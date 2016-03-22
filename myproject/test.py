@@ -1,4 +1,5 @@
 from lemoncheesecake.testsuite import TestSuite, test
+from lemoncheesecake.messages import info
 
 class B(TestSuite):
     @test("Test of B")
@@ -18,26 +19,26 @@ class MyTestSuite(TestSuite):
     
     @test("My test description")
     def this_is_a_test(self):
-        print "do test 1 !"
+        info("do test 1 !")
     
     def foo(self):
         pass
     
     @test("Second test")
     def second_test(self):
-        print "do test 2 !"
+        info("do test 2 !")
     
     def bar(self):
         pass
     
     @test("Third test")
     def third_test(self):
-        print "do test 3 !"
+        info("do test 3 !")
     
     def load_dynamic_tests(self):
         for i in range(4):
             def dummy(suite):
-                print "do test dyn %d" % i
+                info("do test dyn %d" % i)
             self.register_test("test_%d" % i, "This is my dynamic test %d" % i, dummy, after_test="this_is_a_test")
         
 if __name__ == "__main__":

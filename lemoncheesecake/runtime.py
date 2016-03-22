@@ -18,6 +18,7 @@ LOG_LEVEL_ERROR = "error"
 _runtime = None # singleton
 
 def initialize_runtime(report_dir):
+    global _runtime
     _runtime = _Runtime(report_dir)
 
 def get_runtime():
@@ -66,6 +67,9 @@ class _Runtime:
         self.reporting_backends = [ ]
         self.step_lock = False
     
+    def init_reporting_backends(self):
+        self.for_each_backend(lambda b: b.initialize(self.state))
+    
     def for_each_backend(self, callback):
         for backend in self.reporting_backends:
             callback(backend)
@@ -92,12 +96,13 @@ class _Runtime:
         self.for_each_backend(lambda b: b.set_step(DEFAULT_STEP))
             
     def end_test(self):
-        if self.state.current_test_outcome:
+        outcome = self.state.get_current_test_outcome()
+        if outcome:
             self.state.tests_success += 1
         else:
             self.state.tests_failure += 1
         
-        self.for_each_backend(lambda b: b.end_test(self.state_current_test_outcome))
+        self.for_each_backend(lambda b: b.end_test(outcome))
     
     def step(self, description, force_lock=False):
         if self.step_lock and not force_lock:

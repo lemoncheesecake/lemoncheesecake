@@ -5,7 +5,7 @@ Created on Mar 19, 2016
 '''
 
 class Backend:
-    def __init__(self, runtime_state):
+    def initialize(self, runtime_state):
         self.runtime_state = runtime_state
     
     def begin_tests(self):
