@@ -40,6 +40,19 @@ class MyTestSuite(TestSuite):
             def dummy(suite):
                 info("do test dyn %d" % i)
             self.register_test("test_%d" % i, "This is my dynamic test %d" % i, dummy, after_test="this_is_a_test")
+
+class MyTestSuite1(TestSuite):
+    class C(TestSuite):
+        @test("C test 1")
+        def c_test_1(self):
+            pass
+    
+    class D(TestSuite):
+        @test("D test 1")
+        def d_test_1(self):
+            pass
+    
+    sub_testsuite_classes = [C, D]
         
 if __name__ == "__main__":
     suite = MyTestSuite()
