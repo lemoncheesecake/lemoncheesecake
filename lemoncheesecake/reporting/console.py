@@ -39,26 +39,32 @@ class ConsoleBackend(Backend):
         init()
     
     def begin_tests(self):
-        pass
+        self.previous_obj = None
     
     def end_tests(self):
-        pass
+        sys.stdout.write("\n")
     
     def begin_testsuite(self, testsuite):
-        if testsuite.parent_suite:
-            sys.stdout.write("\n")
+        if not testsuite.get_tests():
+            return
+
         self.current_test_idx = 1
-        sys.stdout.write(" " + "=" * 30 + " " + colored(testsuite.get_path_str(), attrs=["bold"]) + " " + "=" * 30 + "\n")
+        path = testsuite.get_path_str()
+        path_len = len(path)
+        if self.previous_obj:
+            sys.stdout.write("\n")
+        sys.stdout.write("=" * 30 + " " + colored(testsuite.get_path_str(), attrs=["bold"]) + " " + "=" * (40 - path_len) + "\n")
+        self.previous_obj = testsuite
         
     def end_testsuite(self):
-        sys.stdout.write("\n")
+        pass
     
     def begin_test(self, test):
         self.current_test_line = " -- %2s # %s" % (self.current_test_idx, test.id)
         write_on_line(self.current_test_line + "...")
+        self.previous_obj = test
     
     def end_test(self, outcome):
-        self.current_test_idx += 1
         line = " %s %2s # %s" % (
             colored("OK", "green", attrs=["bold"]) if outcome else colored("OK", "green", attrs=["bold"]),
             self.current_test_idx, self.runtime_state.current_test.id
