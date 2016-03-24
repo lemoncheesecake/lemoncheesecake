@@ -23,7 +23,7 @@ class Backend:
     def begin_test(self, test):
         pass
     
-    def end_test(self):
+    def end_test(self, outcome):
         pass
     
     def set_step(self, description):

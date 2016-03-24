@@ -66,7 +66,7 @@ class ConsoleBackend(Backend):
     
     def end_test(self, outcome):
         line = " %s %2s # %s" % (
-            colored("OK", "green", attrs=["bold"]) if outcome else colored("OK", "green", attrs=["bold"]),
+            colored("OK", "green", attrs=["bold"]) if outcome else colored("KO", "red", attrs=["bold"]),
             self.current_test_idx, self.runtime_state.current_test.id
         )
         raw_line = "%s %2s # %s" % ("OK" if outcome else "KO", self.current_test_idx, self.runtime_state.current_test.id)
