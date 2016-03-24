@@ -8,10 +8,13 @@ import sys
 import time
 import argparse
 
+import traceback
+
 from lemoncheesecake.project import Project
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.common import LemonCheesecakeException
 from lemoncheesecake.reporting.console import ConsoleBackend 
+from lemoncheesecake.testsuite import AbortTest, AbortTestSuite, AbortAllTests
 
 COMMAND_RUN = "run"
 
@@ -24,32 +27,82 @@ class Launcher:
     def _run_testsuite(self, suite):
         rt = get_runtime()
         
-        rt.begin_testsuite(suite)
-        suite.before_suite()
+        def handle_exception(e):
+            if isinstance(e, AbortTest):
+                rt.error("The test has been aborted")
+            elif isinstance(e, AbortTestSuite):
+                rt.error("The test suite has been aborted")
+                self.abort_testsuite = suite
+            elif isinstance(e, AbortAllTests):
+                rt.error("All tests have been aborted")
+                self.abort_all_tests = True
+            else:
+                # FIXME; use exception instead of last implicit stracktrace
+                stacktrace = traceback.format_exc().decode("utf-8")
+                rt.error("Caught exception while running test: " + stacktrace)
+            
+        try:
+            rt.begin_testsuite(suite)
+        except Exception as e:
+            handle_exception(e)
+            self.abort_testsuite = suite 
+        
+        if not self.abort_testsuite and not self.abort_all_tests:
+            suite.before_suite()
         
         for test in suite.get_tests():
             rt.begin_test(test)
-            suite.before_test(test.id)
-            test.callback(suite)
-            suite.after_test(test.id)
+            if self.abort_testsuite:
+                rt.error("Cannot execute this test: the tests of this test suite have been aborted.")
+                rt.end_test()
+                continue
+            if self.abort_all_tests:
+                rt.error("Cannot execute this test: all tests have been aborted.")
+                rt.end_test()
+                continue
+
+            try:
+                suite.before_test(test.id)
+                test.callback(suite)
+            except Exception as e:
+                handle_exception(e)
+                rt.end_test()
+                continue
+            
+            try:
+                suite.after_test(test.id)
+            except Exception as e:
+                handle_exception(e)
+                rt.end_test()
+                continue
+            
             rt.end_test()
         
         for sub_suite in suite.get_sub_testsuites():
             self._run_testsuite(sub_suite)
 
-        suite.after_suite()
+        try:
+            suite.after_suite()
+        except Exception as e:
+            handle_exception(e)
+            
         rt.end_testsuite()
+        
+        if self.abort_testsuite == suite:
+            self.abort_testsuite = None
         
     def run_testsuites(self, project):
         # load project
         project.load_settings()
         project.load_testsuites()
         
-        # initialize runtime
+        # initialize runtime & global test variables
         initialize_runtime("report-%d" % time.time())
         rt = get_runtime()
         rt.reporting_backends.append(ConsoleBackend())
         rt.init_reporting_backends()
+        self.abort_all_tests = False
+        self.abort_testsuite = None
         
         # run tests
         rt.begin_tests()

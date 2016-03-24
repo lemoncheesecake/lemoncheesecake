@@ -6,6 +6,15 @@ class CannotLoadTest(LemonCheesecakeException):
 class CannotLoadTestSuite(LemonCheesecakeException):
     message_prefix = "Cannot load testsuite"
 
+class AbortTest(LemonCheesecakeException):
+    pass
+
+class AbortTestSuite(LemonCheesecakeException):
+    pass
+
+class AbortAllTests(LemonCheesecakeException):
+    pass
+
 class Test:
     test_current_rank = 1
 

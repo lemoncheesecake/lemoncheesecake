@@ -1,4 +1,4 @@
-from lemoncheesecake.testsuite import TestSuite, test
+from lemoncheesecake.testsuite import *
 from lemoncheesecake.messages import info, error
 
 class B(TestSuite):
@@ -34,6 +34,7 @@ class MyTestSuite(TestSuite):
     @test("Third test")
     def third_test(self):
         error("something goes wrong")
+        raise AbortTestSuite()
     
     def load_dynamic_tests(self):
         for i in range(4):
