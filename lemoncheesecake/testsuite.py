@@ -84,6 +84,14 @@ class TestSuite:
     def get_path_str(self, sep=">"):
         return (" %s " % sep).join([ s.id for s in self.get_path() ])
     
+    def get_depth(self):
+        depth = 1
+        parent = self.parent_suite
+        while parent:
+            depth += 1
+            parent = parent.parent_suite
+        return depth
+    
     def assert_test_description_is_unique(self, description):
         result = filter(lambda t: t.description == description, self._tests)
         if result:

@@ -88,6 +88,7 @@ class Launcher:
             
         rt.end_testsuite()
         
+        # reset the abort suite flag
         if self.abort_testsuite == suite:
             self.abort_testsuite = None
         

@@ -8,6 +8,7 @@ import sys
 import re
 
 from lemoncheesecake.reporting.backend import Backend
+from lemoncheesecake.common import humanize_duration
 
 from colorama import init, Style, Fore
 from termcolor import colored
@@ -40,10 +41,7 @@ class ConsoleBackend(Backend):
     
     def begin_tests(self):
         self.previous_obj = None
-    
-    def end_tests(self):
-        sys.stdout.write("\n")
-    
+ 
     def begin_testsuite(self, testsuite):
         if not testsuite.get_tests():
             return
@@ -56,7 +54,7 @@ class ConsoleBackend(Backend):
         sys.stdout.write("=" * 30 + " " + colored(testsuite.get_path_str(), attrs=["bold"]) + " " + "=" * (40 - path_len) + "\n")
         self.previous_obj = testsuite
         
-    def end_testsuite(self):
+    def end_testsuite(self, testsuite):
         pass
     
     def begin_test(self, test):
@@ -64,12 +62,12 @@ class ConsoleBackend(Backend):
         write_on_line(self.current_test_line + "...")
         self.previous_obj = test
     
-    def end_test(self, outcome):
+    def end_test(self, test, outcome):
         line = " %s %2s # %s" % (
             colored("OK", "green", attrs=["bold"]) if outcome else colored("KO", "red", attrs=["bold"]),
-            self.current_test_idx, self.runtime_state.current_test.id
+            self.current_test_idx, test.id
         )
-        raw_line = "%s %2s # %s" % ("OK" if outcome else "KO", self.current_test_idx, self.runtime_state.current_test.id)
+        raw_line = "%s %2s # %s" % ("OK" if outcome else "KO", self.current_test_idx, test.id)
         write_on_line(line, force_len=len(raw_line))
         flush_line()
         self.current_test_idx += 1
@@ -82,3 +80,14 @@ class ConsoleBackend(Backend):
     
     def log(self, content, level):
         pass
+    
+    def end_tests(self):
+        self.test_results.refresh_stats()
+        print
+        print colored("Statistics", attrs=["bold"]), ":"
+        print " * Duration: %s" % humanize_duration(self.test_results.end_time - self.test_results.start_time)
+        print " * Tests: %d" % self.test_results.tests
+        print " * Successes: %d (%d%%)" % (self.test_results.tests_success, float(self.test_results.tests_success) / self.test_results.tests * 100 if self.test_results.tests else 0)
+        print " * Failures: %d" % (self.test_results.tests_failure)
+        print
+        

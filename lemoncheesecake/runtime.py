@@ -15,6 +15,8 @@ LOG_LEVEL_INFO = "info"
 LOG_LEVEL_WARN = "warn"
 LOG_LEVEL_ERROR = "error"
 
+from lemoncheesecake.testresults import *
+
 _runtime = None # singleton
 
 def initialize_runtime(report_dir):
@@ -28,17 +30,9 @@ def get_runtime():
 
 class _RuntimeState:
     def __init__(self):
-        self.tests = 0
-        self.tests_success = 0
-        self.tests_failure = 0
-        self.checks = 0
-        self.checks_success = 0
-        self.checks_failure = 0
-        self.errors = 0
-        self.warnings = 0
-        
         self.start_time = None
         self.end_time = None
+        self.results = None
         
         self.current_testsuite = None
         self.current_test = None
@@ -63,56 +57,70 @@ class _RuntimeState:
 class _Runtime:
     def __init__(self, report_dir):
         self.report_dir = report_dir
-        self.state = _RuntimeState()
+        self.results = TestResults()
         self.reporting_backends = [ ]
         self.step_lock = False
+        self.current_testsuite_result = None
+        self.current_test_result = None
+        self.current_step_result = None
+        self.current_test = None
+        self.current_testsuite = None
     
     def init_reporting_backends(self):
-        self.for_each_backend(lambda b: b.initialize(self.state))
+        self.for_each_backend(lambda b: b.initialize(self.results))
     
     def for_each_backend(self, callback):
         for backend in self.reporting_backends:
             callback(backend)
     
     def begin_tests(self):
-        self.state.start_time = time.time()
-        for backend in self.reporting_backends:
-            backend.begin_tests()
+        self.results.start_time = time.time()
+        self.for_each_backend(lambda b: b.begin_tests())
     
     def end_tests(self):
-        self.state.end_time = time.time()
+        self.results.end_time = time.time()
         self.for_each_backend(lambda b: b.end_tests())
     
     def begin_testsuite(self, testsuite):
-        self.state.current_testsuite = testsuite
+        self.current_testsuite = testsuite
+        suite_result = TestSuiteResults(testsuite.id, testsuite.description, self.current_testsuite_result)
+        if self.current_testsuite_result:
+            self.current_testsuite_result.sub_testsuites.append(suite_result)
+        else:
+            self.results.testsuites.append(suite_result)
+        self.current_testsuite_result = suite_result
+        
         self.for_each_backend(lambda b: b.begin_testsuite(testsuite))
     
     def end_testsuite(self):
-        self.for_each_backend(lambda b: b.end_testsuite())
+        self.current_testsuite_result = self.current_testsuite_result.parent
+        self.for_each_backend(lambda b: b.end_testsuite(self.current_testsuite))
 
     def begin_test(self, test):
-        self.state.set_current_test(test)
+        self.current_test = test
+        self.current_test_result = TestResult(test.id, test.description)
+        self.current_testsuite_result.tests.append(self.current_test_result)
         self.for_each_backend(lambda b: b.begin_test(test))
-        self.for_each_backend(lambda b: b.set_step(DEFAULT_STEP))
+        self.step(DEFAULT_STEP)
             
     def end_test(self):
-        outcome = self.state.get_current_test_outcome()
-        if outcome:
-            self.state.tests_success += 1
-        else:
-            self.state.tests_failure += 1
+        if self.current_test_result.outcome == None:
+            self.current_test_result.outcome = True
         
-        self.for_each_backend(lambda b: b.end_test(outcome))
+        self.for_each_backend(lambda b: b.end_test(self.current_test, self.current_test_result.outcome))
     
     def step(self, description, force_lock=False):
         if self.step_lock and not force_lock:
             return
         
-        self.state.current_step = description
+        self.current_step = description
+        self.current_step_result = TestStep(description)
+        self.current_test_result.steps.append(self.current_step_result)
         
         self.for_each_backend(lambda b: b.set_step(description))
         
     def log(self, level, content):
+        self.current_step_result.entries.append(TestLog(level, content))
         self.for_each_backend(lambda b: b.log(level, content))
     
     def debug(self, content):
@@ -122,21 +130,17 @@ class _Runtime:
         self.log(LOG_LEVEL_INFO, content)
     
     def warn(self, content):
-        self.state.warnings += 1
         self.log(LOG_LEVEL_WARN, content)
     
     def error(self, content):
-        self.state.errors += 1
-        self.state.set_current_test_as_failed()
+        self.current_test_result.outcome = False
         self.log(LOG_LEVEL_ERROR, content)
     
     def check(self, description, outcome, details=None):
-        self.state.checks += 1
-        if outcome:
-            self.state.checks_success += 1
-        else:
-            self.state.checks_failure += 1
-            self.state.set_current_test_as_failed()
+        self.current_step_result.entries.append(TestCheck(description, outcome, details))
+        
+        if outcome == False:
+            self.current_test_result.outcome = False
         
         self.for_each_backend(lambda b: b.check(description, outcome, details))
         

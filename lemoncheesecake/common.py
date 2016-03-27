@@ -16,3 +16,22 @@ class LemonCheesecakeException(Exception):
 class LemonCheesecakeInternalError(Exception):
     def __str__(self):
         return "Internal error: %s" % Exception.__str__(self)
+
+def humanize_duration(duration):
+    ret = ""
+    
+    if duration / 3600 >= 1:
+        ret += ("%02dh" if ret else "%dh") % (duration / 3600)
+        duration %= 3600
+    
+    if duration / 60 >= 1:
+        ret += ("%02dm" if ret else "%dm") % (duration / 60)
+        duration %= 60
+    
+    if duration >= 1:
+        ret += ("%02ds" if ret else "%ds") % duration
+    
+    if not ret:
+        ret = "0s"
+    
+    return ret

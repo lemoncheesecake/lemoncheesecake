@@ -5,8 +5,8 @@ Created on Mar 19, 2016
 '''
 
 class Backend:
-    def initialize(self, runtime_state):
-        self.runtime_state = runtime_state
+    def initialize(self, test_results):
+        self.test_results = test_results
     
     def begin_tests(self):
         pass
@@ -17,13 +17,13 @@ class Backend:
     def begin_testsuite(self, testsuite):
         pass
     
-    def end_testsuite(self):
+    def end_testsuite(self, testsuite):
         pass
     
     def begin_test(self, test):
         pass
     
-    def end_test(self, outcome):
+    def end_test(self, test, outcome):
         pass
     
     def set_step(self, description):
