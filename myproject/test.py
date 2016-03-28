@@ -1,5 +1,5 @@
 from lemoncheesecake.testsuite import *
-from lemoncheesecake.messages import info, error
+from lemoncheesecake.messages import info, error, step
 
 class B(TestSuite):
     @test("Test of B")
@@ -19,7 +19,10 @@ class MyTestSuite(TestSuite):
     
     @test("My test description")
     def this_is_a_test(self):
+        step("step 1")
         info("do test 1 !")
+        step("step 2")
+        info("something else")
     
     def foo(self):
         pass

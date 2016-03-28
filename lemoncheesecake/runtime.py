@@ -113,6 +113,10 @@ class _Runtime:
         if self.step_lock and not force_lock:
             return
         
+        # remove previous step from results if it was empty
+        if self.current_test_result.steps and not self.current_test_result.steps[-1].entries:
+            del self.current_test_result.steps[-1]
+        
         self.current_step = description
         self.current_step_result = TestStep(description)
         self.current_test_result.steps.append(self.current_step_result)

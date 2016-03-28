@@ -17,3 +17,6 @@ def warn(content):
 
 def error(content):
     get_runtime().error(content)
+
+def step(description):
+    get_runtime().step(description)
