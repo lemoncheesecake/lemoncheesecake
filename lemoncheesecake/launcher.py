@@ -5,6 +5,7 @@ Created on Jan 24, 2016
 '''
 
 import sys
+import os, os.path
 import time
 import argparse
 
@@ -13,7 +14,8 @@ import traceback
 from lemoncheesecake.project import Project
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.common import LemonCheesecakeException
-from lemoncheesecake.reporting.console import ConsoleBackend 
+from lemoncheesecake.reporting.console import ConsoleBackend
+from lemoncheesecake.reporting.xml import XmlReport
 from lemoncheesecake.testsuite import AbortTest, AbortTestSuite, AbortAllTests
 
 COMMAND_RUN = "run"
@@ -98,9 +100,14 @@ class Launcher:
         project.load_testsuites()
         
         # initialize runtime & global test variables
-        initialize_runtime("report-%d" % time.time())
+        report_dir  = project.settings.reports_root_dir
+        report_dir += os.path.sep
+        report_dir += project.settings.report_dir_format(project.settings.reports_root_dir, time.time())
+        os.mkdir(report_dir)
+        initialize_runtime(report_dir)
         rt = get_runtime()
         rt.reporting_backends.append(ConsoleBackend())
+        rt.reporting_backends.append(XmlReport())
         rt.init_reporting_backends()
         self.abort_all_tests = False
         self.abort_testsuite = None

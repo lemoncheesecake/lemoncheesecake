@@ -4,6 +4,8 @@ Created on Mar 18, 2016
 @author: nicolas
 '''
 
+import time
+
 class LemonCheesecakeException(Exception):
     message_prefix = None
     
@@ -35,3 +37,6 @@ def humanize_duration(duration):
         ret = "0s"
     
     return ret
+
+def report_dir_with_datetime(report_rootdir, t):
+    return time.strftime("report-%Y%m%d-%H%M%S", time.localtime(t))

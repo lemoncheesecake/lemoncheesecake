@@ -37,7 +37,7 @@ def flush_line():
 
 class ConsoleBackend(Backend):
     def __init__(self):
-        init()
+        init() # init colorama
     
     def begin_tests(self):
         self.previous_obj = None

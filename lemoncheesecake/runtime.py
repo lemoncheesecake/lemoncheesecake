@@ -67,7 +67,7 @@ class _Runtime:
         self.current_testsuite = None
     
     def init_reporting_backends(self):
-        self.for_each_backend(lambda b: b.initialize(self.results))
+        self.for_each_backend(lambda b: b.initialize(self.results, self.report_dir))
     
     def for_each_backend(self, callback):
         for backend in self.reporting_backends:

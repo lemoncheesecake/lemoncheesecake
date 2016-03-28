@@ -5,8 +5,9 @@ Created on Mar 19, 2016
 '''
 
 class Backend:
-    def initialize(self, test_results):
+    def initialize(self, test_results, report_dir):
         self.test_results = test_results
+        self.report_dir = report_dir
     
     def begin_tests(self):
         pass

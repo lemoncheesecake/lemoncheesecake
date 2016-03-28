@@ -17,12 +17,24 @@ class ProjectSettings:
     def __init__(self, project_dir):
         self.project_dir = project_dir
     
-    def _check_issubclass(self, klass):
+    def _check_is_subclass(self, klass):
         def wrapper(name, value):
             if type(value) is not types.ClassType or not issubclass(value, klass):
                 return "'%s' has an incorrect value, '%s' is not a subclass of '%s'" % (name, value, klass)
             return None
         return wrapper
+    
+    def _check_is_type(self, type_):
+        def wrapper(name, value):
+            if type(value) is not type_:
+                return "'%s' has an incorrect value, '%s' is not a '%s'" % (name, value, type_)
+            return None
+        return wrapper
+    
+    def _check_is_func(self, name, value):
+        if not callable(value):
+            return "'%s' has an incorrect value, '%s' is not a function" % (name, value)
+        return None
     
     def _get_param(self, settings, name, checker, is_list=False, is_optional=False, default_value=None):
         if not hasattr(settings, name):
@@ -49,7 +61,9 @@ class ProjectSettings:
     
     def load(self):
         settings = imp.load_source("settings", "%s/settings.py" % self.project_dir)
-        self._testsuites = self._get_param(settings, "TESTSUITES", self._check_issubclass(TestSuite), is_list=True)
+        self._testsuites = self._get_param(settings, "TESTSUITES", self._check_is_subclass(TestSuite), is_list=True)
+        self.reports_root_dir = self._get_param(settings, "REPORTS_ROOT_DIR", self._check_is_type(str))
+        self.report_dir_format = self._get_param(settings, "REPORT_DIR_FORMAT", self._check_is_func)
     
     def get_testsuite_classes(self):
         return self._testsuites
