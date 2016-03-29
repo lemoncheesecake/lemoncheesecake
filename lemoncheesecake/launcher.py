@@ -14,8 +14,9 @@ import traceback
 from lemoncheesecake.project import Project
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.common import LemonCheesecakeException
-from lemoncheesecake.reporting.console import ConsoleBackend
-from lemoncheesecake.reporting.xml import XmlReport
+from lemoncheesecake import reporting
+from lemoncheesecake.reportbackends.console import ConsoleBackend
+from lemoncheesecake.reportbackends.xml import XmlBackend
 from lemoncheesecake.testsuite import AbortTest, AbortTestSuite, AbortAllTests
 
 COMMAND_RUN = "run"
@@ -25,6 +26,8 @@ class Launcher:
         self.cli_parser = argparse.ArgumentParser()
         subparsers = self.cli_parser.add_subparsers(dest="command")
         self.cli_run_parser = subparsers.add_parser(COMMAND_RUN)
+        reporting.register_backend("console", ConsoleBackend())
+        reporting.register_backend("xml", XmlBackend())
     
     def _run_testsuite(self, suite):
         rt = get_runtime()
@@ -106,8 +109,8 @@ class Launcher:
         os.mkdir(report_dir)
         initialize_runtime(report_dir)
         rt = get_runtime()
-        rt.reporting_backends.append(ConsoleBackend())
-        rt.reporting_backends.append(XmlReport())
+        for backend in project.settings.report_backends:
+            rt.report_backends.append(reporting.get_backend(backend))
         rt.init_reporting_backends()
         self.abort_all_tests = False
         self.abort_testsuite = None

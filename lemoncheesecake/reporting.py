@@ -1,10 +1,28 @@
 '''
-Created on Mar 19, 2016
+Created on Mar 29, 2016
 
 @author: nicolas
 '''
 
-class Backend:
+from lemoncheesecake.common import LemonCheesecakeException
+
+_backends = { }
+
+def register_backend(name, backend):
+    global _backends
+    _backends[name] = backend
+
+def get_backend(name):
+    global _backends
+    if not _backends.has_key(name):
+        raise LemonCheesecakeException("Unknown reporting backend: '%s'" % name)
+    return _backends[name]
+
+def has_backend(name):
+    global _backends
+    return _backends.has_key(name)
+
+class ReportingBackend:
     def initialize(self, test_results, report_dir):
         self.test_results = test_results
         self.report_dir = report_dir

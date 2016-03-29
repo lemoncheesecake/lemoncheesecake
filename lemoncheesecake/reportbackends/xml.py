@@ -5,7 +5,7 @@ Created on Mar 27, 2016
 '''
 
 from lemoncheesecake.testresults import *
-from lemoncheesecake.reporting.backend import Backend
+from lemoncheesecake.reporting import ReportingBackend
 
 from lxml import etree as ET
 from lxml.builder import E
@@ -61,7 +61,7 @@ def serialize_test_results_into_file(results, filename):
     file.write(ET.tostring(report, pretty_print=True, xml_declaration=True, encoding="utf-8"))
     file.close()
 
-class XmlReport(Backend):
+class XmlBackend(ReportingBackend):
     def __init__(self):
         pass
     

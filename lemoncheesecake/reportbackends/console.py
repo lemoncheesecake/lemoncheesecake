@@ -7,7 +7,7 @@ Created on Mar 19, 2016
 import sys
 import re
 
-from lemoncheesecake.reporting.backend import Backend
+from lemoncheesecake.reporting import ReportingBackend
 from lemoncheesecake.common import humanize_duration
 
 from colorama import init, Style, Fore
@@ -35,7 +35,7 @@ def flush_line():
     sys.stdout.write("\n")
     sys.stdout.flush()
 
-class ConsoleBackend(Backend):
+class ConsoleBackend(ReportingBackend):
     def __init__(self):
         init() # init colorama
     

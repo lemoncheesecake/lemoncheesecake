@@ -58,7 +58,7 @@ class _Runtime:
     def __init__(self, report_dir):
         self.report_dir = report_dir
         self.results = TestResults()
-        self.reporting_backends = [ ]
+        self.report_backends = [ ]
         self.step_lock = False
         self.current_testsuite_result = None
         self.current_test_result = None
@@ -70,7 +70,7 @@ class _Runtime:
         self.for_each_backend(lambda b: b.initialize(self.results, self.report_dir))
     
     def for_each_backend(self, callback):
-        for backend in self.reporting_backends:
+        for backend in self.report_backends:
             callback(backend)
     
     def begin_tests(self):

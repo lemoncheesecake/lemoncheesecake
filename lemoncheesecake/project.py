@@ -9,6 +9,7 @@ import types
 
 from lemoncheesecake.common import LemonCheesecakeException
 from lemoncheesecake.testsuite import TestSuite
+from lemoncheesecake import reporting
 
 class CannotLoadProjectSettings(LemonCheesecakeException):
     message_prefix = "Cannot load project settings"
@@ -34,6 +35,11 @@ class ProjectSettings:
     def _check_is_func(self, name, value):
         if not callable(value):
             return "'%s' has an incorrect value, '%s' is not a function" % (name, value)
+        return None
+    
+    def _check_report_backend(self, name, value):
+        if not reporting.has_backend(value):
+            return "unknown report backend '%s'" % value
         return None
     
     def _get_param(self, settings, name, checker, is_list=False, is_optional=False, default_value=None):
@@ -64,6 +70,7 @@ class ProjectSettings:
         self._testsuites = self._get_param(settings, "TESTSUITES", self._check_is_subclass(TestSuite), is_list=True)
         self.reports_root_dir = self._get_param(settings, "REPORTS_ROOT_DIR", self._check_is_type(str))
         self.report_dir_format = self._get_param(settings, "REPORT_DIR_FORMAT", self._check_is_func)
+        self.report_backends = self._get_param(settings, "REPORT_BACKENDS", self._check_report_backend, is_list=True)
     
     def get_testsuite_classes(self):
         return self._testsuites
