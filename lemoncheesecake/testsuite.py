@@ -1,4 +1,28 @@
 from lemoncheesecake.common import LemonCheesecakeException
+from lemoncheesecake.runtime import get_runtime
+
+###
+# Shortcuts for tests
+###
+
+def debug(content):
+    get_runtime().debug(content)
+
+def info(content):
+    get_runtime().info(content)
+
+def warn(content):
+    get_runtime().warn(content)
+
+def error(content):
+    get_runtime().error(content)
+
+def step(description):
+    get_runtime().step(description)
+
+###
+# Exception classes
+###
 
 class CannotLoadTest(LemonCheesecakeException):
     message_prefix = "Cannot load test"
@@ -14,6 +38,10 @@ class AbortTestSuite(LemonCheesecakeException):
 
 class AbortAllTests(LemonCheesecakeException):
     pass
+
+###
+# Test, TestSuite classes and decorators
+###
 
 class Test:
     test_current_rank = 1

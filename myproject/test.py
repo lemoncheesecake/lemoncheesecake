@@ -1,5 +1,4 @@
 from lemoncheesecake.testsuite import *
-from lemoncheesecake.messages import info, error, step
 
 class B(TestSuite):
     @test("Test of B")
