@@ -15,8 +15,8 @@ from lemoncheesecake.project import Project
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.common import LemonCheesecakeException
 from lemoncheesecake import reporting
-from lemoncheesecake.reportbackends.console import ConsoleBackend
-from lemoncheesecake.reportbackends.xml import XmlBackend
+from lemoncheesecake.reportingbackends.console import ConsoleBackend
+from lemoncheesecake.reportingbackends.xml import XmlBackend
 from lemoncheesecake.testsuite import AbortTest, AbortTestSuite, AbortAllTests
 
 COMMAND_RUN = "run"

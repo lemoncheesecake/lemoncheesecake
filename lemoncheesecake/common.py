@@ -38,5 +38,5 @@ def humanize_duration(duration):
     
     return ret
 
-def report_dir_with_datetime(report_rootdir, t):
+def reporting_dir_with_datetime(report_rootdir, t):
     return time.strftime("report-%Y%m%d-%H%M%S", time.localtime(t))

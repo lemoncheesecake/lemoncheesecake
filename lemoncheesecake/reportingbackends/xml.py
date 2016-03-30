@@ -4,7 +4,7 @@ Created on Mar 27, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.testresults import *
+from lemoncheesecake.reportingdata import *
 from lemoncheesecake.reporting import ReportingBackend
 
 from lxml import etree as ET
@@ -30,7 +30,7 @@ def _serialize_test_result(test):
     for step in test.steps:
         step_node = _xml_child(test_node, "step", "description", step.description)
         for entry in step.entries:
-            if isinstance(entry, TestLog):
+            if isinstance(entry, LogData):
                 log_node = _xml_child(step_node, "log", "level", entry.level)
                 log_node.text = entry.message
             else: # TestCheck

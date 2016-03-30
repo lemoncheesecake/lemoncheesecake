@@ -6,30 +6,30 @@ Created on Mar 26, 2016
 
 from lemoncheesecake.runtime import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 
-class TestLog:
+class LogData:
     def __init__(self, level, message):
         self.level = level
         self.message = message
 
-class TestCheck:
+class CheckData:
     def __init__(self, description, outcome, details=None):
         self.description = description
         self.outcome = outcome
         self.details = details
 
-class TestStep:
+class StepData:
     def __init__(self, description):
         self.description = description
         self.entries = [ ]
         
-class TestResult:
+class TestData:
     def __init__(self, id, description):
         self.id = id
         self.description = description
         self.outcome = None
         self.steps = [ ]
 
-class TestSuiteResults:
+class TestSuiteData:
     def __init__(self, id, description, parent=None):
         self.id = id
         self.description = description
@@ -37,7 +37,7 @@ class TestSuiteResults:
         self.tests = [ ]
         self.sub_testsuites = [ ]
 
-class TestResults:
+class ReportingData:
     def __init__(self):
         self.testsuites = [ ]
         self.reset_stats()
@@ -61,13 +61,13 @@ class TestResults:
                 self.tests_failure += 1
             for step in test.steps:
                 for entry in step.entries:
-                    if type(entry) == TestCheck:
+                    if type(entry) == CheckData:
                         self.checks += 1
                         if entry.outcome == True:
                             self.check_success += 1
                         elif entry.outcome == False:
                             self.check_failure += 1
-                    if type(entry) == TestLog:
+                    if type(entry) == LogData:
                         if entry.type == LOG_LEVEL_WARN:
                             self.warnings += 1
                         elif entry.type == LOG_LEVEL_ERROR:
@@ -80,5 +80,3 @@ class TestResults:
         self.reset_stats()
         for suite in self.testsuites:
             self._walk_testsuite(suite)
-        
-        

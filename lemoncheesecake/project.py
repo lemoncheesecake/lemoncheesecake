@@ -68,9 +68,9 @@ class ProjectSettings:
     def load(self):
         settings = imp.load_source("settings", "%s/settings.py" % self.project_dir)
         self._testsuites = self._get_param(settings, "TESTSUITES", self._check_is_subclass(TestSuite), is_list=True)
-        self.reports_root_dir = self._get_param(settings, "REPORTS_ROOT_DIR", self._check_is_type(str))
-        self.report_dir_format = self._get_param(settings, "REPORT_DIR_FORMAT", self._check_is_func)
-        self.report_backends = self._get_param(settings, "REPORT_BACKENDS", self._check_report_backend, is_list=True)
+        self.reports_root_dir = self._get_param(settings, "REPORTING_ROOT_DIR", self._check_is_type(str))
+        self.report_dir_format = self._get_param(settings, "REPORTING_DIR_FORMAT", self._check_is_func)
+        self.report_backends = self._get_param(settings, "REPORTING_BACKENDS", self._check_report_backend, is_list=True)
     
     def get_testsuite_classes(self):
         return self._testsuites

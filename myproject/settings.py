@@ -3,12 +3,12 @@
 import sys
 sys.path.insert(0, ".")
 
-from lemoncheesecake.common import report_dir_with_datetime
+from lemoncheesecake.common import reporting_dir_with_datetime
 
 from test import *
 TESTSUITES = [ MyTestSuite, MyTestSuite1 ]
 
 # Reporting
-REPORTS_ROOT_DIR = "reports"
-REPORT_DIR_FORMAT = report_dir_with_datetime
-REPORT_BACKENDS = "console", "xml"
+REPORTING_ROOT_DIR = "reports"
+REPORTING_DIR_FORMAT = reporting_dir_with_datetime
+REPORTING_BACKENDS = "console", "xml"
