@@ -1,3 +1,5 @@
+from fnmatch import fnmatch 
+
 from lemoncheesecake.common import LemonCheesecakeException
 from lemoncheesecake.runtime import get_runtime
 
@@ -42,6 +44,47 @@ class AbortAllTests(LemonCheesecakeException):
 ###
 # Test, TestSuite classes and decorators
 ###
+
+class Filter:
+    def __init__(self):
+        self.test_id_filters = []
+        self.testsuite_id_filters = []
+        self.test_description_filters = []
+        self.testsuite_description_filters = []
+    
+    def match_test(self, test):
+        # FIXME: what if two filter types are given ?
+        
+        if self.test_id_filters:
+            for filter in self.test_id_filters:
+                if fnmatch(test.id, filter):
+                    return True
+            return False
+        
+        if self.test_description_filters:
+            for filter in self.test_description_filters:
+                if fnmatch(test.description, filter):
+                    return True
+            return False
+        
+        return True
+    
+    def match_testsuite(self, suite):
+        # FIXME: what if two filter types are given ?
+        
+        if self.testsuite_id_filters:
+            for filter in self.testsuite_id_filters:
+                if fnmatch(suite.id, filter):
+                    return True
+            return False
+                
+        if self.testsuite_description_filters:
+            for filter in self.testsuite_description_filters:
+                if fnmatch(suite.description, filter):
+                    return True
+            return False
+
+        return None
 
 class Test:
     test_current_rank = 1
@@ -100,6 +143,9 @@ class TestSuite:
             suite.load(self)
             self.assert_sub_test_suite_description_is_unique(suite.description)
             self._sub_testsuites.append(suite)
+        
+        # filtering data
+        self._selected_test_ids = [ ]
     
     def get_path(self):
         suites = [ self ]
@@ -174,6 +220,48 @@ class TestSuite:
             self._tests.insert(ref_test_idx + (1 if after_test else 0), new_test)
         else:
             self._tests.append(Test(id, description, callback))
+    
+    ###
+    # Filtering methods
+    ###
+    
+    def apply_filter(self, filter):
+        ret = filter.match_testsuite(self)
+        if ret != None:
+            if ret:
+                self.select_entire_testsuite()
+            return
+        
+        self._selected_test_ids = [ ]
+        
+        for test in self._tests:
+            if filter.match_test(test):
+                self._selected_test_ids.append(test.id)
+        
+        for suite in self._sub_testsuites:
+            suite.apply_filter(filter)
+
+    def select_entire_testsuite(self):
+        self._selected_test_ids = [ t.id for t in self._tests ]
+        
+        for suite in self._sub_testsuites:
+            suite.select_entire_testsuite()
+    
+    def has_selected_tests(self, recursive=True):
+        if recursive:
+            if self._selected_test_ids:
+                return True
+             
+            for suite in self._sub_testsuites:
+                if suite.has_selected_tests():
+                    return True
+             
+            return False
+        else:
+            return bool(self._selected_test_ids)
+    
+    def is_test_selected(self, test):
+        return test.id in self._selected_test_ids
     
     ###
     # Hooks

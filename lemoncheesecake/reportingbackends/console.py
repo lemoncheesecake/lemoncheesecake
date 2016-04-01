@@ -43,7 +43,7 @@ class ConsoleBackend(ReportingBackend):
         self.previous_obj = None
  
     def begin_testsuite(self, testsuite):
-        if not testsuite.get_tests():
+        if not testsuite.has_selected_tests(recursive=False):
             return
 
         self.current_test_idx = 1

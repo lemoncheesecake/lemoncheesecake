@@ -17,7 +17,7 @@ from lemoncheesecake.common import LemonCheesecakeException
 from lemoncheesecake import reporting
 from lemoncheesecake.reportingbackends.console import ConsoleBackend
 from lemoncheesecake.reportingbackends.xml import XmlBackend
-from lemoncheesecake.testsuite import AbortTest, AbortTestSuite, AbortAllTests
+from lemoncheesecake.testsuite import Filter, AbortTest, AbortTestSuite, AbortAllTests
 
 COMMAND_RUN = "run"
 
@@ -26,6 +26,10 @@ class Launcher:
         self.cli_parser = argparse.ArgumentParser()
         subparsers = self.cli_parser.add_subparsers(dest="command")
         self.cli_run_parser = subparsers.add_parser(COMMAND_RUN)
+        self.cli_run_parser.add_argument("--filter-test-id", nargs="*", default=[], help="Filters on test ids")
+        self.cli_run_parser.add_argument("--filter-test-description", nargs="*", default=[], help="Filters on test descriptions")
+        self.cli_run_parser.add_argument("--filter-suite-id", nargs="*", default=[], help="Filters on test suite ids")
+        self.cli_run_parser.add_argument("--filter-suite-description", nargs="*", default=[], help="Filters on test suite descriptions")
         reporting.register_backend("console", ConsoleBackend())
         reporting.register_backend("xml", XmlBackend())
     
@@ -45,7 +49,10 @@ class Launcher:
                 # FIXME; use exception instead of last implicit stracktrace
                 stacktrace = traceback.format_exc().decode("utf-8")
                 rt.error("Caught exception while running test: " + stacktrace)
-            
+        
+        if not suite.has_selected_tests(recursive=True):
+            return
+        
         try:
             rt.begin_testsuite(suite)
         except Exception as e:
@@ -97,7 +104,7 @@ class Launcher:
         if self.abort_testsuite == suite:
             self.abort_testsuite = None
         
-    def run_testsuites(self, project):
+    def run_testsuites(self, project, filter):
         # load project
         project.load_settings()
         project.load_testsuites()
@@ -118,12 +125,19 @@ class Launcher:
         # run tests
         rt.begin_tests()
         for suite in project.testsuites:
+            suite.apply_filter(filter)
             self._run_testsuite(suite)
         rt.end_tests()
 
     def cli_run_testsuites(self, args):
         project = Project(".")
-        self.run_testsuites(project)
+        filter = Filter()
+        filter.test_id_filters = args.filter_test_id
+        filter.test_description_filters = args.filter_test_description
+        filter.testsuite_id_filters = args.filter_suite_id
+        filter.testsuite_description_filters = args.filter_suite_description
+        
+        self.run_testsuites(project, filter)
         
     def handle_cli(self):
         try:
