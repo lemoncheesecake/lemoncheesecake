@@ -84,7 +84,7 @@ class Filter:
                     return True
             return False
 
-        return None
+        return True
 
 class Test:
     test_current_rank = 1
@@ -158,6 +158,9 @@ class TestSuite:
     def get_path_str(self, sep=">"):
         return (" %s " % sep).join([ s.id for s in self.get_path() ])
     
+    def __str__(self):
+        return self.get_path_str()
+    
     def get_depth(self):
         depth = 1
         parent = self.parent_suite
@@ -225,28 +228,22 @@ class TestSuite:
     # Filtering methods
     ###
     
-    def apply_filter(self, filter):
-        ret = filter.match_testsuite(self)
-        if ret != None:
-            if ret:
-                self.select_entire_testsuite()
-            return
-        
+    def apply_filter(self, filter, parent_suite_match=False):
         self._selected_test_ids = [ ]
         
-        for test in self._tests:
-            if filter.match_test(test):
-                self._selected_test_ids.append(test.id)
+        if parent_suite_match:
+            suite_match = parent_suite_match
+        else:
+            suite_match = filter.match_testsuite(self)
+                
+        if suite_match:
+            for test in self._tests:
+                if filter.match_test(test):
+                    self._selected_test_ids.append(test.id)
         
         for suite in self._sub_testsuites:
-            suite.apply_filter(filter)
+            suite.apply_filter(filter, suite_match)
 
-    def select_entire_testsuite(self):
-        self._selected_test_ids = [ t.id for t in self._tests ]
-        
-        for suite in self._sub_testsuites:
-            suite.select_entire_testsuite()
-    
     def has_selected_tests(self, recursive=True):
         if recursive:
             if self._selected_test_ids:

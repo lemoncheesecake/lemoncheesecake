@@ -13,7 +13,7 @@ class A(TestSuite):
         pass
 
 class MyTestSuite(TestSuite):
-    description = "This is a my test suite"
+    #description = "This is a my test suite"
     sub_testsuite_classes = [ A ]
     
     @test("My test description")

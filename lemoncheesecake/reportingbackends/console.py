@@ -43,10 +43,11 @@ class ConsoleBackend(ReportingBackend):
         self.previous_obj = None
  
     def begin_testsuite(self, testsuite):
+        self.current_test_idx = 1
+
         if not testsuite.has_selected_tests(recursive=False):
             return
 
-        self.current_test_idx = 1
         path = testsuite.get_path_str()
         path_len = len(path)
         if self.previous_obj:

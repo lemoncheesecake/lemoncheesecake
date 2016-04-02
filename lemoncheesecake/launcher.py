@@ -26,10 +26,10 @@ class Launcher:
         self.cli_parser = argparse.ArgumentParser()
         subparsers = self.cli_parser.add_subparsers(dest="command")
         self.cli_run_parser = subparsers.add_parser(COMMAND_RUN)
-        self.cli_run_parser.add_argument("--filter-test-id", nargs="*", default=[], help="Filters on test ids")
-        self.cli_run_parser.add_argument("--filter-test-description", nargs="*", default=[], help="Filters on test descriptions")
-        self.cli_run_parser.add_argument("--filter-suite-id", nargs="*", default=[], help="Filters on test suite ids")
-        self.cli_run_parser.add_argument("--filter-suite-description", nargs="*", default=[], help="Filters on test suite descriptions")
+        self.cli_run_parser.add_argument("--test-id", nargs="+", default=[], help="Filters on test IDs")
+        self.cli_run_parser.add_argument("--test-desc", nargs="+", default=[], help="Filters on test descriptions")
+        self.cli_run_parser.add_argument("--suite-id", nargs="+", default=[], help="Filters on test suite IDs")
+        self.cli_run_parser.add_argument("--suite-desc", nargs="+", default=[], help="Filters on test suite descriptions")
         reporting.register_backend("console", ConsoleBackend())
         reporting.register_backend("xml", XmlBackend())
     
@@ -63,6 +63,9 @@ class Launcher:
             suite.before_suite()
         
         for test in suite.get_tests():
+            if not suite.is_test_selected(test):
+                continue
+            
             rt.begin_test(test)
             if self.abort_testsuite:
                 rt.error("Cannot execute this test: the tests of this test suite have been aborted.")
@@ -132,10 +135,10 @@ class Launcher:
     def cli_run_testsuites(self, args):
         project = Project(".")
         filter = Filter()
-        filter.test_id_filters = args.filter_test_id
-        filter.test_description_filters = args.filter_test_description
-        filter.testsuite_id_filters = args.filter_suite_id
-        filter.testsuite_description_filters = args.filter_suite_description
+        filter.test_id_filters = args.test_id
+        filter.test_description_filters = args.test_desc
+        filter.testsuite_id_filters = args.suite_id
+        filter.testsuite_description_filters = args.suite_desc
         
         self.run_testsuites(project, filter)
         
