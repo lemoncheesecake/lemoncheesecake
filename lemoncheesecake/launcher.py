@@ -50,9 +50,6 @@ class Launcher:
                 stacktrace = traceback.format_exc().decode("utf-8")
                 rt.error("Caught exception while running test: " + stacktrace)
         
-        if not suite.has_selected_tests(deep=True):
-            return
-        
         try:
             rt.begin_testsuite(suite)
         except Exception as e:
@@ -62,10 +59,7 @@ class Launcher:
         if not self.abort_testsuite and not self.abort_all_tests:
             suite.before_suite()
         
-        for test in suite.get_tests():
-            if not suite.is_test_selected(test):
-                continue
-            
+        for test in suite.get_tests(filtered=True):
             rt.begin_test(test)
             if self.abort_testsuite:
                 rt.error("Cannot execute this test: the tests of this test suite have been aborted.")
@@ -93,7 +87,7 @@ class Launcher:
             
             rt.end_test()
         
-        for sub_suite in suite.get_sub_testsuites():
+        for sub_suite in suite.get_sub_testsuites(filtered=True):
             self._run_testsuite(sub_suite)
 
         try:
@@ -112,6 +106,18 @@ class Launcher:
         project.load_settings()
         project.load_testsuites()
         
+        # retrieve test suites
+        if filter.is_empty():
+            testsuites = project.testsuites
+        else:
+            testsuites = []
+            for suite in project.testsuites:
+                suite.apply_filter(filter)
+                if suite.has_selected_tests():
+                    testsuites.append(suite)
+            if not testsuites:
+                raise LemonCheesecakeException("The test filter does not match any test.")
+                
         # initialize runtime & global test variables
         report_dir  = project.settings.reports_root_dir
         report_dir += os.path.sep
@@ -127,8 +133,7 @@ class Launcher:
         
         # run tests
         rt.begin_tests()
-        for suite in project.testsuites:
-            suite.apply_filter(filter)
+        for suite in testsuites:
             self._run_testsuite(suite)
         rt.end_tests()
 

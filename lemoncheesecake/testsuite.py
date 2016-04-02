@@ -48,9 +48,13 @@ class AbortAllTests(LemonCheesecakeException):
 class Filter:
     def __init__(self):
         self.test_id = []
-        self.testsuite_id = []
         self.test_description = []
+        self.testsuite_id = []
         self.testsuite_description = []
+    
+    def is_empty(self):
+        filters = self.test_id + self.testsuite_id + self.test_description + self.testsuite_description
+        return len(filters) == 0
     
     def match_test(self, test):
         # FIXME: what if two filter types are given ?
@@ -145,7 +149,7 @@ class TestSuite:
             self._sub_testsuites.append(suite)
         
         # filtering data
-        self._selected_test_ids = [ ]
+        self._selected_test_ids = [ t.id for t in self._tests ]
     
     def get_path(self):
         suites = [ self ]
@@ -186,11 +190,17 @@ class TestSuite:
     def load_dynamic_tests(self):
         pass
     
-    def get_tests(self):
-        return self._tests
+    def get_tests(self, filtered=True):
+        if filtered:
+            return filter(lambda t: self.is_test_selected(t), self._tests)
+        else:
+            return self._tests
     
-    def get_sub_testsuites(self):
-        return self._sub_testsuites
+    def get_sub_testsuites(self, filtered=True):
+        if filtered:
+            return filter(lambda s: s.has_selected_tests(deep=True), self._sub_testsuites)
+        else:
+            return self._sub_testsuites
     
     def get_suite_id(self):
         return self.id
