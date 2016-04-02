@@ -47,23 +47,23 @@ class AbortAllTests(LemonCheesecakeException):
 
 class Filter:
     def __init__(self):
-        self.test_id_filters = []
-        self.testsuite_id_filters = []
-        self.test_description_filters = []
-        self.testsuite_description_filters = []
+        self.test_id = []
+        self.testsuite_id = []
+        self.test_description = []
+        self.testsuite_description = []
     
     def match_test(self, test):
         # FIXME: what if two filter types are given ?
         
-        if self.test_id_filters:
-            for filter in self.test_id_filters:
-                if fnmatch(test.id, filter):
+        if self.test_id:
+            for id in self.test_id:
+                if fnmatch(test.id, id):
                     return True
             return False
         
-        if self.test_description_filters:
-            for filter in self.test_description_filters:
-                if fnmatch(test.description, filter):
+        if self.test_description:
+            for desc in self.test_description:
+                if fnmatch(test.description, desc):
                     return True
             return False
         
@@ -72,15 +72,15 @@ class Filter:
     def match_testsuite(self, suite):
         # FIXME: what if two filter types are given ?
         
-        if self.testsuite_id_filters:
-            for filter in self.testsuite_id_filters:
-                if fnmatch(suite.id, filter):
+        if self.testsuite_id:
+            for id in self.testsuite_id:
+                if fnmatch(suite.id, id):
                     return True
             return False
                 
-        if self.testsuite_description_filters:
-            for filter in self.testsuite_description_filters:
-                if fnmatch(suite.description, filter):
+        if self.testsuite_description:
+            for desc in self.testsuite_description:
+                if fnmatch(suite.description, desc):
                     return True
             return False
 
@@ -244,8 +244,8 @@ class TestSuite:
         for suite in self._sub_testsuites:
             suite.apply_filter(filter, suite_match)
 
-    def has_selected_tests(self, recursive=True):
-        if recursive:
+    def has_selected_tests(self, deep=True):
+        if deep:
             if self._selected_test_ids:
                 return True
              

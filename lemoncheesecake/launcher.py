@@ -50,7 +50,7 @@ class Launcher:
                 stacktrace = traceback.format_exc().decode("utf-8")
                 rt.error("Caught exception while running test: " + stacktrace)
         
-        if not suite.has_selected_tests(recursive=True):
+        if not suite.has_selected_tests(deep=True):
             return
         
         try:
@@ -135,10 +135,10 @@ class Launcher:
     def cli_run_testsuites(self, args):
         project = Project(".")
         filter = Filter()
-        filter.test_id_filters = args.test_id
-        filter.test_description_filters = args.test_desc
-        filter.testsuite_id_filters = args.suite_id
-        filter.testsuite_description_filters = args.suite_desc
+        filter.test_id = args.test_id
+        filter.test_description = args.test_desc
+        filter.testsuite_id = args.suite_id
+        filter.testsuite_description = args.suite_desc
         
         self.run_testsuites(project, filter)
         

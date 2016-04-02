@@ -45,7 +45,7 @@ class ConsoleBackend(ReportingBackend):
     def begin_testsuite(self, testsuite):
         self.current_test_idx = 1
 
-        if not testsuite.has_selected_tests(recursive=False):
+        if not testsuite.has_selected_tests(deep=False):
             return
 
         path = testsuite.get_path_str()
