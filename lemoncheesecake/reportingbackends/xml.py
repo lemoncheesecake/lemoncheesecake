@@ -10,6 +10,10 @@ from lemoncheesecake.reporting import ReportingBackend
 from lxml import etree as ET
 from lxml.builder import E
 
+OUTCOME_NOT_AVAILABLE = "n/a"
+OUTCOME_FAILURE = "failure"
+OUTCOME_SUCCESS = "success"
+
 def _xml_node(name, *args):
     node = E(name)
     i = 0
@@ -34,8 +38,14 @@ def _serialize_test_result(test):
                 log_node = _xml_child(step_node, "log", "level", entry.level)
                 log_node.text = entry.message
             else: # TestCheck
-                check_node = _xml_child(step_node, "check", "description", entry.description, "outcome", entry.outcome)
-                check_node.details = entry.details
+                if entry.outcome == True:
+                    outcome = OUTCOME_SUCCESS
+                elif entry.outcome == False:
+                    outcome = OUTCOME_FAILURE
+                else:
+                    outcome = OUTCOME_NOT_AVAILABLE
+                check_node = _xml_child(step_node, "check", "description", entry.description, "outcome", outcome)
+                check_node.text = entry.details
     return test_node
 
 def _serialize_testsuite_result(testsuite):

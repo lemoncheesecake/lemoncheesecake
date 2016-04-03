@@ -50,3 +50,6 @@ class ReportingBackend:
     
     def log(self, content, level):
         pass
+    
+    def check(self, description, outcome, details=None):
+        pass

@@ -1,4 +1,5 @@
 from lemoncheesecake.testsuite import *
+from lemoncheesecake.checkers import *
 
 class B(TestSuite):
     @test("Test of B")
@@ -22,6 +23,8 @@ class MyTestSuite(TestSuite):
         info("do test 1 !")
         step("step 2")
         info("something else")
+        check_eq("some value", 1, 1)
+        check_eq("some value", 1, 2)
     
     def foo(self):
         pass
