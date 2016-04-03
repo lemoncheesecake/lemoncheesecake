@@ -14,6 +14,23 @@ OUTCOME_NOT_AVAILABLE = "n/a"
 OUTCOME_FAILURE = "failure"
 OUTCOME_SUCCESS = "success"
 
+
+# borrowed from http://stackoverflow.com/a/1239193
+def _xml_indent(elem, level=0):
+    i = "\n" + level * "    "
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = i + "    "
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+        for elem in elem:
+            _xml_indent(elem, level+1)
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = i
+
 def _xml_node(name, *args):
     node = E(name)
     i = 0
@@ -67,6 +84,7 @@ def serialize_test_results(results):
 
 def serialize_test_results_into_file(results, filename):
     report = serialize_test_results(results)
+    _xml_indent(report)
     file = open(filename, "w")
     file.write(ET.tostring(report, pretty_print=True, xml_declaration=True, encoding="utf-8"))
     file.close()
