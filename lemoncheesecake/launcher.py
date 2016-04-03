@@ -138,13 +138,21 @@ class Launcher:
         rt.end_tests()
 
     def cli_run_testsuites(self, args):
-        project = Project(".")
+        # check CLI arguments
+        if args.test_id and args.test_desc:
+            raise LemonCheesecakeException("--test-id and --test-desc arguments are mutually exclusives")
+        if args.suite_id and args.suite_desc:
+            raise LemonCheesecakeException("--suite-id and --suite-desc arguments are mutually exclusives")
+
+        # init filter
         filter = Filter()
         filter.test_id = args.test_id
         filter.test_description = args.test_desc
         filter.testsuite_id = args.suite_id
         filter.testsuite_description = args.suite_desc
         
+        # init project and run tests
+        project = Project(".")
         self.run_testsuites(project, filter)
         
     def handle_cli(self):
