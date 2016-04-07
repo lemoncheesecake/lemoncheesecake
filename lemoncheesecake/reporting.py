@@ -33,10 +33,16 @@ class ReportingBackend:
     def end_tests(self):
         pass
     
-    def begin_testsuite(self, testsuite):
+    def begin_before_suite(self, testsuite):
         pass
     
-    def end_testsuite(self, testsuite):
+    def end_before_suite(self, testsuite):
+        pass
+    
+    def begin_after_suite(self, testsuite):
+        pass
+    
+    def end_after_suite(self, testsuite):
         pass
     
     def begin_test(self, test):

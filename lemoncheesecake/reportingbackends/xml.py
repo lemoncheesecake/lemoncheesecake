@@ -14,7 +14,6 @@ OUTCOME_NOT_AVAILABLE = "n/a"
 OUTCOME_FAILURE = "failure"
 OUTCOME_SUCCESS = "success"
 
-
 # borrowed from http://stackoverflow.com/a/1239193
 def _xml_indent(elem, level=0):
     i = "\n" + level * "    "
@@ -46,6 +45,13 @@ def _xml_child(parent_node, name, *args):
     parent_node.append(node)
     return node
 
+def _serialize_steps_with_log_only(steps, parent_node):
+    for step in steps:
+        step_node = _xml_child(parent_node, "step", "description", step.description)
+        for entry in step.entries:
+            log_node = _xml_child(step_node, "log", "level", entry.level)
+            log_node.text = entry.message
+
 def _serialize_test_result(test):
     test_node = _xml_node("test", "id", test.id, "description", test.description)
     for step in test.steps:
@@ -67,12 +73,25 @@ def _serialize_test_result(test):
 
 def _serialize_testsuite_result(testsuite):
     testsuite_node = _xml_node("testsuite", "id", testsuite.id, "description", testsuite.description)
+    
+    # before suite
+    before_suite_node = _xml_child(testsuite_node, "before_suite")
+    _serialize_steps_with_log_only(testsuite.before_suite_steps, before_suite_node)
+    
+    # tests
     for test in testsuite.tests:
         test_node = _serialize_test_result(test)
         testsuite_node.append(test_node)
+    
+    # sub suites
     for sub_suite in testsuite.sub_testsuites:
         sub_suite_node = _serialize_testsuite_result(sub_suite)
         testsuite_node.append(sub_suite_node)
+    
+    # after suite
+    after_suite_node = _xml_child(testsuite_node, "after_suite")
+    _serialize_steps_with_log_only(testsuite.after_suite_steps, after_suite_node)
+    
     return testsuite_node
 
 def serialize_test_results(results):

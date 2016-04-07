@@ -13,36 +13,48 @@ from lemoncheesecake.common import humanize_duration
 from colorama import init, Style, Fore
 from termcolor import colored
 
-prev_len = 0
-def write_on_line(value, force_len=None):
-    global prev_len
-    if prev_len:
-        sys.stdout.write("\b" * prev_len)
+class LinePrinter:
+    def __init__(self):
+        self.prev_len = 0
+    
+    def print_line(self, line, force_len=None):
+        value_len = force_len if force_len else len(line) 
+        if type(line) is unicode:
+            line = line.encode("utf-8")
+        
+        sys.stdout.write("\r")
+        sys.stdout.write(line)
+        if self.prev_len > value_len:
+            sys.stdout.write(" " * (self.prev_len - value_len))
+        sys.stdout.flush()
+        
+        self.prev_len = value_len
+    
+    def new_line(self):
+        self.prev_len = 0
+        sys.stdout.write("\n")
+        sys.stdout.flush()
+    
+    def erase_line(self):
+        sys.stdout.write("\r")
+        sys.stdout.write(" " * self.prev_len)
+        sys.stdout.write("\r")
+        self.prev_len = 0
 
-    value_len = force_len if force_len else len(value) 
-    if type(value) is unicode:
-        value = value.encode("utf-8")
-    sys.stdout.write(value)
-    if prev_len > value_len:
-        sys.stdout.write(" " * (prev_len - value_len))
-    prev_len = value_len
-    sys.stdout.write("\b" * (prev_len - value_len))
-    sys.stdout.flush()
-
-def flush_line():
-    global prev_len
-    prev_len = 0
-    sys.stdout.write("\n")
-    sys.stdout.flush()
+CTX_BEFORE_SUITE = 0
+CTX_TEST = 1
+CTX_AFTER_SUITE = 2
 
 class ConsoleBackend(ReportingBackend):
     def __init__(self):
         init() # init colorama
+        self.lp = LinePrinter()
     
     def begin_tests(self):
         self.previous_obj = None
  
-    def begin_testsuite(self, testsuite):
+    def begin_before_suite(self, testsuite):
+        self.context = CTX_BEFORE_SUITE
         self.current_test_idx = 1
 
         if not testsuite.has_selected_tests(deep=False):
@@ -54,13 +66,20 @@ class ConsoleBackend(ReportingBackend):
             sys.stdout.write("\n")
         sys.stdout.write("=" * 30 + " " + colored(testsuite.get_path_str(), attrs=["bold"]) + " " + "=" * (40 - path_len) + "\n")
         self.previous_obj = testsuite
-        
-    def end_testsuite(self, testsuite):
-        pass
     
+    def end_before_suite(self, testsuite):
+        self.lp.erase_line()
+        
+    def begin_after_suite(self, testsuite):
+        self.context = CTX_AFTER_SUITE
+    
+    def end_after_suite(self, testsuite):
+        self.lp.erase_line()
+        
     def begin_test(self, test):
+        self.context = CTX_TEST
         self.current_test_line = " -- %2s # %s" % (self.current_test_idx, test.id)
-        write_on_line(self.current_test_line + "...")
+        self.lp.print_line(self.current_test_line + "...")
         self.previous_obj = test
     
     def end_test(self, test, outcome):
@@ -69,15 +88,20 @@ class ConsoleBackend(ReportingBackend):
             self.current_test_idx, test.id
         )
         raw_line = "%s %2s # %s" % ("OK" if outcome else "KO", self.current_test_idx, test.id)
-        write_on_line(line, force_len=len(raw_line))
-        flush_line()
+        self.lp.print_line(line, force_len=len(raw_line))
+        self.lp.new_line()
         self.current_test_idx += 1
     
     def set_step(self, description):
-        description += "..."
-        line = "%s (%s)" % (self.current_test_line, description)
-        line = re.sub("^(.{70})(.+)(.{30})$", "\\1...\\3", line)
-        write_on_line(line)
+        if self.context == CTX_BEFORE_SUITE:
+            self.lp.print_line(" => before suite: %s" % description)
+        elif self.context == CTX_AFTER_SUITE:
+            self.lp.print_line(" => after suite: %s" % description)
+        else:
+            description += "..."
+            line = "%s (%s)" % (self.current_test_line, description)
+            line = re.sub("^(.{70})(.+)(.{30})$", "\\1...\\3", line)
+            self.lp.print_line(line)
     
     def log(self, content, level):
         pass

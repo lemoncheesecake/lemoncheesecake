@@ -34,8 +34,10 @@ class TestSuiteData:
         self.id = id
         self.description = description
         self.parent = parent
+        self.before_suite_steps = [ ]
         self.tests = [ ]
         self.sub_testsuites = [ ]
+        self.after_suite_steps = [ ]
 
 class ReportingData:
     def __init__(self):

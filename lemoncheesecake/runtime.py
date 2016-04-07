@@ -60,9 +60,12 @@ class _Runtime:
         self.reporting_data = ReportingData()
         self.report_backends = [ ]
         self.step_lock = False
+        # pointers to reporting data parts
         self.current_testsuite_data = None
         self.current_test_data = None
         self.current_step_data = None
+        self.current_step_data_list = None
+        # pointers to running test/testsuite
         self.current_test = None
         self.current_testsuite = None
     
@@ -81,7 +84,7 @@ class _Runtime:
         self.reporting_data.end_time = time.time()
         self.for_each_backend(lambda b: b.end_tests())
     
-    def begin_testsuite(self, testsuite):
+    def begin_before_suite(self, testsuite):        
         self.current_testsuite = testsuite
         suite_data = TestSuiteData(testsuite.id, testsuite.description, self.current_testsuite_data)
         if self.current_testsuite_data:
@@ -89,18 +92,32 @@ class _Runtime:
         else:
             self.reporting_data.testsuites.append(suite_data)
         self.current_testsuite_data = suite_data
-        
-        self.for_each_backend(lambda b: b.begin_testsuite(testsuite))
-    
-    def end_testsuite(self):
-        self.current_testsuite_data = self.current_testsuite_data.parent
-        self.for_each_backend(lambda b: b.end_testsuite(self.current_testsuite))
+        self.current_step_data_list = self.current_testsuite_data.before_suite_steps
 
+        self.for_each_backend(lambda b: b.begin_before_suite(testsuite))
+
+        self.step(DEFAULT_STEP)
+    
+    def end_before_suite(self):
+        self.for_each_backend(lambda b: b.end_before_suite(self.current_testsuite))
+        
+    def begin_after_suite(self, testsuite):
+        self.current_step_data_list = self.current_testsuite_data.after_suite_steps
+        self.for_each_backend(lambda b: b.begin_after_suite(testsuite))
+
+        self.step(DEFAULT_STEP)
+
+    def end_after_suite(self):
+        self.current_testsuite_data = self.current_testsuite_data.parent
+        self.for_each_backend(lambda b: b.end_after_suite(self.current_testsuite))
+        self.current_testsuite = None
+        
     def begin_test(self, test):
         self.current_test = test
         self.current_test_data = TestData(test.id, test.description)
         self.current_testsuite_data.tests.append(self.current_test_data)
         self.for_each_backend(lambda b: b.begin_test(test))
+        self.current_step_data_list = self.current_test_data.steps
         self.step(DEFAULT_STEP)
             
     def end_test(self):
@@ -108,19 +125,22 @@ class _Runtime:
             self.current_test_data.outcome = True
         
         self.for_each_backend(lambda b: b.end_test(self.current_test, self.current_test_data.outcome))
-    
+
+        self.current_test = None
+        self.current_test_data = None
+
     def step(self, description, force_lock=False):
         if self.step_lock and not force_lock:
             return
-        
-        # remove previous step from reportingdata if it was empty
-        if self.current_test_data.steps and not self.current_test_data.steps[-1].entries:
-            del self.current_test_data.steps[-1]
-        
+
         self.current_step = description
         self.current_step_data = StepData(description)
-        self.current_test_data.steps.append(self.current_step_data)
-        
+
+        # remove previous step from reporting data if it was empty
+        if self.current_step_data_list and not self.current_step_data_list[-1].entries:
+            del self.current_step_data_list[-1]
+        self.current_step_data_list.append(self.current_step_data)
+
         self.for_each_backend(lambda b: b.set_step(description))
         
     def log(self, level, content):
@@ -137,10 +157,14 @@ class _Runtime:
         self.log(LOG_LEVEL_WARN, content)
     
     def error(self, content):
-        self.current_test_data.outcome = False
+        if self.current_test_data:
+            self.current_test_data.outcome = False
         self.log(LOG_LEVEL_ERROR, content)
     
     def check(self, description, outcome, details=None):
+        if not self.current_test:
+            raise LemonCheesecakeInternalError("A check can only be associated to a test not a test suite")
+        
         self.current_step_data.entries.append(CheckData(description, outcome, details))
         
         if outcome == False:

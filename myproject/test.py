@@ -1,6 +1,8 @@
 from lemoncheesecake.testsuite import *
 from lemoncheesecake.checkers import *
 
+from time import sleep
+
 class B(TestSuite):
     @test("Test of B")
     def test_of_B(self):
@@ -8,6 +10,16 @@ class B(TestSuite):
 
 class A(TestSuite):
     sub_testsuite_classes = [ B ]
+
+    def before_suite(self):
+	step("hep csdcnlns csdlcsdl cubsd ucds")
+	sleep(1)
+	info("some stuff in before suite")
+
+    def after_suite(self):
+	step("hopi csdknclsdc lsdclusbcl ubsd")
+	sleep(1)
+	info("some other stuff in after suite")
     
     @test("Test of A")
     def test_of_A(self):
@@ -39,7 +51,7 @@ class MyTestSuite(TestSuite):
     @test("Third test")
     def third_test(self):
         error("something goes wrong")
-        raise AbortTestSuite()
+        #raise AbortTestSuite()
     
     def load_dynamic_tests(self):
         for i in range(4):

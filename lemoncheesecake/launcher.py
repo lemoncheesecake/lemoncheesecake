@@ -37,6 +37,9 @@ class Launcher:
         rt = get_runtime()
         
         def handle_exception(e):
+            stacktrace = traceback.format_exc().decode("utf-8")
+            print ("Caught exception while running test: " + stacktrace)
+            
             if isinstance(e, AbortTest):
                 rt.error("The test has been aborted")
             elif isinstance(e, AbortTestSuite):
@@ -49,15 +52,17 @@ class Launcher:
                 # FIXME; use exception instead of last implicit stracktrace
                 stacktrace = traceback.format_exc().decode("utf-8")
                 rt.error("Caught exception while running test: " + stacktrace)
-        
-        try:
-            rt.begin_testsuite(suite)
-        except Exception as e:
-            handle_exception(e)
-            self.abort_testsuite = suite 
-        
+
+        rt.begin_before_suite(suite)
+                
         if not self.abort_testsuite and not self.abort_all_tests:
-            suite.before_suite()
+            try:
+                suite.before_suite()
+            except Exception as e:
+                handle_exception(e)
+                self.abort_testsuite = suite
+            
+        rt.end_before_suite() 
         
         for test in suite.get_tests(filtered=True):
             rt.begin_test(test)
@@ -90,12 +95,14 @@ class Launcher:
         for sub_suite in suite.get_sub_testsuites(filtered=True):
             self._run_testsuite(sub_suite)
 
+        rt.begin_after_suite(suite)
+
         try:
             suite.after_suite()
         except Exception as e:
             handle_exception(e)
             
-        rt.end_testsuite()
+        rt.end_after_suite()
         
         # reset the abort suite flag
         if self.abort_testsuite == suite:
