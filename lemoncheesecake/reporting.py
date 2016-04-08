@@ -23,8 +23,8 @@ def has_backend(name):
     return _backends.has_key(name)
 
 class ReportingBackend:
-    def initialize(self, test_results, report_dir):
-        self.test_results = test_results
+    def initialize(self, reporting_data, report_dir):
+        self.reporting_data = reporting_data
         self.report_dir = report_dir
     
     def begin_tests(self):
