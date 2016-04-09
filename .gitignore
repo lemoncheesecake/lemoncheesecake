@@ -1,3 +1,4 @@
 *.pyc
 .*project
 myproject/reports/*
+.DS_Store
