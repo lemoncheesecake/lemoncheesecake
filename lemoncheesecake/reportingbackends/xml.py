@@ -75,7 +75,7 @@ def _serialize_testsuite_data(testsuite):
     testsuite_node = _xml_node("testsuite", "id", testsuite.id, "description", testsuite.description)
     
     # before suite
-    before_suite_node = _xml_child(testsuite_node, "before_suite")
+    before_suite_node = _xml_child(testsuite_node, "before-suite")
     _serialize_steps_with_log_only(testsuite.before_suite_steps, before_suite_node)
     
     # tests
@@ -89,13 +89,13 @@ def _serialize_testsuite_data(testsuite):
         testsuite_node.append(sub_suite_node)
     
     # after suite
-    after_suite_node = _xml_child(testsuite_node, "after_suite")
+    after_suite_node = _xml_child(testsuite_node, "after-suite")
     _serialize_steps_with_log_only(testsuite.after_suite_steps, after_suite_node)
     
     return testsuite_node
 
 def serialize_reporting_data(results):
-    report = E.lemoncheesecake_report()
+    report = E("lemoncheesecake-report")
     for suite in results.testsuites:
         suite_node = _serialize_testsuite_data(suite)
         report.append(suite_node)
