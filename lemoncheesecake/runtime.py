@@ -82,11 +82,13 @@ class _Runtime:
     
     def end_tests(self):
         self.reporting_data.end_time = time.time()
+        self.reporting_data.report_generation_time = self.reporting_data.end_time
         self.for_each_backend(lambda b: b.end_tests())
     
     def begin_before_suite(self, testsuite):        
         self.current_testsuite = testsuite
         suite_data = TestSuiteData(testsuite.id, testsuite.description, self.current_testsuite_data)
+        suite_data.before_suite_start_time = time.time()
         if self.current_testsuite_data:
             self.current_testsuite_data.sub_testsuites.append(suite_data)
         else:
@@ -99,15 +101,18 @@ class _Runtime:
         self.step(DEFAULT_STEP)
     
     def end_before_suite(self):
+        self.current_testsuite_data.before_suite_end_time = time.time()
         self.for_each_backend(lambda b: b.end_before_suite(self.current_testsuite))
         
     def begin_after_suite(self, testsuite):
+        self.current_testsuite_data.after_suite_start_time = time.time()
         self.current_step_data_list = self.current_testsuite_data.after_suite_steps
         self.for_each_backend(lambda b: b.begin_after_suite(testsuite))
 
         self.step(DEFAULT_STEP)
 
     def end_after_suite(self):
+        self.current_testsuite_data.after_suite_end_time = time.time()
         self.current_testsuite_data = self.current_testsuite_data.parent
         self.for_each_backend(lambda b: b.end_after_suite(self.current_testsuite))
         self.current_testsuite = None
@@ -115,6 +120,7 @@ class _Runtime:
     def begin_test(self, test):
         self.current_test = test
         self.current_test_data = TestData(test.id, test.description)
+        self.current_test_data.start_time = time.time()
         self.current_testsuite_data.tests.append(self.current_test_data)
         self.for_each_backend(lambda b: b.begin_test(test))
         self.current_step_data_list = self.current_test_data.steps
@@ -123,6 +129,7 @@ class _Runtime:
     def end_test(self):
         if self.current_test_data.outcome == None:
             self.current_test_data.outcome = True
+        self.current_test_data.end_time = time.time()
         
         self.for_each_backend(lambda b: b.end_test(self.current_test, self.current_test_data.outcome))
 

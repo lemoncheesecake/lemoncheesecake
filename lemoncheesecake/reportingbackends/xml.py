@@ -45,6 +45,11 @@ def _xml_child(parent_node, name, *args):
     parent_node.append(node)
     return node
 
+def _add_time_attr(node, name, value):
+    if not value:
+        return
+    node.attrib[name] = "%.3f" % value
+
 def _serialize_steps_with_log_only(steps, parent_node):
     for step in steps:
         step_node = _xml_child(parent_node, "step", "description", step.description)
@@ -54,6 +59,8 @@ def _serialize_steps_with_log_only(steps, parent_node):
 
 def _serialize_test_data(test):
     test_node = _xml_node("test", "id", test.id, "description", test.description)
+    _add_time_attr(test_node, "start-time", test.start_time)
+    _add_time_attr(test_node, "end-time", test.end_time)
     for step in test.steps:
         step_node = _xml_child(test_node, "step", "description", step.description)
         for entry in step.entries:
@@ -76,6 +83,9 @@ def _serialize_testsuite_data(testsuite):
     
     # before suite
     before_suite_node = _xml_child(testsuite_node, "before-suite")
+    _add_time_attr(before_suite_node, "start-time", testsuite.before_suite_start_time)
+    _add_time_attr(before_suite_node, "end-time", testsuite.before_suite_end_time)
+
     _serialize_steps_with_log_only(testsuite.before_suite_steps, before_suite_node)
     
     # tests
@@ -90,13 +100,18 @@ def _serialize_testsuite_data(testsuite):
     
     # after suite
     after_suite_node = _xml_child(testsuite_node, "after-suite")
+    _add_time_attr(after_suite_node, "start-time", testsuite.after_suite_start_time)
+    _add_time_attr(after_suite_node, "end-time", testsuite.after_suite_end_time)
     _serialize_steps_with_log_only(testsuite.after_suite_steps, after_suite_node)
     
     return testsuite_node
 
-def serialize_reporting_data(results):
+def serialize_reporting_data(data):
     report = E("lemoncheesecake-report")
-    for suite in results.testsuites:
+    _add_time_attr(report, "start-time", data.start_time)
+    _add_time_attr(report, "end-time", data.end_time)
+    _add_time_attr(report, "generation-time", data.report_generation_time)
+    for suite in data.testsuites:
         suite_node = _serialize_testsuite_data(suite)
         report.append(suite_node)
     return report

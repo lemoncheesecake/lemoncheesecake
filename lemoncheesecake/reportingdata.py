@@ -28,6 +28,8 @@ class TestData:
         self.description = description
         self.outcome = None
         self.steps = [ ]
+        self.start_time = None
+        self.end_time = None
 
 class TestSuiteData:
     def __init__(self, id, description, parent=None):
@@ -35,13 +37,20 @@ class TestSuiteData:
         self.description = description
         self.parent = parent
         self.before_suite_steps = [ ]
+        self.before_suite_start_time = None
+        self.before_suite_end_time = None
         self.tests = [ ]
         self.sub_testsuites = [ ]
         self.after_suite_steps = [ ]
+        self.after_suite_start_time = None
+        self.after_suite_end_time = None
 
 class ReportingData:
     def __init__(self):
         self.testsuites = [ ]
+        self.start_time = None
+        self.end_time = None
+        self.report_generation_time = None
         self.reset_stats()
     
     def reset_stats(self):
