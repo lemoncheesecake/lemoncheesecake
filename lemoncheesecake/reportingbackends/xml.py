@@ -64,6 +64,9 @@ def _serialize_test_data(test):
     for tag in test.tags:
         tag_node = _xml_child(test_node, "tag")
         tag_node.text = tag
+    for ticket in test.tickets:
+        ticket_node = _xml_child(test_node, "ticket", "id", ticket[0])
+        ticket_node.text = ticket[1]
     for step in test.steps:
         step_node = _xml_child(test_node, "step", "description", step.description)
         for entry in step.entries:
@@ -81,33 +84,39 @@ def _serialize_test_data(test):
                 check_node.text = entry.details
     return test_node
 
-def _serialize_testsuite_data(testsuite):
-    testsuite_node = _xml_node("testsuite", "id", testsuite.id, "description", testsuite.description)
+def _serialize_testsuite_data(suite):
+    suite_node = _xml_node("suite", "id", suite.id, "description", suite.description)
+    for tag in suite.tags:
+        tag_node = _xml_child(suite_node, "tag")
+        tag_node.text = tag
+    for ticket in suite.tickets:
+        ticket_node = _xml_child(suite_node, "ticket", "id", ticket[0])
+        ticket_node.text = ticket[1]
     
     # before suite
-    before_suite_node = _xml_child(testsuite_node, "before-suite")
-    _add_time_attr(before_suite_node, "start-time", testsuite.before_suite_start_time)
-    _add_time_attr(before_suite_node, "end-time", testsuite.before_suite_end_time)
+    before_suite_node = _xml_child(suite_node, "before-suite")
+    _add_time_attr(before_suite_node, "start-time", suite.before_suite_start_time)
+    _add_time_attr(before_suite_node, "end-time", suite.before_suite_end_time)
 
-    _serialize_steps_with_log_only(testsuite.before_suite_steps, before_suite_node)
+    _serialize_steps_with_log_only(suite.before_suite_steps, before_suite_node)
     
     # tests
-    for test in testsuite.tests:
+    for test in suite.tests:
         test_node = _serialize_test_data(test)
-        testsuite_node.append(test_node)
+        suite_node.append(test_node)
     
     # sub suites
-    for sub_suite in testsuite.sub_testsuites:
+    for sub_suite in suite.sub_testsuites:
         sub_suite_node = _serialize_testsuite_data(sub_suite)
-        testsuite_node.append(sub_suite_node)
+        suite_node.append(sub_suite_node)
     
     # after suite
-    after_suite_node = _xml_child(testsuite_node, "after-suite")
-    _add_time_attr(after_suite_node, "start-time", testsuite.after_suite_start_time)
-    _add_time_attr(after_suite_node, "end-time", testsuite.after_suite_end_time)
-    _serialize_steps_with_log_only(testsuite.after_suite_steps, after_suite_node)
+    after_suite_node = _xml_child(suite_node, "after-suite")
+    _add_time_attr(after_suite_node, "start-time", suite.after_suite_start_time)
+    _add_time_attr(after_suite_node, "end-time", suite.after_suite_end_time)
+    _serialize_steps_with_log_only(suite.after_suite_steps, after_suite_node)
     
-    return testsuite_node
+    return suite_node
 
 def serialize_reporting_data(data):
     report = E("lemoncheesecake-report")

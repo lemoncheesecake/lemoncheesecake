@@ -26,6 +26,8 @@ class TestData:
     def __init__(self, id, description):
         self.id = id
         self.description = description
+        self.tags = [ ]
+        self.tickets = [ ]
         self.outcome = None
         self.steps = [ ]
         self.start_time = None
@@ -37,6 +39,7 @@ class TestSuiteData:
         self.description = description
         self.parent = parent
         self.tags = [ ]
+        self.tickets = [ ]
         self.before_suite_steps = [ ]
         self.before_suite_start_time = None
         self.before_suite_end_time = None

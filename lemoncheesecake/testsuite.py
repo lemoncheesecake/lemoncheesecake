@@ -1,4 +1,5 @@
 import fnmatch
+import inspect
 
 from lemoncheesecake.common import LemonCheesecakeException, LemonCheesecakeInternalError
 from lemoncheesecake.runtime import get_runtime
@@ -126,6 +127,7 @@ class Test:
         self.description = description
         self.callback = callback
         self.tags = [ ]
+        self.tickets = [ ]
         self.rank = force_rank if force_rank != None else Test.test_current_rank
         Test.test_current_rank += 1
         
@@ -147,15 +149,29 @@ def test(description): # decorator shortcut
 
 def tags(*tag_names):
     def wrapper(obj):
-        if not isinstance(obj, TestSuite) and not isinstance(obj, Test):
-            raise LemonCheesecakeInternalError("Tags can only be added to Test and TestSuite objects")
-        obj.tags.extend(tag_names)
+        if (inspect.isclass(obj) and not issubclass(obj, TestSuite)) and not isinstance(obj, Test):
+            raise LemonCheesecakeInternalError("Tags can only be added to Test and TestSuite objects (got %s)" % type(obj))
+        obj.tags = tag_names
+        return obj
+    return wrapper
+
+def tickets(*tickets):
+    def wrapper(obj):
+        if (inspect.isclass(obj) and not issubclass(obj, TestSuite)) and not isinstance(obj, Test):
+            raise LemonCheesecakeInternalError("Tickets can only be added to Test and TestSuite objects (got %s)" % type(obj))
+        normalized_tickets = [ ]
+        for ticket in tickets:
+            if type(ticket) not in (tuple, list):
+                ticket = [ ticket, None ] 
+            normalized_tickets.append(ticket)
+        obj.tickets = normalized_tickets
         return obj
     return wrapper
 
 class TestSuite:
-    sub_testsuite_classes = [ ]
     tags = [ ]
+    tickets = [ ]
+    sub_testsuite_classes = [ ]        
     
     def load(self, parent_suite=None):
         self.parent_suite = parent_suite

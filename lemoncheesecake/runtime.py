@@ -88,6 +88,8 @@ class _Runtime:
     def begin_before_suite(self, testsuite):        
         self.current_testsuite = testsuite
         suite_data = TestSuiteData(testsuite.id, testsuite.description, self.current_testsuite_data)
+        suite_data.tags.extend(testsuite.tags)
+        suite_data.tickets.extend(testsuite.tickets)
         suite_data.before_suite_start_time = time.time()
         if self.current_testsuite_data:
             self.current_testsuite_data.sub_testsuites.append(suite_data)
@@ -120,7 +122,8 @@ class _Runtime:
     def begin_test(self, test):
         self.current_test = test
         self.current_test_data = TestData(test.id, test.description)
-        self.current_test_data.tags = test.tags
+        self.current_test_data.tags.extend(test.tags)
+        self.current_test_data.tickets.extend(test.tickets)
         self.current_test_data.start_time = time.time()
         self.current_testsuite_data.tests.append(self.current_test_data)
         self.for_each_backend(lambda b: b.begin_test(test))

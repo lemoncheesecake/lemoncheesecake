@@ -8,6 +8,7 @@ class B(TestSuite):
     def test_of_B(self):
         pass
 
+@tickets("1234")
 class A(TestSuite):
     sub_testsuite_classes = [ B ]
 
