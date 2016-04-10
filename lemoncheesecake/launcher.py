@@ -30,6 +30,7 @@ class Launcher:
         self.cli_run_parser.add_argument("--test-desc", nargs="+", default=[], help="Filters on test descriptions")
         self.cli_run_parser.add_argument("--suite-id", nargs="+", default=[], help="Filters on test suite IDs")
         self.cli_run_parser.add_argument("--suite-desc", nargs="+", default=[], help="Filters on test suite descriptions")
+        self.cli_run_parser.add_argument("--tag", nargs="+", default=[], help="Filters on test & test suite tags")
         reporting.register_backend("console", ConsoleBackend())
         reporting.register_backend("xml", XmlBackend())
     
@@ -37,9 +38,6 @@ class Launcher:
         rt = get_runtime()
         
         def handle_exception(e):
-            stacktrace = traceback.format_exc().decode("utf-8")
-            print ("Caught exception while running test: " + stacktrace)
-            
             if isinstance(e, AbortTest):
                 rt.error("The test has been aborted")
             elif isinstance(e, AbortTestSuite):
@@ -157,6 +155,7 @@ class Launcher:
         filter.test_description = args.test_desc
         filter.testsuite_id = args.suite_id
         filter.testsuite_description = args.suite_desc
+        filter.tags = args.tag
         
         # init project and run tests
         project = Project(".")

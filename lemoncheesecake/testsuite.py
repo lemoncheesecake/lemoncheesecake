@@ -1,6 +1,6 @@
-from fnmatch import fnmatch 
+import fnmatch
 
-from lemoncheesecake.common import LemonCheesecakeException
+from lemoncheesecake.common import LemonCheesecakeException, LemonCheesecakeInternalError
 from lemoncheesecake.runtime import get_runtime
 
 ###
@@ -45,50 +45,78 @@ class AbortAllTests(LemonCheesecakeException):
 # Test, TestSuite classes and decorators
 ###
 
+FILTER_SUITE_MATCH = 0x1
+FILTER_SUITE_MATCH_ID = 0x02
+FILTER_SUITE_MATCH_DESCRIPTION = 0x04
+FILTER_SUITE_MATCH_TAG = 0x08
+
 class Filter:
     def __init__(self):
         self.test_id = []
         self.test_description = []
         self.testsuite_id = []
         self.testsuite_description = []
+        self.tags = [ ]
     
     def is_empty(self):
-        filters = self.test_id + self.testsuite_id + self.test_description + self.testsuite_description
+        filters = self.test_id + self.testsuite_id + self.test_description + self.testsuite_description + self.tags
         return len(filters) == 0
     
-    def match_test(self, test):
-        # FIXME: what if two filter types are given ?
+    def match_test(self, test, parent_suite_match=0):
+        match = False
         
         if self.test_id:
             for id in self.test_id:
-                if fnmatch(test.id, id):
-                    return True
-            return False
+                if fnmatch.fnmatch(test.id, id):
+                    match = True
+                    break
+            if not match:
+                return False
         
         if self.test_description:
             for desc in self.test_description:
-                if fnmatch(test.description, desc):
-                    return True
-            return False
+                if fnmatch.fnmatch(test.description, desc):
+                    match = True
+                    break
+            if not match:
+                return False
+        
+        if self.tags and not parent_suite_match & FILTER_SUITE_MATCH_TAG:
+            for tag in self.tags:
+                if fnmatch.filter(test.tags, tag):
+                    match = True
+                    break
+            if not match:
+                return False
         
         return True
     
-    def match_testsuite(self, suite):
-        # FIXME: what if two filter types are given ?
+    def match_testsuite(self, suite, parent_suite_match=0):
+        match = 0
         
         if self.testsuite_id:
             for id in self.testsuite_id:
-                if fnmatch(suite.id, id):
-                    return True
-            return False
+                if fnmatch.fnmatch(suite.id, id):
+                    match |= FILTER_SUITE_MATCH_ID
+                    break
+            if not match & FILTER_SUITE_MATCH_ID:
+                return 0
                 
         if self.testsuite_description:
             for desc in self.testsuite_description:
-                if fnmatch(suite.description, desc):
-                    return True
-            return False
+                if fnmatch.fnmatch(suite.description, desc):
+                    match |= FILTER_SUITE_MATCH_DESCRIPTION
+                    break
+            if not match & FILTER_SUITE_MATCH_DESCRIPTION:
+                return 0
 
-        return True
+        if self.tags and not parent_suite_match & FILTER_SUITE_MATCH_TAG:
+            for tag in self.tags:
+                if fnmatch.filter(suite.tags, tag):
+                    match |= FILTER_SUITE_MATCH_TAG
+                    break
+
+        return match | FILTER_SUITE_MATCH
 
 class Test:
     test_current_rank = 1
@@ -97,6 +125,7 @@ class Test:
         self.id = id
         self.description = description
         self.callback = callback
+        self.tags = [ ]
         self.rank = force_rank if force_rank != None else Test.test_current_rank
         Test.test_current_rank += 1
         
@@ -116,8 +145,17 @@ class StaticTestDecorator:
 def test(description): # decorator shortcut
     return StaticTestDecorator(description)
 
+def tags(*tag_names):
+    def wrapper(obj):
+        if not isinstance(obj, TestSuite) and not isinstance(obj, Test):
+            raise LemonCheesecakeInternalError("Tags can only be added to Test and TestSuite objects")
+        obj.tags.extend(tag_names)
+        return obj
+    return wrapper
+
 class TestSuite:
     sub_testsuite_classes = [ ]
+    tags = [ ]
     
     def load(self, parent_suite=None):
         self.parent_suite = parent_suite
@@ -238,7 +276,7 @@ class TestSuite:
     # Filtering methods
     ###
     
-    def apply_filter(self, filter, parent_suite_match=False):
+    def apply_filter(self, filter, parent_suite_match=0):
         self._selected_test_ids = [ ]
         
         if parent_suite_match:
@@ -248,7 +286,7 @@ class TestSuite:
                 
         if suite_match:
             for test in self._tests:
-                if filter.match_test(test):
+                if filter.match_test(test, suite_match):
                     self._selected_test_ids.append(test.id)
         
         for suite in self._sub_testsuites:

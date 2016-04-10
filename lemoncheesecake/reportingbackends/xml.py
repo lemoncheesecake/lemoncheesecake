@@ -61,6 +61,9 @@ def _serialize_test_data(test):
     test_node = _xml_node("test", "id", test.id, "description", test.description)
     _add_time_attr(test_node, "start-time", test.start_time)
     _add_time_attr(test_node, "end-time", test.end_time)
+    for tag in test.tags:
+        tag_node = _xml_child(test_node, "tag")
+        tag_node.text = tag
     for step in test.steps:
         step_node = _xml_child(test_node, "step", "description", step.description)
         for entry in step.entries:

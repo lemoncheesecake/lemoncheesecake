@@ -36,6 +36,7 @@ class TestSuiteData:
         self.id = id
         self.description = description
         self.parent = parent
+        self.tags = [ ]
         self.before_suite_steps = [ ]
         self.before_suite_start_time = None
         self.before_suite_end_time = None

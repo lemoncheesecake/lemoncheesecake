@@ -120,6 +120,7 @@ class _Runtime:
     def begin_test(self, test):
         self.current_test = test
         self.current_test_data = TestData(test.id, test.description)
+        self.current_test_data.tags = test.tags
         self.current_test_data.start_time = time.time()
         self.current_testsuite_data.tests.append(self.current_test_data)
         self.for_each_backend(lambda b: b.begin_test(test))

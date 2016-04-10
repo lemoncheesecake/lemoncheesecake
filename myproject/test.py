@@ -29,6 +29,7 @@ class MyTestSuite(TestSuite):
     #description = "This is a my test suite"
     sub_testsuite_classes = [ A ]
     
+    @tags("my_tag1")
     @test("My test description")
     def this_is_a_test(self):
         step("step 1")
