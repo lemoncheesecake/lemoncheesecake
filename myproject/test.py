@@ -21,7 +21,7 @@ class A(TestSuite):
         step("hopi csdknclsdc lsdclusbcl ubsd")
         sleep(1)
         info("some other stuff in after suite")
-    
+
     @test("Test of A")
     def test_of_A(self):
         pass
@@ -42,7 +42,8 @@ class MyTestSuite(TestSuite):
     
     def foo(self):
         pass
-    
+
+    @tickets("1234")    
     @test("Second test")
     def second_test(self):
         info("do test 2 !")

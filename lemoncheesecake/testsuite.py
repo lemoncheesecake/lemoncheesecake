@@ -46,10 +46,10 @@ class AbortAllTests(LemonCheesecakeException):
 # Test, TestSuite classes and decorators
 ###
 
-FILTER_SUITE_MATCH = 0x1
-FILTER_SUITE_MATCH_ID = 0x02
-FILTER_SUITE_MATCH_DESCRIPTION = 0x04
-FILTER_SUITE_MATCH_TAG = 0x08
+FILTER_SUITE_MATCH_ID = 0x01
+FILTER_SUITE_MATCH_DESCRIPTION = 0x02
+FILTER_SUITE_MATCH_TAG = 0x04
+FILTER_SUITE_MATCH_TICKET = 0x08
 
 class Filter:
     def __init__(self):
@@ -58,10 +58,19 @@ class Filter:
         self.testsuite_id = []
         self.testsuite_description = []
         self.tags = [ ]
+        self.tickets = [ ]
     
     def is_empty(self):
-        filters = self.test_id + self.testsuite_id + self.test_description + self.testsuite_description + self.tags
+        filters = self.test_id + self.testsuite_id + self.test_description + self.testsuite_description + self.tags + self.tickets
         return len(filters) == 0
+    
+    def get_flags_to_match_testsuite(self):
+        flags = 0
+        if self.testsuite_id:
+            flags |= FILTER_SUITE_MATCH_ID
+        if self.testsuite_description:
+            flags |= FILTER_SUITE_MATCH_DESCRIPTION
+        return flags
     
     def match_test(self, test, parent_suite_match=0):
         match = False
@@ -89,27 +98,31 @@ class Filter:
                     break
             if not match:
                 return False
+                
+        if self.tickets and not parent_suite_match & FILTER_SUITE_MATCH_TICKET:
+            for ticket in self.tickets:
+                if ticket in [ t[0] for t in test.tickets ]:
+                    match = True
+                    break
+            if not match:
+                return False
         
         return True
     
     def match_testsuite(self, suite, parent_suite_match=0):
         match = 0
         
-        if self.testsuite_id:
+        if self.testsuite_id and not parent_suite_match & FILTER_SUITE_MATCH_ID:
             for id in self.testsuite_id:
                 if fnmatch.fnmatch(suite.id, id):
                     match |= FILTER_SUITE_MATCH_ID
                     break
-            if not match & FILTER_SUITE_MATCH_ID:
-                return 0
                 
-        if self.testsuite_description:
+        if self.testsuite_description and not parent_suite_match & FILTER_SUITE_MATCH_DESCRIPTION:
             for desc in self.testsuite_description:
                 if fnmatch.fnmatch(suite.description, desc):
                     match |= FILTER_SUITE_MATCH_DESCRIPTION
                     break
-            if not match & FILTER_SUITE_MATCH_DESCRIPTION:
-                return 0
 
         if self.tags and not parent_suite_match & FILTER_SUITE_MATCH_TAG:
             for tag in self.tags:
@@ -117,7 +130,13 @@ class Filter:
                     match |= FILTER_SUITE_MATCH_TAG
                     break
 
-        return match | FILTER_SUITE_MATCH
+        if self.tickets and not parent_suite_match & FILTER_SUITE_MATCH_TICKET:
+            for ticket in self.tickets:
+                if ticket in [ t[0] for t in suite.tickets ]:
+                    match |= FILTER_SUITE_MATCH_TICKET
+                    break
+
+        return match
 
 class Test:
     test_current_rank = 1
@@ -295,14 +314,13 @@ class TestSuite:
     def apply_filter(self, filter, parent_suite_match=0):
         self._selected_test_ids = [ ]
         
-        if parent_suite_match:
-            suite_match = parent_suite_match
-        else:
-            suite_match = filter.match_testsuite(self)
-                
-        if suite_match:
+        suite_match = filter.match_testsuite(self, parent_suite_match)
+        suite_match |= parent_suite_match
+        
+        if suite_match & filter.get_flags_to_match_testsuite() == filter.get_flags_to_match_testsuite():
             for test in self._tests:
-                if filter.match_test(test, suite_match):
+                test_match = filter.match_test(test, suite_match)
+                if test_match:
                     self._selected_test_ids.append(test.id)
         
         for suite in self._sub_testsuites:

@@ -31,6 +31,7 @@ class Launcher:
         self.cli_run_parser.add_argument("--suite-id", nargs="+", default=[], help="Filters on test suite IDs")
         self.cli_run_parser.add_argument("--suite-desc", nargs="+", default=[], help="Filters on test suite descriptions")
         self.cli_run_parser.add_argument("--tag", nargs="+", default=[], help="Filters on test & test suite tags")
+        self.cli_run_parser.add_argument("--ticket", nargs="+", default=[], help="Filters on test & test suite tickets")
         reporting.register_backend("console", ConsoleBackend())
         reporting.register_backend("xml", XmlBackend())
     
@@ -156,6 +157,7 @@ class Launcher:
         filter.testsuite_id = args.suite_id
         filter.testsuite_description = args.suite_desc
         filter.tags = args.tag
+        filter.tickets = args.ticket
         
         # init project and run tests
         project = Project(".")
