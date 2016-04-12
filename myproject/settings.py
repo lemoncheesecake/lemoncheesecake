@@ -11,4 +11,4 @@ TESTSUITES = [ MyTestSuite, MyTestSuite1 ]
 # Reporting
 REPORTING_ROOT_DIR = "reports"
 REPORTING_DIR_FORMAT = reporting_dir_with_datetime
-REPORTING_BACKENDS = "console", "xml"
+REPORTING_BACKENDS = "console", "xml", "json"

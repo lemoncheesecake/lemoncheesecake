@@ -17,6 +17,7 @@ from lemoncheesecake.common import LemonCheesecakeException
 from lemoncheesecake import reporting
 from lemoncheesecake.reportingbackends.console import ConsoleBackend
 from lemoncheesecake.reportingbackends.xml import XmlBackend
+from lemoncheesecake.reportingbackends.json_ import JsonBackend
 from lemoncheesecake.testsuite import Filter, AbortTest, AbortTestSuite, AbortAllTests
 
 COMMAND_RUN = "run"
@@ -34,6 +35,7 @@ class Launcher:
         self.cli_run_parser.add_argument("--ticket", "-i", nargs="+", default=[], help="Filters on test & test suite tickets")
         reporting.register_backend("console", ConsoleBackend())
         reporting.register_backend("xml", XmlBackend())
+        reporting.register_backend("json", JsonBackend())
     
     def _run_testsuite(self, suite):
         rt = get_runtime()
