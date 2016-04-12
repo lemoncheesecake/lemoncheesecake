@@ -27,7 +27,7 @@ class A(TestSuite):
         pass
 
 class MyTestSuite(TestSuite):
-    #description = "This is a my test suite"
+    description = "zzz"
     sub_testsuite_classes = [ A ]
     
     @tags("my_tag1")

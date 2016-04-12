@@ -26,12 +26,12 @@ class Launcher:
         self.cli_parser = argparse.ArgumentParser()
         subparsers = self.cli_parser.add_subparsers(dest="command")
         self.cli_run_parser = subparsers.add_parser(COMMAND_RUN)
-        self.cli_run_parser.add_argument("--test-id", nargs="+", default=[], help="Filters on test IDs")
+        self.cli_run_parser.add_argument("--test-id", "-t", nargs="+", default=[], help="Filters on test IDs")
         self.cli_run_parser.add_argument("--test-desc", nargs="+", default=[], help="Filters on test descriptions")
-        self.cli_run_parser.add_argument("--suite-id", nargs="+", default=[], help="Filters on test suite IDs")
+        self.cli_run_parser.add_argument("--suite-id", "-s", nargs="+", default=[], help="Filters on test suite IDs")
         self.cli_run_parser.add_argument("--suite-desc", nargs="+", default=[], help="Filters on test suite descriptions")
-        self.cli_run_parser.add_argument("--tag", nargs="+", default=[], help="Filters on test & test suite tags")
-        self.cli_run_parser.add_argument("--ticket", nargs="+", default=[], help="Filters on test & test suite tickets")
+        self.cli_run_parser.add_argument("--tag", "-a", nargs="+", default=[], help="Filters on test & test suite tags")
+        self.cli_run_parser.add_argument("--ticket", "-i", nargs="+", default=[], help="Filters on test & test suite tickets")
         reporting.register_backend("console", ConsoleBackend())
         reporting.register_backend("xml", XmlBackend())
     
@@ -144,12 +144,6 @@ class Launcher:
         rt.end_tests()
 
     def cli_run_testsuites(self, args):
-        # check CLI arguments
-        if args.test_id and args.test_desc:
-            raise LemonCheesecakeException("--test-id and --test-desc arguments are mutually exclusives")
-        if args.suite_id and args.suite_desc:
-            raise LemonCheesecakeException("--suite-id and --suite-desc arguments are mutually exclusives")
-
         # init filter
         filter = Filter()
         filter.test_id = args.test_id
