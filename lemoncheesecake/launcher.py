@@ -14,11 +14,12 @@ import traceback
 from lemoncheesecake.project import Project
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.common import LemonCheesecakeException
+from lemoncheesecake.testsuite import Filter, AbortTest, AbortTestSuite, AbortAllTests
 from lemoncheesecake import reporting
 from lemoncheesecake.reportingbackends.console import ConsoleBackend
 from lemoncheesecake.reportingbackends.xml import XmlBackend
 from lemoncheesecake.reportingbackends.json_ import JsonBackend
-from lemoncheesecake.testsuite import Filter, AbortTest, AbortTestSuite, AbortAllTests
+from lemoncheesecake.reportingbackends.html import HtmlBackend
 
 COMMAND_RUN = "run"
 
@@ -36,6 +37,7 @@ class Launcher:
         reporting.register_backend("console", ConsoleBackend())
         reporting.register_backend("xml", XmlBackend())
         reporting.register_backend("json", JsonBackend())
+        reporting.register_backend("html", HtmlBackend())
     
     def _run_testsuite(self, suite):
         rt = get_runtime()
