@@ -28,7 +28,8 @@ def _serialize_test_data(test):
         "end_time": _time_value(test.end_time),
         "tags": test.tags,
         "tickets": [ { "id": t[0], "url": t[1] } for t in test.tickets ],
-        "steps": [ ]
+        "steps": [ ],
+        "outcome": test.outcome
     }
         
     for step in test.steps:
