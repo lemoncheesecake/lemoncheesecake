@@ -25,22 +25,25 @@ Report.prototype = {
 	},
 		
 	render_test_suite: function (suite) {
-		var rows = [ ];
-		for (i in suite.tests) {
-		    test = suite.tests[i];
-		    $row = this.render_test(test);
-		    rows.push($row);
-		}
-		
 		var $panel = $("<div class='panel panel-default panel-primary'>")
 			.append("<div class='panel-heading'>Suite: " + suite.description + "</div>");
 		var $panel_body = $("<div class='panel-body'>");
 		$panel.append($panel_body);
-		var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
-			.append($("<thead><tr><th>Test description</th><th>Outcome</th></tr></thead>"))
-			.append($("<tbody>").append(rows));
-		$panel_body.append($table);
 
+		if (suite.tests.length > 0) {
+			var rows = [ ];
+			for (i in suite.tests) {
+			    test = suite.tests[i];
+			    $row = this.render_test(test);
+			    rows.push($row);
+			}
+			
+			var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
+				.append($("<thead><tr><th>Test description</th><th>Outcome</th></tr></thead>"))
+				.append($("<tbody>").append(rows));
+			$panel_body.append($table);
+		}
+		
 		for (i in suite.sub_suites) {
 			sub_suite = suite.sub_suites[i];
 			$panel_body.append(this.render_test_suite(sub_suite));
