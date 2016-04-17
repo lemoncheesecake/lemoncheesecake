@@ -35,6 +35,7 @@ class MyTestSuite(TestSuite):
     def this_is_a_test(self):
         step("step 1")
         info("do test 1 !")
+        check_list_len_eq("my list", [1,2], 1)
         step("step 2")
         info("something else")
         check_eq("some value", 1, 1)
@@ -66,7 +67,7 @@ class MyTestSuite1(TestSuite):
     class C(TestSuite):
         @test("C test 1")
         def c_test_1(self):
-            pass
+            assert_eq("value", 32, 54)
     
     class D(TestSuite):
         @test("D test 1")
