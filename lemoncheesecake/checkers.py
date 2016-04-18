@@ -22,21 +22,24 @@ class Check:
     value_type = None
     
     def __init__(self, assertion=False):
-        self._assertion = assertion
+        self.assertion = assertion
+    
+    def handle_assertion(self, outcome):
+        if self.assertion and not outcome:
+            raise AbortTest()
+        return outcome
     
     def __call__(self, name, actual, expected):
-        outcome = self.compare(actual, expected)
+        ret = self.compare(name, actual, expected)
+        return self.handle_assertion(ret)
+    
+    def compare(self, name, actual, expected):
+        outcome = self.comparator(actual, expected)
         description = self.description(name, expected)
         details = None
         if not outcome or self.always_details:
             details = self.details(actual)
-        ret = check(description, outcome, details)
-        if self.assertion and not ret:
-            raise AbortTest()
-    
-    def compare(self, actual, expected):
-        callback = self.comparator
-        return callback(actual, expected)
+        return check(description, outcome, details)
     
     def description(self, name, expected):
         description = self.description_prefix
@@ -113,6 +116,67 @@ class CheckListLen(Check):
     comparator = staticmethod(lambda a, e: len(a) == e)
     details = staticmethod(lambda a: "Got %d elements: %s" % (len(a), a))
 check_list_len_eq, assert_list_len_eq = check_and_assert(CheckListLen)
+check_list_len, assert_list_len = check_list_len_eq, assert_list_len_eq
 
 check_list_eq, assert_list_eq = check_eq, assert_eq
 check_list, assert_list = check_list_eq, assert_list_eq
+
+class CheckListContains(Check):
+    description_fmt = "'{name}' list contains elements: {expected}"
+    
+    def compare(self, name, actual, expected):
+        description = self.description(name, expected)
+        
+        missing = expected[:]
+        for elem in missing:
+            if elem in actual:
+                missing.remove(elem)
+        if missing:
+            details = "Missing elements %s in list %s" % (missing, actual)
+            return check(description, False, details)
+        else:
+            return check(description, True, None)
+check_list_contains, assert_list_contains = check_and_assert(CheckListContains)
+
+################################################################################
+# dict checkers 
+################################################################################
+
+class CheckDictHasKey(Check):
+    description_fmt = "'{name}' has entry '{expected}'"
+    comparator = staticmethod(lambda a, e: a.has_key(e))
+check_dict_has_key, assert_dict_has_key = check_and_assert(CheckDictHasKey)
+
+class CheckDictValue(Check):
+    def __call__(self, expected_key, actual, expected_value, value_checker):
+        if actual.has_key(expected_key):
+            ret = value_checker(expected_key, actual[expected_key], expected_value)
+        else:
+            check(value_checker.description(expected_key, expected_value), False,
+                  "There is no key '%s'" % expected_key)
+            ret = False
+        return self.handle_assertion(ret)
+check_dict_value, assert_dict_value = check_and_assert(CheckDictValue)
+
+class CheckDictValue2(Check):
+    def __call__(self, expected_key, actual, expected, value_checker):
+        if actual.has_key(expected_key):
+            ret = value_checker(expected_key, actual[expected_key], expected[expected_key])
+        else:
+            check(value_checker.description(expected_key, expected[expected_key]), False,
+                  "There is no key '%s'" % expected_key)
+            ret = False
+        return self.handle_assertion(ret)
+check_dict_value2, assert_dict_value2 = check_and_assert(CheckDictValue2)
+
+class CheckDictValue2WithDefault(Check):
+    def __call__(self, expected_key, actual, expected, value_checker, default):
+        if actual.has_key(expected_key):
+            expected_value = expected.get(expected_key, default)
+            ret = value_checker(expected_key, actual[expected_key], expected_value)
+        else:
+            check(value_checker.description(expected_key, expected[expected_key]), False,
+                  "There is no key '%s'" % expected_key)
+            ret = False
+        return self.handle_assertion(ret)
+check_dict_value2_with_default, assert_dict_value2_with_default = check_and_assert(CheckDictValue2WithDefault)

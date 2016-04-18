@@ -35,7 +35,11 @@ class MyTestSuite(TestSuite):
     def this_is_a_test(self):
         step("step 1")
         info("do test 1 !")
-        check_list_len_eq("my list", [1,2], 1)
+        check_list_len("my list", [1,2], 3)
+        check_list_contains("my other list", [ 1, 2, 3 ], [ 1, 4])
+        check_dict_has_key("my dict", { "foo": 33 }, "fool")
+        check_dict_value2("bar", { "bar": 33 }, { "bar": 33 }, check_eq)
+        check_dict_value2_with_default("bar", { "bar": 33 }, { "ball": 11 }, check_eq, default=33)
         step("step 2")
         info("something else")
         check_eq("some value", 1, 1)
