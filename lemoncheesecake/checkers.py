@@ -7,6 +7,7 @@ Created on Jan 24, 2016
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.testsuite import AbortTest
 
+import sys
 import re
 
 def check(description, outcome, details=None):
@@ -52,6 +53,23 @@ class Check:
 def check_and_assert(checker):
     return checker(), checker(assertion=True)
 
+def do_register(name, checker_inst, assertion_inst):
+    setattr(sys.modules[__name__], "check_%s" % name, checker_inst)
+    setattr(sys.modules[__name__], "assert_%s" % name, assertion_inst)
+
+def register_checker(name, checker, alias=None):
+    checker_inst = checker()
+    assertion_inst = checker(assertion=True)
+    do_register(name, checker_inst, assertion_inst)
+    if alias:
+        do_register(alias, checker_inst, assertion_inst)
+
+def alias_checker(alias, name):
+    do_register(alias,
+        getattr(sys.modules[__name__], "check_%s" % name),
+        getattr(sys.modules[__name__], "assert_%s" % name)
+    )
+
 ################################################################################
 # Equality / non-equality checkers 
 ################################################################################
@@ -59,12 +77,12 @@ def check_and_assert(checker):
 class CheckEq(Check):
     description_fmt = "'{name}' is equal to {expected}"
     comparator = staticmethod(lambda a, e: a == e)
-check_eq, assert_eq = check_and_assert(CheckEq)
+register_checker("eq", CheckEq)
 
 class CheckNotEq(Check):
     description_fmt = "'{name}' is not equal to {expected}"
     comparator = staticmethod(lambda a, e: a != e)
-check_not_eq, assert_not_eq = check_and_assert(CheckNotEq)
+register_checker("not_eq", CheckNotEq)
 
 ################################################################################
 # Greater than and Greater than or equal checkers 
@@ -73,12 +91,12 @@ check_not_eq, assert_not_eq = check_and_assert(CheckNotEq)
 class CheckGt(Check):
     description_fmt = "'{name}' is greater than {expected}"
     comparator = staticmethod(lambda a, e: a > e)
-check_gt, assert_gt = check_and_assert(CheckGt)
+register_checker("gt", CheckGt)
 
 class CheckGteq(Check):
     description_fmt = "'{name}' is greater or equal than {expected}"
     comparator = staticmethod(lambda a, e: a >= e)
-check_gteq, assert_gteq = check_and_assert(CheckGteq)
+register_checker("gteq", CheckGteq)
 
 ################################################################################
 # Lower than and Lower than or equal checkers 
@@ -87,12 +105,12 @@ check_gteq, assert_gteq = check_and_assert(CheckGteq)
 class CheckLt(Check):
     description_fmt = "'{name}' is lower than {expected}"
     comparator = staticmethod(lambda a, e: a < e)
-check_lt, assert_lt = check_and_assert(CheckLt)
+register_checker("lt", CheckLt)
 
 class CheckLteq(Check):
     description_fmt = "'{name}' is lower or equal than {expected}"
     comparator = staticmethod(lambda a, e: a <= e)
-check_lteq, assert_lteq = check_and_assert(CheckLteq)
+register_checker("lteq", CheckLteq)
 
 ################################################################################
 # str checkers 
@@ -100,26 +118,24 @@ check_lteq, assert_lteq = check_and_assert(CheckLteq)
 
 class CheckStrEq(CheckEq):
     description_fmt = "'{name}' is equal to '{expected}'"
-check_str_eq, assert_str_eq = check_and_assert(CheckStrEq)
-check_str, assert_str = check_str_eq, assert_str_eq
+register_checker("str_eq", CheckStrEq, alias="str")
 
 class CheckStrNotEq(CheckNotEq):
     description_fmt = "'{name}' is not equal to '{expected}'"
-check_str_not_eq, assert_str_not_eq = check_and_assert(CheckStrNotEq)
+register_checker("str_no_eq", CheckStrNotEq)
 
 ################################################################################
 # list checkers 
 ################################################################################
 
+alias_checker("list_eq", "eq")
+alias_checker("list", "list_eq")
+
 class CheckListLen(Check):
     description_fmt = "'{name}' list has {expected} elements"
     comparator = staticmethod(lambda a, e: len(a) == e)
     details = staticmethod(lambda a: "Got %d elements: %s" % (len(a), a))
-check_list_len_eq, assert_list_len_eq = check_and_assert(CheckListLen)
-check_list_len, assert_list_len = check_list_len_eq, assert_list_len_eq
-
-check_list_eq, assert_list_eq = check_eq, assert_eq
-check_list, assert_list = check_list_eq, assert_list_eq
+register_checker("list_len_eq", CheckListLen, alias="list_len")
 
 class CheckListContains(Check):
     description_fmt = "'{name}' list contains elements: {expected}"
@@ -136,7 +152,7 @@ class CheckListContains(Check):
             return check(description, False, details)
         else:
             return check(description, True, None)
-check_list_contains, assert_list_contains = check_and_assert(CheckListContains)
+register_checker("list_contains", CheckListContains)
 
 ################################################################################
 # dict checkers 
@@ -145,7 +161,7 @@ check_list_contains, assert_list_contains = check_and_assert(CheckListContains)
 class CheckDictHasKey(Check):
     description_fmt = "'{name}' has entry '{expected}'"
     comparator = staticmethod(lambda a, e: a.has_key(e))
-check_dict_has_key, assert_dict_has_key = check_and_assert(CheckDictHasKey)
+register_checker("dict_has_key", CheckDictHasKey)
 
 class CheckDictValue(Check):
     def __call__(self, expected_key, actual, expected_value, value_checker):
@@ -156,7 +172,7 @@ class CheckDictValue(Check):
                   "There is no key '%s'" % expected_key)
             ret = False
         return self.handle_assertion(ret)
-check_dict_value, assert_dict_value = check_and_assert(CheckDictValue)
+register_checker("dict_value", CheckDictValue)
 
 class CheckDictValue2(Check):
     def __call__(self, expected_key, actual, expected, value_checker):
@@ -167,7 +183,7 @@ class CheckDictValue2(Check):
                   "There is no key '%s'" % expected_key)
             ret = False
         return self.handle_assertion(ret)
-check_dict_value2, assert_dict_value2 = check_and_assert(CheckDictValue2)
+register_checker("dict_value2", CheckDictValue2)
 
 class CheckDictValue2WithDefault(Check):
     def __call__(self, expected_key, actual, expected, value_checker, default):
@@ -179,4 +195,4 @@ class CheckDictValue2WithDefault(Check):
                   "There is no key '%s'" % expected_key)
             ret = False
         return self.handle_assertion(ret)
-check_dict_value2_with_default, assert_dict_value2_with_default = check_and_assert(CheckDictValue2WithDefault)
+register_checker("dict_value2_with_default", CheckDictValue2WithDefault)
