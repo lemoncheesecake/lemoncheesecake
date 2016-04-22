@@ -15,15 +15,15 @@ def check(description, outcome, details=None):
 
 class Check:
     assertion = False
-    description_prefix = "Verify that "
-    description_fmt = None
-    comparator = None
     always_details = False
-    details_fmt = "Got {actual}"
+    comparator = None
+    description_prefix = "Verify that "
+    comparator_label = None
     value_type = None
     
-    def __init__(self, assertion=False):
+    def __init__(self, assertion=False, value_type=None):
         self.assertion = assertion
+        self.value_type = value_type
     
     def handle_assertion(self, outcome):
         if self.assertion and not outcome:
@@ -35,20 +35,27 @@ class Check:
         return self.handle_assertion(ret)
     
     def compare(self, name, actual, expected):
+        description = self.format_description(name, expected)
+        if self.value_type:
+            if type(actual) != self.value_type:
+                return check(description, False, self.details(actual) + "()")
         outcome = self.comparator(actual, expected)
-        description = self.description(name, expected)
         details = None
         if not outcome or self.always_details:
             details = self.details(actual)
         return check(description, outcome, details)
     
-    def description(self, name, expected):
-        description = self.description_prefix
-        description += self.description_fmt.format(name=name, expected=expected)
-        return description
+    def format_value(self, value):
+        return "%s" % value
     
-    def details(self, actual):
-        return self.details_fmt.format(actual=actual)
+    def format_description(self, name, expected):
+        return "{prefix} {name} {comparator} {expected}".format(
+            prefix=self.description_prefix, name=name,
+            comparator=self.comparator_label, self.format_value(expected)
+        )
+    
+    def format_details(self, actual):
+        return "Got %s" % self.format(actual)
 
 def check_and_assert(checker):
     return checker(), checker(assertion=True)
@@ -57,9 +64,9 @@ def do_register(name, checker_inst, assertion_inst):
     setattr(sys.modules[__name__], "check_%s" % name, checker_inst)
     setattr(sys.modules[__name__], "assert_%s" % name, assertion_inst)
 
-def register_checker(name, checker, alias=None):
-    checker_inst = checker()
-    assertion_inst = checker(assertion=True)
+def register_checker(name, checker, alias=None, value_type=None):
+    checker_inst = checker(value_type=value_type)
+    assertion_inst = checker(assertion=True, value_type=value_type)
     do_register(name, checker_inst, assertion_inst)
     if alias:
         do_register(alias, checker_inst, assertion_inst)
@@ -75,7 +82,7 @@ def alias_checker(alias, name):
 ################################################################################
 
 class CheckEq(Check):
-    description_fmt = "'{name}' is equal to {expected}"
+    comparator_label = "is equal to"
     comparator = staticmethod(lambda a, e: a == e)
 register_checker("eq", CheckEq)
 
@@ -89,12 +96,12 @@ register_checker("not_eq", CheckNotEq)
 ################################################################################
 
 class CheckGt(Check):
-    description_fmt = "'{name}' is greater than {expected}"
+    comparator_label = "is greater than"
     comparator = staticmethod(lambda a, e: a > e)
 register_checker("gt", CheckGt)
 
 class CheckGteq(Check):
-    description_fmt = "'{name}' is greater or equal than {expected}"
+    comparator_label = "is greater or equal than"
     comparator = staticmethod(lambda a, e: a >= e)
 register_checker("gteq", CheckGteq)
 
@@ -103,12 +110,12 @@ register_checker("gteq", CheckGteq)
 ################################################################################
 
 class CheckLt(Check):
-    description_fmt = "'{name}' is lower than {expected}"
+    comparator_label = "is lower than"
     comparator = staticmethod(lambda a, e: a < e)
 register_checker("lt", CheckLt)
 
 class CheckLteq(Check):
-    description_fmt = "'{name}' is lower or equal than {expected}"
+    comparator_label = "is lower or equal than"
     comparator = staticmethod(lambda a, e: a <= e)
 register_checker("lteq", CheckLteq)
 
@@ -117,11 +124,11 @@ register_checker("lteq", CheckLteq)
 ################################################################################
 
 class CheckStrEq(CheckEq):
-    description_fmt = "'{name}' is equal to '{expected}'"
+    format_value = staticmethod(lambda s: "'%s'"% s)
 register_checker("str_eq", CheckStrEq, alias="str")
 
-class CheckStrNotEq(CheckNotEq):
-    description_fmt = "'{name}' is not equal to '{expected}'"
+class CheckStrNotEq(CheckStrEq, CheckNotEq):
+    pass
 register_checker("str_no_eq", CheckStrNotEq)
 
 ################################################################################
