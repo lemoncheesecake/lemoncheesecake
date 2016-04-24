@@ -16,10 +16,11 @@ def check(description, outcome, details=None):
     return get_runtime().check(description, outcome, details)
 
 class Check:
+    name = None
     assertion = False
     always_details = False
     comparator = None
-    description_prefix = "Verify that"
+    description_prefix = "Check that"
     comparator_label = None
     value_type = None
     
@@ -40,7 +41,7 @@ class Check:
         description = self.format_description(name, expected)
         if self.value_type:
             if type(actual) != self.value_type:
-                return check(description, False, self.format_details(actual) + "()")
+                return check(description, False, self.format_details(actual))
         outcome = self.comparator(actual, expected)
         details = None
         if not outcome or self.always_details:
@@ -51,13 +52,19 @@ class Check:
         return "%s" % value
     
     def format_description(self, name, expected):
-        return "{prefix} {name} {comparator} {expected}".format(
+        description = "{prefix} {name} {comparator} {expected}".format(
             prefix=self.description_prefix, name=name,
             comparator=self.comparator_label, expected=self.format_value(expected)
         )
+        if self.value_type:
+            description += " (%s)" % self.value_type.__name__
+        return description
     
     def format_details(self, actual):
-        return "Got %s" % self.format_value(actual)
+        details = "Got %s" % self.format_value(actual)
+        if self.value_type:
+            details += " (%s)" % type(actual).__name__
+        return details
 
 def check_and_assert(checker):
     return checker(), checker(assertion=True)
@@ -66,13 +73,17 @@ def do_register(name, checker_inst, assertion_inst):
     setattr(sys.modules[__name__], "check_%s" % name, checker_inst)
     setattr(sys.modules[__name__], "assert_%s" % name, assertion_inst)
 
-def register_checker(name, checker, alias=None, value_type=None):
+def register_checker(checker_class, alias=None, value_type=None):
     global BASE_CHECKER_NAMES
-    BASE_CHECKER_NAMES.append(name)
     
-    checker_inst = checker(value_type=value_type)
-    assertion_inst = checker(assertion=True, value_type=value_type)
-    do_register(name, checker_inst, assertion_inst)
+    if not checker_class.name:
+        raise Exception("Missing name for checker class %s" % checker_class)
+    
+    BASE_CHECKER_NAMES.append(checker_class.name)
+    
+    checker_inst = checker_class(value_type=value_type)
+    assertion_inst = checker_class(assertion=True, value_type=value_type)
+    do_register(checker_class.name, checker_inst, assertion_inst)
     if alias:
         do_register(alias, checker_inst, assertion_inst)
 
@@ -90,54 +101,74 @@ def alias_checker(alias, name):
 ################################################################################
 
 class CheckEq(Check):
+    name = "eq"
     comparator_label = "is equal to"
     comparator = staticmethod(lambda a, e: a == e)
-register_checker("eq", CheckEq)
+register_checker(CheckEq)
 
 class CheckNotEq(Check):
-    description_fmt = "'{name}' is not equal to {expected}"
+    name = "not_eq"
+    comparator_label = "is not equal to"
     comparator = staticmethod(lambda a, e: a != e)
-register_checker("not_eq", CheckNotEq)
+register_checker(CheckNotEq)
 
 ################################################################################
 # Greater than and Greater than or equal checkers 
 ################################################################################
 
 class CheckGt(Check):
+    name = "gt"
     comparator_label = "is greater than"
     comparator = staticmethod(lambda a, e: a > e)
-register_checker("gt", CheckGt)
+register_checker(CheckGt)
 
 class CheckGteq(Check):
+    name = "gteq"
     comparator_label = "is greater or equal than"
     comparator = staticmethod(lambda a, e: a >= e)
-register_checker("gteq", CheckGteq)
+register_checker(CheckGteq)
 
 ################################################################################
 # Lower than and Lower than or equal checkers 
 ################################################################################
 
 class CheckLt(Check):
+    name = "lt"
     comparator_label = "is lower than"
     comparator = staticmethod(lambda a, e: a < e)
-register_checker("lt", CheckLt)
+register_checker(CheckLt)
 
 class CheckLteq(Check):
+    name = "lteq"
     comparator_label = "is lower or equal than"
     comparator = staticmethod(lambda a, e: a <= e)
-register_checker("lteq", CheckLteq)
+register_checker(CheckLteq)
 
 ################################################################################
 # str checkers 
 ################################################################################
 
 class CheckStrEq(CheckEq):
+    name = "str_eq"
     format_value = staticmethod(lambda s: "'%s'"% s)
-register_checker("str_eq", CheckStrEq, alias="str")
+register_checker(CheckStrEq, alias="str")
 
 class CheckStrNotEq(CheckStrEq, CheckNotEq):
-    pass
-register_checker("str_no_eq", CheckStrNotEq)
+    name = "str_not_eq"
+register_checker(CheckStrNotEq)
+
+################################################################################
+# Numeric checkers
+################################################################################
+
+def generate_comparator_checkers_for_type(type_):
+    checker_classes = CheckEq, CheckNotEq, CheckGt, CheckGteq, CheckLt, CheckLteq
+    for klass in checker_classes:
+        do_register("%s_%s" % (type_.__name__, klass.name), 
+                    klass(value_type=type_), klass(value_type=type_, assertion=True))
+
+generate_comparator_checkers_for_type(int)
+generate_comparator_checkers_for_type(float)
 
 ################################################################################
 # list checkers 
@@ -147,6 +178,7 @@ alias_checker("list_eq", "eq")
 alias_checker("list", "list_eq")
 
 class CheckListLen(Check):
+    name = "list_len_eq"
     comparator = staticmethod(lambda a, e: len(a) == e)
     def format_description(self, name, expected):
         return "{prefix} {name} contains {expected} elements".format(
@@ -154,9 +186,10 @@ class CheckListLen(Check):
         )
     def format_details(self, actual):
         return "Got %d elements: %s" % (len(actual), actual)
-register_checker("list_len_eq", CheckListLen, alias="list_len")
+register_checker(CheckListLen, alias="list_len")
 
 class CheckListContains(Check):
+    name = "list_contains"
     comparator_label = "contains elements"
     
     def compare(self, name, actual, expected):
@@ -171,7 +204,7 @@ class CheckListContains(Check):
             return check(description, False, details)
         else:
             return check(description, True, None)
-register_checker("list_contains", CheckListContains)
+register_checker(CheckListContains)
 
 ################################################################################
 # dict checkers 
@@ -190,14 +223,16 @@ def register_dict_checkers(dict_checker_name_fmt, dict_checker):
         do_register(dict_checker_name_fmt % name, klass(), klass(assertion=True))
 
 class CheckDictHasKey(Check):
+    name = "dict_has_key"
     comparator = staticmethod(lambda a, e: a.has_key(e))
     def format_description(self, name, expected):
         return "{prefix} {name} has entry '{expected}'".format(
             prefix=self.description_prefix, name=name, expected=expected
         )
-register_checker("dict_has_key", CheckDictHasKey)
+register_checker(CheckDictHasKey)
 
 class CheckDictValue(Check):
+    name = "dict_value"
     def __call__(self, expected_key, actual, expected_value, value_checker):
         if actual.has_key(expected_key):
             ret = value_checker("'%s'" % expected_key, actual[expected_key], expected_value)
@@ -206,10 +241,11 @@ class CheckDictValue(Check):
                   "There is no key '%s'" % expected_key)
             ret = False
         return self.handle_assertion(ret)
-register_checker("dict_value", CheckDictValue)
-register_dict_checkers("dict_%s", CheckDictValue)
+register_checker(CheckDictValue)
+register_dict_checkers("dict_value_%s", CheckDictValue)
 
 class CheckDictValue2(Check):
+    name = "dict_value2"
     def __call__(self, expected_key, actual, expected, value_checker):
         if actual.has_key(expected_key):
             ret = value_checker("'%s'" % expected_key, actual[expected_key], expected[expected_key])
@@ -218,10 +254,11 @@ class CheckDictValue2(Check):
                   "There is no key '%s'" % expected_key)
             ret = False
         return self.handle_assertion(ret)
-register_checker("dict_value2", CheckDictValue2)
-register_dict_checkers("dict_%s2", CheckDictValue2)
+register_checker(CheckDictValue2)
+register_dict_checkers("dict_value_%s2", CheckDictValue2)
 
 class CheckDictValue2WithDefault(Check):
+    name = "dict_value2_with_default"
     def __call__(self, expected_key, actual, expected, value_checker, default):
         if actual.has_key(expected_key):
             expected_value = expected.get(expected_key, default)
@@ -231,5 +268,5 @@ class CheckDictValue2WithDefault(Check):
                   "There is no key '%s'" % expected_key)
             ret = False
         return self.handle_assertion(ret)
-register_checker("dict_value2_with_default", CheckDictValue2WithDefault)
-register_dict_checkers("dict_%s2_with_default", CheckDictValue2WithDefault)
+register_checker(CheckDictValue2WithDefault)
+register_dict_checkers("dict_value_%s2_with_default", CheckDictValue2WithDefault)
