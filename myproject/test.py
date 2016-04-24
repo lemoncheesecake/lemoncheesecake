@@ -33,17 +33,21 @@ class MyTestSuite(TestSuite):
     @tags("my_tag1")
     @test("My test description")
     def this_is_a_test(self):
-        step("step 1")
+        step("test list checkers")
         info("do test 1 !")
         check_list_len("my list", [1,2], 3)
         check_list_contains("my other list", [ 1, 2, 3 ], [ 1, 4])
+        step("test dict checkers")
         check_dict_has_key("my dict", { "foo": 33 }, "fool")
         check_dict_value2("bar", { "bar": 33 }, { "bar": 33 }, check_eq)
         check_dict_value2_with_default("bar", { "bar": 33 }, { "ball": 11 }, check_eq, default=33)
-        step("step 2")
+        step("test simple value checkers")
         info("something else")
         check_eq("some value", 1, 1)
         check_eq("some value", 1, 2)
+        check_str_eq("some string", "foo", "bar")
+        step("test dict composed checkers")
+        check_dict_str_eq("foo", {"foo": "bar"}, "bar")
     
     def foo(self):
         pass
