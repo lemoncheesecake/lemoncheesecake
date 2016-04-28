@@ -48,7 +48,7 @@ class MyTestSuite(TestSuite):
         check_str_eq("some string", "foo", "bar")
         check_int_eq("my num", "33", 33)
         step("test dict composed checkers")
-        check_dict_str_eq("foo", {"foo": "bar"}, "bar")
+        check_dict_value_str_eq("foo", {"foo": "bar"}, "bar")
     
     def foo(self):
         pass
