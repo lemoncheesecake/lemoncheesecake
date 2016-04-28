@@ -24,11 +24,12 @@ Report.prototype = {
 		return $("<tr>", { "class": status_class }).append(cols)
 	},
 		
-	render_test_suite: function (suite) {
-		var $panel = $("<div class='panel panel-default panel-primary'>")
-			.append("<div class='panel-heading'>Suite: " + suite.description + "</div>");
-		var $panel_body = $("<div class='panel-body'>");
-		$panel.append($panel_body);
+	render_test_suite: function (suite, parents=[]) {
+		var panels = [ ]
+		var description = parents.map(function(p) { return p.description }).concat(suite.description).join(" > ");
+		var $panel = $("<div class='panel panel-default panel-primary' style='margin-left:" + (20 * parents.length) + "px'>")
+			.append("<div class='panel-heading'>Suite: " + description + "</div>");
+		panels.push($panel);
 
 		if (suite.tests.length > 0) {
 			var rows = [ ];
@@ -41,20 +42,24 @@ Report.prototype = {
 			var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
 				.append($("<thead><tr><th>Test description</th><th>Outcome</th></tr></thead>"))
 				.append($("<tbody>").append(rows));
-			$panel_body.append($table);
+			$panel.append($table);
 		}
 		
 		for (i in suite.sub_suites) {
 			sub_suite = suite.sub_suites[i];
-			$panel_body.append(this.render_test_suite(sub_suite));
+			extra_panels = this.render_test_suite(sub_suite, parents.concat([ suite ]))
+			panels = panels.concat(extra_panels);
 		}
 		
-		return $panel;
+		return panels;
 	},
 	
 	render: function () {
 		for (suite in this.data.suites) {
-			$(this.render_test_suite(this.data.suites[suite])).appendTo(this.node);
+			panels = this.render_test_suite(this.data.suites[suite]);
+			for (i in panels) {
+				$(panels[i]).appendTo(this.node);
+			}
 		}
 	}	
 };
