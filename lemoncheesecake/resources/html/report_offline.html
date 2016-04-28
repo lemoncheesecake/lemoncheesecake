@@ -11,8 +11,13 @@
 		<!-- Latest compiled and minified JavaScript -->
 		<script src=".html/bootstrap-3.3.6-dist/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 	
-		<script src="report.json"></script>
+		<!-- Local resources -->
+		<link rel="stylesheet" href=".html/report.css">
 		<script src=".html/report.js"></script>
+		
+		<!-- Reporting data -->
+		<script src="report.json"></script>
+		
 		<script>
  			$(document).ready(function() {
  				var report = new Report(reporting_data, "#content");

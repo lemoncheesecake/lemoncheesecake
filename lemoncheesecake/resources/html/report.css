@@ -1,0 +1,10 @@
+.panel-heading {
+	font-size: 13px;
+   	line-height: 1.0;
+   	padding: 4px 10px;
+}
+ 		
+th, td {
+	font-size: 12px;
+   	line-height: 1.0;
+}

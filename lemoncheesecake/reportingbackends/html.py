@@ -21,6 +21,7 @@ class HtmlBackend(ReportingBackend):
         
         os.mkdir(report_resource_dir)
         copy(p.join(html_resource_dir, "report.js"), report_resource_dir)
+        copy(p.join(html_resource_dir, "report.css"), report_resource_dir)
         
         if OFFLINE_MODE:
             copy(p.join(html_resource_dir, "report_offline.html"), p.join(self.report_dir, "report.html"))
