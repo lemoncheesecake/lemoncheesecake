@@ -38,7 +38,7 @@ Report.prototype = {
 	
 	render_test: function(test) {
 		var cols = [ ];
-		var $test_desc = $("<a>" + test.description + "</a>");
+		var $test_desc = $("<a><strong>" + test.description + "</strong></a>");
 		cols.push($("<td>").append($test_desc));
 		cols.push($("<td>" + test.id + "</td>"));
 		var status;
