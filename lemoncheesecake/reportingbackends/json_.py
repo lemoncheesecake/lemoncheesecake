@@ -34,6 +34,7 @@ def _serialize_test_data(test):
         
     for step in test.steps:
         json_step = { "description": step.description, "entries": [ ] }
+        json_test["steps"].append(json_step)
         for entry in step.entries:
             if isinstance(entry, LogData):
                 json_step["entries"].append({ "type": "log", "level": entry.level, "message": entry.message })
