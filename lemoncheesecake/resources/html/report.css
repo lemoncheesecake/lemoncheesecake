@@ -1,10 +1,49 @@
+/* http://paletton.com/#uid=7000u0k3V4WaYgf7Lb1ac80gJaQ */
+
+/* body {
+	background-color: #0F1E1F;
+	padding-top: 20px;
+}
+
+table {
+	background-color: #0F2C2E;
+	border-color: #194547;
+}
+
+td {
+	color: #DDDDDD;
+}
+
+.table-bordered>tbody>tr>td, .table-bordered>tbody>tr>th, .table-bordered>tfoot>tr>td, .table-bordered>tfoot>tr>th, .table-bordered>thead>tr>td, .table-bordered>thead>tr>th {
+	border-color: #194547;
+	font-color: #000000;
+}
+
+.table>tbody>tr.danger>td, .table>tbody>tr.danger>th, .table>tbody>tr>td.danger, .table>tbody>tr>th.danger, .table>tfoot>tr.danger>td, .table>tfoot>tr.danger>th, .table>tfoot>tr>td.danger, .table>tfoot>tr>th.danger, .table>thead>tr.danger>td, .table>thead>tr.danger>th, .table>thead>tr>td.danger, .table>thead>tr>th.danger {
+	background-color: #752B29;
+}
+ */
+/* Keep this custom */
+
+body {
+	padding-top: 20px;
+}
+
 .panel-heading {
 	font-size: 13px;
    	line-height: 1.0;
    	padding: 4px 10px;
 }
- 		
+
 th, td {
 	font-size: 12px;
    	line-height: 1.0;
+}
+
+.step td:first-child {
+	padding-left: 15px;
+}
+
+.check td:first-child, .log td:first-child {
+	padding-left: 30px;
 }

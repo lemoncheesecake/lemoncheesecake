@@ -6,22 +6,70 @@ function Report(data, node) {
 Report.prototype = {
 	constructor: Report,
 	
+	render_step: function(step) {
+		var rows = [ ];
+		$step = $("<tr style='display: none' class='step'><td colspan='3'><u>" + step.description + "</u></td></tr>");
+		rows.push($step);
+		for (i in step.entries) {
+			var entry = step.entries[i];
+			$row = $("<tr style='display: none'>");
+			rows.push($row);
+			if (entry.type == "check") {
+				$row.addClass("check");
+				$row.append($("<td>" + entry.description + "</td>"));
+				$row.append($("<td>" + (entry.details ? entry.details : "") + "</td>"));
+				if (entry.outcome) {
+					$row.append($("<td class='text-success'><strong>success</strong></td>"));
+				} else {
+					$row.append($("<td><strong>success</strong></td>"));
+					$row.addClass("danger");
+				}
+			} else if (entry.type == "log") {
+				$row.addClass("log");
+				$row.append($("<td colspan='2'>" + entry.message + "</td>"));
+				$row.append($("<td class='text-uppercase'>" + entry.level + "</td>"));
+				if (entry.level == "error") {
+					$row.addClass("danger");
+				}
+			}
+		}
+		return rows;
+	},
+	
 	render_test: function(test) {
 		var cols = [ ];
-		cols.push($("<td>" + test.description + "</td>"));
+		var $test_desc = $("<a href='#'>" + test.description + "</a>");
+		cols.push($("<td>").append($test_desc));
+		cols.push($("<td>" + test.id + "</td>"));
 		var status;
 		var status_class;
 		if (test.outcome == true) {
-			status = "success";
-			status_class = "success";
+			$status_col = $("<td class='text-success'><strong>success</strong></td>");
 		} else if (test.outcome == false) {
-			status = "failure";
+			$status_col = $("<td><strong>failure</strong></td>");
 			status_class = "danger";
 		} else {
-			status = "n/a";
+			$status_col = $("<td>n/a</td>");
 		}
-		cols.push($("<td>" + status + "</td>"));
-		return $("<tr>", { "class": status_class }).append(cols)
+		cols.push($status_col);
+		$test_row = $("<tr>", { "class": status_class }).append(cols);
+		rows = [ $test_row ];
+		var step_rows = [ ];
+		for (i in test.steps) {
+			step_rows = step_rows.concat(this.render_step(test.steps[i]));
+		}
+		rows = rows.concat(step_rows);
+		$test_desc.click(function() {
+			for (i in step_rows) {
+				$row = step_rows[i];
+				if ($row.css("display") == "none") {
+					$row.css("display", "");
+				} else {
+					$row.css("display", "none");
+				}
+			}
+		});
+		return rows;
 	},
 		
 	render_test_suite: function (suite, parents=[]) {
@@ -35,12 +83,13 @@ Report.prototype = {
 			var rows = [ ];
 			for (i in suite.tests) {
 			    test = suite.tests[i];
-			    $row = this.render_test(test);
-			    rows.push($row);
+			    test_rows = this.render_test(test);
+			    rows = rows.concat(test_rows);
 			}
 			
 			var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
-				.append($("<thead><tr><th>Test description</th><th>Outcome</th></tr></thead>"))
+				.append($("<colgroup><col width='70%'><col width='20%'><col width='10%'></colgroup>"))
+				.append($("<thead><tr><th>Test description</th><th>Test id</th><th>Outcome</th></tr></thead>"))
 				.append($("<tbody>").append(rows));
 			$panel.append($table);
 		}

@@ -27,5 +27,7 @@ class HtmlBackend(ReportingBackend):
             copy(p.join(html_resource_dir, "report_offline.html"), p.join(self.report_dir, "report.html"))
             copy(p.join(html_resource_dir, "jquery-1.12.3.min.js"), report_resource_dir)
             copytree(p.join(html_resource_dir, "bootstrap-3.3.6-dist"), p.join(report_resource_dir, "bootstrap-3.3.6-dist"))
+            copy(p.join(html_resource_dir, "bootstrap-slate.min.css"),
+                 p.join(report_resource_dir, "bootstrap-3.3.6-dist", "css", "bootstrap.min.css"))
         else:
             copy(p.join(html_resource_dir, "report.html"), self.report_dir)
