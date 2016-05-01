@@ -141,6 +141,9 @@ class Launcher:
         self.abort_all_tests = False
         self.abort_testsuite = None
         
+        # init report information
+        rt.reporting_data.add_info("Command line", " ".join(sys.argv))
+        
         # run tests
         rt.begin_tests()
         for suite in testsuites:

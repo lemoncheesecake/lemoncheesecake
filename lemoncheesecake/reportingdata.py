@@ -51,11 +51,19 @@ class TestSuiteData:
 
 class ReportingData:
     def __init__(self):
+        self.info = [ ]
+        self.stats = [ ]
         self.testsuites = [ ]
         self.start_time = None
         self.end_time = None
         self.report_generation_time = None
         self.reset_stats()
+    
+    def add_info(self, name, value):
+        self.info.append([name, value])
+    
+    def add_stats(self, name, value):
+        self.stats.append([name, value])
     
     def reset_stats(self):
         self.tests = 0

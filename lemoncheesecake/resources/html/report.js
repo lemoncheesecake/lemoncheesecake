@@ -38,7 +38,7 @@ Report.prototype = {
 	
 	render_test: function(test) {
 		var cols = [ ];
-		var $test_desc = $("<a href='#'>" + test.description + "</a>");
+		var $test_desc = $("<a>" + test.description + "</a>");
 		cols.push($("<td>").append($test_desc));
 		cols.push($("<td>" + test.id + "</td>"));
 		var status;
@@ -103,7 +103,26 @@ Report.prototype = {
 		return panels;
 	},
 	
+	render_key_value_table: function (data) {
+		var $table = $("<table class='table table-hover table-bordered table-condensed'>");
+		$table.append($("<colgroup><col width='30%'><col width='70%'></colgroup>"));
+		for (var i = 0; i < data.length; i++) {
+			$row = $("<tr>")
+				.append("<td>" + data[i][0] + "</td>")
+				.append("<td>" + data[i][1] + "</td>");
+			$table.append($row);
+		}
+		return $table;
+	},
+	
 	render: function () {
+		$("<h1>Information</h1>").appendTo(this.node);
+		this.render_key_value_table(this.data.info).appendTo(this.node);
+		
+		$("<h1>Statistics</h1>").appendTo(this.node);
+		this.render_key_value_table(this.data.stats).appendTo(this.node);
+		
+		$("<h1>Test results</h1>").appendTo(this.node);
 		for (suite in this.data.suites) {
 			panels = this.render_test_suite(this.data.suites[suite]);
 			for (i in panels) {

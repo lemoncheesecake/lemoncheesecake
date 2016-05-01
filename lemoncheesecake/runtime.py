@@ -6,7 +6,7 @@ Created on Jan 24, 2016
 
 import time
 
-from lemoncheesecake.common import LemonCheesecakeInternalError
+from lemoncheesecake.common import LemonCheesecakeInternalError, humanize_duration
 
 DEFAULT_STEP = "-"
 
@@ -83,6 +83,14 @@ class _Runtime:
     def end_tests(self):
         self.reporting_data.end_time = time.time()
         self.reporting_data.report_generation_time = self.reporting_data.end_time
+        self.reporting_data.refresh_stats()
+        self.reporting_data.add_stats("Start time", time.asctime(time.localtime(self.reporting_data.start_time)))
+        self.reporting_data.add_stats("End time", time.asctime(time.localtime(self.reporting_data.end_time)))
+        self.reporting_data.add_stats("Duration", humanize_duration(self.reporting_data.end_time - self.reporting_data.start_time))
+        self.reporting_data.add_stats("Tests", str(self.reporting_data.tests))
+        self.reporting_data.add_stats("Successful tests", str(self.reporting_data.tests_success))
+        self.reporting_data.add_stats("Successful tests in %", "%d%%" % (float(self.reporting_data.tests_success) / self.reporting_data.tests * 100 if self.reporting_data.tests else 0))
+        self.reporting_data.add_stats("Failed tests", str(self.reporting_data.tests_failure))
         self.for_each_backend(lambda b: b.end_tests())
     
     def begin_before_suite(self, testsuite):        

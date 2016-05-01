@@ -123,6 +123,12 @@ def serialize_reporting_data(data):
     _add_time_attr(report, "start-time", data.start_time)
     _add_time_attr(report, "end-time", data.end_time)
     _add_time_attr(report, "generation-time", data.report_generation_time)
+    for name, value in data.info:
+        info_node = _xml_child(report, "info", "name", name)
+        info_node.text = value
+    for name, value in data.stats:
+        stat_node = _xml_child(report, "stat", "name", name)
+        stat_node.text = value
     for suite in data.testsuites:
         suite_node = _serialize_testsuite_data(suite)
         report.append(suite_node)
