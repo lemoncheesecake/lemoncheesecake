@@ -36,16 +36,16 @@ Report.prototype = {
 		return rows;
 	},
 	
-	render_test: function(test) {
+	do_render_test: function(id, description, outcome, steps) {
 		var cols = [ ];
-		var $test_desc = $("<a><strong>" + test.description + "</strong></a>");
+		var $test_desc = $("<a>" + description + "</a>");
 		cols.push($("<td>").append($test_desc));
-		cols.push($("<td>" + test.id + "</td>"));
+		cols.push($("<td>" + id + "</td>"));
 		var status;
 		var status_class;
-		if (test.outcome == true) {
+		if (outcome == true) {
 			$status_col = $("<td class='text-success'><strong>success</strong></td>");
-		} else if (test.outcome == false) {
+		} else if (outcome == false) {
 			$status_col = $("<td><strong>failure</strong></td>");
 			status_class = "danger";
 		} else {
@@ -55,8 +55,8 @@ Report.prototype = {
 		$test_row = $("<tr>", { "class": status_class }).append(cols);
 		rows = [ $test_row ];
 		var step_rows = [ ];
-		for (i in test.steps) {
-			step_rows = step_rows.concat(this.render_step(test.steps[i]));
+		for (i in steps) {
+			step_rows = step_rows.concat(this.render_step(steps[i]));
 		}
 		rows = rows.concat(step_rows);
 		$test_desc.click(function() {
@@ -71,7 +71,11 @@ Report.prototype = {
 		});
 		return rows;
 	},
-		
+	
+	render_test: function(test) {
+		return this.do_render_test(test.id, test.description, test.outcome, test.steps);
+	},
+	
 	render_test_suite: function (suite, parents=[]) {
 		var panels = [ ]
 		var description = parents.map(function(p) { return p.description }).concat(suite.description).join(" > ");
@@ -81,10 +85,18 @@ Report.prototype = {
 
 		if (suite.tests.length > 0) {
 			var rows = [ ];
+			if (suite.before_suite) {
+				before = this.do_render_test("n/a", " - Before suite -", "n/a", suite.before_suite.steps);
+				rows = rows.concat(before);
+			}
 			for (i in suite.tests) {
 			    test = suite.tests[i];
 			    test_rows = this.render_test(test);
 			    rows = rows.concat(test_rows);
+			}
+			if (suite.after_suite) {
+				after = this.do_render_test("n/a", " - After suite -", "n/a", suite.after_suite.steps);
+				rows = rows.concat(after);
 			}
 			
 			var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
