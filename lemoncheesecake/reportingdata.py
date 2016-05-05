@@ -17,6 +17,11 @@ class CheckData:
         self.outcome = outcome
         self.details = details
 
+class AttachmentData:
+    def __init__(self, name, filename):
+        self.name = name
+        self.filename = filename
+
 class StepData:
     def __init__(self, description):
         self.description = description

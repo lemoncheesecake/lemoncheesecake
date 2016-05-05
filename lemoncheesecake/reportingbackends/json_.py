@@ -20,6 +20,8 @@ def _serialize_steps(steps):
         for entry in step.entries:
             if isinstance(entry, LogData):
                 json_step["entries"].append({ "type": "log", "level": entry.level, "message": entry.message })
+            elif isinstance(entry, AttachmentData):
+                json_step["entries"].append({ "type": "attachment", "name": entry.name, "filename": entry.filename })
             else: # TestCheck
                 json_step["entries"].append({ "type": "check", "description": entry.description, "outcome": entry.outcome })
     return json_steps

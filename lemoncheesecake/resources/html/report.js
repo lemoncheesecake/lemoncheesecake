@@ -31,6 +31,9 @@ Report.prototype = {
 				if (entry.level == "error") {
 					$row.addClass("danger");
 				}
+			} else if (entry.type == "attachment") {
+				$row.addClass("attachment");
+				$row.append("<td colspan='3'>Attachment: <a target='_blank' href='" + entry.filename + "'>" + entry.name + "</a></td>")
 			}
 		}
 		return rows;

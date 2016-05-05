@@ -48,6 +48,6 @@ th, td {
 	padding-left: 15px;
 }
 
-.check td:first-child, .log td:first-child {
+.check td:first-child, .log td:first-child, .attachment td:first-child {
 	padding-left: 30px;
 }

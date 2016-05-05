@@ -4,11 +4,13 @@ Created on Jan 24, 2016
 @author: nicolas
 '''
 
+import os.path
 import time
+import shutil
 
 from lemoncheesecake.common import LemonCheesecakeInternalError, humanize_duration
 
-DEFAULT_STEP = "-"
+ATTACHEMENT_DIR = "attachments"
 
 LOG_LEVEL_DEBUG = "debug"
 LOG_LEVEL_INFO = "info"
@@ -32,6 +34,7 @@ class _RuntimeState:
     def __init__(self):
         self.start_time = None
         self.end_time = None
+
         self.reporting_data = None
         
         self.current_testsuite = None
@@ -57,6 +60,7 @@ class _RuntimeState:
 class _Runtime:
     def __init__(self, report_dir):
         self.report_dir = report_dir
+        self.attachment_count = 0
         self.reporting_data = ReportingData()
         self.report_backends = [ ]
         self.step_lock = False
@@ -199,3 +203,17 @@ class _Runtime:
         self.for_each_backend(lambda b: b.check(description, outcome, details))
         
         return outcome
+    
+    def save_attachment(self, filename, name=None):
+        self.create_step_if_needed()
+        
+        if not name:
+            name = filename
+        attachment_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
+        attachment_filename = "%04d_%s" % (self.attachment_count + 1, name)
+        self.attachment_count += 1
+        if not os.path.exists(attachment_dir):
+            os.mkdir(attachment_dir)
+        shutil.copy(filename, os.path.join(attachment_dir, attachment_filename))
+        self.current_step_data.entries.append(AttachmentData(name, "%s/%s" % (ATTACHEMENT_DIR, attachment_filename)))
+        # TODO: add hook for attachment
