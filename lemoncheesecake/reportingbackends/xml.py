@@ -50,25 +50,9 @@ def _add_time_attr(node, name, value):
         return
     node.attrib[name] = "%.3f" % value
 
-def _serialize_steps_with_log_only(steps, parent_node):
+def _serialize_steps(steps, parent_node):
     for step in steps:
         step_node = _xml_child(parent_node, "step", "description", step.description)
-        for entry in step.entries:
-            log_node = _xml_child(step_node, "log", "level", entry.level)
-            log_node.text = entry.message
-
-def _serialize_test_data(test):
-    test_node = _xml_node("test", "id", test.id, "description", test.description)
-    _add_time_attr(test_node, "start-time", test.start_time)
-    _add_time_attr(test_node, "end-time", test.end_time)
-    for tag in test.tags:
-        tag_node = _xml_child(test_node, "tag")
-        tag_node.text = tag
-    for ticket in test.tickets:
-        ticket_node = _xml_child(test_node, "ticket", "id", ticket[0])
-        ticket_node.text = ticket[1]
-    for step in test.steps:
-        step_node = _xml_child(test_node, "step", "description", step.description)
         for entry in step.entries:
             if isinstance(entry, LogData):
                 log_node = _xml_child(step_node, "log", "level", entry.level)
@@ -82,6 +66,19 @@ def _serialize_test_data(test):
                     outcome = OUTCOME_NOT_AVAILABLE
                 check_node = _xml_child(step_node, "check", "description", entry.description, "outcome", outcome)
                 check_node.text = entry.details
+
+def _serialize_test_data(test):
+    test_node = _xml_node("test", "id", test.id, "description", test.description)
+    _add_time_attr(test_node, "start-time", test.start_time)
+    _add_time_attr(test_node, "end-time", test.end_time)
+    for tag in test.tags:
+        tag_node = _xml_child(test_node, "tag")
+        tag_node.text = tag
+    for ticket in test.tickets:
+        ticket_node = _xml_child(test_node, "ticket", "id", ticket[0])
+        ticket_node.text = ticket[1]
+    _serialize_steps(test.steps, test_node)
+    
     return test_node
 
 def _serialize_testsuite_data(suite):
@@ -98,7 +95,7 @@ def _serialize_testsuite_data(suite):
         before_suite_node = _xml_child(suite_node, "before-suite")
         _add_time_attr(before_suite_node, "start-time", suite.before_suite_start_time)
         _add_time_attr(before_suite_node, "end-time", suite.before_suite_end_time)
-        _serialize_steps_with_log_only(suite.before_suite_steps, before_suite_node)
+        _serialize_steps(suite.before_suite_steps, before_suite_node)
     
     # tests
     for test in suite.tests:
@@ -115,7 +112,7 @@ def _serialize_testsuite_data(suite):
         after_suite_node = _xml_child(suite_node, "after-suite")
         _add_time_attr(after_suite_node, "start-time", suite.after_suite_start_time)
         _add_time_attr(after_suite_node, "end-time", suite.after_suite_end_time)
-        _serialize_steps_with_log_only(suite.after_suite_steps, after_suite_node)
+        _serialize_steps(suite.after_suite_steps, after_suite_node)
     
     return suite_node
 
