@@ -21,7 +21,7 @@ Report.prototype = {
 				if (entry.outcome) {
 					$row.append($("<td class='text-success'><strong>success</strong></td>"));
 				} else {
-					$row.append($("<td><strong>success</strong></td>"));
+					$row.append($("<td><strong>failure</strong></td>"));
 					$row.addClass("danger");
 				}
 			} else if (entry.type == "log") {
