@@ -94,11 +94,11 @@ def _serialize_testsuite_data(suite):
         ticket_node.text = ticket[1]
     
     # before suite
-    before_suite_node = _xml_child(suite_node, "before-suite")
-    _add_time_attr(before_suite_node, "start-time", suite.before_suite_start_time)
-    _add_time_attr(before_suite_node, "end-time", suite.before_suite_end_time)
-
-    _serialize_steps_with_log_only(suite.before_suite_steps, before_suite_node)
+    if suite.before_suite_steps:
+        before_suite_node = _xml_child(suite_node, "before-suite")
+        _add_time_attr(before_suite_node, "start-time", suite.before_suite_start_time)
+        _add_time_attr(before_suite_node, "end-time", suite.before_suite_end_time)
+        _serialize_steps_with_log_only(suite.before_suite_steps, before_suite_node)
     
     # tests
     for test in suite.tests:
@@ -111,10 +111,11 @@ def _serialize_testsuite_data(suite):
         suite_node.append(sub_suite_node)
     
     # after suite
-    after_suite_node = _xml_child(suite_node, "after-suite")
-    _add_time_attr(after_suite_node, "start-time", suite.after_suite_start_time)
-    _add_time_attr(after_suite_node, "end-time", suite.after_suite_end_time)
-    _serialize_steps_with_log_only(suite.after_suite_steps, after_suite_node)
+    if suite.before_suite_steps:
+        after_suite_node = _xml_child(suite_node, "after-suite")
+        _add_time_attr(after_suite_node, "start-time", suite.after_suite_start_time)
+        _add_time_attr(after_suite_node, "end-time", suite.after_suite_end_time)
+        _serialize_steps_with_log_only(suite.after_suite_steps, after_suite_node)
     
     return suite_node
 

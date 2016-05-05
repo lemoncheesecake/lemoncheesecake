@@ -43,22 +43,26 @@ def _serialize_test_data(test):
     return json_test
 
 def _serialize_testsuite_data(suite):
-    return {
+    ret = {
         "id": suite.id, "description": suite.description, "tags": suite.tags,
         "tickets": [ { "id": t[0], "url": t[1] } for t in suite.tickets ],
-        "before_suite": {
-            "start_time": _time_value(suite.before_suite_start_time),
-            "end_time": _time_value(suite.before_suite_end_time),
-            "steps": _serialize_steps_with_log_only(suite.before_suite_steps)
-        },
-        "after_suite": {
-            "start_time": _time_value(suite.after_suite_start_time),
-            "end_time": _time_value(suite.after_suite_end_time),
-            "steps": _serialize_steps_with_log_only(suite.after_suite_steps)
-        },
         "tests": [ _serialize_test_data(t) for t in suite.tests ],
         "sub_suites": [ _serialize_testsuite_data(s) for s in suite.sub_testsuites ]
     }
+    if suite.before_suite_steps:
+        ret["before_suite"] = {
+            "start_time": _time_value(suite.before_suite_start_time),
+            "end_time": _time_value(suite.before_suite_end_time),
+            "steps": _serialize_steps_with_log_only(suite.before_suite_steps)
+        }
+    if suite.after_suite_steps:
+        ret["after_suite"] = {
+            "start_time": _time_value(suite.after_suite_start_time),
+            "end_time": _time_value(suite.after_suite_end_time),
+            "steps": _serialize_steps_with_log_only(suite.after_suite_steps)
+        }
+    
+    return ret
 
 def serialize_reporting_data(data):
     return {
