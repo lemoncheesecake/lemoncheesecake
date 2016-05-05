@@ -84,7 +84,7 @@ def serialize_reporting_data_into_file(data, filename, javascript_compatibility=
 
 class JsonBackend(ReportingBackend):
     def __init__(self, javascript_compatibility=True):
-        self.javascript_compatibility=True
+        self.javascript_compatibility = javascript_compatibility
     
     def end_tests(self):
-        serialize_reporting_data_into_file(self.reporting_data, self.report_dir + "/report.json", javascript_compatibility=True)
+        serialize_reporting_data_into_file(self.reporting_data, self.report_dir + "/report.json", javascript_compatibility=self.javascript_compatibility)
