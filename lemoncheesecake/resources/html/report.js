@@ -62,6 +62,7 @@ function Test(id, description, outcome, steps) {
 	for (var i = 0; i < steps.length; i++) {
 		this.steps.push(new Step(steps[i]));
 	}
+	this.is_displayed = false;
 };
 
 Test.prototype = {
@@ -90,18 +91,39 @@ Test.prototype = {
 			step_rows = step_rows.concat(this.steps[i].render());
 		}
 		rows = rows.concat(step_rows);
-		$test_desc.click(function() {
-			for (i in step_rows) {
-				$row = step_rows[i];
-				if ($row.css("display") == "none") {
-					$row.css("display", "");
-				} else {
-					$row.css("display", "none");
-				}
-			}
-		});
+		$test_desc.click(this.toggle.bind(this));
 		return rows;
 	},
+	
+	current_displayed_test: null,
+	
+	show: function() {
+		if (Test.prototype.current_displayed_test) {
+			Test.prototype.current_displayed_test.hide();
+			Test.prototype.current_displayed_test = null;
+		}
+		
+		for (var i = 0; i < this.steps.length; i++) {
+			this.steps[i].show();
+		}
+		this.is_displayed = true;
+		Test.prototype.current_displayed_test = this;
+	},
+	
+	hide: function() {
+		for (var i = 0; i < this.steps.length; i++) {
+			this.steps[i].hide();
+		}
+		this.is_displayed = false;
+	},
+	
+	toggle: function() {
+		if (this.is_displayed) {
+			this.hide();
+		} else {
+			this.show();
+		}
+	}
 }
 
 function Report(data, node) {
