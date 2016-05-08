@@ -1,19 +1,18 @@
-function Report(data, node) {
-	this.data = data;
-	this.node = node;
+function Step(step) {
+	this.step = step;
 };
 
-Report.prototype = {
-	constructor: Report,
+Step.prototype = {
+	constructor: Step,
 	
-	render_step: function(step) {
-		var rows = [ ];
-		$step = $("<tr style='display: none' class='step'><td colspan='3'><u>" + step.description + "</u></td></tr>");
-		rows.push($step);
-		for (i in step.entries) {
-			var entry = step.entries[i];
+	render: function () {
+		this.step_row = $("<tr style='display: none' class='step'><td colspan='3'><u>" + this.step.description + "</u></td></tr>");
+		this.entry_rows = [ ];
+		
+		for (i in this.step.entries) {
+			var entry = this.step.entries[i];
 			$row = $("<tr style='display: none'>");
-			rows.push($row);
+			this.entry_rows.push($row);
 			if (entry.type == "check") {
 				$row.addClass("check");
 				$row.append($("<td>" + entry.description + "</td>"));
@@ -36,19 +35,48 @@ Report.prototype = {
 				$row.append("<td colspan='3'>Attachment: <a target='_blank' href='" + entry.filename + "'>" + entry.name + "</a></td>")
 			}
 		}
-		return rows;
+		
+		return [ this.step_row ].concat(this.entry_rows);
 	},
 	
-	do_render_test: function(id, description, outcome, steps) {
+	show: function() {
+		this.step_row.show();
+		for (var i = 0; i < this.entry_rows.length; i++) {
+			this.entry_rows[i].show();
+		}
+	},
+	
+	hide: function() {
+		this.step_row.hide();
+		for (var i = 0; i < this.entry_rows.length; i++) {
+			this.entry_rows[i].hide();
+		}
+	}
+};
+
+function Test(id, description, outcome, steps) {
+	this.id = id;
+	this.description = description;
+	this.outcome = outcome;
+	this.steps = [];
+	for (var i = 0; i < steps.length; i++) {
+		this.steps.push(new Step(steps[i]));
+	}
+};
+
+Test.prototype = {
+	constructor: Test,
+	
+	render: function() {
 		var cols = [ ];
-		var $test_desc = $("<a>" + description + "</a>");
+		var $test_desc = $("<a name='" + this.id + "' href='#" + this.id + "'>" + this.description + "</a>");
 		cols.push($("<td>").append($test_desc));
-		cols.push($("<td>" + id + "</td>"));
+		cols.push($("<td>" + this.id + "</td>"));
 		var status;
 		var status_class;
-		if (outcome == true) {
+		if (this.outcome == true) {
 			$status_col = $("<td class='text-success'><strong>success</strong></td>");
-		} else if (outcome == false) {
+		} else if (this.outcome == false) {
 			$status_col = $("<td><strong>failure</strong></td>");
 			status_class = "danger";
 		} else {
@@ -58,8 +86,8 @@ Report.prototype = {
 		$test_row = $("<tr>", { "class": status_class }).append(cols);
 		rows = [ $test_row ];
 		var step_rows = [ ];
-		for (i in steps) {
-			step_rows = step_rows.concat(this.render_step(steps[i]));
+		for (i in this.steps) {
+			step_rows = step_rows.concat(this.steps[i].render());
 		}
 		rows = rows.concat(step_rows);
 		$test_desc.click(function() {
@@ -74,9 +102,19 @@ Report.prototype = {
 		});
 		return rows;
 	},
-	
-	render_test: function(test) {
-		return this.do_render_test(test.id, test.description, test.outcome, test.steps);
+}
+
+function Report(data, node) {
+	this.data = data;
+	this.node = node;
+};
+
+Report.prototype = {
+	constructor: Report,
+			
+	do_render_test: function(id, description, outcome, steps) {
+		test = new Test(id, description, outcome, steps);
+		return test.render();
 	},
 	
 	render_test_suite: function (suite, parents=[]) {
@@ -94,7 +132,7 @@ Report.prototype = {
 			}
 			for (i in suite.tests) {
 			    test = suite.tests[i];
-			    test_rows = this.render_test(test);
+			    test_rows = this.do_render_test(test.id, test.description, test.outcome, test.steps);
 			    rows = rows.concat(test_rows);
 			}
 			if (suite.after_suite) {
