@@ -23,7 +23,7 @@ def _serialize_steps(steps):
             elif isinstance(entry, AttachmentData):
                 json_step["entries"].append({ "type": "attachment", "description": entry.description, "filename": entry.filename })
             else: # TestCheck
-                json_step["entries"].append({ "type": "check", "description": entry.description, "outcome": entry.outcome })
+                json_step["entries"].append({ "type": "check", "description": entry.description, "outcome": entry.outcome, "details": entry.details })
     return json_steps
 
 def _serialize_test_data(test):
