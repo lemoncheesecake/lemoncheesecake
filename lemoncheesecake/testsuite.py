@@ -23,8 +23,14 @@ def error(content):
 def step(description):
     get_runtime().step(description)
 
-def save_attachment(filename, name=None):
-    get_runtime().save_attachment(filename, name)
+def prepare_attachment(filename, description=None):
+    get_runtime().prepare_attachment(filename, description)
+
+def save_attachment_file(filename, description=None):
+    get_runtime().save_attachment_file(filename, description)
+
+def save_attachment_content(content, filename, description=None):
+    get_runtime().save_attachment_content(content, filename, description)
 
 ###
 # Exception classes

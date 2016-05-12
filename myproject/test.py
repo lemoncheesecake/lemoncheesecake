@@ -81,7 +81,8 @@ class MyTestSuite1(TestSuite):
     class D(TestSuite):
         @test("D test 1")
         def d_test_1(self):
-            save_attachment("mycar.jpg")
+            save_attachment_file("mycar.jpg")
+            save_attachment_content("blah " * 100, "sometext.txt", "Some text")
     
     sub_testsuite_classes = [C, D]
         

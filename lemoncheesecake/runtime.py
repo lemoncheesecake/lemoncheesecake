@@ -204,16 +204,29 @@ class _Runtime:
         
         return outcome
     
-    def save_attachment(self, filename, name=None):
+    def prepare_attachment(self, filename, description=None):
         self.create_step_if_needed()
         
-        if not name:
-            name = filename
+        if not description:
+            description = filename
+        
         attachment_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
-        attachment_filename = "%04d_%s" % (self.attachment_count + 1, name)
+        attachment_filename = "%04d_%s" % (self.attachment_count + 1, filename)
         self.attachment_count += 1
         if not os.path.exists(attachment_dir):
             os.mkdir(attachment_dir)
-        shutil.copy(filename, os.path.join(attachment_dir, attachment_filename))
-        self.current_step_data.entries.append(AttachmentData(name, "%s/%s" % (ATTACHEMENT_DIR, attachment_filename)))
+        self.current_step_data.entries.append(AttachmentData(description, "%s/%s" % (ATTACHEMENT_DIR, attachment_filename)))
+        
+        return os.path.join(attachment_dir, attachment_filename)
         # TODO: add hook for attachment
+    
+    def save_attachment_file(self, filename, description=None):
+        target_filename = self.prepare_attachment(filename, description)
+        shutil.copy(filename, target_filename)
+    
+    def save_attachment_content(self, content, filename, description=None):
+        target_filename = self.prepare_attachment(filename, description)
+        
+        fh = open(target_filename, "w")
+        fh.write(content)
+        fh.close()

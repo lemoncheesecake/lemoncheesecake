@@ -32,7 +32,7 @@ Step.prototype = {
 				}
 			} else if (entry.type == "attachment") {
 				$row.addClass("attachment");
-				$row.append("<td colspan='3'>Attachment: <a target='_blank' href='" + entry.filename + "'>" + entry.name + "</a></td>")
+				$row.append("<td colspan='3'>Attachment: <a target='_blank' href='" + entry.filename + "'>" + entry.description + "</a></td>")
 			}
 		}
 		

@@ -18,8 +18,8 @@ class CheckData:
         self.details = details
 
 class AttachmentData:
-    def __init__(self, name, filename):
-        self.name = name
+    def __init__(self, description, filename):
+        self.description = description
         self.filename = filename
 
 class StepData:

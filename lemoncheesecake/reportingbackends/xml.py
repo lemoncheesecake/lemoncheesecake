@@ -58,7 +58,7 @@ def _serialize_steps(steps, parent_node):
                 log_node = _xml_child(step_node, "log", "level", entry.level)
                 log_node.text = entry.message
             elif isinstance(entry, AttachmentData):
-                attachment_node = _xml_child(step_node, "attachment", "name", entry.name)
+                attachment_node = _xml_child(step_node, "attachment", "description", entry.description)
                 attachment_node.text = entry.filename
             else: # TestCheck
                 if entry.outcome == True:
