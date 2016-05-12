@@ -18,7 +18,7 @@ def check(description, outcome, details=None):
 class Check:
     name = None
     assertion = False
-    always_details = False
+    always_display_details = False
     comparator = None
     description_prefix = "Check that"
     comparator_label = None
@@ -44,7 +44,7 @@ class Check:
                 return check(description, False, self.format_details(actual))
         outcome = self.comparator(actual, expected)
         details = None
-        if not outcome or self.always_details:
+        if not outcome or self.always_display_details:
             details = self.format_details(actual)
         return check(description, outcome, details)
     
@@ -111,6 +111,7 @@ class CheckNotEq(Check):
     name = "not_eq"
     comparator_label = "is not equal to"
     comparator = staticmethod(lambda a, e: a != e)
+    always_display_details = True
 register_checker(CheckNotEq)
 
 ################################################################################
@@ -137,12 +138,14 @@ class CheckLt(Check):
     name = "lt"
     comparator_label = "is lower than"
     comparator = staticmethod(lambda a, e: a < e)
+    always_display_details = True
 register_checker(CheckLt)
 
 class CheckLteq(Check):
     name = "lteq"
     comparator_label = "is lower or equal than"
     comparator = staticmethod(lambda a, e: a <= e)
+    always_display_details = True
 register_checker(CheckLteq)
 
 ################################################################################
@@ -156,6 +159,7 @@ register_checker(CheckStrEq, alias="str")
 
 class CheckStrNotEq(CheckStrEq, CheckNotEq):
     name = "str_not_eq"
+    always_display_details = True
 register_checker(CheckStrNotEq)
 
 class CheckStrMatchPattern(CheckStrEq):
@@ -163,6 +167,7 @@ class CheckStrMatchPattern(CheckStrEq):
     comparator_label = "match pattern"
     format_expected_value = staticmethod(lambda p: "'%s'" % p.pattern)
     comparator = staticmethod(lambda a, e: bool(e.match(a)))
+    always_display_details = True
 register_checker(CheckStrMatchPattern, alias="pattern")
 
 class CheckStrDoesNotMatchPattern(CheckStrMatchPattern):
@@ -205,6 +210,7 @@ register_checker(CheckListLen, alias="list_len")
 class CheckListContains(Check):
     name = "list_contains"
     comparator_label = "contains elements"
+    always_display_details = True
     
     def compare(self, name, actual, expected):
         description = self.format_description(name, expected)
