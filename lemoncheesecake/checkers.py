@@ -48,20 +48,21 @@ class Check:
             details = self.format_details(actual)
         return check(description, outcome, details)
     
-    def format_value(self, value):
+    def format_actual_value(self, value):
         return "%s" % value
+    format_expected_value = format_actual_value
     
     def format_description(self, name, expected):
         description = "{prefix} {name} {comparator} {expected}".format(
             prefix=self.description_prefix, name=name,
-            comparator=self.comparator_label, expected=self.format_value(expected)
+            comparator=self.comparator_label, expected=self.format_expected_value(expected)
         )
         if self.value_type:
             description += " (%s)" % self.value_type.__name__
         return description
     
     def format_details(self, actual):
-        details = "Got %s" % self.format_value(actual)
+        details = "Got %s" % self.format_actual_value(actual)
         if self.value_type:
             details += " (%s)" % type(actual).__name__
         return details
@@ -150,12 +151,25 @@ register_checker(CheckLteq)
 
 class CheckStrEq(CheckEq):
     name = "str_eq"
-    format_value = staticmethod(lambda s: "'%s'"% s)
+    format_expected_value = format_actual_value = staticmethod(lambda s: "'%s'" % s)
 register_checker(CheckStrEq, alias="str")
 
 class CheckStrNotEq(CheckStrEq, CheckNotEq):
     name = "str_not_eq"
 register_checker(CheckStrNotEq)
+
+class CheckStrMatchPattern(CheckStrEq):
+    name = "str_match_pattern"
+    comparator_label = "match pattern"
+    format_expected_value = staticmethod(lambda p: "'%s'" % p.pattern)
+    comparator = staticmethod(lambda a, e: bool(e.match(a)))
+register_checker(CheckStrMatchPattern, alias="pattern")
+
+class CheckStrDoesNotMatchPattern(CheckStrMatchPattern):
+    name = "str_does_not_match_pattern"
+    comparator_label = "does not match pattern"
+    comparator = staticmethod(lambda a, e: not bool(e.match(a)))
+register_checker(CheckStrDoesNotMatchPattern)
 
 ################################################################################
 # Numeric checkers

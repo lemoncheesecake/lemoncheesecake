@@ -49,7 +49,10 @@ class MyTestSuite(TestSuite):
         check_int_eq("my num", "33", 33)
         step("test dict composed checkers")
         check_dict_value_str_eq("foo", {"foo": "bar"}, "bar")
-    
+        check_pattern("some value", "foo bar", re.compile("foo.+"))
+        check_str_does_not_match_pattern("some value", "foo bar", re.compile("foo.+"))
+        
+        
     def foo(self):
         pass
 
