@@ -220,7 +220,7 @@ class TestSuite:
         self._tests = sorted(self._tests, key=lambda x: x.rank)
 
         # dynamic test        
-        self.load_dynamic_tests()
+        self.load_generated_tests()
         
         # sub testsuites
         self._sub_testsuites = [ ]
@@ -269,7 +269,7 @@ class TestSuite:
                 "a sub test suite with description '%s' is already registered in test suite %s" % (description, self.get_path_str())
             )
         
-    def load_dynamic_tests(self):
+    def load_generated_tests(self):
         pass
     
     def get_tests(self, filtered=True):
@@ -290,11 +290,11 @@ class TestSuite:
     def get_suite_description(self):
         return self.description
     
-    def register_test(self, id, description, callback, before_test=None, after_test=None):
+    def register_test(self, new_test, before_test=None, after_test=None):
         if before_test and after_test:
             raise Exception("before_test and after_test are mutually exclusive")
         
-        self.assert_test_description_is_unique(description)
+        self.assert_test_description_is_unique(new_test.description)
         
         ref_test_id = before_test if before_test else after_test
         
@@ -308,13 +308,26 @@ class TestSuite:
             if ref_test_idx == None:
                 raise CannotLoadTest("Could not find any test named '%s' in the test suite '%s'" % (ref_test_id, self.get_suite_id()))
             
-            # create test with the appropriate rank and shift all test's ranks coming after the new test
-            new_test = Test(id, description, callback, force_rank=ref_test.rank + (1 if after_test else 0))
+            # set the test appropriate rank and shift all test's ranks coming after the new test
+            new_test.rank = ref_test.rank + (1 if after_test else 0)
             for test in self._tests[ref_test_idx + (1 if after_test else 0):]:
                 test.rank += 1
             self._tests.insert(ref_test_idx + (1 if after_test else 0), new_test)
         else:
-            self._tests.append(Test(id, description, callback))
+            self._tests.append(new_test)
+    
+    def register_tests(self, tests, before_test=None, after_test=None):
+        if before_test and after_test:
+            raise Exception("before_test and after_test are mutually exclusive")
+        
+        if after_test:
+            previous_test = after_test
+            for test in tests:
+                self.register_test(test, after_test=previous_test)
+                previous_test = test.id
+        else:
+            for test in tests:
+                self.register_test(test, before_test=before_test)
     
     ###
     # Filtering methods

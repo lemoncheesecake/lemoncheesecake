@@ -52,7 +52,6 @@ class MyTestSuite(TestSuite):
         check_pattern("some value", "foo bar", re.compile("foo.+"))
         check_str_does_not_match_pattern("some value", "foo bar", re.compile("foo.+"))
         
-        
     def foo(self):
         pass
 
@@ -69,11 +68,13 @@ class MyTestSuite(TestSuite):
         error("something goes wrong")
         #raise AbortTestSuite()
     
-    def load_dynamic_tests(self):
+    def load_generated_tests(self):
+        tests = []
         for i in range(4):
             def dummy(suite):
                 info("do test dyn %d" % i)
-            self.register_test("test_%d" % i, "This is my dynamic test %d" % i, dummy, after_test="this_is_a_test")
+            tests.append(Test("test_%d" % i, "This is my dynamic test %d" % i, dummy))
+        self.register_tests(tests, after_test="this_is_a_test")
 
 class MyTestSuite1(TestSuite):
     class C(TestSuite):
