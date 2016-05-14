@@ -111,7 +111,6 @@ class CheckEq(Check):
 
 @checker("not_eq")
 class CheckNotEq(Check):
-    name = "not_eq"
     comparator_label = "is not equal to"
     comparator = staticmethod(lambda a, e: a != e)
     always_display_details = True
@@ -194,7 +193,6 @@ alias_checker("list", "list_eq")
 
 @checker("list_len_eq", alias="list_len")
 class CheckListLen(Check):
-    name = "list_len_eq"
     comparator = staticmethod(lambda a, e: len(a) == e)
     def format_description(self, name, expected):
         return "{prefix} {name} contains {expected} elements".format(
@@ -205,7 +203,6 @@ class CheckListLen(Check):
 
 @checker("list_contains")
 class CheckListContains(Check):
-    name = "list_contains"
     comparator_label = "contains elements"
     always_display_details = True
     
