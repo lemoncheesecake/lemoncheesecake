@@ -25,7 +25,7 @@ Step.prototype = {
 				}
 			} else if (entry.type == "log") {
 				$row.addClass("log");
-				$row.append($("<td colspan='2'>" + entry.message + "</td>"));
+				$row.append($("<td colspan='2'><samp>" + entry.message + "</samp></td>"));
 				$row.append($("<td class='text-uppercase'>" + entry.level + "</td>"));
 				if (entry.level == "error") {
 					$row.addClass("danger");
