@@ -38,8 +38,8 @@ class ProjectSettings:
         return None
     
     def _check_report_backend(self, name, value):
-        if not reporting.has_backend(value):
-            return "unknown report backend '%s'" % value
+        if not isinstance(value, reporting.ReportingBackend):
+            return "%s does not inherit lemoncheesecake.reporting.ReportingBackend" % value
         return None
     
     def _get_param(self, settings, name, checker, is_list=False, is_optional=False, default_value=None):

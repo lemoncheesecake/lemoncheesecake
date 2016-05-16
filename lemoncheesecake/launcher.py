@@ -34,10 +34,6 @@ class Launcher:
         self.cli_run_parser.add_argument("--suite-desc", nargs="+", default=[], help="Filters on test suite descriptions")
         self.cli_run_parser.add_argument("--tag", "-a", nargs="+", default=[], help="Filters on test & test suite tags")
         self.cli_run_parser.add_argument("--ticket", "-i", nargs="+", default=[], help="Filters on test & test suite tickets")
-        reporting.register_backend("console", ConsoleBackend())
-        reporting.register_backend("xml", XmlBackend())
-        reporting.register_backend("json", JsonBackend())
-        reporting.register_backend("html", HtmlBackend())
     
     def _run_testsuite(self, suite):
         rt = get_runtime()
@@ -152,7 +148,7 @@ class Launcher:
         initialize_runtime(report_dir)
         rt = get_runtime()
         for backend in project.settings.report_backends:
-            rt.report_backends.append(reporting.get_backend(backend))
+            rt.report_backends.append(backend)
         rt.init_reporting_backends()
         self.abort_all_tests = False
         self.abort_testsuite = None
