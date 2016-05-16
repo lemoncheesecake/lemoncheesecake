@@ -7,6 +7,8 @@ class B(TestSuite):
     class BB1(TestSuite):
         @test("Test of BB1")
         def c_test_1(self):
+            import time
+            time.sleep(1)
             assert_eq("value", 32, 54)
     
     class BB2(TestSuite):

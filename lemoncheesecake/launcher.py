@@ -51,6 +51,9 @@ class Launcher:
             elif isinstance(e, AbortAllTests):
                 rt.error(str(e))
                 self.abort_all_tests = True
+            elif isinstance(e, KeyboardInterrupt):
+                rt.error("All tests have been interrupted manually by the user")
+                self.abort_all_tests = True
             else:
                 # FIXME; use exception instead of last implicit stracktrace
                 stacktrace = traceback.format_exc().decode("utf-8")
@@ -64,6 +67,8 @@ class Launcher:
             except Exception as e:
                 handle_exception(e)
                 self.abort_testsuite = suite
+            except KeyboardInterrupt as e:
+                handle_exception(e)
             
         rt.end_before_suite() 
         
@@ -85,6 +90,8 @@ class Launcher:
                 handle_exception(e)
                 rt.end_test()
                 continue
+            except KeyboardInterrupt as e:
+                handle_exception(e)
             
             try:
                 suite.after_test(test.id)
@@ -92,6 +99,8 @@ class Launcher:
                 handle_exception(e)
                 rt.end_test()
                 continue
+            except KeyboardInterrupt as e:
+                handle_exception(e)
             
             rt.end_test()
         
@@ -103,6 +112,8 @@ class Launcher:
         try:
             suite.after_suite()
         except Exception as e:
+            handle_exception(e)
+        except KeyboardInterrupt as e:
             handle_exception(e)
             
         rt.end_after_suite()
