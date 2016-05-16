@@ -10,6 +10,12 @@ import re
 import glob
 import importlib
 
+def suite_rank(value):
+    def wrapper(klass):
+        klass._rank = value
+        return klass
+    return wrapper
+
 def _strip_py_ext(filename):
     return re.sub("\.py$", "", filename)
 
@@ -51,4 +57,6 @@ def load_testsuites_from_directory(dir, recursive=True):
                 sub_suites = load_testsuites_from_directory(suite_subdir, recursive=True)
                 suite.sub_testsuite_classes = suite.sub_testsuite_classes + sub_suites
         suites.append(suite)
+    if filter(lambda s: hasattr(s, "_rank"), suites) == suites:
+        suites.sort(key=lambda s: s._rank)
     return suites

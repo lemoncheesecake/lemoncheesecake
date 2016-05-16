@@ -1,6 +1,8 @@
 from lemoncheesecake.testsuite import *
 from lemoncheesecake.checkers import *
+from lemoncheesecake.loader import suite_rank
 
+@suite_rank(2)
 class A(TestSuite):
     description = "A Suite"
     
