@@ -29,7 +29,7 @@ class Check:
     
     def handle_assertion(self, outcome):
         if self.assertion and not outcome:
-            raise AbortTest()
+            raise AbortTest("previous assertion was not fulfilled")
         return outcome
     
     def __call__(self, name, actual, expected):

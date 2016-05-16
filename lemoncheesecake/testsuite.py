@@ -43,13 +43,22 @@ class CannotLoadTestSuite(LemonCheesecakeException):
     message_prefix = "Cannot load testsuite"
 
 class AbortTest(LemonCheesecakeException):
-    pass
-
+    message_prefix = "The test has been aborted"
+    
+    def __init__(self, reason):
+        LemonCheesecakeException.__init__(self, reason)
+    
 class AbortTestSuite(LemonCheesecakeException):
-    pass
+    message_prefix = "The testsuite has been aborted"
+
+    def __init__(self, reason):
+        LemonCheesecakeException.__init__(self, reason)
 
 class AbortAllTests(LemonCheesecakeException):
-    pass
+    message_prefix = "All tests have been aborted"
+
+    def __init__(self, reason):
+        LemonCheesecakeException.__init__(self, reason)
 
 ###
 # Test, TestSuite classes and decorators

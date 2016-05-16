@@ -4,7 +4,7 @@ from lemoncheesecake.checkers import *
 class AAA(TestSuite):
     @test("Test of AAA")
     def test_of_B(self):
-        pass
+        assert_eq("value", 1, 2)
 
 @tickets("1234")
 class AA(TestSuite):
@@ -20,4 +20,4 @@ class AA(TestSuite):
 
     @test("Test of A")
     def test_of_A(self):
-        pass
+        raise AbortTest("this test cannot be executed")

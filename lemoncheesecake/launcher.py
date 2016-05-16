@@ -44,17 +44,17 @@ class Launcher:
         
         def handle_exception(e):
             if isinstance(e, AbortTest):
-                rt.error("The test has been aborted")
+                rt.error(str(e))
             elif isinstance(e, AbortTestSuite):
-                rt.error("The test suite has been aborted")
+                rt.error(str(e))
                 self.abort_testsuite = suite
             elif isinstance(e, AbortAllTests):
-                rt.error("All tests have been aborted")
+                rt.error(str(e))
                 self.abort_all_tests = True
             else:
                 # FIXME; use exception instead of last implicit stracktrace
                 stacktrace = traceback.format_exc().decode("utf-8")
-                rt.error("Caught exception while running test: " + stacktrace)
+                rt.error("Caught unexpected exception while running test: " + stacktrace)
 
         rt.begin_before_suite(suite)
                 
