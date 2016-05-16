@@ -1,34 +1,8 @@
 from lemoncheesecake.testsuite import *
 from lemoncheesecake.checkers import *
 
-from time import sleep
-
-class B(TestSuite):
-    @test("Test of B")
-    def test_of_B(self):
-        pass
-
-@tickets("1234")
 class A(TestSuite):
-    sub_testsuite_classes = [ B ]
-
-    def before_suite(self):
-        step("hep csdcnlns csdlcsdl cubsd ucds")
-        sleep(1)
-        info("some stuff in before suite")
-
-    def after_suite(self):
-        step("hopi csdknclsdc lsdclusbcl ubsd")
-        sleep(1)
-        info("some other stuff in after suite")
-
-    @test("Test of A")
-    def test_of_A(self):
-        pass
-
-class MyTestSuite(TestSuite):
-    description = "zzz"
-    sub_testsuite_classes = [ A ]
+    description = "A Suite"
     
     @tags("my_tag1")
     @test("My test description")
@@ -75,34 +49,3 @@ class MyTestSuite(TestSuite):
                 info("do test dyn %d" % i)
             tests.append(Test("test_%d" % i, "This is my dynamic test %d" % i, dummy))
         self.register_tests(tests, after_test="this_is_a_test")
-
-class MyTestSuite1(TestSuite):
-    class C(TestSuite):
-        @test("C test 1")
-        def c_test_1(self):
-            assert_eq("value", 32, 54)
-    
-    class D(TestSuite):
-        @test("D test 1")
-        def d_test_1(self):
-            save_attachment_file("mycar.jpg")
-            save_attachment_content("blah " * 100, "sometext.txt", "Some text")
-    
-    sub_testsuite_classes = [C, D]
-
-if __name__ == "__main__":
-    suite = MyTestSuite()
-    suite.load()
-    
-    print "Suite id: %s" % suite.id
-    print "Suite description: %s" % suite.description
-    
-    print "Tests:"
-    for test in suite.get_tests():
-        print "* %s" % test
-        print test.callback
-        print
-    
-    print "Test results"
-    for test in suite.get_tests():
-        test.callback(suite)

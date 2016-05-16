@@ -5,9 +5,10 @@ sys.path.insert(0, ".")
 
 from lemoncheesecake.reportingbackends import html
 from lemoncheesecake.common import reporting_dir_with_datetime
+from lemoncheesecake.loader import load_testsuites_from_directory
 
 from test import *
-TESTSUITES = [ MyTestSuite, MyTestSuite1 ]
+TESTSUITES = load_testsuites_from_directory("suites") #[ MyTestSuite, MyTestSuite1 ]
 
 html.OFFLINE_MODE = True
 
