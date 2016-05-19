@@ -4,6 +4,8 @@ Created on Mar 19, 2016
 @author: nicolas
 '''
 
+from __future__ import print_function
+
 import sys
 import re
 
@@ -108,11 +110,11 @@ class ConsoleBackend(ReportingBackend):
     
     def end_tests(self):
         self.reporting_data.refresh_stats()
-        print
-        print colored("Statistics", attrs=["bold"]), ":"
-        print " * Duration: %s" % humanize_duration(self.reporting_data.end_time - self.reporting_data.start_time)
-        print " * Tests: %d" % self.reporting_data.tests
-        print " * Successes: %d (%d%%)" % (self.reporting_data.tests_success, float(self.reporting_data.tests_success) / self.reporting_data.tests * 100 if self.reporting_data.tests else 0)
-        print " * Failures: %d" % (self.reporting_data.tests_failure)
-        print
+        print()
+        print(colored("Statistics", attrs=["bold"]), ":")
+        print(" * Duration: %s" % humanize_duration(self.reporting_data.end_time - self.reporting_data.start_time))
+        print(" * Tests: %d" % self.reporting_data.tests)
+        print(" * Successes: %d (%d%%)" % (self.reporting_data.tests_success, float(self.reporting_data.tests_success) / self.reporting_data.tests * 100 if self.reporting_data.tests else 0))
+        print(" * Failures: %d" % (self.reporting_data.tests_failure))
+        print()
         

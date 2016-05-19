@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from lemoncheesecake.testsuite import *
 from lemoncheesecake.checkers import *
 
@@ -94,15 +96,15 @@ if __name__ == "__main__":
     suite = MyTestSuite()
     suite.load()
     
-    print "Suite id: %s" % suite.id
-    print "Suite description: %s" % suite.description
+    print("Suite id: %s" % suite.id)
+    print("Suite description: %s" % suite.description)
     
-    print "Tests:"
+    print("Tests:")
     for test in suite.get_tests():
-        print "* %s" % test
-        print test.callback
-        print
+        print("* %s" % test)
+        print(test.callback)
+        print()
     
-    print "Test results"
+    print("Test results")
     for test in suite.get_tests():
         test.callback(suite)
