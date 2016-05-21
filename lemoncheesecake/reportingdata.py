@@ -92,13 +92,13 @@ class ReportingData:
                     if type(entry) == CheckData:
                         self.checks += 1
                         if entry.outcome == True:
-                            self.check_success += 1
+                            self.checks_success += 1
                         elif entry.outcome == False:
-                            self.check_failure += 1
+                            self.checks_failure += 1
                     if type(entry) == LogData:
-                        if entry.type == LOG_LEVEL_WARN:
+                        if entry.level == LOG_LEVEL_WARN:
                             self.warnings += 1
-                        elif entry.type == LOG_LEVEL_ERROR:
+                        elif entry.level == LOG_LEVEL_ERROR:
                             self.errors += 1
         
         for sub_suite in suite.sub_testsuites:

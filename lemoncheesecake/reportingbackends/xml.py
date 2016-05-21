@@ -6,6 +6,7 @@ Created on Mar 27, 2016
 
 from lemoncheesecake.reportingdata import *
 from lemoncheesecake.reporting import ReportingBackend
+from lemoncheesecake.common import IS_PYTHON3
 
 from lxml import etree as ET
 from lxml.builder import E
@@ -36,7 +37,10 @@ def _xml_node(name, *args):
     while i < len(args):
         name, value = args[i], args[i+1]
         if value is not None:
-            node.attrib[name] = value if type(value) is unicode else unicode(value, "utf-8")
+            if IS_PYTHON3:
+                node.attrib[name] = value
+            else:
+                node.attrib[name] = value if type(value) is unicode else unicode(value, "utf-8")
         i += 2
     return node 
 
@@ -139,7 +143,11 @@ def serialize_reporting_data_into_file(data, filename):
     report = serialize_reporting_data(data)
     _xml_indent(report)
     file = open(filename, "w")
-    file.write(ET.tostring(report, pretty_print=True, xml_declaration=True, encoding="utf-8"))
+    if IS_PYTHON3:
+        content = ET.tostring(report, pretty_print=True, encoding="unicode")
+    else:
+        content = ET.tostring(report, pretty_print=True, xml_declaration=True, encoding="utf-8")
+    file.write(content)
     file.close()
 
 class XmlBackend(ReportingBackend):

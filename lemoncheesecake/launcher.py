@@ -13,7 +13,7 @@ import traceback
 
 from lemoncheesecake.project import Project
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
-from lemoncheesecake.common import LemonCheesecakeException
+from lemoncheesecake.common import LemonCheesecakeException, IS_PYTHON3
 from lemoncheesecake.testsuite import Filter, AbortTest, AbortTestSuite, AbortAllTests
 from lemoncheesecake import reporting
 from lemoncheesecake.reportingbackends.console import ConsoleBackend
@@ -51,8 +51,10 @@ class Launcher:
                 rt.error("All tests have been interrupted manually by the user")
                 self.abort_all_tests = True
             else:
-                # FIXME; use exception instead of last implicit stracktrace
-                stacktrace = traceback.format_exc().decode("utf-8")
+                # FIXME; use exception instead of last implicit stacktrace
+                stacktrace = traceback.format_exc()
+                if not IS_PYTHON3:
+                    stacktrace = stacktrace.decode("utf-8")
                 rt.error("Caught unexpected exception while running test: " + stacktrace)
 
         rt.begin_before_suite(suite)

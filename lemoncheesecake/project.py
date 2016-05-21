@@ -5,7 +5,7 @@ Created on Mar 12, 2016
 '''
 
 import imp
-import types
+import inspect
 
 from lemoncheesecake.common import LemonCheesecakeException
 from lemoncheesecake.testsuite import TestSuite
@@ -20,8 +20,8 @@ class ProjectSettings:
     
     def _check_is_subclass(self, klass):
         def wrapper(name, value):
-            if type(value) is not types.ClassType or not issubclass(value, klass):
-                return "'%s' has an incorrect value, '%s' is not a subclass of '%s'" % (name, value, klass)
+            if not inspect.isclass(value) or not issubclass(value, klass):
+                return "'%s' has an incorrect value, '%s' is not a subclass of %s" % (name, value, klass)
             return None
         return wrapper
     

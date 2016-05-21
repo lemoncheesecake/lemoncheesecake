@@ -5,6 +5,9 @@ Created on Mar 18, 2016
 '''
 
 import time
+import sys
+
+IS_PYTHON3 = sys.version_info > (3,)
 
 class LemonCheesecakeException(Exception):
     message_prefix = None

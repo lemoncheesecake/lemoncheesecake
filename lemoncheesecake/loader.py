@@ -57,6 +57,6 @@ def load_testsuites_from_directory(dir, recursive=True):
                 sub_suites = load_testsuites_from_directory(suite_subdir, recursive=True)
                 suite.sub_testsuite_classes = suite.sub_testsuite_classes + sub_suites
         suites.append(suite)
-    if filter(lambda s: hasattr(s, "_rank"), suites) == suites:
+    if len(list(filter(lambda s: hasattr(s, "_rank"), suites))) == len(suites):
         suites.sort(key=lambda s: s._rank)
     return suites

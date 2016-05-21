@@ -265,14 +265,14 @@ class TestSuite:
         return depth
     
     def assert_test_description_is_unique(self, description):
-        result = filter(lambda t: t.description == description, self._tests)
+        result = list(filter(lambda t: t.description == description, self._tests))
         if result:
             raise CannotLoadTest(
                 "a test with description '%s' is already registered in test suite %s" % (description, self.get_path_str())
             )
         
     def assert_sub_test_suite_description_is_unique(self, description):
-        result = filter(lambda s: s.description == description, self._sub_testsuites)
+        result = list(filter(lambda s: s.description == description, self._sub_testsuites))
         if result:
             raise CannotLoadTestSuite(
                 "a sub test suite with description '%s' is already registered in test suite %s" % (description, self.get_path_str())

@@ -13,6 +13,7 @@ from lemoncheesecake.reportingbackends.html import HtmlBackend
 
 from test import *
 TESTSUITES = load_testsuites_from_directory("suites") #[ MyTestSuite, MyTestSuite1 ]
+# TESTSUITES = [ "MyTestSuite" ]
 
 html.OFFLINE_MODE = True
 

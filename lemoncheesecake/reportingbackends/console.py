@@ -10,7 +10,7 @@ import sys
 import re
 
 from lemoncheesecake.reporting import ReportingBackend
-from lemoncheesecake.common import humanize_duration
+from lemoncheesecake.common import IS_PYTHON3, humanize_duration
 
 from colorama import init, Style, Fore
 from termcolor import colored
@@ -21,8 +21,9 @@ class LinePrinter:
     
     def print_line(self, line, force_len=None):
         value_len = force_len if force_len else len(line) 
-        if type(line) is unicode:
-            line = line.encode("utf-8")
+        if not IS_PYTHON3:
+            if type(line) is unicode:
+                line = line.encode("utf-8")
         
         sys.stdout.write("\r")
         sys.stdout.write(line)
