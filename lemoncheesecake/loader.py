@@ -30,21 +30,6 @@ def _load_testsuite(filename):
         raise Exception("Cannot find class '%s' in '%s'" % (mod_name, loaded_mod.__file__))
     return klass
 
-def _load_testsuite1(filename):
-    mod_path = _strip_py_ext(filename.replace("/", "."))
-    mod_dir = ".".join(mod_path.split(".")[0:-1])
-    mod_name = mod_path.split(".")[-1]
-    if mod_name in sys.modules:
-        raise Exception("Module '%s' is already loaded" % mod_name)
-    
-    importlib.import_module(mod_dir)
-    loaded_mod = importlib.import_module("." + mod_name, package=mod_dir)
-    try:
-        klass = getattr(loaded_mod, mod_name)
-    except AttributeError:
-        raise Exception("Cannot find class '%s' in %s" % (mod_name, loaded_mod.__file__))
-    return klass
-
 def load_testsuites_from_directory(dir, recursive=True):
     suites = [ ]
     for filename in glob.glob(os.path.join(dir, "*.py")):
