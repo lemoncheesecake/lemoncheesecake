@@ -12,6 +12,7 @@ from lemoncheesecake.reportingbackends.json_ import JsonBackend
 from lemoncheesecake.reportingbackends.html import HtmlBackend
 
 from test import *
+
 TESTSUITES = load_testsuites_from_directory("suites") #[ MyTestSuite, MyTestSuite1 ]
 # TESTSUITES = [ "MyTestSuite" ]
 

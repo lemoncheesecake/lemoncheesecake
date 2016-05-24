@@ -126,40 +126,52 @@ Test.prototype = {
 	}
 }
 
-function Report(data, node) {
-	this.data = data;
-	this.node = node;
-};
+function TestSuite(data, parents=[]) {
+    this.parents = parents;
+    this.id = data.id;
+    this.description = data.description;
+    this.before_suite = null;
+    this.after_suite = null;
+    this.tests = [ ];
+    this.sub_suites = [ ];
 
-Report.prototype = {
-	constructor: Report,
-			
-	do_render_test: function(id, description, outcome, steps) {
-		test = new Test(id, description, outcome, steps);
-		return test.render();
-	},
+    if (data.before_suite) {
+    	this.before_suite = new Test("n/a", " - Before suite -", "n/a", data.before_suite.steps);
+    }
+
+    if (data.after_suite) {
+    	this.after_suite = new Test("n/a", " - After suite -", "n/a", data.after_suite.steps)
+    }
+
+    for (var i = 0; i < data.tests.length; i++) {
+    	this.tests.push(new Test(data.tests[i].id, data.tests[i].description, data.tests[i].outcome, data.tests[i].steps));
+    }
+
+    for (var i = 0; i < data.sub_suites.length; i++) {
+    	this.sub_suites.push(new TestSuite(data.sub_suites[i], parents.concat(this)));
+    }
+}
+
+TestSuite.prototype = {
+	constructor: TestSuite,
 	
-	render_test_suite: function (suite, parents=[]) {
+	render: function() {
 		var panels = [ ]
-		var description = parents.map(function(p) { return p.description }).concat(suite.description).join(" > ");
-		var $panel = $("<div class='panel panel-default panel-primary' style='margin-left:" + (20 * parents.length) + "px'>")
+		var description = this.parents.map(function(p) { return p.description }).concat(this.description).join(" > ");
+		var $panel = $("<div class='panel panel-default panel-primary' style='margin-left:" + (20 * this.parents.length) + "px'>")
 			.append("<div class='panel-heading'>Suite: " + description + "</div>");
 		panels.push($panel);
 
-		if (suite.tests.length > 0) {
+		if (this.tests.length > 0) {
 			var rows = [ ];
-			if (suite.before_suite) {
-				before = this.do_render_test("n/a", " - Before suite -", "n/a", suite.before_suite.steps);
-				rows = rows.concat(before);
+			if (this.before_suite) {
+				rows = rows.concat(this.before_suite.render());
 			}
-			for (i in suite.tests) {
-			    test = suite.tests[i];
-			    test_rows = this.do_render_test(test.id, test.description, test.outcome, test.steps);
-			    rows = rows.concat(test_rows);
+			for (var i = 0; i < this.tests.length; i++) {
+			    rows = rows.concat(this.tests[i].render());
 			}
-			if (suite.after_suite) {
-				after = this.do_render_test("n/a", " - After suite -", "n/a", suite.after_suite.steps);
-				rows = rows.concat(after);
+			if (this.after_suite) {
+				rows = rows.concat(this.after_suite.render());
 			}
 			
 			var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
@@ -169,14 +181,26 @@ Report.prototype = {
 			$panel.append($table);
 		}
 		
-		for (i in suite.sub_suites) {
-			sub_suite = suite.sub_suites[i];
-			extra_panels = this.render_test_suite(sub_suite, parents.concat([ suite ]))
-			panels = panels.concat(extra_panels);
+		for (var i = 0; i < this.sub_suites.length; i++) {
+			panels = panels.concat(this.sub_suites[i].render());
 		}
 		
 		return panels;
-	},
+	}
+};
+
+function Report(data, node) {
+	this.data = data;
+	this.suites = [];
+	this.node = node;
+	
+	for (var i = 0; i < data.suites.length; i++) {
+		this.suites.push(new TestSuite(data.suites[i]));
+	}
+};
+
+Report.prototype = {
+	constructor: Report,
 	
 	render_key_value_table: function (data) {
 		var $table = $("<table class='table table-hover table-bordered table-condensed'>");
@@ -198,10 +222,10 @@ Report.prototype = {
 		this.render_key_value_table(this.data.stats).appendTo(this.node);
 		
 		$("<h1>Test results</h1>").appendTo(this.node);
-		for (suite in this.data.suites) {
-			panels = this.render_test_suite(this.data.suites[suite]);
-			for (i in panels) {
-				$(panels[i]).appendTo(this.node);
+		for (var i = 0; i < this.suites.length; i++) {
+			panels = this.suites[i].render();
+			for (var j = 0; j < panels.length; j++) {
+				$(panels[j]).appendTo(this.node);
 			}
 		}
 	}	
