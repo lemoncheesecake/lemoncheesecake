@@ -22,6 +22,9 @@ class LemonCheesecakeInternalError(Exception):
     def __str__(self):
         return "Internal error: %s" % Exception.__str__(self)
 
+class LemonCheesecakeInvalidReport(LemonCheesecakeException):
+    pass
+
 def humanize_duration(duration):
     ret = ""
     

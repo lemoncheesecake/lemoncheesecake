@@ -6,7 +6,7 @@ Created on Mar 27, 2016
 
 from lemoncheesecake.reportingdata import *
 from lemoncheesecake.reporting import ReportingBackend
-from lemoncheesecake.common import IS_PYTHON3
+from lemoncheesecake.common import IS_PYTHON3, LemonCheesecakeInvalidReport
 
 from lxml import etree as ET
 from lxml.builder import E
@@ -54,6 +54,13 @@ def _add_time_attr(node, name, value):
         return
     node.attrib[name] = "%.3f" % value
 
+def _serialize_outcome(outcome):
+    if outcome == True:
+        return OUTCOME_SUCCESS
+    if outcome == False:
+        return OUTCOME_FAILURE
+    return OUTCOME_NOT_AVAILABLE
+
 def _serialize_steps(steps, parent_node):
     for step in steps:
         step_node = _xml_child(parent_node, "step", "description", step.description)
@@ -65,17 +72,13 @@ def _serialize_steps(steps, parent_node):
                 attachment_node = _xml_child(step_node, "attachment", "description", entry.description)
                 attachment_node.text = entry.filename
             else: # TestCheck
-                if entry.outcome == True:
-                    outcome = OUTCOME_SUCCESS
-                elif entry.outcome == False:
-                    outcome = OUTCOME_FAILURE
-                else:
-                    outcome = OUTCOME_NOT_AVAILABLE
-                check_node = _xml_child(step_node, "check", "description", entry.description, "outcome", outcome)
+                check_node = _xml_child(step_node, "check", "description", entry.description,
+                                        "outcome", _serialize_outcome(entry.outcome))
                 check_node.text = entry.details
 
 def _serialize_test_data(test):
-    test_node = _xml_node("test", "id", test.id, "description", test.description)
+    test_node = _xml_node("test", "id", test.id, "description", test.description,
+                          "outcome", _serialize_outcome(test.outcome))
     _add_time_attr(test_node, "start-time", test.start_time)
     _add_time_attr(test_node, "end-time", test.end_time)
     for tag in test.tags:
@@ -150,6 +153,84 @@ def serialize_reporting_data_into_file(data, filename):
     file.write(content)
     file.close()
 
+def _unserialize_outcome(value):
+    if value == OUTCOME_SUCCESS:
+        return True
+    if value == OUTCOME_FAILURE:
+        return False
+    if value == OUTCOME_NOT_AVAILABLE:
+        return None
+    raise LemonCheesecakeInvalidReport("Unknown value '%s' for outcome" % value)
+
+def _unserialize_step_data(xml):
+    step = StepData(xml.attrib["description"])
+    for xml_entry in xml:
+        if xml_entry.tag == "log":
+            entry = LogData(xml_entry.attrib["level"], xml_entry.text)
+        elif xml_entry.tag == "attachment":
+            entry = AttachmentData(xml_entry.attrib["description"], xml_entry.text)
+        elif xml_entry.tag == "check":
+            entry = CheckData(xml_entry.attrib["description"], _unserialize_outcome(xml_entry.attrib["outcome"]),
+                              xml_entry.text)
+        step.entries.append(entry)
+    return step
+
+def _unserialize_test_data(xml):
+    test = TestData(xml.attrib["id"], xml.attrib["description"])
+    test.outcome = _unserialize_outcome(xml.attrib["outcome"])
+    test.start_time = float(xml.attrib["start-time"])
+    test.end_time = float(xml.attrib["end-time"])
+    test.tags = [ node.text for node in xml.xpath("tag") ]
+    test.tickets = [ [t.attrib["id"], t.text] for t in xml.xpath("ticket") ]
+    test.steps = [ _unserialize_step_data(s) for s in xml.xpath("step") ]
+    return test
+
+def _unserialize_testsuite_data(xml, parent=None):
+    suite = TestSuiteData(xml.attrib["id"], xml.attrib["description"], parent)
+    suite.tags = [ node.text for node in xml.xpath("tag") ]
+    suite.tickets = [ [t.attrib["id"], t.text] for t in xml.xpath("ticket") ]
+    
+    before_suite = xml.xpath("before-suite")
+    before_suite = before_suite[0] if len(before_suite) > 0 else None
+    if before_suite != None:
+        suite.before_suite_start_time = float(before_suite.attrib["start-time"])
+        suite.before_suite_end_time = float(before_suite.attrib["end-time"])
+        suite.before_suite_steps = [ _unserialize_step_data(s) for s in before_suite.xpath("step") ]
+        
+    suite.tests = [ _unserialize_test_data(t) for t in xml.xpath("test") ]
+    
+    after_suite = xml.xpath("after-suite")
+    after_suite = after_suite[0] if len(after_suite) > 0 else None
+    if after_suite != None:
+        suite.after_suite_start_time = float(after_suite.attrib["start-time"])
+        suite.after_suite_end_time = float(after_suite.attrib["end-time"])
+        suite.after_suite_steps = [ _unserialize_step_data(s) for s in after_suite.xpath("step") ]
+    
+    suite.sub_testsuites = [ _unserialize_testsuite_data(s, suite) for s in xml.xpath("suite") ]
+    
+    return suite
+
+def _unserialize_keyvalue_list(nodes):
+    ret = [ ]
+    for node in nodes:
+        ret.append([node.attrib["name"], node.text])
+    return ret
+
+def unserialize_reporting_data_from_file(filename):
+    data = ReportingData()
+    xml = ET.parse(open(filename, "r"))
+    root = xml.getroot().xpath("/lemoncheesecake-report")[0]
+    data.start_time = float(root.attrib["start-time"]) if "start-time" in root.attrib else None
+    data.end_time = float(root.attrib["end-time"]) if "end-time" in root.attrib else None
+    data.report_generation_time = float(root.attrib["generation-time"]) if "generation-time" in root.attrib else None
+    data.info = _unserialize_keyvalue_list(root.xpath("info"))
+    data.stats = _unserialize_keyvalue_list(root.xpath("stat"))
+    
+    for xml_suite in root.xpath("suite"):
+        data.testsuites.append(_unserialize_testsuite_data(xml_suite))
+    
+    return data
+    
 class XmlBackend(ReportingBackend):
     def __init__(self):
         pass
