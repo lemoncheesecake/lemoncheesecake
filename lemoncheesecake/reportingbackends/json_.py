@@ -63,6 +63,24 @@ def _serialize_testsuite_data(suite):
     
     return json_suite
 
+def serialize_reporting_data(data):
+    return {
+        "start_time": _time_value(data.start_time),
+        "end_time": _time_value(data.end_time),
+        "generation_time": _time_value(data.report_generation_time),
+        "suites": [ _serialize_testsuite_data(s) for s in data.testsuites ],
+        "info": [ [ n, v ] for n, v in data.info ],
+        "stats": [ [ n, v ] for n, v in data.stats ],
+    }
+
+def serialize_reporting_data_into_file(data, filename, javascript_compatibility=True):
+    report = serialize_reporting_data(data)
+    file = open(filename, "w")
+    if javascript_compatibility:
+        file.write(JS_PREFIX)
+    file.write(json.dumps(report))
+    file.close()
+
 def _unserialize_step_data(js):
     step = StepData(js["description"])
     for js_entry in js["entries"]:
@@ -105,24 +123,6 @@ def _unserialize_testsuite_data(js, parent=None):
     suite.sub_testsuites = [ _unserialize_testsuite_data(s, suite) for s in js["sub_suites"] ]
     
     return suite
-
-def serialize_reporting_data(data):
-    return {
-        "start_time": _time_value(data.start_time),
-        "end_time": _time_value(data.end_time),
-        "generation_time": _time_value(data.report_generation_time),
-        "suites": [ _serialize_testsuite_data(s) for s in data.testsuites ],
-        "info": [ [ n, v ] for n, v in data.info ],
-        "stats": [ [ n, v ] for n, v in data.stats ],
-    }
-
-def serialize_reporting_data_into_file(data, filename, javascript_compatibility=True):
-    report = serialize_reporting_data(data)
-    file = open(filename, "w")
-    if javascript_compatibility:
-        file.write(JS_PREFIX)
-    file.write(json.dumps(report))
-    file.close()
 
 def unserialize_reporting_data_from_file(filename):
     data = ReportingData()
