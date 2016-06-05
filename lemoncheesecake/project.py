@@ -4,6 +4,7 @@ Created on Mar 12, 2016
 @author: nicolas
 '''
 
+import os
 import imp
 import inspect
 
@@ -66,7 +67,7 @@ class ProjectSettings:
         return value
     
     def load(self):
-        settings = imp.load_source("settings", "%s/settings.py" % self.project_dir)
+        settings = imp.load_source("settings", os.path.join(self.project_dir, "settings.py"))
         self._testsuites = self._get_param(settings, "TESTSUITES", self._check_is_subclass(TestSuite), is_list=True)
         self.reports_root_dir = self._get_param(settings, "REPORTING_ROOT_DIR", self._check_is_type(str))
         self.report_dir_format = self._get_param(settings, "REPORTING_DIR_FORMAT", self._check_is_func)

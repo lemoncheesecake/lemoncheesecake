@@ -6,6 +6,7 @@ Created on Jan 24, 2016
 
 import sys
 import os, os.path
+import platform
 import time
 import argparse
 
@@ -142,11 +143,11 @@ class Launcher:
         report_dir += os.path.sep
         report_dir += project.settings.report_dir_format(project.settings.reports_root_dir, time.time())
         os.mkdir(report_dir)
-        # FIXME: the symlink is not portable
-        symlink_path = os.path.join(project.settings.reports_root_dir, "..", "last_report")
-        if os.path.exists(symlink_path):
-            os.unlink(symlink_path)
-        os.symlink(report_dir, symlink_path)
+        if platform.system() != "Windows":
+            symlink_path = os.path.join(project.settings.reports_root_dir, "..", "last_report")
+            if os.path.exists(symlink_path):
+                os.unlink(symlink_path)
+            os.symlink(report_dir, symlink_path)
         initialize_runtime(report_dir)
         rt = get_runtime()
         for backend in project.settings.report_backends:

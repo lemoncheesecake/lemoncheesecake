@@ -20,7 +20,7 @@ def _strip_py_ext(filename):
     return re.sub("\.py$", "", filename)
 
 def _load_testsuite(filename):
-    mod_path = _strip_py_ext(filename.replace("/", "."))
+    mod_path = _strip_py_ext(filename.replace(os.path.sep, "."))
     mod_name = mod_path.split(".")[-1]
 
     loaded_mod = importlib.import_module(mod_path)
