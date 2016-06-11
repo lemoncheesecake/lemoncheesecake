@@ -73,12 +73,15 @@ def serialize_reporting_data(data):
         "stats": [ [ n, v ] for n, v in data.stats ],
     }
 
-def serialize_reporting_data_into_file(data, filename, javascript_compatibility=True):
+def serialize_reporting_data_into_file(data, filename, javascript_compatibility=True, pretty_formatting=False):
     report = serialize_reporting_data(data)
     file = open(filename, "w")
     if javascript_compatibility:
         file.write(JS_PREFIX)
-    file.write(json.dumps(report))
+    if pretty_formatting:
+        file.write(json.dumps(report, indent=4, sort_keys=True))
+    else:
+        file.write(json.dumps(report))
     file.close()
 
 def _unserialize_step_data(js):
@@ -140,8 +143,12 @@ def unserialize_reporting_data_from_file(filename):
     return data
 
 class JsonBackend(ReportingBackend):
-    def __init__(self, javascript_compatibility=True):
+    def __init__(self, javascript_compatibility=True, pretty_formatting=False):
         self.javascript_compatibility = javascript_compatibility
+        self.pretty_formatting = pretty_formatting
     
     def end_tests(self):
-        serialize_reporting_data_into_file(self.reporting_data, self.report_dir + "/report.json", javascript_compatibility=self.javascript_compatibility)
+        serialize_reporting_data_into_file(
+            self.reporting_data, self.report_dir + "/report.json",
+            javascript_compatibility=self.javascript_compatibility, pretty_formatting=self.pretty_formatting
+        )

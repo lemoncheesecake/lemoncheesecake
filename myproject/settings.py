@@ -21,4 +21,4 @@ html.OFFLINE_MODE = True
 # Reporting
 REPORTING_ROOT_DIR = "reports"
 REPORTING_DIR_FORMAT = reporting_dir_with_datetime
-REPORTING_BACKENDS = ConsoleBackend(), XmlBackend(), JsonBackend(), HtmlBackend()
+REPORTING_BACKENDS = ConsoleBackend(), XmlBackend(), JsonBackend(pretty_formatting=True), HtmlBackend()
