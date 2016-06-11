@@ -231,14 +231,16 @@ class TestSuite:
         # dynamic test        
         self.load_generated_tests()
         
-        # sub testsuites
         self._sub_testsuites = [ ]
-        for suite_class in self.sub_testsuite_classes:
-            suite = suite_class()
-            suite.load(self)
-            self.assert_sub_test_suite_description_is_unique(suite.description)
-            self._sub_testsuites.append(suite)
-        
+        for attr_name in dir(self):
+            attr = getattr(self, attr_name)
+            if not inspect.isclass(attr) or not issubclass(attr, TestSuite):
+                continue
+            sub_suite = attr()
+            sub_suite.load(self)
+            self.assert_sub_test_suite_description_is_unique(sub_suite.description)
+            self._sub_testsuites.append(sub_suite)
+
         # filtering data
         self._selected_test_ids = [ t.id for t in self._tests ]
     

@@ -40,7 +40,8 @@ def load_testsuites_from_directory(dir, recursive=True):
             suite_subdir = _strip_py_ext(filename) + "_suites"
             if os.path.isdir(suite_subdir):
                 sub_suites = load_testsuites_from_directory(suite_subdir, recursive=True)
-                suite.sub_testsuite_classes = suite.sub_testsuite_classes + sub_suites
+                for sub_suite in sub_suites:
+                    setattr(suite, sub_suite.__name__, sub_suite)
         suites.append(suite)
     if len(list(filter(lambda s: hasattr(s, "_rank"), suites))) == len(suites):
         suites.sort(key=lambda s: s._rank)

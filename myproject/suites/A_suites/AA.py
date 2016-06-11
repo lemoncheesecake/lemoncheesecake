@@ -1,15 +1,8 @@
 from lemoncheesecake.testsuite import *
 from lemoncheesecake.checkers import *
 
-class AAA(TestSuite):
-    @test("Test of AAA")
-    def test_of_B(self):
-        assert_eq("value", 1, 2)
-
 @tickets("1234")
 class AA(TestSuite):
-    sub_testsuite_classes = [ AAA ]
-
     def before_suite(self):
         step("hep csdcnlns csdlcsdl cubsd ucds")
         info("some stuff in before suite")
@@ -21,3 +14,8 @@ class AA(TestSuite):
     @test("Test of A")
     def test_of_A(self):
         raise AbortTest("this test cannot be executed")
+
+    class AAA(TestSuite):
+        @test("Test of AAA")
+        def test_of_B(self):
+            assert_eq("value", 1, 2)
