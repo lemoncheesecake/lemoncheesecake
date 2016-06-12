@@ -126,8 +126,8 @@ Test.prototype = {
 	}
 }
 
-function TestSuite(data, parents=[]) {
-    this.parents = parents;
+function TestSuite(data, parents) {
+    this.parents = (parents == null) ? [] : parents;
     this.id = data.id;
     this.description = data.description;
     this.before_suite = null;
@@ -148,7 +148,7 @@ function TestSuite(data, parents=[]) {
     }
 
     for (var i = 0; i < data.sub_suites.length; i++) {
-    	this.sub_suites.push(new TestSuite(data.sub_suites[i], parents.concat(this)));
+        this.sub_suites.push(new TestSuite(data.sub_suites[i], this.parents.concat(this)));
     }
 }
 
