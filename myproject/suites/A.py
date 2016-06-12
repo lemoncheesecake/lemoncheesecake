@@ -39,6 +39,7 @@ class A(TestSuite):
     def bar(self):
         pass
     
+    @tickets(["#444", "http://bugtracker.net/tickets/444"])
     @test("Third test")
     def third_test(self):
         error("something goes wrong")
