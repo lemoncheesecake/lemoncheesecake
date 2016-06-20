@@ -6,13 +6,14 @@ Created on Jan 24, 2016
 
 import sys
 import os, os.path
+import re
+import importlib
+import glob
 import platform
 import time
 import argparse
-
 import traceback
 
-from lemoncheesecake.project import Project
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.common import LemonCheesecakeException, IS_PYTHON3
 from lemoncheesecake.testsuite import Filter, AbortTest, AbortTestSuite, AbortAllTests
@@ -24,9 +25,50 @@ from lemoncheesecake.reportingbackends.html import HtmlBackend
 
 COMMAND_RUN = "run"
 
+class CannotLoadTestSuite(LemonCheesecakeException):
+    pass
+
+def reporting_dir_with_datetime(report_rootdir, t):
+    return time.strftime("report-%Y%m%d-%H%M%S", time.localtime(t))
+
+def _strip_py_ext(filename):
+    return re.sub("\.py$", "", filename)
+
+def _load_testsuite(filename):
+    mod_path = _strip_py_ext(filename.replace(os.path.sep, "."))
+    mod_name = mod_path.split(".")[-1]
+
+    loaded_mod = importlib.import_module(mod_path)
+    try:
+        klass = getattr(loaded_mod, mod_name)
+    except AttributeError:
+        raise Exception("Cannot find class '%s' in '%s'" % (mod_name, loaded_mod.__file__))
+    return klass
+
+def load_testsuites_from_directory(dir, recursive=True):
+    suites = [ ]
+    for filename in glob.glob(os.path.join(dir, "*.py")):
+        if os.path.basename(filename).startswith("__"):
+            continue
+        suite = _load_testsuite(filename)
+        if recursive:
+            suite_subdir = _strip_py_ext(filename) + "_suites"
+            if os.path.isdir(suite_subdir):
+                sub_suites = load_testsuites_from_directory(suite_subdir, recursive=True)
+                for sub_suite in sub_suites:
+                    setattr(suite, sub_suite.__name__, sub_suite)
+        suites.append(suite)
+    if len(list(filter(lambda s: hasattr(s, "_rank"), suites))) == len(suites):
+        suites.sort(key=lambda s: s._rank)
+    return suites
+
 class Launcher:
     def __init__(self):
         self.cli_parser = argparse.ArgumentParser()
+
+        ###
+        # CLI setup
+        ###
         subparsers = self.cli_parser.add_subparsers(dest="command")
         self.cli_run_parser = subparsers.add_parser(COMMAND_RUN)
         self.cli_run_parser.add_argument("--test-id", "-t", nargs="+", default=[], help="Filters on test IDs")
@@ -35,6 +77,44 @@ class Launcher:
         self.cli_run_parser.add_argument("--suite-desc", nargs="+", default=[], help="Filters on test suite descriptions")
         self.cli_run_parser.add_argument("--tag", "-a", nargs="+", default=[], help="Filters on test & test suite tags")
         self.cli_run_parser.add_argument("--ticket", "-i", nargs="+", default=[], help="Filters on test & test suite tickets")
+        self.cli_run_parser.add_argument("--report-dir", "-r", required=False, help="Directory where reporting data will be stored")
+        
+        ###
+        # Default reporting setup when no --report-dir has been setup
+        ###
+        self.reporting_root_dir = os.path.join(os.path.dirname(sys.argv[0]), "reports")
+        self.reporting_dir_format = reporting_dir_with_datetime
+        self.reporting_backends = ConsoleBackend(), XmlBackend(), JsonBackend(), HtmlBackend()
+    
+        ###
+        # Testsuites data
+        ###
+        self._testsuites = [ ]
+        self._testsuites_by_id = { }
+        self._tests_by_id = { }
+    
+    def _load_testsuite(self, suite):
+        # process suite
+        if suite.id in self._testsuites_by_id:
+            raise CannotLoadTestSuite("A test suite with id '%s' has been registered more than one time" % suite.id)
+        self._testsuites_by_id[suite.id] = suite
+
+        # process tests
+        for test in suite.get_tests():
+            if test.id in self._tests_by_id:
+                raise CannotLoadTestSuite("A test with id '%s' has been registered more than one time" % test.id)
+            self._tests_by_id[test.id] = test
+        
+        # process sub suites
+        for sub_suite in suite.get_sub_testsuites():
+            self._load_testsuite(sub_suite)
+        
+    def add_testsuites(self, suites):
+        for suite_klass in suites:
+            suite = suite_klass()
+            suite.load()
+            self._load_testsuite(suite)
+            self._testsuites.append(suite)
     
     def _run_testsuite(self, suite):
         rt = get_runtime()
@@ -121,17 +201,13 @@ class Launcher:
         if self.abort_testsuite == suite:
             self.abort_testsuite = None
         
-    def run_testsuites(self, project, filter):
-        # load project
-        project.load_settings()
-        project.load_testsuites()
-        
+    def run_testsuites(self, filter, report_dir):
         # retrieve test suites
         if filter.is_empty():
-            testsuites = project.testsuites
+            testsuites = self._testsuites
         else:
             testsuites = []
-            for suite in project.testsuites:
+            for suite in self._testsuites:
                 suite.apply_filter(filter)
                 if suite.has_selected_tests():
                     testsuites.append(suite)
@@ -139,18 +215,19 @@ class Launcher:
                 raise LemonCheesecakeException("The test filter does not match any test.")
                 
         # initialize runtime & global test variables
-        report_dir  = project.settings.reports_root_dir
-        report_dir += os.path.sep
-        report_dir += project.settings.report_dir_format(project.settings.reports_root_dir, time.time())
+        if not report_dir:
+            report_dir = self.reporting_root_dir
+            report_dir += os.path.sep
+            report_dir += self.reporting_dir_format(self.reporting_root_dir, time.time())
         os.mkdir(report_dir)
         if platform.system() != "Windows":
-            symlink_path = os.path.join(project.settings.reports_root_dir, "..", "last_report")
+            symlink_path = os.path.join(os.path.dirname(report_dir), "..", "last_report")
             if os.path.exists(symlink_path):
                 os.unlink(symlink_path)
             os.symlink(report_dir, symlink_path)
         initialize_runtime(report_dir)
         rt = get_runtime()
-        for backend in project.settings.report_backends:
+        for backend in self.reporting_backends:
             rt.report_backends.append(backend)
         rt.init_reporting_backends()
         self.abort_all_tests = False
@@ -176,8 +253,7 @@ class Launcher:
         filter.tickets = args.ticket
         
         # init project and run tests
-        project = Project(".")
-        self.run_testsuites(project, filter)
+        self.run_testsuites(filter, args.report_dir)
         
     def handle_cli(self):
         try:

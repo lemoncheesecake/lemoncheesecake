@@ -192,6 +192,12 @@ def tags(*tag_names):
         return obj
     return wrapper
 
+def suite_rank(value):
+    def wrapper(klass):
+        klass._rank = value
+        return klass
+    return wrapper
+
 def tickets(*tickets):
     def wrapper(obj):
         if (inspect.isclass(obj) and not issubclass(obj, TestSuite)) and not isinstance(obj, Test):
