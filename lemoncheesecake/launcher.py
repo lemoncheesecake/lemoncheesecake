@@ -216,6 +216,8 @@ class Launcher:
                 
         # initialize runtime & global test variables
         if not report_dir:
+            if not os.path.exists(self.reporting_root_dir):
+                os.mkdir(self.reporting_root_dir)
             report_dir = self.reporting_root_dir
             report_dir += os.path.sep
             report_dir += self.reporting_dir_format(self.reporting_root_dir, time.time())
