@@ -34,7 +34,7 @@ def reporting_dir_with_datetime(report_rootdir, t):
 def _strip_py_ext(filename):
     return re.sub("\.py$", "", filename)
 
-def _load_testsuite(filename):
+def get_testsuite_from_file(filename):
     mod_path = _strip_py_ext(filename.replace(os.path.sep, "."))
     mod_name = mod_path.split(".")[-1]
 
@@ -45,16 +45,16 @@ def _load_testsuite(filename):
         raise Exception("Cannot find class '%s' in '%s'" % (mod_name, loaded_mod.__file__))
     return klass
 
-def load_testsuites_from_directory(dir, recursive=True):
+def get_testsuites_from_directory(dir, recursive=True):
     suites = [ ]
     for filename in glob.glob(os.path.join(dir, "*.py")):
         if os.path.basename(filename).startswith("__"):
             continue
-        suite = _load_testsuite(filename)
+        suite = get_testsuite_from_file(filename)
         if recursive:
             suite_subdir = _strip_py_ext(filename) + "_suites"
             if os.path.isdir(suite_subdir):
-                sub_suites = load_testsuites_from_directory(suite_subdir, recursive=True)
+                sub_suites = get_testsuites_from_directory(suite_subdir, recursive=True)
                 for sub_suite in sub_suites:
                     setattr(suite, sub_suite.__name__, sub_suite)
         suites.append(suite)
@@ -109,7 +109,12 @@ class Launcher:
         for sub_suite in suite.get_sub_testsuites():
             self._load_testsuite(sub_suite)
         
-    def add_testsuites(self, suites):
+    def load_testsuites(self, suites):
+        """Load TestSuite classes.
+        
+        :param suites: the test suites to load
+        :type suites: list of TestSuite classes
+        """
         for suite_klass in suites:
             suite = suite_klass()
             suite.load()
@@ -202,6 +207,16 @@ class Launcher:
             self.abort_testsuite = None
         
     def run_testsuites(self, filter, report_dir):
+        """Run the loaded test suites.
+        
+        :param filter: Only the test suites and tests that match the given filter will be run.
+        :type filter: a Filter instance
+        :param report_dir: The directory where the various reporting data files will be written. 
+        If None, the default reporting dir mechanism will be used (see reporting_root_dir and
+        reportin_dir_format attributes).
+        :type report_dir: str
+        """
+        
         # retrieve test suites
         if filter.is_empty():
             testsuites = self._testsuites
@@ -245,6 +260,12 @@ class Launcher:
         rt.end_tests()
 
     def cli_run_testsuites(self, args):
+        """Run the loaded test suites according to the command line parameters.
+        
+        :param args: the user CLI parameters
+        :type args: the return value of the method parse_args of argparse.ArgumentParser
+        """
+        
         # init filter
         filter = Filter()
         filter.test_id = args.test_id
@@ -258,6 +279,10 @@ class Launcher:
         self.run_testsuites(filter, args.report_dir)
         
     def handle_cli(self):
+        """Main method of the launcher: run the launcher according the CLI arguments (found in sys.argv).
+        The method will exit with exit code 0 or 1 if anything goes wrong (NB: test failures or successes
+        do not impact the exit code).
+        """
         try:
             args = self.cli_parser.parse_args()
             if args.command == COMMAND_RUN:
