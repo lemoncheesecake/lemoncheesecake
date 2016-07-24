@@ -17,6 +17,7 @@ import traceback
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.common import LemonCheesecakeException, IS_PYTHON3
 from lemoncheesecake.testsuite import Filter, AbortTest, AbortTestSuite, AbortAllTests
+import lemoncheesecake.worker
 from lemoncheesecake import reporting
 from lemoncheesecake.reportingbackends.console import ConsoleBackend
 from lemoncheesecake.reportingbackends.xml import XmlBackend
@@ -92,6 +93,16 @@ class Launcher:
         self._testsuites = [ ]
         self._testsuites_by_id = { }
         self._tests_by_id = { }
+        
+        ###
+        # Worker
+        ###
+        self._worker = None
+        lemoncheesecake.worker.worker = None
+    
+    def set_worker(self, worker):
+        self._worker = worker
+        lemoncheesecake.worker.worker = worker
     
     def _load_testsuite(self, suite):
         # process suite
@@ -123,7 +134,7 @@ class Launcher:
     
     def _run_testsuite(self, suite):
         rt = get_runtime()
-        
+                
         def handle_exception(e):
             if isinstance(e, AbortTest):
                 rt.error(str(e))
@@ -144,7 +155,7 @@ class Launcher:
                 rt.error("Caught unexpected exception while running test: " + stacktrace)
 
         rt.begin_before_suite(suite)
-                
+
         if not self.abort_testsuite and not self.abort_all_tests:
             try:
                 suite.before_suite()
@@ -275,7 +286,9 @@ class Launcher:
         filter.tags = args.tag
         filter.tickets = args.ticket
         
-        # init project and run tests
+        # initialize worker using CLI args and run tests
+        if self._worker:
+            self._worker.cli_initialize(args)
         self.run_testsuites(filter, args.report_dir)
         
     def handle_cli(self):
