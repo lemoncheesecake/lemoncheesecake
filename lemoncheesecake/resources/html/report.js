@@ -6,7 +6,7 @@ Step.prototype = {
 	constructor: Step,
 	
 	render: function () {
-		this.step_row = $("<tr style='display: none' class='step'><td colspan='3'><u>" + this.step.description + "</u></td></tr>");
+		this.step_row = $("<tr style='display: none' class='step'><td colspan='4'><u>" + this.step.description + "</u></td></tr>");
 		this.entry_rows = [ ];
 		
 		for (i in this.step.entries) {
@@ -16,7 +16,7 @@ Step.prototype = {
 			if (entry.type == "check") {
 				$row.addClass("check");
 				$row.append($("<td>" + entry.description + "</td>"));
-				$row.append($("<td>" + (entry.details ? entry.details : "") + "</td>"));
+				$row.append($("<td colspan='2'>" + (entry.details ? entry.details : "") + "</td>"));
 				if (entry.outcome) {
 					$row.append($("<td class='text-success'><strong>success</strong></td>"));
 				} else {
@@ -25,7 +25,7 @@ Step.prototype = {
 				}
 			} else if (entry.type == "log") {
 				$row.addClass("log");
-				$row.append($("<td colspan='2'><samp>" + entry.message + "</samp></td>"));
+				$row.append($("<td colspan='3'><samp>" + entry.message + "</samp></td>"));
 				$row.append($("<td class='text-uppercase'>" + entry.level + "</td>"));
 				if (entry.level == "error") {
 					$row.addClass("danger");
@@ -80,19 +80,6 @@ Test.prototype = {
 		/* build id column */
 		cols.push($("<td>" + this.id + "</td>"));
 
-		/* build status column */
-		var status;
-		var status_class;
-		if (this.outcome == true) {
-			$status_col = $("<td class='text-success'><strong>success</strong></td>");
-		} else if (this.outcome == false) {
-			$status_col = $("<td><strong>failure</strong></td>");
-			status_class = "danger";
-		} else {
-			$status_col = $("<td>n/a</td>");
-		}
-		cols.push($status_col);
-
 		/* build info column */
 		var $info = $("<td>");
 		if (this.tags.length > 0) {
@@ -113,6 +100,19 @@ Test.prototype = {
 		    }
 		}
 		cols.push($info);
+
+		/* build status column */
+		var status;
+		var status_class;
+		if (this.outcome == true) {
+			$status_col = $("<td class='text-success'><strong>success</strong></td>");
+		} else if (this.outcome == false) {
+			$status_col = $("<td><strong>failure</strong></td>");
+			status_class = "danger";
+		} else {
+			$status_col = $("<td>n/a</td>");
+		}
+		cols.push($status_col);
 
 		/* build the whole line test with steps */
 		$test_row = $("<tr>", { "class": status_class }).append(cols);
@@ -208,7 +208,7 @@ TestSuite.prototype = {
 			
 			var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
 				.append($("<colgroup><col width='60%'><col width='20%'><col width='10%'><col width='10%'></colgroup>"))
-				.append($("<thead><tr><th>Test description</th><th>Test id</th><th>Outcome</th><th>Info</th></tr></thead>"))
+				.append($("<thead><tr><th>Test description</th><th>Test id</th><th>Info</th><th>Outcome</th></tr></thead>"))
 				.append($("<tbody>").append(rows));
 			$panel.append($table);
 		}
