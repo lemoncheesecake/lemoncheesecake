@@ -49,6 +49,8 @@ CTX_TEST = 1
 CTX_AFTER_SUITE = 2
 
 class ConsoleBackend(ReportingBackend):
+    name = "console"
+    
     def __init__(self):
         init() # init colorama
         self.lp = LinePrinter()

@@ -4,7 +4,7 @@ Created on Mar 26, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.runtime import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
+from lemoncheesecake.reporting import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 
 class LogData:
     def __init__(self, level, message):

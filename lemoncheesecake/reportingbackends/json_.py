@@ -143,6 +143,8 @@ def unserialize_reporting_data_from_file(filename):
     return data
 
 class JsonBackend(ReportingBackend):
+    name = "json"
+    
     def __init__(self, javascript_compatibility=True, pretty_formatting=False):
         self.javascript_compatibility = javascript_compatibility
         self.pretty_formatting = pretty_formatting

@@ -13,6 +13,8 @@ from shutil import copy, copytree
 from lemoncheesecake.reporting import ReportingBackend
 
 class HtmlBackend(ReportingBackend):
+    name = "html"
+    
     def __init__(self, offline_mode=False):
         self.offline_mode = offline_mode
     

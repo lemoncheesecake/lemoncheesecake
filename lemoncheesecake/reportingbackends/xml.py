@@ -232,6 +232,8 @@ def unserialize_reporting_data_from_file(filename):
     return data
     
 class XmlBackend(ReportingBackend):
+    name = "xml"
+    
     def __init__(self):
         pass
     

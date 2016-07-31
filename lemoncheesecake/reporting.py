@@ -6,6 +6,46 @@ Created on Mar 29, 2016
 
 from lemoncheesecake.common import LemonCheesecakeException
 
+ATTACHEMENT_DIR = "attachments"
+
+LOG_LEVEL_DEBUG = "debug"
+LOG_LEVEL_INFO = "info"
+LOG_LEVEL_WARN = "warn"
+LOG_LEVEL_ERROR = "error"
+
+_backends = { }
+_enabled_backends = set()
+
+def register_backend(name, backend):
+    global _backends
+    _backends[name] = backend
+
+def get_backend(name):
+    global _backends
+    if not _backends.has_key(name):
+        raise LemonCheesecakeException("Unknown reporting backend: '%s'" % name)
+    return _backends[name]
+
+def has_backend(name):
+    global _backends
+    return _backends.has_key(name)
+
+def enable_backend(name):
+    _enabled_backends.add(name)
+
+def disable_backend(name):
+    _enabled_backends.discard(name)
+
+def only_enable_backends(*names):
+    _enabled_backends.clear()
+    _enabled_backends.update(names)
+
+def get_enabled_backend_names():
+    return _enabled_backends[:]
+
+def get_enabled_backends():
+    return [_backends[b] for b in _enabled_backends]
+
 class ReportingBackend:
     def initialize(self, reporting_data, report_dir):
         self.reporting_data = reporting_data
@@ -43,3 +83,17 @@ class ReportingBackend:
     
     def check(self, description, outcome, details=None):
         pass
+
+def register_default_backends():
+    from lemoncheesecake.reportingbackends.console import ConsoleBackend
+    from lemoncheesecake.reportingbackends.xml import XmlBackend
+    from lemoncheesecake.reportingbackends.json_ import JsonBackend
+    from lemoncheesecake.reportingbackends.html import HtmlBackend
+
+    backends = ConsoleBackend, XmlBackend, JsonBackend, HtmlBackend
+    for backend in backends:
+        register_backend(backend.name, backend())
+    
+    only_enable_backends(ConsoleBackend.name, JsonBackend.name, HtmlBackend.name)
+
+register_default_backends()

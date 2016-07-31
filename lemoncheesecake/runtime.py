@@ -9,13 +9,8 @@ import time
 import shutil
 
 from lemoncheesecake.common import LemonCheesecakeInternalError, humanize_duration
-
-ATTACHEMENT_DIR = "attachments"
-
-LOG_LEVEL_DEBUG = "debug"
-LOG_LEVEL_INFO = "info"
-LOG_LEVEL_WARN = "warn"
-LOG_LEVEL_ERROR = "error"
+from lemoncheesecake.reporting import get_enabled_backends, LOG_LEVEL_DEBUG, LOG_LEVEL_INFO, \
+    LOG_LEVEL_WARN, LOG_LEVEL_ERROR, ATTACHEMENT_DIR
 
 from lemoncheesecake.reportingdata import *
 
@@ -62,7 +57,7 @@ class _Runtime:
         self.report_dir = report_dir
         self.attachment_count = 0
         self.reporting_data = ReportingData()
-        self.report_backends = [ ]
+        self.report_backends = get_enabled_backends()
         self.step_lock = False
         self.default_step_description = ""
         # pointers to reporting data parts

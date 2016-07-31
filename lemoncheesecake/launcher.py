@@ -19,10 +19,6 @@ from lemoncheesecake.common import LemonCheesecakeException, IS_PYTHON3
 from lemoncheesecake.testsuite import Filter, AbortTest, AbortTestSuite, AbortAllTests
 import lemoncheesecake.worker
 from lemoncheesecake import reporting
-from lemoncheesecake.reportingbackends.console import ConsoleBackend
-from lemoncheesecake.reportingbackends.xml import XmlBackend
-from lemoncheesecake.reportingbackends.json_ import JsonBackend
-from lemoncheesecake.reportingbackends.html import HtmlBackend
 
 COMMAND_RUN = "run"
 
@@ -85,7 +81,6 @@ class Launcher:
         ###
         self.reporting_root_dir = os.path.join(os.path.dirname(sys.argv[0]), "reports")
         self.reporting_dir_format = reporting_dir_with_datetime
-        self.reporting_backends = ConsoleBackend(), XmlBackend(), JsonBackend(), HtmlBackend()
     
         ###
         # Testsuites data
@@ -255,8 +250,6 @@ class Launcher:
             os.symlink(report_dir, symlink_path)
         initialize_runtime(report_dir)
         rt = get_runtime()
-        for backend in self.reporting_backends:
-            rt.report_backends.append(backend)
         rt.init_reporting_backends()
         self.abort_all_tests = False
         self.abort_testsuite = None
