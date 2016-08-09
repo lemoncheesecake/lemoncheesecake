@@ -16,15 +16,15 @@ OUTCOME_FAILURE = "failure"
 OUTCOME_SUCCESS = "success"
 
 # borrowed from http://stackoverflow.com/a/1239193
-def _xml_indent(elem, level=0):
-    i = "\n" + level * "    "
+def _xml_indent(elem, level=0, indent_level=4):
+    i = "\n" + level * (" " * indent_level)
     if len(elem):
         if not elem.text or not elem.text.strip():
-            elem.text = i + "    "
+            elem.text = i + (" " * indent_level)
         if not elem.tail or not elem.tail.strip():
             elem.tail = i
         for elem in elem:
-            _xml_indent(elem, level+1)
+            _xml_indent(elem, level+1, indent_level)
         if not elem.tail or not elem.tail.strip():
             elem.tail = i
     else:
@@ -142,9 +142,9 @@ def serialize_reporting_data(data):
         report.append(suite_node)
     return report
 
-def serialize_reporting_data_into_file(data, filename):
+def serialize_reporting_data_into_file(data, filename, indent_level):
     report = serialize_reporting_data(data)
-    _xml_indent(report)
+    _xml_indent(report, indent_level=indent_level)
     file = open(filename, "w")
     if IS_PYTHON3:
         content = ET.tostring(report, pretty_print=True, encoding="unicode")
@@ -235,7 +235,9 @@ class XmlBackend(ReportingBackend):
     name = "xml"
     
     def __init__(self):
-        pass
+        self.indent_level = 4
     
     def end_tests(self):
-        serialize_reporting_data_into_file(self.reporting_data, self.report_dir + "/report.xml")
+        serialize_reporting_data_into_file(
+            self.reporting_data, self.report_dir + "/report.xml", self.indent_level
+        )
