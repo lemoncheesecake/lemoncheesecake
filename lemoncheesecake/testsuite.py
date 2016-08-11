@@ -68,6 +68,7 @@ FILTER_SUITE_MATCH_ID = 0x01
 FILTER_SUITE_MATCH_DESCRIPTION = 0x02
 FILTER_SUITE_MATCH_TAG = 0x04
 FILTER_SUITE_MATCH_TICKET = 0x08
+FILTER_SUITE_MATCH_METADATA = 0x10
 
 class Filter:
     def __init__(self):
@@ -76,11 +77,15 @@ class Filter:
         self.testsuite_id = []
         self.testsuite_description = []
         self.tags = [ ]
+        self.metadata = {}
         self.tickets = [ ]
     
     def is_empty(self):
-        filters = self.test_id + self.testsuite_id + self.test_description + self.testsuite_description + self.tags + self.tickets
-        return len(filters) == 0
+        count = 0
+        for value in self.test_id, self.testsuite_id, self.test_description, \
+            self.testsuite_description, self.tags, self.metadata, self.tickets:
+            count += len(value)
+        return count == 0
     
     def get_flags_to_match_testsuite(self):
         flags = 0
@@ -117,6 +122,14 @@ class Filter:
             if not match:
                 return False
                 
+        if self.metadata and not parent_suite_match & FILTER_SUITE_MATCH_METADATA:
+            for key, value in self.metadata.items():
+                if key in test.metadata and test.metadata[key] == value:
+                    match = True
+                    break
+            if not match:
+                return False
+                
         if self.tickets and not parent_suite_match & FILTER_SUITE_MATCH_TICKET:
             for ticket in self.tickets:
                 if ticket in [ t[0] for t in test.tickets ]:
@@ -148,6 +161,12 @@ class Filter:
                     match |= FILTER_SUITE_MATCH_TAG
                     break
 
+        if self.metadata and not parent_suite_match & FILTER_SUITE_MATCH_METADATA:
+            for key, value in self.metadata.items():
+                if key in suite.metadata and suite.metadata[key] == value:
+                    match |= FILTER_SUITE_MATCH_METADATA
+                    break
+
         if self.tickets and not parent_suite_match & FILTER_SUITE_MATCH_TICKET:
             for ticket in self.tickets:
                 if ticket in [ t[0] for t in suite.tickets ]:
@@ -164,6 +183,7 @@ class Test:
         self.description = description
         self.callback = callback
         self.tags = [ ]
+        self.metadata = {}
         self.tickets = [ ]
         self.rank = force_rank if force_rank != None else Test.test_current_rank
         Test.test_current_rank += 1
@@ -192,6 +212,14 @@ def tags(*tag_names):
         return obj
     return wrapper
 
+def metadata(key, value):
+    def wrapper(obj):
+        if (inspect.isclass(obj) and not issubclass(obj, TestSuite)) and not isinstance(obj, Test):
+            raise LemonCheesecakeInternalError("Metadata can only be added to Test and TestSuite objects (got %s)" % type(obj))
+        obj.metadata[key] = value
+        return obj
+    return wrapper
+
 def suite_rank(value):
     def wrapper(klass):
         klass._rank = value
@@ -213,6 +241,7 @@ def tickets(*tickets):
 
 class TestSuite:
     tags = [ ]
+    metadata = {}
     tickets = [ ]
     sub_testsuite_classes = [ ]        
     

@@ -84,6 +84,9 @@ def _serialize_test_data(test):
     for tag in test.tags:
         tag_node = _xml_child(test_node, "tag")
         tag_node.text = tag
+    for key, value in test.metadata.items():
+        metadata_node = _xml_child(test_node, "metadata", "key", key)
+        metadata_node.text = value
     for ticket in test.tickets:
         ticket_node = _xml_child(test_node, "ticket", "id", ticket[0])
         ticket_node.text = ticket[1]
@@ -96,6 +99,9 @@ def _serialize_testsuite_data(suite):
     for tag in suite.tags:
         tag_node = _xml_child(suite_node, "tag")
         tag_node.text = tag
+    for key, value in suite.metadata.items():
+        metadata_node = _xml_child(suite_node, "metadata", "key", key)
+        metadata_node.text = value
     for ticket in suite.tickets:
         ticket_node = _xml_child(suite_node, "ticket", "id", ticket[0])
         ticket_node.text = ticket[1]
@@ -181,6 +187,7 @@ def _unserialize_test_data(xml):
     test.start_time = float(xml.attrib["start-time"])
     test.end_time = float(xml.attrib["end-time"])
     test.tags = [ node.text for node in xml.xpath("tag") ]
+    test.metadata = { node.attrib["key"]: node.text for node in xml.xpath("metadata") }
     test.tickets = [ [t.attrib["id"], t.text] for t in xml.xpath("ticket") ]
     test.steps = [ _unserialize_step_data(s) for s in xml.xpath("step") ]
     return test
@@ -188,6 +195,7 @@ def _unserialize_test_data(xml):
 def _unserialize_testsuite_data(xml, parent=None):
     suite = TestSuiteData(xml.attrib["id"], xml.attrib["description"], parent)
     suite.tags = [ node.text for node in xml.xpath("tag") ]
+    suite.metadata = { node.attrib["key"]: node.text for node in xml.xpath("metadata") }
     suite.tickets = [ [t.attrib["id"], t.text] for t in xml.xpath("ticket") ]
     
     before_suite = xml.xpath("before-suite")
