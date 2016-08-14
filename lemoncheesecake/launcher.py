@@ -16,7 +16,7 @@ import traceback
 
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.common import LemonCheesecakeException, IS_PYTHON3
-from lemoncheesecake.testsuite import Filter, AbortTest, AbortTestSuite, AbortAllTests
+from lemoncheesecake.testsuite import Filter, MetadataValidator, AbortTest, AbortTestSuite, AbortAllTests
 import lemoncheesecake.worker
 from lemoncheesecake import reporting
 
@@ -59,6 +59,12 @@ def get_testsuites_from_directory(dir, recursive=True):
         suites.sort(key=lambda s: s._rank)
     return suites
 
+def metadata_value(value):
+    splitted = value.split(":")
+    if len(splitted) != 2:
+        raise ValueError()
+    return splitted
+
 class Launcher:
     def __init__(self):
         self.cli_parser = argparse.ArgumentParser()
@@ -73,6 +79,7 @@ class Launcher:
         self.cli_run_parser.add_argument("--suite-id", "-s", nargs="+", default=[], help="Filters on test suite IDs")
         self.cli_run_parser.add_argument("--suite-desc", nargs="+", default=[], help="Filters on test suite descriptions")
         self.cli_run_parser.add_argument("--tag", "-a", nargs="+", default=[], help="Filters on test & test suite tags")
+        self.cli_run_parser.add_argument("--metadata", "-m", nargs="+", type=metadata_value, default=[], help="Filters on test & test suite metadata")
         self.cli_run_parser.add_argument("--ticket", "-i", nargs="+", default=[], help="Filters on test & test suite tickets")
         self.cli_run_parser.add_argument("--report-dir", "-r", required=False, help="Directory where reporting data will be stored")
         
@@ -99,23 +106,27 @@ class Launcher:
         self._worker = worker
         lemoncheesecake.worker.worker = worker
     
-    def _load_testsuite(self, suite):
+    def _load_testsuite(self, suite, metadata_validator):
         # process suite
         if suite.id in self._testsuites_by_id:
             raise CannotLoadTestSuite("A test suite with id '%s' has been registered more than one time" % suite.id)
+        if metadata_validator:
+            metadata_validator.check_suite_compliance(suite)
         self._testsuites_by_id[suite.id] = suite
 
         # process tests
         for test in suite.get_tests():
             if test.id in self._tests_by_id:
                 raise CannotLoadTestSuite("A test with id '%s' has been registered more than one time" % test.id)
+            if metadata_validator:
+                metadata_validator.check_test_compliance(test)
             self._tests_by_id[test.id] = test
         
         # process sub suites
         for sub_suite in suite.get_sub_testsuites():
-            self._load_testsuite(sub_suite)
+            self._load_testsuite(sub_suite, metadata_validator)
         
-    def load_testsuites(self, suites):
+    def load_testsuites(self, suites, metadata_validator=None):
         """Load TestSuite classes.
         
         :param suites: the test suites to load
@@ -124,7 +135,7 @@ class Launcher:
         for suite_klass in suites:
             suite = suite_klass()
             suite.load()
-            self._load_testsuite(suite)
+            self._load_testsuite(suite, metadata_validator)
             self._testsuites.append(suite)
     
     def _run_testsuite(self, suite):
@@ -277,6 +288,7 @@ class Launcher:
         filter.testsuite_id = args.suite_id
         filter.testsuite_description = args.suite_desc
         filter.tags = args.tag
+        filter.metadata = dict(args.metadata)
         filter.tickets = args.ticket
         
         # initialize worker using CLI args and run tests

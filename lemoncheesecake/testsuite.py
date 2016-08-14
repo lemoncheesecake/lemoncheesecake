@@ -42,6 +42,9 @@ class CannotLoadTest(LemonCheesecakeException):
 class CannotLoadTestSuite(LemonCheesecakeException):
     message_prefix = "Cannot load testsuite"
 
+class MetadataError(LemonCheesecakeException):
+    message_prefix = "Metadata error"
+
 class AbortTest(LemonCheesecakeException):
     message_prefix = "The test has been aborted"
     
@@ -59,6 +62,65 @@ class AbortAllTests(LemonCheesecakeException):
 
     def __init__(self, reason):
         LemonCheesecakeException.__init__(self, reason)
+
+###
+# Metadata validator
+###
+
+class MetadataValidator:
+    def __init__(self):
+        self._test_rules = {}
+        self._suite_rules = {}
+        self._accepted_test_metadata = None
+        self._accepted_suite_metadata = None
+    
+    def _add_rule(self, rules, metadata_name, rule_name, rule_value):
+        if metadata_name not in rules:
+            rules[metadata_name] = { "mandatory": False, "accepted_values": [] }
+        rules[metadata_name][rule_name] = rule_value
+
+    def set_accepted_test_metadata(self, names):
+        self._accepted_test_metadata = names
+    
+    def set_accepted_suite_metadata(self, names):
+        self._accepted_suite_metadata = names
+    
+    def make_test_metadata_mandatory(self, name):
+        self._add_rule(self._test_rules, name, "mandatory", True)
+    
+    def set_test_metadata_accepted_values(self, name, values):
+        self._add_rule(self._test_rules, name, "accepted_values", values)
+    
+    def make_suite_metadata_mandatory(self, name):
+        self._add_rule(self._suite_rules, name, "mandatory", True)
+    
+    def set_suite_metadata_accepted_values(self, name, values):
+        self._add_rule(self._suite_rules, name, "accepted_values", values)
+    
+    def _check_compliance(self, obj, obj_type, rules, accepted):
+        if accepted != None:
+            for metadata_name in obj.metadata.keys():
+                if not metadata_name in accepted:
+                    raise MetadataError("cannot load %s '%s', the metadata '%s' is not supported (availables are: %s)",
+                                        obj_type, obj.id, metadata_name, ", ".join(accepted))
+        
+        for mandatory in [ m for m in rules.keys() if rules[m]["mandatory"] ]:
+            if not mandatory in obj.metadata.keys():
+                raise MetadataError("cannot load %s '%s', the mandatory metadata '%s' is missing" % (obj_type, obj.id, mandatory))
+        
+        for name, value in obj.metadata.items():
+            if not name in rules:
+                continue
+            if rules[name]["accepted_values"] and not value in rules[name]["accepted_values"]:
+                raise MetadataError(
+                    "cannot load %s '%s', value '%s' of metadata '%s' is not among accepted values: %s" % (obj_type, obj.id, value, name, rules[name]["accepted_values"])
+                )
+            
+    def check_test_compliance(self, test):
+        self._check_compliance(test, "test", self._test_rules, self._accepted_test_metadata)
+
+    def check_suite_compliance(self, suite):
+        self._check_compliance(suite, "suite", self._suite_rules, self._accepted_suite_metadata)
 
 ###
 # Test, TestSuite classes and decorators
