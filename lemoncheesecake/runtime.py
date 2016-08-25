@@ -97,7 +97,7 @@ class _Runtime:
         self.current_testsuite = testsuite
         suite_data = TestSuiteData(testsuite.id, testsuite.description, self.current_testsuite_data)
         suite_data.tags.extend(testsuite.tags)
-        suite_data.metadata.update(testsuite.metadata)
+        suite_data.properties.update(testsuite.properties)
         suite_data.tickets.extend(testsuite.tickets)
         suite_data.before_suite_start_time = time.time()
         if self.current_testsuite_data:
@@ -132,7 +132,7 @@ class _Runtime:
         self.current_test = test
         self.current_test_data = TestData(test.id, test.description)
         self.current_test_data.tags.extend(test.tags)
-        self.current_test_data.metadata.update(test.metadata)
+        self.current_test_data.properties.update(test.properties)
         self.current_test_data.tickets.extend(test.tickets)
         self.current_test_data.start_time = time.time()
         self.current_testsuite_data.tests.append(self.current_test_data)

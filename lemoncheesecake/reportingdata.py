@@ -32,7 +32,7 @@ class TestData:
         self.id = id
         self.description = description
         self.tags = [ ]
-        self.metadata = {}
+        self.properties = {}
         self.tickets = [ ]
         self.outcome = None
         self.steps = [ ]
@@ -45,7 +45,7 @@ class TestSuiteData:
         self.description = description
         self.parent = parent
         self.tags = [ ]
-        self.metadata = {}
+        self.properties = {}
         self.tickets = [ ]
         self.before_suite_steps = [ ]
         self.before_suite_start_time = None

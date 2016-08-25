@@ -42,8 +42,8 @@ class CannotLoadTest(LemonCheesecakeException):
 class CannotLoadTestSuite(LemonCheesecakeException):
     message_prefix = "Cannot load testsuite"
 
-class MetadataError(LemonCheesecakeException):
-    message_prefix = "Metadata error"
+class PropertyError(LemonCheesecakeException):
+    message_prefix = "Property error"
 
 class AbortTest(LemonCheesecakeException):
     message_prefix = "The test has been aborted"
@@ -64,63 +64,63 @@ class AbortAllTests(LemonCheesecakeException):
         LemonCheesecakeException.__init__(self, reason)
 
 ###
-# Metadata validator
+# Property validator
 ###
 
-class MetadataValidator:
+class PropertyValidator:
     def __init__(self):
         self._test_rules = {}
         self._suite_rules = {}
-        self._accepted_test_metadata = None
-        self._accepted_suite_metadata = None
+        self._accepted_test_properties = None
+        self._accepted_suite_properties = None
     
-    def _add_rule(self, rules, metadata_name, rule_name, rule_value):
-        if metadata_name not in rules:
-            rules[metadata_name] = { "mandatory": False, "accepted_values": [] }
-        rules[metadata_name][rule_name] = rule_value
+    def _add_rule(self, rules, property_name, rule_name, rule_value):
+        if property_name not in rules:
+            rules[property_name] = { "mandatory": False, "accepted_values": [] }
+        rules[property_name][rule_name] = rule_value
 
-    def set_accepted_test_metadata(self, names):
-        self._accepted_test_metadata = names
+    def set_accepted_test_properties(self, names):
+        self._accepted_test_properties = names
     
-    def set_accepted_suite_metadata(self, names):
-        self._accepted_suite_metadata = names
+    def set_accepted_suite_properties(self, names):
+        self._accepted_suite_properties = names
     
-    def make_test_metadata_mandatory(self, name):
+    def make_test_property_mandatory(self, name):
         self._add_rule(self._test_rules, name, "mandatory", True)
     
-    def set_test_metadata_accepted_values(self, name, values):
+    def set_test_property_accepted_values(self, name, values):
         self._add_rule(self._test_rules, name, "accepted_values", values)
     
-    def make_suite_metadata_mandatory(self, name):
+    def make_suite_property_mandatory(self, name):
         self._add_rule(self._suite_rules, name, "mandatory", True)
     
-    def set_suite_metadata_accepted_values(self, name, values):
+    def set_suite_property_accepted_values(self, name, values):
         self._add_rule(self._suite_rules, name, "accepted_values", values)
     
     def _check_compliance(self, obj, obj_type, rules, accepted):
         if accepted != None:
-            for metadata_name in obj.metadata.keys():
-                if not metadata_name in accepted:
-                    raise MetadataError("cannot load %s '%s', the metadata '%s' is not supported (availables are: %s)",
-                                        obj_type, obj.id, metadata_name, ", ".join(accepted))
+            for property_name in obj.properties.keys():
+                if not property_name in accepted:
+                    raise PropertyError("cannot load %s '%s', the property '%s' is not supported (availables are: %s)",
+                                        obj_type, obj.id, property_name, ", ".join(accepted))
         
         for mandatory in [ m for m in rules.keys() if rules[m]["mandatory"] ]:
-            if not mandatory in obj.metadata.keys():
-                raise MetadataError("cannot load %s '%s', the mandatory metadata '%s' is missing" % (obj_type, obj.id, mandatory))
+            if not mandatory in obj.properties.keys():
+                raise PropertyError("cannot load %s '%s', the mandatory property '%s' is missing" % (obj_type, obj.id, mandatory))
         
-        for name, value in obj.metadata.items():
+        for name, value in obj.properties.items():
             if not name in rules:
                 continue
             if rules[name]["accepted_values"] and not value in rules[name]["accepted_values"]:
-                raise MetadataError(
-                    "cannot load %s '%s', value '%s' of metadata '%s' is not among accepted values: %s" % (obj_type, obj.id, value, name, rules[name]["accepted_values"])
+                raise PropertyError(
+                    "cannot load %s '%s', value '%s' of property '%s' is not among accepted values: %s" % (obj_type, obj.id, value, name, rules[name]["accepted_values"])
                 )
             
     def check_test_compliance(self, test):
-        self._check_compliance(test, "test", self._test_rules, self._accepted_test_metadata)
+        self._check_compliance(test, "test", self._test_rules, self._accepted_test_properties)
 
     def check_suite_compliance(self, suite):
-        self._check_compliance(suite, "suite", self._suite_rules, self._accepted_suite_metadata)
+        self._check_compliance(suite, "suite", self._suite_rules, self._accepted_suite_properties)
 
 ###
 # Test, TestSuite classes and decorators
@@ -130,7 +130,7 @@ FILTER_SUITE_MATCH_ID = 0x01
 FILTER_SUITE_MATCH_DESCRIPTION = 0x02
 FILTER_SUITE_MATCH_TAG = 0x04
 FILTER_SUITE_MATCH_TICKET = 0x08
-FILTER_SUITE_MATCH_METADATA = 0x10
+FILTER_SUITE_MATCH_PROPERTY = 0x10
 
 class Filter:
     def __init__(self):
@@ -139,13 +139,13 @@ class Filter:
         self.testsuite_id = []
         self.testsuite_description = []
         self.tags = [ ]
-        self.metadata = {}
+        self.properties = {}
         self.tickets = [ ]
     
     def is_empty(self):
         count = 0
         for value in self.test_id, self.testsuite_id, self.test_description, \
-            self.testsuite_description, self.tags, self.metadata, self.tickets:
+            self.testsuite_description, self.tags, self.properties, self.tickets:
             count += len(value)
         return count == 0
     
@@ -184,9 +184,9 @@ class Filter:
             if not match:
                 return False
                 
-        if self.metadata and not parent_suite_match & FILTER_SUITE_MATCH_METADATA:
-            for key, value in self.metadata.items():
-                if key in test.metadata and test.metadata[key] == value:
+        if self.properties and not parent_suite_match & FILTER_SUITE_MATCH_PROPERTY:
+            for key, value in self.properties.items():
+                if key in test.properties and test.properties[key] == value:
                     match = True
                     break
             if not match:
@@ -223,10 +223,10 @@ class Filter:
                     match |= FILTER_SUITE_MATCH_TAG
                     break
 
-        if self.metadata and not parent_suite_match & FILTER_SUITE_MATCH_METADATA:
-            for key, value in self.metadata.items():
-                if key in suite.metadata and suite.metadata[key] == value:
-                    match |= FILTER_SUITE_MATCH_METADATA
+        if self.properties and not parent_suite_match & FILTER_SUITE_MATCH_PROPERTY:
+            for key, value in self.properties.items():
+                if key in suite.properties and suite.properties[key] == value:
+                    match |= FILTER_SUITE_MATCH_PROPERTY
                     break
 
         if self.tickets and not parent_suite_match & FILTER_SUITE_MATCH_TICKET:
@@ -245,7 +245,7 @@ class Test:
         self.description = description
         self.callback = callback
         self.tags = [ ]
-        self.metadata = {}
+        self.properties = {}
         self.tickets = [ ]
         self.rank = force_rank if force_rank != None else Test.test_current_rank
         Test.test_current_rank += 1
@@ -274,11 +274,11 @@ def tags(*tag_names):
         return obj
     return wrapper
 
-def metadata(key, value):
+def prop(key, value):
     def wrapper(obj):
         if (inspect.isclass(obj) and not issubclass(obj, TestSuite)) and not isinstance(obj, Test):
-            raise LemonCheesecakeInternalError("Metadata can only be added to Test and TestSuite objects (got %s)" % type(obj))
-        obj.metadata[key] = value
+            raise LemonCheesecakeInternalError("Property can only be added to Test and TestSuite objects (got %s)" % type(obj))
+        obj.properties[key] = value
         return obj
     return wrapper
 
@@ -303,7 +303,7 @@ def tickets(*tickets):
 
 class TestSuite:
     tags = [ ]
-    metadata = {}
+    properties = {}
     tickets = [ ]
     sub_testsuite_classes = [ ]        
     

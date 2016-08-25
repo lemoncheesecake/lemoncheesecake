@@ -30,7 +30,7 @@ class A(TestSuite):
     def foo(self):
         pass
 
-    @metadata("priority", "high")
+    @prop("priority", "high")
     @tickets("1234")    
     @test("Second test")
     def second_test(self):
