@@ -4,6 +4,17 @@ import inspect
 from lemoncheesecake.common import LemonCheesecakeException, LemonCheesecakeInternalError
 from lemoncheesecake.runtime import get_runtime
 
+__all__ = (
+    # messages & steps
+    "debug", "info", "warn", "error", "step",
+    # attachments
+    "prepare_attachment", "save_attachment_file", "save_attachment_content",
+    # decorators
+    "test", "tags", "prop", "url", "suite_rank",
+    # testsuite
+    "Test", "TestSuite"
+)
+
 ###
 # Shortcuts for tests
 ###
