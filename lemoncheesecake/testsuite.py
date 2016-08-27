@@ -9,27 +9,54 @@ from lemoncheesecake.runtime import get_runtime
 ###
 
 def debug(content):
+    """
+    Add a debug message.
+    """
     get_runtime().debug(content)
 
 def info(content):
+    """
+    Add a info message.
+    """
     get_runtime().info(content)
 
 def warn(content):
+    """
+    Add a warning message.
+    """
     get_runtime().warn(content)
 
 def error(content):
+    """
+    Add an error message.
+    """
     get_runtime().error(content)
 
 def step(description):
+    """
+    Add a new step.
+    """
     get_runtime().step(description)
 
 def prepare_attachment(filename, description=None):
-    get_runtime().prepare_attachment(filename, description)
+    """
+    Prepare a attachment using a pseudo filename and an optional description.
+    The function returns the real filename on disk that will be used by the caller
+    to write the attachment content.
+    """
+    return get_runtime().prepare_attachment(filename, description)
 
 def save_attachment_file(filename, description=None):
+    """
+    Save an attachment using an existing file (identified by filename) and an optional
+    description. The given file will be copied.
+    """
     get_runtime().save_attachment_file(filename, description)
 
 def save_attachment_content(content, filename, description=None):
+    """
+    Save a given content as attachment using pseudo filename and optional description.
+    """
     get_runtime().save_attachment_content(content, filename, description)
 
 ###
