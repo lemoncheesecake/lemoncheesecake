@@ -54,13 +54,13 @@ Step.prototype = {
 	}
 };
 
-function Test(id, description, outcome, steps, tags, tickets) {
+function Test(id, description, outcome, steps, tags, urls) {
 	this.id = id;
 	this.description = description;
 	this.outcome = outcome;
 	this.steps = [];
 	this.tags = (tags != null) ? tags : [];
-	this.tickets = (tickets != null) ? tickets : [];
+	this.urls = (urls != null) ? urls : [];
 	for (var i = 0; i < steps.length; i++) {
 		this.steps.push(new Step(steps[i]));
 	}
@@ -85,18 +85,15 @@ Test.prototype = {
 		if (this.tags.length > 0) {
 		    $info.append($("<span>").text("Tags: " + this.tags.join(", ")));
 		}
-		if (this.tickets.length > 0) {
+		if (this.urls.length > 0) {
 		    if (this.tags.length > 0)
 		        $info.append($("<br>"));
-		    $info.append("Tickets: ");
-		    for (var i = 0; i < this.tickets.length; i++) {
-		        var t = this.tickets[i];
+		    $info.append("URLs: ");
+		    for (var i = 0; i < this.urls.length; i++) {
+		        var u = this.urls[i];
 		        if (i > 0)
 		            $info.append(", ");
-		        if (t.url)
-                    $info.append($("<a>", {href: t.url}).text(t.id));
-                else
-                    $info.append($("<span>").text(t.id));
+		        $info.append($("<a>", {href: u.url}).text(u.name ? u.name : u.url));
 		    }
 		}
 		cols.push($info);
@@ -176,7 +173,7 @@ function TestSuite(data, parents) {
 
     for (var i = 0; i < data.tests.length; i++) {
         var t = data.tests[i]
-    	this.tests.push(new Test(t.id, t.description, t.outcome, t.steps, t.tags, t.tickets));
+    	this.tests.push(new Test(t.id, t.description, t.outcome, t.steps, t.tags, t.urls));
     }
 
     for (var i = 0; i < data.sub_suites.length; i++) {

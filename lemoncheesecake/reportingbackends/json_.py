@@ -30,26 +30,31 @@ def _serialize_steps(steps):
             json_step["entries"].append(entry)
     return json_steps
 
-def _serialize_test_data(test):
+def _serialize_common_data(obj):
     return { 
-        "id": test.id, "description": test.description,
-        "start_time": _time_value(test.start_time),
-        "end_time": _time_value(test.end_time),
-        "tags": test.tags,
-        "properties": test.properties,
-        "tickets": [ { "id": t[0], "url": t[1] } for t in test.tickets ],
-        "steps": _serialize_steps(test.steps),
-        "outcome": test.outcome
+        "id": obj.id, "description": obj.description,
+        "tags": obj.tags,
+        "properties": obj.properties,
+        "urls": [ { "name": t[1], "url": t[0] } for t in obj.urls ]
     }
 
+def _serialize_test_data(test):
+    serialized = _serialize_common_data(test)
+    serialized.update({
+        "start_time": _time_value(test.start_time),
+        "end_time": _time_value(test.end_time),
+        "steps": _serialize_steps(test.steps),
+        "outcome": test.outcome
+        
+    })
+    return serialized
+
 def _serialize_testsuite_data(suite):
-    json_suite = {
-        "id": suite.id, "description": suite.description, 
-        "tags": suite.tags, "properties": suite.properties,
-        "tickets": [ { "id": t[0], "url": t[1] } for t in suite.tickets ],
+    json_suite = _serialize_common_data(suite)
+    json_suite.update({
         "tests": [ _serialize_test_data(t) for t in suite.tests ],
         "sub_suites": [ _serialize_testsuite_data(s) for s in suite.sub_testsuites ]
-    }
+    })
     if suite.before_suite_steps:
         json_suite["before_suite"] = {
             "start_time": _time_value(suite.before_suite_start_time),
@@ -105,7 +110,7 @@ def _unserialize_test_data(js):
     test.end_time = float(js["end_time"])
     test.tags = js["tags"]
     test.properties = js["properties"]
-    test.tickets = [ [t["id"], t["url"]] for t in js["tickets"] ]
+    test.urls = [ [u["url"], u["name"]] for u in js["urls"] ]
     test.steps = [ _unserialize_step_data(s) for s in js["steps"] ]
     return test
 
@@ -113,7 +118,7 @@ def _unserialize_testsuite_data(js, parent=None):
     suite = TestSuiteData(js["id"], js["description"], parent)
     suite.tags = js["tags"]
     suite.properties = js["properties"]
-    suite.tickets = [ [t["id"], t["url"]] for t in js["tickets"] ]
+    suite.urls = [ [u["url"], u["name"]] for u in js["urls"] ]
 
     if "before_suite" in js:
         suite.before_suite_start_time = float(js["before_suite"]["start_time"])

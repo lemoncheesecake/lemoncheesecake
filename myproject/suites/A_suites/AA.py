@@ -1,7 +1,7 @@
 from lemoncheesecake.testsuite import *
 from lemoncheesecake.checkers import *
 
-@tickets("1234")
+@url("http://bugtracker.net/tickets/1234")
 class AA(TestSuite):
     def before_suite(self):
         step("hep csdcnlns csdlcsdl cubsd ucds")

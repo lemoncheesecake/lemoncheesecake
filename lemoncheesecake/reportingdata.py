@@ -33,7 +33,7 @@ class TestData:
         self.description = description
         self.tags = [ ]
         self.properties = {}
-        self.tickets = [ ]
+        self.urls = [ ]
         self.outcome = None
         self.steps = [ ]
         self.start_time = None
@@ -46,7 +46,7 @@ class TestSuiteData:
         self.parent = parent
         self.tags = [ ]
         self.properties = {}
-        self.tickets = [ ]
+        self.urls = [ ]
         self.before_suite_steps = [ ]
         self.before_suite_start_time = None
         self.before_suite_end_time = None

@@ -31,7 +31,7 @@ class A(TestSuite):
         pass
 
     @prop("priority", "high")
-    @tickets("1234")    
+    @url("http://bugtracker.net/tickets/1234")    
     @test("Second test")
     def second_test(self):
         info("do test 2 !")
@@ -39,7 +39,7 @@ class A(TestSuite):
     def bar(self):
         pass
     
-    @tickets(["#444", "http://bugtracker.net/tickets/444"])
+    @url("http://bugtracker.net/tickets/444", "#444")
     @test("Third test")
     def third_test(self):
         error("something goes wrong")

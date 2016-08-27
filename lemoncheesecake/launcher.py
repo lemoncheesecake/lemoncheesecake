@@ -80,7 +80,7 @@ class Launcher:
         self.cli_run_parser.add_argument("--suite-desc", nargs="+", default=[], help="Filters on test suite descriptions")
         self.cli_run_parser.add_argument("--tag", "-a", nargs="+", default=[], help="Filters on test & test suite tags")
         self.cli_run_parser.add_argument("--property", "-m", nargs="+", type=property_value, default=[], help="Filters on test & test suite property")
-        self.cli_run_parser.add_argument("--ticket", "-i", nargs="+", default=[], help="Filters on test & test suite tickets")
+        self.cli_run_parser.add_argument("--url", "-u", nargs="+", default=[], help="Filters on test & test suite url names")
         self.cli_run_parser.add_argument("--report-dir", "-r", required=False, help="Directory where reporting data will be stored")
         
         ###
@@ -289,7 +289,7 @@ class Launcher:
         filter.testsuite_description = args.suite_desc
         filter.tags = args.tag
         filter.properties = dict(args.property)
-        filter.tickets = args.ticket
+        filter.url_names = args.url
         
         # initialize worker using CLI args and run tests
         if self._worker:

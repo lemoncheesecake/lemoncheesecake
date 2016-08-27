@@ -13,7 +13,7 @@ class MyWorker(Worker):
 
 enable_backend("xml")
 get_backend("json").pretty_formatting = True
-get_backend("xml").indent_level = 2
+get_backend("xml").indent_level = 4
 
 property_validator = PropertyValidator()
 property_validator.set_test_property_accepted_values("priority", ("low", "medium", "high"))

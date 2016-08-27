@@ -167,7 +167,7 @@ class PropertyValidator:
 FILTER_SUITE_MATCH_ID = 0x01
 FILTER_SUITE_MATCH_DESCRIPTION = 0x02
 FILTER_SUITE_MATCH_TAG = 0x04
-FILTER_SUITE_MATCH_TICKET = 0x08
+FILTER_SUITE_MATCH_URL_NAME = 0x08
 FILTER_SUITE_MATCH_PROPERTY = 0x10
 
 class Filter:
@@ -178,12 +178,12 @@ class Filter:
         self.testsuite_description = []
         self.tags = [ ]
         self.properties = {}
-        self.tickets = [ ]
+        self.url_names = [ ]
     
     def is_empty(self):
         count = 0
         for value in self.test_id, self.testsuite_id, self.test_description, \
-            self.testsuite_description, self.tags, self.properties, self.tickets:
+            self.testsuite_description, self.tags, self.properties, self.url_names:
             count += len(value)
         return count == 0
     
@@ -230,9 +230,9 @@ class Filter:
             if not match:
                 return False
                 
-        if self.tickets and not parent_suite_match & FILTER_SUITE_MATCH_TICKET:
-            for ticket in self.tickets:
-                if ticket in [ t[0] for t in test.tickets ]:
+        if self.url_names and not parent_suite_match & FILTER_SUITE_MATCH_URL_NAME:
+            for url in self.url_names:
+                if url in [ u[1] for u in test.urls if u[1] ]:
                     match = True
                     break
             if not match:
@@ -267,10 +267,10 @@ class Filter:
                     match |= FILTER_SUITE_MATCH_PROPERTY
                     break
 
-        if self.tickets and not parent_suite_match & FILTER_SUITE_MATCH_TICKET:
-            for ticket in self.tickets:
-                if ticket in [ t[0] for t in suite.tickets ]:
-                    match |= FILTER_SUITE_MATCH_TICKET
+        if self.url_names and not parent_suite_match & FILTER_SUITE_MATCH_URL_NAME:
+            for url in self.url_names:
+                if url in [ u[0] for u in suite.urls ]:
+                    match |= FILTER_SUITE_MATCH_URL_NAME
                     break
 
         return match
@@ -284,7 +284,7 @@ class Test:
         self.callback = callback
         self.tags = [ ]
         self.properties = {}
-        self.tickets = [ ]
+        self.urls = [ ]
         self.rank = force_rank if force_rank != None else Test.test_current_rank
         Test.test_current_rank += 1
         
@@ -326,23 +326,18 @@ def suite_rank(value):
         return klass
     return wrapper
 
-def tickets(*tickets):
+def url(url, name=None):
     def wrapper(obj):
         if (inspect.isclass(obj) and not issubclass(obj, TestSuite)) and not isinstance(obj, Test):
-            raise LemonCheesecakeInternalError("Tickets can only be added to Test and TestSuite objects (got %s)" % type(obj))
-        normalized_tickets = [ ]
-        for ticket in tickets:
-            if type(ticket) not in (tuple, list):
-                ticket = [ ticket, None ] 
-            normalized_tickets.append(ticket)
-        obj.tickets = normalized_tickets
+            raise LemonCheesecakeInternalError("URLs can only be added to Test and TestSuite objects (got %s)" % type(obj))
+        obj.urls.append([url, name])
         return obj
     return wrapper
 
 class TestSuite:
     tags = [ ]
     properties = {}
-    tickets = [ ]
+    urls = [ ]
     sub_testsuite_classes = [ ]        
     
     def load(self, parent_suite=None):
