@@ -3,7 +3,7 @@
 import sys
 sys.path.append("..")
 
-from lemoncheesecake.launcher import Launcher, get_testsuites_from_directory
+from lemoncheesecake.launcher import Launcher, find_testsuites_in_directory
 from lemoncheesecake.testsuite import PropertyValidator
 from lemoncheesecake.worker import Worker
 from lemoncheesecake.reporting import get_backend, enable_backend
@@ -21,5 +21,5 @@ property_validator.make_suite_property_mandatory("type")
 
 launcher = Launcher()
 launcher.set_worker(MyWorker())
-launcher.load_testsuites(get_testsuites_from_directory("suites"))
+launcher.load_testsuites(find_testsuites_in_directory("suites"))
 launcher.handle_cli()

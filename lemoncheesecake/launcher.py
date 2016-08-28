@@ -42,7 +42,7 @@ def get_testsuite_from_file(filename):
         raise Exception("Cannot find class '%s' in '%s'" % (mod_name, loaded_mod.__file__))
     return klass
 
-def get_testsuites_from_directory(dir, recursive=True):
+def find_testsuites_in_directory(dir, recursive=True):
     suites = [ ]
     for filename in glob.glob(os.path.join(dir, "*.py")):
         if os.path.basename(filename).startswith("__"):
@@ -51,7 +51,7 @@ def get_testsuites_from_directory(dir, recursive=True):
         if recursive:
             suite_subdir = _strip_py_ext(filename) + "_suites"
             if os.path.isdir(suite_subdir):
-                sub_suites = get_testsuites_from_directory(suite_subdir, recursive=True)
+                sub_suites = find_testsuites_in_directory(suite_subdir, recursive=True)
                 for sub_suite in sub_suites:
                     setattr(suite, sub_suite.__name__, sub_suite)
         suites.append(suite)
