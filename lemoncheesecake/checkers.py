@@ -282,3 +282,12 @@ class CheckDictValue2WithDefault(Check):
         return self.handle_assertion(ret)
 
 register_dict_checkers("dict_value_%s2_with_default", CheckDictValue2WithDefault)
+
+###
+# Build symbol list for wild import
+###
+
+__all__ = ()
+for symbol in dir():
+    if symbol.startswith("check_") or symbol.startswith("assert_"):
+        __all__ = __all__ + (symbol,)

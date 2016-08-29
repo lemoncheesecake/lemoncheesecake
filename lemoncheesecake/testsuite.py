@@ -12,7 +12,9 @@ __all__ = (
     # decorators
     "test", "tags", "prop", "url", "suite_rank",
     # testsuite
-    "Test", "TestSuite"
+    "Test", "TestSuite",
+    # exceptions
+    "AbortTest", "AbortTestSuite", "AbortAllTests"
 )
 
 ###
