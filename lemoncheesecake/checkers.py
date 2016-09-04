@@ -22,6 +22,8 @@ class Check:
     description_prefix = "Check that"
     comparator_label = None
     value_type = None
+    doc_func_ret = "outcome"
+    doc_func_args = "name, actual, expected"
     
     def __init__(self, assertion=False, value_type=None):
         self.assertion = assertion
@@ -65,15 +67,43 @@ class Check:
         if self.value_type:
             details += " (%s)" % type(actual).__name__
         return details
+    
+    def build_doc_func_args(self):
+        return self.doc_func_args
+    
+    def build_doc_func_ret(self):
+        return self.doc_func_ret
+    
+    def build_doc_func_description(self):
+        return "{prefix} actual {comparator} expected"
+    
+    def build_doc(self, func_name):
+        doc = "{func_name}({func_args}) -> {func_ret}\n{description}".format(
+            func_name=func_name, func_args=self.build_doc_func_args(),
+            func_ret=self.build_doc_func_ret(),
+            description=self.build_doc_func_description()
+        )
+        return doc
+        
 
 def check_and_assert(checker):
     return checker(), checker(assertion=True)
 
 def do_register(name, checker_inst, assertion_inst):
-    setattr(sys.modules[__name__], "check_%s" % name, checker_inst)
-    setattr(sys.modules[__name__], "assert_%s" % name, assertion_inst)
+    def make_func(obj, func_name):
+        def func(*args, **kwargs):
+            return obj(*args, **kwargs)
+        print obj
+        func.__doc__ = obj.build_doc(func_name)
+        return func
+
+    check_func_name = "check_%s" % name
+    assert_func_name = "assert_%s" % name
+    setattr(sys.modules[__name__], check_func_name, make_func(checker_inst, check_func_name))
+    setattr(sys.modules[__name__], assert_func_name, make_func(assertion_inst, assert_func_name))
 
 def register_checker(name, checker_class, alias=None, value_type=None):
+    
     global BASE_CHECKER_NAMES
     
     BASE_CHECKER_NAMES.append(name)
@@ -171,6 +201,16 @@ class CheckStrDoesNotMatchPattern(CheckStrMatchPattern):
     comparator_label = "does not match pattern"
     comparator = staticmethod(lambda a, e: not bool(e.match(a)))
 
+@checker("str_contains")
+class CheckStrContains(CheckStrEq):
+    comparator_label = "contains"
+    comparator = staticmethod(lambda a, e: e in a)
+
+@checker("str_does_not_contain")
+class CheckStrDoesNotContain(CheckStrEq):
+    comparator_label = "does not contain"
+    comparator = staticmethod(lambda a, e: e not in a)
+
 ################################################################################
 # Numeric checkers
 ################################################################################
@@ -237,11 +277,17 @@ def register_dict_checkers(dict_checker_name_fmt, dict_checker):
 
 @checker("dict_has_key")
 class CheckDictHasKey(Check):
-    comparator = staticmethod(lambda a, e: a.has_key(e))
-    def format_description(self, name, expected):
-        return "{prefix} {name} has entry '{expected}'".format(
-            prefix=self.description_prefix, name=name, expected=expected
-        )
+    def __call__(self, expected_key, actual):
+        description = "{prefix} entry '{key}' is present".format(prefix=self.description_prefix, key=expected_key)
+        outcome = check(description, expected_key in actual)
+        self.handle_assertion(outcome)
+        return outcome
+    
+#     comparator = staticmethod(lambda a, e: a.has_key(e))
+#     def format_description(self, name, expected):
+#         return "{prefix} {name} has entry '{expected}'".format(
+#             prefix=self.description_prefix, name=name, expected=expected
+#         )
 
 @checker("dict_value")
 class CheckDictValue(Check):
