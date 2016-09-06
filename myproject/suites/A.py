@@ -1,4 +1,5 @@
 from lemoncheesecake import *
+import re
 
 @suite_rank(2)
 class A(TestSuite):
@@ -12,9 +13,8 @@ class A(TestSuite):
         check_list_len("my list", [1,2], 3)
         check_list_contains("my other list", [ 1, 2, 3 ], [ 1, 4])
         step("test dict checkers")
-        check_dict_has_key("my dict", { "foo": 33 }, "fool")
-        check_dict_value2("bar", { "bar": 33 }, { "bar": 33 }, check_eq)
-        check_dict_value2_with_default("bar", { "bar": 33 }, { "ball": 11 }, check_eq, default=33)
+        check_dict_has_key("foo", { "foo": 33 })
+        check_dict_value("bar", { "bar": 33 }, { "bar": 33 }, check_eq)
         step("test simple value checkers")
         info("something else")
         check_eq("some value", 1, 1)
@@ -22,7 +22,7 @@ class A(TestSuite):
         check_str_eq("some string", "foo", "bar")
         check_int_eq("my num", "33", 33)
         step("test dict composed checkers")
-        check_dict_value_str_eq("foo", {"foo": "bar"}, "bar")
+        check_dictval_str_eq("foo", {"foo": "bar"}, "bar")
         check_pattern("some value", "foo bar", re.compile("foo.+"))
         check_str_does_not_match_pattern("some value", "foo bar", re.compile("foo.+"))
         
