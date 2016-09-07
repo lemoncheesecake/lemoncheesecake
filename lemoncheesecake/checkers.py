@@ -97,9 +97,6 @@ class Check:
             doc += "Return True if the check succeed, False otherwise"
         return doc
 
-def check_and_assert(checker):
-    return checker(), checker(assertion=True)
-
 def do_register(name, checker_inst, assertion_inst, alias_of=None):
     def make_func(obj, func_name, alias_of):
         def func(*args, **kwargs):
