@@ -87,7 +87,7 @@ class Check:
         doc = "%s(%s)" % (func_name, self.build_doc_func_args())
         if not self.assertion:
             doc += " -> bool"
-        doc += "\n%s" % self.build_doc_func_description()
+        doc += "\n\n%s" % self.build_doc_func_description()
         if self.value_type:
             doc += " (value's type must be %s)" % self.value_type.__name__
         doc += "\n"
@@ -97,23 +97,21 @@ class Check:
             doc += "Return True if the check succeed, False otherwise"
         return doc
 
-def do_register(name, checker_inst, assertion_inst, alias_of=None):
-    def make_func(obj, func_name, alias_of):
+def do_register_checker(name, checker_inst, assertion_inst):
+    def make_func(obj, func_name):
         def func(*args, **kwargs):
             return obj(*args, **kwargs)
         func.__doc__ = obj.build_doc(func_name)
-        if alias_of:
-            func.__doc__ += "\n(alias of %s)" % alias_of
         return func
     
-    def do_register_object(name, inst, alias_of):
+    def register_checker_object(name, inst):
         CHECKER_OBJECTS[name] = inst
-        setattr(sys.modules[__name__], name, make_func(inst, name, alias_of))
+        setattr(sys.modules[__name__], name, make_func(inst, name))
         
-    do_register_object("check_%s" % name, checker_inst, alias_of=("check_%s" % alias_of) if alias_of else None)
-    do_register_object("assert_%s" % name, assertion_inst, alias_of=("assert_%s" % alias_of) if alias_of else None)
+    register_checker_object("check_%s" % name, checker_inst)
+    register_checker_object("assert_%s" % name, assertion_inst)
 
-def register_checker(name, checker_class, alias=None, value_type=None, is_base_checker=True):
+def register_checker(name, checker_class, value_type=None, is_base_checker=True):
     if is_base_checker:
         global BASE_CHECKER_NAMES
         BASE_CHECKER_NAMES.append(name)
@@ -121,13 +119,11 @@ def register_checker(name, checker_class, alias=None, value_type=None, is_base_c
     checker_class.name = name
     checker_inst = checker_class(value_type=value_type)
     assertion_inst = checker_class(assertion=True, value_type=value_type)
-    do_register(name, checker_inst, assertion_inst)
-    if alias:
-        do_register(alias, checker_inst, assertion_inst, alias_of=name)
+    do_register_checker(name, checker_inst, assertion_inst)
 
-def checker(name, alias=None, value_type=None, is_base_checker=True):
+def checker(name, value_type=None, is_base_checker=True):
     def wrapper(klass):
-        register_checker(name, klass, alias, value_type, is_base_checker=is_base_checker)
+        register_checker(name, klass, value_type, is_base_checker=is_base_checker)
         return klass
     return wrapper
 
@@ -142,9 +138,6 @@ def get_checker_object(name):
 
 def get_assertion_object(name):
     return CHECKER_OBJECTS["assert_%s" % name]
-
-def alias_checker(alias, name):
-    do_register(alias, get_checker_object(name), get_assertion_object(name), alias_of=name)
 
 ################################################################################
 # Equality / non-equality checkers 
@@ -195,24 +188,22 @@ class CheckLteq(Check):
 # str checkers 
 ################################################################################
 
-@checker("str_eq", alias="str")
+@checker("str_eq")
 class CheckStrEq(CheckEq):
-    name = "str_eq"
     format_expected_value = format_actual_value = staticmethod(lambda s: "'%s'" % s)
 
 @checker("str_not_eq")
 class CheckStrNotEq(CheckStrEq, CheckNotEq):
     always_display_details = True
 
-@checker("str_match_pattern", alias="pattern")
+@checker("str_match")
 class CheckStrMatchPattern(CheckStrEq):
-    name = "str_match_pattern"
     comparator_label = "match pattern"
     format_expected_value = staticmethod(lambda p: "'%s'" % p.pattern)
     comparator = staticmethod(lambda a, e: bool(e.match(a)))
     always_display_details = True
 
-@checker("str_does_not_match_pattern")
+@checker("str_does_not_match")
 class CheckStrDoesNotMatchPattern(CheckStrMatchPattern):
     comparator_label = "does not match pattern"
     comparator = staticmethod(lambda a, e: not bool(e.match(a)))
@@ -234,7 +225,7 @@ class CheckStrDoesNotContain(CheckStrEq):
 def generate_comparator_checkers_for_type(type_):
     checker_classes = CheckEq, CheckNotEq, CheckGt, CheckGteq, CheckLt, CheckLteq
     for klass in checker_classes:
-        do_register("%s_%s" % (type_.__name__, klass.name), 
+        do_register_checker("%s_%s" % (type_.__name__, klass.name), 
                     klass(value_type=type_), klass(value_type=type_, assertion=True))
 
 generate_comparator_checkers_for_type(int)
@@ -244,10 +235,11 @@ generate_comparator_checkers_for_type(float)
 # list checkers 
 ################################################################################
 
-alias_checker("list_eq", "eq")
-alias_checker("list", "list_eq")
+@checker("list_eq")
+class CheckListEq(CheckEq):
+    pass
 
-@checker("list_len_eq", alias="list_len")
+@checker("list_len")
 class CheckListLen(Check):
     comparator = staticmethod(lambda a, e: len(a) == e)
     def format_description(self, name, expected):
@@ -294,7 +286,7 @@ def register_dict_checkers(dict_checker_name_fmt, dict_checker):
     global BASE_CHECKER_NAMES
     for name in BASE_CHECKER_NAMES:
         klass = wrapper(get_checker_object(name))
-        do_register(dict_checker_name_fmt % name, klass(), klass(assertion=True))
+        do_register_checker(dict_checker_name_fmt % name, klass(), klass(assertion=True))
 
 @checker("dict_has_key", is_base_checker=False)
 class CheckDictHasKey(Check):
@@ -314,7 +306,10 @@ class CheckDictHasKey(Check):
 @checker("dict_value", is_base_checker=False)
 class CheckDictValue(Check):
     doc_func_args = "key, d, expected, value_checker"
-        
+    
+    def build_doc_func_description(self):
+        return "Check key[d] against expected using value_checker"
+    
     def __call__(self, expected_key, actual, expected_value, value_checker):
         if actual.has_key(expected_key):
             ret = value_checker("'%s'" % expected_key, actual[expected_key], expected_value)
