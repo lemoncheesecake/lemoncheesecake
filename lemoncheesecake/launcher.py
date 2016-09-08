@@ -15,14 +15,17 @@ import argparse
 import traceback
 
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
-from lemoncheesecake.common import LemonCheesecakeException, IS_PYTHON3
+from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.testsuite import Filter, PropertyValidator, AbortTest, AbortTestSuite, AbortAllTests
 import lemoncheesecake.worker
 from lemoncheesecake import reporting
+from lemoncheesecake.exceptions import LemonCheesecakeException
+
+__all__ = ("Launcher", "find_testsuites_in_directory", "LoadTestSuiteError")
 
 COMMAND_RUN = "run"
 
-class CannotLoadTestSuite(LemonCheesecakeException):
+class LoadTestSuiteError(LemonCheesecakeException):
     pass
 
 def reporting_dir_with_datetime(report_rootdir, t):
@@ -35,14 +38,28 @@ def get_testsuite_from_file(filename):
     mod_path = _strip_py_ext(filename.replace(os.path.sep, "."))
     mod_name = mod_path.split(".")[-1]
 
-    loaded_mod = importlib.import_module(mod_path)
+    try:
+        loaded_mod = importlib.import_module(mod_path)
+    except ImportError as e:
+        raise LoadTestSuiteError("Cannot import module %s: %s" % (mod_name, str(e)))
     try:
         klass = getattr(loaded_mod, mod_name)
     except AttributeError:
-        raise Exception("Cannot find class '%s' in '%s'" % (mod_name, loaded_mod.__file__))
+        raise LoadTestSuiteError("Cannot find class '%s' in '%s'" % (mod_name, loaded_mod.__file__))
     return klass
 
 def find_testsuites_in_directory(dir, recursive=True):
+    """Find testsuite classes in modules found in dir.
+    
+    The function expect that:
+    - each module (.py file) contains a class that inherits TestSuite
+    - the class name must have the same name as the module name (if the module is foo.py 
+      the class must be named foo)
+    If the recursive argument is set to True, sub testsuites will be searched in a directory named
+    from the suite module: if the suite module is "foo" then the sub suites directory must be "foo_suites".
+    
+    Raise LoadTestSuiteError if the testsuite cannot be loaded.
+    """
     suites = [ ]
     for filename in glob.glob(os.path.join(dir, "*.py")):
         if os.path.basename(filename).startswith("__"):
@@ -109,7 +126,7 @@ class Launcher:
     def _load_testsuite(self, suite, property_validator):
         # process suite
         if suite.id in self._testsuites_by_id:
-            raise CannotLoadTestSuite("A test suite with id '%s' has been registered more than one time" % suite.id)
+            raise LoadTestSuiteError("A test suite with id '%s' has been registered more than one time" % suite.id)
         if property_validator:
             property_validator.check_suite_compliance(suite)
         self._testsuites_by_id[suite.id] = suite
@@ -117,7 +134,7 @@ class Launcher:
         # process tests
         for test in suite.get_tests():
             if test.id in self._tests_by_id:
-                raise CannotLoadTestSuite("A test with id '%s' has been registered more than one time" % test.id)
+                raise LoadTestSuiteError("A test with id '%s' has been registered more than one time" % test.id)
             if property_validator:
                 property_validator.check_test_compliance(test)
             self._tests_by_id[test.id] = test
@@ -127,10 +144,12 @@ class Launcher:
             self._load_testsuite(sub_suite, property_validator)
         
     def load_testsuites(self, suites, property_validator=None):
-        """Load TestSuite classes.
+        """Load testsuites classes into the launcher.
         
-        :param suites: the test suites to load
-        :type suites: list of TestSuite classes
+        - testsuite classes get instantiated into objects
+        - sanity checks are performed (among which unicity constraints)
+        - test and testsuites properties are checked using property_validator (PropertyValidator instance)
+          is supplied
         """
         for suite_klass in suites:
             suite = suite_klass()
