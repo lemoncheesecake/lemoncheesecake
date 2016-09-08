@@ -6,7 +6,8 @@ Created on Mar 27, 2016
 
 from lemoncheesecake.reportingdata import *
 from lemoncheesecake.reporting import ReportingBackend
-from lemoncheesecake.common import IS_PYTHON3, LemonCheesecakeInvalidReport
+from lemoncheesecake.utils import IS_PYTHON3
+from lemoncheesecake.exceptions import ProgrammingError
 
 from lxml import etree as ET
 from lxml.builder import E
@@ -166,7 +167,7 @@ def _unserialize_outcome(value):
         return False
     if value == OUTCOME_NOT_AVAILABLE:
         return None
-    raise LemonCheesecakeInvalidReport("Unknown value '%s' for outcome" % value)
+    raise ProgrammingError("Unknown value '%s' for outcome" % value)
 
 def _unserialize_step_data(xml):
     step = StepData(xml.attrib["description"])

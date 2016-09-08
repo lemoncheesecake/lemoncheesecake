@@ -4,26 +4,9 @@ Created on Mar 18, 2016
 @author: nicolas
 '''
 
-import time
 import sys
 
 IS_PYTHON3 = sys.version_info > (3,)
-
-class LemonCheesecakeException(Exception):
-    message_prefix = None
-    
-    def __str__(self):
-        s = Exception.__str__(self)
-        if self.message_prefix:
-            s = "%s: %s" % (self.message_prefix, s)
-        return s
-
-class LemonCheesecakeInternalError(Exception):
-    def __str__(self):
-        return "Internal error: %s" % Exception.__str__(self)
-
-class LemonCheesecakeInvalidReport(LemonCheesecakeException):
-    pass
 
 def humanize_duration(duration):
     ret = ""

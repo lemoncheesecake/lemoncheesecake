@@ -10,7 +10,7 @@ import sys
 import re
 
 from lemoncheesecake.reporting import ReportingBackend
-from lemoncheesecake.common import IS_PYTHON3, humanize_duration
+from lemoncheesecake.utils import IS_PYTHON3, humanize_duration
 
 from colorama import init, Style, Fore
 from termcolor import colored

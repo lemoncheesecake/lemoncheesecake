@@ -4,7 +4,7 @@ Created on Mar 29, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.common import LemonCheesecakeException
+from lemoncheesecake.exceptions import LemonCheesecakeException
 
 ATTACHEMENT_DIR = "attachments"
 

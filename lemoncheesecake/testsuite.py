@@ -1,7 +1,7 @@
 import fnmatch
 import inspect
 
-from lemoncheesecake.common import LemonCheesecakeException, LemonCheesecakeInternalError
+from lemoncheesecake.exceptions import LemonCheesecakeException, LemonCheesecakeInternalError
 from lemoncheesecake.runtime import get_runtime
 
 __all__ = (

@@ -8,7 +8,8 @@ import os.path
 import time
 import shutil
 
-from lemoncheesecake.common import LemonCheesecakeInternalError, humanize_duration
+from lemoncheesecake.utils import humanize_duration
+from lemoncheesecake.exceptions import LemonCheesecakeInternalError
 from lemoncheesecake.reporting import get_enabled_backends, LOG_LEVEL_DEBUG, LOG_LEVEL_INFO, \
     LOG_LEVEL_WARN, LOG_LEVEL_ERROR, ATTACHEMENT_DIR
 
