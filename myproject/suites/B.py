@@ -1,4 +1,5 @@
-from lemoncheesecake import *
+from lemoncheesecake.testsuite import *
+from lemoncheesecake.checkers import *
 
 @suite_rank(1)
 class B(TestSuite):

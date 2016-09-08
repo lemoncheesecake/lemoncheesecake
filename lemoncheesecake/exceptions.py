@@ -13,9 +13,10 @@ class LemonCheesecakeException(Exception):
             s = "%s: %s" % (self.message_prefix, s)
         return s
 
-class LemonCheesecakeInternalError(Exception):
+class LemonCheesecakeInternalError(LemonCheesecakeException):
     def __str__(self):
-        return "Internal error: %s" % Exception.__str__(self)
+        return "Internal error: %s" % LemonCheesecakeException.__str__(self)
 
 class ProgrammingError(LemonCheesecakeException):
-    pass
+    def __str__(self):
+        return "Programming error: %s" % LemonCheesecakeException.__str__(self)
