@@ -23,31 +23,31 @@ __all__ = (
 
 def log_debug(content):
     """
-    Add a debug message.
+    Log a debug level message.
     """
     get_runtime().log_debug(content)
 
 def log_info(content):
     """
-    Add a info message.
+    Log a info level message.
     """
     get_runtime().log_info(content)
 
 def log_warn(content):
     """
-    Add a warning message.
+    Log a warning level message.
     """
     get_runtime().log_warn(content)
 
 def log_error(content):
     """
-    Add an error message.
+    Log an error level message.
     """
     get_runtime().log_error(content)
 
 def set_step(description):
     """
-    Add a new step.
+    Set a new step.
     """
     get_runtime().set_step(description)
 
