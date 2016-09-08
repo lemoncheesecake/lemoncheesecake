@@ -6,7 +6,7 @@ from lemoncheesecake.runtime import get_runtime
 
 __all__ = (
     # messages & steps
-    "debug", "info", "warn", "error", "step",
+    "log_debug", "log_info", "log_warn", "log_error", "set_step",
     # attachments
     "prepare_attachment", "save_attachment_file", "save_attachment_content",
     # decorators
@@ -21,35 +21,35 @@ __all__ = (
 # Shortcuts for tests
 ###
 
-def debug(content):
+def log_debug(content):
     """
     Add a debug message.
     """
-    get_runtime().debug(content)
+    get_runtime().log_debug(content)
 
-def info(content):
+def log_info(content):
     """
     Add a info message.
     """
-    get_runtime().info(content)
+    get_runtime().log_info(content)
 
-def warn(content):
+def log_warn(content):
     """
     Add a warning message.
     """
-    get_runtime().warn(content)
+    get_runtime().log_warn(content)
 
-def error(content):
+def log_error(content):
     """
     Add an error message.
     """
-    get_runtime().error(content)
+    get_runtime().log_error(content)
 
-def step(description):
+def set_step(description):
     """
     Add a new step.
     """
-    get_runtime().step(description)
+    get_runtime().set_step(description)
 
 def prepare_attachment(filename, description=None):
     """

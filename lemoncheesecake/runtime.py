@@ -153,9 +153,9 @@ class _Runtime:
 
     def create_step_if_needed(self):
         if not self.current_step_data_list:
-            self.step(self.default_step_description)
+            self.set_step(self.default_step_description)
 
-    def step(self, description, force_lock=False):
+    def set_step(self, description, force_lock=False):
         if self.step_lock and not force_lock:
             return
 
@@ -174,16 +174,16 @@ class _Runtime:
         self.current_step_data.entries.append(LogData(level, content))
         self.for_each_backend(lambda b: b.log(level, content))
     
-    def debug(self, content):
+    def log_debug(self, content):
         self.log(LOG_LEVEL_DEBUG, content)
     
-    def info(self, content):
+    def log_info(self, content):
         self.log(LOG_LEVEL_INFO, content)
     
-    def warn(self, content):
+    def log_warn(self, content):
         self.log(LOG_LEVEL_WARN, content)
     
-    def error(self, content):
+    def log_error(self, content):
         if self.current_test_data:
             self.current_test_data.outcome = False
         self.log(LOG_LEVEL_ERROR, content)

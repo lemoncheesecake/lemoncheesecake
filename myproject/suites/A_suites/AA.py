@@ -3,12 +3,12 @@ from lemoncheesecake import *
 @url("http://bugtracker.net/tickets/1234")
 class AA(TestSuite):
     def before_suite(self):
-        step("hep csdcnlns csdlcsdl cubsd ucds")
-        info("some stuff in before suite")
+        set_step("hep csdcnlns csdlcsdl cubsd ucds")
+        log_info("some stuff in before suite")
 
     def after_suite(self):
-        step("hopi csdknclsdc lsdclusbcl ubsd")
-        info("some other stuff in after suite")
+        set_step("hopi csdknclsdc lsdclusbcl ubsd")
+        log_info("some other stuff in after suite")
 
     @test("Test of A")
     def test_of_A(self):

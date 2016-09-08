@@ -162,22 +162,22 @@ class Launcher:
                 
         def handle_exception(e):
             if isinstance(e, AbortTest):
-                rt.error(str(e))
+                rt.log_error(str(e))
             elif isinstance(e, AbortTestSuite):
-                rt.error(str(e))
+                rt.log_error(str(e))
                 self.abort_testsuite = suite
             elif isinstance(e, AbortAllTests):
-                rt.error(str(e))
+                rt.log_error(str(e))
                 self.abort_all_tests = True
             elif isinstance(e, KeyboardInterrupt):
-                rt.error("All tests have been interrupted manually by the user")
+                rt.log_error("All tests have been interrupted manually by the user")
                 self.abort_all_tests = True
             else:
                 # FIXME; use exception instead of last implicit stacktrace
                 stacktrace = traceback.format_exc()
                 if not IS_PYTHON3:
                     stacktrace = stacktrace.decode("utf-8")
-                rt.error("Caught unexpected exception while running test: " + stacktrace)
+                rt.log_error("Caught unexpected exception while running test: " + stacktrace)
 
         rt.begin_before_suite(suite)
 
@@ -195,11 +195,11 @@ class Launcher:
         for test in suite.get_tests(filtered=True):
             rt.begin_test(test)
             if self.abort_testsuite:
-                rt.error("Cannot execute this test: the tests of this test suite have been aborted.")
+                rt.log_error("Cannot execute this test: the tests of this test suite have been aborted.")
                 rt.end_test()
                 continue
             if self.abort_all_tests:
-                rt.error("Cannot execute this test: all tests have been aborted.")
+                rt.log_error("Cannot execute this test: all tests have been aborted.")
                 rt.end_test()
                 continue
 
