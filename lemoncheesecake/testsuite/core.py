@@ -8,7 +8,7 @@ import inspect
 
 from lemoncheesecake.testsuite.exceptions import LoadTestError, LoadTestSuiteError
 
-__all__ = "Test", "TestSuite"
+__all__ = "TestSuite", "Test"
 
 class Test:
     test_current_rank = 1
