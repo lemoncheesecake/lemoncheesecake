@@ -328,7 +328,3 @@ class Launcher:
             sys.exit(e)
         
         sys.exit(0)
-
-if __name__ == "__main__":
-    launcher = Launcher()
-    launcher.handle_cli()
