@@ -6,9 +6,6 @@ Created on Jan 24, 2016
 
 import sys
 import os, os.path
-import re
-import importlib
-import glob
 import platform
 import time
 import argparse
@@ -16,65 +13,17 @@ import traceback
 
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.utils import IS_PYTHON3
-from lemoncheesecake.testsuite import Filter, PropertyValidator, AbortTest, AbortTestSuite, AbortAllTests
+from lemoncheesecake.launcher.filter import Filter
 import lemoncheesecake.worker
 from lemoncheesecake import reporting
-from lemoncheesecake.exceptions import LemonCheesecakeException
+from lemoncheesecake.exceptions import LemonCheesecakeException, InvalidMetadataError, AbortTest, AbortTestSuite, AbortAllTests
 
-__all__ = ("Launcher", "find_testsuites_in_directory", "LoadTestSuiteError")
+__all__ = ("Launcher",)
 
 COMMAND_RUN = "run"
 
-class LoadTestSuiteError(LemonCheesecakeException):
-    pass
-
 def reporting_dir_with_datetime(report_rootdir, t):
     return time.strftime("report-%Y%m%d-%H%M%S", time.localtime(t))
-
-def _strip_py_ext(filename):
-    return re.sub("\.py$", "", filename)
-
-def get_testsuite_from_file(filename):
-    mod_path = _strip_py_ext(filename.replace(os.path.sep, "."))
-    mod_name = mod_path.split(".")[-1]
-
-    try:
-        loaded_mod = importlib.import_module(mod_path)
-    except ImportError as e:
-        raise LoadTestSuiteError("Cannot import module %s: %s" % (mod_name, str(e)))
-    try:
-        klass = getattr(loaded_mod, mod_name)
-    except AttributeError:
-        raise LoadTestSuiteError("Cannot find class '%s' in '%s'" % (mod_name, loaded_mod.__file__))
-    return klass
-
-def find_testsuites_in_directory(dir, recursive=True):
-    """Find testsuite classes in modules found in dir.
-    
-    The function expect that:
-    - each module (.py file) contains a class that inherits TestSuite
-    - the class name must have the same name as the module name (if the module is foo.py 
-      the class must be named foo)
-    If the recursive argument is set to True, sub testsuites will be searched in a directory named
-    from the suite module: if the suite module is "foo" then the sub suites directory must be "foo_suites".
-    
-    Raise LoadTestSuiteError if the testsuite cannot be loaded.
-    """
-    suites = [ ]
-    for filename in glob.glob(os.path.join(dir, "*.py")):
-        if os.path.basename(filename).startswith("__"):
-            continue
-        suite = get_testsuite_from_file(filename)
-        if recursive:
-            suite_subdir = _strip_py_ext(filename) + "_suites"
-            if os.path.isdir(suite_subdir):
-                sub_suites = find_testsuites_in_directory(suite_subdir, recursive=True)
-                for sub_suite in sub_suites:
-                    setattr(suite, sub_suite.__name__, sub_suite)
-        suites.append(suite)
-    if len(list(filter(lambda s: hasattr(s, "_rank"), suites))) == len(suites):
-        suites.sort(key=lambda s: s._rank)
-    return suites
 
 def property_value(value):
     splitted = value.split(":")
@@ -126,7 +75,7 @@ class Launcher:
     def _load_testsuite(self, suite, property_validator):
         # process suite
         if suite.id in self._testsuites_by_id:
-            raise LoadTestSuiteError("A test suite with id '%s' has been registered more than one time" % suite.id)
+            raise InvalidMetadataError("A test suite with id '%s' has been registered more than one time" % suite.id)
         if property_validator:
             property_validator.check_suite_compliance(suite)
         self._testsuites_by_id[suite.id] = suite
@@ -134,7 +83,7 @@ class Launcher:
         # process tests
         for test in suite.get_tests():
             if test.id in self._tests_by_id:
-                raise LoadTestSuiteError("A test with id '%s' has been registered more than one time" % test.id)
+                raise InvalidMetadataError("A test with id '%s' has been registered more than one time" % test.id)
             if property_validator:
                 property_validator.check_test_compliance(test)
             self._tests_by_id[test.id] = test

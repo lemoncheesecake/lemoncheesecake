@@ -4,7 +4,9 @@ Created on Sep 8, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.testsuite.exceptions import PropertyError
+from lemoncheesecake.exceptions import InvalidMetadataError
+
+__all__ = ("PropertyValidator",)
 
 class PropertyValidator:
     def __init__(self):
@@ -40,20 +42,26 @@ class PropertyValidator:
         if accepted != None:
             for property_name in obj.properties.keys():
                 if not property_name in accepted:
-                    raise PropertyError("cannot load %s '%s', the property '%s' is not supported (availables are: %s)",
-                                        obj_type, obj.id, property_name, ", ".join(accepted))
+                    raise InvalidMetadataError(
+                        "cannot load %s '%s', the property '%s' is not supported (availables are: %s)" % (
+                        obj_type, obj.id, property_name, ", ".join(accepted)
+                    ))
         
         for mandatory in [ m for m in rules.keys() if rules[m]["mandatory"] ]:
             if not mandatory in obj.properties.keys():
-                raise PropertyError("cannot load %s '%s', the mandatory property '%s' is missing" % (obj_type, obj.id, mandatory))
+                raise InvalidMetadataError(
+                    "cannot load %s '%s', the mandatory property '%s' is missing" % (
+                    obj_type, obj.id, mandatory
+                ))
         
         for name, value in obj.properties.items():
             if not name in rules:
                 continue
             if rules[name]["accepted_values"] and not value in rules[name]["accepted_values"]:
-                raise PropertyError(
-                    "cannot load %s '%s', value '%s' of property '%s' is not among accepted values: %s" % (obj_type, obj.id, value, name, rules[name]["accepted_values"])
-                )
+                raise InvalidMetadataError(
+                    "cannot load %s '%s', value '%s' of property '%s' is not among accepted values: %s" % (
+                    obj_type, obj.id, value, name, rules[name]["accepted_values"]
+                ))
             
     def check_test_compliance(self, test):
         self._check_compliance(test, "test", self._test_rules, self._accepted_test_properties)

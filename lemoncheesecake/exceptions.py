@@ -14,9 +14,31 @@ class LemonCheesecakeException(Exception):
         return s
 
 class LemonCheesecakeInternalError(LemonCheesecakeException):
-    def __str__(self):
-        return "Internal error: %s" % LemonCheesecakeException.__str__(self)
+    message_prefix = "Internal error"
 
 class ProgrammingError(LemonCheesecakeException):
-    def __str__(self):
-        return "Programming error: %s" % LemonCheesecakeException.__str__(self)
+    message_prefix = "Programing error"
+
+class ImportTestSuiteError(LemonCheesecakeException):
+    message_prefix = "Cannot import testsuite"
+
+class InvalidMetadataError(ProgrammingError):
+    message_prefix = "Invalid metadata"
+
+class AbortTest(LemonCheesecakeException):
+    message_prefix = "The test has been aborted"
+    
+    def __init__(self, reason):
+        LemonCheesecakeException.__init__(self, reason)
+
+class AbortTestSuite(LemonCheesecakeException):
+    message_prefix = "The testsuite has been aborted"
+
+    def __init__(self, reason):
+        LemonCheesecakeException.__init__(self, reason)
+
+class AbortAllTests(LemonCheesecakeException):
+    message_prefix = "All tests have been aborted"
+
+    def __init__(self, reason):
+        LemonCheesecakeException.__init__(self, reason)

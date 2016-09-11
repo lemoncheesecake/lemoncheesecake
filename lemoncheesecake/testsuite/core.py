@@ -6,7 +6,7 @@ Created on Sep 8, 2016
 
 import inspect
 
-from lemoncheesecake.testsuite.exceptions import LoadTestError, LoadTestSuiteError
+from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError
 
 __all__ = "TestSuite", "Test"
 
@@ -91,14 +91,14 @@ class TestSuite:
     def assert_test_description_is_unique(self, description):
         result = list(filter(lambda t: t.description == description, self._tests))
         if result:
-            raise LoadTestError(
+            raise InvalidMetadataError(
                 "a test with description '%s' is already registered in test suite %s" % (description, self.get_path_str())
             )
         
     def assert_sub_test_suite_description_is_unique(self, description):
         result = list(filter(lambda s: s.description == description, self._sub_testsuites))
         if result:
-            raise LoadTestSuiteError(
+            raise InvalidMetadataError(
                 "a sub test suite with description '%s' is already registered in test suite %s" % (description, self.get_path_str())
             )
         
@@ -125,7 +125,7 @@ class TestSuite:
     
     def register_test(self, new_test, before_test=None, after_test=None):
         if before_test and after_test:
-            raise Exception("before_test and after_test are mutually exclusive")
+            raise ProgrammingError("before_test and after_test are mutually exclusive")
         
         self.assert_test_description_is_unique(new_test.description)
         
@@ -139,7 +139,7 @@ class TestSuite:
                     ref_test, ref_test_idx = test, idx
                     break
             if ref_test_idx == None:
-                raise LoadTestError("Could not find any test named '%s' in the test suite '%s'" % (ref_test_id, self.get_suite_id()))
+                raise InvalidMetadataError("Could not find any test named '%s' in the test suite '%s'" % (ref_test_id, self.get_suite_id()))
             
             # set the test appropriate rank and shift all test's ranks coming after the new test
             new_test.rank = ref_test.rank + (1 if after_test else 0)
@@ -151,7 +151,7 @@ class TestSuite:
     
     def register_tests(self, tests, before_test=None, after_test=None):
         if before_test and after_test:
-            raise Exception("before_test and after_test are mutually exclusive")
+            raise ProgrammingError("before_test and after_test are mutually exclusive")
         
         if after_test:
             previous_test = after_test

@@ -1,5 +1,4 @@
-from lemoncheesecake.testsuite import *
-from lemoncheesecake.checkers import *
+from lemoncheesecake import *
 import re
 
 @suite_rank(2)

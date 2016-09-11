@@ -5,7 +5,7 @@ Created on Jan 24, 2016
 '''
 
 from lemoncheesecake.runtime import get_runtime
-from lemoncheesecake.testsuite import AbortTest
+from lemoncheesecake.exceptions import AbortTest
 
 import sys
 import re

@@ -1,5 +1,4 @@
-from lemoncheesecake.testsuite import *
-from lemoncheesecake.checkers import *
+from lemoncheesecake import *
 
 @url("http://bugtracker.net/tickets/1234")
 class AA(TestSuite):
