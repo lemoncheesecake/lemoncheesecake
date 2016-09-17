@@ -11,10 +11,10 @@ import time
 import argparse
 import traceback
 
+import lemoncheesecake # for worker access
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.launcher.filter import Filter
-import lemoncheesecake.worker
 from lemoncheesecake import reporting
 from lemoncheesecake.exceptions import LemonCheesecakeException, InvalidMetadataError, AbortTest, AbortTestSuite, AbortAllTests
 
@@ -61,16 +61,10 @@ class Launcher:
         self._testsuites = [ ]
         self._testsuites_by_id = { }
         self._tests_by_id = { }
-        
-        ###
-        # Worker
-        ###
-        self._worker = None
-        lemoncheesecake.worker.worker = None
-    
+            
     def set_worker(self, worker):
-        self._worker = worker
-        lemoncheesecake.worker.worker = worker
+        "Set the worker that will be used in the testsuites"
+        lemoncheesecake.set_worker(worker)
     
     def _load_testsuite(self, suite, property_validator):
         # process suite
@@ -260,8 +254,8 @@ class Launcher:
         filter.url_names = args.url
         
         # initialize worker using CLI args and run tests
-        if self._worker:
-            self._worker.cli_initialize(args)
+        if lemoncheesecake.worker:
+            lemoncheesecake.worker.cli_initialize(args)
         self.run_testsuites(filter, args.report_dir)
         
     def handle_cli(self):
