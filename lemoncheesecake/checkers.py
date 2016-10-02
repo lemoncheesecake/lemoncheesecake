@@ -25,7 +25,8 @@ class Check:
     value_type = None
     doc_func_args = "name, actual, expected"
     
-    def __init__(self, assertion=False, value_type=None):
+    def __init__(self, name, assertion=False, value_type=None):
+        self.name = name
         self.assertion = assertion
         self.value_type = value_type
     
@@ -116,13 +117,13 @@ def register_checker(name, checker_class, value_type=None, is_base_checker=True)
         global BASE_CHECKER_NAMES
         BASE_CHECKER_NAMES.append(name)
     
-    checker_class.name = name
-    checker_inst = checker_class(value_type=value_type)
-    assertion_inst = checker_class(assertion=True, value_type=value_type)
+    checker_inst = checker_class(name, value_type=value_type)
+    assertion_inst = checker_class(name, assertion=True, value_type=value_type)
     do_register_checker(name, checker_inst, assertion_inst)
 
 def checker(name, value_type=None, is_base_checker=True):
     def wrapper(klass):
+        klass.name = name
         register_checker(name, klass, value_type, is_base_checker=is_base_checker)
         return klass
     return wrapper
@@ -225,8 +226,7 @@ class CheckStrDoesNotContain(CheckStrEq):
 def generate_comparator_checkers_for_type(type_):
     checker_classes = CheckEq, CheckNotEq, CheckGt, CheckGteq, CheckLt, CheckLteq
     for klass in checker_classes:
-        do_register_checker("%s_%s" % (type_.__name__, klass.name), 
-                    klass(value_type=type_), klass(value_type=type_, assertion=True))
+        register_checker("%s_%s" % (type_.__name__, klass.name), klass, value_type=type_)
 
 generate_comparator_checkers_for_type(int)
 generate_comparator_checkers_for_type(float)
@@ -274,6 +274,8 @@ class CheckListContains(Check):
 def register_dict_checkers(dict_checker_name_fmt, dict_checker):
     def wrapper(value_checker):
         class dict_value_checker(dict_checker):
+            doc_func_args = "key, d, expected"
+            
             def build_doc_func_description(self):
                 return "{prefix} key[d] {comparator} expected".format(
                     prefix=self.description_prefix, comparator=value_checker.comparator_label
@@ -286,7 +288,7 @@ def register_dict_checkers(dict_checker_name_fmt, dict_checker):
     global BASE_CHECKER_NAMES
     for name in BASE_CHECKER_NAMES:
         klass = wrapper(get_checker_object(name))
-        do_register_checker(dict_checker_name_fmt % name, klass(), klass(assertion=True))
+        do_register_checker(dict_checker_name_fmt % name, klass(name), klass(name, assertion=True))
 
 @checker("dict_has_key", is_base_checker=False)
 class CheckDictHasKey(Check):
