@@ -39,7 +39,7 @@ class TestSuite:
         if not hasattr(self, "id"):
             self.id = self.__class__.__name__
         if not hasattr(self, "description"):
-            self.description = self.__class__.__name__
+            self.description = self.id
 
         # static tests
         self._tests = [ ]
