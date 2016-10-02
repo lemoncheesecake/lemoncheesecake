@@ -34,7 +34,7 @@ Statistics :
 ```
 
 In the launcher code example:
-- TestSuite classes are imported from files in the "tests" directory using `import_testsuites_in_directory`
+- TestSuite classes are imported from files in the "tests" directory using `import_testsuites_from_directory`
 - these classes are loaded into the launcher using the `load_testsuites` method
 - the `handle_cli` method run the tests according to the options passed by the user, the usage of the launcher script looks like this:
 ```
@@ -99,7 +99,7 @@ class my_first_testsuite(TestSuite):
 ```
 
 All lemoncheesecake classes, functions, decorators needed in testsuites can be safely imported through a wild import of the `lemoncheesecake` package.
-A testsuite module must inherit from the TestSuite class, in case you load your test classes using the `import_testsuites_in_directory` function of the launcher package, it is required that your class name has the same name as its module container. A testsuite can contains several tests and sub testsuites. The `@test` decorator takes a description as argument and make an object method a test of the testsuite. The first line of the test is a call to step that will group the following logs and checks. Each new call to the step function creates a new step at the test level. Once we have performed an http/API call using urllib2, the first thing we do is to check for HTTP code status. We use the assert_eq function for that. Each checker function is available in two forms:
+A testsuite module must inherit from the TestSuite class, in case you load your test classes using the `import_testsuites_from_directory` function of the launcher package, it is required that your class name has the same name as its module container. A testsuite can contains several tests and sub testsuites. The `@test` decorator takes a description as argument and make an object method a test of the testsuite. The first line of the test is a call to step that will group the following logs and checks. Each new call to the step function creates a new step at the test level. Once we have performed an http/API call using urllib2, the first thing we do is to check for HTTP code status. We use the assert_eq function for that. Each checker function is available in two forms:
 - one with a `check_` prefix, it will perform the requested check, add the result in the report, and the test will continue (whatever of the outcome of test is)
 - the other one with an `assert_` prefix, it behaves like check_ but stops the test (it raises an AbortTest exception) if the check fails
 
