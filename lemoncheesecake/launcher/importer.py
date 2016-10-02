@@ -5,6 +5,7 @@ Created on Sep 10, 2016
 '''
 
 import os
+import sys
 import glob
 import re
 import importlib
@@ -22,13 +23,17 @@ def import_testsuite_from_file(filename):
     The testsuite class must have the same name as the containing Python module.
     Raise a ImportTestSuiteError if the testsuite class cannot be imported.
     """
-    mod_path = _strip_py_ext(filename.replace(os.path.sep, "."))
-    mod_name = mod_path.split(".")[-1]
+    mod_dir = os.path.dirname(filename)
+    mod_name = _strip_py_ext(os.path.basename(filename))
 
+    sys.path.insert(0, mod_dir)
     try:
-        loaded_mod = importlib.import_module(mod_path)
+        loaded_mod = importlib.import_module(mod_name)
     except ImportError as e:
         raise ImportTestSuiteError("Cannot import module %s: %s" % (mod_name, str(e)))
+    finally:
+        del sys.path[0]
+    
     try:
         klass = getattr(loaded_mod, mod_name)
     except AttributeError:
@@ -43,7 +48,7 @@ def import_testsuites_from_directory(dir, recursive=True):
     - the class name must have the same name as the module name (if the module is foo.py 
       the class must be named foo)
     If the recursive argument is set to True, sub testsuites will be searched in a directory named
-    from the suite module: if the suite module is "foo" then the sub suites directory must be "foo_suites".
+    from the suite module: if the suite module is "foo.py" then the sub suites directory must be "foo".
     
     Raise ImportTestSuiteError if one or more testsuite cannot be imported.
     """
@@ -53,7 +58,7 @@ def import_testsuites_from_directory(dir, recursive=True):
             continue
         suite = import_testsuite_from_file(filename)
         if recursive:
-            suite_subdir = _strip_py_ext(filename) + "_suites"
+            suite_subdir = _strip_py_ext(filename)
             if os.path.isdir(suite_subdir):
                 sub_suites = import_testsuites_from_directory(suite_subdir, recursive=True)
                 for sub_suite in sub_suites:
