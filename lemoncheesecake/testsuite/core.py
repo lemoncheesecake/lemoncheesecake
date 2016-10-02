@@ -202,13 +202,17 @@ class TestSuite:
     ###
     
     def before_suite(self):
+        """This hook is called before running the tests (and sub testsuites) of the testsuite"""
         pass
     
     def after_suite(self):
+        """This hook is called after running the tests (and sub testsuites) of the testsuite"""
         pass
 
     def before_test(self, test_name):
+        """This hook before running each test of the testsuite"""
         pass
     
     def after_test(self, test_name):
+        """This hook after running each test of the testsuite"""
         pass
