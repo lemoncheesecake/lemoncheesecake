@@ -56,6 +56,6 @@ def url(url, name=None):
     """Decorator, set an URL (with an optional friendly name) to a test or a testsuite"""
     def wrapper(obj):
         assert_test_or_testsuite(obj)
-        obj.urls.append([url, name])
+        obj.urls.append((url, name))
         return obj
     return wrapper
