@@ -221,12 +221,14 @@ my_sub_testsuite.py
 # Testsuite hooks
 
 Testsuites provides several methods that give the user the possibility to execute code at particular steps of the testsuite execution:
+
 - `before_suite` is called before executing the tests of the testsuite; if something wrong happens (a call to `log_error` or if an exception is raised) then the whole testsuite execution is aborted
 - `before_test` takes the test name as argument and is called before each test; if something wrong happen then the test execution is aborted
 - `after_test` takes the test name as argument is called after each test; if something wrong happen the the executed test will be mark as failed
 - `after_suite` is called after executing the tests of the testsuite
 
 Please note that:
+
 - code within `before_suite` and `after_suite` methods is executed in a dedicated context and generated data (checks, logs) will be represented like a test in the test report
 - code within `before_test` and `after_test` methods is executed within the related test context and generated data will be associated to the given test
 
@@ -251,7 +253,6 @@ def test_something_else(self):
 def test_something_else_again(self):
     pass
 ```
-: "important", "deprecated", "slow", etc...
 - properties: they are used for keywords that have a (closed) choice of values; examples:
 ```python
 @prop("type", "acceptance")
