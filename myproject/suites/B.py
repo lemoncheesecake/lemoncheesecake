@@ -14,5 +14,3 @@ class B(TestSuite):
         def d_test_1(self):
             save_attachment_file("mycar.jpg")
             save_attachment_content("blah " * 100, "sometext.txt", "Some text")
-    
-    sub_testsuite_classes = [BB1, BB2]
