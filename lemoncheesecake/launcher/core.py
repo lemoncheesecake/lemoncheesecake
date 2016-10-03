@@ -230,11 +230,17 @@ class Launcher:
         # init report information
         rt.reporting_data.add_info("Command line", " ".join(sys.argv))
         
+        if lemoncheesecake.worker:
+            lemoncheesecake.worker.before_tests()
+        
         # run tests
         rt.begin_tests()
         for suite in testsuites:
             self._run_testsuite(suite)
         rt.end_tests()
+        
+        if lemoncheesecake.worker:
+            lemoncheesecake.worker.after_tests()
 
     def cli_run_testsuites(self, args):
         """Run the loaded test suites according to the command line parameters.
