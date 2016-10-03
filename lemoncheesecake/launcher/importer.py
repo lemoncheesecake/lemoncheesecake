@@ -58,11 +58,9 @@ def import_testsuites_from_directory(dir, recursive=True):
             continue
         suite = import_testsuite_from_file(filename)
         if recursive:
-            suite_subdir = _strip_py_ext(filename)
-            if os.path.isdir(suite_subdir):
-                sub_suites = import_testsuites_from_directory(suite_subdir, recursive=True)
-                for sub_suite in sub_suites:
-                    setattr(suite, sub_suite.__name__, sub_suite)
+            subsuites_dir = _strip_py_ext(filename)
+            if os.path.isdir(subsuites_dir):
+                suite.sub_suites = import_testsuites_from_directory(subsuites_dir, recursive=True)
         suites.append(suite)
     if len(list(filter(lambda s: hasattr(s, "_rank"), suites))) == len(suites):
         suites.sort(key=lambda s: s._rank)

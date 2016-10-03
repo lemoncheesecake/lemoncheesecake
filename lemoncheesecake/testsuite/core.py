@@ -30,7 +30,7 @@ class TestSuite:
     tags = [ ]
     properties = {}
     urls = [ ]
-    sub_testsuite_classes = [ ]        
+    sub_suites = [ ]        
     
     def load(self, parent_suite=None):
         self.parent_suite = parent_suite
@@ -53,12 +53,19 @@ class TestSuite:
         # dynamic test        
         self.load_generated_tests()
         
-        self._sub_testsuites = [ ]
+        # find sub testsuite classes
+        # - first: in the "sub_suites" attribute of the class
+        suite_classes = self.sub_suites[:]
+        # - second: in inline attributes
         for attr_name in dir(self):
             attr = getattr(self, attr_name)
-            if not inspect.isclass(attr) or not issubclass(attr, TestSuite):
-                continue
-            sub_suite = attr()
+            if inspect.isclass(attr) and issubclass(attr, TestSuite): 
+                suite_classes.append(attr) 
+        
+        # load sub testsuites
+        self._sub_testsuites = [ ]
+        for suite_class in suite_classes:
+            sub_suite = suite_class()
             sub_suite.load(self)
             self.assert_sub_test_suite_description_is_unique(sub_suite.description)
             self._sub_testsuites.append(sub_suite)
@@ -202,17 +209,17 @@ class TestSuite:
     ###
     
     def before_suite(self):
-        """This hook is called before running the tests (and sub testsuites) of the testsuite"""
+        """Hook method called before running the tests (and sub testsuites) of the testsuite"""
         pass
     
     def after_suite(self):
-        """This hook is called after running the tests (and sub testsuites) of the testsuite"""
+        """Hook method called after running the tests (and sub testsuites) of the testsuite"""
         pass
 
     def before_test(self, test_name):
-        """This hook before running each test of the testsuite"""
+        """Hook method called before running each test of the testsuite"""
         pass
     
     def after_test(self, test_name):
-        """This hook after running each test of the testsuite"""
+        """Hook method called after running each test of the testsuite"""
         pass
