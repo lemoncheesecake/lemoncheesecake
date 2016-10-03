@@ -1,6 +1,6 @@
 # Introduction
 
-LemoncheeseCake aims to be a lightweight functional testing framework for Python. It provides functionalities such as a test launcher, tests organization (through hierarchical test suites, tags, properties), structured reporting data (JSON, XML) and HTML reports.
+lemoncheesecake aims to be a lightweight functional testing framework for Python. It provides functionalities such as a test launcher, tests organization (through hierarchical test suites, tags, properties), structured reporting data (JSON, XML) and HTML reports.
 
 Tests are defined as methods in a testsuite class that can also contain sub testsuites allowing the developer to define a complex hierarchy of tests. Tests and testsuites are identified by a unique id and a description. Tags, properties (key/value pairs), URLs can be associated to both test and testsuites. Those metadata can be used later by the user to filter the test he wants to run.
 
@@ -153,7 +153,6 @@ check_dictval_eq(d, "foo", 21)
 check_dictval_eq(d, "bar", 42)
 ```
 
-
 ## The worker
 
 The worker is used to maintain a customizable state for the user across the execution of all testsuites. It also advised to use the worker as a level of abstraction between the tests and the system under test:
@@ -183,6 +182,7 @@ class MySuite(TestSuite):
 ```
 
 The worker class provide three hooks detailed in the API documentation:
+
 - `cli_initialize`
 - `before_tests`
 - `after_tests`
@@ -233,8 +233,8 @@ Please note that:
 # Metadata
 
 Various metadata can be set to test and to testsuites:
-- tags: they are simple keywords used to tag tests or testsuites that have a particular characteristic:
 
+- tags: they are simple keywords used to tag tests or testsuites that have a particular characteristic:
 ```python
 @tags("important")
 @test("Test something")
@@ -253,7 +253,6 @@ def test_something_else_again(self):
 ```
 : "important", "deprecated", "slow", etc...
 - properties: they are used for keywords that have a (closed) choice of values; examples:
-
 ```python
 @prop("type", "acceptance")
 @test("Test something")
@@ -265,9 +264,7 @@ def test_something(self):
 def test_something_else(self):
     pass
 ```
-
 - urls: they are used to associate an URL (with an optional label) to a given test or testsuite:
-
 ```python
 @url("http://my.bug.tracker/1234", "TICKET-1234")
 @test("Test something")
@@ -281,6 +278,7 @@ def test_something_else(self):
 ```
 
 These metadata:
+
 - can be used to filter the tests to be run (see the `--tag`, `--property` and `url` CLI launcher)
 - will be available in the test report
 
@@ -323,9 +321,9 @@ launcher.handle_cli()
 # file tests/movies.py
 from lemoncheesecake import *
 
-class my_first_testsuite(TestSuite):
+class movies(TestSuite):
 	@test("Some test")
-	def some_test(self):
+	def test_matrix(self):
 		data = worker.get_movie_info("matrix", 1999)
 		set_step("Check movie information")
 		check_dictval_str_eq("Title", data, "The Matrix")
