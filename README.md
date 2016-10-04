@@ -1,16 +1,16 @@
 # Introduction
 
-lemoncheesecake aims to be a lightweight functional testing framework for Python. It provides functionalities such as a test launcher, tests organization (through hierarchical test suites, tags, properties), structured reporting data (JSON, XML) and HTML reports.
+lemoncheesecake is a lightweight functional testing framework for Python. It provides functionalities such as test launcher, tests organization (through hierarchical test suites, tags, properties), structured reporting data (JSON, XML) and HTML reports.
 
-Tests are defined as methods in a testsuite class that can also contain sub testsuites allowing the developer to define a complex hierarchy of tests. Tests and testsuites are identified by a unique id and a description. Tags, properties (key/value pairs), URLs can be associated to both test and testsuites. Those metadata can be used later by the user to filter the test he wants to run.
+Tests are defined as methods in a testsuite class that can also contain sub testsuites allowing the developer to define a complex hierarchy of tests. Tests and testsuites are identified by a unique id and a description. Tags, properties (key/value pairs), URLs can be associated with both test and testsuites. These metadata can be used later by the user to filter the test he wants to run.
 
-One of the key feature of lemoncheesecake is it's reporting capabilities, providing the user with various format (XML, JSON, HTML) and the possibility to create his own reporting backend.
+One of the key features of lemoncheesecake is it's reporting capabilities, providing the user with various formats (XML, JSON, HTML) and the possibility to create his own reporting backend.
 
 # Getting started
 
 ## Implementing the launcher
-
-The launcher is in charge of loading the testsuites and running the tests accordingly to the user options passed through the CLI:
+The first step to creating your tests is to implement the launcher.
+The launcher is in charge of loading the testsuites and running the tests according to the user options passed through the CLI:
 
 ```python
 # mytests.py:
@@ -23,7 +23,7 @@ launcher.handle_cli()
 
 The `load_testsuites` methods takes a list of `TestSuite` classes.
 
-The `import_testsuites_from_directory` will search
+The `import_testsuites_from_directory` will look
 for test modules in a directory named "tests"; each module must contain a testsuite class of the same name, meaning that if a test module is named "my_first_testsuite.py" then the module must contain a testsuite class named "my_first_testsuite".
 
 ## Running the tests
@@ -57,9 +57,9 @@ optional arguments:
                         Directory where reporting data will be stored
 ```
 
-Options like --test-id, --test-desc, --tag filter the test to be run based on their metadata. Available metadata will be detailed later on this document.
+Options like --test-id, --test-desc, --tag filter the tests to be run based on their metadata. Available metadata will be detailed later in this document.
 
-The tests are then run like this:
+The tests are run like this:
 ```
 $ ./mytests.py run
 ============================== my_first_testsuite ======================
@@ -77,7 +77,7 @@ Statistics :
 
 ## Testsuite
 
-A lemoncheesecake testsuite is a class that inherits `TestSuite` and contains tests and/or sub testsuites:
+A lemoncheesecake testsuite is a class that inherits from `TestSuite` and contains tests and/or sub testsuites:
 ```python
 # tests/my_first_testsuite.py:
 from lemoncheesecake import *
@@ -91,7 +91,7 @@ class my_first_testsuite(TestSuite):
 The code above declares:
 
 - a testsuite whose id is `my_first_testsuite` (the suite's id and description can be set through the `id` and `description` attributes of the testsuite class, otherwise they will be set to the class name)
-- a test whose id `some_test` and description is `Some test`
+- a test whose id is `some_test` and description is `Some test`
 
 All lemoncheesecake functions and classes used in test modules can be imported safely through a wild import of the `lemoncheesecake` package (like in the example above).
 
@@ -124,7 +124,7 @@ check_dictval_eq("foo", d, 2)
 check_dictval_int_gt("bar", d, 3) # will properly fail by indicating that "bar" is not present
 ```
 
-`check_` functions return `True` if the check succeed and return `False` otherwise. All `check_` functions have their `assert_` equivalent that return no value if the assertion succeed and stop the test (by raising `AbortTest`) otherwise.
+`check_` functions return `True` if the check succeed and return `False` otherwise. All `check_` functions have their `assert_` equivalent that returns no value if the assertion succeeds and stops the test (by raising `AbortTest`) otherwise.
 
 If one check fails in a test, this test will be marked as failed.
 
@@ -140,7 +140,7 @@ lemoncheesecake provides logging functions that give the user the ability to log
 ```python
 log_debug("Some debug message")
 log_info("More important, informational message")
-log_warn("Something looks like abnormal")
+log_warn("Something looks abnormal")
 log_error("Something bad happened")
 ```
 
@@ -185,7 +185,7 @@ class MySuite(TestSuite):
         worker.do_some_operation(42)
 ```
 
-The worker class provide three hooks detailed in the API documentation:
+The worker class provides three hooks detailed in the API documentation:
 
 - `cli_initialize`
 - `before_tests`
@@ -231,7 +231,7 @@ Testsuites provide several methods that give the user the possibility to execute
 - `after_test` is called after each test (it takes the test name as argument); if something wrong happens the executed test will be mark as failed
 - `after_suite` is called after executing the tests of the testsuite
 
-Please note that:
+Note that:
 
 - code within `before_suite` and `after_suite` methods is executed in a dedicated context and the data it generates (checks, logs) will be represented the same way as a test in the test report
 - code within `before_test` and `after_test` methods is executed within the related test context and the data it generates will be associated to the given test
