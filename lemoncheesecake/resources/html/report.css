@@ -51,3 +51,11 @@ th, td {
 .check td:first-child, .log td:first-child, .attachment td:first-child {
 	padding-left: 30px;
 }
+
+pre, samp {
+    border: 0px;
+    padding: 0px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+}
