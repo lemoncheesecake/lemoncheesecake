@@ -4,7 +4,7 @@ lemoncheesecake aims to be a lightweight functional testing framework for Python
 
 Tests are defined as methods in a testsuite class that can also contain sub testsuites allowing the developer to define a complex hierarchy of tests. Tests and testsuites are identified by a unique id and a description. Tags, properties (key/value pairs), URLs can be associated to both test and testsuites. Those metadata can be used later by the user to filter the test he wants to run.
 
-One of the key feature of LemoncheeseCake is it's reporting capabilities, providing the user with various format (XML, JSON, HTML) and the possibility to create his own reporting backend.
+One of the key feature of lemoncheesecake is it's reporting capabilities, providing the user with various format (XML, JSON, HTML) and the possibility to create his own reporting backend.
 
 # Getting started
 
@@ -13,6 +13,7 @@ One of the key feature of LemoncheeseCake is it's reporting capabilities, provid
 The launcher is in charge of loading the testsuites and running the tests accordingly to the user options passed through the CLI:
 
 ```python
+# mytests.py:
 from lemoncheesecake.launcher import Launcher, import_testsuites_from_directory
 
 launcher = Launcher()
@@ -23,7 +24,7 @@ launcher.handle_cli()
 The `load_testsuites` methods takes a list of `TestSuite` classes.
 
 The `import_testsuites_from_directory` will search
-for test modules in a directory named "tests" directory; each module must contain a testsuite class of the same name, meaning that if a test module is named "my_testsuite.py" then the module must contain a testsuite class named "my_testsuite".
+for test modules in a directory named "tests"; each module must contain a testsuite class of the same name, meaning that if a test module is named "my_first_testsuite.py" then the module must contain a testsuite class named "my_first_testsuite".
 
 ## Running the tests
 
@@ -74,10 +75,11 @@ Statistics :
  * Failures: 0
 ```
 
-## The testsuite
+## Testsuite
 
 A lemoncheesecake testsuite is a class that inherits `TestSuite` and contains tests and/or sub testsuites:
 ```python
+# tests/my_first_testsuite.py:
 from lemoncheesecake import *
 
 class my_first_testsuite(TestSuite):
@@ -87,14 +89,15 @@ class my_first_testsuite(TestSuite):
 ```
 
 The code above declares:
+
 - a testsuite whose id is `my_first_testsuite` (the suite's id and description can be set through the `id` and `description` attributes of the testsuite class, otherwise they will be set to the class name)
 - a test whose id `some_test` and description is `Some test`
 
-All lemoncheesecake functions and classes used in test modules can be safely through a wild import of the lemoncheesecake package (like in the example above).
+All lemoncheesecake functions and classes used in test modules can be imported safely through a wild import of the `lemoncheesecake` package (like in the example above).
 
-## The checkers
+## Checkers
 
-lemoncheesecake comes with a wide variety of checkers that allow you to check if values fullfill given conditions, examples:
+lemoncheesecake comes with a wide variety of checkers that allow you to check if values fulfill given conditions, examples:
 ```python
 @test("Some test")
 def some_test(self):
@@ -123,11 +126,12 @@ check_dictval_int_gt("bar", d, 3) # will properly fail by indicating that "bar" 
 
 `check_` functions return `True` if the check succeed and return `False` otherwise. All `check_` functions have their `assert_` equivalent that return no value if the assertion succeed and stop the test (by raising `AbortTest`) otherwise.
 
-If one check fails in a test, this test will be set as failed.
+If one check fails in a test, this test will be marked as failed.
 
 ## Logs and steps
 
 lemoncheesecake provides logging functions that give the user the ability to log information beyond the check functions. There are four logging functions available corresponding to four logging levels:
+
 - `log_debug`
 - `log_info`
 - `log_warn`
@@ -143,19 +147,19 @@ log_error("Something bad happened")
 Steps provide a way to organize your checks and logs when they tend to be quite large:
 ```python
 set_step("Prepare stuff for test")
-input = "val"
-log_info("Retrieve data for %s" % val)
-d = some_function_that_provide_data(val)
-log_info("Got data: %d" % d)
+value = 42
+log_info("Retrieve data for %d" % value)
+data = some_function_that_provide_data(value)
+log_info("Got data: %s" % data)
 
 set_step("Check data")
-check_dictval_eq(d, "foo", 21)
-check_dictval_eq(d, "bar", 42)
+check_dictval_eq(data, "foo", 21)
+check_dictval_eq(data, "bar", 42)
 ```
 
-## The worker
+## Worker
 
-The worker is used to maintain a customizable state for the user across the execution of all testsuites. It also advised to use the worker as a level of abstraction between the tests and the system under test:
+The worker is used to maintain a custom state for the user across the execution of all testsuites. It is also advised to use the worker as a level of abstraction between the tests and the system under test:
 
 ```python
 # launcher code:
@@ -220,21 +224,21 @@ my_sub_testsuite.py
 
 # Testsuite hooks
 
-Testsuites provides several methods that give the user the possibility to execute code at particular steps of the testsuite execution:
+Testsuites provide several methods that give the user the possibility to execute code at particular steps of the testsuite execution:
 
-- `before_suite` is called before executing the tests of the testsuite; if something wrong happens (a call to `log_error` or if an exception is raised) then the whole testsuite execution is aborted
+- `before_suite` is called before executing the tests of the testsuite; if something wrong happens (a call to `log_error` or a raised exception) then the whole testsuite execution is aborted
 - `before_test` takes the test name as argument and is called before each test; if something wrong happen then the test execution is aborted
-- `after_test` takes the test name as argument is called after each test; if something wrong happen the the executed test will be mark as failed
+- `after_test` is called after each test (it takes the test name as argument); if something wrong happens the executed test will be mark as failed
 - `after_suite` is called after executing the tests of the testsuite
 
 Please note that:
 
-- code within `before_suite` and `after_suite` methods is executed in a dedicated context and generated data (checks, logs) will be represented like a test in the test report
-- code within `before_test` and `after_test` methods is executed within the related test context and generated data will be associated to the given test
+- code within `before_suite` and `after_suite` methods is executed in a dedicated context and the data it generates (checks, logs) will be represented the same way as a test in the test report
+- code within `before_test` and `after_test` methods is executed within the related test context and the data it generates will be associated to the given test
 
 # Metadata
 
-Various metadata can be set to test and to testsuites:
+Various metadata can be associated to test and to testsuites:
 
 - tags: they are simple keywords used to tag tests or testsuites that have a particular characteristic:
 ```python
@@ -253,7 +257,7 @@ def test_something_else(self):
 def test_something_else_again(self):
     pass
 ```
-- properties: they are used for keywords that have a (closed) choice of values; examples:
+- properties: they are used for keywords that have a (closed) choice of values:
 ```python
 @prop("type", "acceptance")
 @test("Test something")
@@ -267,12 +271,12 @@ def test_something_else(self):
 ```
 - urls: they are used to associate an URL (with an optional label) to a given test or testsuite:
 ```python
-@url("http://my.bug.tracker/1234", "TICKET-1234")
+@url("http://my.bug.tracker/issue/1234", "TICKET-1234")
 @test("Test something")
 def test_something(self):
     pass
 
-@url("http://my.bug.tracker/5678")
+@url("http://my.bug.tracker/issue/5678")
 @test("Test something else")
 def test_something_else(self):
     pass
@@ -280,14 +284,14 @@ def test_something_else(self):
 
 These metadata:
 
-- can be used to filter the tests to be run (see the `--tag`, `--property` and `url` CLI launcher)
+- can be used to filter the tests to be run (see the `--tag`, `--property` and `--url` of the CLI launcher)
 - will be available in the test report
 
 # Put it all together
 
-Here is a testsuite example. The purpose of the test is to test the omdbapi Web Service API. We lookup 'The Matrix' movie and then check several elements of the returned data.
+Here is a launcher/worker/testsuite example. The purpose of the test is to test the omdbapi Web Service API. We lookup 'The Matrix' movie and then check several elements of the returned data.
 ```python
-# file test-omdbapi.py:
+# test-omdbapi.py:
 import urllib
 import urllib2
 import json
@@ -319,7 +323,7 @@ launcher.set_worker(OmdbapiWorker())
 launcher.load_testsuites(import_testsuites_from_directory("tests"))
 launcher.handle_cli()
 
-# file tests/movies.py
+# tests/movies.py
 from lemoncheesecake import *
 
 class movies(TestSuite):
