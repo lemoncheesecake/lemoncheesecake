@@ -75,6 +75,10 @@ Statistics :
  * Failures: 0
 ```
 
+Generated HTML test report:
+
+![alt text](https://bytebucket.org/ndelon/lemoncheesecake/raw/7f4a450fcf97b1a99e173a6ba901fed6ea1b9581/misc/report-screenshot.png "Test Report")
+
 ## Testsuite
 
 A lemoncheesecake testsuite is a class that inherits from `TestSuite` and contains tests and/or sub testsuites:
