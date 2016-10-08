@@ -218,7 +218,7 @@ class Launcher:
         os.mkdir(report_dir)
         if platform.system() != "Windows":
             symlink_path = os.path.join(os.path.dirname(report_dir), "..", "last_report")
-            if os.path.exists(symlink_path):
+            if os.path.lexists(symlink_path):
                 os.unlink(symlink_path)
             os.symlink(report_dir, symlink_path)
         initialize_runtime(report_dir)
