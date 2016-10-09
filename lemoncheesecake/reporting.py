@@ -78,7 +78,7 @@ class ReportingBackend:
     def set_step(self, description):
         pass
     
-    def log(self, content, level):
+    def log(self, level, content):
         pass
     
     def check(self, description, outcome, details=None):
