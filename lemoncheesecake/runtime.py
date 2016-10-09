@@ -95,6 +95,7 @@ class _Runtime:
         self.reporting_data.add_stats("Successful tests", str(self.reporting_data.tests_success))
         self.reporting_data.add_stats("Successful tests in %", "%d%%" % (float(self.reporting_data.tests_success) / self.reporting_data.tests * 100 if self.reporting_data.tests else 0))
         self.reporting_data.add_stats("Failed tests", str(self.reporting_data.tests_failure))
+        self.reporting_data.add_stats("Errors", str(self.reporting_data.errors))
         self.for_each_backend(lambda b: b.end_tests())
     
     def begin_before_suite(self, testsuite):        
