@@ -9,6 +9,7 @@ class AA(TestSuite):
     def after_suite(self):
         set_step("hopi csdknclsdc lsdclusbcl ubsd")
         log_info("some other stuff in after suite")
+        1 / 0 # trigger an exception
 
     @test("Test of A")
     def test_of_A(self):
