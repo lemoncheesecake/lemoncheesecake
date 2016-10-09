@@ -4,10 +4,14 @@ Created on Sep 30, 2016
 @author: nicolas
 '''
 
+import sys
 import tempfile
 import shutil
 
+import pytest
+
 from lemoncheesecake.launcher import Launcher, Filter
+from lemoncheesecake.runtime import get_runtime
 import lemoncheesecake as lcc
 
 from helpers import test_backend, run_testsuite
@@ -116,6 +120,112 @@ def test_sub_testsuite_inline(test_backend):
     run_testsuite(MyParentSuite)
     
     assert test_backend.get_test_outcome("sometest") == True
+
+def test_hook_before_test(test_backend):
+    class MySuite(lcc.TestSuite):
+        def before_test(self, test_name):
+            lcc.log_info("hook called")
+        
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    run_testsuite(MySuite)
+
+    assert test_backend.get_last_log() == "hook called"
+
+def test_hook_after_test(test_backend):
+    class MySuite(lcc.TestSuite):
+        def after_test(self, test_name):
+            lcc.log_info("hook called")
+        
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    run_testsuite(MySuite)
+
+    assert test_backend.get_last_log() == "hook called"
+
+def test_hook_before_suite(test_backend):
+    class MySuite(lcc.TestSuite):
+        def before_suite(self):
+            lcc.log_info("hook called")
+        
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    run_testsuite(MySuite)
+
+    assert test_backend.get_last_log() == "hook called"
+
+def test_hook_after_suite(test_backend):
+    class MySuite(lcc.TestSuite):
+        def after_suite(self):
+            lcc.log_info("hook called")
+        
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    run_testsuite(MySuite)
+
+    assert test_backend.get_last_log() == "hook called"
+
+def test_hook_error_before_test(test_backend):
+    class MySuite(lcc.TestSuite):
+        def before_test(self, test_name):
+            1 / 0
+        
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    run_testsuite(MySuite)
+
+    assert test_backend.get_test_outcome("sometest") == False
+
+def test_hook_error_after_test(test_backend):
+    class MySuite(lcc.TestSuite):
+        def after_test(self, test_name):
+            1 / 0
+        
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    run_testsuite(MySuite)
+
+    assert test_backend.get_test_outcome("sometest") == False
+
+def test_hook_error_before_suite(test_backend):
+    class MySuite(lcc.TestSuite):
+        def before_suite(self):
+            1 / 0
+        
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    run_testsuite(MySuite)
+
+    assert test_backend.get_last_test_outcome() == False
+    assert get_runtime().reporting_data.errors == 1
+
+def test_hook_error_after_suite(test_backend):
+    class MySuite(lcc.TestSuite):
+        def after_suite(self):
+            1 / 0
+        
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    run_testsuite(MySuite)
+
+    assert test_backend.get_last_test_outcome() == True
+    assert get_runtime().reporting_data.errors == 1
 
 def test_sub_testsuite_attr(test_backend):
     class MyChildSuite(lcc.TestSuite):

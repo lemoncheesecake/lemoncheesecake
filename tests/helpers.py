@@ -30,21 +30,27 @@ class TestBackend(reporting.ReportingBackend):
         self._test_outcomes = {}
         self._last_test_outcome = None
         self._test_nb = 0
+        self._last_log = None
     
     def get_last_test_outcome(self):
         return self._last_test_outcome
     
-    def get_test_outcome(self, test_path):
-        return self._test_outcomes[test_path]
+    def get_last_log(self):
+        return self._last_log
+    
+    def get_test_outcome(self, test_id):
+        return self._test_outcomes[test_id]
     
     def begin_test(self, test):
         self._last_test_outcome = None
     
     def end_test(self, test, outcome):
-        suite = get_runtime().current_testsuite
         self._test_outcomes[test.id] = outcome
         self._last_test_outcome = outcome
         self._test_nb += 1
+    
+    def log(self, level, content):
+        self._last_log = content
 
 def get_test_backend():
     backend = TestBackend()
