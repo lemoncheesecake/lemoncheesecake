@@ -180,6 +180,11 @@ class MyWorker(Worker):
     def do_some_operation(self, some_value):
         return some_func(self.config, some_value)
 
+launcher = Launcher()
+launcher.set_worker(MyWorker())
+launcher.load_testsuites(import_testsuites_from_directory("tests"))
+launcher.handle_cli()
+
 # test module file:
 from lemoncheesecake import *
 
