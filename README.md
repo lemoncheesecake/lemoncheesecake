@@ -13,7 +13,7 @@ The first step to creating your tests is to implement the launcher.
 The launcher is in charge of loading the testsuites and running the tests according to the user options passed through the CLI:
 
 ```python
-# mytests.py:
+# mytests.py file:
 from lemoncheesecake.launcher import Launcher, import_testsuites_from_directory
 
 launcher = Launcher()
@@ -83,7 +83,7 @@ Generated HTML test report:
 
 A lemoncheesecake testsuite is a class that inherits from `TestSuite` and contains tests and/or sub testsuites:
 ```python
-# tests/my_first_testsuite.py:
+# tests/my_first_testsuite.py file:
 from lemoncheesecake import *
 
 class my_first_testsuite(TestSuite):
@@ -166,7 +166,7 @@ check_dictval_eq(data, "bar", 42)
 The worker is used to maintain a custom state for the user across the execution of all testsuites. It is also advised to use the worker as a level of abstraction between the tests and the system under test:
 
 ```python
-# launcher code:
+# launcher file:
 from lemoncheesecake.launcher import Launcher
 from lemoncheesecake.worker import Worker
 
@@ -180,7 +180,7 @@ class MyWorker(Worker):
     def do_some_operation(self, some_value):
         return some_func(self.config, some_value)
 
-# test module code:
+# test module file:
 from lemoncheesecake import *
 
 class MySuite(TestSuite):
