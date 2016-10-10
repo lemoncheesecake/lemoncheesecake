@@ -346,3 +346,7 @@ class movies(TestSuite):
 		if check_dict_has_key("imdbRating", data):
 			check_gt("imdbRating", float(data["imdbRating"]), 8.5)
 ```
+
+# Contact
+
+Bugs and improvement ideas are welcomed in tickets. A Google Groups is also available for discussions about lemoncheesecake: https://groups.google.com/forum/#!forum/lemoncheesecake .
