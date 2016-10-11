@@ -121,6 +121,18 @@ def test_sub_testsuite_inline(test_backend):
     
     assert test_backend.get_test_outcome("sometest") == True
 
+def test_sub_testsuite_attr(test_backend):
+    class MyChildSuite(lcc.TestSuite):
+            @lcc.test("Some test")
+            def sometest(self):
+                pass
+    class MyParentSuite(lcc.TestSuite):
+        sub_suites = [MyChildSuite]
+    
+    run_testsuite(MyParentSuite)
+    
+    assert test_backend.get_test_outcome("sometest") == True
+
 def test_hook_before_test(test_backend):
     class MySuite(lcc.TestSuite):
         def before_test(self, test_name):
@@ -226,15 +238,3 @@ def test_hook_error_after_suite(test_backend):
 
     assert test_backend.get_last_test_outcome() == True
     assert get_runtime().reporting_data.errors == 1
-
-def test_sub_testsuite_attr(test_backend):
-    class MyChildSuite(lcc.TestSuite):
-            @lcc.test("Some test")
-            def sometest(self):
-                pass
-    class MyParentSuite(lcc.TestSuite):
-        sub_suites = [MyChildSuite]
-    
-    run_testsuite(MyParentSuite)
-    
-    assert test_backend.get_test_outcome("sometest") == True
