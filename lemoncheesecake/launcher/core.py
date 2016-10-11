@@ -18,7 +18,7 @@ from lemoncheesecake.launcher.filter import Filter
 from lemoncheesecake import reporting
 from lemoncheesecake.exceptions import LemonCheesecakeException, InvalidMetadataError, AbortTest, AbortTestSuite, AbortAllTests
 
-__all__ = ("Launcher",)
+__all__ = ("Launcher", "get_launcher_abspath", "get_abspath_from_launcher")
 
 COMMAND_RUN = "run"
 
@@ -30,6 +30,12 @@ def property_value(value):
     if len(splitted) != 2:
         raise ValueError()
     return splitted
+
+def get_launcher_abspath():
+    return os.path.abspath(os.path.dirname(sys.argv[0]))
+
+def get_abspath_from_launcher(path):
+    return path if os.path.isabs(path) else os.path.join(get_launcher_abspath(), path)
 
 class Launcher:
     def __init__(self):
