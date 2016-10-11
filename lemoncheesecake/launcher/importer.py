@@ -7,6 +7,7 @@ Created on Sep 10, 2016
 import os
 import sys
 import glob
+import fnmatch
 import re
 import importlib
 
@@ -39,6 +40,23 @@ def import_testsuite_from_file(filename):
     except AttributeError:
         raise ImportTestSuiteError("Cannot find class '%s' in '%s'" % (mod_name, loaded_mod.__file__))
     return klass
+
+def import_testsuites_from_files(patterns, excludes=[]):
+    if type(patterns) not in (list, tuple):
+        patterns = [patterns]
+    if type(excludes) not in (list, tuple):
+        excludes = [excludes]
+    files = []
+    for pattern in patterns:
+        files.extend(glob.glob(pattern))
+    if excludes:
+        tmp = files[:] # iterate on copy to be able to alter files
+        for file in tmp:
+            for exclude in excludes:
+                if fnmatch.fnmatch(file, exclude):
+                    files.remove(file)
+                    break
+    return [import_testsuite_from_file(f) for f in files]
 
 def import_testsuites_from_directory(dir, recursive=True):
     """Find testsuite classes in modules found in dir.

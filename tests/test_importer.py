@@ -47,3 +47,22 @@ def test_import_testsuites_from_directory_with_subdir(tmpdir):
     klasses = importer.import_testsuites_from_directory(tmpdir.strpath)
     assert klasses[0].__name__ == "parentsuite"
     assert len(klasses[0].sub_suites) == 1
+
+def test_import_testsuites_from_files(tmpdir):
+    for name in "testsuite1", "testsuite2", "mysuite":
+        tmpdir.join(name + ".py").write(build_test_module(name))
+    klasses = importer.import_testsuites_from_files(tmpdir.join("testsuite*.py").strpath)
+    assert len(klasses) == 2
+    assert "testsuite1" in [k.__name__ for k in klasses]
+    assert "testsuite2" in [k.__name__ for k in klasses]
+
+def test_import_testsuites_from_files_nomatch(tmpdir):
+    klasses = importer.import_testsuites_from_files(tmpdir.join("*.py").strpath)
+    assert len(klasses) == 0
+
+def test_import_testsuites_from_files_exclude(tmpdir):
+    for name in "testsuite1", "testsuite2", "mysuite":
+        tmpdir.join(name + ".py").write(build_test_module(name))
+    klasses = importer.import_testsuites_from_files(tmpdir.join("*.py").strpath, "*/testsuite*.py")
+    assert len(klasses) == 1
+    assert klasses[0].__name__ == "mysuite"
