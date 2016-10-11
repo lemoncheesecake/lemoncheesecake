@@ -4,7 +4,7 @@ Created on Mar 29, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.exceptions import LemonCheesecakeException
+from lemoncheesecake.exceptions import LemonCheesecakeException, UnknownReportBackendError
 
 ATTACHEMENT_DIR = "attachments"
 
@@ -16,32 +16,40 @@ LOG_LEVEL_ERROR = "error"
 _backends = { }
 _enabled_backends = set()
 
+def _assert_backend_name(name):
+    if name not in _backends:
+        raise UnknownReportBackendError(name)
+
 def register_backend(name, backend):
     global _backends
     _backends[name] = backend
 
 def get_backend(name):
     global _backends
-    if not _backends.has_key(name):
-        raise LemonCheesecakeException("Unknown reporting backend: '%s'" % name)
+    _assert_backend_name(name)
     return _backends[name]
 
 def has_backend(name):
     global _backends
-    return _backends.has_key(name)
+    return name in _backends
 
 def enable_backend(name):
+    _assert_backend_name(name)
     _enabled_backends.add(name)
 
 def disable_backend(name):
+    _assert_backend_name(name)
     _enabled_backends.discard(name)
 
-def only_enable_backends(*names):
+def only_enable_backends(names):
+    for name in names:
+        _assert_backend_name(name)
+
     _enabled_backends.clear()
     _enabled_backends.update(names)
 
 def get_enabled_backend_names():
-    return _enabled_backends[:]
+    return list(_enabled_backends)
 
 def get_enabled_backends():
     return [_backends[b] for b in _enabled_backends]
@@ -94,6 +102,6 @@ def register_default_backends():
     for backend in backends:
         register_backend(backend.name, backend())
     
-    only_enable_backends(ConsoleBackend.name, JsonBackend.name, HtmlBackend.name)
+    only_enable_backends((ConsoleBackend.name, JsonBackend.name, HtmlBackend.name))
 
 register_default_backends()

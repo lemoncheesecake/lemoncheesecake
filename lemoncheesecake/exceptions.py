@@ -25,6 +25,9 @@ class ImportTestSuiteError(LemonCheesecakeException):
 class InvalidMetadataError(ProgrammingError):
     message_prefix = "Invalid metadata"
 
+class UnknownReportBackendError(LemonCheesecakeException):
+    message_prefix = "Unknown report backend"
+
 class AbortTest(LemonCheesecakeException):
     message_prefix = "The test has been aborted"
     

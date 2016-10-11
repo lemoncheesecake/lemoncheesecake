@@ -54,6 +54,15 @@ class Launcher:
         self.cli_run_parser.add_argument("--property", "-m", nargs="+", type=property_value, default=[], help="Filters on test & test suite property")
         self.cli_run_parser.add_argument("--url", "-u", nargs="+", default=[], help="Filters on test & test suite url names")
         self.cli_run_parser.add_argument("--report-dir", "-r", required=False, help="Directory where reporting data will be stored")
+        self.cli_run_parser.add_argument("--reports", nargs="+", required=False,
+            help="The list of reporting backends to use (defaults: %s)" % ", ".join(sorted(reporting.get_enabled_backend_names()))
+        )
+        self.cli_run_parser.add_argument("--enable-reports", nargs="+", required=False,
+            help="The list of reporting backends to add (to base backends)"
+        )
+        self.cli_run_parser.add_argument("--disable-reports", nargs="+", required=False,
+            help="The list of reporting backends to remove (from base backends)"
+        )
         
         ###
         # Default reporting setup when no --report-dir has been setup
@@ -264,6 +273,16 @@ class Launcher:
         filter.tags = args.tag
         filter.properties = dict(args.property)
         filter.url_names = args.url
+        
+        # report backends
+        if args.reports:
+            reporting.only_enable_backends(args.reports)
+        if args.enable_reports:
+            for backend in args.enable_reports:
+                reporting.enable_backend(backend)
+        if args.disable_reports:
+            for backend in args.disable_reports:
+                reporting.disable_backend(backend)
         
         # initialize worker using CLI args and run tests
         if lemoncheesecake.worker:

@@ -55,7 +55,7 @@ class TestBackend(reporting.ReportingBackend):
 def get_test_backend():
     backend = TestBackend()
     reporting.register_backend("test", backend)
-    reporting.only_enable_backends("test")
+    reporting.only_enable_backends(["test"])
     return backend
 
 @pytest.fixture()
