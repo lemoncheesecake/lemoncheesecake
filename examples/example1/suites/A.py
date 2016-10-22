@@ -31,6 +31,7 @@ class A(TestSuite):
 
     @prop("priority", "high")
     @url("http://bugtracker.net/tickets/1234")    
+    @url("http://bugtracker.net/tickets/5678")
     @test("Second test")
     def second_test(self):
         log_info("do test 2 !")

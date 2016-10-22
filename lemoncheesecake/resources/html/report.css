@@ -35,9 +35,16 @@ body {
    	padding: 4px 10px;
 }
 
+.table {
+	width: 100%;	
+	table-layout: fixed;
+}
+
 th, td {
 	font-size: 12px;
    	line-height: 1.0;
+   	text-overflow: ellipsis;
+	overflow: hidden;
 }
 
 .table>thead>tr>td.danger, .table>tbody>tr>td.danger, .table>tfoot>tr>td.danger, .table>thead>tr>th.danger, .table>tbody>tr>th.danger, .table>tfoot>tr>th.danger, .table>thead>tr.danger>td, .table>tbody>tr.danger>td, .table>tfoot>tr.danger>td, .table>thead>tr.danger>th, .table>tbody>tr.danger>th, .table>tfoot>tr.danger>th {
@@ -46,6 +53,10 @@ th, td {
 
 .step td:first-child {
 	padding-left: 15px;
+}
+
+.step, .check, .log {
+	background-color: #353d44;
 }
 
 .check td:first-child, .log td:first-child, .attachment td:first-child {

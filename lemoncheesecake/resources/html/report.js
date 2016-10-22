@@ -54,12 +54,13 @@ Step.prototype = {
 	}
 };
 
-function Test(id, description, outcome, steps, tags, urls) {
+function Test(id, description, outcome, steps, tags, properties, urls) {
 	this.id = id;
 	this.description = description;
 	this.outcome = outcome;
 	this.steps = [];
 	this.tags = (tags != null) ? tags : [];
+	this.properties = (properties != null) ? properties : [];
 	this.urls = (urls != null) ? urls : [];
 	for (var i = 0; i < steps.length; i++) {
 		this.steps.push(new Step(steps[i]));
@@ -74,29 +75,25 @@ Test.prototype = {
 		var cols = [ ];
 
 		/* build description column */
-		var $test_desc = $("<a name='" + this.id + "' href='#" + this.id + "'>" + this.description + "</a>");
+		var $test_desc = $("<h6><a name='" + this.id + "' href='#" + this.id + "'>" + this.description + "<br/><small>" + this.id + "</small></a></h6>");
 		cols.push($("<td>").append($test_desc));
 
-		/* build id column */
-		cols.push($("<td>" + this.id + "</td>"));
-
-		/* build info column */
-		var $info = $("<td>");
-		if (this.tags.length > 0) {
-		    $info.append($("<span>").text("Tags: " + this.tags.join(", ")));
-		}
-		if (this.urls.length > 0) {
-		    if (this.tags.length > 0)
-		        $info.append($("<br>"));
-		    $info.append("URLs: ");
-		    for (var i = 0; i < this.urls.length; i++) {
-		        var u = this.urls[i];
-		        if (i > 0)
-		            $info.append(", ");
-		        $info.append($("<a>", {href: u.url}).text(u.name ? u.name : u.url));
-		    }
-		}
-		cols.push($info);
+		/* build tags column */
+		var $tags = $("<span>" + 
+			this.tags.join("<br/>") + 
+			$.map(this.properties, function(value, key) {
+				return key + ": " + value;
+			}).join("<br/>") +
+			"</span>"
+		);
+		cols.push($("<td>").append($tags));
+		
+		/* build urls column */
+		var $links = $.map(this.urls, function (u) {
+			var label = u.name ? u.name : u.url;
+			return "<a href='" + u.url + "' title='" + label + "'>" + label + "</a>";
+		}).join(", ");
+		cols.push($("<td>").append($links));
 
 		/* build status column */
 		var status;
@@ -173,7 +170,7 @@ function TestSuite(data, parents) {
 
     for (var i = 0; i < data.tests.length; i++) {
         var t = data.tests[i]
-    	this.tests.push(new Test(t.id, t.description, t.outcome, t.steps, t.tags, t.urls));
+    	this.tests.push(new Test(t.id, t.description, t.outcome, t.steps, t.tags, t.properties, t.urls));
     }
 
     for (var i = 0; i < data.sub_suites.length; i++) {
@@ -187,8 +184,8 @@ TestSuite.prototype = {
 	render: function() {
 		var panels = [ ];
 		var description = this.parents.map(function(p) { return p.description }).concat(this.description).join(" > ");
-		var $panel = $("<div class='panel panel-default panel-primary' style='margin-left:" + (20 * this.parents.length) + "px'>")
-			.append("<div class='panel-heading'>Suite: " + description + "</div>");
+		var $panel = $("<div class='panel panel-default panel-primary' style='margin-left:" + (0 * this.parents.length) + "px'>")
+			.append("<div class='panel-heading'>" + description + "</div>");
 		panels.push($panel);
 
 		if (this.tests.length > 0) {
@@ -205,7 +202,7 @@ TestSuite.prototype = {
 			
 			var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
 				.append($("<colgroup><col width='60%'><col width='20%'><col width='10%'><col width='10%'></colgroup>"))
-				.append($("<thead><tr><th>Test description</th><th>Test id</th><th>Info</th><th>Outcome</th></tr></thead>"))
+				.append($("<thead><tr><th style='width: 60%'>Test</th><th style='width: 20%'>Properties/Tags</th><th style='width: 10%'>URLs</th><th style='width: 10%'>Outcome</th></tr></thead>"))
 				.append($("<tbody>").append(rows));
 			$panel.append($table);
 		}
