@@ -155,6 +155,9 @@ function TestSuite(data, parents) {
     this.parents = (parents == null) ? [] : parents;
     this.id = data.id;
     this.description = data.description;
+    this.tags = data.tags;
+    this.properties = data.properties;
+    this.urls = data.urls;
     this.before_suite = null;
     this.after_suite = null;
     this.tests = [ ];
@@ -184,8 +187,28 @@ TestSuite.prototype = {
 	render: function() {
 		var panels = [ ];
 		var description = this.parents.map(function(p) { return p.description }).concat(this.description).join(" > ");
+		var $panel_heading = $("<div class='panel-heading'>");
+		$panel_heading.append($("<span>").append(description));
+		if (this.properties.length > 0 || this.tags.length > 0) {
+			$panel_heading.append($("<br/>"));
+			$panel_heading.append($("<span style='font-size: 75%'>Properties/Tags: " + 
+				this.tags.join(", ") + (this.tags.length > 0 ? ", " : "") +
+				$.map(this.properties, function(value, key) {
+					return key + ": " + value;
+				}).join(", ") +
+				"</span>"
+			));
+		}
+		if (this.urls.length > 0) {
+			$panel_heading.append($("<br/>"));
+			$panel_heading.append($("<span style='font-size: 75%'>URLs: " +
+				$.map(this.urls, function (u) {
+					var label = u.name ? u.name : u.url;
+					return "<a href='" + u.url + "' title='" + label + "'>" + label + "</a>";
+			}).join(", ")));
+		}
 		var $panel = $("<div class='panel panel-default panel-primary' style='margin-left:" + (0 * this.parents.length) + "px'>")
-			.append("<div class='panel-heading'>" + description + "</div>");
+			.append($panel_heading);
 		panels.push($panel);
 
 		if (this.tests.length > 0) {
