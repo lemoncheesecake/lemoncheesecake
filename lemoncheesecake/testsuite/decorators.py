@@ -33,7 +33,12 @@ def tags(*tag_names):
     """Decorator, add tags to a test or a testsuite"""
     def wrapper(obj):
         assert_test_or_testsuite(obj)
-        obj.tags = tag_names
+        if "tags" in obj.__dict__:
+            obj.tags.extend(tag_names)
+        elif hasattr(obj, "tags"):
+            obj.tags = obj.tags + list(tag_names)
+        else:
+            obj.tags = list(tag_names)
         return obj
     return wrapper
 
@@ -41,7 +46,14 @@ def prop(key, value):
     """Decorator, add a property (key/value) to a test or a testsuite"""
     def wrapper(obj):
         assert_test_or_testsuite(obj)
-        obj.properties[key] = value
+        if "properties" in obj.__dict__:
+            obj.properties[key] = value
+        elif hasattr(obj, "properties"):
+            props = obj.properties.copy()
+            props[key]= value
+            obj.properties = props
+        else:
+            obj.properties = { key: value }
         return obj
     return wrapper
 
@@ -56,6 +68,11 @@ def url(url, name=None):
     """Decorator, set an URL (with an optional friendly name) to a test or a testsuite"""
     def wrapper(obj):
         assert_test_or_testsuite(obj)
-        obj.urls.append((url, name))
+        if "urls" in obj.__dict__:
+            obj.urls.append((url, name))
+        elif hasattr(obj, "urls"):
+            obj.urls = obj.urls + [(url, name)]
+        else:
+            obj.urls = [(url, name)]
         return obj
     return wrapper
