@@ -2,6 +2,9 @@ from lemoncheesecake import *
 import re
 
 @suite_rank(2)
+@tags("my_tag")
+@prop("key1", "value1")
+@prop("key2", "value2")
 class A(TestSuite):
     description = "A Suite"
     
