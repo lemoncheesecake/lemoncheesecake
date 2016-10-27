@@ -9,7 +9,7 @@ import inspect
 from lemoncheesecake.testsuite.core import Test, TestSuite
 from lemoncheesecake.exceptions import ProgrammingError
 
-__all__ = "test", "tags", "prop", "suite_rank", "url"
+__all__ = "test", "tags", "prop", "suite_rank", "link"
 
 class StaticTestDecorator:
     def __init__(self, description):
@@ -64,15 +64,15 @@ def suite_rank(value):
         return klass
     return wrapper
 
-def url(url, name=None):
-    """Decorator, set an URL (with an optional friendly name) to a test or a testsuite"""
+def link(url, name=None):
+    """Decorator, set an LINK (with an optional friendly name) to a test or a testsuite"""
     def wrapper(obj):
         assert_test_or_testsuite(obj)
-        if "urls" in obj.__dict__:
-            obj.urls.append((url, name))
-        elif hasattr(obj, "urls"):
-            obj.urls = obj.urls + [(url, name)]
+        if "links" in obj.__dict__:
+            obj.links.append((url, name))
+        elif hasattr(obj, "links"):
+            obj.links = obj.links + [(url, name)]
         else:
-            obj.urls = [(url, name)]
+            obj.links = [(url, name)]
         return obj
     return wrapper

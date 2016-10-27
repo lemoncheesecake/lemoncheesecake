@@ -103,7 +103,7 @@ class _Runtime:
         suite_data = TestSuiteData(testsuite.id, testsuite.description, self.current_testsuite_data)
         suite_data.tags.extend(testsuite.tags)
         suite_data.properties.update(testsuite.properties)
-        suite_data.urls.extend(testsuite.urls)
+        suite_data.links.extend(testsuite.links)
         suite_data.before_suite_start_time = time.time()
         if self.current_testsuite_data:
             self.current_testsuite_data.sub_testsuites.append(suite_data)
@@ -138,7 +138,7 @@ class _Runtime:
         self.current_test_data = TestData(test.id, test.description)
         self.current_test_data.tags.extend(test.tags)
         self.current_test_data.properties.update(test.properties)
-        self.current_test_data.urls.extend(test.urls)
+        self.current_test_data.links.extend(test.links)
         self.current_test_data.start_time = time.time()
         self.current_testsuite_data.tests.append(self.current_test_data)
         self.for_each_backend(lambda b: b.begin_test(test))

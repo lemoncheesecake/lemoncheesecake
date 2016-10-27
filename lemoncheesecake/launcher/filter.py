@@ -9,7 +9,7 @@ import fnmatch
 FILTER_SUITE_MATCH_ID = 0x01
 FILTER_SUITE_MATCH_DESCRIPTION = 0x02
 FILTER_SUITE_MATCH_TAG = 0x04
-FILTER_SUITE_MATCH_URL_NAME = 0x08
+FILTER_SUITE_MATCH_LINK_NAME = 0x08
 FILTER_SUITE_MATCH_PROPERTY = 0x10
 
 __all__ = ("Filter",)
@@ -22,12 +22,12 @@ class Filter:
         self.testsuite_description = []
         self.tags = [ ]
         self.properties = {}
-        self.url_names = [ ]
+        self.link_names = [ ]
     
     def is_empty(self):
         count = 0
         for value in self.test_id, self.testsuite_id, self.test_description, \
-            self.testsuite_description, self.tags, self.properties, self.url_names:
+            self.testsuite_description, self.tags, self.properties, self.link_names:
             count += len(value)
         return count == 0
     
@@ -74,9 +74,9 @@ class Filter:
             if not match:
                 return False
                 
-        if self.url_names and not parent_suite_match & FILTER_SUITE_MATCH_URL_NAME:
-            for url in self.url_names:
-                if url in [ u[1] for u in test.urls if u[1] ]:
+        if self.link_names and not parent_suite_match & FILTER_SUITE_MATCH_LINK_NAME:
+            for link in self.link_names:
+                if link in [ l[1] for l in test.links if l[1] ]:
                     match = True
                     break
             if not match:
@@ -111,10 +111,10 @@ class Filter:
                     match |= FILTER_SUITE_MATCH_PROPERTY
                     break
 
-        if self.url_names and not parent_suite_match & FILTER_SUITE_MATCH_URL_NAME:
-            for url in self.url_names:
-                if url in [ u[0] for u in suite.urls ]:
-                    match |= FILTER_SUITE_MATCH_URL_NAME
+        if self.link_names and not parent_suite_match & FILTER_SUITE_MATCH_LINK_NAME:
+            for link in self.link_names:
+                if link in [ l[0] for l in suite.links ]:
+                    match |= FILTER_SUITE_MATCH_LINK_NAME
                     break
 
         return match

@@ -46,18 +46,18 @@ def test_decorator_prop():
     test = suite.get_tests()[0]
     assert test.properties["key2"] == "val2"
 
-def test_decorator_url():
-    @lcc.url("http://www.example.com", "example")
+def test_decorator_link():
+    @lcc.link("http://www.example.com", "example")
     class MySuite(lcc.TestSuite):
-        @lcc.url("http://www.example.com")
+        @lcc.link("http://www.example.com")
         @lcc.test("test_desc")
         def mytest(self):
             pass
     suite = MySuite()
     suite.load()
-    assert suite.urls[0] == ("http://www.example.com", "example")
+    assert suite.links[0] == ("http://www.example.com", "example")
     test = suite.get_tests()[0]
-    assert test.urls[0] == ("http://www.example.com", None)
+    assert test.links[0] == ("http://www.example.com", None)
 
 def test_decorator_on_invalid_object():
     with pytest.raises(ProgrammingError):
@@ -66,13 +66,13 @@ def test_decorator_on_invalid_object():
             pass
 
 def test_decorator_with_testsuite_inheritance():
-    @lcc.url("http://www.example1.com")
+    @lcc.link("http://www.example1.com")
     @lcc.tags("tag1", "tag2")
     @lcc.prop("key1", "value1")
     class MySuite1(lcc.TestSuite):
         pass
     
-    @lcc.url("http://www.example2.com")
+    @lcc.link("http://www.example2.com")
     @lcc.tags("tag3")
     @lcc.prop("key2", "value2")
     class MySuite2(MySuite1):
@@ -83,15 +83,15 @@ def test_decorator_with_testsuite_inheritance():
     suite2 = MySuite2()
     suite2.load()
     
-    assert len(suite1.urls) == 1
-    assert suite1.urls[0] == ("http://www.example1.com", None)
+    assert len(suite1.links) == 1
+    assert suite1.links[0] == ("http://www.example1.com", None)
     assert suite1.tags == ["tag1", "tag2"]
     assert len(suite1.properties) == 1
     assert suite1.properties["key1"] == "value1"
     
-    assert len(suite2.urls) == 2
-    assert suite2.urls[0] == ("http://www.example1.com", None)
-    assert suite2.urls[1] == ("http://www.example2.com", None)
+    assert len(suite2.links) == 2
+    assert suite2.links[0] == ("http://www.example1.com", None)
+    assert suite2.links[1] == ("http://www.example2.com", None)
     assert suite2.tags == ["tag1", "tag2", "tag3"]
     assert len(suite2.properties) == 2
     assert suite2.properties["key1"] == "value1"

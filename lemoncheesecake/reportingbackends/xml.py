@@ -88,9 +88,9 @@ def _serialize_test_data(test):
     for name, value in test.properties.items():
         property_node = _xml_child(test_node, "property", "name", name)
         property_node.text = value
-    for url in test.urls:
-        url_node = _xml_child(test_node, "url", "name", url[1])
-        url_node.text = url[0]
+    for link in test.links:
+        link_node = _xml_child(test_node, "link", "name", link[1])
+        link_node.text = link[0]
     _serialize_steps(test.steps, test_node)
     
     return test_node
@@ -103,9 +103,9 @@ def _serialize_testsuite_data(suite):
     for name, value in suite.properties.items():
         property_node = _xml_child(suite_node, "property", "name", name)
         property_node.text = value
-    for url in suite.urls:
-        url_node = _xml_child(suite_node, "url", "name", url[1])
-        url_node.text = url[0]
+    for link in suite.links:
+        link_node = _xml_child(suite_node, "link", "name", link[1])
+        link_node.text = link[0]
     
     # before suite
     if suite.before_suite_steps:
@@ -189,7 +189,7 @@ def _unserialize_test_data(xml):
     test.end_time = float(xml.attrib["end-time"])
     test.tags = [ node.text for node in xml.xpath("tag") ]
     test.properties = { node.attrib["name"]: node.text for node in xml.xpath("properties") }
-    test.urls = [ [u.attrib["name"], u.text] for u in xml.xpath("url") ]
+    test.links = [ [link.attrib["name"], link.text] for link in xml.xpath("link") ]
     test.steps = [ _unserialize_step_data(s) for s in xml.xpath("step") ]
     return test
 
@@ -197,7 +197,7 @@ def _unserialize_testsuite_data(xml, parent=None):
     suite = TestSuiteData(xml.attrib["id"], xml.attrib["description"], parent)
     suite.tags = [ node.text for node in xml.xpath("tag") ]
     suite.properties = { node.attrib["name"]: node.text for node in xml.xpath("properties") }
-    suite.urls = [ [t.attrib["name"], t.text] for t in xml.xpath("url") ]
+    suite.links = [ [link.attrib["name"], link.text] for link in xml.xpath("link") ]
     
     before_suite = xml.xpath("before-suite")
     before_suite = before_suite[0] if len(before_suite) > 0 else None

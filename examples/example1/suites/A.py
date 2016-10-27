@@ -33,8 +33,8 @@ class A(TestSuite):
         pass
 
     @prop("priority", "high")
-    @url("http://bugtracker.net/tickets/1234")    
-    @url("http://bugtracker.net/tickets/5678")
+    @link("http://bugtracker.net/tickets/1234")    
+    @link("http://bugtracker.net/tickets/5678")
     @test("Second test")
     def second_test(self):
         log_info("do test 2 !")
@@ -42,7 +42,7 @@ class A(TestSuite):
     def bar(self):
         pass
     
-    @url("http://bugtracker.net/tickets/444", "#444")
+    @link("http://bugtracker.net/tickets/444", "#444")
     @test("Third test")
     def third_test(self):
         log_error("something goes wrong")

@@ -54,14 +54,14 @@ Step.prototype = {
 	}
 };
 
-function Test(id, description, outcome, steps, tags, properties, urls) {
+function Test(id, description, outcome, steps, tags, properties, links) {
 	this.id = id;
 	this.description = description;
 	this.outcome = outcome;
 	this.steps = [];
 	this.tags = (tags != null) ? tags : [];
 	this.properties = (properties != null) ? properties : [];
-	this.urls = (urls != null) ? urls : [];
+	this.links = (links != null) ? links : [];
 	for (var i = 0; i < steps.length; i++) {
 		this.steps.push(new Step(steps[i]));
 	}
@@ -88,10 +88,10 @@ Test.prototype = {
 		);
 		cols.push($("<td>").append($tags));
 		
-		/* build urls column */
-		var $links = $.map(this.urls, function (u) {
-			var label = u.name ? u.name : u.url;
-			return "<a href='" + u.url + "' title='" + label + "'>" + label + "</a>";
+		/* build links column */
+		var $links = $.map(this.links, function (link) {
+			var label = link.name ? link.name : link.url;
+			return "<a href='" + link.url + "' title='" + label + "'>" + label + "</a>";
 		}).join(", ");
 		cols.push($("<td>").append($links));
 
@@ -157,7 +157,7 @@ function TestSuite(data, parents) {
     this.description = data.description;
     this.tags = data.tags;
     this.properties = data.properties;
-    this.urls = data.urls;
+    this.links = data.links;
     this.before_suite = null;
     this.after_suite = null;
     this.tests = [ ];
@@ -173,7 +173,7 @@ function TestSuite(data, parents) {
 
     for (var i = 0; i < data.tests.length; i++) {
         var t = data.tests[i]
-    	this.tests.push(new Test(t.id, t.description, t.outcome, t.steps, t.tags, t.properties, t.urls));
+    	this.tests.push(new Test(t.id, t.description, t.outcome, t.steps, t.tags, t.properties, t.links));
     }
 
     for (var i = 0; i < data.sub_suites.length; i++) {
@@ -199,12 +199,12 @@ TestSuite.prototype = {
 				"</span>"
 			));
 		}
-		if (this.urls.length > 0) {
+		if (this.links.length > 0) {
 			$panel_heading.append($("<br/>"));
-			$panel_heading.append($("<span style='font-size: 75%'>URLs: " +
-				$.map(this.urls, function (u) {
-					var label = u.name ? u.name : u.url;
-					return "<a href='" + u.url + "' title='" + label + "'>" + label + "</a>";
+			$panel_heading.append($("<span style='font-size: 75%'>links: " +
+				$.map(this.links, function (link) {
+					var label = link.name ? link.name : link.url;
+					return "<a href='" + link.url + "' title='" + label + "'>" + label + "</a>";
 			}).join(", ")));
 		}
 		var $panel = $("<div class='panel panel-default panel-primary' style='margin-left:" + (0 * this.parents.length) + "px'>")
@@ -225,7 +225,7 @@ TestSuite.prototype = {
 			
 			var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
 				.append($("<colgroup><col width='60%'><col width='20%'><col width='10%'><col width='10%'></colgroup>"))
-				.append($("<thead><tr><th style='width: 60%'>Test</th><th style='width: 20%'>Properties/Tags</th><th style='width: 10%'>URLs</th><th style='width: 10%'>Outcome</th></tr></thead>"))
+				.append($("<thead><tr><th style='width: 60%'>Test</th><th style='width: 20%'>Properties/Tags</th><th style='width: 10%'>Links</th><th style='width: 10%'>Outcome</th></tr></thead>"))
 				.append($("<tbody>").append(rows));
 			$panel.append($table);
 		}

@@ -19,7 +19,7 @@ class Test:
         self.callback = callback
         self.tags = [ ]
         self.properties = {}
-        self.urls = [ ]
+        self.links = [ ]
         self.rank = force_rank if force_rank != None else Test.test_current_rank
         Test.test_current_rank += 1
         
@@ -29,7 +29,7 @@ class Test:
 class TestSuite:
     tags = [ ]
     properties = {}
-    urls = [ ]
+    links = [ ]
     sub_suites = [ ]        
     
     def load(self, parent_suite=None):

@@ -1,6 +1,6 @@
 from lemoncheesecake import *
 
-@url("http://bugtracker.net/tickets/1234")
+@link("http://bugtracker.net/tickets/1234")
 class AA(TestSuite):
     def before_suite(self):
         set_step("hep csdcnlns csdlcsdl cubsd ucds")

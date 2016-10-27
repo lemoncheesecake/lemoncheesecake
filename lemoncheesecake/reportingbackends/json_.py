@@ -35,7 +35,7 @@ def _serialize_common_data(obj):
         "id": obj.id, "description": obj.description,
         "tags": obj.tags,
         "properties": obj.properties,
-        "urls": [ { "name": t[1], "url": t[0] } for t in obj.urls ]
+        "links": [ { "name": link[1], "url": link[0] } for link in obj.links ]
     }
 
 def _serialize_test_data(test):
@@ -110,7 +110,7 @@ def _unserialize_test_data(js):
     test.end_time = float(js["end_time"])
     test.tags = js["tags"]
     test.properties = js["properties"]
-    test.urls = [ [u["url"], u["name"]] for u in js["urls"] ]
+    test.links = [ [link["url"], link["name"]] for link in js["links"] ]
     test.steps = [ _unserialize_step_data(s) for s in js["steps"] ]
     return test
 
@@ -118,7 +118,7 @@ def _unserialize_testsuite_data(js, parent=None):
     suite = TestSuiteData(js["id"], js["description"], parent)
     suite.tags = js["tags"]
     suite.properties = js["properties"]
-    suite.urls = [ [u["url"], u["name"]] for u in js["urls"] ]
+    suite.links = [ [link["url"], link["name"]] for link in js["links"] ]
 
     if "before_suite" in js:
         suite.before_suite_start_time = float(js["before_suite"]["start_time"])
