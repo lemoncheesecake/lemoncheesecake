@@ -110,6 +110,18 @@ def test_exception_abortalltests(test_backend):
     assert test_backend.get_test_outcome("someothertest") == False
     assert test_backend.get_test_outcome("anothertest") == False
 
+def test_generated_test(test_backend):
+    class MySuite(lcc.TestSuite):
+        def load_generated_tests(self):
+            def test_func(suite):
+                lcc.log_info("somelog")
+            test = lcc.Test("mytest", "My Test", test_func)
+            self.register_test(test)
+    
+    run_testsuite(MySuite)
+    
+    assert test_backend.get_test_outcome("mytest")
+
 def test_sub_testsuite_inline(test_backend):
     class MyParentSuite(lcc.TestSuite):
         class MyChildSuite(lcc.TestSuite):
