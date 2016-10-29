@@ -31,6 +31,10 @@ class TestBackend(reporting.ReportingBackend):
         self._last_test_outcome = None
         self._test_nb = 0
         self._last_log = None
+        self._last_test = None
+    
+    def get_last_test(self):
+        return self._last_test
     
     def get_last_test_outcome(self):
         return self._last_test_outcome
@@ -45,6 +49,7 @@ class TestBackend(reporting.ReportingBackend):
         self._last_test_outcome = None
     
     def end_test(self, test, outcome):
+        self._last_test = test.id
         self._test_outcomes[test.id] = outcome
         self._last_test_outcome = outcome
         self._test_nb += 1
