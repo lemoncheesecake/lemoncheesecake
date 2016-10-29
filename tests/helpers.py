@@ -75,3 +75,6 @@ def run_testsuite(suite):
         launcher.run_testsuites(Filter(), os.path.join(report_dir, "report"))
     finally:
         shutil.rmtree(report_dir)
+
+def dummy_test_callback(suite):
+    pass

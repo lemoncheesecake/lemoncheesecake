@@ -9,6 +9,8 @@ import pytest
 import lemoncheesecake as lcc
 from lemoncheesecake.exceptions import ProgrammingError
 
+from helpers import dummy_test_callback
+
 def test_decorator_test():
     class MySuite(lcc.TestSuite):
         @lcc.test("test_desc")
@@ -96,4 +98,78 @@ def test_decorator_with_testsuite_inheritance():
     assert len(suite2.properties) == 2
     assert suite2.properties["key1"] == "value1"
     assert suite2.properties["key2"] == "value2"
+
+def test_register_test():
+    class MySuite(lcc.TestSuite):
+        def load_generated_tests(self):
+            self.register_test(lcc.Test("mytest", "My Test", dummy_test_callback))
     
+    suite = MySuite()
+    suite.load()
+    assert len(suite.get_tests()) == 1
+
+def test_register_test_multiple():
+    class MySuite(lcc.TestSuite):
+        def load_generated_tests(self):
+            for i in range(3):
+                self.register_test(lcc.Test("mytest_%d" % i, "My Test %d" % i, dummy_test_callback))
+    
+    suite = MySuite()
+    suite.load()
+    assert len(suite.get_tests()) == 3
+
+def test_register_tests():
+    class MySuite(lcc.TestSuite):
+        def load_generated_tests(self):
+            tests = [lcc.Test("mytest_%d" % i, "My Test %d" % i, dummy_test_callback) for i in range(3)]
+            self.register_tests(tests)
+    
+    suite = MySuite()
+    suite.load()
+    assert len(suite.get_tests()) == 3
+
+def test_register_test_with_before_and_after():
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Bar 1")
+        def bar1(self):
+            pass
+        
+        @lcc.test("Bar 2")
+        def bar2(self):
+            pass
+        
+        def load_generated_tests(self):
+            self.register_test(lcc.Test("foo1", "Foo 1", dummy_test_callback), before_test="bar1")
+            self.register_test(lcc.Test("foo2", "Foo 2", dummy_test_callback), before_test="bar1")
+            self.register_test(lcc.Test("baz1", "Baz 1", dummy_test_callback), after_test="bar2")
+            self.register_test(lcc.Test("baz2", "Baz 2", dummy_test_callback), after_test="baz1")
+    
+    suite = MySuite()
+    suite.load()
+    
+    assert [t.id for t in suite.get_tests()] == ["foo1", "foo2", "bar1", "bar2", "baz1", "baz2"]
+
+def test_register_tests_with_before_and_after():
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Bar 1")
+        def bar1(self):
+            pass
+        
+        @lcc.test("Bar 2")
+        def bar2(self):
+            pass
+        
+        def load_generated_tests(self):
+            self.register_tests(
+                [lcc.Test("foo1", "Foo 1", dummy_test_callback), lcc.Test("foo2", "Foo 2", dummy_test_callback)],
+                before_test="bar1"
+            )
+            self.register_tests(
+                [lcc.Test("baz1", "Baz 1", dummy_test_callback), lcc.Test("baz2", "Baz 2", dummy_test_callback)],
+                after_test="bar2"
+            )
+    
+    suite = MySuite()
+    suite.load()
+    
+    assert [t.id for t in suite.get_tests()] == ["foo1", "foo2", "bar1", "bar2", "baz1", "baz2"]
