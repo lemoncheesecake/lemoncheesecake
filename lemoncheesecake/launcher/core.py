@@ -15,6 +15,7 @@ import lemoncheesecake # for worker access
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.launcher.filter import Filter
+from lemoncheesecake.launcher.validators import MetadataPolicy
 from lemoncheesecake import reporting
 from lemoncheesecake.exceptions import LemonCheesecakeException, InvalidMetadataError, AbortTest, AbortTestSuite, AbortAllTests
 
@@ -76,43 +77,45 @@ class Launcher:
         self._testsuites = [ ]
         self._testsuites_by_id = { }
         self._tests_by_id = { }
+        
+        ###
+        # Misc
+        ###
+        self.metadata_policy = MetadataPolicy()
             
     def set_worker(self, worker):
         "Set the worker that will be used in the testsuites"
         lemoncheesecake.set_worker(worker)
     
-    def _load_testsuite(self, suite, property_validator):
+    def _load_testsuite(self, suite):
         # process suite
         if suite.id in self._testsuites_by_id:
             raise InvalidMetadataError("A test suite with id '%s' has been registered more than one time" % suite.id)
-        if property_validator:
-            property_validator.check_suite_compliance(suite)
+        self.metadata_policy.check_suite_compliance(suite)
         self._testsuites_by_id[suite.id] = suite
 
         # process tests
         for test in suite.get_tests():
             if test.id in self._tests_by_id:
                 raise InvalidMetadataError("A test with id '%s' has been registered more than one time" % test.id)
-            if property_validator:
-                property_validator.check_test_compliance(test)
+            self.metadata_policy.check_test_compliance(test)
             self._tests_by_id[test.id] = test
         
         # process sub suites
         for sub_suite in suite.get_sub_testsuites():
-            self._load_testsuite(sub_suite, property_validator)
+            self._load_testsuite(sub_suite)
         
-    def load_testsuites(self, suites, property_validator=None):
+    def load_testsuites(self, suites):
         """Load testsuites classes into the launcher.
         
         - testsuite classes get instantiated into objects
         - sanity checks are performed (among which unicity constraints)
-        - test and testsuites properties are checked using property_validator (PropertyValidator instance)
-          is supplied
+        - test and testsuites properties are checked using self.metadata_policy (MetadataPolicy instance)
         """
         for suite_klass in suites:
             suite = suite_klass()
             suite.load()
-            self._load_testsuite(suite, property_validator)
+            self._load_testsuite(suite)
             self._testsuites.append(suite)
     
     def _run_testsuite(self, suite):

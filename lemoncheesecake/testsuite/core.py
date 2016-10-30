@@ -112,6 +112,12 @@ class TestSuite:
     def load_generated_tests(self):
         pass
     
+    def get_test(self, test_id):
+        for test in self._tests:
+            if test.id == test_id:
+                return test
+        raise ProgrammingError("unknown test '%s'" % test_id)
+    
     def get_tests(self, filtered=True):
         if filtered:
             return filter(lambda t: self.is_test_selected(t), self._tests)

@@ -12,6 +12,7 @@ import pytest
 
 from lemoncheesecake.launcher import Launcher, Filter
 from lemoncheesecake.runtime import get_runtime
+from lemoncheesecake.exceptions import *
 import lemoncheesecake as lcc
 
 from helpers import test_backend, run_testsuite
@@ -250,3 +251,23 @@ def test_hook_error_after_suite(test_backend):
 
     assert test_backend.get_last_test_outcome() == True
     assert get_runtime().reporting_data.errors == 1
+
+def test_metadata_policy():
+    class MySuite1(lcc.TestSuite):
+        @lcc.prop("foo", 3)
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+        
+    @lcc.prop("foo", 3)
+    class MySuite2(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+    
+    launcher = Launcher()
+    launcher.metadata_policy.add_property_rule("foo", (1, 2))
+    with pytest.raises(InvalidMetadataError):
+        launcher.load_testsuites([MySuite1])
+    with pytest.raises(InvalidMetadataError):
+        launcher.load_testsuites([MySuite2])
