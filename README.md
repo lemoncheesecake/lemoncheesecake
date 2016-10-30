@@ -161,6 +161,29 @@ check_dictval_eq(data, "foo", 21)
 check_dictval_eq(data, "bar", 42)
 ```
 
+## Attachments
+
+Within a test, you also have the possibility to attach files to the report:
+```python
+save_attachment_file(filename, "The application screenshot")
+```
+
+The file will be copied into the report dir and is prefixed by a unique value, making it possible to save multiple times an attachment with the same name. The attachment description is optional (the given filename will be used as a description).
+
+There are other ways to save attachment files depending on your need.
+
+If the file you want to save is loaded in memory:
+```python
+save_attachment_content(image_data, "screenshot.png", "The application screenshot")
+```
+
+If you need the effective file path to write into:
+```python
+path = prepare_attachment("screenshot.png", "The application screenshot")
+with open(path, "w") as fh:
+    fh.write(image_data)
+```
+
 ## Worker
 
 The worker is used to maintain a custom state for the user across the execution of all testsuites. It is also advised to use the worker as a level of abstraction between the tests and the system under test:
@@ -247,9 +270,10 @@ Note that:
 
 # Metadata
 
-Various metadata can be associated to test and to testsuites:
+Various metadata can be associated to tests and testsuites:
 
 - tags: they are simple keywords used to tag tests or testsuites that have a particular characteristic:
+
 ```python
 @tags("important")
 @test("Test something")
@@ -267,6 +291,7 @@ def test_something_else_again(self):
     pass
 ```
 - properties: they are used for keywords that have a (closed) choice of values:
+
 ```python
 @prop("type", "acceptance")
 @test("Test something")
@@ -279,6 +304,7 @@ def test_something_else(self):
     pass
 ```
 - urls: they are used to associate an URL (with an optional label) to a given test or testsuite:
+
 ```python
 @url("http://my.bug.tracker/issue/1234", "TICKET-1234")
 @test("Test something")
@@ -295,6 +321,33 @@ These metadata:
 
 - can be used to filter the tests to be run (see the `--tag`, `--property` and `--url` of the CLI launcher)
 - will be available in the test report
+
+## Metadata Policy
+
+The launcher provides a metadata policy that can be used to add constraints to metadata.
+
+For example, for the usage of a property "priority" on all tests with a given set of values:
+
+```python
+launcher = Launcher()
+launcher.metadata_policy.add_property_rule(
+    "priority", ("low", "medium", "high")), required=True
+)
+launcher.load_testsuites(...)
+```
+
+Add a limited set of tags available for both tests and testsuites and forbid the usage of any other tags:
+
+```python
+launcher = Launcher()
+launcher.metadata_policy.add_tag_rule(
+    ("todo", "known_defect"), on_test=True, on_suite=True
+)
+launcher.metadata_policy.disallow_unknown_tags()
+launcher.load_testsuites(...)
+```
+
+See `lemoncheesecake.launcher.validators.MetadataPolicy` for more information.
 
 # Put it all together
 
