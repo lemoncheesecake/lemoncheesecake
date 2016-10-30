@@ -36,7 +36,7 @@ usage: mytests.py run [-h] [--test-id TEST_ID [TEST_ID ...]]
                       [--suite-desc SUITE_DESC [SUITE_DESC ...]]
                       [--tag TAG [TAG ...]]
                       [--property PROPERTY [PROPERTY ...]]
-                      [--url URL [URL ...]] [--report-dir REPORT_DIR]
+                      [--link LINK [LINK ...]] [--report-dir REPORT_DIR]
 optional arguments:
   -h, --help            show this help message and exit
   --test-id TEST_ID [TEST_ID ...], -t TEST_ID [TEST_ID ...]
@@ -51,8 +51,8 @@ optional arguments:
                         Filters on test & test suite tags
   --property PROPERTY [PROPERTY ...], -m PROPERTY [PROPERTY ...]
                         Filters on test & test suite property
-  --url URL [URL ...], -u URL [URL ...]
-                        Filters on test & test suite url names
+  --link LINK [LINK ...], -l LINK [LINK ...]
+                        Filters on test & test suite link names
   --report-dir REPORT_DIR, -r REPORT_DIR
                         Directory where reporting data will be stored
 ```
@@ -303,15 +303,15 @@ def test_something(self):
 def test_something_else(self):
     pass
 ```
-- urls: they are used to associate an URL (with an optional label) to a given test or testsuite:
+- links: they are used to associate a link (with an optional label) to a given test or testsuite:
 
 ```python
-@url("http://my.bug.tracker/issue/1234", "TICKET-1234")
+@link("http://my.bug.tracker/issue/1234", "TICKET-1234")
 @test("Test something")
 def test_something(self):
     pass
 
-@url("http://my.bug.tracker/issue/5678")
+@link("http://my.bug.tracker/issue/5678")
 @test("Test something else")
 def test_something_else(self):
     pass
@@ -319,7 +319,7 @@ def test_something_else(self):
 
 These metadata:
 
-- can be used to filter the tests to be run (see the `--tag`, `--property` and `--url` of the CLI launcher)
+- can be used to filter the tests to be run (see the `--tag`, `--property` and `--link` of the CLI launcher)
 - will be available in the test report
 
 ## Metadata Policy
