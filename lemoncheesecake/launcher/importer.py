@@ -22,6 +22,7 @@ def import_testsuite_from_file(filename):
     """Get testsuite class from Python module.
     
     The testsuite class must have the same name as the containing Python module.
+    
     Raise a ImportTestSuiteError if the testsuite class cannot be imported.
     """
     mod_dir = os.path.dirname(filename)
@@ -41,18 +42,26 @@ def import_testsuite_from_file(filename):
         raise ImportTestSuiteError("Cannot find class '%s' in '%s'" % (mod_name, loaded_mod.__file__))
     return klass
 
-def import_testsuites_from_files(patterns, excludes=[]):
+def import_testsuites_from_files(patterns, exclude=[]):
+    """
+    Import testsuites from a list of files:
+    - patterns: a mandatory list (a simple string can also be used instead of a single element list)
+      of files to import; the wildcard '*' character can be used
+    - exclude: an optional list (a simple string can also be used instead of a single element list)
+      of elements to exclude from the expanded list of files to import
+    Example: import_testsuites_from_files("test_*.py")
+    """
     if type(patterns) not in (list, tuple):
         patterns = [patterns]
-    if type(excludes) not in (list, tuple):
-        excludes = [excludes]
+    if type(exclude) not in (list, tuple):
+        exclude = [exclude]
     files = []
     for pattern in patterns:
         files.extend(glob.glob(pattern))
-    if excludes:
+    if exclude:
         tmp = files[:] # iterate on copy to be able to alter files
         for file in tmp:
-            for exclude in excludes:
+            for exclude in exclude:
                 if fnmatch.fnmatch(file, exclude):
                     files.remove(file)
                     break
