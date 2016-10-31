@@ -11,6 +11,6 @@
 - **Unit tests**: improve test coverage on testsuites import functions, `Launcher` and `TestSuite` classes
 - **Unit tests**: add tests on the new `MetadataPolicy` class
 
-# 0.1.0 (2016-10-01)
+# 0.1.0 (2016-10-06)
 
 - Initial release
