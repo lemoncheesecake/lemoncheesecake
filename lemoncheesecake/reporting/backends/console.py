@@ -9,7 +9,7 @@ from __future__ import print_function
 import sys
 import re
 
-from lemoncheesecake.reporting import ReportingBackend
+from lemoncheesecake.reporting.backend import ReportingBackend
 from lemoncheesecake.utils import IS_PYTHON3, humanize_duration
 
 from colorama import init, Style, Fore
@@ -112,12 +112,12 @@ class ConsoleBackend(ReportingBackend):
         pass
     
     def end_tests(self):
-        self.reporting_data.refresh_stats()
+        self.report.refresh_stats()
         print()
         print(colored("Statistics", attrs=["bold"]), ":")
-        print(" * Duration: %s" % humanize_duration(self.reporting_data.end_time - self.reporting_data.start_time))
-        print(" * Tests: %d" % self.reporting_data.tests)
-        print(" * Successes: %d (%d%%)" % (self.reporting_data.tests_success, float(self.reporting_data.tests_success) / self.reporting_data.tests * 100 if self.reporting_data.tests else 0))
-        print(" * Failures: %d" % (self.reporting_data.tests_failure))
+        print(" * Duration: %s" % humanize_duration(self.report.end_time - self.report.start_time))
+        print(" * Tests: %d" % self.report.tests)
+        print(" * Successes: %d (%d%%)" % (self.report.tests_success, float(self.report.tests_success) / self.report.tests * 100 if self.report.tests else 0))
+        print(" * Failures: %d" % (self.report.tests_failure))
         print()
         

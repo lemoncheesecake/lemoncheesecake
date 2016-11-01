@@ -10,10 +10,9 @@ import shutil
 
 from lemoncheesecake.utils import humanize_duration
 from lemoncheesecake.exceptions import LemonCheesecakeInternalError
-from lemoncheesecake.reporting import get_enabled_backends, LOG_LEVEL_DEBUG, LOG_LEVEL_INFO, \
-    LOG_LEVEL_WARN, LOG_LEVEL_ERROR, ATTACHEMENT_DIR
-
-from lemoncheesecake.reportingdata import *
+from lemoncheesecake.consts import ATTACHEMENT_DIR, \
+    LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
+from lemoncheesecake.reporting import *
 
 __all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "set_step", \
     "prepare_attachment", "save_attachment_file", "save_attachment_content"
@@ -34,7 +33,7 @@ class _RuntimeState:
         self.start_time = None
         self.end_time = None
 
-        self.reporting_data = None
+        self.report = None
         
         self.current_testsuite = None
         self.current_test = None
@@ -60,11 +59,11 @@ class _Runtime:
     def __init__(self, report_dir):
         self.report_dir = report_dir
         self.attachment_count = 0
-        self.reporting_data = ReportingData()
+        self.report = Report()
         self.report_backends = get_enabled_backends()
         self.step_lock = False
         self.default_step_description = ""
-        # pointers to reporting data parts
+        # pointers to report data parts
         self.current_testsuite_data = None
         self.current_test_data = None
         self.current_step_data = None
@@ -73,29 +72,29 @@ class _Runtime:
         self.current_test = None
         self.current_testsuite = None
     
-    def init_reporting_backends(self):
-        self.for_each_backend(lambda b: b.initialize(self.reporting_data, self.report_dir))
+    def init_report_backends(self):
+        self.for_each_backend(lambda b: b.initialize(self.report, self.report_dir))
     
     def for_each_backend(self, callback):
         for backend in self.report_backends:
             callback(backend)
     
     def begin_tests(self):
-        self.reporting_data.start_time = time.time()
+        self.report.start_time = time.time()
         self.for_each_backend(lambda b: b.begin_tests())
     
     def end_tests(self):
-        self.reporting_data.end_time = time.time()
-        self.reporting_data.report_generation_time = self.reporting_data.end_time
-        self.reporting_data.refresh_stats()
-        self.reporting_data.add_stats("Start time", time.asctime(time.localtime(self.reporting_data.start_time)))
-        self.reporting_data.add_stats("End time", time.asctime(time.localtime(self.reporting_data.end_time)))
-        self.reporting_data.add_stats("Duration", humanize_duration(self.reporting_data.end_time - self.reporting_data.start_time))
-        self.reporting_data.add_stats("Tests", str(self.reporting_data.tests))
-        self.reporting_data.add_stats("Successful tests", str(self.reporting_data.tests_success))
-        self.reporting_data.add_stats("Successful tests in %", "%d%%" % (float(self.reporting_data.tests_success) / self.reporting_data.tests * 100 if self.reporting_data.tests else 0))
-        self.reporting_data.add_stats("Failed tests", str(self.reporting_data.tests_failure))
-        self.reporting_data.add_stats("Errors", str(self.reporting_data.errors))
+        self.report.end_time = time.time()
+        self.report.report_generation_time = self.report.end_time
+        self.report.refresh_stats()
+        self.report.add_stats("Start time", time.asctime(time.localtime(self.report.start_time)))
+        self.report.add_stats("End time", time.asctime(time.localtime(self.report.end_time)))
+        self.report.add_stats("Duration", humanize_duration(self.report.end_time - self.report.start_time))
+        self.report.add_stats("Tests", str(self.report.tests))
+        self.report.add_stats("Successful tests", str(self.report.tests_success))
+        self.report.add_stats("Successful tests in %", "%d%%" % (float(self.report.tests_success) / self.report.tests * 100 if self.report.tests else 0))
+        self.report.add_stats("Failed tests", str(self.report.tests_failure))
+        self.report.add_stats("Errors", str(self.report.errors))
         self.for_each_backend(lambda b: b.end_tests())
     
     def begin_before_suite(self, testsuite):        
@@ -108,7 +107,7 @@ class _Runtime:
         if self.current_testsuite_data:
             self.current_testsuite_data.sub_testsuites.append(suite_data)
         else:
-            self.reporting_data.testsuites.append(suite_data)
+            self.report.testsuites.append(suite_data)
         self.current_testsuite_data = suite_data
         self.current_step_data_list = self.current_testsuite_data.before_suite_steps
 
@@ -166,7 +165,7 @@ class _Runtime:
         self.current_step = description
         self.current_step_data = StepData(description)
 
-        # remove previous step from reporting data if it was empty
+        # remove previous step from report data if it was empty
         if self.current_step_data_list and not self.current_step_data_list[-1].entries:
             del self.current_step_data_list[-1]
         self.current_step_data_list.append(self.current_step_data)

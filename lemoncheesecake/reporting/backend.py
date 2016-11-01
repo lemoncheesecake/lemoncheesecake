@@ -4,14 +4,14 @@ Created on Mar 29, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.exceptions import LemonCheesecakeException, UnknownReportBackendError
+from lemoncheesecake.exceptions import UnknownReportBackendError
 
-ATTACHEMENT_DIR = "attachments"
-
-LOG_LEVEL_DEBUG = "debug"
-LOG_LEVEL_INFO = "info"
-LOG_LEVEL_WARN = "warn"
-LOG_LEVEL_ERROR = "error"
+__all__ = (
+    "register_backend", "get_backend", "has_backend", "enable_backend", "disable_backend", 
+    "only_enable_backends", "get_enabled_backend_names", "get_enabled_backends",
+    "register_default_backends",
+    "ReportingBackend"
+)
 
 _backends = { }
 _enabled_backends = set()
@@ -55,8 +55,8 @@ def get_enabled_backends():
     return [_backends[b] for b in _enabled_backends]
 
 class ReportingBackend:
-    def initialize(self, reporting_data, report_dir):
-        self.reporting_data = reporting_data
+    def initialize(self, report, report_dir):
+        self.report = report
         self.report_dir = report_dir
     
     def begin_tests(self):
@@ -93,10 +93,7 @@ class ReportingBackend:
         pass
 
 def register_default_backends():
-    from lemoncheesecake.reportingbackends.console import ConsoleBackend
-    from lemoncheesecake.reportingbackends.xml import XmlBackend
-    from lemoncheesecake.reportingbackends.json_ import JsonBackend
-    from lemoncheesecake.reportingbackends.html import HtmlBackend
+    from lemoncheesecake.reporting.backends import ConsoleBackend, XmlBackend, JsonBackend, HtmlBackend
 
     backends = ConsoleBackend, XmlBackend, JsonBackend, HtmlBackend
     for backend in backends:

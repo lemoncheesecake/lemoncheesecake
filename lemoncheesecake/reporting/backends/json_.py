@@ -7,8 +7,8 @@ Created on Mar 27, 2016
 import re
 import json
 
-from lemoncheesecake.reportingdata import *
-from lemoncheesecake.reporting import ReportingBackend
+from lemoncheesecake.reporting.backend import ReportingBackend
+from lemoncheesecake.reporting.report import *
 
 JS_PREFIX = "var reporting_data = "
 
@@ -70,7 +70,7 @@ def _serialize_testsuite_data(suite):
     
     return json_suite
 
-def serialize_reporting_data(data):
+def serialize_report(data):
     return {
         "start_time": _time_value(data.start_time),
         "end_time": _time_value(data.end_time),
@@ -80,8 +80,8 @@ def serialize_reporting_data(data):
         "stats": [ [ n, v ] for n, v in data.stats ],
     }
 
-def serialize_reporting_data_into_file(data, filename, javascript_compatibility=True, pretty_formatting=False):
-    report = serialize_reporting_data(data)
+def serialize_report_into_file(data, filename, javascript_compatibility=True, pretty_formatting=False):
+    report = serialize_report(data)
     file = open(filename, "w")
     if javascript_compatibility:
         file.write(JS_PREFIX)
@@ -136,20 +136,20 @@ def _unserialize_testsuite_data(js, parent=None):
     
     return suite
 
-def unserialize_reporting_data_from_file(filename):
-    data = ReportingData()
+def unserialize_report_from_file(filename):
+    report = Report()
     file = open(filename, "r")
     content = file.read()
     file.close()
     content = re.sub("^" + JS_PREFIX, "", content)
     js = json.loads(content)
-    data.info = js["info"]
-    data.stats = js["stats"]
-    data.start_time = float(js["start_time"])
-    data.end_time = float(js["end_time"])
-    data.generation_time = float(js["generation_time"])
-    data.testsuites = [ _unserialize_testsuite_data(s) for s in js["suites"] ]
-    return data
+    report.info = js["info"]
+    report.stats = js["stats"]
+    report.start_time = float(js["start_time"])
+    report.end_time = float(js["end_time"])
+    report.generation_time = float(js["generation_time"])
+    report.testsuites = [ _unserialize_testsuite_data(s) for s in js["suites"] ]
+    return report
 
 class JsonBackend(ReportingBackend):
     name = "json"
@@ -159,7 +159,7 @@ class JsonBackend(ReportingBackend):
         self.pretty_formatting = pretty_formatting
     
     def end_tests(self):
-        serialize_reporting_data_into_file(
-            self.reporting_data, self.report_dir + "/report.json",
+        serialize_report_into_file(
+            self.report, self.report_dir + "/report.json",
             javascript_compatibility=self.javascript_compatibility, pretty_formatting=self.pretty_formatting
         )

@@ -4,7 +4,12 @@ Created on Mar 26, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.reporting import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
+from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
+
+__all__ = (
+    "LogData", "CheckData", "AttachmentData", "StepData", "TestData",
+    "TestSuiteData", "Report"
+)
 
 class LogData:
     def __init__(self, level, message):
@@ -77,7 +82,7 @@ class TestSuiteData:
     def after_suite_has_failure(self):
         return len(filter(lambda step: step.has_failure(), self.after_suite_steps)) > 0
 
-class ReportingData:
+class Report:
     def __init__(self):
         self.info = [ ]
         self.stats = [ ]

@@ -236,7 +236,7 @@ def test_hook_error_before_suite(test_backend):
     run_testsuite(MySuite)
 
     assert test_backend.get_last_test_outcome() == False
-    assert get_runtime().reporting_data.errors == 1
+    assert get_runtime().report.errors == 1
 
 def test_hook_error_after_suite(test_backend):
     class MySuite(lcc.TestSuite):
@@ -250,7 +250,7 @@ def test_hook_error_after_suite(test_backend):
     run_testsuite(MySuite)
 
     assert test_backend.get_last_test_outcome() == True
-    assert get_runtime().reporting_data.errors == 1
+    assert get_runtime().report.errors == 1
 
 def test_metadata_policy():
     class MySuite1(lcc.TestSuite):

@@ -23,7 +23,7 @@ __all__ = ("Launcher", "get_launcher_abspath", "get_abspath_from_launcher")
 
 COMMAND_RUN = "run"
 
-def reporting_dir_with_datetime(report_rootdir, t):
+def report_dir_with_datetime(report_rootdir, t):
     return time.strftime("report-%Y%m%d-%H%M%S", time.localtime(t))
 
 def property_value(value):
@@ -54,22 +54,22 @@ class Launcher:
         self.cli_run_parser.add_argument("--tag", "-a", nargs="+", default=[], help="Filters on test & test suite tags")
         self.cli_run_parser.add_argument("--property", "-m", nargs="+", type=property_value, default=[], help="Filters on test & test suite property")
         self.cli_run_parser.add_argument("--link", "-l", nargs="+", default=[], help="Filters on test & test suite link names")
-        self.cli_run_parser.add_argument("--report-dir", "-r", required=False, help="Directory where reporting data will be stored")
-        self.cli_run_parser.add_argument("--reports", nargs="+", required=False,
-            help="The list of reporting backends to use (defaults: %s)" % ", ".join(sorted(reporting.get_enabled_backend_names()))
+        self.cli_run_parser.add_argument("--report-dir", "-r", required=False, help="Directory where report data will be stored")
+        self.cli_run_parser.add_argument("--reporting", nargs="+", required=False,
+            help="The list of reporting backends to use (default: %s)" % ", ".join(sorted(reporting.get_enabled_backend_names()))
         )
-        self.cli_run_parser.add_argument("--enable-reports", nargs="+", required=False,
+        self.cli_run_parser.add_argument("--enable-reporting", nargs="+", required=False,
             help="The list of reporting backends to add (to base backends)"
         )
-        self.cli_run_parser.add_argument("--disable-reports", nargs="+", required=False,
+        self.cli_run_parser.add_argument("--disable-reporting", nargs="+", required=False,
             help="The list of reporting backends to remove (from base backends)"
         )
         
         ###
-        # Default reporting setup when no --report-dir has been setup
+        # Default report setup when no --report-dir has been setup
         ###
-        self.reporting_root_dir = os.path.join(os.path.dirname(sys.argv[0]), "reports")
-        self.reporting_dir_format = reporting_dir_with_datetime
+        self.report_root_dir = os.path.join(os.path.dirname(sys.argv[0]), "reports")
+        self.report_dir_format = report_dir_with_datetime
     
         ###
         # Testsuites data
@@ -208,8 +208,8 @@ class Launcher:
         
         :param filter: Only the test suites and tests that match the given filter will be run.
         :type filter: a Filter instance
-        :param report_dir: The directory where the various reporting data files will be written. 
-        If None, the default reporting dir mechanism will be used (see reporting_root_dir and
+        :param report_dir: The directory where the various report data files will be written. 
+        If None, the default report dir mechanism will be used (see report_root_dir and
         reportin_dir_format attributes).
         :type report_dir: str
         """
@@ -228,11 +228,11 @@ class Launcher:
                 
         # initialize runtime & global test variables
         if not report_dir:
-            if not os.path.exists(self.reporting_root_dir):
-                os.mkdir(self.reporting_root_dir)
-            report_dir = self.reporting_root_dir
+            if not os.path.exists(self.report_root_dir):
+                os.mkdir(self.report_root_dir)
+            report_dir = self.report_root_dir
             report_dir += os.path.sep
-            report_dir += self.reporting_dir_format(self.reporting_root_dir, time.time())
+            report_dir += self.report_dir_format(self.report_root_dir, time.time())
         os.mkdir(report_dir)
         if platform.system() != "Windows":
             symlink_path = os.path.join(os.path.dirname(report_dir), "..", "last_report")
@@ -241,12 +241,12 @@ class Launcher:
             os.symlink(report_dir, symlink_path)
         initialize_runtime(report_dir)
         rt = get_runtime()
-        rt.init_reporting_backends()
+        rt.init_report_backends()
         self.abort_all_tests = False
         self.abort_testsuite = None
         
         # init report information
-        rt.reporting_data.add_info("Command line", " ".join(sys.argv))
+        rt.report.add_info("Command line", " ".join(sys.argv))
         
         if lemoncheesecake.worker:
             lemoncheesecake.worker.before_tests()
@@ -278,13 +278,13 @@ class Launcher:
         filter.link_names = args.link
         
         # report backends
-        if args.reports:
-            reporting.only_enable_backends(args.reports)
-        if args.enable_reports:
-            for backend in args.enable_reports:
+        if args.reporting:
+            reporting.only_enable_backends(args.reporting)
+        if args.enable_reporting:
+            for backend in args.enable_reporting:
                 reporting.enable_backend(backend)
-        if args.disable_reports:
-            for backend in args.disable_reports:
+        if args.disable_reporting:
+            for backend in args.disable_reporting:
                 reporting.disable_backend(backend)
         
         # initialize worker using CLI args and run tests

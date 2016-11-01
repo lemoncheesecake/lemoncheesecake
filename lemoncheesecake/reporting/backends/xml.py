@@ -4,13 +4,13 @@ Created on Mar 27, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.reportingdata import *
-from lemoncheesecake.reporting import ReportingBackend
-from lemoncheesecake.utils import IS_PYTHON3
-from lemoncheesecake.exceptions import ProgrammingError
-
 from lxml import etree as ET
 from lxml.builder import E
+
+from lemoncheesecake.reporting.backend import ReportingBackend
+from lemoncheesecake.reporting.report import *
+from lemoncheesecake.utils import IS_PYTHON3
+from lemoncheesecake.exceptions import ProgrammingError
 
 OUTCOME_NOT_AVAILABLE = "n/a"
 OUTCOME_FAILURE = "failure"
@@ -133,7 +133,7 @@ def _serialize_testsuite_data(suite):
     
     return suite_node
 
-def serialize_reporting_data(data):
+def serialize_report(data):
     report = E("lemoncheesecake-report")
     _add_time_attr(report, "start-time", data.start_time)
     _add_time_attr(report, "end-time", data.end_time)
@@ -149,8 +149,8 @@ def serialize_reporting_data(data):
         report.append(suite_node)
     return report
 
-def serialize_reporting_data_into_file(data, filename, indent_level):
-    report = serialize_reporting_data(data)
+def serialize_report_into_file(data, filename, indent_level):
+    report = serialize_report(data)
     _xml_indent(report, indent_level=indent_level)
     file = open(filename, "w")
     if IS_PYTHON3:
@@ -225,8 +225,8 @@ def _unserialize_keyvalue_list(nodes):
         ret.append([node.attrib["name"], node.text])
     return ret
 
-def unserialize_reporting_data_from_file(filename):
-    data = ReportingData()
+def unserialize_report_from_file(filename):
+    data = Report()
     xml = ET.parse(open(filename, "r"))
     root = xml.getroot().xpath("/lemoncheesecake-report")[0]
     data.start_time = float(root.attrib["start-time"]) if "start-time" in root.attrib else None
@@ -247,6 +247,6 @@ class XmlBackend(ReportingBackend):
         self.indent_level = 4
     
     def end_tests(self):
-        serialize_reporting_data_into_file(
-            self.reporting_data, self.report_dir + "/report.xml", self.indent_level
+        serialize_report_into_file(
+            self.report, self.report_dir + "/report.xml", self.indent_level
         )

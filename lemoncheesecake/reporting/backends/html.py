@@ -10,7 +10,7 @@ import os
 import os.path as p
 from shutil import copy, copytree
 
-from lemoncheesecake.reporting import ReportingBackend
+from lemoncheesecake.reporting.backend import ReportingBackend
 
 class HtmlBackend(ReportingBackend):
     name = "html"
@@ -19,7 +19,7 @@ class HtmlBackend(ReportingBackend):
         self.offline_mode = offline_mode
     
     def begin_tests(self):
-        html_resource_dir = p.join(p.dirname(__file__), p.pardir, "resources", "html")
+        html_resource_dir = p.join(p.dirname(__file__), p.pardir, p.pardir, "resources", "html")
         report_resource_dir = p.join(self.report_dir, ".html") 
         
         os.mkdir(report_resource_dir)
