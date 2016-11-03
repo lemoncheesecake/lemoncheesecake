@@ -67,14 +67,51 @@ def get_test_backend():
 def test_backend():
     return get_test_backend()
 
-def run_testsuite(suite):
+def run_testsuites(suites):
     launcher = Launcher()
-    launcher.load_testsuites([suite])
+    launcher.load_testsuites(suites)
     report_dir = tempfile.mkdtemp()
     try:
         launcher.run_testsuites(Filter(), os.path.join(report_dir, "report"))
     finally:
         shutil.rmtree(report_dir)
 
+def run_testsuite(suite):
+    run_testsuites([suite])
+
 def dummy_test_callback(suite):
     pass
+
+def assert_test_data_from_test(test_data, test):
+    assert test_data.id == test.id
+    assert test_data.description == test.description
+    assert test_data.tags == test.tags
+    assert test_data.properties == test.properties
+    assert test_data.links == test.links
+
+def assert_testsuite_data_from_testsuite(testsuite_data, testsuite):
+    assert testsuite_data.id == testsuite.id
+    assert testsuite_data.description == testsuite.description
+    assert testsuite_data.tags == testsuite.tags
+    assert testsuite_data.properties == testsuite.properties
+    assert testsuite_data.links == testsuite.links
+    assert len(testsuite_data.tests) == len(testsuite.get_tests())
+    
+    assert len(testsuite_data.tests) == len(testsuite.get_tests())
+    for test_data, test in zip(testsuite_data.tests, testsuite.get_tests()):
+        assert_test_data_from_test(test_data, test)
+    
+    assert len(testsuite_data.sub_testsuites) == len(testsuite.get_sub_testsuites())
+    for sub_testsuite_data, sub_testsuite in zip(testsuite_data.sub_testsuites, testsuite.get_sub_testsuites()):
+        assert_testsuite_data_from_testsuite(sub_testsuite_data, sub_testsuite)
+    
+def assert_report_from_testsuites(report, suite_classes):
+    assert len(report.testsuites) == len(suite_classes)
+    for testsuite_data, testsuite_class in zip(report.testsuites, suite_classes):
+        testsuite = testsuite_class()
+        testsuite.load()
+        assert_testsuite_data_from_testsuite(testsuite_data, testsuite)
+
+def assert_report_from_testsuite(report, suite_class):
+    assert_report_from_testsuites(report, [suite_class])
+    
