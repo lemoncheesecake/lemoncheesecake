@@ -58,6 +58,7 @@ class _RuntimeState:
 class _Runtime:
     def __init__(self, report_dir):
         self.report_dir = report_dir
+        self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
         self.attachment_count = 0
         self.report = Report()
         self.report_backends = get_enabled_backends()
@@ -211,14 +212,13 @@ class _Runtime:
         if not description:
             description = filename
         
-        attachment_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
         attachment_filename = "%04d_%s" % (self.attachment_count + 1, filename)
         self.attachment_count += 1
-        if not os.path.exists(attachment_dir):
-            os.mkdir(attachment_dir)
+        if not os.path.exists(self.attachments_dir):
+            os.mkdir(self.attachments_dir)
         self.current_step_data.entries.append(AttachmentData(description, "%s/%s" % (ATTACHEMENT_DIR, attachment_filename)))
         
-        return os.path.join(attachment_dir, attachment_filename)
+        return os.path.join(self.attachments_dir, attachment_filename)
         # TODO: add hook for attachment
     
     def save_attachment_file(self, filename, description=None):
