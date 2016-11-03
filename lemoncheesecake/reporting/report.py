@@ -81,6 +81,18 @@ class TestSuiteData:
 
     def after_suite_has_failure(self):
         return len(filter(lambda step: step.has_failure(), self.after_suite_steps)) > 0
+    
+    def get_test(self, test_id):
+        for test in self.tests:
+            if test.id == test_id:
+                return test
+        
+        for suite in self.sub_testsuites:
+            test = suite.get_test(test_id)
+            if test:
+                return test
+        
+        return None
 
 class Report:
     def __init__(self):
@@ -97,6 +109,14 @@ class Report:
     
     def add_stats(self, name, value):
         self.stats.append([name, value])
+    
+    def get_test(self, test_id):
+        for suite in self.testsuites:
+            test = suite.get_test(test_id)
+            if test:
+                return test
+        
+        return None
     
     def reset_stats(self):
         self.tests = 0
