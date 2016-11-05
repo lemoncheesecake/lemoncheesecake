@@ -42,7 +42,7 @@ def import_testsuite_from_file(filename):
         raise ImportTestSuiteError("Cannot find class '%s' in '%s'" % (mod_name, loaded_mod.__file__))
     return klass
 
-def import_testsuites_from_files(patterns, exclude=[]):
+def import_testsuites_from_files(patterns, excluding=[]):
     """
     Import testsuites from a list of files:
     - patterns: a mandatory list (a simple string can also be used instead of a single element list)
@@ -53,16 +53,16 @@ def import_testsuites_from_files(patterns, exclude=[]):
     """
     if type(patterns) not in (list, tuple):
         patterns = [patterns]
-    if type(exclude) not in (list, tuple):
-        exclude = [exclude]
+    if type(excluding) not in (list, tuple):
+        excluding = [excluding]
     files = []
     for pattern in patterns:
         files.extend(glob.glob(pattern))
-    if exclude:
+    if excluding:
         tmp = files[:] # iterate on copy to be able to alter files
         for file in tmp:
-            for exclude in exclude:
-                if fnmatch.fnmatch(file, exclude):
+            for excluded in excluding:
+                if fnmatch.fnmatch(file, excluded):
                     files.remove(file)
                     break
     return [import_testsuite_from_file(f) for f in files]
