@@ -16,8 +16,10 @@ OUTCOME_NOT_AVAILABLE = "n/a"
 OUTCOME_FAILURE = "failure"
 OUTCOME_SUCCESS = "success"
 
+DEFAULT_INDENT_LEVEL = 4
+
 # borrowed from http://stackoverflow.com/a/1239193
-def _xml_indent(elem, level=0, indent_level=4):
+def _xml_indent(elem, level=0, indent_level=DEFAULT_INDENT_LEVEL):
     i = "\n" + level * (" " * indent_level)
     if len(elem):
         if not elem.text or not elem.text.strip():
@@ -133,32 +135,34 @@ def _serialize_testsuite_data(suite):
     
     return suite_node
 
-def serialize_report(data):
-    report = E("lemoncheesecake-report")
-    _add_time_attr(report, "start-time", data.start_time)
-    _add_time_attr(report, "end-time", data.end_time)
-    _add_time_attr(report, "generation-time", data.report_generation_time)
-    for name, value in data.info:
-        info_node = _xml_child(report, "info", "name", name)
+def serialize_report_as_tree(report):
+    xml = E("lemoncheesecake-xml")
+    _add_time_attr(xml, "start-time", report.start_time)
+    _add_time_attr(xml, "end-time", report.end_time)
+    _add_time_attr(xml, "generation-time", report.report_generation_time)
+    for name, value in report.info:
+        info_node = _xml_child(xml, "info", "name", name)
         info_node.text = value
-    for name, value in data.stats:
-        stat_node = _xml_child(report, "stat", "name", name)
+    for name, value in report.stats:
+        stat_node = _xml_child(xml, "stat", "name", name)
         stat_node.text = value
-    for suite in data.testsuites:
+    for suite in report.testsuites:
         suite_node = _serialize_testsuite_data(suite)
-        report.append(suite_node)
-    return report
+        xml.append(suite_node)
+    return xml
 
-def serialize_report_into_file(data, filename, indent_level):
-    report = serialize_report(data)
+def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
+    report = serialize_report_as_tree(report)
     _xml_indent(report, indent_level=indent_level)
-    file = open(filename, "w")
+    
     if IS_PYTHON3:
-        content = ET.tostring(report, pretty_print=True, encoding="unicode")
-    else:
-        content = ET.tostring(report, pretty_print=True, xml_declaration=True, encoding="utf-8")
-    file.write(content)
-    file.close()
+        return ET.tostring(report, pretty_print=True, encoding="unicode")
+    return ET.tostring(report, pretty_print=True, xml_declaration=True, encoding="utf-8")
+
+def serialize_report_into_file(report, filename, indent_level):
+    content = serialize_report_as_string(report, indent_level)
+    with open(filename, "w") as fh:
+        fh.write(content)
 
 def _unserialize_outcome(value):
     if value == OUTCOME_SUCCESS:
@@ -244,7 +248,7 @@ class XmlBackend(ReportingBackend):
     name = "xml"
     
     def __init__(self):
-        self.indent_level = 4
+        self.indent_level = DEFAULT_INDENT_LEVEL
     
     def end_tests(self):
         serialize_report_into_file(
