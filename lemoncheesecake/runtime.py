@@ -222,7 +222,7 @@ class _Runtime:
         # TODO: add hook for attachment
     
     def save_attachment_file(self, filename, description=None):
-        target_filename = self.prepare_attachment(filename, description)
+        target_filename = self.prepare_attachment(os.path.basename(filename), description)
         shutil.copy(filename, target_filename)
     
     def save_attachment_content(self, content, filename, description=None):
