@@ -67,18 +67,22 @@ def get_test_backend():
 def test_backend():
     return get_test_backend()
 
-def run_testsuites(suites):
+def run_testsuites(suites, tmpdir=None):
     launcher = Launcher()
     launcher.load_testsuites(suites)
-    report_dir = tempfile.mkdtemp()
-    try:
-        launcher.run_testsuites(Filter(), os.path.join(report_dir, "report"))
-    finally:
-        shutil.rmtree(report_dir)
+    
+    if tmpdir:
+        launcher.run_testsuites(Filter(), os.path.join(tmpdir.strpath, "report"))
+    else:
+        report_dir = tempfile.mkdtemp()
+        try:
+            launcher.run_testsuites(Filter(), os.path.join(report_dir, "report"))
+        finally:
+            shutil.rmtree(report_dir)
 
-def run_testsuite(suite):
-    run_testsuites([suite])
-
+def run_testsuite(suite, tmpdir=None):
+    run_testsuites([suite], tmpdir)
+    
 def dummy_test_callback(suite):
     pass
 
@@ -114,4 +118,16 @@ def assert_report_from_testsuites(report, suite_classes):
 
 def assert_report_from_testsuite(report, suite_class):
     assert_report_from_testsuites(report, [suite_class])
-    
+
+def assert_report_stats(report,
+                        expected_tests_success=0, expected_tests_failure=0, expected_errors=0,
+                        expected_checks_success=0, expected_checks_failure=0,
+                        expected_error_logs=0, expected_warning_logs=0):
+    assert report.tests_success == expected_tests_success
+    assert report.tests_failure == expected_tests_failure
+    assert report.errors == expected_errors
+    assert report.checks == expected_checks_success + expected_checks_failure
+    assert report.checks_success == expected_checks_success
+    assert report.checks_failure == expected_checks_failure
+    assert report.error_logs == expected_error_logs
+    assert report.warning_logs == expected_warning_logs
