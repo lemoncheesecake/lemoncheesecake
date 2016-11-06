@@ -144,13 +144,13 @@ class Report:
                 self.tests_failure += 1
             for step in test.steps:
                 for entry in step.entries:
-                    if type(entry) == CheckData:
+                    if isinstance(entry, CheckData):
                         self.checks += 1
                         if entry.outcome == True:
                             self.checks_success += 1
                         elif entry.outcome == False:
                             self.checks_failure += 1
-                    if type(entry) == LogData:
+                    if isinstance(entry, LogData):
                         if entry.level == LOG_LEVEL_WARN:
                             self.warning_logs += 1
                         elif entry.level == LOG_LEVEL_ERROR:
