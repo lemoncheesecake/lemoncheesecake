@@ -63,7 +63,7 @@ class _Runtime:
         self.report = Report()
         self.report_backends = get_enabled_backends()
         self.step_lock = False
-        self.default_step_description = ""
+        self.default_step_description = "-"
         # pointers to report data parts
         self.current_testsuite_data = None
         self.current_test_data = None
@@ -113,8 +113,6 @@ class _Runtime:
         self.current_step_data_list = self.current_testsuite_data.before_suite_steps
 
         self.for_each_backend(lambda b: b.begin_before_suite(testsuite))
-
-        self.default_step_description = "Before suite"
     
     def end_before_suite(self):
         self.current_testsuite_data.before_suite_end_time = time.time()
@@ -124,8 +122,6 @@ class _Runtime:
         self.current_testsuite_data.after_suite_start_time = time.time()
         self.current_step_data_list = self.current_testsuite_data.after_suite_steps
         self.for_each_backend(lambda b: b.begin_after_suite(testsuite))
-
-        self.default_step_description = "After suite"
 
     def end_after_suite(self):
         self.current_testsuite_data.after_suite_end_time = time.time()
@@ -143,7 +139,6 @@ class _Runtime:
         self.current_testsuite_data.tests.append(self.current_test_data)
         self.for_each_backend(lambda b: b.begin_test(test))
         self.current_step_data_list = self.current_test_data.steps
-        self.default_step_description = test.description
             
     def end_test(self):
         if self.current_test_data.outcome == None:
