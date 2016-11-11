@@ -150,12 +150,29 @@ class Report:
         self.error_logs = 0
         self.warning_logs = 0
     
+    def _walk_steps(self, steps):
+        for step in steps:
+            for entry in step.entries:
+                if isinstance(entry, CheckData):
+                    self.checks += 1
+                    if entry.outcome == True:
+                        self.checks_success += 1
+                    elif entry.outcome == False:
+                        self.checks_failure += 1
+                if isinstance(entry, LogData):
+                    if entry.level == LOG_LEVEL_WARN:
+                        self.warning_logs += 1
+                    elif entry.level == LOG_LEVEL_ERROR:
+                        self.error_logs += 1
+    
     def _walk_testsuite(self, suite):
         if suite.before_suite_has_failure():
             self.errors += 1
+        self._walk_steps(suite.before_suite_steps)
         
         if suite.after_suite_has_failure():
             self.errors += 1
+        self._walk_steps(suite.after_suite_steps)
         
         for test in suite.tests:
             self.tests += 1
@@ -163,19 +180,7 @@ class Report:
                 self.tests_success += 1
             elif test.outcome == False:
                 self.tests_failure += 1
-            for step in test.steps:
-                for entry in step.entries:
-                    if isinstance(entry, CheckData):
-                        self.checks += 1
-                        if entry.outcome == True:
-                            self.checks_success += 1
-                        elif entry.outcome == False:
-                            self.checks_failure += 1
-                    if isinstance(entry, LogData):
-                        if entry.level == LOG_LEVEL_WARN:
-                            self.warning_logs += 1
-                        elif entry.level == LOG_LEVEL_ERROR:
-                            self.error_logs += 1
+            self._walk_steps(test.steps)
         
         for sub_suite in suite.sub_testsuites:
             self._walk_testsuite(sub_suite)
