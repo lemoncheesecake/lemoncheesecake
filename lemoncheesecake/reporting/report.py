@@ -93,6 +93,17 @@ class TestSuiteData:
                 return test
         
         return None
+    
+    def get_suite(self, suite_id):
+        if self.id == suite_id:
+            return self
+        
+        for sub_suite in self.sub_testsuites:
+            suite = sub_suite.get_suite(suite_id)
+            if suite:
+                return suite
+        
+        return None
 
 class Report:
     def __init__(self):
@@ -115,6 +126,16 @@ class Report:
             test = suite.get_test(test_id)
             if test:
                 return test
+        
+        return None
+    
+    def get_suite(self, suite_id):
+        for suite in self.testsuites:
+            if suite.id == suite_id:
+                return suite
+            sub_suite = suite.get_suite(suite_id)
+            if sub_suite:
+                return sub_suite
         
         return None
     
