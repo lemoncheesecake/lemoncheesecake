@@ -143,7 +143,7 @@ def serialize_report_as_tree(report):
     for name, value in report.info:
         info_node = _xml_child(xml, "info", "name", name)
         info_node.text = value
-    for name, value in report.stats:
+    for name, value in report.serialize_stats():
         stat_node = _xml_child(xml, "stat", "name", name)
         stat_node.text = value
     for suite in report.testsuites:

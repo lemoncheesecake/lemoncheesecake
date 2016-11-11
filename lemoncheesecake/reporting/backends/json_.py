@@ -77,7 +77,7 @@ def serialize_report(data):
         "generation_time": _time_value(data.report_generation_time),
         "suites": [ _serialize_testsuite_data(s) for s in data.testsuites ],
         "info": [ [ n, v ] for n, v in data.info ],
-        "stats": [ [ n, v ] for n, v in data.stats ],
+        "stats": [ [ n, v ] for n, v in data.serialize_stats() ],
     }
 
 def serialize_report_into_file(data, filename, javascript_compatibility=True, pretty_formatting=False):

@@ -123,15 +123,16 @@ def assert_report_from_testsuite(report, suite_class):
     assert_report_from_testsuites(report, [suite_class])
 
 def assert_report_stats(report,
-                        expected_tests_success=0, expected_tests_failure=0, expected_errors=0,
-                        expected_checks_success=0, expected_checks_failure=0,
+                        expected_test_successes=0, expected_test_failures=0, expected_errors=0,
+                        expected_check_successes=0, expected_check_failures=0,
                         expected_error_logs=0, expected_warning_logs=0):
-    assert report.tests == expected_tests_success + expected_tests_failure
-    assert report.tests_success == expected_tests_success
-    assert report.tests_failure == expected_tests_failure
-    assert report.errors == expected_errors
-    assert report.checks == expected_checks_success + expected_checks_failure
-    assert report.checks_success == expected_checks_success
-    assert report.checks_failure == expected_checks_failure
-    assert report.error_logs == expected_error_logs
-    assert report.warning_logs == expected_warning_logs
+    stats = report.get_stats()
+    assert stats.tests == expected_test_successes + expected_test_failures
+    assert stats.test_successes == expected_test_successes
+    assert stats.test_failures == expected_test_failures
+    assert stats.errors == expected_errors
+    assert stats.checks == expected_check_successes + expected_check_failures
+    assert stats.check_successes == expected_check_successes
+    assert stats.check_failures == expected_check_failures
+    assert stats.error_logs == expected_error_logs
+    assert stats.warning_logs == expected_warning_logs

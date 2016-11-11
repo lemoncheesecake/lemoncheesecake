@@ -4,7 +4,10 @@ Created on Mar 26, 2016
 @author: nicolas
 '''
 
+import time
+
 from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
+from lemoncheesecake.utils import humanize_duration
 
 __all__ = (
     "LogData", "CheckData", "AttachmentData", "StepData", "TestData",
@@ -105,22 +108,67 @@ class TestSuiteData:
         
         return None
 
+class ReportStats:
+    def __init__(self, report):
+        self.tests = 0
+        self.test_successes = 0
+        self.test_failures = 0
+        self.errors = 0
+        self.checks = 0
+        self.check_successes = 0
+        self.check_failures = 0
+        self.error_logs = 0
+        self.warning_logs = 0
+        
+        for suite in report.testsuites:
+            self._walk_testsuite(suite)
+    
+    def _walk_steps(self, steps):
+        for step in steps:
+            for entry in step.entries:
+                if isinstance(entry, CheckData):
+                    self.checks += 1
+                    if entry.outcome == True:
+                        self.check_successes += 1
+                    elif entry.outcome == False:
+                        self.check_failures += 1
+                if isinstance(entry, LogData):
+                    if entry.level == LOG_LEVEL_WARN:
+                        self.warning_logs += 1
+                    elif entry.level == LOG_LEVEL_ERROR:
+                        self.error_logs += 1
+        
+    def _walk_testsuite(self, suite):
+        if suite.before_suite_has_failure():
+            self.errors += 1
+        self._walk_steps(suite.before_suite_steps)
+        
+        if suite.after_suite_has_failure():
+            self.errors += 1
+        self._walk_steps(suite.after_suite_steps)
+        
+        for test in suite.tests:
+            self.tests += 1
+            if test.outcome == True:
+                self.test_successes += 1
+            elif test.outcome == False:
+                self.test_failures += 1
+            self._walk_steps(test.steps)
+        
+        for sub_suite in suite.sub_testsuites:
+            self._walk_testsuite(sub_suite)
+
 class Report:
     def __init__(self):
         self.info = [ ]
-        self.stats = [ ]
         self.testsuites = [ ]
         self.start_time = None
         self.end_time = None
         self.report_generation_time = None
-        self.reset_stats()
     
     def add_info(self, name, value):
         self.info.append([name, value])
-    
-    def add_stats(self, name, value):
-        self.stats.append([name, value])
-    
+
     def get_test(self, test_id):
         for suite in self.testsuites:
             test = suite.get_test(test_id)
@@ -139,53 +187,18 @@ class Report:
         
         return None
     
-    def reset_stats(self):
-        self.tests = 0
-        self.tests_success = 0
-        self.tests_failure = 0
-        self.errors = 0
-        self.checks = 0
-        self.checks_success = 0
-        self.checks_failure = 0
-        self.error_logs = 0
-        self.warning_logs = 0
+    def get_stats(self):
+        return ReportStats(self)
     
-    def _walk_steps(self, steps):
-        for step in steps:
-            for entry in step.entries:
-                if isinstance(entry, CheckData):
-                    self.checks += 1
-                    if entry.outcome == True:
-                        self.checks_success += 1
-                    elif entry.outcome == False:
-                        self.checks_failure += 1
-                if isinstance(entry, LogData):
-                    if entry.level == LOG_LEVEL_WARN:
-                        self.warning_logs += 1
-                    elif entry.level == LOG_LEVEL_ERROR:
-                        self.error_logs += 1
-    
-    def _walk_testsuite(self, suite):
-        if suite.before_suite_has_failure():
-            self.errors += 1
-        self._walk_steps(suite.before_suite_steps)
-        
-        if suite.after_suite_has_failure():
-            self.errors += 1
-        self._walk_steps(suite.after_suite_steps)
-        
-        for test in suite.tests:
-            self.tests += 1
-            if test.outcome == True:
-                self.tests_success += 1
-            elif test.outcome == False:
-                self.tests_failure += 1
-            self._walk_steps(test.steps)
-        
-        for sub_suite in suite.sub_testsuites:
-            self._walk_testsuite(sub_suite)
-    
-    def refresh_stats(self):
-        self.reset_stats()
-        for suite in self.testsuites:
-            self._walk_testsuite(suite)
+    def serialize_stats(self):
+        stats = self.get_stats()
+        return (
+            ("Start time", time.asctime(time.localtime(self.start_time))),
+            ("End time", time.asctime(time.localtime(self.end_time))),
+            ("Duration", humanize_duration(self.end_time - self.start_time)),
+            ("Tests", str(stats.tests)),
+            ("Successful tests", str(stats.test_successes)),
+            ("Successful tests in %", "%d%%" % (float(stats.test_successes) / stats.tests * 100 if stats.tests else 0)),
+            ("Failed tests", str(stats.test_failures)),
+            ("Errors", str(stats.errors))
+        )

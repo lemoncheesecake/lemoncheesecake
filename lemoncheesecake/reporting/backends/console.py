@@ -112,12 +112,12 @@ class ConsoleBackend(ReportingBackend):
         pass
     
     def end_tests(self):
-        self.report.refresh_stats()
+        report = self.report
+        stats = report.get_stats()
         print()
         print(colored("Statistics", attrs=["bold"]), ":")
-        print(" * Duration: %s" % humanize_duration(self.report.end_time - self.report.start_time))
-        print(" * Tests: %d" % self.report.tests)
-        print(" * Successes: %d (%d%%)" % (self.report.tests_success, float(self.report.tests_success) / self.report.tests * 100 if self.report.tests else 0))
-        print(" * Failures: %d" % (self.report.tests_failure))
+        print(" * Duration: %s" % humanize_duration(report.end_time - report.start_time))
+        print(" * Tests: %d" % stats.tests)
+        print(" * Successes: %d (%d%%)" % (stats.test_successes, float(stats.test_successes) / stats.tests * 100 if stats.tests else 0))
+        print(" * Failures: %d" % (stats.test_failures))
         print()
-        

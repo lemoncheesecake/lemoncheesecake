@@ -87,15 +87,6 @@ class _Runtime:
     def end_tests(self):
         self.report.end_time = time.time()
         self.report.report_generation_time = self.report.end_time
-        self.report.refresh_stats()
-        self.report.add_stats("Start time", time.asctime(time.localtime(self.report.start_time)))
-        self.report.add_stats("End time", time.asctime(time.localtime(self.report.end_time)))
-        self.report.add_stats("Duration", humanize_duration(self.report.end_time - self.report.start_time))
-        self.report.add_stats("Tests", str(self.report.tests))
-        self.report.add_stats("Successful tests", str(self.report.tests_success))
-        self.report.add_stats("Successful tests in %", "%d%%" % (float(self.report.tests_success) / self.report.tests * 100 if self.report.tests else 0))
-        self.report.add_stats("Failed tests", str(self.report.tests_failure))
-        self.report.add_stats("Errors", str(self.report.errors))
         self.for_each_backend(lambda b: b.end_tests())
     
     def begin_before_suite(self, testsuite):        

@@ -30,7 +30,7 @@ def test_simple_test():
     report = get_runtime().report
 
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_tests_success=1, expected_checks_success=1)
+    assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
     
     assert report.get_test("sometest").outcome == True
 
@@ -48,7 +48,7 @@ def test_test_with_all_metadata():
     report = get_runtime().report
 
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_tests_success=1, expected_checks_success=1)
+    assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
 
     assert report.get_test("sometest").outcome == True
 
@@ -66,7 +66,7 @@ def test_testsuite_with_all_metadata():
     report = get_runtime().report
 
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_tests_success=1, expected_checks_success=1)
+    assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
     
     assert report.get_test("sometest").outcome == True
 
@@ -125,8 +125,8 @@ def test_multiple_testsuites_and_tests():
     assert_report_from_testsuites(report, [MySuite1, MySuite2])
     assert_report_stats(
         report,
-        expected_tests_success=6, expected_tests_failure=3,
-        expected_checks_success=6, expected_checks_failure=1, expected_error_logs=2
+        expected_test_successes=6, expected_test_failures=3,
+        expected_check_successes=6, expected_check_failures=1, expected_error_logs=2
     )
     
     assert report.get_test("test_1_1").outcome == True
@@ -152,7 +152,7 @@ def test_check_success():
     report = get_runtime().report
 
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_tests_success=1, expected_checks_success=1)
+    assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
     
     test = report.get_test("test_1")
     assert test.outcome == True
@@ -173,7 +173,7 @@ def test_check_failure():
     report = get_runtime().report
 
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_tests_failure=1, expected_checks_failure=1)
+    assert_report_stats(report, expected_test_failures=1, expected_check_failures=1)
     
     test = report.get_test("test_1")
     assert test.outcome == False
@@ -194,7 +194,7 @@ def test_assert_success():
     report = get_runtime().report
 
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_tests_success=1, expected_checks_success=1)
+    assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
     
     test = report.get_test("test_1")
     assert test.outcome == True
@@ -215,7 +215,7 @@ def test_assert_failure():
     report = get_runtime().report
 
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_tests_failure=1, expected_checks_failure=1, expected_error_logs=1)
+    assert_report_stats(report, expected_test_failures=1, expected_check_failures=1, expected_error_logs=1)
     
     test = report.get_test("test_1")
     assert test.outcome == False
@@ -243,7 +243,7 @@ def test_all_types_of_logs():
 
     assert_report_from_testsuite(report, MySuite)
     assert_report_stats(report, 
-        expected_tests_success=1, expected_tests_failure=1, 
+        expected_test_successes=1, expected_test_failures=1, 
         expected_error_logs=1, expected_warning_logs=1
     )
     
@@ -276,7 +276,7 @@ def test_multiple_steps():
     report = get_runtime().report
 
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_tests_success=1)
+    assert_report_stats(report, expected_test_successes=1)
 
     test = report.get_test("sometest")
     assert test.outcome == True
@@ -298,7 +298,7 @@ def test_default_step():
     report = get_runtime().report
 
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_tests_success=1)
+    assert_report_stats(report, expected_test_successes=1)
     
     test = report.get_test("sometest")
     assert test.outcome == True
@@ -319,7 +319,7 @@ def test_prepare_attachment(tmpdir):
     report = get_runtime().report
     
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_tests_success=1)
+    assert_report_stats(report, expected_test_successes=1)
 
     test = report.get_test("sometest")
     assert test.steps[0].entries[0].filename.endswith("foobar.txt")
@@ -342,7 +342,7 @@ def test_save_attachment_file(tmpdir):
     report = get_runtime().report
     
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_tests_success=1)
+    assert_report_stats(report, expected_test_successes=1)
 
     test = report.get_test("sometest")
     assert test.steps[0].entries[0].filename.endswith("somefile.txt")
@@ -361,7 +361,7 @@ def test_save_attachment_content(tmpdir):
     report = get_runtime().report
     
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_tests_success=1)
+    assert_report_stats(report, expected_test_successes=1)
 
     test = report.get_test("sometest")
     assert test.steps[0].entries[0].filename.endswith("foobar.txt")
@@ -383,7 +383,7 @@ def test_before_suite_success():
     report = get_runtime().report
 
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_tests_success=1)
+    assert_report_stats(report, expected_test_successes=1)
     
     suite = report.get_suite("MySuite")
     assert suite.before_suite_steps[0].entries[0].message == "some log"
@@ -404,7 +404,7 @@ def test_before_suite_failure():
     report = get_runtime().report
 
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_tests_failure=1, expected_errors=1, expected_error_logs=2)
+    assert_report_stats(report, expected_test_failures=1, expected_errors=1, expected_error_logs=2)
     
     suite = report.get_suite("MySuite")
     assert suite.before_suite_steps[0].entries[0].message == "something bad happened"
@@ -425,7 +425,7 @@ def test_after_suite_success():
     report = get_runtime().report
 
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_tests_success=1)
+    assert_report_stats(report, expected_test_successes=1)
     
     suite = report.get_suite("MySuite")
     assert suite.after_suite_steps[0].entries[0].message == "some log"
@@ -446,7 +446,7 @@ def test_after_suite_failure():
     report = get_runtime().report
     
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_tests_success=1, expected_errors=1, expected_error_logs=1)
+    assert_report_stats(report, expected_test_successes=1, expected_errors=1, expected_error_logs=1)
     
     suite = report.get_suite("MySuite")
     assert suite.after_suite_steps[0].entries[0].message == "something bad happened"
