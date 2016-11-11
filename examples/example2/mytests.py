@@ -14,9 +14,11 @@ class OmdbapiWorker(Worker):
     
     def get_movie_info(self, movie, year):
         set_step("Make HTTP request")
-        req = urllib2.urlopen("http://{host}/?t={movie}&y={year}&plot=short&r=json".format(
+        url = "http://{host}/?t={movie}&y={year}&plot=short&r=json".format(
             host=self.host, movie=urllib.quote(movie), year=int(year)
-        ))
+        )
+        log_info("GET %s" % url)
+        req = urllib2.urlopen(url)
         assert_eq("HTTP status code", req.code, 200)
          
         content = req.read()
