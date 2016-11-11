@@ -4,6 +4,7 @@ Created on Nov 1, 2016
 @author: nicolas
 '''
 
+import sys
 import os.path
 import tempfile
 
@@ -14,6 +15,7 @@ from lemoncheesecake.exceptions import *
 import lemoncheesecake as lcc
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
+from lemoncheesecake.reporting.backends.json_ import serialize_report
 
 from helpers import run_testsuite, run_testsuites, assert_report_from_testsuite, assert_report_from_testsuites, assert_report_stats
 
@@ -366,3 +368,87 @@ def test_save_attachment_content(tmpdir):
     assert test.steps[0].entries[0].description == "foobar.txt"
     assert test.outcome == True
     assert open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename)).read() == "foobar"
+
+def test_before_suite_success():
+    class MySuite(lcc.TestSuite):
+        def before_suite(self):
+            lcc.log_info("some log")
+        
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+    
+    run_testsuite(MySuite)
+    
+    report = get_runtime().report
+
+    assert_report_from_testsuite(report, MySuite)
+    assert_report_stats(report, expected_tests_success=1)
+    
+    suite = report.get_suite("MySuite")
+    assert suite.before_suite_steps[0].entries[0].message == "some log"
+    assert suite.before_suite_has_failure() == False
+    assert report.get_test("sometest").outcome == True
+
+def test_before_suite_failure():
+    class MySuite(lcc.TestSuite):
+        def before_suite(self):
+            lcc.log_error("something bad happened")
+        
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+    
+    run_testsuite(MySuite)
+    
+    report = get_runtime().report
+
+    assert_report_from_testsuite(report, MySuite)
+    assert_report_stats(report, expected_tests_failure=1, expected_errors=1, expected_error_logs=2)
+    
+    suite = report.get_suite("MySuite")
+    assert suite.before_suite_steps[0].entries[0].message == "something bad happened"
+    assert suite.before_suite_has_failure() == True
+    assert report.get_test("sometest").outcome == False
+
+def test_after_suite_success():
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+        def after_suite(self):
+            lcc.log_info("some log")
+    
+    run_testsuite(MySuite)
+    
+    report = get_runtime().report
+
+    assert_report_from_testsuite(report, MySuite)
+    assert_report_stats(report, expected_tests_success=1)
+    
+    suite = report.get_suite("MySuite")
+    assert suite.after_suite_steps[0].entries[0].message == "some log"
+    assert suite.after_suite_has_failure() == False
+    assert report.get_test("sometest").outcome == True
+
+def test_after_suite_failure():
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+        def after_suite(self):
+            lcc.log_error("something bad happened")
+        
+    run_testsuite(MySuite)
+    
+    report = get_runtime().report
+    
+    assert_report_from_testsuite(report, MySuite)
+    assert_report_stats(report, expected_tests_success=1, expected_errors=1, expected_error_logs=1)
+    
+    suite = report.get_suite("MySuite")
+    assert suite.after_suite_steps[0].entries[0].message == "something bad happened"
+    assert suite.after_suite_has_failure() == True
+    assert report.get_test("sometest").outcome == True

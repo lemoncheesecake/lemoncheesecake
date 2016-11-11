@@ -14,8 +14,11 @@ from lemoncheesecake.launcher import Launcher, Filter
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.exceptions import *
 import lemoncheesecake as lcc
+from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 
 from helpers import test_backend, run_testsuite
+
+# TODO: make launcher unit tests more independent from the reporting layer ?
 
 def test_test_success(test_backend):
     class MySuite(lcc.TestSuite):
@@ -224,7 +227,7 @@ def test_hook_error_after_test(test_backend):
 
     assert test_backend.get_test_outcome("sometest") == False
 
-def test_hook_error_before_suite(test_backend):
+def test_hook_error_before_suite_because_of_exception(test_backend):
     class MySuite(lcc.TestSuite):
         def before_suite(self):
             1 / 0
@@ -238,15 +241,43 @@ def test_hook_error_before_suite(test_backend):
     assert test_backend.get_last_test_outcome() == False
     assert get_runtime().report.errors == 1
 
-def test_hook_error_after_suite(test_backend):
+def test_hook_error_before_suite_because_of_error_log(test_backend):
     class MySuite(lcc.TestSuite):
-        def after_suite(self):
-            1 / 0
+        def before_suite(self):
+            lcc.log_error("some error")
         
         @lcc.test("Some test")
         def sometest(self):
             pass
 
+    run_testsuite(MySuite)
+
+    assert test_backend.get_last_test_outcome() == False
+    assert get_runtime().report.errors == 1
+
+def test_hook_error_after_suite_because_of_exception(test_backend):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+        def after_suite(self):
+            1 / 0
+        
+    run_testsuite(MySuite)
+
+    assert test_backend.get_last_test_outcome() == True
+    assert get_runtime().report.errors == 1
+
+def test_hook_error_after_suite_because_of_error_log(test_backend):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+        def after_suite(self):
+            lcc.log_error("some error")
+        
     run_testsuite(MySuite)
 
     assert test_backend.get_last_test_outcome() == True

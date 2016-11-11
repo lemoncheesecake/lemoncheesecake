@@ -108,8 +108,11 @@ def assert_testsuite_data_from_testsuite(testsuite_data, testsuite):
     assert len(testsuite_data.sub_testsuites) == len(testsuite.get_sub_testsuites())
     for sub_testsuite_data, sub_testsuite in zip(testsuite_data.sub_testsuites, testsuite.get_sub_testsuites()):
         assert_testsuite_data_from_testsuite(sub_testsuite_data, sub_testsuite)
-    
+
 def assert_report_from_testsuites(report, suite_classes):
+    assert report.start_time != None
+    assert report.end_time != None
+    assert report.report_generation_time != None
     assert len(report.testsuites) == len(suite_classes)
     for testsuite_data, testsuite_class in zip(report.testsuites, suite_classes):
         testsuite = testsuite_class()
@@ -123,6 +126,7 @@ def assert_report_stats(report,
                         expected_tests_success=0, expected_tests_failure=0, expected_errors=0,
                         expected_checks_success=0, expected_checks_failure=0,
                         expected_error_logs=0, expected_warning_logs=0):
+    assert report.tests == expected_tests_success + expected_tests_failure
     assert report.tests_success == expected_tests_success
     assert report.tests_failure == expected_tests_failure
     assert report.errors == expected_errors
