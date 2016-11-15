@@ -7,7 +7,7 @@ Created on Mar 27, 2016
 import re
 import json
 
-from lemoncheesecake.reporting.backend import ReportingBackend
+from lemoncheesecake.reporting.backend import ReportingBackend, FileReportBackend
 from lemoncheesecake.reporting.report import *
 
 JS_PREFIX = "var reporting_data = "
@@ -151,15 +151,15 @@ def unserialize_report_from_file(filename):
     report.testsuites = [ _unserialize_testsuite_data(s) for s in js["suites"] ]
     return report
 
-class JsonBackend(ReportingBackend):
+class JsonBackend(FileReportBackend):
     name = "json"
     
     def __init__(self, javascript_compatibility=True, pretty_formatting=False):
         self.javascript_compatibility = javascript_compatibility
         self.pretty_formatting = pretty_formatting
     
-    def end_tests(self):
+    def serialize_report(self, report, report_dir):
         serialize_report_into_file(
-            self.report, self.report_dir + "/report.json",
+            report, report_dir + "/report.json",
             javascript_compatibility=self.javascript_compatibility, pretty_formatting=self.pretty_formatting
         )

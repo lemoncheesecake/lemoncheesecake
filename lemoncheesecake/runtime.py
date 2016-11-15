@@ -61,7 +61,7 @@ class _Runtime:
         self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
         self.attachment_count = 0
         self.report = Report()
-        self.report_backends = get_enabled_backends()
+        self.reporting_sessions = []
         self.step_lock = False
         self.default_step_description = "-"
         # pointers to report data parts
@@ -73,21 +73,23 @@ class _Runtime:
         self.current_test = None
         self.current_testsuite = None
     
-    def init_report_backends(self):
-        self.for_each_backend(lambda b: b.initialize(self.report, self.report_dir))
-    
-    def for_each_backend(self, callback):
-        for backend in self.report_backends:
-            callback(backend)
+    def initialize_reporting_sessions(self):
+        for backend in get_enabled_backends():
+            session = backend.create_reporting_session(self.report, self.report_dir)
+            self.reporting_sessions.append(session)
+            
+    def for_each_reporting_sessions(self, callback):
+        for session in self.reporting_sessions:
+            callback(session)
     
     def begin_tests(self):
         self.report.start_time = time.time()
-        self.for_each_backend(lambda b: b.begin_tests())
+        self.for_each_reporting_sessions(lambda b: b.begin_tests())
     
     def end_tests(self):
         self.report.end_time = time.time()
         self.report.report_generation_time = self.report.end_time
-        self.for_each_backend(lambda b: b.end_tests())
+        self.for_each_reporting_sessions(lambda b: b.end_tests())
     
     def begin_before_suite(self, testsuite):        
         self.current_testsuite = testsuite
@@ -103,21 +105,21 @@ class _Runtime:
         self.current_testsuite_data = suite_data
         self.current_step_data_list = self.current_testsuite_data.before_suite_steps
 
-        self.for_each_backend(lambda b: b.begin_before_suite(testsuite))
+        self.for_each_reporting_sessions(lambda b: b.begin_before_suite(testsuite))
     
     def end_before_suite(self):
         self.current_testsuite_data.before_suite_end_time = time.time()
-        self.for_each_backend(lambda b: b.end_before_suite(self.current_testsuite))
+        self.for_each_reporting_sessions(lambda b: b.end_before_suite(self.current_testsuite))
         
     def begin_after_suite(self, testsuite):
         self.current_testsuite_data.after_suite_start_time = time.time()
         self.current_step_data_list = self.current_testsuite_data.after_suite_steps
-        self.for_each_backend(lambda b: b.begin_after_suite(testsuite))
+        self.for_each_reporting_sessions(lambda b: b.begin_after_suite(testsuite))
 
     def end_after_suite(self):
         self.current_testsuite_data.after_suite_end_time = time.time()
         self.current_testsuite_data = self.current_testsuite_data.parent
-        self.for_each_backend(lambda b: b.end_after_suite(self.current_testsuite))
+        self.for_each_reporting_sessions(lambda b: b.end_after_suite(self.current_testsuite))
         self.current_testsuite = None
         
     def begin_test(self, test):
@@ -128,7 +130,7 @@ class _Runtime:
         self.current_test_data.links.extend(test.links)
         self.current_test_data.start_time = time.time()
         self.current_testsuite_data.tests.append(self.current_test_data)
-        self.for_each_backend(lambda b: b.begin_test(test))
+        self.for_each_reporting_sessions(lambda b: b.begin_test(test))
         self.current_step_data_list = self.current_test_data.steps
             
     def end_test(self):
@@ -136,7 +138,7 @@ class _Runtime:
             self.current_test_data.outcome = True
         self.current_test_data.end_time = time.time()
         
-        self.for_each_backend(lambda b: b.end_test(self.current_test, self.current_test_data.outcome))
+        self.for_each_reporting_sessions(lambda b: b.end_test(self.current_test, self.current_test_data.outcome))
 
         self.current_test = None
         self.current_test_data = None
@@ -157,12 +159,12 @@ class _Runtime:
             del self.current_step_data_list[-1]
         self.current_step_data_list.append(self.current_step_data)
 
-        self.for_each_backend(lambda b: b.set_step(description))
+        self.for_each_reporting_sessions(lambda b: b.set_step(description))
         
     def log(self, level, content):
         self.create_step_if_needed()
         self.current_step_data.entries.append(LogData(level, content))
-        self.for_each_backend(lambda b: b.log(level, content))
+        self.for_each_reporting_sessions(lambda b: b.log(level, content))
     
     def log_debug(self, content):
         self.log(LOG_LEVEL_DEBUG, content)
@@ -188,7 +190,7 @@ class _Runtime:
         if outcome == False:
             self.current_test_data.outcome = False
         
-        self.for_each_backend(lambda b: b.check(description, outcome, details))
+        self.for_each_reporting_sessions(lambda b: b.check(description, outcome, details))
         
         return outcome
     

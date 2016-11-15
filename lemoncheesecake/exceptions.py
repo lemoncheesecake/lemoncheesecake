@@ -19,6 +19,10 @@ class LemonCheesecakeInternalError(LemonCheesecakeException):
 class ProgrammingError(LemonCheesecakeException):
     message_prefix = "Programing error"
 
+class MethodNotImplemented(ProgrammingError):
+    def __init__(self, obj, method_name):
+        ProgrammingError.__init__(self, "Class '%s' must implement the method '%s'" % (obj.__class__._name__, method_name))
+
 class ImportTestSuiteError(LemonCheesecakeException):
     message_prefix = "Cannot import testsuite"
 

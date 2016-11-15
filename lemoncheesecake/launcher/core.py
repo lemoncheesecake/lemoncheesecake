@@ -244,7 +244,7 @@ class Launcher:
             os.symlink(report_dir, symlink_path)
         initialize_runtime(report_dir)
         rt = get_runtime()
-        rt.init_report_backends()
+        rt.initialize_reporting_sessions()
         self.abort_all_tests = False
         self.abort_testsuite = None
         

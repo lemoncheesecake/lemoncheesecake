@@ -9,7 +9,7 @@ from __future__ import print_function
 import sys
 import re
 
-from lemoncheesecake.reporting.backend import ReportingBackend
+from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
 from lemoncheesecake.utils import IS_PYTHON3, humanize_duration
 
 from colorama import init, Style, Fore
@@ -48,10 +48,9 @@ CTX_BEFORE_SUITE = 0
 CTX_TEST = 1
 CTX_AFTER_SUITE = 2
 
-class ConsoleBackend(ReportingBackend):
-    name = "console"
-    
-    def __init__(self):
+class ConsoleReportingSession(ReportingSession):
+    def __init__(self, report, report_dir):
+        ReportingSession.__init__(self, report, report_dir)
         init() # init colorama
         self.lp = LinePrinter()
     
@@ -121,3 +120,9 @@ class ConsoleBackend(ReportingBackend):
         print(" * Successes: %d (%d%%)" % (stats.test_successes, float(stats.test_successes) / stats.tests * 100 if stats.tests else 0))
         print(" * Failures: %d" % (stats.test_failures))
         print()
+
+class ConsoleBackend(ReportingBackend):
+    name = "console"
+
+    def create_reporting_session(self, report, report_dir):
+        return ConsoleReportingSession(report, report_dir)

@@ -16,7 +16,7 @@ from lemoncheesecake.exceptions import *
 import lemoncheesecake as lcc
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 
-from helpers import test_backend, run_testsuite
+from helpers import reporting_session, run_testsuite
 
 # TODO: make launcher unit tests more independent from the reporting layer ?
 
@@ -24,7 +24,7 @@ def assert_report_errors(errors):
     stats = get_runtime().report.get_stats()
     assert stats.errors == errors
 
-def test_test_success(test_backend):
+def test_test_success(reporting_session):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
@@ -32,9 +32,9 @@ def test_test_success(test_backend):
     
     run_testsuite(MySuite)
     
-    assert test_backend.get_last_test_outcome() == True
+    assert reporting_session.get_last_test_outcome() == True
 
-def test_test_failure(test_backend):
+def test_test_failure(reporting_session):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
@@ -42,9 +42,9 @@ def test_test_failure(test_backend):
     
     run_testsuite(MySuite)
     
-    assert test_backend.get_last_test_outcome() == False
+    assert reporting_session.get_last_test_outcome() == False
 
-def test_exception_unexpected(test_backend):
+def test_exception_unexpected(reporting_session):
     class MySuite(lcc.TestSuite):
         @lcc.test("First test")
         def first_test(self):
@@ -56,10 +56,10 @@ def test_exception_unexpected(test_backend):
     
     run_testsuite(MySuite)
     
-    assert test_backend.get_test_outcome("first_test") == False
-    assert test_backend.get_test_outcome("second_test") == True
+    assert reporting_session.get_test_outcome("first_test") == False
+    assert reporting_session.get_test_outcome("second_test") == True
 
-def test_excepion_aborttest(test_backend):
+def test_excepion_aborttest(reporting_session):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
@@ -71,10 +71,10 @@ def test_excepion_aborttest(test_backend):
         
     run_testsuite(MySuite)
     
-    assert test_backend.get_test_outcome("sometest") == False
-    assert test_backend.get_test_outcome("someothertest") == True
+    assert reporting_session.get_test_outcome("sometest") == False
+    assert reporting_session.get_test_outcome("someothertest") == True
 
-def test_exception_aborttestsuite(test_backend):
+def test_exception_aborttestsuite(reporting_session):
     class MySuite(lcc.TestSuite):
         class MyFirstSuite(lcc.TestSuite):
             @lcc.test("Some test")
@@ -92,11 +92,11 @@ def test_exception_aborttestsuite(test_backend):
     
     run_testsuite(MySuite)
     
-    assert test_backend.get_test_outcome("sometest") == False
-    assert test_backend.get_test_outcome("someothertest") == False
-    assert test_backend.get_test_outcome("anothertest") == True
+    assert reporting_session.get_test_outcome("sometest") == False
+    assert reporting_session.get_test_outcome("someothertest") == False
+    assert reporting_session.get_test_outcome("anothertest") == True
 
-def test_exception_abortalltests(test_backend):
+def test_exception_abortalltests(reporting_session):
     class MySuite(lcc.TestSuite):
         class MyFirstSuite(lcc.TestSuite):
             @lcc.test("Some test")
@@ -114,11 +114,11 @@ def test_exception_abortalltests(test_backend):
     
     run_testsuite(MySuite)
     
-    assert test_backend.get_test_outcome("sometest") == False
-    assert test_backend.get_test_outcome("someothertest") == False
-    assert test_backend.get_test_outcome("anothertest") == False
+    assert reporting_session.get_test_outcome("sometest") == False
+    assert reporting_session.get_test_outcome("someothertest") == False
+    assert reporting_session.get_test_outcome("anothertest") == False
 
-def test_generated_test(test_backend):
+def test_generated_test(reporting_session):
     class MySuite(lcc.TestSuite):
         def load_generated_tests(self):
             def test_func(suite):
@@ -128,9 +128,9 @@ def test_generated_test(test_backend):
     
     run_testsuite(MySuite)
     
-    assert test_backend.get_test_outcome("mytest")
+    assert reporting_session.get_test_outcome("mytest")
 
-def test_sub_testsuite_inline(test_backend):
+def test_sub_testsuite_inline(reporting_session):
     class MyParentSuite(lcc.TestSuite):
         class MyChildSuite(lcc.TestSuite):
             @lcc.test("Some test")
@@ -139,9 +139,9 @@ def test_sub_testsuite_inline(test_backend):
     
     run_testsuite(MyParentSuite)
     
-    assert test_backend.get_test_outcome("sometest") == True
+    assert reporting_session.get_test_outcome("sometest") == True
 
-def test_sub_testsuite_attr(test_backend):
+def test_sub_testsuite_attr(reporting_session):
     class MyChildSuite(lcc.TestSuite):
             @lcc.test("Some test")
             def sometest(self):
@@ -151,9 +151,9 @@ def test_sub_testsuite_attr(test_backend):
     
     run_testsuite(MyParentSuite)
     
-    assert test_backend.get_test_outcome("sometest") == True
+    assert reporting_session.get_test_outcome("sometest") == True
 
-def test_hook_before_test(test_backend):
+def test_hook_before_test(reporting_session):
     class MySuite(lcc.TestSuite):
         def before_test(self, test_name):
             lcc.log_info("hook called")
@@ -164,9 +164,9 @@ def test_hook_before_test(test_backend):
 
     run_testsuite(MySuite)
 
-    assert test_backend.get_last_log() == "hook called"
+    assert reporting_session.get_last_log() == "hook called"
 
-def test_hook_after_test(test_backend):
+def test_hook_after_test(reporting_session):
     class MySuite(lcc.TestSuite):
         def after_test(self, test_name):
             lcc.log_info("hook called")
@@ -177,9 +177,9 @@ def test_hook_after_test(test_backend):
 
     run_testsuite(MySuite)
 
-    assert test_backend.get_last_log() == "hook called"
+    assert reporting_session.get_last_log() == "hook called"
 
-def test_hook_before_suite(test_backend):
+def test_hook_before_suite(reporting_session):
     class MySuite(lcc.TestSuite):
         def before_suite(self):
             lcc.log_info("hook called")
@@ -190,9 +190,9 @@ def test_hook_before_suite(test_backend):
 
     run_testsuite(MySuite)
 
-    assert test_backend.get_last_log() == "hook called"
+    assert reporting_session.get_last_log() == "hook called"
 
-def test_hook_after_suite(test_backend):
+def test_hook_after_suite(reporting_session):
     class MySuite(lcc.TestSuite):
         def after_suite(self):
             lcc.log_info("hook called")
@@ -203,9 +203,9 @@ def test_hook_after_suite(test_backend):
 
     run_testsuite(MySuite)
 
-    assert test_backend.get_last_log() == "hook called"
+    assert reporting_session.get_last_log() == "hook called"
 
-def test_hook_error_before_test(test_backend):
+def test_hook_error_before_test(reporting_session):
     class MySuite(lcc.TestSuite):
         def before_test(self, test_name):
             1 / 0
@@ -216,9 +216,9 @@ def test_hook_error_before_test(test_backend):
 
     run_testsuite(MySuite)
 
-    assert test_backend.get_test_outcome("sometest") == False
+    assert reporting_session.get_test_outcome("sometest") == False
 
-def test_hook_error_after_test(test_backend):
+def test_hook_error_after_test(reporting_session):
     class MySuite(lcc.TestSuite):
         def after_test(self, test_name):
             1 / 0
@@ -229,9 +229,9 @@ def test_hook_error_after_test(test_backend):
 
     run_testsuite(MySuite)
 
-    assert test_backend.get_test_outcome("sometest") == False
+    assert reporting_session.get_test_outcome("sometest") == False
 
-def test_hook_error_before_suite_because_of_exception(test_backend):
+def test_hook_error_before_suite_because_of_exception(reporting_session):
     class MySuite(lcc.TestSuite):
         def before_suite(self):
             1 / 0
@@ -242,10 +242,10 @@ def test_hook_error_before_suite_because_of_exception(test_backend):
 
     run_testsuite(MySuite)
 
-    assert test_backend.get_last_test_outcome() == False
+    assert reporting_session.get_last_test_outcome() == False
     assert_report_errors(1)
 
-def test_hook_error_before_suite_because_of_error_log(test_backend):
+def test_hook_error_before_suite_because_of_error_log(reporting_session):
     class MySuite(lcc.TestSuite):
         def before_suite(self):
             lcc.log_error("some error")
@@ -256,10 +256,10 @@ def test_hook_error_before_suite_because_of_error_log(test_backend):
 
     run_testsuite(MySuite)
 
-    assert test_backend.get_last_test_outcome() == False
+    assert reporting_session.get_last_test_outcome() == False
     assert_report_errors(1)
 
-def test_hook_error_after_suite_because_of_exception(test_backend):
+def test_hook_error_after_suite_because_of_exception(reporting_session):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
@@ -270,10 +270,10 @@ def test_hook_error_after_suite_because_of_exception(test_backend):
         
     run_testsuite(MySuite)
 
-    assert test_backend.get_last_test_outcome() == True
+    assert reporting_session.get_last_test_outcome() == True
     assert_report_errors(1)
 
-def test_hook_error_after_suite_because_of_error_log(test_backend):
+def test_hook_error_after_suite_because_of_error_log(reporting_session):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
@@ -284,7 +284,7 @@ def test_hook_error_after_suite_because_of_error_log(test_backend):
         
     run_testsuite(MySuite)
 
-    assert test_backend.get_last_test_outcome() == True
+    assert reporting_session.get_last_test_outcome() == True
     assert_report_errors(1)
 
 def test_metadata_policy():

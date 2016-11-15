@@ -7,7 +7,7 @@ Created on Mar 27, 2016
 from lxml import etree as ET
 from lxml.builder import E
 
-from lemoncheesecake.reporting.backend import ReportingBackend
+from lemoncheesecake.reporting.backend import ReportingBackend, FileReportBackend
 from lemoncheesecake.reporting.report import *
 from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.exceptions import ProgrammingError
@@ -243,14 +243,14 @@ def unserialize_report_from_file(filename):
         data.testsuites.append(_unserialize_testsuite_data(xml_suite))
     
     return data
-    
-class XmlBackend(ReportingBackend):
+
+class XmlBackend(FileReportBackend):
     name = "xml"
     
     def __init__(self):
         self.indent_level = DEFAULT_INDENT_LEVEL
-    
-    def end_tests(self):
+     
+    def serialize_report(self, report, report_dir):
         serialize_report_into_file(
-            self.report, self.report_dir + "/report.xml", self.indent_level
+            report, report_dir + "/report.xml", self.indent_level
         )

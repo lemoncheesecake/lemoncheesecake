@@ -4,13 +4,13 @@ Created on Mar 29, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.exceptions import UnknownReportBackendError
+from lemoncheesecake.exceptions import UnknownReportBackendError, MethodNotImplemented
 
 __all__ = (
     "register_backend", "get_backend", "has_backend", "enable_backend", "disable_backend", 
     "only_enable_backends", "get_enabled_backend_names", "get_enabled_backends",
     "register_default_backends",
-    "ReportingBackend"
+    "ReportingBackend", "ReportingSession"
 )
 
 _backends = { }
@@ -54,8 +54,8 @@ def get_enabled_backend_names():
 def get_enabled_backends():
     return [_backends[b] for b in _enabled_backends]
 
-class ReportingBackend:
-    def initialize(self, report, report_dir):
+class ReportingSession:
+    def __init__(self, report, report_dir):
         self.report = report
         self.report_dir = report_dir
     
@@ -91,6 +91,46 @@ class ReportingBackend:
     
     def check(self, description, outcome, details=None):
         pass
+
+class ReportingBackend:
+    def can_handle_reporting_session(self):
+        return False
+    
+    def can_serialize_report(self):
+        return False
+    
+    def can_unserialize_report(self):
+        return False
+    
+    def create_reporting_session(self, report, report_dir):
+        raise MethodNotImplemented(self, "create_reporting_session")
+    
+    def serialize_report(self, report, report_dir):
+        raise MethodNotImplemented(self, "serialize_report")
+    
+    def unserialize_report_from_file(self, report_filename):
+        raise MethodNotImplemented(self, "unserialize_report_from_file")
+    
+    def unserialize_report_from_dir(self, report_dir):
+        raise MethodNotImplemented(self, "unserialize_report_from_dir")
+
+class FileReportSession(ReportingSession):
+    def __init__(self, report, report_dir, backend):
+        ReportingSession.__init__(self, report, report_dir)
+        self.backend = backend
+    
+    def end_tests(self):
+        self.backend.serialize_report(self.report, self.report_dir)
+
+class FileReportBackend(ReportingBackend):
+    def can_handle_reporting_session(self):
+        return True
+    
+    def can_serialize_report(self):
+        return True
+    
+    def create_reporting_session(self, report, report_dir):
+        return FileReportSession(report, report_dir, self)
 
 def register_default_backends():
     from lemoncheesecake.reporting.backends import ConsoleBackend, XmlBackend, JsonBackend, HtmlBackend

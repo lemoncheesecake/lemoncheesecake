@@ -25,7 +25,7 @@ class {name}(TestSuite):
         pass
 """.format(name=name)
 
-class TestBackend(reporting.ReportingBackend):
+class ReportingSession(reporting.ReportingSession):
     def __init__(self):
         self._test_outcomes = {}
         self._last_test_outcome = None
@@ -57,15 +57,26 @@ class TestBackend(reporting.ReportingBackend):
     def log(self, level, content):
         self._last_log = content
 
-def get_test_backend():
-    backend = TestBackend()
+def get_reporting_session():
+    class ReportingBackend(reporting.ReportingBackend):
+        def __init__(self, reporting_session):
+            self.reporting_session = reporting_session
+        
+        def can_handle_reporting_session(self):
+            return True
+        
+        def create_reporting_session(self, report, report_dir):
+            return self.reporting_session
+
+    reporting_session = ReportingSession()
+    backend = ReportingBackend(reporting_session)
     reporting.register_backend("test", backend)
     reporting.only_enable_backends(["test"])
-    return backend
+    return reporting_session
 
 @pytest.fixture()
-def test_backend():
-    return get_test_backend()
+def reporting_session():
+    return get_reporting_session()
 
 def run_testsuites(suites, tmpdir=None):
     launcher = Launcher()
