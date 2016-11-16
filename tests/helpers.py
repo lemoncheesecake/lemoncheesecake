@@ -59,11 +59,10 @@ class ReportingSession(reporting.ReportingSession):
 
 def get_reporting_session():
     class ReportingBackend(reporting.ReportingBackend):
+        name = "test_backend"
+        
         def __init__(self, reporting_session):
             self.reporting_session = reporting_session
-        
-        def can_handle_reporting_session(self):
-            return True
         
         def create_reporting_session(self, report, report_dir):
             return self.reporting_session
@@ -71,7 +70,7 @@ def get_reporting_session():
     reporting_session = ReportingSession()
     backend = ReportingBackend(reporting_session)
     reporting.register_backend("test", backend)
-    reporting.only_enable_backends(["test"])
+    reporting.set_enabled_backends(["test"])
     return reporting_session
 
 @pytest.fixture()

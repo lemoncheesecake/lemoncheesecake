@@ -74,7 +74,7 @@ class _Runtime:
         self.current_testsuite = None
     
     def initialize_reporting_sessions(self):
-        for backend in get_enabled_backends():
+        for backend in get_backends():
             session = backend.create_reporting_session(self.report, self.report_dir)
             self.reporting_sessions.append(session)
             

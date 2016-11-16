@@ -56,7 +56,7 @@ class Launcher:
         self.cli_run_parser.add_argument("--link", "-l", nargs="+", default=[], help="Filters on test & test suite link names")
         self.cli_run_parser.add_argument("--report-dir", "-r", required=False, help="Directory where report data will be stored")
         self.cli_run_parser.add_argument("--reporting", nargs="+", required=False,
-            help="The list of reporting backends to use (default: %s)" % ", ".join(sorted(reporting.get_enabled_backend_names()))
+            help="The list of reporting backends to use (default: %s)" % ", ".join(sorted(reporting.get_backend_names()))
         )
         self.cli_run_parser.add_argument("--enable-reporting", nargs="+", required=False,
             help="The list of reporting backends to add (to base backends)"
@@ -282,7 +282,7 @@ class Launcher:
         
         # report backends
         if args.reporting:
-            reporting.only_enable_backends(args.reporting)
+            reporting.set_enabled_backends(args.reporting)
         if args.enable_reporting:
             for backend in args.enable_reporting:
                 reporting.enable_backend(backend)

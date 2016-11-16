@@ -8,13 +8,17 @@ from lemoncheesecake.exceptions import UnknownReportBackendError, MethodNotImple
 
 __all__ = (
     "register_backend", "get_backend", "has_backend", "enable_backend", "disable_backend", 
-    "only_enable_backends", "get_enabled_backend_names", "get_enabled_backends",
+    "set_enabled_backends", "get_backend_names", "get_backends",
     "register_default_backends",
     "ReportingBackend", "ReportingSession"
 )
 
 _backends = { }
 _enabled_backends = set()
+
+CAPABILITY_REPORTING_SESSION = 0x1
+CAPABILITY_SERIALIZE = 0x2
+CAPABILITY_UNSERIALIZE = 0x4
 
 def _assert_backend_name(name):
     if name not in _backends:
@@ -41,18 +45,21 @@ def disable_backend(name):
     _assert_backend_name(name)
     _enabled_backends.discard(name)
 
-def only_enable_backends(names):
+def set_enabled_backends(names):
     for name in names:
         _assert_backend_name(name)
 
     _enabled_backends.clear()
     _enabled_backends.update(names)
 
-def get_enabled_backend_names():
-    return list(_enabled_backends)
+def get_backends(capabilities=CAPABILITY_REPORTING_SESSION, enabled_backends_only=True):
+    backend_names = _enabled_backends if enabled_backends_only else _backends.keys()
+    return [
+        _backends[name] for name in backend_names if _backends[name].get_capabilities() & capabilities == capabilities
+    ]
 
-def get_enabled_backends():
-    return [_backends[b] for b in _enabled_backends]
+def get_backend_names(capabilities=CAPABILITY_REPORTING_SESSION, enabled_backends_only=True):
+    return [ backend.name for backend in get_backends(capabilities, enabled_backends_only) ]
 
 class ReportingSession:
     def __init__(self, report, report_dir):
@@ -93,14 +100,8 @@ class ReportingSession:
         pass
 
 class ReportingBackend:
-    def can_handle_reporting_session(self):
-        return False
-    
-    def can_serialize_report(self):
-        return False
-    
-    def can_unserialize_report(self):
-        return False
+    def get_capabilities(self):
+        return CAPABILITY_REPORTING_SESSION
     
     def create_reporting_session(self, report, report_dir):
         raise MethodNotImplemented(self, "create_reporting_session")
@@ -123,11 +124,8 @@ class FileReportSession(ReportingSession):
         self.backend.serialize_report(self.report, self.report_dir)
 
 class FileReportBackend(ReportingBackend):
-    def can_handle_reporting_session(self):
-        return True
-    
-    def can_serialize_report(self):
-        return True
+    def get_capabilities(self):
+        return CAPABILITY_REPORTING_SESSION | CAPABILITY_SERIALIZE
     
     def create_reporting_session(self, report, report_dir):
         return FileReportSession(report, report_dir, self)
@@ -139,6 +137,6 @@ def register_default_backends():
     for backend in backends:
         register_backend(backend.name, backend())
     
-    only_enable_backends((ConsoleBackend.name, JsonBackend.name, HtmlBackend.name))
+    set_enabled_backends((ConsoleBackend.name, JsonBackend.name, HtmlBackend.name))
 
 register_default_backends()
