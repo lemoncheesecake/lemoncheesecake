@@ -144,7 +144,8 @@ class Launcher:
 
         if not self.abort_testsuite and not self.abort_all_tests:
             try:
-                suite.before_suite()
+                if suite.has_hook("before_suite"):
+                    suite.before_suite()
             except Exception as e:
                 handle_exception(e)
                 self.abort_testsuite = suite
@@ -168,7 +169,8 @@ class Launcher:
                 continue
 
             try:
-                suite.before_test(test.id)
+                if suite.has_hook("before_test"):
+                    suite.before_test(test.id)
                 test.callback(suite)
             except Exception as e:
                 handle_exception(e)
@@ -177,14 +179,15 @@ class Launcher:
             except KeyboardInterrupt as e:
                 handle_exception(e)
             
-            try:
-                suite.after_test(test.id)
-            except Exception as e:
-                handle_exception(e)
-                rt.end_test()
-                continue
-            except KeyboardInterrupt as e:
-                handle_exception(e)
+            if suite.has_hook("after_test"):
+                try:
+                    suite.after_test(test.id)
+                except Exception as e:
+                    handle_exception(e)
+                    rt.end_test()
+                    continue
+                except KeyboardInterrupt as e:
+                    handle_exception(e)
             
             rt.end_test()
         
@@ -193,12 +196,13 @@ class Launcher:
 
         rt.begin_after_suite(suite)
 
-        try:
-            suite.after_suite()
-        except Exception as e:
-            handle_exception(e)
-        except KeyboardInterrupt as e:
-            handle_exception(e)
+        if suite.has_hook("after_suite"):
+            try:
+                suite.after_suite()
+            except Exception as e:
+                handle_exception(e)
+            except KeyboardInterrupt as e:
+                handle_exception(e)
             
         rt.end_after_suite()
         

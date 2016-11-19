@@ -26,3 +26,9 @@ def humanize_duration(duration):
         ret = "0s"
     
     return ret
+
+def object_has_method(obj, method_name):
+    try:
+        return callable(getattr(obj, method_name))
+    except AttributeError:
+        return False

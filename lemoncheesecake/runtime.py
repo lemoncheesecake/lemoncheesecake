@@ -91,13 +91,12 @@ class _Runtime:
         self.report.report_generation_time = self.report.end_time
         self.for_each_reporting_sessions(lambda b: b.end_tests())
     
-    def begin_before_suite(self, testsuite):        
+    def begin_before_suite(self, testsuite):
         self.current_testsuite = testsuite
         suite_data = TestSuiteData(testsuite.id, testsuite.description, self.current_testsuite_data)
         suite_data.tags.extend(testsuite.tags)
         suite_data.properties.update(testsuite.properties)
         suite_data.links.extend(testsuite.links)
-        suite_data.before_suite_start_time = time.time()
         if self.current_testsuite_data:
             self.current_testsuite_data.sub_testsuites.append(suite_data)
         else:
@@ -105,19 +104,25 @@ class _Runtime:
         self.current_testsuite_data = suite_data
         self.current_step_data_list = self.current_testsuite_data.before_suite_steps
 
+        if testsuite.has_hook("before_testsuite"):
+            suite_data.before_suite_start_time = time.time()
+
         self.for_each_reporting_sessions(lambda b: b.begin_before_suite(testsuite))
     
     def end_before_suite(self):
-        self.current_testsuite_data.before_suite_end_time = time.time()
+        if self.current_testsuite_data.before_suite_start_time:
+            self.current_testsuite_data.before_suite_end_time = time.time()
         self.for_each_reporting_sessions(lambda b: b.end_before_suite(self.current_testsuite))
         
     def begin_after_suite(self, testsuite):
-        self.current_testsuite_data.after_suite_start_time = time.time()
+        if testsuite.has_hook("after_suite"):
+            self.current_testsuite_data.after_suite_start_time = time.time()
         self.current_step_data_list = self.current_testsuite_data.after_suite_steps
         self.for_each_reporting_sessions(lambda b: b.begin_after_suite(testsuite))
 
     def end_after_suite(self):
-        self.current_testsuite_data.after_suite_end_time = time.time()
+        if self.current_testsuite_data.after_suite_start_time:
+            self.current_testsuite_data.after_suite_end_time = time.time()
         self.current_testsuite_data = self.current_testsuite_data.parent
         self.for_each_reporting_sessions(lambda b: b.end_after_suite(self.current_testsuite))
         self.current_testsuite = None

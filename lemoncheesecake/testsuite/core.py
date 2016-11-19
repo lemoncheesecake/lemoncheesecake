@@ -7,6 +7,7 @@ Created on Sep 8, 2016
 import inspect
 
 from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError
+from lemoncheesecake.utils import object_has_method
 
 __all__ = "TestSuite", "Test"
 
@@ -25,12 +26,15 @@ class Test:
         
     def __str__(self):
         return "%s (%s) # %d" % (self.id, self.description, self.rank)
-        
+
 class TestSuite:
     tags = [ ]
     properties = {}
     links = [ ]
     sub_suites = [ ]        
+    
+    def has_hook(self, hook_name):
+        return object_has_method(self, hook_name)
     
     def load(self, parent_suite=None):
         self.parent_suite = parent_suite
@@ -209,23 +213,3 @@ class TestSuite:
     
     def is_test_selected(self, test):
         return test.id in self._selected_test_ids
-    
-    ###
-    # Hooks
-    ###
-    
-    def before_suite(self):
-        """Hook method called before running the tests (and sub testsuites) of the testsuite"""
-        pass
-    
-    def after_suite(self):
-        """Hook method called after running the tests (and sub testsuites) of the testsuite"""
-        pass
-
-    def before_test(self, test_name):
-        """Hook method called before running each test of the testsuite"""
-        pass
-    
-    def after_test(self, test_name):
-        """Hook method called after running each test of the testsuite"""
-        pass
