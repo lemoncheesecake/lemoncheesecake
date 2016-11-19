@@ -1,6 +1,6 @@
 *.pyc
 .*project
-myproject/reports/*
+.settings
 .DS_Store
 .cache
 examples/*/last_report
