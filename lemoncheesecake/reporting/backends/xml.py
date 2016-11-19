@@ -4,10 +4,12 @@ Created on Mar 27, 2016
 @author: nicolas
 '''
 
+import os.path
+
 from lxml import etree as ET
 from lxml.builder import E
 
-from lemoncheesecake.reporting.backend import ReportingBackend, FileReportBackend
+from lemoncheesecake.reporting.backend import ReportingBackend, FileReportBackend, CAPABILITY_UNSERIALIZE
 from lemoncheesecake.reporting.report import *
 from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.exceptions import ProgrammingError
@@ -55,7 +57,7 @@ def _xml_child(parent_node, name, *args):
 def _add_time_attr(node, name, value):
     if not value:
         return
-    node.attrib[name] = "%.3f" % value
+    node.attrib[name] = "%f" % value
 
 def _serialize_outcome(outcome):
     if outcome == True:
@@ -127,7 +129,7 @@ def _serialize_testsuite_data(suite):
         suite_node.append(sub_suite_node)
     
     # after suite
-    if suite.before_suite_steps:
+    if suite.after_suite_steps:
         after_suite_node = _xml_child(suite_node, "after-suite")
         _add_time_attr(after_suite_node, "start-time", suite.after_suite_start_time)
         _add_time_attr(after_suite_node, "end-time", suite.after_suite_end_time)
@@ -136,7 +138,7 @@ def _serialize_testsuite_data(suite):
     return suite_node
 
 def serialize_report_as_tree(report):
-    xml = E("lemoncheesecake-xml")
+    xml = E("lemoncheesecake-report")
     _add_time_attr(xml, "start-time", report.start_time)
     _add_time_attr(xml, "end-time", report.end_time)
     _add_time_attr(xml, "generation-time", report.report_generation_time)
@@ -192,16 +194,16 @@ def _unserialize_test_data(xml):
     test.start_time = float(xml.attrib["start-time"])
     test.end_time = float(xml.attrib["end-time"])
     test.tags = [ node.text for node in xml.xpath("tag") ]
-    test.properties = { node.attrib["name"]: node.text for node in xml.xpath("properties") }
-    test.links = [ [link.attrib["name"], link.text] for link in xml.xpath("link") ]
+    test.properties = { node.attrib["name"]: node.text for node in xml.xpath("property") }
+    test.links = [ (link.text, link.attrib["name"]) for link in xml.xpath("link") ]
     test.steps = [ _unserialize_step_data(s) for s in xml.xpath("step") ]
     return test
 
 def _unserialize_testsuite_data(xml, parent=None):
     suite = TestSuiteData(xml.attrib["id"], xml.attrib["description"], parent)
     suite.tags = [ node.text for node in xml.xpath("tag") ]
-    suite.properties = { node.attrib["name"]: node.text for node in xml.xpath("properties") }
-    suite.links = [ [link.attrib["name"], link.text] for link in xml.xpath("link") ]
+    suite.properties = { node.attrib["name"]: node.text for node in xml.xpath("property") }
+    suite.links = [ (link.text, link.attrib["name"]) for link in xml.xpath("link") ]
     
     before_suite = xml.xpath("before-suite")
     before_suite = before_suite[0] if len(before_suite) > 0 else None
@@ -249,8 +251,16 @@ class XmlBackend(FileReportBackend):
     
     def __init__(self):
         self.indent_level = DEFAULT_INDENT_LEVEL
+    
+    def get_capabilities(self):
+        return FileReportBackend.get_capabilities(self) | CAPABILITY_UNSERIALIZE
      
     def serialize_report(self, report, report_dir):
         serialize_report_into_file(
-            report, report_dir + "/report.xml", self.indent_level
+            report, os.path.join(report_dir, "report.xml"), self.indent_level
         )
+    
+    def unserialize_report(self, report_path):
+        if os.path.isdir(report_path):
+            report_path = os.path.join(report_path, "report.xml")
+        return unserialize_report_from_file(report_path)

@@ -109,11 +109,8 @@ class ReportingBackend:
     def serialize_report(self, report, report_dir):
         raise MethodNotImplemented(self, "serialize_report")
     
-    def unserialize_report_from_file(self, report_filename):
+    def unserialize_report(self, report_path):
         raise MethodNotImplemented(self, "unserialize_report_from_file")
-    
-    def unserialize_report_from_dir(self, report_dir):
-        raise MethodNotImplemented(self, "unserialize_report_from_dir")
 
 class FileReportSession(ReportingSession):
     def __init__(self, report, report_dir, backend):

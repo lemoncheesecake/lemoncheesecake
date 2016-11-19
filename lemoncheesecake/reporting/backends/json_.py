@@ -4,6 +4,7 @@ Created on Mar 27, 2016
 @author: nicolas
 '''
 
+import os
 import re
 import json
 
@@ -13,7 +14,7 @@ from lemoncheesecake.reporting.report import *
 JS_PREFIX = "var reporting_data = "
 
 def _time_value(value):
-    return "%.3f" % value if value else None
+    return value if value else None
 
 def _serialize_steps(steps):
     json_steps = []
@@ -110,7 +111,7 @@ def _unserialize_test_data(js):
     test.end_time = float(js["end_time"])
     test.tags = js["tags"]
     test.properties = js["properties"]
-    test.links = [ [link["url"], link["name"]] for link in js["links"] ]
+    test.links = [ (link["url"], link["name"]) for link in js["links"] ]
     test.steps = [ _unserialize_step_data(s) for s in js["steps"] ]
     return test
 
@@ -118,7 +119,7 @@ def _unserialize_testsuite_data(js, parent=None):
     suite = TestSuiteData(js["id"], js["description"], parent)
     suite.tags = js["tags"]
     suite.properties = js["properties"]
-    suite.links = [ [link["url"], link["name"]] for link in js["links"] ]
+    suite.links = [ (link["url"], link["name"]) for link in js["links"] ]
 
     if "before_suite" in js:
         suite.before_suite_start_time = float(js["before_suite"]["start_time"])
@@ -147,7 +148,7 @@ def unserialize_report_from_file(filename):
     report.stats = js["stats"]
     report.start_time = float(js["start_time"])
     report.end_time = float(js["end_time"])
-    report.generation_time = float(js["generation_time"])
+    report.report_generation_time = float(js["generation_time"])
     report.testsuites = [ _unserialize_testsuite_data(s) for s in js["suites"] ]
     return report
 
@@ -160,6 +161,11 @@ class JsonBackend(FileReportBackend):
     
     def serialize_report(self, report, report_dir):
         serialize_report_into_file(
-            report, report_dir + "/report.json",
+            report, os.path.join(report_dir, "report.json"),
             javascript_compatibility=self.javascript_compatibility, pretty_formatting=self.pretty_formatting
         )
+    
+    def unserialize_report(self, report_path):
+        if os.path.isdir(report_path):
+            report_path = os.path.join(report_path, "report.json")
+        return unserialize_report_from_file(report_path)
