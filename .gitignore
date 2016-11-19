@@ -2,3 +2,8 @@
 .*project
 myproject/reports/*
 .DS_Store
+.cache
+examples/*/last_report
+examples/*/reports
+TODO
+
