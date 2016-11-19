@@ -140,7 +140,7 @@ def test_multiple_testsuites_and_tests():
     assert report.get_test("test_3_1").outcome == True
     assert report.get_test("test_3_2").outcome == False
     assert report.get_test("test_3_3").outcome == True
-
+    
 def test_check_success():
     class MySuite(lcc.TestSuite):
         @lcc.test("Test 1")
@@ -386,6 +386,8 @@ def test_before_suite_success():
     assert_report_stats(report, expected_test_successes=1)
     
     suite = report.get_suite("MySuite")
+    assert suite.before_suite_start_time != None
+    assert suite.before_suite_end_time != None
     assert suite.before_suite_steps[0].entries[0].message == "some log"
     assert suite.before_suite_has_failure() == False
     assert report.get_test("sometest").outcome == True
@@ -407,6 +409,8 @@ def test_before_suite_failure():
     assert_report_stats(report, expected_test_failures=1, expected_errors=1, expected_error_logs=2)
     
     suite = report.get_suite("MySuite")
+    assert suite.before_suite_start_time != None
+    assert suite.before_suite_end_time != None
     assert suite.before_suite_steps[0].entries[0].message == "something bad happened"
     assert suite.before_suite_has_failure() == True
     assert report.get_test("sometest").outcome == False
@@ -428,6 +432,8 @@ def test_after_suite_success():
     assert_report_stats(report, expected_test_successes=1)
     
     suite = report.get_suite("MySuite")
+    assert suite.after_suite_start_time != None
+    assert suite.after_suite_end_time != None
     assert suite.after_suite_steps[0].entries[0].message == "some log"
     assert suite.after_suite_has_failure() == False
     assert report.get_test("sometest").outcome == True
@@ -449,6 +455,8 @@ def test_after_suite_failure():
     assert_report_stats(report, expected_test_successes=1, expected_errors=1, expected_error_logs=1)
     
     suite = report.get_suite("MySuite")
+    assert suite.after_suite_start_time != None
+    assert suite.after_suite_end_time != None
     assert suite.after_suite_steps[0].entries[0].message == "something bad happened"
     assert suite.after_suite_has_failure() == True
     assert report.get_test("sometest").outcome == True
