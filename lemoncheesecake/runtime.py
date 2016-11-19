@@ -104,7 +104,7 @@ class _Runtime:
         self.current_testsuite_data = suite_data
         self.current_step_data_list = self.current_testsuite_data.before_suite_steps
 
-        if testsuite.has_hook("before_testsuite"):
+        if testsuite.has_hook("before_suite"):
             suite_data.before_suite_start_time = time.time()
 
         self.for_each_reporting_sessions(lambda b: b.begin_before_suite(testsuite))
