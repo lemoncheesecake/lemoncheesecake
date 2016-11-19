@@ -96,6 +96,89 @@ def run_testsuite(suite, tmpdir=None):
 def dummy_test_callback(suite):
     pass
 
+def assert_check_data(actual, expected):
+    assert actual.description == expected.description
+    assert actual.outcome == expected.outcome
+    assert actual.details == expected.details
+
+def assert_log_data(actual, expected):
+    assert actual.level == expected.level
+    assert actual.message == expected.message
+
+def assert_attachment_data(actual, expected):
+    assert actual.description == expected.description
+    assert actual.filename == expected.filename
+
+def assert_step_data(actual, expected):
+    assert actual.description == expected.description
+    assert len(actual.entries) == len(expected.entries)
+    for actual_entry, expected_entry in zip(actual.entries, expected.entries):
+        assert actual_entry.__class__ == expected_entry.__class__
+        if isinstance(actual_entry, reporting.LogData):
+            assert_log_data(actual_entry, expected_entry)
+        elif isinstance(actual_entry, reporting.CheckData):
+            assert_check_data(actual_entry, expected_entry)
+        elif isinstance(actual_entry, reporting.AttachmentData):
+            assert_attachment_data(actual_entry, expected_entry)
+        else:
+            raise Exception("Unknown class '%s'" % actual.__class__.__name__)
+
+def assert_test_data(actual, expected):
+    assert actual.id == expected.id
+    assert actual.description == expected.description
+    assert actual.tags == expected.tags
+    assert actual.properties == expected.properties
+    assert actual.links == expected.links
+    assert actual.outcome == expected.outcome
+    assert actual.start_time == expected.start_time
+    assert actual.end_time == expected.end_time
+    
+    assert len(actual.steps) == len(expected.steps)
+    for actual_step, expected_step in zip(actual.steps, expected.steps):
+        assert_step_data(actual_step, expected_step)
+        
+
+def assert_testsuite_data(actual, expected):
+    assert actual.id == expected.id
+    assert actual.description == expected.description
+    if expected.parent == None:
+        assert actual.parent == None
+    else:
+        assert actual.parent.id == expected.parent.id
+    assert actual.tags == expected.tags
+    assert actual.properties == expected.properties
+    assert actual.links == expected.links
+    
+    assert actual.before_suite_start_time == expected.before_suite_start_time
+    assert actual.before_suite_end_time == expected.before_suite_end_time
+    assert len(actual.before_suite_steps) == len(expected.before_suite_steps)
+    for actual_step, expected_step in zip(actual.before_suite_steps, expected.before_suite_steps):
+        assert_step_data(actual_step, expected_step)
+    
+    assert len(actual.tests) == len(expected.tests)
+    for actual_test, expected_test in zip(actual.tests, expected.tests):
+        assert_test_data(actual_test, expected_test)
+    
+    assert len(actual.sub_testsuites) == len(expected.sub_testsuites)
+    for actual_subsuite, expected_subsuite in zip(actual.sub_testsuites, expected.sub_testsuites):
+        assert_testsuite_data(actual_subsuite, expected_subsuite)
+
+    assert expected.before_suite_start_time == expected.before_suite_start_time
+    assert expected.before_suite_end_time == expected.before_suite_end_time
+    assert len(expected.before_suite_steps) == len(expected.before_suite_steps)
+    for expected_step, expected_step in zip(expected.before_suite_steps, expected.before_suite_steps):
+        assert_step_data(expected_step, expected_step)
+
+def assert_report(actual, expected):
+    assert actual.info == expected.info
+    assert actual.start_time == expected.start_time
+    assert actual.end_time == expected.end_time
+    assert actual.report_generation_time == expected.report_generation_time
+    assert len(actual.testsuites) == len(expected.testsuites)
+    
+    for actual_testsuite, expected_testsuite in zip(actual.testsuites, expected.testsuites):
+        assert_testsuite_data(actual_testsuite, expected_testsuite)
+
 def assert_test_data_from_test(test_data, test):
     assert test_data.id == test.id
     assert test_data.description == test.description
@@ -109,7 +192,6 @@ def assert_testsuite_data_from_testsuite(testsuite_data, testsuite):
     assert testsuite_data.tags == testsuite.tags
     assert testsuite_data.properties == testsuite.properties
     assert testsuite_data.links == testsuite.links
-    assert len(testsuite_data.tests) == len(testsuite.get_tests())
     
     assert len(testsuite_data.tests) == len(testsuite.get_tests())
     for test_data, test in zip(testsuite_data.tests, testsuite.get_tests()):
