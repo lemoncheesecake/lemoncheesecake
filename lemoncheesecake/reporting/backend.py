@@ -5,6 +5,7 @@ Created on Mar 29, 2016
 '''
 
 from lemoncheesecake.exceptions import UnknownReportBackendError, MethodNotImplemented
+from lemoncheesecake.utils import object_has_method
 
 __all__ = (
     "register_backend", "get_backend", "has_backend", "enable_backend", "disable_backend", 
@@ -101,16 +102,23 @@ class ReportingSession:
 
 class ReportingBackend:
     def get_capabilities(self):
-        return CAPABILITY_REPORTING_SESSION
+        capabilities = 0
+        if object_has_method(self, "create_reporting_session"):
+            capabilities |= CAPABILITY_REPORTING_SESSION
+        if object_has_method(self, "serialize_report"):
+            capabilities |= CAPABILITY_SERIALIZE
+        if object_has_method(self, "unserialize_report"):
+            capabilities |= CAPABILITY_UNSERIALIZE
+        return capabilities
     
-    def create_reporting_session(self, report, report_dir):
-        raise MethodNotImplemented(self, "create_reporting_session")
-    
-    def serialize_report(self, report, report_dir):
-        raise MethodNotImplemented(self, "serialize_report")
-    
-    def unserialize_report(self, report_path):
-        raise MethodNotImplemented(self, "unserialize_report_from_file")
+#     def create_reporting_session(self, report, report_dir):
+#         pass
+#     
+#     def serialize_report(self, report, report_dir):
+#         pass
+#     
+#     def unserialize_report(self, report_path):
+#         pass
 
 class FileReportSession(ReportingSession):
     def __init__(self, report, report_dir, backend):
@@ -121,8 +129,8 @@ class FileReportSession(ReportingSession):
         self.backend.serialize_report(self.report, self.report_dir)
 
 class FileReportBackend(ReportingBackend):
-    def get_capabilities(self):
-        return CAPABILITY_REPORTING_SESSION | CAPABILITY_SERIALIZE
+    def serialize_report(self, report, report_dir):
+        raise MethodNotImplemented(self, "serialize_report")
     
     def create_reporting_session(self, report, report_dir):
         return FileReportSession(report, report_dir, self)

@@ -259,9 +259,6 @@ class XmlBackend(FileReportBackend):
     def __init__(self):
         self.indent_level = DEFAULT_INDENT_LEVEL
     
-    def get_capabilities(self):
-        return FileReportBackend.get_capabilities(self) | CAPABILITY_UNSERIALIZE
-     
     def serialize_report(self, report, report_dir):
         serialize_report_into_file(
             report, os.path.join(report_dir, "report.xml"), self.indent_level
