@@ -22,6 +22,7 @@ def do_test_serialization(suites, backend, tmpdir):
     report = get_runtime().report
         
     backend.serialize_report(report, tmpdir.strpath)
+#     print >> sys.stderr, open(tmpdir.strpath + "/report.xml").read()
     unserialized_report = backend.unserialize_report(tmpdir.strpath)
     
     assert_report(unserialized_report, report)    

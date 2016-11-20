@@ -149,11 +149,14 @@ def assert_testsuite_data(actual, expected):
     assert actual.properties == expected.properties
     assert actual.links == expected.links
     
-    assert actual.before_suite_start_time == expected.before_suite_start_time
-    assert actual.before_suite_end_time == expected.before_suite_end_time
-    assert len(actual.before_suite_steps) == len(expected.before_suite_steps)
-    for actual_step, expected_step in zip(actual.before_suite_steps, expected.before_suite_steps):
-        assert_step_data(actual_step, expected_step)
+    if expected.before_suite == None:
+        assert actual.before_suite == None
+    else:
+        assert actual.before_suite.start_time == expected.before_suite.start_time
+        assert actual.before_suite.end_time == expected.before_suite.end_time
+        assert len(actual.before_suite.steps) == len(expected.before_suite.steps)
+        for actual_step, expected_step in zip(actual.before_suite.steps, expected.before_suite.steps):
+            assert_step_data(actual_step, expected_step)
     
     assert len(actual.tests) == len(expected.tests)
     for actual_test, expected_test in zip(actual.tests, expected.tests):
@@ -163,11 +166,14 @@ def assert_testsuite_data(actual, expected):
     for actual_subsuite, expected_subsuite in zip(actual.sub_testsuites, expected.sub_testsuites):
         assert_testsuite_data(actual_subsuite, expected_subsuite)
 
-    assert expected.before_suite_start_time == expected.before_suite_start_time
-    assert expected.before_suite_end_time == expected.before_suite_end_time
-    assert len(expected.before_suite_steps) == len(expected.before_suite_steps)
-    for expected_step, expected_step in zip(expected.before_suite_steps, expected.before_suite_steps):
-        assert_step_data(expected_step, expected_step)
+    if expected.after_suite == None:
+        assert actual.after_suite == None
+    else:
+        assert actual.after_suite.start_time == expected.after_suite.start_time
+        assert actual.after_suite.end_time == expected.after_suite.end_time
+        assert len(actual.after_suite.steps) == len(expected.after_suite.steps)
+        for actual_step, expected_step in zip(actual.after_suite.steps, expected.after_suite.steps):
+            assert_step_data(actual_step, expected_step)
 
 def assert_report(actual, expected):
     assert actual.info == expected.info
@@ -193,6 +199,11 @@ def assert_testsuite_data_from_testsuite(testsuite_data, testsuite):
     assert testsuite_data.properties == testsuite.properties
     assert testsuite_data.links == testsuite.links
     
+    if testsuite.has_hook("before_suite"):
+        assert testsuite_data.before_suite != None
+        assert testsuite_data.before_suite.start_time != None
+        assert testsuite_data.before_suite.end_time != None
+    
     assert len(testsuite_data.tests) == len(testsuite.get_tests())
     for test_data, test in zip(testsuite_data.tests, testsuite.get_tests()):
         assert_test_data_from_test(test_data, test)
@@ -201,6 +212,11 @@ def assert_testsuite_data_from_testsuite(testsuite_data, testsuite):
     for sub_testsuite_data, sub_testsuite in zip(testsuite_data.sub_testsuites, testsuite.get_sub_testsuites()):
         assert_testsuite_data_from_testsuite(sub_testsuite_data, sub_testsuite)
 
+    if testsuite.has_hook("after_suite"):
+        assert testsuite_data.after_suite != None
+        assert testsuite_data.after_suite.start_time != None
+        assert testsuite_data.after_suite.end_time != None
+    
 def assert_report_from_testsuites(report, suite_classes):
     assert report.start_time != None
     assert report.end_time != None

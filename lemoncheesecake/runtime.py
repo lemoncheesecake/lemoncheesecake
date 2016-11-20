@@ -4,6 +4,7 @@ Created on Jan 24, 2016
 @author: nicolas
 '''
 
+import sys
 import os.path
 import time
 import shutil
@@ -86,6 +87,11 @@ class _Runtime:
         self.report.start_time = time.time()
         self.for_each_reporting_sessions(lambda b: b.begin_tests())
     
+    def _start_hook(self):
+        hook_data = HookData()
+        hook_data.start_time = time.time()
+        return hook_data
+    
     def end_tests(self):
         self.report.end_time = time.time()
         self.report.report_generation_time = self.report.end_time
@@ -102,27 +108,28 @@ class _Runtime:
         else:
             self.report.testsuites.append(suite_data)
         self.current_testsuite_data = suite_data
-        self.current_step_data_list = self.current_testsuite_data.before_suite_steps
 
         if testsuite.has_hook("before_suite"):
-            suite_data.before_suite_start_time = time.time()
+            suite_data.before_suite = self._start_hook()
+            self.current_step_data_list = suite_data.before_suite.steps
 
         self.for_each_reporting_sessions(lambda b: b.begin_before_suite(testsuite))
     
     def end_before_suite(self):
-        if self.current_testsuite_data.before_suite_start_time:
-            self.current_testsuite_data.before_suite_end_time = time.time()
+        if self.current_testsuite_data.before_suite:
+            self.current_testsuite_data.before_suite.end_time = time.time()
         self.for_each_reporting_sessions(lambda b: b.end_before_suite(self.current_testsuite))
         
     def begin_after_suite(self, testsuite):
         if testsuite.has_hook("after_suite"):
-            self.current_testsuite_data.after_suite_start_time = time.time()
-        self.current_step_data_list = self.current_testsuite_data.after_suite_steps
+            self.current_testsuite_data.after_suite = self._start_hook()
+            self.current_step_data_list = self.current_testsuite_data.after_suite.steps
+            
         self.for_each_reporting_sessions(lambda b: b.begin_after_suite(testsuite))
 
     def end_after_suite(self):
-        if self.current_testsuite_data.after_suite_start_time:
-            self.current_testsuite_data.after_suite_end_time = time.time()
+        if self.current_testsuite_data.after_suite:
+            self.current_testsuite_data.after_suite.end_time = time.time()
         self.current_testsuite_data = self.current_testsuite_data.parent
         self.for_each_reporting_sessions(lambda b: b.end_after_suite(self.current_testsuite))
         self.current_testsuite = None
@@ -137,7 +144,7 @@ class _Runtime:
         self.current_testsuite_data.tests.append(self.current_test_data)
         self.for_each_reporting_sessions(lambda b: b.begin_test(test))
         self.current_step_data_list = self.current_test_data.steps
-            
+    
     def end_test(self):
         if self.current_test_data.outcome == None:
             self.current_test_data.outcome = True

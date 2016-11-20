@@ -152,7 +152,7 @@ class Launcher:
             except KeyboardInterrupt as e:
                 handle_exception(e)
             suite_data = rt.report.get_suite(suite.id)
-            if suite_data.before_suite_has_failure():
+            if suite_data.before_suite and suite_data.before_suite.has_failure():
                 self.abort_testsuite = suite
             
         rt.end_before_suite() 

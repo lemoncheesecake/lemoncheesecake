@@ -386,10 +386,10 @@ def test_before_suite_success():
     assert_report_stats(report, expected_test_successes=1)
     
     suite = report.get_suite("MySuite")
-    assert suite.before_suite_start_time != None
-    assert suite.before_suite_end_time != None
-    assert suite.before_suite_steps[0].entries[0].message == "some log"
-    assert suite.before_suite_has_failure() == False
+    assert suite.before_suite.start_time != None
+    assert suite.before_suite.end_time != None
+    assert suite.before_suite.steps[0].entries[0].message == "some log"
+    assert suite.before_suite.has_failure() == False
     assert report.get_test("sometest").outcome == True
 
 def test_before_suite_failure():
@@ -409,10 +409,10 @@ def test_before_suite_failure():
     assert_report_stats(report, expected_test_failures=1, expected_errors=1, expected_error_logs=2)
     
     suite = report.get_suite("MySuite")
-    assert suite.before_suite_start_time != None
-    assert suite.before_suite_end_time != None
-    assert suite.before_suite_steps[0].entries[0].message == "something bad happened"
-    assert suite.before_suite_has_failure() == True
+    assert suite.before_suite.start_time != None
+    assert suite.before_suite.end_time != None
+    assert suite.before_suite.steps[0].entries[0].message == "something bad happened"
+    assert suite.before_suite.has_failure() == True
     assert report.get_test("sometest").outcome == False
 
 def test_after_suite_success():
@@ -432,10 +432,10 @@ def test_after_suite_success():
     assert_report_stats(report, expected_test_successes=1)
     
     suite = report.get_suite("MySuite")
-    assert suite.after_suite_start_time != None
-    assert suite.after_suite_end_time != None
-    assert suite.after_suite_steps[0].entries[0].message == "some log"
-    assert suite.after_suite_has_failure() == False
+    assert suite.after_suite.start_time != None
+    assert suite.after_suite.end_time != None
+    assert suite.after_suite.steps[0].entries[0].message == "some log"
+    assert suite.after_suite.has_failure() == False
     assert report.get_test("sometest").outcome == True
 
 def test_after_suite_failure():
@@ -455,8 +455,8 @@ def test_after_suite_failure():
     assert_report_stats(report, expected_test_successes=1, expected_errors=1, expected_error_logs=1)
     
     suite = report.get_suite("MySuite")
-    assert suite.after_suite_start_time != None
-    assert suite.after_suite_end_time != None
-    assert suite.after_suite_steps[0].entries[0].message == "something bad happened"
-    assert suite.after_suite_has_failure() == True
+    assert suite.after_suite.start_time != None
+    assert suite.after_suite.end_time != None
+    assert suite.after_suite.steps[0].entries[0].message == "something bad happened"
+    assert suite.after_suite.has_failure() == True
     assert report.get_test("sometest").outcome == True

@@ -11,7 +11,7 @@ from lemoncheesecake.utils import humanize_duration
 
 __all__ = (
     "LogData", "CheckData", "AttachmentData", "StepData", "TestData",
-    "TestSuiteData", "Report"
+    "TestSuiteData", "HookData", "Report"
 )
 
 class LogData:
@@ -62,6 +62,15 @@ class TestData:
     def has_failure(self):
         return len(filter(lambda step: step.has_failure(), self.steps)) > 0
 
+class HookData:
+    def __init__(self):
+        self.steps = [ ]
+        self.start_time = None
+        self.end_time = None
+    
+    def has_failure(self):
+        return len(filter(lambda step: step.has_failure(), self.steps)) > 0
+
 class TestSuiteData:
     def __init__(self, id, description, parent=None):
         self.id = id
@@ -70,20 +79,10 @@ class TestSuiteData:
         self.tags = [ ]
         self.properties = {}
         self.links = [ ]
-        self.before_suite_steps = [ ]
-        self.before_suite_start_time = None
-        self.before_suite_end_time = None
+        self.before_suite = None
         self.tests = [ ]
         self.sub_testsuites = [ ]
-        self.after_suite_steps = [ ]
-        self.after_suite_start_time = None
-        self.after_suite_end_time = None
-    
-    def before_suite_has_failure(self):
-        return len(filter(lambda step: step.has_failure(), self.before_suite_steps)) > 0
-
-    def after_suite_has_failure(self):
-        return len(filter(lambda step: step.has_failure(), self.after_suite_steps)) > 0
+        self.after_suite = None
     
     def get_test(self, test_id):
         for test in self.tests:
@@ -139,13 +138,15 @@ class ReportStats:
                         self.error_logs += 1
         
     def _walk_testsuite(self, suite):
-        if suite.before_suite_has_failure():
-            self.errors += 1
-        self._walk_steps(suite.before_suite_steps)
+        if suite.before_suite:
+            if suite.before_suite.has_failure():
+                self.errors += 1
+            self._walk_steps(suite.before_suite.steps)
         
-        if suite.after_suite_has_failure():
-            self.errors += 1
-        self._walk_steps(suite.after_suite_steps)
+        if suite.after_suite:
+            if suite.after_suite.has_failure():
+                self.errors += 1
+            self._walk_steps(suite.after_suite.steps)
         
         for test in suite.tests:
             self.tests += 1

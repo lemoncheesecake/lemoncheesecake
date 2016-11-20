@@ -56,17 +56,17 @@ def _serialize_testsuite_data(suite):
         "tests": [ _serialize_test_data(t) for t in suite.tests ],
         "sub_suites": [ _serialize_testsuite_data(s) for s in suite.sub_testsuites ]
     })
-    if suite.before_suite_steps:
+    if suite.before_suite:
         json_suite["before_suite"] = {
-            "start_time": _time_value(suite.before_suite_start_time),
-            "end_time": _time_value(suite.before_suite_end_time),
-            "steps": _serialize_steps(suite.before_suite_steps)
+            "start_time": _time_value(suite.before_suite.start_time),
+            "end_time": _time_value(suite.before_suite.end_time),
+            "steps": _serialize_steps(suite.before_suite.steps)
         }
-    if suite.after_suite_steps:
+    if suite.after_suite:
         json_suite["after_suite"] = {
-            "start_time": _time_value(suite.after_suite_start_time),
-            "end_time": _time_value(suite.after_suite_end_time),
-            "steps": _serialize_steps(suite.after_suite_steps)
+            "start_time": _time_value(suite.after_suite.start_time),
+            "end_time": _time_value(suite.after_suite.end_time),
+            "steps": _serialize_steps(suite.after_suite.steps)
         }
     
     return json_suite
@@ -122,16 +122,18 @@ def _unserialize_testsuite_data(js, parent=None):
     suite.links = [ (link["url"], link["name"]) for link in js["links"] ]
 
     if "before_suite" in js:
-        suite.before_suite_start_time = float(js["before_suite"]["start_time"])
-        suite.before_suite_end_time = float(js["before_suite"]["end_time"])
-        suite.before_suite_steps = [ _unserialize_step_data(s) for s in js["before_suite"]["steps"] ]
+        suite.before_suite = HookData()
+        suite.before_suite.start_time = float(js["before_suite"]["start_time"])
+        suite.before_suite.end_time = float(js["before_suite"]["end_time"])
+        suite.before_suite.steps = [ _unserialize_step_data(s) for s in js["before_suite"]["steps"] ]
 
     suite.tests = [ _unserialize_test_data(t) for t in js["tests"] ]
     
     if "after_suite" in js:
-        suite.after_suite_start_time = float(js["after_suite"]["start_time"])
-        suite.after_suite_end_time = float(js["after_suite"]["end_time"])
-        suite.after_suite_steps = [ _unserialize_step_data(s) for s in js["after_suite"]["steps"] ]
+        suite.after_suite = HookData()
+        suite.after_suite.start_time = float(js["after_suite"]["start_time"])
+        suite.after_suite.end_time = float(js["after_suite"]["end_time"])
+        suite.after_suite.steps = [ _unserialize_step_data(s) for s in js["after_suite"]["steps"] ]
     
     suite.sub_testsuites = [ _unserialize_testsuite_data(s, suite) for s in js["sub_suites"] ]
     

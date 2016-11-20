@@ -4,6 +4,7 @@ Created on Mar 27, 2016
 @author: nicolas
 '''
 
+import sys
 import os.path
 
 from lxml import etree as ET
@@ -112,11 +113,11 @@ def _serialize_testsuite_data(suite):
         link_node.text = link[0]
     
     # before suite
-    if suite.before_suite_steps:
+    if suite.before_suite:
         before_suite_node = _xml_child(suite_node, "before-suite")
-        _add_time_attr(before_suite_node, "start-time", suite.before_suite_start_time)
-        _add_time_attr(before_suite_node, "end-time", suite.before_suite_end_time)
-        _serialize_steps(suite.before_suite_steps, before_suite_node)
+        _add_time_attr(before_suite_node, "start-time", suite.before_suite.start_time)
+        _add_time_attr(before_suite_node, "end-time", suite.before_suite.end_time)
+        _serialize_steps(suite.before_suite.steps, before_suite_node)
     
     # tests
     for test in suite.tests:
@@ -129,11 +130,11 @@ def _serialize_testsuite_data(suite):
         suite_node.append(sub_suite_node)
     
     # after suite
-    if suite.after_suite_steps:
+    if suite.after_suite:
         after_suite_node = _xml_child(suite_node, "after-suite")
-        _add_time_attr(after_suite_node, "start-time", suite.after_suite_start_time)
-        _add_time_attr(after_suite_node, "end-time", suite.after_suite_end_time)
-        _serialize_steps(suite.after_suite_steps, after_suite_node)
+        _add_time_attr(after_suite_node, "start-time", suite.after_suite.start_time)
+        _add_time_attr(after_suite_node, "end-time", suite.after_suite.end_time)
+        _serialize_steps(suite.after_suite.steps, after_suite_node)
     
     return suite_node
 
@@ -208,18 +209,20 @@ def _unserialize_testsuite_data(xml, parent=None):
     before_suite = xml.xpath("before-suite")
     before_suite = before_suite[0] if len(before_suite) > 0 else None
     if before_suite != None:
-        suite.before_suite_start_time = float(before_suite.attrib["start-time"])
-        suite.before_suite_end_time = float(before_suite.attrib["end-time"])
-        suite.before_suite_steps = [ _unserialize_step_data(s) for s in before_suite.xpath("step") ]
+        suite.before_suite = HookData()
+        suite.before_suite.start_time = float(before_suite.attrib["start-time"])
+        suite.before_suite.end_time = float(before_suite.attrib["end-time"])
+        suite.before_suite.steps = [ _unserialize_step_data(s) for s in before_suite.xpath("step") ]
         
     suite.tests = [ _unserialize_test_data(t) for t in xml.xpath("test") ]
     
     after_suite = xml.xpath("after-suite")
     after_suite = after_suite[0] if len(after_suite) > 0 else None
     if after_suite != None:
-        suite.after_suite_start_time = float(after_suite.attrib["start-time"])
-        suite.after_suite_end_time = float(after_suite.attrib["end-time"])
-        suite.after_suite_steps = [ _unserialize_step_data(s) for s in after_suite.xpath("step") ]
+        suite.after_suite = HookData()
+        suite.after_suite.start_time = float(after_suite.attrib["start-time"])
+        suite.after_suite.end_time = float(after_suite.attrib["end-time"])
+        suite.after_suite.steps = [ _unserialize_step_data(s) for s in after_suite.xpath("step") ]
     
     suite.sub_testsuites = [ _unserialize_testsuite_data(s, suite) for s in xml.xpath("suite") ]
     
