@@ -19,7 +19,12 @@ def _time_value(value):
 def _serialize_steps(steps):
     json_steps = []
     for step in steps:
-        json_step = { "description": step.description, "entries": [ ] }
+        json_step = {
+            "description": step.description,
+            "start_time": _time_value(step.start_time),
+            "end_time": _time_value(step.end_time),
+            "entries": [ ]
+        }
         json_steps.append(json_step)
         for entry in step.entries:
             if isinstance(entry, LogData):
@@ -94,6 +99,8 @@ def serialize_report_into_file(data, filename, javascript_compatibility=True, pr
 
 def _unserialize_step_data(js):
     step = StepData(js["description"])
+    step.start_time = float(js["start_time"])
+    step.end_time = float(js["end_time"])
     for js_entry in js["entries"]:
         if js_entry["type"] == "log":
             entry = LogData(js_entry["level"], js_entry["message"])

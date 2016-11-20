@@ -43,6 +43,8 @@ class StepData:
     def __init__(self, description):
         self.description = description
         self.entries = [ ]
+        self.start_time = None
+        self.end_time = None
     
     def has_failure(self):
         return len(filter(lambda entry: entry.has_failure(), self.entries)) > 0

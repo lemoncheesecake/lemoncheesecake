@@ -70,6 +70,8 @@ def _serialize_outcome(outcome):
 def _serialize_steps(steps, parent_node):
     for step in steps:
         step_node = _xml_child(parent_node, "step", "description", step.description)
+        _add_time_attr(step_node, "start-time", step.start_time)
+        _add_time_attr(step_node, "end-time", step.end_time)
         for entry in step.entries:
             if isinstance(entry, LogData):
                 log_node = _xml_child(step_node, "log", "level", entry.level)
@@ -178,6 +180,8 @@ def _unserialize_outcome(value):
 
 def _unserialize_step_data(xml):
     step = StepData(xml.attrib["description"])
+    step.start_time = float(xml.attrib["start-time"])
+    step.end_time = float(xml.attrib["end-time"])
     for xml_entry in xml:
         if xml_entry.tag == "log":
             entry = LogData(xml_entry.attrib["level"], xml_entry.text)

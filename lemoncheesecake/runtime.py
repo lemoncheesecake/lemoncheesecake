@@ -68,8 +68,8 @@ class _Runtime:
         # pointers to report data parts
         self.current_testsuite_data = None
         self.current_test_data = None
-        self.current_step_data = None
         self.current_step_data_list = None
+        self.current_step_data = None
         # pointers to running test/testsuite
         self.current_test = None
         self.current_testsuite = None
@@ -116,8 +116,10 @@ class _Runtime:
         self.for_each_reporting_sessions(lambda b: b.begin_before_suite(testsuite))
     
     def end_before_suite(self):
+        now = time.time()
         if self.current_testsuite_data.before_suite:
-            self.current_testsuite_data.before_suite.end_time = time.time()
+            self.current_testsuite_data.before_suite.end_time = now
+        self.end_current_step(now)
         self.for_each_reporting_sessions(lambda b: b.end_before_suite(self.current_testsuite))
         
     def begin_after_suite(self, testsuite):
@@ -128,9 +130,11 @@ class _Runtime:
         self.for_each_reporting_sessions(lambda b: b.begin_after_suite(testsuite))
 
     def end_after_suite(self):
+        now = time.time()
         if self.current_testsuite_data.after_suite:
-            self.current_testsuite_data.after_suite.end_time = time.time()
+            self.current_testsuite_data.after_suite.end_time = now
         self.current_testsuite_data = self.current_testsuite_data.parent
+        self.end_current_step(now)
         self.for_each_reporting_sessions(lambda b: b.end_after_suite(self.current_testsuite))
         self.current_testsuite = None
         
@@ -146,25 +150,36 @@ class _Runtime:
         self.current_step_data_list = self.current_test_data.steps
     
     def end_test(self):
+        now = time.time()
         if self.current_test_data.outcome == None:
             self.current_test_data.outcome = True
-        self.current_test_data.end_time = time.time()
+        self.current_test_data.end_time = now
         
         self.for_each_reporting_sessions(lambda b: b.end_test(self.current_test, self.current_test_data.outcome))
 
         self.current_test = None
         self.current_test_data = None
+        self.current_step_data_list = None
+        
+        self.end_current_step(now)
 
     def create_step_if_needed(self):
         if not self.current_step_data_list:
             self.set_step(self.default_step_description)
 
+    def end_current_step(self, t=None):
+        if self.current_step_data:
+            self.current_step_data.end_time = t if t else time.time()
+            self.current_step_data = None
+
     def set_step(self, description, force_lock=False):
         if self.step_lock and not force_lock:
             return
-
-        self.current_step = description
+        
+        self.end_current_step()
+        
         self.current_step_data = StepData(description)
+        self.current_step_data.start_time = time.time()
 
         # remove previous step from report data if it was empty
         if self.current_step_data_list and not self.current_step_data_list[-1].entries:

@@ -110,6 +110,8 @@ def assert_attachment_data(actual, expected):
     assert actual.filename == expected.filename
 
 def assert_step_data(actual, expected):
+    assert actual.start_time == expected.start_time
+    assert actual.end_time == expected.end_time
     assert actual.description == expected.description
     assert len(actual.entries) == len(expected.entries)
     for actual_entry, expected_entry in zip(actual.entries, expected.entries):
@@ -185,12 +187,19 @@ def assert_report(actual, expected):
     for actual_testsuite, expected_testsuite in zip(actual.testsuites, expected.testsuites):
         assert_testsuite_data(actual_testsuite, expected_testsuite)
 
+def assert_steps_data(steps):
+    for step in steps:
+        assert step.start_time
+        assert step.end_time >= step.start_time
+
 def assert_test_data_from_test(test_data, test):
     assert test_data.id == test.id
     assert test_data.description == test.description
     assert test_data.tags == test.tags
     assert test_data.properties == test.properties
     assert test_data.links == test.links
+    
+    assert_steps_data(test_data.steps)
 
 def assert_testsuite_data_from_testsuite(testsuite_data, testsuite):
     assert testsuite_data.id == testsuite.id
@@ -203,6 +212,7 @@ def assert_testsuite_data_from_testsuite(testsuite_data, testsuite):
         assert testsuite_data.before_suite != None
         assert testsuite_data.before_suite.start_time != None
         assert testsuite_data.before_suite.end_time != None
+        assert_steps_data(testsuite_data.before_suite.steps)
     
     assert len(testsuite_data.tests) == len(testsuite.get_tests())
     for test_data, test in zip(testsuite_data.tests, testsuite.get_tests()):
@@ -216,6 +226,7 @@ def assert_testsuite_data_from_testsuite(testsuite_data, testsuite):
         assert testsuite_data.after_suite != None
         assert testsuite_data.after_suite.start_time != None
         assert testsuite_data.after_suite.end_time != None
+        assert_steps_data(testsuite_data.after_suite.steps)
     
 def assert_report_from_testsuites(report, suite_classes):
     assert report.start_time != None
