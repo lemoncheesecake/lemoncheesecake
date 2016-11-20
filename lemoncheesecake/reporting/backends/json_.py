@@ -7,6 +7,7 @@ Created on Mar 27, 2016
 import os
 import re
 import json
+from collections import OrderedDict
 
 from lemoncheesecake.reporting.backend import ReportingBackend, FileReportBackend
 from lemoncheesecake.reporting.report import *
@@ -16,75 +17,82 @@ JS_PREFIX = "var reporting_data = "
 def _time_value(value):
     return value if value else None
 
+def _dict(*args):
+    d = OrderedDict()
+    i = 0
+    while i < len(args):
+        d[args[i]] = args[i+1]
+        i += 2
+    return d
+
 def _serialize_steps(steps):
     json_steps = []
     for step in steps:
-        json_step = {
-            "description": step.description,
-            "start_time": _time_value(step.start_time),
-            "end_time": _time_value(step.end_time),
-            "entries": [ ]
-        }
+        json_step = _dict(
+            "description", step.description,
+            "start_time", _time_value(step.start_time),
+            "end_time", _time_value(step.end_time),
+            "entries", []
+        )
         json_steps.append(json_step)
         for entry in step.entries:
             if isinstance(entry, LogData):
-                entry = { "type": "log", "level": entry.level, "message": entry.message }
+                entry = _dict("type", "log", "level", entry.level, "message", entry.message)
             elif isinstance(entry, AttachmentData):
-                entry = { "type": "attachment", "description": entry.description, "filename": entry.filename }
+                entry = _dict("type", "attachment", "description", entry.description, "filename", entry.filename)
             else: # TestCheck
-                entry = { "type": "check", "description": entry.description, "outcome": entry.outcome, "details": entry.details }
+                entry = _dict("type", "check", "description", entry.description, "outcome", entry.outcome, "details", entry.details)
             json_step["entries"].append(entry)
     return json_steps
 
 def _serialize_common_data(obj):
-    return { 
-        "id": obj.id, "description": obj.description,
-        "tags": obj.tags,
-        "properties": obj.properties,
-        "links": [ { "name": link[1], "url": link[0] } for link in obj.links ]
-    }
+    return _dict(
+        "id", obj.id, "description", obj.description,
+        "tags", obj.tags,
+        "properties", obj.properties,
+        "links", [ _dict("name", link[1], "url", link[0]) for link in obj.links ]
+    )
 
 def _serialize_test_data(test):
     serialized = _serialize_common_data(test)
-    serialized.update({
-        "start_time": _time_value(test.start_time),
-        "end_time": _time_value(test.end_time),
-        "steps": _serialize_steps(test.steps),
-        "outcome": test.outcome
-        
-    })
+    serialized.update(_dict(
+        "start_time", _time_value(test.start_time),
+        "end_time", _time_value(test.end_time),
+        "steps", _serialize_steps(test.steps),
+        "outcome", test.outcome
+    ))
     return serialized
 
 def _serialize_testsuite_data(suite):
     json_suite = _serialize_common_data(suite)
-    json_suite.update({
-        "tests": [ _serialize_test_data(t) for t in suite.tests ],
-        "sub_suites": [ _serialize_testsuite_data(s) for s in suite.sub_testsuites ]
-    })
+    json_suite.update(_dict(
+        "tests", [ _serialize_test_data(t) for t in suite.tests ],
+        "sub_suites", [ _serialize_testsuite_data(s) for s in suite.sub_testsuites ]
+    ))
     if suite.before_suite:
-        json_suite["before_suite"] = {
-            "start_time": _time_value(suite.before_suite.start_time),
-            "end_time": _time_value(suite.before_suite.end_time),
-            "steps": _serialize_steps(suite.before_suite.steps)
-        }
+        json_suite["before_suite"] = _dict(
+            "start_time", _time_value(suite.before_suite.start_time),
+            "end_time", _time_value(suite.before_suite.end_time),
+            "steps", _serialize_steps(suite.before_suite.steps)
+        )
     if suite.after_suite:
-        json_suite["after_suite"] = {
-            "start_time": _time_value(suite.after_suite.start_time),
-            "end_time": _time_value(suite.after_suite.end_time),
-            "steps": _serialize_steps(suite.after_suite.steps)
-        }
+        json_suite["after_suite"] = _dict(
+            "start_time", _time_value(suite.after_suite.start_time),
+            "end_time", _time_value(suite.after_suite.end_time),
+            "steps", _serialize_steps(suite.after_suite.steps)
+        )
     
     return json_suite
 
 def serialize_report(data):
-    return {
-        "start_time": _time_value(data.start_time),
-        "end_time": _time_value(data.end_time),
-        "generation_time": _time_value(data.report_generation_time),
-        "suites": [ _serialize_testsuite_data(s) for s in data.testsuites ],
-        "info": [ [ n, v ] for n, v in data.info ],
-        "stats": [ [ n, v ] for n, v in data.serialize_stats() ],
-    }
+    return _dict(
+        "start_time", _time_value(data.start_time),
+        "end_time", _time_value(data.end_time),
+        "generation_time", _time_value(data.report_generation_time),
+        "suites", [ _serialize_testsuite_data(s) for s in data.testsuites ],
+        "info", [ [ n, v ] for n, v in data.info ],
+        "stats", [ [ n, v ] for n, v in data.serialize_stats() ],
+    )
 
 def serialize_report_into_file(data, filename, javascript_compatibility=True, pretty_formatting=False):
     report = serialize_report(data)
@@ -92,7 +100,7 @@ def serialize_report_into_file(data, filename, javascript_compatibility=True, pr
     if javascript_compatibility:
         file.write(JS_PREFIX)
     if pretty_formatting:
-        file.write(json.dumps(report, indent=4, sort_keys=True))
+        file.write(json.dumps(report, indent=4))
     else:
         file.write(json.dumps(report))
     file.close()
