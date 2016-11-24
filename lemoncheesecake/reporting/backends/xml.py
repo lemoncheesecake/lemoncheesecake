@@ -7,8 +7,12 @@ Created on Mar 27, 2016
 import sys
 import os.path
 
-from lxml import etree as ET
-from lxml.builder import E
+try:
+    from lxml import etree as ET
+    from lxml.builder import E
+    LXML_IS_AVAILABLE = True
+except ImportError:
+    LXML_IS_AVAILABLE = False
 
 from lemoncheesecake.reporting.backend import ReportingBackend, FileReportBackend, CAPABILITY_UNSERIALIZE
 from lemoncheesecake.reporting.report import *
@@ -258,6 +262,9 @@ class XmlBackend(FileReportBackend):
     
     def __init__(self):
         self.indent_level = DEFAULT_INDENT_LEVEL
+    
+    def is_available(self):
+        return LXML_IS_AVAILABLE
     
     def serialize_report(self, report, report_dir):
         serialize_report_into_file(

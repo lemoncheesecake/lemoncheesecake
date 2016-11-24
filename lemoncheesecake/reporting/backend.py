@@ -101,6 +101,9 @@ class ReportingSession:
         pass
 
 class ReportingBackend:
+    def is_available(self):
+        return True
+    
     def get_capabilities(self):
         capabilities = 0
         if object_has_method(self, "create_reporting_session"):
@@ -138,10 +141,14 @@ class FileReportBackend(ReportingBackend):
 def register_default_backends():
     from lemoncheesecake.reporting.backends import ConsoleBackend, XmlBackend, JsonBackend, HtmlBackend
 
-    backends = ConsoleBackend, XmlBackend, JsonBackend, HtmlBackend
+    backends = ConsoleBackend(), XmlBackend(), JsonBackend(), HtmlBackend()
+    enabled_backends = []
     for backend in backends:
-        register_backend(backend.name, backend())
+        if backend.is_available():
+            register_backend(backend.name, backend)
+            if backend.name != "xml":
+                enabled_backends.append(backend) 
     
-    set_enabled_backends((ConsoleBackend.name, JsonBackend.name, HtmlBackend.name))
+    set_enabled_backends([backend.name for backend in enabled_backends])
 
 register_default_backends()
