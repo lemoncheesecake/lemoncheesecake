@@ -6,4 +6,5 @@
 examples/*/last_report
 examples/*/reports
 TODO
-
+dist/
+lemoncheesecake.egg-info/
