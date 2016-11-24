@@ -1,3 +1,10 @@
+# 0.3.0 (2016-11-24)
+
+- **API**: heavy work to improve the reporting layer (lemoncheesecake.reporting) code and API
+- **Unit tests**: put lemoncheesecake.runtime module under tests
+- **Unit tests**: put XML & JSON serialization/unserialization code under tests
+- **Reporting**: make lemoncheesecake installable and usable without lxml
+
 # 0.2.0 (2016-10-31)
 
 - **API**: complete rework of `MetadataPolicy` (previously known as `PropertyValidator`)
