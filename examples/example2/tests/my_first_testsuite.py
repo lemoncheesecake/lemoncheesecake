@@ -5,7 +5,7 @@ from lemoncheesecake import *
 class my_first_testsuite(TestSuite):
 	@test("Some test")
 	def some_test(self):
-		data = worker.get_movie_info("matrix", 1999)
+		data = self.omdb.get_movie_info("matrix", 1999)
 		set_step("Check movie information")
 		check_dictval_str_eq("Title", data, "The Matrix")
 		check_dictval_str_contains("Actors", data, "Keanu Reeves")

@@ -11,13 +11,13 @@ import time
 import argparse
 import traceback
 
-import lemoncheesecake # for worker access
+from lemoncheesecake.worker import get_workers, get_worker_names, get_worker
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.launcher.filter import Filter
 from lemoncheesecake.launcher.validators import MetadataPolicy
 from lemoncheesecake import reporting
-from lemoncheesecake.exceptions import LemonCheesecakeException, InvalidMetadataError, AbortTest, AbortTestSuite, AbortAllTests
+from lemoncheesecake.exceptions import LemonCheesecakeException, InvalidMetadataError, AbortTest, AbortTestSuite, AbortAllTests, ProgrammingError
 
 __all__ = ("Launcher", "get_launcher_abspath", "get_abspath_from_launcher")
 
@@ -83,10 +83,6 @@ class Launcher:
         ###
         self.metadata_policy = MetadataPolicy()
             
-    def set_worker(self, worker):
-        "Set the worker that will be used in the testsuites"
-        lemoncheesecake.set_worker(worker)
-    
     def _load_testsuite(self, suite):
         # process suite
         if suite.id in self._testsuites_by_id:
@@ -140,6 +136,14 @@ class Launcher:
                     stacktrace = stacktrace.decode("utf-8")
                 rt.log_error("Caught unexpected exception while running test: " + stacktrace)
 
+        # set workers
+        for worker_name in get_worker_names():
+            if hasattr(suite, worker_name):
+                raise ProgrammingError("Cannot set worker '%s' into testsuite '%s', it already has an attribute with that name" % (
+                    worker_name, suite
+                ))
+            setattr(suite, worker_name, get_worker(worker_name))
+    
         rt.begin_before_suite(suite)
 
         if not self.abort_testsuite and not self.abort_all_tests:
@@ -255,8 +259,8 @@ class Launcher:
         # init report information
         rt.report.add_info("Command line", " ".join(sys.argv))
         
-        if lemoncheesecake.worker:
-            lemoncheesecake.worker.before_tests()
+        for worker in get_workers():
+            worker.before_tests()
         
         # run tests
         rt.begin_tests()
@@ -264,8 +268,8 @@ class Launcher:
             self._run_testsuite(suite)
         rt.end_tests()
         
-        if lemoncheesecake.worker:
-            lemoncheesecake.worker.after_tests()
+        for worker in get_workers():
+            worker.after_tests()
 
     def cli_run_testsuites(self, args):
         """Run the loaded test suites according to the command line parameters.
@@ -295,8 +299,8 @@ class Launcher:
                 reporting.disable_backend(backend)
         
         # initialize worker using CLI args and run tests
-        if lemoncheesecake.worker:
-            lemoncheesecake.worker.cli_initialize(args)
+        for worker in get_workers():
+            worker.cli_initialize(args)
         self.run_testsuites(filter, args.report_dir)
         
     def handle_cli(self):

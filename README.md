@@ -184,14 +184,14 @@ with open(path, "w") as fh:
     fh.write(image_data)
 ```
 
-## Worker
+## Workers
 
-The worker is used to maintain a custom state for the user across the execution of all testsuites. It is also advised to use the worker as a level of abstraction between the tests and the system under test:
+Workers are used to maintain a custom state for the user across the execution of all testsuites. It is also advised to use workers as a level of abstraction between the tests and the system under tests:
 
 ```python
 # launcher file:
 from lemoncheesecake.launcher import Launcher
-from lemoncheesecake.worker import Worker
+from lemoncheesecake.worker import Worker, add_worker
 
 class MyWorker(Worker):
     def cli_initialize(self, cli_args):
@@ -203,8 +203,9 @@ class MyWorker(Worker):
     def do_some_operation(self, some_value):
         return some_func(self.config, some_value)
 
+add_worker("myworker", MyWorker())
+
 launcher = Launcher()
-launcher.set_worker(MyWorker())
 launcher.load_testsuites(import_testsuites_from_directory("tests"))
 launcher.handle_cli()
 
@@ -214,7 +215,7 @@ from lemoncheesecake import *
 class MySuite(TestSuite):
     @test("Some test")
     def some_test(self):
-        worker.do_some_operation(42)
+        self.myworker.do_some_operation(42)
 ```
 
 The worker class provides three hooks detailed in the API documentation:
@@ -359,7 +360,7 @@ import urllib2
 import json
 
 from lemoncheesecake.launcher import Launcher, import_testsuites_from_directory
-from lemoncheesecake.worker import Worker
+from lemoncheesecake.worker import Worker, add_worker
 from lemoncheesecake import *
 
 class OmdbapiWorker(Worker):
@@ -380,8 +381,9 @@ class OmdbapiWorker(Worker):
         except ValueError:
             raise AbortTest("The returned JSON is not valid")
 
+add_worker("omdb", OmdbapiWorker())
+
 launcher = Launcher()
-launcher.set_worker(OmdbapiWorker())
 launcher.load_testsuites(import_testsuites_from_directory("tests"))
 launcher.handle_cli()
 
@@ -391,7 +393,7 @@ from lemoncheesecake import *
 class movies(TestSuite):
 	@test("Some test")
 	def test_matrix(self):
-		data = worker.get_movie_info("matrix", 1999)
+		data = self.omdb.get_movie_info("matrix", 1999)
 		set_step("Check movie information")
 		check_dictval_str_eq("Title", data, "The Matrix")
 		check_dictval_str_contains("Actors", data, "Keanu Reeves")

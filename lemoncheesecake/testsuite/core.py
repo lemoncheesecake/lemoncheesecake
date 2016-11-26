@@ -31,7 +31,7 @@ class TestSuite:
     tags = [ ]
     properties = {}
     links = [ ]
-    sub_suites = [ ]        
+    sub_suites = [ ]
     
     def has_hook(self, hook_name):
         return object_has_method(self, hook_name)
@@ -76,7 +76,7 @@ class TestSuite:
 
         # filtering data
         self._selected_test_ids = [ t.id for t in self._tests ]
-    
+        
     def get_path(self):
         suites = [ self ]
         parent_suite = self.parent_suite
