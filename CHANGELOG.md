@@ -1,3 +1,8 @@
+# 0.3.1 (2016-11-28)
+
+- **API**: multiple workers can now be used
+- **API**: worker's hooks execution is now performed within the reporting session context (logs, attachments, etc... can be used in hooks)
+
 # 0.3.0 (2016-11-24)
 
 - **API**: heavy work to improve the reporting layer (lemoncheesecake.reporting) code and API
