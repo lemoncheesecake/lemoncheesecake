@@ -11,7 +11,7 @@ import time
 import argparse
 import traceback
 
-from lemoncheesecake.worker import get_workers, get_worker_names, get_worker
+from lemoncheesecake import workers
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.launcher.filter import Filter
@@ -114,35 +114,37 @@ class Launcher:
             self._load_testsuite(suite)
             self._testsuites.append(suite)
     
+    def _handle_exception(self, excp, suite=None):
+        rt = get_runtime()
+            
+        if isinstance(excp, AbortTest):
+            rt.log_error(str(excp))
+        elif isinstance(excp, AbortTestSuite):
+            rt.log_error(str(excp))
+            self.abort_testsuite = suite
+        elif isinstance(excp, AbortAllTests):
+            rt.log_error(str(excp))
+            self.abort_all_tests = True
+        elif isinstance(excp, KeyboardInterrupt):
+            rt.log_error("All tests have been interrupted manually by the user")
+            self.abort_all_tests = True
+        else:
+            # FIXME: use exception instead of last implicit stacktrace
+            stacktrace = traceback.format_exc()
+            if not IS_PYTHON3:
+                stacktrace = stacktrace.decode("utf-8")
+            rt.log_error("Caught unexpected exception while running test: " + stacktrace)
+    
     def _run_testsuite(self, suite):
         rt = get_runtime()
-                
-        def handle_exception(e):
-            if isinstance(e, AbortTest):
-                rt.log_error(str(e))
-            elif isinstance(e, AbortTestSuite):
-                rt.log_error(str(e))
-                self.abort_testsuite = suite
-            elif isinstance(e, AbortAllTests):
-                rt.log_error(str(e))
-                self.abort_all_tests = True
-            elif isinstance(e, KeyboardInterrupt):
-                rt.log_error("All tests have been interrupted manually by the user")
-                self.abort_all_tests = True
-            else:
-                # FIXME; use exception instead of last implicit stacktrace
-                stacktrace = traceback.format_exc()
-                if not IS_PYTHON3:
-                    stacktrace = stacktrace.decode("utf-8")
-                rt.log_error("Caught unexpected exception while running test: " + stacktrace)
 
         # set workers
-        for worker_name in get_worker_names():
+        for worker_name in workers.get_worker_names():
             if hasattr(suite, worker_name):
                 raise ProgrammingError("Cannot set worker '%s' into testsuite '%s', it already has an attribute with that name" % (
                     worker_name, suite
                 ))
-            setattr(suite, worker_name, get_worker(worker_name))
+            setattr(suite, worker_name, workers.get_worker(worker_name))
     
         rt.begin_before_suite(suite)
 
@@ -151,10 +153,10 @@ class Launcher:
                 if suite.has_hook("before_suite"):
                     suite.before_suite()
             except Exception as e:
-                handle_exception(e)
+                self._handle_exception(e, suite)
                 self.abort_testsuite = suite
             except KeyboardInterrupt as e:
-                handle_exception(e)
+                self._handle_exception(e, suite)
             suite_data = rt.report.get_suite(suite.id)
             if suite_data.before_suite and suite_data.before_suite.has_failure():
                 self.abort_testsuite = suite
@@ -177,21 +179,21 @@ class Launcher:
                     suite.before_test(test.id)
                 test.callback(suite)
             except Exception as e:
-                handle_exception(e)
+                self._handle_exception(e, suite)
                 rt.end_test()
                 continue
             except KeyboardInterrupt as e:
-                handle_exception(e)
+                self._handle_exception(e, suite)
             
             if suite.has_hook("after_test"):
                 try:
                     suite.after_test(test.id)
                 except Exception as e:
-                    handle_exception(e)
+                    self._handle_exception(e, suite)
                     rt.end_test()
                     continue
                 except KeyboardInterrupt as e:
-                    handle_exception(e)
+                    self._handle_exception(e, suite)
             
             rt.end_test()
         
@@ -204,9 +206,9 @@ class Launcher:
             try:
                 suite.after_suite()
             except Exception as e:
-                handle_exception(e)
+                self._handle_exception(e, suite)
             except KeyboardInterrupt as e:
-                handle_exception(e)
+                self._handle_exception(e, suite)
             
         rt.end_after_suite()
         
@@ -259,18 +261,43 @@ class Launcher:
         # init report information
         rt.report.add_info("Command line", " ".join(sys.argv))
         
-        for worker in get_workers():
-            worker.before_tests()
+        rt.begin_tests()
+        
+        # workers hook before_all_tests handling
+        wrks = workers.get_workers_with_hook_before_all_tests()
+        if wrks:
+            rt.begin_worker_hook_before_all_tests()
+            for worker in wrks:
+                try:
+                    worker.before_all_tests()
+                except Exception as e:
+                    self._handle_exception(e)
+                    self.abort_all_tests = True
+                except KeyboardInterrupt as e:
+                    self._handle_exception(e)
+            rt.end_worker_hook_before_all_tests()
+            if rt.report.before_all_tests.has_failure():
+                self.abort_all_tests = True
         
         # run tests
-        rt.begin_tests()
         for suite in testsuites:
             self._run_testsuite(suite)
-        rt.end_tests()
         
-        for worker in get_workers():
-            worker.after_tests()
-
+        # workers after_test hook
+        wrks = workers.get_workers_with_hook_after_all_tests()
+        if wrks:
+            rt.begin_worker_hook_after_all_tests()
+            for worker in wrks:
+                try:
+                    worker.after_all_tests()
+                except Exception as e:
+                    self._handle_exception(e)
+                except KeyboardInterrupt as e:
+                    self._handle_exception(e)
+            rt.end_worker_hook_after_all_tests()
+    
+        rt.end_tests()
+    
     def cli_run_testsuites(self, args):
         """Run the loaded test suites according to the command line parameters.
         
@@ -298,8 +325,8 @@ class Launcher:
             for backend in args.disable_reporting:
                 reporting.disable_backend(backend)
         
-        # initialize worker using CLI args and run tests
-        for worker in get_workers():
+        # initialize workers using CLI args and run tests
+        for worker in workers.get_workers():
             worker.cli_initialize(args)
         self.run_testsuites(filter, args.report_dir)
         

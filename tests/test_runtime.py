@@ -14,10 +14,12 @@ from lemoncheesecake.launcher import importer
 from lemoncheesecake.exceptions import *
 import lemoncheesecake as lcc
 from lemoncheesecake.runtime import get_runtime
+from lemoncheesecake.workers import Worker
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 from lemoncheesecake.reporting.backends.json_ import serialize_report
 
-from helpers import run_testsuite, run_testsuites, assert_report_from_testsuite, assert_report_from_testsuites, assert_report_stats
+from helpers import run_testsuite, run_testsuites, assert_report_from_testsuite, assert_report_from_testsuites, assert_report_stats, \
+    dump_report
 
 def test_simple_test():
     class MySuite(lcc.TestSuite):
@@ -314,7 +316,7 @@ def test_prepare_attachment(tmpdir):
             with open(filename, "w") as fh:
                 fh.write("some content")
     
-    run_testsuite(MySuite, tmpdir)
+    run_testsuite(MySuite, tmpdir=tmpdir)
     
     report = get_runtime().report
     
@@ -337,7 +339,7 @@ def test_save_attachment_file(tmpdir):
                 fh.write("some other content")
             lcc.save_attachment_file(filename, "some other file")
     
-    run_testsuite(MySuite, tmpdir)
+    run_testsuite(MySuite, tmpdir=tmpdir)
     
     report = get_runtime().report
     
@@ -356,7 +358,7 @@ def test_save_attachment_content(tmpdir):
         def sometest(self):
             lcc.save_attachment_content("foobar", "foobar.txt")
     
-    run_testsuite(MySuite, tmpdir)
+    run_testsuite(MySuite, tmpdir=tmpdir)
     
     report = get_runtime().report
     
@@ -459,4 +461,96 @@ def test_after_suite_failure():
     assert suite.after_suite.end_time != None
     assert suite.after_suite.steps[0].entries[0].message == "something bad happened"
     assert suite.after_suite.has_failure() == True
+    assert report.get_test("sometest").outcome == True
+
+def test_worker_before_all_tests_success():
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+    
+    class MyWorker(Worker):
+        def before_all_tests(self):
+            lcc.log_info("some log")
+    
+    run_testsuite(MySuite, worker=MyWorker())
+    
+    report = get_runtime().report
+
+    assert_report_from_testsuite(report, MySuite)
+    assert_report_stats(report, expected_test_successes=1)
+    
+    assert report.before_all_tests.start_time != None
+    assert report.before_all_tests.end_time != None
+    assert report.before_all_tests.steps[0].entries[0].message == "some log"
+    assert report.before_all_tests.has_failure() == False
+    assert report.get_test("sometest").outcome == True
+
+def test_worker_before_all_tests_failure():
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+    
+    class MyWorker(Worker):
+        def before_all_tests(self):
+            lcc.log_error("something bad happened")
+    
+    run_testsuite(MySuite, worker=MyWorker())
+    
+    report = get_runtime().report
+    
+    assert_report_from_testsuite(report, MySuite)
+    assert_report_stats(report, expected_test_failures=1, expected_errors=1, expected_error_logs=2)
+     
+    assert report.before_all_tests.start_time != None
+    assert report.before_all_tests.end_time != None
+    assert report.before_all_tests.steps[0].entries[0].message == "something bad happened"
+    assert report.before_all_tests.has_failure() == True
+    assert report.get_test("sometest").outcome == False
+ 
+def test_worker_after_all_tests_success():
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+    
+    class MyWorker(Worker):
+        def after_all_tests(self):
+            lcc.log_info("some log")
+    
+    run_testsuite(MySuite, worker=MyWorker())
+    
+    report = get_runtime().report
+ 
+    assert_report_from_testsuite(report, MySuite)
+    assert_report_stats(report, expected_test_successes=1)
+    
+    assert report.after_all_tests.start_time != None
+    assert report.after_all_tests.end_time != None
+    assert report.after_all_tests.steps[0].entries[0].message == "some log"
+    assert report.after_all_tests.has_failure() == False
+    assert report.get_test("sometest").outcome == True
+ 
+def test_worker_after_all_tests_failure():
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+    
+    class MyWorker(Worker):
+        def after_all_tests(self):
+            lcc.log_error("something bad happened")
+    
+    run_testsuite(MySuite, worker=MyWorker())
+         
+    report = get_runtime().report
+     
+    assert_report_from_testsuite(report, MySuite)
+    assert_report_stats(report, expected_test_successes=1, expected_errors=1, expected_error_logs=1)
+     
+    assert report.after_all_tests.start_time != None
+    assert report.after_all_tests.end_time != None
+    assert report.after_all_tests.steps[0].entries[0].message == "something bad happened"
+    assert report.after_all_tests.has_failure() == True
     assert report.get_test("sometest").outcome == True

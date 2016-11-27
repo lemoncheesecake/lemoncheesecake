@@ -83,19 +83,39 @@ class _Runtime:
         for session in self.reporting_sessions:
             callback(session)
     
-    def begin_tests(self):
-        self.report.start_time = time.time()
-        self.for_each_reporting_sessions(lambda b: b.begin_tests())
-    
     def _start_hook(self):
         hook_data = HookData()
         hook_data.start_time = time.time()
         return hook_data
     
+    def begin_tests(self):
+        self.report.start_time = time.time()
+        self.for_each_reporting_sessions(lambda b: b.begin_tests())
+    
     def end_tests(self):
         self.report.end_time = time.time()
         self.report.report_generation_time = self.report.end_time
         self.for_each_reporting_sessions(lambda b: b.end_tests())
+    
+    def begin_worker_hook_before_all_tests(self):
+        self.report.before_all_tests = self._start_hook()
+        self.current_step_data_list = self.report.before_all_tests.steps
+    
+    def end_worker_hook_before_all_tests(self):
+        now = time.time()
+        if self.report.before_all_tests:
+            self.report.before_all_tests.end_time = now
+        self.end_current_step()
+
+    def begin_worker_hook_after_all_tests(self):
+        self.report.after_all_tests = self._start_hook()
+        self.current_step_data_list = self.report.after_all_tests.steps
+    
+    def end_worker_hook_after_all_tests(self):
+        now = time.time()
+        if self.report.after_all_tests:
+            self.report.after_all_tests.end_time = now
+        self.end_current_step()
     
     def begin_before_suite(self, testsuite):
         self.current_testsuite = testsuite

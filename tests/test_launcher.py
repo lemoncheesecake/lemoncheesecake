@@ -11,6 +11,7 @@ import shutil
 import pytest
 
 from lemoncheesecake.launcher import Launcher, Filter
+from lemoncheesecake.workers import Worker
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.exceptions import *
 import lemoncheesecake as lcc
@@ -59,7 +60,7 @@ def test_exception_unexpected(reporting_session):
     assert reporting_session.get_test_outcome("first_test") == False
     assert reporting_session.get_test_outcome("second_test") == True
 
-def test_excepion_aborttest(reporting_session):
+def test_exception_aborttest(reporting_session):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
@@ -152,6 +153,34 @@ def test_sub_testsuite_attr(reporting_session):
     run_testsuite(MyParentSuite)
     
     assert reporting_session.get_test_outcome("sometest") == True
+
+def test_hook_worker_before_all_tests(reporting_session):
+    class MyWorker(Worker):
+        def before_all_tests(self):
+            lcc.log_info("hook called")
+    
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+    
+    run_testsuite(MySuite, worker=MyWorker())
+    
+    assert reporting_session.get_last_log() == "hook called"
+
+def test_hook_worker_after_all_tests(reporting_session):
+    class MyWorker(Worker):
+        def after_all_tests(self):
+            lcc.log_info("hook called")
+    
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+    
+    run_testsuite(MySuite, worker=MyWorker())
+    
+    assert reporting_session.get_last_log() == "hook called"
 
 def test_hook_before_test(reporting_session):
     class MySuite(lcc.TestSuite):
@@ -283,6 +312,66 @@ def test_hook_error_after_suite_because_of_error_log(reporting_session):
             lcc.log_error("some error")
         
     run_testsuite(MySuite)
+
+    assert reporting_session.get_last_test_outcome() == True
+    assert_report_errors(1)
+
+def test_hook_error_worker_before_all_tests_because_of_exception(reporting_session):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    class MyWorker(Worker):
+        def before_all_tests(self):
+            1 / 0
+
+    run_testsuite(MySuite, worker=MyWorker())
+
+    assert reporting_session.get_last_test_outcome() == False
+    assert_report_errors(1)
+
+def test_hook_error_worker_before_all_tests_because_of_error_log(reporting_session):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    class MyWorker(Worker):
+        def before_all_tests(self):
+            lcc.log_error("some error")
+
+    run_testsuite(MySuite, worker=MyWorker())
+
+    assert reporting_session.get_last_test_outcome() == False
+    assert_report_errors(1)
+
+def test_hook_error_worker_after_all_tests_because_of_exception(reporting_session):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    class MyWorker(Worker):
+        def after_all_tests(self):
+            1 / 0
+            
+    run_testsuite(MySuite, worker=MyWorker())
+
+    assert reporting_session.get_last_test_outcome() == True
+    assert_report_errors(1)
+
+def test_hook_error_worker_after_all_tests_because_of_error_log(reporting_session):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    class MyWorker(Worker):
+        def after_all_tests(self):
+            lcc.log_error("some error")
+        
+    run_testsuite(MySuite, worker=MyWorker())
 
     assert reporting_session.get_last_test_outcome() == True
     assert_report_errors(1)

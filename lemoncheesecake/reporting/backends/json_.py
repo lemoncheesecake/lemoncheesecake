@@ -63,6 +63,13 @@ def _serialize_test_data(test):
     ))
     return serialized
 
+def _serialize_hook_data(hook_data):
+    return _dict(
+        "start_time", _time_value(hook_data.start_time),
+        "end_time", _time_value(hook_data.end_time),
+        "steps", _serialize_steps(hook_data.steps)
+    )
+
 def _serialize_testsuite_data(suite):
     json_suite = _serialize_common_data(suite)
     json_suite.update(_dict(
@@ -70,29 +77,30 @@ def _serialize_testsuite_data(suite):
         "sub_suites", [ _serialize_testsuite_data(s) for s in suite.sub_testsuites ]
     ))
     if suite.before_suite:
-        json_suite["before_suite"] = _dict(
-            "start_time", _time_value(suite.before_suite.start_time),
-            "end_time", _time_value(suite.before_suite.end_time),
-            "steps", _serialize_steps(suite.before_suite.steps)
-        )
+        json_suite["before_suite"] = _serialize_hook_data(suite.before_suite)
     if suite.after_suite:
-        json_suite["after_suite"] = _dict(
-            "start_time", _time_value(suite.after_suite.start_time),
-            "end_time", _time_value(suite.after_suite.end_time),
-            "steps", _serialize_steps(suite.after_suite.steps)
-        )
+        json_suite["after_suite"] = _serialize_hook_data(suite.after_suite)
     
     return json_suite
 
-def serialize_report(data):
-    return _dict(
-        "start_time", _time_value(data.start_time),
-        "end_time", _time_value(data.end_time),
-        "generation_time", _time_value(data.report_generation_time),
-        "suites", [ _serialize_testsuite_data(s) for s in data.testsuites ],
-        "info", [ [ n, v ] for n, v in data.info ],
-        "stats", [ [ n, v ] for n, v in data.serialize_stats() ],
+def serialize_report(report):
+    serialized = _dict(
+        "start_time", _time_value(report.start_time),
+        "end_time", _time_value(report.end_time),
+        "generation_time", _time_value(report.report_generation_time),
+        "info", [ [ n, v ] for n, v in report.info ],
+        "stats", [ [ n, v ] for n, v in report.serialize_stats() ]
     )
+    
+    if report.before_all_tests:
+        serialized["before_all_tests"] = _serialize_hook_data(report.before_all_tests)
+    
+    serialized["suites"] = [ _serialize_testsuite_data(s) for s in report.testsuites ]
+    
+    if report.after_all_tests:
+        serialized["after_all_tests"] = _serialize_hook_data(report.after_all_tests)
+    
+    return serialized
 
 def serialize_report_into_file(data, filename, javascript_compatibility=True, pretty_formatting=False):
     report = serialize_report(data)
@@ -130,6 +138,14 @@ def _unserialize_test_data(js):
     test.steps = [ _unserialize_step_data(s) for s in js["steps"] ]
     return test
 
+def _unserialize_hook_data(js):
+    data = HookData()
+    data.start_time = float(js["start_time"])
+    data.end_time = float(js["end_time"])
+    data.steps = [ _unserialize_step_data(s) for s in js["steps"] ]
+
+    return data
+
 def _unserialize_testsuite_data(js, parent=None):
     suite = TestSuiteData(js["id"], js["description"], parent)
     suite.tags = js["tags"]
@@ -137,18 +153,12 @@ def _unserialize_testsuite_data(js, parent=None):
     suite.links = [ (link["url"], link["name"]) for link in js["links"] ]
 
     if "before_suite" in js:
-        suite.before_suite = HookData()
-        suite.before_suite.start_time = float(js["before_suite"]["start_time"])
-        suite.before_suite.end_time = float(js["before_suite"]["end_time"])
-        suite.before_suite.steps = [ _unserialize_step_data(s) for s in js["before_suite"]["steps"] ]
+        suite.before_suite = _unserialize_hook_data(js["before_suite"])
 
     suite.tests = [ _unserialize_test_data(t) for t in js["tests"] ]
     
     if "after_suite" in js:
-        suite.after_suite = HookData()
-        suite.after_suite.start_time = float(js["after_suite"]["start_time"])
-        suite.after_suite.end_time = float(js["after_suite"]["end_time"])
-        suite.after_suite.steps = [ _unserialize_step_data(s) for s in js["after_suite"]["steps"] ]
+        suite.after_suite = _unserialize_hook_data(js["after_suite"])
     
     suite.sub_testsuites = [ _unserialize_testsuite_data(s, suite) for s in js["sub_suites"] ]
     
@@ -166,7 +176,15 @@ def unserialize_report_from_file(filename):
     report.start_time = float(js["start_time"])
     report.end_time = float(js["end_time"])
     report.report_generation_time = float(js["generation_time"])
+    
+    if "before_all_tests" in js:
+        report.before_all_tests = _unserialize_hook_data(js["before_all_tests"])
+    
     report.testsuites = [ _unserialize_testsuite_data(s) for s in js["suites"] ]
+    
+    if "after_all_tests" in js:
+        report.after_all_tests = _unserialize_hook_data(js["after_all_tests"])
+    
     return report
 
 class JsonBackend(FileReportBackend):

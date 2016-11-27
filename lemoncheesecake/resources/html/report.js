@@ -242,6 +242,15 @@ function Report(data, node) {
 	this.data = data;
 	this.suites = [];
 	this.node = node;
+	this.before_all_tests = null;
+	this.after_all_tests = null;
+	
+	if (data.before_all_tests) {
+		this.before_all_tests = new Test("n/a", " - Before all tests -", "n/a", data.before_all_tests.steps);
+	}
+	if (data.after_all_tests) {
+		this.after_all_tests = new Test("n/a", " - After all tests -", "n/a", data.after_all_tests.steps);
+	}
 	
 	for (var i = 0; i < data.suites.length; i++) {
 		this.suites.push(new TestSuite(data.suites[i]));
@@ -263,6 +272,15 @@ Report.prototype = {
 		return $table;
 	},
 	
+	render_hook_data: function(test, label) {
+		var $panel_heading = $("<div class='panel-heading'>" + label + "</div>");
+		var $panel = $("<div class='panel panel-default panel-primary'>").append($panel_heading);
+		rows = test.render();
+		var $table = $("<table class='table table-hover table-bordered table-condensed'/>").append($("<tbody>").append(rows));
+		$panel.append($table);
+		return $panel;
+	},
+	
 	render: function () {
 		$("<h1>Information</h1>").appendTo(this.node);
 		this.render_key_value_table(this.data.info).appendTo(this.node);
@@ -271,11 +289,22 @@ Report.prototype = {
 		this.render_key_value_table(this.data.stats).appendTo(this.node);
 		
 		$("<h1>Test results</h1>").appendTo(this.node);
+		
+		if (this.before_all_tests) {
+			$panel = this.render_hook_data(this.before_all_tests, "- Before all tests -");
+			$panel.appendTo(this.node);
+		}
+		
 		for (var i = 0; i < this.suites.length; i++) {
 			panels = this.suites[i].render();
 			for (var j = 0; j < panels.length; j++) {
 				$(panels[j]).appendTo(this.node);
 			}
+		}
+		
+		if (this.after_all_tests) {
+			$panel = this.render_hook_data(this.after_all_tests, "- After all tests -");
+			$panel.appendTo(this.node);
 		}
 	}	
 };

@@ -10,20 +10,25 @@ import sys
 
 import lemoncheesecake as lcc
 from lemoncheesecake.runtime import get_runtime
+from lemoncheesecake.workers import Worker
+from lemoncheesecake.reporting.backend import set_enabled_backends
 
-from helpers import run_testsuite, run_testsuites, assert_report
+from helpers import run_testsuite, run_testsuites, assert_report, dump_report
 
-def do_test_serialization(suites, backend, tmpdir):
+def do_test_serialization(suites, backend, tmpdir, worker=None):
+    set_enabled_backends([backend.name])
+    
     if type(suites) in (list, tuple):
-        run_testsuites(suites)
+        run_testsuites(suites, worker=worker)
     else:
-        run_testsuite(suites)
+        run_testsuite(suites, worker=worker)
     
     report = get_runtime().report
-        
+    
     backend.serialize_report(report, tmpdir.strpath)
-#     print >> sys.stderr, open(tmpdir.strpath + "/report.xml").read()
     unserialized_report = backend.unserialize_report(tmpdir.strpath)
+    
+#     dump_report(unserialized_report)
     
     assert_report(unserialized_report, report)    
 
@@ -226,3 +231,80 @@ def test_after_suite_failure(backend, tmpdir):
             lcc.log_error("something bad happened")
 
     do_test_serialization(MySuite, backend, tmpdir)
+
+def test_before_and_after_suite(backend, tmpdir):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+        
+        def before_suite(self):
+            lcc.log_info("some log")
+
+        def after_suite(self):
+            lcc.log_info("some other log")
+
+    do_test_serialization(MySuite, backend, tmpdir)
+
+def test_worker_before_all_tests_success(backend, tmpdir):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    class MyWorker(Worker):
+        def before_all_tests(self):
+            lcc.log_info("some log")
+
+    do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
+
+def test_worker_before_all_tests_failure(backend, tmpdir):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    class MyWorker(Worker):
+        def before_all_tests(self):
+            lcc.log_error("something bad happened")
+
+    do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
+
+def test_worker_after_all_tests_success(backend, tmpdir):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    class MyWorker(Worker):
+        def after_all_tests(self):
+            lcc.log_info("some log")
+
+    do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
+
+def test_worker_after_all_tests_failure(backend, tmpdir):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    class MyWorker(Worker):
+        def after_all_tests(self):
+            lcc.log_error("something bad happened")
+    
+    do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
+
+def test_worker_before_and_after_all_tests(backend, tmpdir):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    class MyWorker(Worker):
+        def before_all_tests(self):
+            lcc.log_info("some log")
+            
+        def after_all_tests(self):
+            lcc.log_info("some other log")
+
+    do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())

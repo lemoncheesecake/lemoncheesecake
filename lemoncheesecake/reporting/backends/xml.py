@@ -106,6 +106,11 @@ def _serialize_test_data(test):
     
     return test_node
 
+def _serialize_hook_data(data, node):
+    _add_time_attr(node, "start-time", data.start_time)
+    _add_time_attr(node, "end-time", data.end_time)
+    _serialize_steps(data.steps, node)
+
 def _serialize_testsuite_data(suite):
     suite_node = _xml_node("suite", "id", suite.id, "description", suite.description)
     for tag in suite.tags:
@@ -120,10 +125,7 @@ def _serialize_testsuite_data(suite):
     
     # before suite
     if suite.before_suite:
-        before_suite_node = _xml_child(suite_node, "before-suite")
-        _add_time_attr(before_suite_node, "start-time", suite.before_suite.start_time)
-        _add_time_attr(before_suite_node, "end-time", suite.before_suite.end_time)
-        _serialize_steps(suite.before_suite.steps, before_suite_node)
+        _serialize_hook_data(suite.before_suite, _xml_child(suite_node, "before-suite"))
     
     # tests
     for test in suite.tests:
@@ -137,10 +139,7 @@ def _serialize_testsuite_data(suite):
     
     # after suite
     if suite.after_suite:
-        after_suite_node = _xml_child(suite_node, "after-suite")
-        _add_time_attr(after_suite_node, "start-time", suite.after_suite.start_time)
-        _add_time_attr(after_suite_node, "end-time", suite.after_suite.end_time)
-        _serialize_steps(suite.after_suite.steps, after_suite_node)
+        _serialize_hook_data(suite.after_suite, _xml_child(suite_node, "after-suite"))
     
     return suite_node
 
@@ -149,15 +148,24 @@ def serialize_report_as_tree(report):
     _add_time_attr(xml, "start-time", report.start_time)
     _add_time_attr(xml, "end-time", report.end_time)
     _add_time_attr(xml, "generation-time", report.report_generation_time)
+    
     for name, value in report.info:
         info_node = _xml_child(xml, "info", "name", name)
         info_node.text = value
     for name, value in report.serialize_stats():
         stat_node = _xml_child(xml, "stat", "name", name)
         stat_node.text = value
+
+    if report.before_all_tests:
+        _serialize_hook_data(report.before_all_tests, _xml_child(xml, "before-all-tests"))
+
     for suite in report.testsuites:
         suite_node = _serialize_testsuite_data(suite)
         xml.append(suite_node)
+
+    if report.after_all_tests:
+        _serialize_hook_data(report.after_all_tests, _xml_child(xml, "after-all-tests"))
+    
     return xml
 
 def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
@@ -208,6 +216,13 @@ def _unserialize_test_data(xml):
     test.steps = [ _unserialize_step_data(s) for s in xml.xpath("step") ]
     return test
 
+def _unserialize_hook_data(xml):
+    data = HookData()
+    data.start_time = float(xml.attrib["start-time"])
+    data.end_time = float(xml.attrib["end-time"])
+    data.steps = [ _unserialize_step_data(s) for s in xml.xpath("step") ]
+    return data
+
 def _unserialize_testsuite_data(xml, parent=None):
     suite = TestSuiteData(xml.attrib["id"], xml.attrib["description"], parent)
     suite.tags = [ node.text for node in xml.xpath("tag") ]
@@ -217,20 +232,14 @@ def _unserialize_testsuite_data(xml, parent=None):
     before_suite = xml.xpath("before-suite")
     before_suite = before_suite[0] if len(before_suite) > 0 else None
     if before_suite != None:
-        suite.before_suite = HookData()
-        suite.before_suite.start_time = float(before_suite.attrib["start-time"])
-        suite.before_suite.end_time = float(before_suite.attrib["end-time"])
-        suite.before_suite.steps = [ _unserialize_step_data(s) for s in before_suite.xpath("step") ]
+        suite.before_suite = _unserialize_hook_data(before_suite)
         
     suite.tests = [ _unserialize_test_data(t) for t in xml.xpath("test") ]
     
     after_suite = xml.xpath("after-suite")
     after_suite = after_suite[0] if len(after_suite) > 0 else None
     if after_suite != None:
-        suite.after_suite = HookData()
-        suite.after_suite.start_time = float(after_suite.attrib["start-time"])
-        suite.after_suite.end_time = float(after_suite.attrib["end-time"])
-        suite.after_suite.steps = [ _unserialize_step_data(s) for s in after_suite.xpath("step") ]
+        suite.after_suite = _unserialize_hook_data(after_suite)
     
     suite.sub_testsuites = [ _unserialize_testsuite_data(s, suite) for s in xml.xpath("suite") ]
     
@@ -243,19 +252,29 @@ def _unserialize_keyvalue_list(nodes):
     return ret
 
 def unserialize_report_from_file(filename):
-    data = Report()
+    report = Report()
     xml = ET.parse(open(filename, "r"))
     root = xml.getroot().xpath("/lemoncheesecake-report")[0]
-    data.start_time = float(root.attrib["start-time"]) if "start-time" in root.attrib else None
-    data.end_time = float(root.attrib["end-time"]) if "end-time" in root.attrib else None
-    data.report_generation_time = float(root.attrib["generation-time"]) if "generation-time" in root.attrib else None
-    data.info = _unserialize_keyvalue_list(root.xpath("info"))
-    data.stats = _unserialize_keyvalue_list(root.xpath("stat"))
+    report.start_time = float(root.attrib["start-time"]) if "start-time" in root.attrib else None
+    report.end_time = float(root.attrib["end-time"]) if "end-time" in root.attrib else None
+    report.report_generation_time = float(root.attrib["generation-time"]) if "generation-time" in root.attrib else None
+    report.info = _unserialize_keyvalue_list(root.xpath("info"))
+    report.stats = _unserialize_keyvalue_list(root.xpath("stat"))
     
+    before_all_tests = xml.xpath("before-all-tests")
+    before_all_tests = before_all_tests[0] if len(before_all_tests) else None
+    if before_all_tests:
+        report.before_all_tests = _unserialize_hook_data(before_all_tests)
+        
     for xml_suite in root.xpath("suite"):
-        data.testsuites.append(_unserialize_testsuite_data(xml_suite))
+        report.testsuites.append(_unserialize_testsuite_data(xml_suite))
+
+    after_all_tests = xml.xpath("after-all-tests")
+    after_all_tests = after_all_tests[0] if len(after_all_tests) else None
+    if after_all_tests:
+        report.after_all_tests = _unserialize_hook_data(after_all_tests)
     
-    return data
+    return report
 
 class XmlBackend(FileReportBackend):
     name = "xml"

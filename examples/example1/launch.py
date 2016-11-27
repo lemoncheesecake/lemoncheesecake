@@ -4,11 +4,17 @@ import sys
 sys.path.append("..")
 
 from lemoncheesecake.launcher import Launcher, import_testsuites_from_directory
-from lemoncheesecake.worker import Worker, add_worker
+from lemoncheesecake.workers import Worker, add_worker
 from lemoncheesecake.reporting import get_backend, enable_backend
+from lemoncheesecake import *
 
 class MyWorker(Worker):
-    pass
+    def before_all_tests(self):
+        log_info("some log")
+    
+    def after_all_tests(self):
+        log_info("some other log")
+
 add_worker("myworker", MyWorker())
 
 enable_backend("xml")

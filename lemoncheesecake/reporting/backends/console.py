@@ -53,6 +53,7 @@ class ConsoleReportingSession(ReportingSession):
         ReportingSession.__init__(self, report, report_dir)
         init() # init colorama
         self.lp = LinePrinter()
+        self.context = None
     
     def begin_tests(self):
         self.previous_obj = None
@@ -79,6 +80,7 @@ class ConsoleReportingSession(ReportingSession):
     
     def end_after_suite(self, testsuite):
         self.lp.erase_line()
+        self.context = None
         
     def begin_test(self, test):
         self.context = CTX_TEST
@@ -101,7 +103,7 @@ class ConsoleReportingSession(ReportingSession):
             self.lp.print_line(" => before suite: %s" % description)
         elif self.context == CTX_AFTER_SUITE:
             self.lp.print_line(" => after suite: %s" % description)
-        else:
+        elif self.context == CTX_TEST:
             description += "..."
             line = "%s (%s)" % (self.current_test_line, description)
             line = re.sub("^(.{70})(.+)(.{30})$", "\\1...\\3", line)

@@ -121,6 +121,16 @@ class ReportStats:
         self.error_logs = 0
         self.warning_logs = 0
         
+        if report.before_all_tests:
+            if report.before_all_tests.has_failure():
+                self.errors += 1
+            self._walk_steps(report.before_all_tests.steps)
+        
+        if report.after_all_tests:
+            if report.after_all_tests.has_failure():
+                self.errors += 1
+            self._walk_steps(report.after_all_tests.steps)
+        
         for suite in report.testsuites:
             self._walk_testsuite(suite)
     
@@ -164,6 +174,8 @@ class ReportStats:
 class Report:
     def __init__(self):
         self.info = [ ]
+        self.before_all_tests = None
+        self.after_all_tests = None
         self.testsuites = [ ]
         self.start_time = None
         self.end_time = None

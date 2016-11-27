@@ -73,6 +73,12 @@ class ReportingSession:
     def end_tests(self):
         pass
     
+    def begin_worker_before_all_tests(self):
+        pass
+    
+    def end_worker_after_all_tests(self):
+        pass
+    
     def begin_before_suite(self, testsuite):
         pass
     

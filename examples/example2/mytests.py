@@ -5,7 +5,7 @@ import urllib2
 import json
 
 from lemoncheesecake.launcher import Launcher, import_testsuites_from_directory
-from lemoncheesecake.worker import Worker, add_worker
+from lemoncheesecake.workers import Worker, add_worker
 from lemoncheesecake import *
 
 class OmdbapiWorker(Worker):

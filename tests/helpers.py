@@ -14,6 +14,8 @@ import pytest
 from lemoncheesecake.launcher import Launcher, Filter
 from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
+from lemoncheesecake.workers import add_worker, clear_workers
+from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 
 def build_test_module(name="mytestsuite"):
     return """
@@ -77,9 +79,13 @@ def get_reporting_session():
 def reporting_session():
     return get_reporting_session()
 
-def run_testsuites(suites, tmpdir=None):
+def run_testsuites(suites, worker=None, tmpdir=None):
     launcher = Launcher()
     launcher.load_testsuites(suites)
+    
+    clear_workers()
+    if worker:
+        add_worker("testworker", worker)
     
     if tmpdir:
         launcher.run_testsuites(Filter(), os.path.join(tmpdir.strpath, "report"))
@@ -90,9 +96,13 @@ def run_testsuites(suites, tmpdir=None):
         finally:
             shutil.rmtree(report_dir)
 
-def run_testsuite(suite, tmpdir=None):
-    run_testsuites([suite], tmpdir)
-    
+def run_testsuite(suite, worker=None, tmpdir=None):
+    run_testsuites([suite], worker=worker, tmpdir=tmpdir)
+
+def dump_report(report):
+    xml = serialize_report_as_string(report)
+    print >> sys.stderr, xml
+
 def dummy_test_callback(suite):
     pass
 
@@ -138,7 +148,16 @@ def assert_test_data(actual, expected):
     assert len(actual.steps) == len(expected.steps)
     for actual_step, expected_step in zip(actual.steps, expected.steps):
         assert_step_data(actual_step, expected_step)
-        
+
+def assert_hook_data(actual, expected):
+    if expected == None:
+        assert actual == None
+    else:
+        assert actual.start_time == expected.start_time
+        assert actual.end_time == expected.end_time
+        assert len(actual.steps) == len(expected.steps)
+        for actual_step, expected_step in zip(actual.steps, expected.steps):
+            assert_step_data(actual_step, expected_step)
 
 def assert_testsuite_data(actual, expected):
     assert actual.id == expected.id
@@ -151,14 +170,7 @@ def assert_testsuite_data(actual, expected):
     assert actual.properties == expected.properties
     assert actual.links == expected.links
     
-    if expected.before_suite == None:
-        assert actual.before_suite == None
-    else:
-        assert actual.before_suite.start_time == expected.before_suite.start_time
-        assert actual.before_suite.end_time == expected.before_suite.end_time
-        assert len(actual.before_suite.steps) == len(expected.before_suite.steps)
-        for actual_step, expected_step in zip(actual.before_suite.steps, expected.before_suite.steps):
-            assert_step_data(actual_step, expected_step)
+    assert_hook_data(actual.before_suite, expected.before_suite)
     
     assert len(actual.tests) == len(expected.tests)
     for actual_test, expected_test in zip(actual.tests, expected.tests):
@@ -168,14 +180,7 @@ def assert_testsuite_data(actual, expected):
     for actual_subsuite, expected_subsuite in zip(actual.sub_testsuites, expected.sub_testsuites):
         assert_testsuite_data(actual_subsuite, expected_subsuite)
 
-    if expected.after_suite == None:
-        assert actual.after_suite == None
-    else:
-        assert actual.after_suite.start_time == expected.after_suite.start_time
-        assert actual.after_suite.end_time == expected.after_suite.end_time
-        assert len(actual.after_suite.steps) == len(expected.after_suite.steps)
-        for actual_step, expected_step in zip(actual.after_suite.steps, expected.after_suite.steps):
-            assert_step_data(actual_step, expected_step)
+    assert_hook_data(actual.after_suite, expected.after_suite)
 
 def assert_report(actual, expected):
     assert actual.info == expected.info
@@ -184,8 +189,12 @@ def assert_report(actual, expected):
     assert actual.report_generation_time == expected.report_generation_time
     assert len(actual.testsuites) == len(expected.testsuites)
     
+    assert_hook_data(actual.before_all_tests, expected.before_all_tests)
+    
     for actual_testsuite, expected_testsuite in zip(actual.testsuites, expected.testsuites):
         assert_testsuite_data(actual_testsuite, expected_testsuite)
+
+    assert_hook_data(actual.after_all_tests, expected.after_all_tests)
 
 def assert_steps_data(steps):
     for step in steps:
