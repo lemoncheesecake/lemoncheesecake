@@ -191,7 +191,7 @@ Workers are used to maintain a custom state for the user across the execution of
 ```python
 # launcher file:
 from lemoncheesecake.launcher import Launcher
-from lemoncheesecake.worker import Worker, add_worker
+from lemoncheesecake.workers import Worker, add_worker
 
 class MyWorker(Worker):
     def cli_initialize(self, cli_args):
@@ -218,7 +218,7 @@ class MySuite(TestSuite):
         self.myworker.do_some_operation(42)
 ```
 
-The worker class provides three hooks detailed in the API documentation:
+The Worker class provides three hooks detailed in the API documentation:
 
 - `cli_initialize`
 - `before_tests`
