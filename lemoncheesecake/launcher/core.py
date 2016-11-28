@@ -23,6 +23,39 @@ __all__ = ("Launcher", "get_launcher_abspath", "get_abspath_from_launcher")
 
 COMMAND_RUN = "run"
 
+def archive_dirname_datetime(ts, archives_dir):
+    return time.strftime("report-%Y%m%d-%H%M%S", time.localtime(ts))
+
+def report_dir_with_archives(dirname_callback):
+    script_dir = os.path.dirname(sys.argv[0])
+    archives_dir = os.path.join(script_dir, "reports")
+    
+    if platform.system() == "Windows":
+        report_dir = os.path.join(script_dir, "report")
+        if os.path.exists(report_dir):
+            if not os.path.exists(archives_dir):
+                os.mkdir(archives_dir)
+            os.rename(
+                report_dir, os.path.join(archives_dir, dirname_callback(os.path.getctime(report_dir), archives_dir))
+            )
+        os.mkdir(report_dir)
+        
+    else:
+        if not os.path.exists(archives_dir):
+            os.mkdir(archives_dir)
+        
+        report_dirname = dirname_callback(time.time(), archives_dir)
+    
+        report_dir = os.path.join(archives_dir, report_dirname)
+        os.mkdir(report_dir)
+    
+        symlink_path = os.path.join(os.path.dirname(report_dir), "..", "report")
+        if os.path.lexists(symlink_path):
+            os.unlink(symlink_path)
+        os.symlink(report_dir, symlink_path)
+    
+    return report_dir
+
 def report_dir_with_datetime(report_rootdir, t):
     return time.strftime("report-%Y%m%d-%H%M%S", time.localtime(t))
 
@@ -68,8 +101,7 @@ class Launcher:
         ###
         # Default report setup when no --report-dir has been setup
         ###
-        self.report_root_dir = os.path.join(os.path.dirname(sys.argv[0]), "reports")
-        self.report_dir_format = report_dir_with_datetime
+        self.report_dir_creation_callback = lambda: report_dir_with_archives(archive_dirname_datetime)
     
         ###
         # Testsuites data
@@ -239,19 +271,13 @@ class Launcher:
             if not testsuites:
                 raise LemonCheesecakeException("The test filter does not match any test.")
                 
+        # create report dir
+        if report_dir:
+            os.mkdir(report_dir)
+        else:
+            report_dir = self.report_dir_creation_callback()
+
         # initialize runtime & global test variables
-        if not report_dir:
-            if not os.path.exists(self.report_root_dir):
-                os.mkdir(self.report_root_dir)
-            report_dir = self.report_root_dir
-            report_dir += os.path.sep
-            report_dir += self.report_dir_format(self.report_root_dir, time.time())
-        os.mkdir(report_dir)
-        if platform.system() != "Windows":
-            symlink_path = os.path.join(os.path.dirname(report_dir), "..", "last_report")
-            if os.path.lexists(symlink_path):
-                os.unlink(symlink_path)
-            os.symlink(report_dir, symlink_path)
         initialize_runtime(report_dir)
         rt = get_runtime()
         rt.initialize_reporting_sessions()
