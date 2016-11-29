@@ -163,11 +163,13 @@ class CheckNotEq(Check):
 class CheckGt(Check):
     comparator_label = "is greater than"
     comparator = staticmethod(lambda a, e: a > e)
+    always_display_details = True
 
 @checker("gteq")
 class CheckGteq(Check):
     comparator_label = "is greater or equal than"
     comparator = staticmethod(lambda a, e: a >= e)
+    always_display_details = True
 
 ################################################################################
 # Lower than and Lower than or equal checkers 
@@ -213,11 +215,13 @@ class CheckStrDoesNotMatchPattern(CheckStrMatchPattern):
 class CheckStrContains(CheckStrEq):
     comparator_label = "contains"
     comparator = staticmethod(lambda a, e: e in a)
+    always_display_details = True
 
 @checker("str_does_not_contain")
 class CheckStrDoesNotContain(CheckStrEq):
     comparator_label = "does not contain"
     comparator = staticmethod(lambda a, e: e not in a)
+    always_display_details = True
 
 ################################################################################
 # Numeric checkers

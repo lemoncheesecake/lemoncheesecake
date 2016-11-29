@@ -48,6 +48,11 @@ class A(TestSuite):
         log_error("something goes wrong")
         #raise AbortTestSuite()
     
+    @test("Fourth test")
+    def fourth_test(self):
+        check_gteq("value", 4, 2)
+        check_str_contains("string", "foobar", "foo")
+    
     def load_generated_tests(self):
         tests = []
         for i in range(4):
