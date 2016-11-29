@@ -3,7 +3,7 @@
 .settings
 .DS_Store
 .cache
-examples/*/last_report
+examples/*/report
 examples/*/reports
 TODO
 dist/
