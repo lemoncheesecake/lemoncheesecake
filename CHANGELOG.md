@@ -1,3 +1,7 @@
+# 0.3.2 (2016-11-29)
+
+- **Reporting**: Rework the report dir creation so that the rotation mechanism also works on Windows
+
 # 0.3.1 (2016-11-28)
 
 - **API**: multiple workers can now be used
