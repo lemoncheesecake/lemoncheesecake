@@ -26,6 +26,7 @@ COMMAND_RUN = "run"
 def archive_dirname_datetime(ts, archives_dir):
     return time.strftime("report-%Y%m%d-%H%M%S", time.localtime(ts))
 
+# TODO: create two different functions
 def report_dir_with_archives(dirname_callback):
     script_dir = os.path.dirname(sys.argv[0])
     archives_dir = os.path.join(script_dir, "reports")
