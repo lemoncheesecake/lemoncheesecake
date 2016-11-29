@@ -53,6 +53,22 @@ class A(TestSuite):
         check_gteq("value", 4, 2)
         check_str_contains("string", "foobar", "foo")
     
+    @tags("<h1>My Tag</h1>")    
+    @prop("<h1>Prop name</h1>", "<h1>Prop value</h1>")
+    @link("http://bugtracker.net/tickets/1234", "<h1>link name</h1>")    
+    class HtmlEscaping(TestSuite):
+        description = "<h1>Test suite</h1>"
+
+        @tags("<h1>My Tag</h1>")    
+        @prop("<h1>Prop name</h1>", "<h1>Prop value</h1>")
+        @link("http://bugtracker.net/tickets/1234", "<h1>link name</h1>")    
+        @test("<h1>html escaping</h1>")
+        def html_escaping(self):
+            set_step("<h1>step description</h1>")
+            check_eq("<h1>value</h1>", "<h1>actual</h1>", "<h1>expected</h1>")
+            log_info("<h1>some log</h1>")
+            save_attachment_content("content", "filename", "<h1>attachment</h1>")
+        
     def load_generated_tests(self):
         tests = []
         for i in range(4):
