@@ -1,3 +1,14 @@
+// borrowed from http://stackoverflow.com/questions/6234773/can-i-escape-html-special-chars-in-javascript
+
+function escapeHtml(unsafe) {
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+
 function Step(step) {
 	this.step = step;
 };
@@ -6,7 +17,9 @@ Step.prototype = {
 	constructor: Step,
 	
 	render: function () {
-		this.step_row = $("<tr style='display: none' class='step'><td colspan='4'><u>" + this.step.description + "</u></td></tr>");
+		this.step_row = $("<tr style='display: none' class='step'>")
+			.append($("<td colspan='4'>")
+				.append($("<u>").text(this.step.description)));
 		this.entry_rows = [ ];
 		
 		for (i in this.step.entries) {
@@ -15,8 +28,8 @@ Step.prototype = {
 			this.entry_rows.push($row);
 			if (entry.type == "check") {
 				$row.addClass("check");
-				$row.append($("<td>" + entry.description + "</td>"));
-				$row.append($("<td colspan='2'>" + (entry.details ? entry.details : "") + "</td>"));
+				$row.append($("<td>").text(entry.description));
+				$row.append($("<td colspan='2'>").text(entry.details ? entry.details : ""));
 				if (entry.outcome) {
 					$row.append($("<td class='text-success'><strong>success</strong></td>"));
 				} else {
@@ -25,14 +38,14 @@ Step.prototype = {
 				}
 			} else if (entry.type == "log") {
 				$row.addClass("log");
-				$row.append($("<td colspan='3'><samp>" + entry.message + "</samp></td>"));
-				$row.append($("<td class='text-uppercase'>" + entry.level + "</td>"));
+				$row.append($("<td colspan='3'><samp>").text(entry.message));
+				$row.append($("<td class='text-uppercase'>").text(entry.level));
 				if (entry.level == "error") {
 					$row.addClass("danger");
 				}
 			} else if (entry.type == "attachment") {
 				$row.addClass("attachment");
-				$row.append("<td colspan='3'>Attachment: <a target='_blank' href='" + entry.filename + "'>" + entry.description + "</a></td>")
+				$row.append($("<td colspan='3'>Attachment: ").append($("<a>", { "target": "_blank", "href": entry.filename }).text(entry.description)));
 			}
 		}
 		
@@ -75,14 +88,16 @@ Test.prototype = {
 		var cols = [ ];
 
 		/* build description column */
-		var $test_desc = $("<h6><a name='" + this.id + "' href='#" + this.id + "'>" + this.description + "<br/><small>" + this.id + "</small></a></h6>");
+		var $test_desc = $("<h6><a>", {"name": this.id, "href": "#" + this.id}).text(this.description).append($("<br/><small>").text());
 		cols.push($("<td>").append($test_desc));
 
-		/* build tags column */
+		/* build tags & properties column */
 		var $tags = $("<span>" + 
-			this.tags.join("<br/>") + 
+			$.map(this.tags, function(tag) {
+				return escapeHtml(tag);
+			}).join("<br/>") +
 			$.map(this.properties, function(value, key) {
-				return key + ": " + value;
+				return escapeHtml(key + ": " + value);
 			}).join("<br/>") +
 			"</span>"
 		);
@@ -91,7 +106,7 @@ Test.prototype = {
 		/* build links column */
 		var $links = $.map(this.links, function (link) {
 			var label = link.name ? link.name : link.url;
-			return "<a href='" + link.url + "' title='" + label + "'>" + label + "</a>";
+			return "<a href='" + escapeHtml(link.url) + "' title='" + escapeHtml(label) + "'>" + escapeHtml(label) + "</a>";
 		}).join(", ");
 		cols.push($("<td>").append($links));
 
@@ -188,15 +203,14 @@ TestSuite.prototype = {
 		var panels = [ ];
 		var description = this.parents.map(function(p) { return p.description }).concat(this.description).join(" > ");
 		var $panel_heading = $("<div class='panel-heading'>");
-		$panel_heading.append($("<span>").append(description));
+		$panel_heading.append($("<span>").text(description));
 		if (this.properties.length > 0 || this.tags.length > 0) {
 			$panel_heading.append($("<br/>"));
-			$panel_heading.append($("<span style='font-size: 75%'>Properties/Tags: " + 
+			$panel_heading.append($("<span style='font-size: 75%'>Properties/Tags: ").text(
 				this.tags.join(", ") + (this.tags.length > 0 ? ", " : "") +
 				$.map(this.properties, function(value, key) {
 					return key + ": " + value;
-				}).join(", ") +
-				"</span>"
+				}).join(", ")
 			));
 		}
 		if (this.links.length > 0) {
@@ -204,7 +218,7 @@ TestSuite.prototype = {
 			$panel_heading.append($("<span style='font-size: 75%'>links: " +
 				$.map(this.links, function (link) {
 					var label = link.name ? link.name : link.url;
-					return "<a href='" + link.url + "' title='" + label + "'>" + label + "</a>";
+					return "<a href='" + escapeHtml(link.url) + "' title='" + escapeHtml(label) + "'>" + escapeHtml(label) + "</a>";
 			}).join(", ")));
 		}
 		var $panel = $("<div class='panel panel-default panel-primary' style='margin-left:" + (0 * this.parents.length) + "px'>")
@@ -265,8 +279,8 @@ Report.prototype = {
 		$table.append($("<colgroup><col width='30%'><col width='70%'></colgroup>"));
 		for (var i = 0; i < data.length; i++) {
 			$row = $("<tr>")
-				.append("<td>" + data[i][0] + "</td>")
-				.append("<td>" + data[i][1] + "</td>");
+				.append($("<td>").text(data[i][0]))
+				.append($("<td>").text(data[i][1]));
 			$table.append($row);
 		}
 		return $table;
