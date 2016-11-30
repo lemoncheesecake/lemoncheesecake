@@ -17,9 +17,7 @@ class MyWorker(Worker):
 
 add_worker("myworker", MyWorker())
 
-enable_backend("xml")
 get_backend("json").pretty_formatting = True
-get_backend("xml").indent_level = 4
 
 launcher = Launcher()
 launcher.load_testsuites(import_testsuites_from_directory("suites"))
