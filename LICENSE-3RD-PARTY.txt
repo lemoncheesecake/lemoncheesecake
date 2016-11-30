@@ -2,3 +2,6 @@ Lemoncheesecake includes 3rd party software, licensed under the MIT License (htt
 - jQuery - Copyright jQuery Foundation and other contributors (https://jquery.org/)
 - Bootstrap - Copyright Twitter (http://getbootstrap.com)
 - Slate - Copyright Thomas Mark (thomas@bootswatch.com) (https://bootswatch.com/slate/)
+
+Code without explicit license:
+- terminalsize.py - https://gist.github.com/jtriley/1108174
