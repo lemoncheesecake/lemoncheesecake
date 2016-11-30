@@ -77,7 +77,9 @@ class ConsoleReportingSession(ReportingSession):
         path = testsuite.get_path_str()
         path_len = len(path)
         max_width = min((self.terminal_width, 80))
-        padding_total = max_width - 2 - path_len if path_len <= (max_width - 2) else 0 # -2 corresponds to the two space characters at the left and right of testsuite path
+        # -2 corresponds to the two space characters at the left and right of testsuite path + another character to avoid
+        # an extra line after the testsuite line on Windows terminal having width <= 80
+        padding_total = max_width - 3 - path_len if path_len <= (max_width - 3) else 0
         padding_left = padding_total / 2
         padding_right = padding_total / 2 + padding_total % 2
         sys.stdout.write("=" * padding_left + " " + colored(testsuite.get_path_str(), attrs=["bold"]) + " " + "=" * padding_right + "\n")
