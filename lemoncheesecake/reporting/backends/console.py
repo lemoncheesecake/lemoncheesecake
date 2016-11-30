@@ -11,12 +11,14 @@ import re
 
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
 from lemoncheesecake.utils import IS_PYTHON3, humanize_duration
+from lemoncheesecake.reporting.backends import terminalsize
 
 from colorama import init, Style, Fore
 from termcolor import colored
 
 class LinePrinter:
-    def __init__(self):
+    def __init__(self, terminal_width):
+        self.terminal_width = terminal_width
         self.prev_len = 0
     
     def print_line(self, line, force_len=None):
@@ -24,6 +26,9 @@ class LinePrinter:
         if not IS_PYTHON3:
             if type(line) is unicode:
                 line = line.encode("utf-8")
+        
+        if value_len > self.terminal_width:
+            line = line[:self.terminal_width-4] + "..."
         
         sys.stdout.write("\r")
         sys.stdout.write(line)
@@ -49,10 +54,11 @@ CTX_TEST = 1
 CTX_AFTER_SUITE = 2
 
 class ConsoleReportingSession(ReportingSession):
-    def __init__(self, report, report_dir):
+    def __init__(self, report, report_dir, terminal_width):
         ReportingSession.__init__(self, report, report_dir)
         init() # init colorama
-        self.lp = LinePrinter()
+        self.lp = LinePrinter(terminal_width)
+        self.terminal_width = terminal_width
         self.context = None
     
     def begin_tests(self):
@@ -65,11 +71,16 @@ class ConsoleReportingSession(ReportingSession):
         if not testsuite.has_selected_tests(deep=False):
             return
 
-        path = testsuite.get_path_str()
-        path_len = len(path)
         if self.previous_obj:
             sys.stdout.write("\n")
-        sys.stdout.write("=" * 30 + " " + colored(testsuite.get_path_str(), attrs=["bold"]) + " " + "=" * (40 - path_len) + "\n")
+
+        path = testsuite.get_path_str()
+        path_len = len(path)
+        max_width = min((self.terminal_width, 80))
+        padding_total = max_width - 2 - path_len if path_len <= (max_width - 2) else 0 # -2 corresponds to the two space characters at the left and right of testsuite path
+        padding_left = padding_total / 2
+        padding_right = padding_total / 2 + padding_total % 2
+        sys.stdout.write("=" * padding_left + " " + colored(testsuite.get_path_str(), attrs=["bold"]) + " " + "=" * padding_right + "\n")
         self.previous_obj = testsuite
     
     def end_before_suite(self, testsuite):
@@ -106,7 +117,6 @@ class ConsoleReportingSession(ReportingSession):
         elif self.context == CTX_TEST:
             description += "..."
             line = "%s (%s)" % (self.current_test_line, description)
-            line = re.sub("^(.{70})(.+)(.{30})$", "\\1...\\3", line)
             self.lp.print_line(line)
     
     def log(self, content, level):
@@ -125,6 +135,10 @@ class ConsoleReportingSession(ReportingSession):
 
 class ConsoleBackend(ReportingBackend):
     name = "console"
+    
+    def __init__(self):
+        width, height = terminalsize.get_terminal_size()
+        self.terminal_width = width
 
     def create_reporting_session(self, report, report_dir):
-        return ConsoleReportingSession(report, report_dir)
+        return ConsoleReportingSession(report, report_dir, self.terminal_width)
