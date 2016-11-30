@@ -1,5 +1,6 @@
 from lemoncheesecake import *
 import re
+import time
 
 @suite_rank(2)
 @tags("my_tag")
@@ -68,6 +69,12 @@ class A(TestSuite):
             check_eq("<h1>value</h1>", "<h1>actual</h1>", "<h1>expected</h1>")
             log_info("<h1>some log</h1>")
             save_attachment_content("content", "filename", "<h1>attachment</h1>")
+    
+    class a_very_lllllllllllllllllllllllooooooooooooooooooooooooooooooooonnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnggggggggggggggggggggggg_testsuite_name(TestSuite):
+        @test("A test within a testsuite with a long name")
+        def the_test_within_the_testsuite_with_long_name(self):
+            set_step("lllllllllllllllllllllllllllllllooooooooooooooooooooooonnnnnnnnnnngggggggggggggggg step")
+            time.sleep(3)
         
     def load_generated_tests(self):
         tests = []
