@@ -75,6 +75,12 @@ class A(TestSuite):
         def the_test_within_the_testsuite_with_long_name(self):
             set_step("lllllllllllllllllllllllllllllllooooooooooooooooooooooonnnnnnnnnnngggggggggggggggg step")
             time.sleep(3)
+    
+    class a_testsuite_without_direct_tests(TestSuite):
+        class a_testsuite_with_parent_without_direct_tests(TestSuite):
+            @test("Yet Another Test")
+            def yet_another_test(self):
+                pass
         
     def load_generated_tests(self):
         tests = []
