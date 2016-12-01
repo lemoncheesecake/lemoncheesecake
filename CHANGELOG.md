@@ -1,3 +1,10 @@
+# 0.3.3 (2016-12-01)
+
+- **HTML report**: escape all the data coming from the JSON report
+- **HTML report**: do not display a testsuite header if the testsuite does not contain tests directly
+- **Console reporting**: optimize the output depending on the terminal size
+- Fix missing check details for some checkers
+
 # 0.3.2 (2016-11-29)
 
 - **Reporting**: Rework the report dir creation so that the rotation mechanism also works on Windows
