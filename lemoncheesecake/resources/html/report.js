@@ -201,31 +201,32 @@ TestSuite.prototype = {
 	
 	render: function() {
 		var panels = [ ];
-		var description = this.parents.map(function(p) { return p.description }).concat(this.description).join(" > ");
-		var $panel_heading = $("<div class='panel-heading'>");
-		$panel_heading.append($("<span>").text(description));
-		if (this.properties.length > 0 || this.tags.length > 0) {
-			$panel_heading.append($("<br/>"));
-			$panel_heading.append($("<span style='font-size: 75%'>Properties/Tags: ").text(
-				this.tags.join(", ") + (this.tags.length > 0 ? ", " : "") +
-				$.map(this.properties, function(value, key) {
-					return key + ": " + value;
-				}).join(", ")
-			));
-		}
-		if (this.links.length > 0) {
-			$panel_heading.append($("<br/>"));
-			$panel_heading.append($("<span style='font-size: 75%'>links: " +
-				$.map(this.links, function (link) {
-					var label = link.name ? link.name : link.url;
-					return "<a href='" + escapeHtml(link.url) + "' title='" + escapeHtml(label) + "'>" + escapeHtml(label) + "</a>";
-			}).join(", ")));
-		}
-		var $panel = $("<div class='panel panel-default panel-primary' style='margin-left:" + (0 * this.parents.length) + "px'>")
-			.append($panel_heading);
-		panels.push($panel);
 
 		if (this.tests.length > 0) {
+			var description = this.parents.map(function(p) { return p.description }).concat(this.description).join(" > ");
+			var $panel_heading = $("<div class='panel-heading'>");
+			$panel_heading.append($("<span>").text(description));
+			if (this.properties.length > 0 || this.tags.length > 0) {
+				$panel_heading.append($("<br/>"));
+				$panel_heading.append($("<span style='font-size: 75%'>Properties/Tags: ").text(
+					this.tags.join(", ") + (this.tags.length > 0 ? ", " : "") +
+					$.map(this.properties, function(value, key) {
+						return key + ": " + value;
+					}).join(", ")
+				));
+			}
+			if (this.links.length > 0) {
+				$panel_heading.append($("<br/>"));
+				$panel_heading.append($("<span style='font-size: 75%'>links: " +
+					$.map(this.links, function (link) {
+						var label = link.name ? link.name : link.url;
+						return "<a href='" + escapeHtml(link.url) + "' title='" + escapeHtml(label) + "'>" + escapeHtml(label) + "</a>";
+				}).join(", ")));
+			}
+			var $panel = $("<div class='panel panel-default panel-primary' style='margin-left:" + (0 * this.parents.length) + "px'>")
+				.append($panel_heading);
+			panels.push($panel);
+
 			var rows = [ ];
 			if (this.before_suite) {
 				rows = rows.concat(this.before_suite.render());
