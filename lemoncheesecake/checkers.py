@@ -331,7 +331,7 @@ register_dict_checkers("dictval_%s", CheckDictValue)
 # Build symbol list for wild import
 ###
 
-__all__ = ()
+__all__ = ("check",)
 for symbol in dir():
     if symbol.startswith("check_") or symbol.startswith("assert_"):
         __all__ = __all__ + (symbol,)
