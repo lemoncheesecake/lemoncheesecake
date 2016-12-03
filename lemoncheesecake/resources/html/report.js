@@ -291,7 +291,9 @@ Report.prototype = {
 		var $panel_heading = $("<div class='panel-heading'>" + label + "</div>");
 		var $panel = $("<div class='panel panel-default panel-primary'>").append($panel_heading);
 		rows = test.render();
-		var $table = $("<table class='table table-hover table-bordered table-condensed'/>").append($("<tbody>").append(rows));
+		var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
+			.append($("<colgroup><col width='60%'><col width='20%'><col width='10%'><col width='10%'></colgroup>"))
+			.append($("<tbody>").append(rows));
 		$panel.append($table);
 		return $panel;
 	},
