@@ -45,7 +45,7 @@ class Check:
     
     def compare(self, name, actual, expected):
         description = self.format_description(name, expected)
-        if self.value_type:
+        if self.value_type and expected != None:
             if type(actual) != self.value_type:
                 return check(description, False, self.format_details(actual))
         outcome = self.comparator(actual, expected)
@@ -63,13 +63,13 @@ class Check:
             prefix=self.description_prefix, name=name,
             comparator=self.comparator_label, expected=self.format_expected_value(expected)
         )
-        if self.value_type:
+        if self.value_type and expected != None:
             description += " (%s)" % self.value_type.__name__
         return description
     
     def format_details(self, actual):
         details = "Got %s" % self.format_actual_value(actual)
-        if self.value_type:
+        if self.value_type and actual != None:
             details += " (%s)" % type(actual).__name__
         return details
     
