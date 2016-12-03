@@ -196,8 +196,8 @@ class CheckStrEq(CheckEq):
     format_expected_value = format_actual_value = staticmethod(lambda s: "'%s'" % s)
 
 @checker("str_not_eq")
-class CheckStrNotEq(CheckStrEq, CheckNotEq):
-    always_display_details = True
+class CheckStrNotEq(CheckNotEq):
+    format_expected_value = format_actual_value = staticmethod(lambda s: "'%s'" % s)
 
 @checker("str_match")
 class CheckStrMatchPattern(CheckStrEq):
