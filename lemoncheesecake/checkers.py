@@ -224,7 +224,7 @@ class CheckStrDoesNotContain(CheckStrEq):
     always_display_details = True
 
 ################################################################################
-# Numeric checkers
+# Typed checkers
 ################################################################################
 
 def generate_comparator_checkers_for_type(type_):
@@ -234,6 +234,8 @@ def generate_comparator_checkers_for_type(type_):
 
 generate_comparator_checkers_for_type(int)
 generate_comparator_checkers_for_type(float)
+
+register_checker("bool_eq", CheckEq, value_type=bool)
 
 ################################################################################
 # list checkers 
