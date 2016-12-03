@@ -38,7 +38,7 @@ Step.prototype = {
 				}
 			} else if (entry.type == "log") {
 				$row.addClass("log");
-				$row.append($("<td colspan='3'><samp>").text(entry.message));
+				$row.append($("<td colspan='3'>").append($("<samp>").text(entry.message)));
 				$row.append($("<td class='text-uppercase'>").text(entry.level));
 				if (entry.level == "error") {
 					$row.addClass("danger");
@@ -88,7 +88,7 @@ Test.prototype = {
 		var cols = [ ];
 
 		/* build description column */
-		var $test_desc = $("<h6><a>", {"name": this.id, "href": "#" + this.id}).text(this.description).append($("<br/><small>").text());
+		var $test_desc = $("<h6><a>", {"name": this.id, "href": "#" + this.id}).text(this.description).append($("<br/><small>").text(this.id));
 		cols.push($("<td>").append($test_desc));
 
 		/* build tags & properties column */
