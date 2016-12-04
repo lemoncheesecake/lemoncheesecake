@@ -305,8 +305,10 @@ class CheckDictHasKey(Check):
             prefix=self.description_prefix
         )
     
-    def __call__(self, expected_key, actual):
-        description = "{prefix} entry '{key}' is present".format(prefix=self.description_prefix, key=expected_key)
+    def __call__(self, expected_key, actual, key_label=None):
+        if not key_label:
+            key_label = "'%s'" % expected_key
+        description = "{prefix} entry {key_label} is present".format(prefix=self.description_prefix, key_label=key_label)
         outcome = check(description, expected_key in actual)
         self.handle_check_outcome(outcome)
         return outcome
@@ -318,12 +320,14 @@ class CheckDictValue(Check):
     def build_doc_func_description(self):
         return "Check key[d] against expected using value_checker"
     
-    def __call__(self, expected_key, actual, expected_value, value_checker):
+    def __call__(self, expected_key, actual, expected_value, value_checker, key_label=None):
+        if not key_label:
+            key_label = "'%s'" % expected_key
         if actual.has_key(expected_key):
-            ret = value_checker("'%s'" % expected_key, actual[expected_key], expected_value)
+            ret = value_checker(key_label, actual[expected_key], expected_value)
         else:
             check(value_checker.format_description(expected_key, expected_value), False,
-                  "There is no key '%s'" % expected_key)
+                  "There is no key %s" % key_label)
             ret = False
         return self.handle_check_outcome(ret)
 
