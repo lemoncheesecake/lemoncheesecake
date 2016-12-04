@@ -29,6 +29,7 @@ class LinePrinter:
         
         if value_len > self.terminal_width:
             line = line[:self.terminal_width-4] + "..."
+            value_len = len(line)
         
         sys.stdout.write("\r")
         sys.stdout.write(line)
