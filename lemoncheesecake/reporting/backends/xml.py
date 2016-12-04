@@ -62,7 +62,7 @@ def _xml_child(parent_node, name, *args):
 def _add_time_attr(node, name, value):
     if not value:
         return
-    node.attrib[name] = "%f" % value
+    node.attrib[name] = "%.8f" % value
 
 def _serialize_outcome(outcome):
     if outcome == True:

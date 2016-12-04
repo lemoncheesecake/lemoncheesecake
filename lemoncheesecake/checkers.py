@@ -323,7 +323,7 @@ class CheckDictValue(Check):
     def __call__(self, expected_key, actual, expected_value, value_checker, key_label=None):
         if not key_label:
             key_label = "'%s'" % expected_key
-        if actual.has_key(expected_key):
+        if expected_key in actual:
             ret = value_checker(key_label, actual[expected_key], expected_value)
         else:
             check(value_checker.format_description(expected_key, expected_value), False,

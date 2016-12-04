@@ -47,7 +47,7 @@ def clear_workers():
     _workers.clear()
 
 def get_workers_with_hook_before_all_tests():
-    return filter(lambda b: b.has_hook("before_all_tests"), get_workers())
+    return list(filter(lambda b: b.has_hook("before_all_tests"), get_workers()))
 
 def get_workers_with_hook_after_all_tests():
-    return filter(lambda b: b.has_hook("after_all_tests"), get_workers())
+    return list(filter(lambda b: b.has_hook("after_all_tests"), get_workers()))

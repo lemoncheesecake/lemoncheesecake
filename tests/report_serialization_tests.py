@@ -6,6 +6,8 @@ Created on Nov 18, 2016
 @author: nicolas
 '''
 
+from __future__ import print_function
+
 import sys
 
 import lemoncheesecake as lcc

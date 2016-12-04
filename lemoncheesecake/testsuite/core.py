@@ -62,6 +62,8 @@ class TestSuite:
         suite_classes = self.sub_suites[:]
         # - second: in inline attributes
         for attr_name in dir(self):
+            if attr_name.startswith("__"):
+                continue
             attr = getattr(self, attr_name)
             if inspect.isclass(attr) and issubclass(attr, TestSuite): 
                 suite_classes.append(attr) 
@@ -124,13 +126,13 @@ class TestSuite:
     
     def get_tests(self, filtered=True):
         if filtered:
-            return filter(lambda t: self.is_test_selected(t), self._tests)
+            return list(filter(lambda t: self.is_test_selected(t), self._tests))
         else:
             return self._tests
     
     def get_sub_testsuites(self, filtered=True):
         if filtered:
-            return filter(lambda s: s.has_selected_tests(deep=True), self._sub_testsuites)
+            return list(filter(lambda s: s.has_selected_tests(deep=True), self._sub_testsuites))
         else:
             return self._sub_testsuites
     

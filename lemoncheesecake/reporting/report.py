@@ -47,7 +47,7 @@ class StepData:
         self.end_time = None
     
     def has_failure(self):
-        return len(filter(lambda entry: entry.has_failure(), self.entries)) > 0
+        return len(list(filter(lambda entry: entry.has_failure(), self.entries))) > 0
         
 class TestData:
     def __init__(self, id, description):
@@ -62,7 +62,7 @@ class TestData:
         self.end_time = None
     
     def has_failure(self):
-        return len(filter(lambda step: step.has_failure(), self.steps)) > 0
+        return len(list(filter(lambda step: step.has_failure(), self.steps))) > 0
 
 class HookData:
     def __init__(self):
@@ -71,7 +71,7 @@ class HookData:
         self.end_time = None
     
     def has_failure(self):
-        return len(filter(lambda step: step.has_failure(), self.steps)) > 0
+        return len(list(filter(lambda step: step.has_failure(), self.steps))) > 0
 
 class TestSuiteData:
     def __init__(self, id, description, parent=None):
