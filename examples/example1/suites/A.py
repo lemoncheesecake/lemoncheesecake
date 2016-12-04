@@ -16,9 +16,10 @@ class A(TestSuite):
         log_info("do test 1 !")
         check_list_len("my list", [1,2], 3)
         check_list_contains("my other list", [ 1, 2, 3 ], [ 1, 4])
+        check_list_contains("param", ("foo", "baz"), ("bar", ))
         set_step("test dict checkers")
         check_dict_has_key("foo", { "foo": 33 })
-        check_dict_value("bar", { "bar": 33 }, { "bar": 33 }, check_eq)
+        check_dict_value("bar", { "bar": 33 }, 33, check_eq, key_label="bar key")
         set_step("test simple value checkers")
         log_info("something else")
         check_eq("some value", 1, 1)
@@ -29,6 +30,10 @@ class A(TestSuite):
         check_dictval_str_eq("foo", {"foo": "bar"}, "bar")
         check_str_match("some value", "foo bar", re.compile("foo.+"))
         check_str_does_not_match("some value", "foo bar", re.compile("foo.+"))
+        check_int_eq("some value", None, None)
+        check_dictval_int_eq("foo", {"foo": None}, None)
+        check_int_eq("some value", 42, None)
+        check_bool_eq("some bool", False, False)
         
     def foo(self):
         pass
@@ -80,7 +85,7 @@ class A(TestSuite):
         class a_testsuite_with_parent_without_direct_tests(TestSuite):
             @test("Yet Another Test")
             def yet_another_test(self):
-                pass
+                check_str_not_eq("string", "foo", "foo")
         
     def load_generated_tests(self):
         tests = []
