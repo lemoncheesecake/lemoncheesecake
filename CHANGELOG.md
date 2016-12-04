@@ -1,3 +1,11 @@
+# 0.3.4 (2016-12-05)
+
+- **HTML report**: fix regressions introduced in 0.3.3
+- **Checkers**: minor fixes and improvements
+- **Compatibility**: make it work (again) with Python 3
+- **Console reporting**: fix minor issue dealing with terminal width and long test id / test steps
+- **Unit tests**: add tests for for `lemoncheesecake.checkers`
+
 # 0.3.3 (2016-12-01)
 
 - **HTML report**: escape all the data coming from the JSON report
