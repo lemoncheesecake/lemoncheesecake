@@ -38,6 +38,7 @@ class ReportingSession(reporting.ReportingSession):
         self._last_check_description = None
         self._last_check_outcome = None
         self._last_check_details = None
+        self._error_log_nb = 0
     
     def get_last_test(self):
         return self._last_test
@@ -47,6 +48,9 @@ class ReportingSession(reporting.ReportingSession):
     
     def get_last_log(self):
         return self._last_log
+    
+    def get_error_log_nb(self):
+        return self._error_log_nb
     
     def get_test_outcome(self, test_id):
         return self._test_outcomes[test_id]
@@ -64,6 +68,8 @@ class ReportingSession(reporting.ReportingSession):
         self._test_nb += 1
     
     def log(self, level, content):
+        if level == "error":
+            self._error_log_nb += 1
         self._last_log = content
     
     def check(self, description, outcome, details=None):
