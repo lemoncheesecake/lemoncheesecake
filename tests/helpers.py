@@ -11,6 +11,7 @@ import shutil
 
 import pytest
 
+import lemoncheesecake as lcc
 from lemoncheesecake.launcher import Launcher, Filter
 from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
@@ -34,6 +35,9 @@ class ReportingSession(reporting.ReportingSession):
         self._test_nb = 0
         self._last_log = None
         self._last_test = None
+        self._last_check_description = None
+        self._last_check_outcome = None
+        self._last_check_details = None
     
     def get_last_test(self):
         return self._last_test
@@ -47,6 +51,9 @@ class ReportingSession(reporting.ReportingSession):
     def get_test_outcome(self, test_id):
         return self._test_outcomes[test_id]
     
+    def get_last_check(self):
+        return self._last_check_description, self._last_check_outcome, self._last_check_details
+    
     def begin_test(self, test):
         self._last_test_outcome = None
     
@@ -58,6 +65,11 @@ class ReportingSession(reporting.ReportingSession):
     
     def log(self, level, content):
         self._last_log = content
+    
+    def check(self, description, outcome, details=None):
+        self._last_check_description = description
+        self._last_check_outcome = outcome
+        self._last_check_details = details
 
 def get_reporting_session():
     class ReportingBackend(reporting.ReportingBackend):
@@ -95,9 +107,19 @@ def run_testsuites(suites, worker=None, tmpdir=None):
             launcher.run_testsuites(Filter(), os.path.join(report_dir, "report"))
         finally:
             shutil.rmtree(report_dir)
+    
+    dump_report(get_runtime().report)
 
 def run_testsuite(suite, worker=None, tmpdir=None):
     run_testsuites([suite], worker=worker, tmpdir=tmpdir)
+
+def run_func_in_test(callback):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            callback()
+    
+    run_testsuite(MySuite)
 
 def dump_report(report):
     xml = serialize_report_as_string(report)
