@@ -263,8 +263,8 @@ class CheckListContains(Check):
     def compare(self, name, actual, expected):
         description = self.format_description(name, expected)
         
-        missing = expected[:]
-        for elem in missing:
+        missing = list(expected)
+        for elem in expected:
             if elem in actual:
                 missing.remove(elem)
         if missing:
