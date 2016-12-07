@@ -167,9 +167,9 @@ class _Runtime:
         if not self.current_step_data_list:
             self.set_step(self.default_step_description)
 
-    def end_current_step(self, t=None):
+    def end_current_step(self, ts=None):
         if self.current_step_data:
-            self.current_step_data.end_time = t if t else time.time()
+            self.current_step_data.end_time = ts or time.time()
             self.current_step_data = None
 
     def set_step(self, description, force_lock=False):
