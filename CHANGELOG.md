@@ -1,3 +1,10 @@
+# 0.3.5 (2016-12-08)
+
+- **API**: add the ability to perform a check within a hook (before/after suite, before/after all tests)
+- **API / Report**: add a outcome flag for hooks
+- **API**: improve default step description ("-" has been replaced by the current context description)
+- **Console reporting**: add the ability display only the current testsuite id instead of the full testsuite path
+
 # 0.3.4 (2016-12-05)
 
 - **HTML report**: fix regressions introduced in 0.3.3
