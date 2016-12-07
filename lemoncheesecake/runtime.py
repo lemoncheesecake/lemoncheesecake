@@ -29,33 +29,6 @@ def get_runtime():
         raise LemonCheesecakeInternalError("Runtime is not initialized")
     return _runtime
 
-class _RuntimeState:
-    def __init__(self):
-        self.start_time = None
-        self.end_time = None
-
-        self.report = None
-        
-        self.current_testsuite = None
-        self.current_test = None
-        self.current_step = None
-        self._current_test_outcome = True
-        
-        self.metainfo = { }
-    
-    def set_current_testsuite(self, testsuite):
-        self.testsuite = testsuite
-    
-    def set_current_test(self, test):
-        self.current_test = test
-        self._current_test_outcome = True 
-    
-    def set_current_test_as_failed(self):
-        self._current_test_outcome = False
-    
-    def get_current_test_outcome(self):
-        return self._current_test_outcome
-
 class _Runtime:
     def __init__(self, report_dir):
         self.report_dir = report_dir
