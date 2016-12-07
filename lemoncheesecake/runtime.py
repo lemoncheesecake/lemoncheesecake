@@ -37,7 +37,7 @@ class _Runtime:
         self.report = Report()
         self.reporting_sessions = []
         self.step_lock = False
-        self.default_step_description = "-"
+        self.default_step_description = None
         # pointers to report data parts
         self.current_testsuite_data = None
         self.current_test_data = None
@@ -81,6 +81,7 @@ class _Runtime:
     def begin_worker_hook_before_all_tests(self):
         self.report.before_all_tests = self._start_hook()
         self.current_step_data_list = self.report.before_all_tests.steps
+        self.default_step_description = "Before all tests"
     
     def end_worker_hook_before_all_tests(self):
         self._end_hook(self.report.before_all_tests)
@@ -89,6 +90,7 @@ class _Runtime:
     def begin_worker_hook_after_all_tests(self):
         self.report.after_all_tests = self._start_hook()
         self.current_step_data_list = self.report.after_all_tests.steps
+        self.default_step_description = "After all tests"
     
     def end_worker_hook_after_all_tests(self):
         self._end_hook(self.report.after_all_tests)
@@ -109,6 +111,7 @@ class _Runtime:
         if testsuite.has_hook("before_suite"):
             suite_data.before_suite = self._start_hook()
             self.current_step_data_list = suite_data.before_suite.steps
+            self.default_step_description = "Before suite"
 
         self.for_each_reporting_sessions(lambda b: b.begin_before_suite(testsuite))
     
@@ -122,6 +125,7 @@ class _Runtime:
         if testsuite.has_hook("after_suite"):
             self.current_testsuite_data.after_suite = self._start_hook()
             self.current_step_data_list = self.current_testsuite_data.after_suite.steps
+            self.default_step_description = "After suite"
             
         self.for_each_reporting_sessions(lambda b: b.begin_after_suite(testsuite))
 
@@ -144,6 +148,7 @@ class _Runtime:
         self.current_testsuite_data.tests.append(self.current_test_data)
         self.for_each_reporting_sessions(lambda b: b.begin_test(test))
         self.current_step_data_list = self.current_test_data.steps
+        self.default_step_description = test.description
     
     def end_test(self):
         now = time.time()

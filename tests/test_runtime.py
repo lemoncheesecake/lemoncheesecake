@@ -304,7 +304,7 @@ def test_default_step():
     
     test = report.get_test("sometest")
     assert test.outcome == True
-    assert test.steps[0].description == "-"
+    assert test.steps[0].description == "Some test"
     assert test.steps[0].entries[0].level == "info"
     assert test.steps[0].entries[0].message == "do something"
 
