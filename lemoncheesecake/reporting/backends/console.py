@@ -34,7 +34,7 @@ class LinePrinter:
         sys.stdout.write("\r")
         sys.stdout.write(line)
         if self.prev_len > value_len:
-            sys.stdout.write(" " * (self.prev_len - value_len))
+            sys.stdout.write(" " * (self.prev_len - value_len - 1))
         sys.stdout.flush()
         
         self.prev_len = value_len
