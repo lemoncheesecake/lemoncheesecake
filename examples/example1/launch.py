@@ -18,6 +18,7 @@ class MyWorker(Worker):
 add_worker("myworker", MyWorker())
 
 get_backend("json").pretty_formatting = True
+# get_backend("console").display_testsuite_full_path = False
 
 launcher = Launcher()
 launcher.load_testsuites(import_testsuites_from_directory("suites"))

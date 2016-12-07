@@ -55,11 +55,12 @@ CTX_TEST = 1
 CTX_AFTER_SUITE = 2
 
 class ConsoleReportingSession(ReportingSession):
-    def __init__(self, report, report_dir, terminal_width):
+    def __init__(self, report, report_dir, terminal_width, display_testsuite_full_path):
         ReportingSession.__init__(self, report, report_dir)
         init() # init colorama
         self.lp = LinePrinter(terminal_width)
         self.terminal_width = terminal_width
+        self.display_testsuite_full_path = display_testsuite_full_path
         self.context = None
     
     def begin_tests(self):
@@ -75,15 +76,15 @@ class ConsoleReportingSession(ReportingSession):
         if self.previous_obj:
             sys.stdout.write("\n")
 
-        path = testsuite.get_path_str()
-        path_len = len(path)
+        label = testsuite.get_path_str() if self.display_testsuite_full_path else testsuite.id
+        label_len = len(label)
         max_width = min((self.terminal_width, 80))
         # -2 corresponds to the two space characters at the left and right of testsuite path + another character to avoid
         # an extra line after the testsuite line on Windows terminal having width <= 80
-        padding_total = max_width - 3 - path_len if path_len <= (max_width - 3) else 0
+        padding_total = max_width - 3 - label_len if label_len <= (max_width - 3) else 0
         padding_left = padding_total // 2
         padding_right = padding_total // 2 + padding_total % 2
-        sys.stdout.write("=" * padding_left + " " + colored(testsuite.get_path_str(), attrs=["bold"]) + " " + "=" * padding_right + "\n")
+        sys.stdout.write("=" * padding_left + " " + colored(label, attrs=["bold"]) + " " + "=" * padding_right + "\n")
         self.previous_obj = testsuite
     
     def end_before_suite(self, testsuite):
@@ -142,6 +143,7 @@ class ConsoleBackend(ReportingBackend):
     def __init__(self):
         width, height = terminalsize.get_terminal_size()
         self.terminal_width = width
+        self.display_testsuite_full_path = True
 
     def create_reporting_session(self, report, report_dir):
-        return ConsoleReportingSession(report, report_dir, self.terminal_width)
+        return ConsoleReportingSession(report, report_dir, self.terminal_width, self.display_testsuite_full_path)
