@@ -69,6 +69,7 @@ class HookData:
         self.steps = [ ]
         self.start_time = None
         self.end_time = None
+        self.outcome = None
     
     def has_failure(self):
         return len(list(filter(lambda step: step.has_failure(), self.steps))) > 0

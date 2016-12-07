@@ -107,6 +107,7 @@ def _serialize_test_data(test):
     return test_node
 
 def _serialize_hook_data(data, node):
+    node.attrib["outcome"] = _serialize_outcome(data.outcome)
     _add_time_attr(node, "start-time", data.start_time)
     _add_time_attr(node, "end-time", data.end_time)
     _serialize_steps(data.steps, node)
@@ -218,6 +219,7 @@ def _unserialize_test_data(xml):
 
 def _unserialize_hook_data(xml):
     data = HookData()
+    data.outcome = _unserialize_outcome(xml.attrib["outcome"])
     data.start_time = float(xml.attrib["start-time"])
     data.end_time = float(xml.attrib["end-time"])
     data.steps = [ _unserialize_step_data(s) for s in xml.xpath("step") ]

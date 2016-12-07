@@ -183,6 +183,7 @@ def assert_hook_data(actual, expected):
     if expected == None:
         assert actual == None
     else:
+        assert actual.outcome == expected.outcome
         assert actual.start_time == expected.start_time
         assert actual.end_time == expected.end_time
         assert len(actual.steps) == len(expected.steps)

@@ -388,6 +388,7 @@ def test_before_suite_success():
     assert_report_stats(report, expected_test_successes=1)
     
     suite = report.get_suite("MySuite")
+    assert suite.before_suite.outcome == True
     assert suite.before_suite.start_time != None
     assert suite.before_suite.end_time != None
     assert suite.before_suite.steps[0].entries[0].message == "some log"
@@ -411,6 +412,7 @@ def test_before_suite_failure():
     assert_report_stats(report, expected_test_failures=1, expected_errors=1, expected_error_logs=2)
     
     suite = report.get_suite("MySuite")
+    assert suite.before_suite.outcome == False
     assert suite.before_suite.start_time != None
     assert suite.before_suite.end_time != None
     assert suite.before_suite.steps[0].entries[0].message == "something bad happened"
@@ -434,6 +436,7 @@ def test_after_suite_success():
     assert_report_stats(report, expected_test_successes=1)
     
     suite = report.get_suite("MySuite")
+    assert suite.after_suite.outcome == True
     assert suite.after_suite.start_time != None
     assert suite.after_suite.end_time != None
     assert suite.after_suite.steps[0].entries[0].message == "some log"
@@ -447,19 +450,20 @@ def test_after_suite_failure():
             pass
 
         def after_suite(self):
-            lcc.log_error("something bad happened")
+            lcc.check_eq("val", 1, 2)
         
     run_testsuite(MySuite)
     
     report = get_runtime().report
     
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_test_successes=1, expected_errors=1, expected_error_logs=1)
+    assert_report_stats(report, expected_test_successes=1, expected_errors=1, expected_check_failures=1)
     
     suite = report.get_suite("MySuite")
+    assert suite.after_suite.outcome == False
     assert suite.after_suite.start_time != None
     assert suite.after_suite.end_time != None
-    assert suite.after_suite.steps[0].entries[0].message == "something bad happened"
+    assert suite.after_suite.steps[0].entries[0].outcome == False
     assert suite.after_suite.has_failure() == True
     assert report.get_test("sometest").outcome == True
 
@@ -480,6 +484,7 @@ def test_worker_before_all_tests_success():
     assert_report_from_testsuite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1)
     
+    assert report.before_all_tests.outcome == True
     assert report.before_all_tests.start_time != None
     assert report.before_all_tests.end_time != None
     assert report.before_all_tests.steps[0].entries[0].message == "some log"
@@ -502,7 +507,8 @@ def test_worker_before_all_tests_failure():
     
     assert_report_from_testsuite(report, MySuite)
     assert_report_stats(report, expected_test_failures=1, expected_errors=1, expected_error_logs=2)
-     
+    
+    assert report.before_all_tests.outcome == False
     assert report.before_all_tests.start_time != None
     assert report.before_all_tests.end_time != None
     assert report.before_all_tests.steps[0].entries[0].message == "something bad happened"
@@ -526,6 +532,7 @@ def test_worker_after_all_tests_success():
     assert_report_from_testsuite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1)
     
+    assert report.after_all_tests.outcome == True
     assert report.after_all_tests.start_time != None
     assert report.after_all_tests.end_time != None
     assert report.after_all_tests.steps[0].entries[0].message == "some log"
@@ -540,17 +547,18 @@ def test_worker_after_all_tests_failure():
     
     class MyWorker(Worker):
         def after_all_tests(self):
-            lcc.log_error("something bad happened")
+            lcc.check_eq("val", 1, 2)
     
     run_testsuite(MySuite, worker=MyWorker())
          
     report = get_runtime().report
      
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_test_successes=1, expected_errors=1, expected_error_logs=1)
-     
+    assert_report_stats(report, expected_test_successes=1, expected_errors=1, expected_check_failures=1)
+    
+    assert report.after_all_tests.outcome == False
     assert report.after_all_tests.start_time != None
     assert report.after_all_tests.end_time != None
-    assert report.after_all_tests.steps[0].entries[0].message == "something bad happened"
+    assert report.after_all_tests.steps[0].entries[0].outcome == False
     assert report.after_all_tests.has_failure() == True
     assert report.get_test("sometest").outcome == True

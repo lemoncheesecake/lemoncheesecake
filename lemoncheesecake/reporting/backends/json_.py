@@ -67,7 +67,8 @@ def _serialize_hook_data(hook_data):
     return _dict(
         "start_time", _time_value(hook_data.start_time),
         "end_time", _time_value(hook_data.end_time),
-        "steps", _serialize_steps(hook_data.steps)
+        "steps", _serialize_steps(hook_data.steps),
+        "outcome", hook_data.outcome
     )
 
 def _serialize_testsuite_data(suite):
@@ -140,6 +141,7 @@ def _unserialize_test_data(js):
 
 def _unserialize_hook_data(js):
     data = HookData()
+    data.outcome = js["outcome"]
     data.start_time = float(js["start_time"])
     data.end_time = float(js["end_time"])
     data.steps = [ _unserialize_step_data(s) for s in js["steps"] ]

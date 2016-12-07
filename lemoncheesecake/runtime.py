@@ -46,6 +46,8 @@ class _Runtime:
         # pointers to running test/testsuite
         self.current_test = None
         self.current_testsuite = None
+        # for test / testsuite hook / before/after all tests outcome
+        self.has_pending_failure = False
     
     def initialize_reporting_sessions(self):
         for backend in get_backends():
@@ -57,9 +59,15 @@ class _Runtime:
             callback(session)
     
     def _start_hook(self):
+        self.has_pending_failure = False
         hook_data = HookData()
         hook_data.start_time = time.time()
         return hook_data
+    
+    def _end_hook(self, hook_data, ts=None):
+        if hook_data:
+            hook_data.end_time = ts or time.time()
+            hook_data.outcome = not self.has_pending_failure
     
     def begin_tests(self):
         self.report.start_time = time.time()
@@ -75,9 +83,7 @@ class _Runtime:
         self.current_step_data_list = self.report.before_all_tests.steps
     
     def end_worker_hook_before_all_tests(self):
-        now = time.time()
-        if self.report.before_all_tests:
-            self.report.before_all_tests.end_time = now
+        self._end_hook(self.report.before_all_tests)
         self.end_current_step()
 
     def begin_worker_hook_after_all_tests(self):
@@ -85,9 +91,7 @@ class _Runtime:
         self.current_step_data_list = self.report.after_all_tests.steps
     
     def end_worker_hook_after_all_tests(self):
-        now = time.time()
-        if self.report.after_all_tests:
-            self.report.after_all_tests.end_time = now
+        self._end_hook(self.report.after_all_tests)
         self.end_current_step()
     
     def begin_before_suite(self, testsuite):
@@ -110,8 +114,7 @@ class _Runtime:
     
     def end_before_suite(self):
         now = time.time()
-        if self.current_testsuite_data.before_suite:
-            self.current_testsuite_data.before_suite.end_time = now
+        self._end_hook(self.current_testsuite_data.before_suite, now)
         self.end_current_step(now)
         self.for_each_reporting_sessions(lambda b: b.end_before_suite(self.current_testsuite))
         
@@ -124,14 +127,14 @@ class _Runtime:
 
     def end_after_suite(self):
         now = time.time()
-        if self.current_testsuite_data.after_suite:
-            self.current_testsuite_data.after_suite.end_time = now
+        self._end_hook(self.current_testsuite_data.after_suite, now)
         self.current_testsuite_data = self.current_testsuite_data.parent
         self.end_current_step(now)
         self.for_each_reporting_sessions(lambda b: b.end_after_suite(self.current_testsuite))
         self.current_testsuite = None
         
     def begin_test(self, test):
+        self.has_pending_failure = False
         self.current_test = test
         self.current_test_data = TestData(test.id, test.description)
         self.current_test_data.tags.extend(test.tags)
@@ -144,8 +147,7 @@ class _Runtime:
     
     def end_test(self):
         now = time.time()
-        if self.current_test_data.outcome == None:
-            self.current_test_data.outcome = True
+        self.current_test_data.outcome = not self.has_pending_failure
         self.current_test_data.end_time = now
         
         self.for_each_reporting_sessions(lambda b: b.end_test(self.current_test, self.current_test_data.outcome))
@@ -196,19 +198,15 @@ class _Runtime:
         self.log(LOG_LEVEL_WARN, content)
     
     def log_error(self, content):
-        if self.current_test_data:
-            self.current_test_data.outcome = False
+        self.has_pending_failure = True
         self.log(LOG_LEVEL_ERROR, content)
     
     def check(self, description, outcome, details=None):
-        if not self.current_test:
-            raise LemonCheesecakeInternalError("A check can only be associated to a test not a test suite")
-        
         self.create_step_if_needed()
         self.current_step_data.entries.append(CheckData(description, outcome, details))
         
         if outcome == False:
-            self.current_test_data.outcome = False
+            self.has_pending_failure = True
         
         self.for_each_reporting_sessions(lambda b: b.check(description, outcome, details))
         

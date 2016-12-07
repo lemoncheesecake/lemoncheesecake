@@ -13,7 +13,7 @@ class MyWorker(Worker):
         log_info("some log")
     
     def after_all_tests(self):
-        log_info("some other log")
+        log_error("some error")
 
 add_worker("myworker", MyWorker())
 

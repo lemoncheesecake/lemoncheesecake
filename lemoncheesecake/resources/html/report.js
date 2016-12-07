@@ -179,11 +179,11 @@ function TestSuite(data, parents) {
     this.sub_suites = [ ];
 
     if (data.before_suite) {
-    	this.before_suite = new Test("n/a", " - Before suite -", "n/a", data.before_suite.steps);
+    	this.before_suite = new Test("n/a", " - Before suite -", data.before_suite.outcome, data.before_suite.steps);
     }
 
     if (data.after_suite) {
-    	this.after_suite = new Test("n/a", " - After suite -", "n/a", data.after_suite.steps)
+    	this.after_suite = new Test("n/a", " - After suite -", data.after_suite.outcome, data.after_suite.steps)
     }
 
     for (var i = 0; i < data.tests.length; i++) {
@@ -261,10 +261,10 @@ function Report(data, node) {
 	this.after_all_tests = null;
 	
 	if (data.before_all_tests) {
-		this.before_all_tests = new Test("n/a", " - Before all tests -", "n/a", data.before_all_tests.steps);
+		this.before_all_tests = new Test("n/a", " - Before all tests -", data.before_all_tests.outcome, data.before_all_tests.steps);
 	}
 	if (data.after_all_tests) {
-		this.after_all_tests = new Test("n/a", " - After all tests -", "n/a", data.after_all_tests.steps);
+		this.after_all_tests = new Test("n/a", " - After all tests -", data.after_all_tests.outcome, data.after_all_tests.steps);
 	}
 	
 	for (var i = 0; i < data.suites.length; i++) {
