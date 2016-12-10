@@ -57,9 +57,6 @@ def report_dir_with_archives(dirname_callback):
     
     return report_dir
 
-def report_dir_with_datetime(report_rootdir, t):
-    return time.strftime("report-%Y%m%d-%H%M%S", time.localtime(t))
-
 def property_value(value):
     splitted = value.split(":")
     if len(splitted) != 2:
