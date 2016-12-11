@@ -12,6 +12,7 @@ import argparse
 import traceback
 
 from lemoncheesecake import workers
+from lemoncheesecake.loader import load_testsuites
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.launcher.filter import Filter
@@ -105,8 +106,6 @@ class Launcher:
         # Testsuites data
         ###
         self._testsuites = [ ]
-        self._testsuites_by_id = { }
-        self._tests_by_id = { }
         
         ###
         # Misc
@@ -119,24 +118,6 @@ class Launcher:
         self.before_test_run_hook = None
         self.after_test_run_hook = None
             
-    def _load_testsuite(self, suite):
-        # process suite
-        if suite.id in self._testsuites_by_id:
-            raise InvalidMetadataError("A test suite with id '%s' has been registered more than one time" % suite.id)
-        self.metadata_policy.check_suite_compliance(suite)
-        self._testsuites_by_id[suite.id] = suite
-
-        # process tests
-        for test in suite.get_tests():
-            if test.id in self._tests_by_id:
-                raise InvalidMetadataError("A test with id '%s' has been registered more than one time" % test.id)
-            self.metadata_policy.check_test_compliance(test)
-            self._tests_by_id[test.id] = test
-        
-        # process sub suites
-        for sub_suite in suite.get_sub_testsuites():
-            self._load_testsuite(sub_suite)
-        
     def load_testsuites(self, suites):
         """Load testsuites classes into the launcher.
         
@@ -144,11 +125,7 @@ class Launcher:
         - sanity checks are performed (among which unicity constraints)
         - test and testsuites properties are checked using self.metadata_policy (MetadataPolicy instance)
         """
-        for suite_klass in suites:
-            suite = suite_klass()
-            suite.load()
-            self._load_testsuite(suite)
-            self._testsuites.append(suite)
+        self._testsuites = load_testsuites(suites, self.metadata_policy)
     
     def _handle_exception(self, excp, suite=None):
         rt = get_runtime()

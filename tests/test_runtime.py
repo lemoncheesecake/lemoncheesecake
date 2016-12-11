@@ -12,7 +12,6 @@ import tempfile
 
 import pytest
 
-from lemoncheesecake.launcher import importer
 from lemoncheesecake.exceptions import *
 import lemoncheesecake as lcc
 from lemoncheesecake.runtime import get_runtime

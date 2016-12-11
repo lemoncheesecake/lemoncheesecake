@@ -4,7 +4,8 @@ import urllib
 import urllib2
 import json
 
-from lemoncheesecake.launcher import Launcher, import_testsuites_from_directory
+from lemoncheesecake.launcher import Launcher
+from lemoncheesecake.loader import import_testsuites_from_directory
 from lemoncheesecake.workers import Worker, add_worker
 from lemoncheesecake import *
 
