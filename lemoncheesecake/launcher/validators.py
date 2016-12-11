@@ -15,6 +15,9 @@ class MetadataPolicy:
         self._disallow_unknown_properties = False
         self._disallow_unknown_tags = False
     
+    def has_constraints(self):
+        return len(self._properties) != 0 or len(self._tags) != 0 or self._disallow_unknown_properties or self._disallow_unknown_tags
+    
     def _get_rule_application(self, on_test, on_suite):
         if on_test == None and on_suite == None:
             return True, False

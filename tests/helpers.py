@@ -30,6 +30,24 @@ class {name}(TestSuite):
         pass
 """.format(name=name)
 
+def build_test_project(params={}, extra_imports=[], static_content=""):
+    return """
+from lemoncheesecake import workers
+from lemoncheesecake.reporting import backends
+from lemoncheesecake import loader
+from lemoncheesecake.launcher import validators
+
+{EXTRA_IMPORTS}
+
+{STATIC_CONTENT}
+
+{PARAMS}
+""".format(
+    PARAMS="\n".join(["%s = %s" % (p, v) for p, v in params.items()]),
+    EXTRA_IMPORTS="\n".join(extra_imports),
+    STATIC_CONTENT=static_content
+)
+
 class ReportingSession(reporting.ReportingSession):
     def __init__(self):
         self._test_outcomes = {}
