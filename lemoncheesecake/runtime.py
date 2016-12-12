@@ -16,13 +16,14 @@ from lemoncheesecake.consts import ATTACHEMENT_DIR, \
 from lemoncheesecake.reporting import *
 
 __all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "set_step", \
-    "prepare_attachment", "save_attachment_file", "save_attachment_content"
+    "prepare_attachment", "save_attachment_file", "save_attachment_content", \
+    "get_worker"
 
 _runtime = None # singleton
 
-def initialize_runtime(report_dir):
+def initialize_runtime(report_dir, workers):
     global _runtime
-    _runtime = _Runtime(report_dir)
+    _runtime = _Runtime(report_dir, workers)
 
 def get_runtime():
     if not _runtime:
@@ -30,8 +31,9 @@ def get_runtime():
     return _runtime
 
 class _Runtime:
-    def __init__(self, report_dir):
+    def __init__(self, report_dir, workers):
         self.report_dir = report_dir
+        self.workers = workers
         self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
         self.attachment_count = 0
         self.report = Report()
@@ -306,3 +308,11 @@ def save_attachment_content(content, filename, description=None):
     Save a given content as attachment using pseudo filename and optional description.
     """
     get_runtime().save_attachment_content(content, filename, description)
+
+def get_worker(worker_name):
+    """
+    Return the requested worker. 
+    Raise KeyError if the worker does not exist.
+    """
+    rt = get_runtime()
+    return rt.workers[worker_name]

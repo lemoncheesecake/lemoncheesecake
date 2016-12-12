@@ -57,7 +57,7 @@ def test_project_with_workers(tmpdir):
     params = {}
     set_project_testsuites_param(params, "mysuite", tmpdir)
     worker_code = """
-class MyWorker(workers.Worker):
+class MyWorker(worker.Worker):
     pass
 """
     params["WORKERS"] = "{'myworker': MyWorker()}"

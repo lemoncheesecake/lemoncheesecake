@@ -10,7 +10,7 @@ import imp
 import inspect
 
 from lemoncheesecake.testsuite import TestSuite
-from lemoncheesecake.workers import Worker
+from lemoncheesecake.worker import Worker
 from lemoncheesecake.launcher.validators import MetadataPolicy
 from lemoncheesecake.launcher.core import report_dir_with_archives, archive_dirname_datetime
 from lemoncheesecake.loader import load_testsuites

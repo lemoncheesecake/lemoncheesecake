@@ -15,7 +15,7 @@ import pytest
 from lemoncheesecake.exceptions import *
 import lemoncheesecake as lcc
 from lemoncheesecake.runtime import get_runtime
-from lemoncheesecake.workers import Worker
+from lemoncheesecake.worker import Worker
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 from lemoncheesecake.reporting.backends.json_ import serialize_report
 

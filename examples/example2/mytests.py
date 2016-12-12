@@ -6,7 +6,7 @@ import json
 
 from lemoncheesecake.launcher import Launcher
 from lemoncheesecake.loader import import_testsuites_from_directory
-from lemoncheesecake.workers import Worker, add_worker
+from lemoncheesecake.worker import Worker
 from lemoncheesecake import *
 
 class OmdbapiWorker(Worker):
@@ -29,8 +29,7 @@ class OmdbapiWorker(Worker):
         except ValueError:
             raise AbortTest("The returned JSON is not valid")
 
-add_worker("omdb", OmdbapiWorker())
-
 launcher = Launcher()
+launcher.add_worker("omdb", OmdbapiWorker())
 launcher.load_testsuites(import_testsuites_from_directory("tests"))
 launcher.handle_cli()

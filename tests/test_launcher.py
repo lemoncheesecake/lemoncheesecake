@@ -12,7 +12,7 @@ import shutil
 import pytest
 
 from lemoncheesecake.launcher import Launcher, Filter
-from lemoncheesecake.workers import Worker
+from lemoncheesecake.worker import Worker
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.exceptions import *
 import lemoncheesecake as lcc
@@ -186,6 +186,32 @@ def test_hook_after_test_run(reporting_session):
     
     assert reporting_session.get_test_outcome("sometest") == True
     assert hook_has_been_executed[0] == True
+
+def test_worker_accessible_through_testsuite(reporting_session):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            assert self.testworker != None
+    
+    class MyWorker(Worker):
+        pass
+    
+    run_testsuite(MySuite, worker=MyWorker())
+    
+    assert reporting_session.get_last_test_outcome() == True
+
+def test_worker_accessible_through_runtime(reporting_session):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            assert lcc.get_worker("testworker") != None
+    
+    class MyWorker(Worker):
+        pass
+    
+    run_testsuite(MySuite, worker=MyWorker())
+    
+    assert reporting_session.get_last_test_outcome() == True
 
 def test_hook_worker_before_all_tests(reporting_session):
     class MyWorker(Worker):

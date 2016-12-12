@@ -11,7 +11,6 @@ import time
 import argparse
 import traceback
 
-from lemoncheesecake import workers
 from lemoncheesecake.loader import load_testsuites
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.utils import IS_PYTHON3
@@ -98,18 +97,11 @@ class Launcher:
         )
         
         ###
-        # Default report setup when no --report-dir has been setup
+        # Working data
         ###
         self.report_dir_creation_callback = lambda: report_dir_with_archives(archive_dirname_datetime)
-    
-        ###
-        # Testsuites data
-        ###
         self._testsuites = [ ]
-        
-        ###
-        # Misc
-        ###
+        self._workers = {}
         self.metadata_policy = MetadataPolicy()
         
         ###
@@ -126,6 +118,12 @@ class Launcher:
         - test and testsuites properties are checked using self.metadata_policy (MetadataPolicy instance)
         """
         self._testsuites = load_testsuites(suites, self.metadata_policy)
+    
+    def add_worker(self, worker_name, worker):
+        self._workers[worker_name] = worker
+
+    def get_workers_with_hook(self, hook_name):
+        return list(filter(lambda b: b.has_hook(hook_name), self._workers.values()))
     
     def _handle_exception(self, excp, suite=None):
         rt = get_runtime()
@@ -152,12 +150,12 @@ class Launcher:
         rt = get_runtime()
 
         # set workers
-        for worker_name in workers.get_worker_names():
+        for worker_name, worker in self._workers.items():
             if hasattr(suite, worker_name):
                 raise ProgrammingError("Cannot set worker '%s' into testsuite '%s', it already has an attribute with that name" % (
                     worker_name, suite
                 ))
-            setattr(suite, worker_name, workers.get_worker(worker_name))
+            setattr(suite, worker_name, worker)
     
         rt.begin_suite(suite)
 
@@ -262,7 +260,7 @@ class Launcher:
             self.before_test_run_hook(report_dir)
 
         # initialize runtime & global test variables
-        initialize_runtime(report_dir)
+        initialize_runtime(report_dir, self._workers)
         rt = get_runtime()
         rt.initialize_reporting_sessions()
         self.abort_all_tests = False
@@ -274,10 +272,10 @@ class Launcher:
         rt.begin_tests()
         
         # workers hook before_all_tests handling
-        wrks = workers.get_workers_with_hook_before_all_tests()
-        if wrks:
+        workers = self.get_workers_with_hook("before_all_tests")
+        if workers:
             rt.begin_worker_hook_before_all_tests()
-            for worker in wrks:
+            for worker in workers:
                 try:
                     worker.before_all_tests()
                 except Exception as e:
@@ -294,10 +292,10 @@ class Launcher:
             self._run_testsuite(suite)
         
         # workers after_test hook
-        wrks = workers.get_workers_with_hook_after_all_tests()
-        if wrks:
+        workers = self.get_workers_with_hook("after_all_tests")
+        if workers:
             rt.begin_worker_hook_after_all_tests()
-            for worker in wrks:
+            for worker in workers:
                 try:
                     worker.after_all_tests()
                 except Exception as e:
@@ -339,7 +337,7 @@ class Launcher:
                 reporting.disable_backend(backend)
         
         # initialize workers using CLI args and run tests
-        for worker in workers.get_workers():
+        for worker in self._workers.values():
             worker.cli_initialize(args)
         self.run_testsuites(filter, args.report_dir)
         

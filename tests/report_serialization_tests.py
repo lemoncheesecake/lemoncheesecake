@@ -12,7 +12,7 @@ import sys
 
 import lemoncheesecake as lcc
 from lemoncheesecake.runtime import get_runtime
-from lemoncheesecake.workers import Worker
+from lemoncheesecake.worker import Worker
 from lemoncheesecake.reporting.backend import set_enabled_backends
 
 from helpers import run_testsuite, run_testsuites, assert_report, dump_report

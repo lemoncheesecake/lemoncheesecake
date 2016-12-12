@@ -9,5 +9,4 @@ of the following modules will be directly accessible:
 from lemoncheesecake.testsuite import *
 from lemoncheesecake.runtime import *
 from lemoncheesecake.checkers import *
-from lemoncheesecake.workers import get_worker
 from lemoncheesecake.exceptions import AbortTest, AbortTestSuite, AbortAllTests

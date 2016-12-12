@@ -17,7 +17,6 @@ import lemoncheesecake as lcc
 from lemoncheesecake.launcher import Launcher, Filter
 from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
-from lemoncheesecake.workers import add_worker, clear_workers
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 
 def build_test_module(name="mytestsuite"):
@@ -32,7 +31,7 @@ class {name}(TestSuite):
 
 def build_test_project(params={}, extra_imports=[], static_content=""):
     return """
-from lemoncheesecake import workers
+from lemoncheesecake import worker
 from lemoncheesecake.reporting import backends
 from lemoncheesecake import loader
 from lemoncheesecake.launcher import validators
@@ -121,9 +120,8 @@ def run_testsuites(suites, worker=None, before_test_run_hook=None, after_test_ru
     launcher = Launcher()
     launcher.load_testsuites(suites)
     
-    clear_workers()
     if worker:
-        add_worker("testworker", worker)
+        launcher.add_worker("testworker", worker)
     
     if before_test_run_hook:
         launcher.before_test_run_hook = before_test_run_hook
