@@ -25,7 +25,7 @@ def test_project_minimal_parameters(tmpdir):
     
     assert project.get_report_dir_creation_cb() != None
     
-    assert [p.name for p in project.get_available_reporting_backends()] == ["console", "json", "html"]
+    assert [p.name for p in project.get_reporting_backends()] == ["console", "xml", "json", "html"]
     
     assert len(project.get_workers()) == 0
     
@@ -34,13 +34,13 @@ def test_project_minimal_parameters(tmpdir):
 def test_project_with_available_reporting_backends(tmpdir):
     params = {}
     set_project_testsuites_param(params, "mysuite", tmpdir)
-    params["REPORTING_BACKENDS_AVAILABLE"] = "[ backends.ConsoleBackend() ]"
+    params["REPORTING_BACKENDS"] = "[ backends.ConsoleBackend() ]"
     project_file = tmpdir.join("project.py")
     project_file.write(build_test_project(params))
     
     project = Project(project_file.strpath)
     
-    assert [p.name for p in project.get_available_reporting_backends()] == ["console"]
+    assert [p.name for p in project.get_reporting_backends()] == ["console"]
 
 def test_project_with_enabled_reporting_backends(tmpdir):
     params = {}
@@ -51,7 +51,9 @@ def test_project_with_enabled_reporting_backends(tmpdir):
         
     project = Project(project_file.strpath)
     
-    assert project.get_enabled_reporting_backends() == ["console", "json"]
+    assert project.get_enabled_reporting_backend_names() == ["console", "json"]
+    assert project.is_reporting_backend_enabled("json") == True
+    assert project.is_reporting_backend_enabled("html") == False
 
 def test_project_with_workers(tmpdir):
     params = {}
@@ -118,3 +120,6 @@ def add_cli_args(cli_parser):
     project.add_cli_extra_args(cli_parser)
     
     assert "foobar" in [a.dest for a in cli_parser._actions]
+
+# TODO: add tests on get_capabilities arguments
+

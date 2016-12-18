@@ -87,7 +87,7 @@ class Launcher:
         self.cli_run_parser.add_argument("--link", "-l", nargs="+", default=[], help="Filters on test & test suite link names")
         self.cli_run_parser.add_argument("--report-dir", "-r", required=False, help="Directory where report data will be stored")
         self.cli_run_parser.add_argument("--reporting", nargs="+", required=False,
-            help="The list of reporting backends to use (default: %s)" % ", ".join(sorted(reporting.get_backend_names()))
+            help="The list of reporting backends to use"
         )
         self.cli_run_parser.add_argument("--enable-reporting", nargs="+", required=False,
             help="The list of reporting backends to add (to base backends)"
@@ -103,6 +103,8 @@ class Launcher:
         self._testsuites = [ ]
         self._workers = {}
         self.metadata_policy = MetadataPolicy()
+        self._reporting_backends = {}
+        self._enabled_reporting_backends_names = []
         
         ###
         # Hooks
@@ -124,6 +126,11 @@ class Launcher:
 
     def get_workers_with_hook(self, hook_name):
         return list(filter(lambda b: b.has_hook(hook_name), self._workers.values()))
+    
+    def add_reporting_backend(self, backend, enabled=True):
+        self._reporting_backends[backend.name] = backend
+        if enabled:
+            self._enabled_reporting_backends_names.append(backend.name)
     
     def _handle_exception(self, excp, suite=None):
         rt = get_runtime()
@@ -227,7 +234,7 @@ class Launcher:
         if self.abort_testsuite == suite:
             self.abort_testsuite = None
         
-    def run_testsuites(self, filter, report_dir):
+    def run_testsuites(self, filter, reporting_backend_names, report_dir):
         """Run the loaded test suites.
         
         :param filter: Only the test suites and tests that match the given filter will be run.
@@ -260,7 +267,9 @@ class Launcher:
             self.before_test_run_hook(report_dir)
 
         # initialize runtime & global test variables
-        initialize_runtime(report_dir, self._workers)
+        initialize_runtime(
+            self._workers, [self._reporting_backends[name] for name in reporting_backend_names], report_dir
+        )
         rt = get_runtime()
         rt.initialize_reporting_sessions()
         self.abort_all_tests = False
@@ -325,21 +334,22 @@ class Launcher:
         filter.tags = args.tag
         filter.properties = dict(args.property)
         filter.link_names = args.link
-        
+                
         # report backends
+        reporting_backend_names = set(self._enabled_reporting_backends_names)
         if args.reporting:
-            reporting.set_enabled_backends(args.reporting)
+            reporting_backend_names = set(args.reporting)
         if args.enable_reporting:
             for backend in args.enable_reporting:
-                reporting.enable_backend(backend)
+                reporting_backend_names.add(backend)
         if args.disable_reporting:
             for backend in args.disable_reporting:
-                reporting.disable_backend(backend)
+                reporting_backend_names.remove(backend)
         
         # initialize workers using CLI args and run tests
         for worker in self._workers.values():
             worker.cli_initialize(args)
-        self.run_testsuites(filter, args.report_dir)
+        self.run_testsuites(filter, reporting_backend_names, args.report_dir)
         
     def handle_cli(self):
         """Main method of the launcher: run the launcher according the CLI arguments (found in sys.argv).

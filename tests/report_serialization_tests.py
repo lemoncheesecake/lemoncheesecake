@@ -13,17 +13,14 @@ import sys
 import lemoncheesecake as lcc
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.worker import Worker
-from lemoncheesecake.reporting.backend import set_enabled_backends
 
 from helpers import run_testsuite, run_testsuites, assert_report, dump_report
 
 def do_test_serialization(suites, backend, tmpdir, worker=None):
-    set_enabled_backends([backend.name])
-    
     if type(suites) in (list, tuple):
-        run_testsuites(suites, worker=worker)
+        run_testsuites(suites, worker=worker, backends=[backend])
     else:
-        run_testsuite(suites, worker=worker)
+        run_testsuite(suites, worker=worker, backends=[backend])
     
     report = get_runtime().report
     

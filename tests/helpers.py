@@ -47,7 +47,7 @@ from lemoncheesecake.launcher import validators
     STATIC_CONTENT=static_content
 )
 
-class ReportingSession(reporting.ReportingSession):
+class TestReportingSession(reporting.ReportingSession):
     def __init__(self):
         self._test_outcomes = {}
         self._last_test_outcome = None
@@ -58,6 +58,7 @@ class ReportingSession(reporting.ReportingSession):
         self._last_check_outcome = None
         self._last_check_details = None
         self._error_log_nb = 0
+        self.backend = None
     
     def get_last_test(self):
         return self._last_test
@@ -96,27 +97,29 @@ class ReportingSession(reporting.ReportingSession):
         self._last_check_outcome = outcome
         self._last_check_details = details
 
-def get_reporting_session():
-    class ReportingBackend(reporting.ReportingBackend):
-        name = "test_backend"
-        
-        def __init__(self, reporting_session):
-            self.reporting_session = reporting_session
-        
-        def create_reporting_session(self, report, report_dir):
-            return self.reporting_session
+_reporting_session = None
 
-    reporting_session = ReportingSession()
-    backend = ReportingBackend(reporting_session)
-    reporting.register_backend("test", backend)
-    reporting.set_enabled_backends(["test"])
-    return reporting_session
+class TestReportingBackend(reporting.ReportingBackend):
+    name = "test_backend"
+    
+    def __init__(self, reporting_session):
+        self.reporting_session = reporting_session
+    
+    def create_reporting_session(self, report, report_dir):
+        return self.reporting_session
+
+def get_reporting_session():
+    global _reporting_session
+    _reporting_session = TestReportingSession()
+    return _reporting_session
 
 @pytest.fixture()
 def reporting_session():
     return get_reporting_session()
 
-def run_testsuites(suites, worker=None, before_test_run_hook=None, after_test_run_hook=None, tmpdir=None):
+def run_testsuites(suites, worker=None, backends=None, before_test_run_hook=None, after_test_run_hook=None, tmpdir=None):
+    global _reporting_session
+    
     launcher = Launcher()
     launcher.load_testsuites(suites)
     
@@ -128,21 +131,34 @@ def run_testsuites(suites, worker=None, before_test_run_hook=None, after_test_ru
     
     if after_test_run_hook:
         launcher.after_test_run_hook = after_test_run_hook
+    if not backends:
+        backends = []
+    
+    if _reporting_session:
+        backends.append(TestReportingBackend(_reporting_session))
+        
+    for backend in backends:
+        launcher.add_reporting_backend(backend, enabled=True)
     
     if tmpdir:
-        launcher.run_testsuites(Filter(), os.path.join(tmpdir.strpath, "report"))
+        try:
+            launcher.run_testsuites(Filter(), [b.name for b in backends], os.path.join(tmpdir.strpath, "report"))
+        finally:
+            _reporting_session = None
     else:
         report_dir = tempfile.mkdtemp()
         try:
-            launcher.run_testsuites(Filter(), os.path.join(report_dir, "report"))
+            launcher.run_testsuites(Filter(), [b.name for b in backends], os.path.join(report_dir, "report"))
         finally:
             shutil.rmtree(report_dir)
+            # reset _reporting_session (either it has been set or not) at the end of each test run
+            _reporting_session = None
     
     dump_report(get_runtime().report)
 
-def run_testsuite(suite, worker=None, before_test_run_hook=None, after_test_run_hook=None, tmpdir=None):
+def run_testsuite(suite, worker=None, backends=[], before_test_run_hook=None, after_test_run_hook=None, tmpdir=None):
     run_testsuites(
-        [suite], worker=worker, before_test_run_hook=before_test_run_hook, 
+        [suite], worker=worker, backends=backends, before_test_run_hook=before_test_run_hook, 
         after_test_run_hook=after_test_run_hook,
         tmpdir=tmpdir
     )

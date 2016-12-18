@@ -8,10 +8,7 @@ from lemoncheesecake.exceptions import UnknownReportBackendError, MethodNotImple
 from lemoncheesecake.utils import object_has_method
 
 __all__ = (
-    "register_backend", "get_backend", "has_backend", "enable_backend", "disable_backend", 
-    "set_enabled_backends", "get_backend_names", "get_backends",
-    "register_default_backends",
-    "ReportingBackend", "ReportingSession"
+    "get_available_backends", "ReportingBackend", "ReportingSession"
 )
 
 _backends = { }
@@ -26,47 +23,6 @@ SAVE_AT_EACH_TESTSUITE = 2
 SAVE_AT_EACH_TEST = 3
 SAVE_AT_EACH_FAILED_TEST = 4
 SAVE_AT_EACH_EVENT = 5
-
-def _assert_backend_name(name):
-    if name not in _backends:
-        raise UnknownReportBackendError(name)
-
-def register_backend(name, backend):
-    global _backends
-    _backends[name] = backend
-
-def get_backend(name):
-    global _backends
-    _assert_backend_name(name)
-    return _backends[name]
-
-def has_backend(name):
-    global _backends
-    return name in _backends
-
-def enable_backend(name):
-    _assert_backend_name(name)
-    _enabled_backends.add(name)
-
-def disable_backend(name):
-    _assert_backend_name(name)
-    _enabled_backends.discard(name)
-
-def set_enabled_backends(names):
-    for name in names:
-        _assert_backend_name(name)
-
-    _enabled_backends.clear()
-    _enabled_backends.update(names)
-
-def get_backends(capabilities=CAPABILITY_REPORTING_SESSION, enabled_backends_only=True):
-    backend_names = _enabled_backends if enabled_backends_only else _backends.keys()
-    return [
-        _backends[name] for name in backend_names if _backends[name].get_capabilities() & capabilities == capabilities
-    ]
-
-def get_backend_names(capabilities=CAPABILITY_REPORTING_SESSION, enabled_backends_only=True):
-    return [ backend.name for backend in get_backends(capabilities, enabled_backends_only) ]
 
 class ReportingSession:
     def __init__(self, report, report_dir):
@@ -203,17 +159,7 @@ class FileReportBackend(ReportingBackend):
     def create_reporting_session(self, report, report_dir):
         return FileReportSession(report, report_dir, self, self.save_mode)
 
-def register_default_backends():
+def get_available_backends():
     from lemoncheesecake.reporting.backends import ConsoleBackend, XmlBackend, JsonBackend, HtmlBackend
 
-    backends = ConsoleBackend(), XmlBackend(), JsonBackend(), HtmlBackend()
-    enabled_backends = []
-    for backend in backends:
-        if backend.is_available():
-            register_backend(backend.name, backend)
-            if backend.name != "xml":
-                enabled_backends.append(backend) 
-    
-    set_enabled_backends([backend.name for backend in enabled_backends])
-
-register_default_backends()
+    return list(filter(lambda b: b.is_available(), [ConsoleBackend(), XmlBackend(), JsonBackend(), HtmlBackend()]))

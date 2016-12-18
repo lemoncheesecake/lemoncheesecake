@@ -13,12 +13,11 @@ from lemoncheesecake.testsuite import TestSuite
 from lemoncheesecake.worker import Worker
 from lemoncheesecake.launcher.validators import MetadataPolicy
 from lemoncheesecake.launcher.core import report_dir_with_archives, archive_dirname_datetime
-from lemoncheesecake.loader import load_testsuites
 from lemoncheesecake import reporting
 from lemoncheesecake.reporting import backends
 from lemoncheesecake.exceptions import ProjectError
 
-DEFAULT_REPORTING_BACKENDS = backends.ConsoleBackend, backends.JsonBackend, backends.HtmlBackend
+DEFAULT_REPORTING_BACKENDS = reporting.get_available_backends()
 
 def find_project_file():
     if "LEMONCHEESECAKE_PROJECT_FILE" in os.environ:
@@ -141,17 +140,33 @@ class Project:
     
     def get_workers(self):
         return self._get_param("WORKERS", _check_class_instance(Worker), is_dict=True, required=False, default={})
-    
-    def get_available_reporting_backends(self):
-        return self._get_param("REPORTING_BACKENDS_AVAILABLE", 
+
+    def _get_reporting_backends(self):
+        if "REPORTING_BACKENDS" in self._cache:
+            return self._cache["REPORTING_BACKENDS"]
+        
+        backends = self._get_param("REPORTING_BACKENDS", 
             _check_class_instance(reporting.ReportingBackend), is_list=True, required=False, default=DEFAULT_REPORTING_BACKENDS,
+            cache_value=False
         )
+        for backend in backends:
+            if not backend.is_available():
+                raise ProjectError(self._project_file, "in REPORTING_BACKENDS, backend '%s' is not available" % backend.name)
+        
+        self._cache["REPORTING_BACKENDS"] = backends
+        return backends
+
+    def get_reporting_backends(self, capabilities=0, only_enabled=False):
+        return list(filter(
+            lambda b: b.name in self.get_enabled_reporting_backend_names() and b.get_capabilities() & capabilities == capabilities,
+            self._get_reporting_backends()
+        ))
     
-    def get_enabled_reporting_backends(self):
+    def get_enabled_reporting_backend_names(self):
         if "REPORTING_BACKENDS_ENABLED" in self._cache:
             return self._cache["REPORTING_BACKENDS_ENABLED"]
         
-        available = [backend.name for backend in self.get_available_reporting_backends()]
+        available = [backend.name for backend in self._get_reporting_backends()]
         enabled = self._get_param("REPORTING_BACKENDS_ENABLED", 
             _check_type(str), is_list=True, required=False, default=available,
             cache_value=False
@@ -166,6 +181,9 @@ class Project:
         
         self._cache["REPORTING_BACKENDS_ENABLED"] = enabled
         return enabled
+
+    def is_reporting_backend_enabled(self, backend_name):
+        return backend_name in self.get_enabled_reporting_backend_names()
     
     def get_metadata_policy(self):
         return self._get_param("METADATA_POLICY", _check_class_instance(MetadataPolicy), required=False, default=MetadataPolicy())

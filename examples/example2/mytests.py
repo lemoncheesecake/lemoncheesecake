@@ -7,6 +7,7 @@ import json
 from lemoncheesecake.launcher import Launcher
 from lemoncheesecake.loader import import_testsuites_from_directory
 from lemoncheesecake.worker import Worker
+from lemoncheesecake.reporting import get_available_backends
 from lemoncheesecake import *
 
 class OmdbapiWorker(Worker):
@@ -31,5 +32,7 @@ class OmdbapiWorker(Worker):
 
 launcher = Launcher()
 launcher.add_worker("omdb", OmdbapiWorker())
+for backend in get_available_backends():
+    launcher.add_reporting_backend(backend)
 launcher.load_testsuites(import_testsuites_from_directory("tests"))
 launcher.handle_cli()
