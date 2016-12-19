@@ -27,7 +27,7 @@ class LinePrinter:
             if type(line) is unicode:
                 line = line.encode("utf-8")
         
-        if value_len > self.terminal_width:
+        if value_len >= self.terminal_width:
             line = line[:self.terminal_width-4] + "..."
             value_len = len(line)
         
