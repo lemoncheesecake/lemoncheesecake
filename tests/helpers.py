@@ -138,7 +138,7 @@ def run_testsuites(suites, worker=None, backends=None, before_test_run_hook=None
         backends.append(TestReportingBackend(_reporting_session))
         
     for backend in backends:
-        launcher.add_reporting_backend(backend, enabled=True)
+        launcher.add_reporting_backend(backend, is_active=True)
     
     if tmpdir:
         try:

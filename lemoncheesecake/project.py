@@ -156,34 +156,37 @@ class Project:
         self._cache["REPORTING_BACKENDS"] = backends
         return backends
 
-    def get_reporting_backends(self, capabilities=0, only_enabled=False):
+    def get_reporting_backends(self, capabilities=0, active_only=False):
+        if active_only:
+            backends = filter(lambda b: b.name in self.get_active_reporting_backend_names(), self._get_reporting_backends())
+        else:
+            backends = self._get_reporting_backends()
         return list(filter(
-            lambda b: b.name in self.get_enabled_reporting_backend_names() and b.get_capabilities() & capabilities == capabilities,
-            self._get_reporting_backends()
+            lambda b: b.get_capabilities() & capabilities == capabilities, backends
         ))
     
-    def get_enabled_reporting_backend_names(self):
-        if "REPORTING_BACKENDS_ENABLED" in self._cache:
-            return self._cache["REPORTING_BACKENDS_ENABLED"]
+    def get_active_reporting_backend_names(self):
+        if "REPORTING_BACKENDS_ACTIVE" in self._cache:
+            return self._cache["REPORTING_BACKENDS_ACTIVE"]
         
         available = [backend.name for backend in self._get_reporting_backends()]
-        enabled = self._get_param("REPORTING_BACKENDS_ENABLED", 
+        active = self._get_param("REPORTING_BACKENDS_ACTIVE", 
             _check_type(str), is_list=True, required=False, default=available,
             cache_value=False
         )
-        for enabled_backend in enabled:
-            if enabled_backend not in available:
+        for active_backend in active:
+            if active_backend not in available:
                 raise ProjectError(
                     self._project_file,
-                    "In parameter REPORTING_BACKENDS_ENABLED, backend '%s' is not among available backends (%s)" % (
-                        enabled_backend, ", ".join(available) 
+                    "In parameter REPORTING_BACKENDS_ACTIVE, backend '%s' is not among available backends (%s)" % (
+                        active_backend, ", ".join(available) 
                 ))
         
-        self._cache["REPORTING_BACKENDS_ENABLED"] = enabled
-        return enabled
+        self._cache["REPORTING_BACKENDS_ACTIVE"] = active
+        return active
 
-    def is_reporting_backend_enabled(self, backend_name):
-        return backend_name in self.get_enabled_reporting_backend_names()
+    def is_reporting_backend_active(self, backend_name):
+        return backend_name in self.get_active_reporting_backend_names()
     
     def get_metadata_policy(self):
         return self._get_param("METADATA_POLICY", _check_class_instance(MetadataPolicy), required=False, default=MetadataPolicy())

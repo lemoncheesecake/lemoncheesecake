@@ -42,18 +42,18 @@ def test_project_with_available_reporting_backends(tmpdir):
     
     assert [p.name for p in project.get_reporting_backends()] == ["console"]
 
-def test_project_with_enabled_reporting_backends(tmpdir):
+def test_project_with_active_reporting_backends(tmpdir):
     params = {}
     set_project_testsuites_param(params, "mysuite", tmpdir)
-    params["REPORTING_BACKENDS_ENABLED"] = "[ 'console', 'json' ]"
+    params["REPORTING_BACKENDS_ACTIVE"] = "[ 'console', 'json' ]"
     project_file = tmpdir.join("project.py")
     project_file.write(build_test_project(params))
         
     project = Project(project_file.strpath)
     
-    assert project.get_enabled_reporting_backend_names() == ["console", "json"]
-    assert project.is_reporting_backend_enabled("json") == True
-    assert project.is_reporting_backend_enabled("html") == False
+    assert project.get_active_reporting_backend_names() == ["console", "json"]
+    assert project.is_reporting_backend_active("json") == True
+    assert project.is_reporting_backend_active("html") == False
 
 def test_project_with_workers(tmpdir):
     params = {}

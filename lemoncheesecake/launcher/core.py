@@ -104,7 +104,7 @@ class Launcher:
         self._workers = {}
         self.metadata_policy = MetadataPolicy()
         self._reporting_backends = {}
-        self._enabled_reporting_backends_names = []
+        self._active_reporting_backends_names = []
         
         ###
         # Hooks
@@ -127,10 +127,10 @@ class Launcher:
     def get_workers_with_hook(self, hook_name):
         return list(filter(lambda b: b.has_hook(hook_name), self._workers.values()))
     
-    def add_reporting_backend(self, backend, enabled=True):
+    def add_reporting_backend(self, backend, is_active=True):
         self._reporting_backends[backend.name] = backend
-        if enabled:
-            self._enabled_reporting_backends_names.append(backend.name)
+        if is_active:
+            self._active_reporting_backends_names.append(backend.name)
     
     def _handle_exception(self, excp, suite=None):
         rt = get_runtime()
@@ -336,7 +336,7 @@ class Launcher:
         filter.link_names = args.link
                 
         # report backends
-        reporting_backend_names = set(self._enabled_reporting_backends_names)
+        reporting_backend_names = set(self._active_reporting_backends_names)
         if args.reporting:
             reporting_backend_names = set(args.reporting)
         if args.enable_reporting:
