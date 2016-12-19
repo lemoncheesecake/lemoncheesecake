@@ -4,15 +4,12 @@ Created on Mar 29, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.exceptions import UnknownReportBackendError, MethodNotImplemented
+from lemoncheesecake.exceptions import MethodNotImplemented
 from lemoncheesecake.utils import object_has_method
 
 __all__ = (
     "get_available_backends", "ReportingBackend", "ReportingSession"
 )
-
-_backends = { }
-_enabled_backends = set()
 
 CAPABILITY_REPORTING_SESSION = 0x1
 CAPABILITY_SERIALIZE = 0x2
