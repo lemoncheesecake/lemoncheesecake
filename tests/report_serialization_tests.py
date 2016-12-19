@@ -31,7 +31,7 @@ def do_test_serialization(suites, backend, tmpdir, worker=None):
     unserialized_report = backend.unserialize_report(tmpdir.strpath)
     
 #     dump_report(unserialized_report)
-    
+
     assert_report(unserialized_report, report)    
 
 def test_simple_test(backend, tmpdir):
@@ -68,12 +68,18 @@ def test_unicode(backend, tmpdir):
     @lcc.link("http://foo.bar", u"éééààà")
     @lcc.prop(u"ééé", u"ààà")
     @lcc.tags(u"ééé", u"ààà")
-    @lcc.test(u"Some test ààà")
-    def sometest(self):
-        lcc.set_step(u"éééààà")
-        lcc.check_int_eq(u"éééààà", 1, 1)
-        lcc.log_info(u"éééààà")
-        lcc.save_attachment_content("A" * 1024, u"somefileààà", u"éééààà")
+    class MySuite(lcc.TestSuite):
+        @lcc.link("http://foo.bar", u"éééààà")
+        @lcc.prop(u"ééé", u"ààà")
+        @lcc.tags(u"ééé", u"ààà")
+        @lcc.test(u"Some test ààà")
+        def sometest(self):
+            lcc.set_step(u"éééààà")
+            lcc.check_int_eq(u"éééààà", 1, 1)
+            lcc.log_info(u"éééààà")
+            lcc.save_attachment_content("A" * 1024, u"somefileààà", u"éééààà")
+    
+    do_test_serialization(MySuite, backend, tmpdir)
 
 def test_multiple_testsuites_and_tests(backend, tmpdir):
     class MySuite1(lcc.TestSuite):
