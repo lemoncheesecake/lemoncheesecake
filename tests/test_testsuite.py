@@ -1,3 +1,5 @@
+ # -*- coding: utf-8 -*-
+
 '''
 Created on Sep 30, 2016
 
@@ -98,6 +100,31 @@ def test_decorator_with_testsuite_inheritance():
     assert len(suite2.properties) == 2
     assert suite2.properties["key1"] == "value1"
     assert suite2.properties["key2"] == "value2"
+
+def test_decorator_unicode():
+    @lcc.link("http://foo.bar", u"éééààà")
+    @lcc.prop(u"ééé", u"ààà")
+    @lcc.tags(u"ééé", u"ààà")
+    class MySuite(lcc.TestSuite):
+        @lcc.link("http://foo.bar", u"éééààà")
+        @lcc.prop(u"ééé", u"ààà")
+        @lcc.tags(u"ééé", u"ààà")
+        @lcc.test(u"Some test ààà")
+        def sometest(self):
+            pass
+    
+    suite = MySuite()
+    suite.load()
+    
+    assert suite.links[0] == ("http://foo.bar", u"éééààà")
+    assert suite.properties[u"ééé"] == u"ààà"
+    assert suite.tags == [u"ééé", u"ààà"]
+    
+    test = suite.get_tests()[0]
+    assert test.description == u"Some test ààà"
+    assert test.links[0] == ("http://foo.bar", u"éééààà")
+    assert test.properties[u"ééé"] == u"ààà"
+    assert test.tags == [u"ééé", u"ààà"]
 
 def test_register_test():
     class MySuite(lcc.TestSuite):

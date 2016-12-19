@@ -1,3 +1,5 @@
+ # -*- coding: utf-8 -*-
+
 '''
 Created on Nov 1, 2016
 
@@ -370,6 +372,33 @@ def test_save_attachment_content(tmpdir):
     assert test.steps[0].entries[0].description == "foobar.txt"
     assert test.outcome == True
     assert open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename)).read() == "foobar"
+
+def test_unicode(tmpdir):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("some test")
+        def sometest(self):
+            lcc.set_step(u"éééààà")
+            lcc.check_int_eq(u"éééààà", 1, 1)
+            lcc.log_info(u"éééààà")
+            lcc.save_attachment_content("A" * 1024, u"somefileààà", u"éééààà")
+    
+    run_testsuite(MySuite, tmpdir=tmpdir)
+    
+    report = get_runtime().report
+    
+    assert_report_from_testsuite(report, MySuite)
+    assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
+
+    test = report.get_test("sometest")
+    assert test.outcome == True
+    step = test.steps[0]
+    assert step.description == u"éééààà"
+    assert u"éééààà" in step.entries[0].description
+    assert "1" in step.entries[0].description
+    assert step.entries[1].message == u"éééààà"
+    assert step.entries[2].filename.endswith(u"somefileààà")
+    assert step.entries[2].description == u"éééààà"
+    assert open(os.path.join(get_runtime().report_dir, step.entries[2].filename)).read() == "A" * 1024
 
 def test_before_suite_success():
     class MySuite(lcc.TestSuite):

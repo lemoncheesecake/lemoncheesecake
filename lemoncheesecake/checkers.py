@@ -59,7 +59,7 @@ class Check:
     format_expected_value = format_actual_value
     
     def format_description(self, name, expected):
-        description = "{prefix} {name} {comparator} {expected}".format(
+        description = u"{prefix} {name} {comparator} {expected}".format(
             prefix=self.description_prefix, name=name,
             comparator=self.comparator_label, expected=self.format_expected_value(expected)
         )
@@ -249,7 +249,7 @@ class CheckListEq(CheckEq):
 class CheckListLen(Check):
     comparator = staticmethod(lambda a, e: len(a) == e)
     def format_description(self, name, expected):
-        return "{prefix} {name} contains {expected} elements".format(
+        return u"{prefix} {name} contains {expected} elements".format(
             prefix=self.description_prefix, name=name, expected=expected
         )
     def format_details(self, actual):
@@ -308,7 +308,7 @@ class CheckDictHasKey(Check):
     def __call__(self, expected_key, actual, key_label=None):
         if not key_label:
             key_label = "'%s'" % expected_key
-        description = "{prefix} entry {key_label} is present".format(prefix=self.description_prefix, key_label=key_label)
+        description = u"{prefix} entry {key_label} is present".format(prefix=self.description_prefix, key_label=key_label)
         outcome = check(description, expected_key in actual)
         self.handle_check_outcome(outcome)
         return outcome
