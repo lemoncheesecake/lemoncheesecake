@@ -1,3 +1,10 @@
+# 0.3.6 (2016-12-21)
+
+- **API**: add new checkers for dict data
+- **API**: add two new hooks in launcher for custom code that need to run before and/or after the test run
+- fix encoding issue in checkers description
+- various minor fixes
+
 # 0.3.5 (2016-12-08)
 
 - **API**: add the ability to perform a check within a hook (before/after suite, before/after all tests)
