@@ -6,6 +6,7 @@ Created on Jan 24, 2016
 
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.exceptions import AbortTest
+from lemoncheesecake.utils import IS_PYTHON3
 
 import sys
 import re
@@ -329,6 +330,38 @@ class CheckDictHasNotKey(Check):
         outcome = check(description, expected_key not in actual)
         self.handle_check_outcome(outcome)
         return outcome
+
+def register_dict_has_key_typed(type_name, types):
+    class _CheckDictHasKeyTyped(Check):
+        doc_func_args = "key, d"
+        
+        def build_doc_func_description(self):
+            return "Check that key[d] has key of type %s" % type_name
+        
+        def __call__(self, expected_key, actual, key_label=None):
+            if not key_label:
+                key_label = "'%s'" % expected_key
+            description = u"{prefix} entry {key_label} with type {typ} is present".format(
+                prefix=self.description_prefix, key_label=key_label, typ=type_name
+            )
+            if expected_key in actual:
+                outcome = type(actual[expected_key]) in types
+                ret = check(description, outcome, None if outcome else "Got type %s" % type(actual[expected_key]).__name__)
+            else:
+                ret = check(description, False, "There is no key %s" % key_label)
+            return self.handle_check_outcome(ret)
+    
+    do_register_checker(
+        "dict_has_%s" % type_name, _CheckDictHasKeyTyped(type_name), _CheckDictHasKeyTyped(type_name, assertion=True)
+    )
+
+register_dict_has_key_typed("int", [int])
+register_dict_has_key_typed("float", [float])
+if IS_PYTHON3:
+    register_dict_has_key_typed("str", [str])
+else:
+    register_dict_has_key_typed("str", [str, unicode])
+register_dict_has_key_typed("bool", [bool])
 
 @checker("dict_value", is_base_checker=False)
 class CheckDictValue(Check):

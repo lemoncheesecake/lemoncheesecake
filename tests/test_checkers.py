@@ -347,6 +347,24 @@ def test_check_dict_has_not_key_success(reporting_session):
     assert outcome == True
     assert details == None
 
+def test_check_dict_has_int_success(reporting_session):
+    run_func_in_test(lambda: lcc.check_dict_has_int("foo", {"foo": 21}))
+    description, outcome, details = reporting_session.get_last_check()
+    
+    assert "foo" in description
+    assert "int" in description
+    assert outcome == True
+    assert details == None
+
+def test_check_dict_has_int_failure(reporting_session):
+    run_func_in_test(lambda: lcc.check_dict_has_int("foo", {"foo": 21.1}))
+    description, outcome, details = reporting_session.get_last_check()
+    
+    assert "foo" in description
+    assert "int" in description
+    assert outcome == False
+    assert "float" in details
+
 def test_check_dict_value_success(reporting_session):
     run_func_in_test(lambda: lcc.check_dict_value("foo", {"foo": 42}, 42, lcc.check_eq))
     description, outcome, details = reporting_session.get_last_check()
