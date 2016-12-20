@@ -409,10 +409,18 @@ def test_check_dict_value_str_eq_failure(reporting_session):
 def test_checkers_availability():
     from lemoncheesecake import checkers as lcc_checkers
     
-    comparators = ("eq", "not_eq", "gt", "gteq", "lt", "lteq")
-    types = ("int", "float")
+    types = {
+        "int": ("eq", "not_eq", "gt", "gteq", "lt", "lteq"),
+        "float": ("eq", "not_eq", "gt", "gteq", "lt", "lteq"),
+        "str": ("eq", "not_eq"),
+        "bool": ("eq",)
+    }
     
-    for type_ in types:
+    for type_, comparators in types.items():
+        for prefix in "check", "assert":
+            checker_name = "%s_dict_has_%s" % (prefix, type_)
+            assert checker_name in lcc_checkers.__all__
+            assert type(getattr(lcc_checkers, checker_name)) == FunctionType
         for comparator in comparators:
             for prefix in "check", "assert", "check_dictval", "assert_dictval":
                 checker_name = "%s_%s_%s" % (prefix, type_, comparator)
