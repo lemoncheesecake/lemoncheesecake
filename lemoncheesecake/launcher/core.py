@@ -115,6 +115,12 @@ class Launcher:
         # Misc
         ###
         self.metadata_policy = MetadataPolicy()
+        
+        ###
+        # Hooks
+        ###
+        self.before_test_run_hook = None
+        self.after_test_run_hook = None
             
     def _load_testsuite(self, suite):
         # process suite
@@ -277,6 +283,9 @@ class Launcher:
             os.mkdir(report_dir)
         else:
             report_dir = self.report_dir_creation_callback()
+        
+        if self.before_test_run_hook:
+            self.before_test_run_hook(report_dir)
 
         # initialize runtime & global test variables
         initialize_runtime(report_dir)
@@ -324,6 +333,9 @@ class Launcher:
             rt.end_worker_hook_after_all_tests()
     
         rt.end_tests()
+
+        if self.after_test_run_hook:
+            self.after_test_run_hook(report_dir)
     
     def cli_run_testsuites(self, args):
         """Run the loaded test suites according to the command line parameters.

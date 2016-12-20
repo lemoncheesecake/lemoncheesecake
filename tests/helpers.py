@@ -99,13 +99,19 @@ def get_reporting_session():
 def reporting_session():
     return get_reporting_session()
 
-def run_testsuites(suites, worker=None, tmpdir=None):
+def run_testsuites(suites, worker=None, before_test_run_hook=None, after_test_run_hook=None, tmpdir=None):
     launcher = Launcher()
     launcher.load_testsuites(suites)
     
     clear_workers()
     if worker:
         add_worker("testworker", worker)
+    
+    if before_test_run_hook:
+        launcher.before_test_run_hook = before_test_run_hook
+    
+    if after_test_run_hook:
+        launcher.after_test_run_hook = after_test_run_hook
     
     if tmpdir:
         launcher.run_testsuites(Filter(), os.path.join(tmpdir.strpath, "report"))
@@ -118,8 +124,12 @@ def run_testsuites(suites, worker=None, tmpdir=None):
     
     dump_report(get_runtime().report)
 
-def run_testsuite(suite, worker=None, tmpdir=None):
-    run_testsuites([suite], worker=worker, tmpdir=tmpdir)
+def run_testsuite(suite, worker=None, before_test_run_hook=None, after_test_run_hook=None, tmpdir=None):
+    run_testsuites(
+        [suite], worker=worker, before_test_run_hook=before_test_run_hook, 
+        after_test_run_hook=after_test_run_hook,
+        tmpdir=tmpdir
+    )
 
 def run_func_in_test(callback):
     class MySuite(lcc.TestSuite):

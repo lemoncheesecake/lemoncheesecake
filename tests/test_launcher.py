@@ -4,6 +4,7 @@ Created on Sep 30, 2016
 @author: nicolas
 '''
 
+import os
 import sys
 import tempfile
 import shutil
@@ -153,6 +154,38 @@ def test_sub_testsuite_attr(reporting_session):
     run_testsuite(MyParentSuite)
     
     assert reporting_session.get_test_outcome("sometest") == True
+
+def test_hook_before_test_run(reporting_session):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+    
+    hook_has_been_executed = [False]
+    def hook(report_dir):
+        assert os.path.exists(report_dir)
+        hook_has_been_executed[0] = True
+    
+    run_testsuite(MySuite, before_test_run_hook=hook)
+    
+    assert reporting_session.get_test_outcome("sometest") == True
+    assert hook_has_been_executed[0] == True
+
+def test_hook_after_test_run(reporting_session):
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+    
+    hook_has_been_executed = [False]
+    def hook(report_dir):
+        assert os.path.exists(report_dir)
+        hook_has_been_executed[0] = True
+    
+    run_testsuite(MySuite, after_test_run_hook=hook)
+    
+    assert reporting_session.get_test_outcome("sometest") == True
+    assert hook_has_been_executed[0] == True
 
 def test_hook_worker_before_all_tests(reporting_session):
     class MyWorker(Worker):
