@@ -339,6 +339,14 @@ def test_check_dict_has_key_success(reporting_session):
     assert outcome == True
     assert details == None
 
+def test_check_dict_has_not_key_success(reporting_session):
+    run_func_in_test(lambda: lcc.check_dict_has_not_key("foo", {}, "foo"))
+    description, outcome, details = reporting_session.get_last_check()
+    
+    assert "foo" in description
+    assert outcome == True
+    assert details == None
+
 def test_check_dict_value_success(reporting_session):
     run_func_in_test(lambda: lcc.check_dict_value("foo", {"foo": 42}, 42, lcc.check_eq))
     description, outcome, details = reporting_session.get_last_check()

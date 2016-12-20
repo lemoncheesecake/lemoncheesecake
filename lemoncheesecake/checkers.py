@@ -313,6 +313,23 @@ class CheckDictHasKey(Check):
         self.handle_check_outcome(outcome)
         return outcome
 
+@checker("dict_has_not_key", is_base_checker=False)
+class CheckDictHasNotKey(Check):
+    doc_func_args = "key, d"
+    
+    def build_doc_func_description(self):
+        return "{prefix} d does not have entry key".format(
+            prefix=self.description_prefix
+        )
+    
+    def __call__(self, expected_key, actual, key_label=None):
+        if not key_label:
+            key_label = "'%s'" % expected_key
+        description = u"{prefix} entry {key_label} is not present".format(prefix=self.description_prefix, key_label=key_label)
+        outcome = check(description, expected_key not in actual)
+        self.handle_check_outcome(outcome)
+        return outcome
+
 @checker("dict_value", is_base_checker=False)
 class CheckDictValue(Check):
     doc_func_args = "key, d, expected, value_checker"
