@@ -306,11 +306,12 @@ class CheckDictHasKey(Check):
             prefix=self.description_prefix
         )
     
-    def __call__(self, expected_key, actual, key_label=None):
+    def __call__(self, expected_key, actual, key_label=None, show_actual=True):
         if not key_label:
             key_label = "'%s'" % expected_key
         description = u"{prefix} entry {key_label} is present".format(prefix=self.description_prefix, key_label=key_label)
-        outcome = check(description, expected_key in actual)
+        outcome = expected_key in actual
+        check(description, outcome, self.format_details(actual[expected_key]) if outcome and show_actual else None)
         self.handle_check_outcome(outcome)
         return outcome
 
@@ -323,22 +324,24 @@ class CheckDictHasNotKey(Check):
             prefix=self.description_prefix
         )
     
-    def __call__(self, expected_key, actual, key_label=None):
+    def __call__(self, expected_key, actual, key_label=None, show_actual=True):
         if not key_label:
             key_label = "'%s'" % expected_key
         description = u"{prefix} entry {key_label} is not present".format(prefix=self.description_prefix, key_label=key_label)
-        outcome = check(description, expected_key not in actual)
+        outcome = expected_key not in actual
+        check(description, outcome, self.format_details(actual[expected_key]) if not outcome and show_actual else None)
         self.handle_check_outcome(outcome)
         return outcome
 
-def register_dict_has_key_typed(type_name, types):
-    class _CheckDictHasKeyTyped(Check):
+def register_dict_has_key_typed(type_name, types, base_class):
+    class _CheckDictHasKeyTyped(base_class):
+        always_display_details = True
         doc_func_args = "key, d"
         
         def build_doc_func_description(self):
             return "Check that key[d] has key of type %s" % type_name
         
-        def __call__(self, expected_key, actual, key_label=None):
+        def __call__(self, expected_key, actual, key_label=None, show_actual=True):
             if not key_label:
                 key_label = "'%s'" % expected_key
             description = u"{prefix} entry {key_label} with type {typ} is present".format(
@@ -346,22 +349,24 @@ def register_dict_has_key_typed(type_name, types):
             )
             if expected_key in actual:
                 outcome = type(actual[expected_key]) in types
-                ret = check(description, outcome, None if outcome else "Got type %s" % type(actual[expected_key]).__name__)
+                ret = check(description, outcome, self.format_details(actual[expected_key]) if not outcome or show_actual else None)
             else:
                 ret = check(description, False, "There is no key %s" % key_label)
             return self.handle_check_outcome(ret)
     
     do_register_checker(
-        "dict_has_%s" % type_name, _CheckDictHasKeyTyped(type_name), _CheckDictHasKeyTyped(type_name, assertion=True)
+        "dict_has_%s" % type_name, 
+        _CheckDictHasKeyTyped(type_name, value_type=types[0]),
+        _CheckDictHasKeyTyped(type_name, value_type=types[0], assertion=True)
     )
 
-register_dict_has_key_typed("int", [int])
-register_dict_has_key_typed("float", [float])
+register_dict_has_key_typed("int", [int], Check)
+register_dict_has_key_typed("float", [float], Check)
 if IS_PYTHON3:
-    register_dict_has_key_typed("str", [str])
+    register_dict_has_key_typed("str", [str], CheckStrEq)
 else:
-    register_dict_has_key_typed("str", [str, unicode])
-register_dict_has_key_typed("bool", [bool])
+    register_dict_has_key_typed("str", [str, unicode], CheckStrEq)
+register_dict_has_key_typed("bool", [bool], Check)
 
 @checker("dict_value", is_base_checker=False)
 class CheckDictValue(Check):
