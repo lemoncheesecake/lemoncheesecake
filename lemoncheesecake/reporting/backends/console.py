@@ -27,14 +27,14 @@ class LinePrinter:
             if type(line) is unicode:
                 line = line.encode("utf-8")
         
-        if value_len >= self.terminal_width:
-            line = line[:self.terminal_width-4] + "..."
+        if value_len >= self.terminal_width - 1:
+            line = line[:self.terminal_width - 5] + "..."
             value_len = len(line)
         
         sys.stdout.write("\r")
         sys.stdout.write(line)
         if self.prev_len > value_len:
-            sys.stdout.write(" " * (self.prev_len - value_len - 1))
+            sys.stdout.write(" " * (self.prev_len - value_len))
         sys.stdout.flush()
         
         self.prev_len = value_len
