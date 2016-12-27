@@ -95,8 +95,8 @@ class _Runtime:
     def end_worker_hook_after_all_tests(self):
         self._end_hook(self.report.after_all_tests)
         self.end_current_step()
-    
-    def begin_before_suite(self, testsuite):
+
+    def begin_suite(self, testsuite):
         self.current_testsuite = testsuite
         suite_data = TestSuiteData(testsuite.id, testsuite.description, self.current_testsuite_data)
         suite_data.tags.extend(testsuite.tags)
@@ -107,13 +107,15 @@ class _Runtime:
         else:
             self.report.testsuites.append(suite_data)
         self.current_testsuite_data = suite_data
+        
+        self.for_each_reporting_sessions(lambda b: b.begin_suite(testsuite))
+    
+    def begin_before_suite(self):
+        self.current_testsuite_data.before_suite = self._start_hook()
+        self.current_step_data_list = self.current_testsuite_data.before_suite.steps
+        self.default_step_description = "Before suite"
 
-        if testsuite.has_hook("before_suite"):
-            suite_data.before_suite = self._start_hook()
-            self.current_step_data_list = suite_data.before_suite.steps
-            self.default_step_description = "Before suite"
-
-        self.for_each_reporting_sessions(lambda b: b.begin_before_suite(testsuite))
+        self.for_each_reporting_sessions(lambda b: b.begin_before_suite(self.current_testsuite))
     
     def end_before_suite(self):
         now = time.time()
@@ -121,20 +123,22 @@ class _Runtime:
         self.end_current_step(now)
         self.for_each_reporting_sessions(lambda b: b.end_before_suite(self.current_testsuite))
         
-    def begin_after_suite(self, testsuite):
-        if testsuite.has_hook("after_suite"):
-            self.current_testsuite_data.after_suite = self._start_hook()
-            self.current_step_data_list = self.current_testsuite_data.after_suite.steps
-            self.default_step_description = "After suite"
+    def begin_after_suite(self):
+        self.current_testsuite_data.after_suite = self._start_hook()
+        self.current_step_data_list = self.current_testsuite_data.after_suite.steps
+        self.default_step_description = "After suite"
             
-        self.for_each_reporting_sessions(lambda b: b.begin_after_suite(testsuite))
+        self.for_each_reporting_sessions(lambda b: b.begin_after_suite(self.current_testsuite))
 
     def end_after_suite(self):
         now = time.time()
-        self._end_hook(self.current_testsuite_data.after_suite, now)
-        self.current_testsuite_data = self.current_testsuite_data.parent
         self.end_current_step(now)
+        self._end_hook(self.current_testsuite_data.after_suite, now)
         self.for_each_reporting_sessions(lambda b: b.end_after_suite(self.current_testsuite))
+    
+    def end_suite(self):
+        self.current_testsuite_data = self.current_testsuite_data.parent
+        self.for_each_reporting_sessions(lambda b: b.end_suite(self.current_testsuite))
         self.current_testsuite = None
         
     def begin_test(self, test):

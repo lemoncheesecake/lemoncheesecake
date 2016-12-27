@@ -185,22 +185,22 @@ class Launcher:
                 ))
             setattr(suite, worker_name, workers.get_worker(worker_name))
     
-        rt.begin_before_suite(suite)
+        rt.begin_suite(suite)
 
-        if not self.abort_testsuite and not self.abort_all_tests:
-            try:
-                if suite.has_hook("before_suite"):
+        if suite.has_hook("before_suite"):
+            rt.begin_before_suite()
+            if not self.abort_testsuite and not self.abort_all_tests:
+                try:
                     suite.before_suite()
-            except Exception as e:
-                self._handle_exception(e, suite)
-                self.abort_testsuite = suite
-            except KeyboardInterrupt as e:
-                self._handle_exception(e, suite)
+                except Exception as e:
+                    self._handle_exception(e, suite)
+                    self.abort_testsuite = suite
+                except KeyboardInterrupt as e:
+                    self._handle_exception(e, suite)
             suite_data = rt.report.get_suite(suite.id)
-            if suite_data.before_suite and suite_data.before_suite.has_failure():
+            if suite_data.before_suite.has_failure():
                 self.abort_testsuite = suite
-            
-        rt.end_before_suite() 
+            rt.end_before_suite()
         
         for test in suite.get_tests(filtered=True):
             rt.begin_test(test)
@@ -239,17 +239,17 @@ class Launcher:
         for sub_suite in suite.get_sub_testsuites(filtered=True):
             self._run_testsuite(sub_suite)
 
-        rt.begin_after_suite(suite)
-
         if suite.has_hook("after_suite"):
+            rt.begin_after_suite()
             try:
                 suite.after_suite()
             except Exception as e:
                 self._handle_exception(e, suite)
             except KeyboardInterrupt as e:
                 self._handle_exception(e, suite)
-            
-        rt.end_after_suite()
+            rt.end_after_suite()
+        
+        rt.end_suite()
         
         # reset the abort suite flag
         if self.abort_testsuite == suite:

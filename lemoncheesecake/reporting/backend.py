@@ -79,16 +79,22 @@ class ReportingSession:
     def end_worker_after_all_tests(self):
         pass
     
+    def begin_suite(self, testsuite):
+        pass
+    
     def begin_before_suite(self, testsuite):
         pass
     
     def end_before_suite(self, testsuite):
         pass
-    
+        
     def begin_after_suite(self, testsuite):
         pass
     
     def end_after_suite(self, testsuite):
+        pass
+    
+    def end_suite(self, testsuite):
         pass
     
     def begin_test(self, test):
