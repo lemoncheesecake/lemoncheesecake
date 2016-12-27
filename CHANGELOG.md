@@ -1,3 +1,9 @@
+# 0.3.7 (2016-12-27)
+
+- **Reporting**: add a configurable save mode for JSON & XML reporting backends allowing the developer
+  to indicate at which moment the report should be written on disk
+- minor enhancements and bug fixes
+
 # 0.3.6 (2016-12-21)
 
 - **API**: add new checkers for dict data
