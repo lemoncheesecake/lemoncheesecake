@@ -21,6 +21,12 @@ CAPABILITY_REPORTING_SESSION = 0x1
 CAPABILITY_SERIALIZE = 0x2
 CAPABILITY_UNSERIALIZE = 0x4
 
+SAVE_AT_END_OF_TESTS = 1
+SAVE_AT_EACH_TESTSUITE = 2
+SAVE_AT_EACH_TEST = 3
+SAVE_AT_EACH_FAILED_TEST = 4
+SAVE_AT_EACH_EVENT = 5
+
 def _assert_backend_name(name):
     if name not in _backends:
         raise UnknownReportBackendError(name)
@@ -74,6 +80,12 @@ class ReportingSession:
         pass
     
     def begin_worker_before_all_tests(self):
+        pass
+    
+    def end_worker_before_all_tests(self):
+        pass
+    
+    def begin_worker_after_all_tests(self):
         pass
     
     def end_worker_after_all_tests(self):
@@ -136,19 +148,60 @@ class ReportingBackend:
 #         pass
 
 class FileReportSession(ReportingSession):
-    def __init__(self, report, report_dir, backend):
+    def __init__(self, report, report_dir, backend, save_mode):
         ReportingSession.__init__(self, report, report_dir)
         self.backend = backend
+        self.save_mode = save_mode
+    
+    def save(self):
+        self.backend.serialize_report(self.report, self.report_dir)
+    
+    def _handle_code_end(self, is_failure):
+        if (self.save_mode == SAVE_AT_EACH_TEST) or (self.save_mode == SAVE_AT_EACH_FAILED_TEST and is_failure):
+            self.save()
+            return
+            
+    def end_worker_before_all_tests(self):
+        self._handle_code_end(self.report.before_all_tests.has_failure())
+    
+    def end_worker_after_all_tests(self):
+        self._handle_code_end(self.report.after_all_tests.has_failure())
+    
+    def end_before_suite(self, testsuite):
+        suite_data = self.report.get_suite(testsuite.id)
+        self._handle_code_end(suite_data.before_suite.has_failure())
+
+    def end_after_suite(self, testsuite):
+        suite_data = self.report.get_suite(testsuite.id)
+        self._handle_code_end(suite_data.after_suite.has_failure())
+    
+    def end_test(self, test, outcome):
+        self._handle_code_end(not outcome)
+    
+    def end_suite(self, testsuite):
+        if self.save_mode == SAVE_AT_EACH_TESTSUITE:
+            self.save()
+    
+    def log(self, level, content):
+        if self.save_mode == SAVE_AT_EACH_EVENT:
+            self.save()
+    
+    def check(self, description, outcome, details=None):
+        if self.save_mode == SAVE_AT_EACH_EVENT:
+            self.save()
     
     def end_tests(self):
-        self.backend.serialize_report(self.report, self.report_dir)
+        self.save()
 
 class FileReportBackend(ReportingBackend):
+    def __init__(self, save_mode=SAVE_AT_EACH_FAILED_TEST):
+        self.save_mode = save_mode
+    
     def serialize_report(self, report, report_dir):
         raise MethodNotImplemented(self, "serialize_report")
     
     def create_reporting_session(self, report, report_dir):
-        return FileReportSession(report, report_dir, self)
+        return FileReportSession(report, report_dir, self, self.save_mode)
 
 def register_default_backends():
     from lemoncheesecake.reporting.backends import ConsoleBackend, XmlBackend, JsonBackend, HtmlBackend

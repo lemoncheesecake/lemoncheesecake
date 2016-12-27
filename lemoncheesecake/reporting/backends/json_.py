@@ -9,7 +9,7 @@ import re
 import json
 from collections import OrderedDict
 
-from lemoncheesecake.reporting.backend import ReportingBackend, FileReportBackend
+from lemoncheesecake.reporting.backend import FileReportBackend, SAVE_AT_EACH_FAILED_TEST
 from lemoncheesecake.reporting.report import *
 
 JS_PREFIX = "var reporting_data = "
@@ -192,7 +192,8 @@ def unserialize_report_from_file(filename):
 class JsonBackend(FileReportBackend):
     name = "json"
     
-    def __init__(self, javascript_compatibility=True, pretty_formatting=False):
+    def __init__(self, save_mode=SAVE_AT_EACH_FAILED_TEST, javascript_compatibility=True, pretty_formatting=False):
+        FileReportBackend.__init__(self, save_mode)
         self.javascript_compatibility = javascript_compatibility
         self.pretty_formatting = pretty_formatting
     

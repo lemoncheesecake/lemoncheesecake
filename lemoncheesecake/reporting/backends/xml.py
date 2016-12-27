@@ -14,7 +14,7 @@ try:
 except ImportError:
     LXML_IS_AVAILABLE = False
 
-from lemoncheesecake.reporting.backend import ReportingBackend, FileReportBackend, CAPABILITY_UNSERIALIZE
+from lemoncheesecake.reporting.backend import FileReportBackend, SAVE_AT_EACH_FAILED_TEST
 from lemoncheesecake.reporting.report import *
 from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.exceptions import ProgrammingError
@@ -281,7 +281,8 @@ def unserialize_report_from_file(filename):
 class XmlBackend(FileReportBackend):
     name = "xml"
     
-    def __init__(self):
+    def __init__(self, save_mode=SAVE_AT_EACH_FAILED_TEST):
+        FileReportBackend.__init__(self, save_mode)
         self.indent_level = DEFAULT_INDENT_LEVEL
     
     def is_available(self):

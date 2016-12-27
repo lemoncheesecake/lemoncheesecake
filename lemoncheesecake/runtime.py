@@ -83,18 +83,25 @@ class _Runtime:
         self.current_step_data_list = self.report.before_all_tests.steps
         self.default_step_description = "Before all tests"
     
+        self.for_each_reporting_sessions(lambda b: b.begin_worker_before_all_tests())
+    
     def end_worker_hook_before_all_tests(self):
         self._end_hook(self.report.before_all_tests)
         self.end_current_step()
+
+        self.for_each_reporting_sessions(lambda b: b.end_worker_before_all_tests())
 
     def begin_worker_hook_after_all_tests(self):
         self.report.after_all_tests = self._start_hook()
         self.current_step_data_list = self.report.after_all_tests.steps
         self.default_step_description = "After all tests"
+        
+        self.for_each_reporting_sessions(lambda b: b.begin_worker_after_all_tests())
     
     def end_worker_hook_after_all_tests(self):
         self._end_hook(self.report.after_all_tests)
         self.end_current_step()
+        self.for_each_reporting_sessions(lambda b: b.end_worker_after_all_tests())
 
     def begin_suite(self, testsuite):
         self.current_testsuite = testsuite
@@ -137,9 +144,9 @@ class _Runtime:
         self.for_each_reporting_sessions(lambda b: b.end_after_suite(self.current_testsuite))
     
     def end_suite(self):
-        self.current_testsuite_data = self.current_testsuite_data.parent
         self.for_each_reporting_sessions(lambda b: b.end_suite(self.current_testsuite))
-        self.current_testsuite = None
+        self.current_testsuite_data = self.current_testsuite_data.parent
+        self.current_testsuite = self.current_testsuite.parent_suite
         
     def begin_test(self, test):
         self.has_pending_failure = False

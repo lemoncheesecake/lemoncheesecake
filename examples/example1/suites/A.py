@@ -44,6 +44,7 @@ class A(TestSuite):
     @link("http://bugtracker.net/tickets/5678")
     @test("Second test")
     def second_test(self):
+        time.sleep(2)
         log_info("do test 2 !")
     
     def bar(self):

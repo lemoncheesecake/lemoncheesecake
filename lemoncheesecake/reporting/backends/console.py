@@ -50,10 +50,6 @@ class LinePrinter:
         sys.stdout.write("\r")
         self.prev_len = 0
 
-CTX_BEFORE_SUITE = 0
-CTX_TEST = 1
-CTX_AFTER_SUITE = 2
-
 class ConsoleReportingSession(ReportingSession):
     def __init__(self, report, report_dir, terminal_width, display_testsuite_full_path):
         ReportingSession.__init__(self, report, report_dir)
@@ -62,12 +58,12 @@ class ConsoleReportingSession(ReportingSession):
         self.terminal_width = terminal_width
         self.display_testsuite_full_path = display_testsuite_full_path
         self.context = None
+        self.custom_step_prefix = None
     
     def begin_tests(self):
         self.previous_obj = None
  
-    def begin_before_suite(self, testsuite):
-        self.context = CTX_BEFORE_SUITE
+    def begin_suite(self, testsuite):
         self.current_test_idx = 1
 
         if not testsuite.has_selected_tests(deep=False):
@@ -87,20 +83,37 @@ class ConsoleReportingSession(ReportingSession):
         sys.stdout.write("=" * padding_left + " " + colored(label, attrs=["bold"]) + " " + "=" * padding_right + "\n")
         self.previous_obj = testsuite
     
+    def begin_before_suite(self, testsuite):
+        self.step_prefix = " => before suite: "
+        self.lp.print_line(self.step_prefix + "...")
+    
+    def begin_after_suite(self, testsuite):
+        self.step_prefix = " => after suite: "
+        self.lp.print_line(self.step_prefix + "...")
+    
+    def begin_worker_before_all_tests(self):
+        self.step_prefix = " => before all tests: "
+        self.lp.print_line(self.step_prefix + "...")
+    
+    def begin_worker_after_all_tests(self):
+        self.step_prefix = " => after all tests: "
+        self.lp.print_line(self.step_prefix + "...")
+    
     def end_before_suite(self, testsuite):
         self.lp.erase_line()
-        
-    def begin_after_suite(self, testsuite):
-        self.context = CTX_AFTER_SUITE
+        self.custom_step_prefix = None
     
-    def end_after_suite(self, testsuite):
+    end_after_suite = end_before_suite
+    
+    def end_worker_before_all_tests(self):
         self.lp.erase_line()
-        self.context = None
-        
+        self.custom_step_prefix = None
+    
+    end_worker_after_all_tests = end_worker_before_all_tests
+            
     def begin_test(self, test):
-        self.context = CTX_TEST
-        self.current_test_line = " -- %2s # %s" % (self.current_test_idx, test.id)
-        self.lp.print_line(self.current_test_line + "...")
+        self.step_prefix = " -- %2s # %s" % (self.current_test_idx, test.id)
+        self.lp.print_line(self.step_prefix + "...")
         self.previous_obj = test
     
     def end_test(self, test, outcome):
@@ -114,14 +127,7 @@ class ConsoleReportingSession(ReportingSession):
         self.current_test_idx += 1
     
     def set_step(self, description):
-        if self.context == CTX_BEFORE_SUITE:
-            self.lp.print_line(" => before suite: %s" % description)
-        elif self.context == CTX_AFTER_SUITE:
-            self.lp.print_line(" => after suite: %s" % description)
-        elif self.context == CTX_TEST:
-            description += "..."
-            line = "%s (%s)" % (self.current_test_line, description)
-            self.lp.print_line(line)
+        self.lp.print_line("%s (%s...)" % (self.step_prefix, description))
     
     def log(self, content, level):
         pass

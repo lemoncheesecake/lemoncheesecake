@@ -210,8 +210,8 @@ class Report:
         stats = self.get_stats()
         return (
             ("Start time", time.asctime(time.localtime(self.start_time))),
-            ("End time", time.asctime(time.localtime(self.end_time))),
-            ("Duration", humanize_duration(self.end_time - self.start_time)),
+            ("End time", time.asctime(time.localtime(self.end_time)) if self.end_time else "n/a"),
+            ("Duration", humanize_duration(self.end_time - self.start_time) if self.end_time else "n/a"),
             ("Tests", str(stats.tests)),
             ("Successful tests", str(stats.test_successes)),
             ("Successful tests in %", "%d%%" % (float(stats.test_successes) / stats.tests * 100 if stats.tests else 0)),
