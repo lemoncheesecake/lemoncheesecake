@@ -306,7 +306,7 @@ class CheckDictHasKey(Check):
             prefix=self.description_prefix
         )
     
-    def __call__(self, expected_key, actual, key_label=None, show_actual=True):
+    def __call__(self, expected_key, actual, key_label=None, show_actual=False):
         if not key_label:
             key_label = "'%s'" % expected_key
         description = u"{prefix} entry {key_label} is present".format(prefix=self.description_prefix, key_label=key_label)
@@ -324,7 +324,7 @@ class CheckDictHasNotKey(Check):
             prefix=self.description_prefix
         )
     
-    def __call__(self, expected_key, actual, key_label=None, show_actual=True):
+    def __call__(self, expected_key, actual, key_label=None, show_actual=False):
         if not key_label:
             key_label = "'%s'" % expected_key
         description = u"{prefix} entry {key_label} is not present".format(prefix=self.description_prefix, key_label=key_label)

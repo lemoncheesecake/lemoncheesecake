@@ -338,7 +338,7 @@ def test_check_dict_has_key_success(reporting_session):
     
     assert "foo" in description
     assert outcome == True
-    assert "42" in details
+    assert details == None
 
 def test_check_dict_has_key_failure(reporting_session):
     run_func_in_test(lambda: lcc.check_dict_has_key("foo", {"bar": 42}, "foo"))
@@ -362,7 +362,7 @@ def test_check_dict_has_not_key_failure(reporting_session):
     
     assert "foo" in description
     assert outcome == False
-    assert "42" in details
+    assert details == None
 
 def test_check_dict_has_int_success(reporting_session):
     run_func_in_test(lambda: lcc.check_dict_has_int("foo", {"foo": 21}))
