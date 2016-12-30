@@ -250,7 +250,7 @@ class _Runtime:
     def save_attachment_content(self, content, filename, description=None):
         target_filename = self.prepare_attachment(filename, description)
         
-        fh = open(target_filename, "w")
+        fh = open(target_filename, "wb")
         fh.write(content)
         fh.close()
     
