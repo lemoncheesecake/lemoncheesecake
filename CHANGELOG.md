@@ -1,3 +1,8 @@
+# 0.3.8 (2016-12-30)
+
+- Various bug fixes, among which: fix binary attachment saving on Windows, be fault tolerant when an exception
+  cannot be properly decoded in UTF-8 (on Windows, I already got a stacktrace encoded in mbcs)
+
 # 0.3.7 (2016-12-27)
 
 - **Reporting**: add a configurable save mode for JSON & XML reporting backends allowing the developer
