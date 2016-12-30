@@ -171,7 +171,7 @@ class Launcher:
             # FIXME: use exception instead of last implicit stacktrace
             stacktrace = traceback.format_exc()
             if not IS_PYTHON3:
-                stacktrace = stacktrace.decode("utf-8")
+                stacktrace = stacktrace.decode("utf-8", "replace")
             rt.log_error("Caught unexpected exception while running test: " + stacktrace)
     
     def _run_testsuite(self, suite):
