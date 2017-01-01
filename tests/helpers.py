@@ -15,7 +15,8 @@ import pytest
 
 import lemoncheesecake as lcc
 from lemoncheesecake import loader
-from lemoncheesecake.launcher import Launcher, Filter
+from lemoncheesecake.launcher import Launcher
+from lemoncheesecake.testsuite import Filter
 from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string

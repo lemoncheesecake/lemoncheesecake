@@ -11,7 +11,8 @@ import shutil
 
 import pytest
 
-from lemoncheesecake.launcher import Launcher, Filter
+from lemoncheesecake.launcher import Launcher
+from lemoncheesecake.testsuite import Filter
 from lemoncheesecake.worker import Worker
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.exceptions import *
