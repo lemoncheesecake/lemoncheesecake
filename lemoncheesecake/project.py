@@ -12,7 +12,7 @@ import inspect
 from lemoncheesecake.testsuite import TestSuite
 from lemoncheesecake.worker import Worker
 from lemoncheesecake.validators import MetadataPolicy
-from lemoncheesecake.launcher.core import report_dir_with_archives, archive_dirname_datetime
+from lemoncheesecake.reporting import reportdir
 from lemoncheesecake import reporting
 from lemoncheesecake.reporting import backends
 from lemoncheesecake.exceptions import ProjectError
@@ -128,7 +128,8 @@ class Project:
     
     def get_report_dir_creation_cb(self):
         return self._get_param("REPORT_DIR_CREATION", 
-            _check_func(args_nb=1), required=False, default=lambda top_dir: report_dir_with_archives(top_dir, archive_dirname_datetime)
+            _check_func(args_nb=1), required=False, 
+            default=lambda top_dir: reportdir.report_dir_with_archiving(top_dir, reportdir.archive_dirname_datetime)
         )
     
     def get_testsuites_classes(self):

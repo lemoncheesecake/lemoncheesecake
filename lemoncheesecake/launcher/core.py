@@ -17,44 +17,12 @@ from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.testsuite import filter as testsuitefilter
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake import reporting
+from lemoncheesecake.reporting import reportdir
 from lemoncheesecake.exceptions import LemonCheesecakeException, InvalidMetadataError, AbortTest, AbortTestSuite, AbortAllTests, ProgrammingError
 
 __all__ = ("Launcher", "get_launcher_abspath", "get_abspath_from_launcher")
 
 COMMAND_RUN = "run"
-
-def archive_dirname_datetime(ts, archives_dir):
-    return time.strftime("report-%Y%m%d-%H%M%S", time.localtime(ts))
-
-# TODO: create two different functions
-def report_dir_with_archives(top_dir, dirname_callback):
-    archives_dir = os.path.join(top_dir, "reports")
-    
-    if platform.system() == "Windows":
-        report_dir = os.path.join(top_dir, "report")
-        if os.path.exists(report_dir):
-            if not os.path.exists(archives_dir):
-                os.mkdir(archives_dir)
-            os.rename(
-                report_dir, os.path.join(archives_dir, dirname_callback(os.path.getctime(report_dir), archives_dir))
-            )
-        os.mkdir(report_dir)
-        
-    else:
-        if not os.path.exists(archives_dir):
-            os.mkdir(archives_dir)
-        
-        report_dirname = dirname_callback(time.time(), archives_dir)
-    
-        report_dir = os.path.join(archives_dir, report_dirname)
-        os.mkdir(report_dir)
-    
-        symlink_path = os.path.join(os.path.dirname(report_dir), "..", "report")
-        if os.path.lexists(symlink_path):
-            os.unlink(symlink_path)
-        os.symlink(report_dir, symlink_path)
-    
-    return report_dir
 
 def get_launcher_abspath():
     return os.path.abspath(os.path.dirname(sys.argv[0]))
@@ -85,7 +53,7 @@ class Launcher:
         # Working data
         ###
         self._report_top_dir = report_top_dir
-        self._report_dir_creation_callback = lambda: report_dir_with_archives(archive_dirname_datetime)
+        self._report_dir_creation_callback = lambda: reportdir.report_dir_with_archiving(reportdir.archive_dirname_datetime)
         self._testsuites = [ ]
         self._workers = {}
         self.metadata_policy = MetadataPolicy()
