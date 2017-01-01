@@ -12,7 +12,7 @@ FILTER_SUITE_MATCH_TAG = 0x04
 FILTER_SUITE_MATCH_LINK_NAME = 0x08
 FILTER_SUITE_MATCH_PROPERTY = 0x10
 
-__all__ = ("Filter",)
+__all__ = ("Filter", "add_filter_args_to_cli_parser", "get_filter_from_cli_args")
 
 class Filter:
     def __init__(self):
@@ -118,3 +118,29 @@ class Filter:
                     break
 
         return match
+
+def add_filter_args_to_cli_parser(cli_parser):
+    def property_value(value):
+        splitted = value.split(":")
+        if len(splitted) != 2:
+            raise ValueError()
+        return splitted
+
+    cli_parser.add_argument("--test-id", "-t", nargs="+", default=[], help="Filters on test IDs")
+    cli_parser.add_argument("--test-desc", nargs="+", default=[], help="Filters on test descriptions")
+    cli_parser.add_argument("--suite-id", "-s", nargs="+", default=[], help="Filters on test suite IDs")
+    cli_parser.add_argument("--suite-desc", nargs="+", default=[], help="Filters on test suite descriptions")
+    cli_parser.add_argument("--tag", "-a", nargs="+", default=[], help="Filters on test & test suite tags")
+    cli_parser.add_argument("--property", "-m", nargs="+", type=property_value, default=[], help="Filters on test & test suite property")
+    cli_parser.add_argument("--link", "-l", nargs="+", default=[], help="Filters on test & test suite link names")
+
+def get_filter_from_cli_args(cli_args):
+    filter = Filter()
+    filter.test_id = cli_args.test_id
+    filter.test_description = cli_args.test_desc
+    filter.testsuite_id = cli_args.suite_id
+    filter.testsuite_description = cli_args.suite_desc
+    filter.tags = cli_args.tag
+    filter.properties = dict(cli_args.property)
+    filter.link_names = cli_args.link
+    return filter

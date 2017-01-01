@@ -14,7 +14,7 @@ import traceback
 from lemoncheesecake.loader import load_testsuites
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.utils import IS_PYTHON3
-from lemoncheesecake.testsuite import Filter
+from lemoncheesecake.testsuite import filter as testsuitefilter
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake import reporting
 from lemoncheesecake.exceptions import LemonCheesecakeException, InvalidMetadataError, AbortTest, AbortTestSuite, AbortAllTests, ProgrammingError
@@ -56,12 +56,6 @@ def report_dir_with_archives(top_dir, dirname_callback):
     
     return report_dir
 
-def property_value(value):
-    splitted = value.split(":")
-    if len(splitted) != 2:
-        raise ValueError()
-    return splitted
-
 def get_launcher_abspath():
     return os.path.abspath(os.path.dirname(sys.argv[0]))
 
@@ -75,13 +69,7 @@ class Launcher:
         ###
         # CLI setup
         ###
-        self.cli_parser.add_argument("--test-id", "-t", nargs="+", default=[], help="Filters on test IDs")
-        self.cli_parser.add_argument("--test-desc", nargs="+", default=[], help="Filters on test descriptions")
-        self.cli_parser.add_argument("--suite-id", "-s", nargs="+", default=[], help="Filters on test suite IDs")
-        self.cli_parser.add_argument("--suite-desc", nargs="+", default=[], help="Filters on test suite descriptions")
-        self.cli_parser.add_argument("--tag", "-a", nargs="+", default=[], help="Filters on test & test suite tags")
-        self.cli_parser.add_argument("--property", "-m", nargs="+", type=property_value, default=[], help="Filters on test & test suite property")
-        self.cli_parser.add_argument("--link", "-l", nargs="+", default=[], help="Filters on test & test suite link names")
+        testsuitefilter.add_filter_args_to_cli_parser(self.cli_parser)
         self.cli_parser.add_argument("--report-dir", "-r", required=False, help="Directory where report data will be stored")
         self.cli_parser.add_argument("--reporting", nargs="+", required=False,
             help="The list of reporting backends to use"
@@ -325,14 +313,7 @@ class Launcher:
         """
         
         # init filter
-        filter = Filter()
-        filter.test_id = args.test_id
-        filter.test_description = args.test_desc
-        filter.testsuite_id = args.suite_id
-        filter.testsuite_description = args.suite_desc
-        filter.tags = args.tag
-        filter.properties = dict(args.property)
-        filter.link_names = args.link
+        filter = testsuitefilter.get_filter_from_cli_args(args)
                 
         # report backends
         reporting_backend_names = set(self._active_reporting_backends_names)
