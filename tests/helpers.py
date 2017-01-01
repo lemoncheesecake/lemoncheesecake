@@ -36,7 +36,7 @@ def build_test_project(params={}, extra_imports=[], static_content=""):
 from lemoncheesecake import worker
 from lemoncheesecake.reporting import backends
 from lemoncheesecake import loader
-from lemoncheesecake.launcher import validators
+from lemoncheesecake import validators
 
 {EXTRA_IMPORTS}
 

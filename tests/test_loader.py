@@ -4,7 +4,7 @@ import pytest
 
 import lemoncheesecake as lcc
 from lemoncheesecake import loader
-from lemoncheesecake.launcher.validators import MetadataPolicy
+from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.exceptions import *
 from helpers import build_test_module
 

@@ -11,7 +11,7 @@ import inspect
 
 from lemoncheesecake.testsuite import TestSuite
 from lemoncheesecake.worker import Worker
-from lemoncheesecake.launcher.validators import MetadataPolicy
+from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.launcher.core import report_dir_with_archives, archive_dirname_datetime
 from lemoncheesecake import reporting
 from lemoncheesecake.reporting import backends

@@ -15,7 +15,7 @@ from lemoncheesecake.loader import load_testsuites
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.testsuite import Filter
-from lemoncheesecake.launcher.validators import MetadataPolicy
+from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake import reporting
 from lemoncheesecake.exceptions import LemonCheesecakeException, InvalidMetadataError, AbortTest, AbortTestSuite, AbortAllTests, ProgrammingError
 
