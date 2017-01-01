@@ -12,9 +12,9 @@ import inspect
 from lemoncheesecake.testsuite import TestSuite
 from lemoncheesecake.worker import Worker
 from lemoncheesecake.validators import MetadataPolicy
-from lemoncheesecake.reporting import reportdir
+from lemoncheesecake.reporting import reportdir, backends
 from lemoncheesecake import reporting
-from lemoncheesecake.reporting import backends
+from lemoncheesecake import loader
 from lemoncheesecake.exceptions import ProjectError
 
 DEFAULT_REPORTING_BACKENDS = reporting.get_available_backends()
@@ -187,3 +187,12 @@ class Project:
     
     def get_metadata_policy(self):
         return self._get_param("METADATA_POLICY", _check_class_instance(MetadataPolicy), required=False, default=MetadataPolicy())
+    
+    def get_before_test_run_hook(self):
+        return self._get_param("BEFORE_RUN_HOOK", _check_func(args_nb=1), required=False)
+
+    def get_after_test_run_hook(self):
+        return self._get_param("AFTER_RUN_HOOK", _check_func(args_nb=1), required=False)
+    
+    def load_testsuites(self):
+        return loader.load_testsuites(self.get_testsuites_classes(), self.get_metadata_policy())

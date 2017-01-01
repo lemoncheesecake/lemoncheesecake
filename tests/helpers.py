@@ -15,7 +15,7 @@ import pytest
 
 import lemoncheesecake as lcc
 from lemoncheesecake import loader
-from lemoncheesecake.launcher import Launcher
+from lemoncheesecake import runner
 from lemoncheesecake.testsuite import Filter
 from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
@@ -119,38 +119,31 @@ def get_reporting_session():
 def reporting_session():
     return get_reporting_session()
 
-def run_testsuites(suites, worker=None, backends=None, before_test_run_hook=None, after_test_run_hook=None, tmpdir=None):
+def run_testsuites(suites, worker=None, backends=None, tmpdir=None):
     global _reporting_session
     
-    launcher = Launcher(None)
-    launcher.set_testsuites(loader.load_testsuites(suites))
-    
+    workers = {}
     if worker:
-        launcher.add_worker("testworker", worker)
+        workers["testworker"] = worker
     
-    if before_test_run_hook:
-        launcher.before_test_run_hook = before_test_run_hook
-    
-    if after_test_run_hook:
-        launcher.after_test_run_hook = after_test_run_hook
     if not backends:
         backends = []
     
     if _reporting_session:
         backends.append(TestReportingBackend(_reporting_session))
         
-    for backend in backends:
-        launcher.add_reporting_backend(backend, is_active=True)
-    
     if tmpdir:
         try:
-            launcher.run_testsuites(Filter(), [b.name for b in backends], os.path.join(tmpdir.strpath, "report"))
+            report_dir = os.path.join(tmpdir.strpath, "report")
+            os.mkdir(report_dir)
+            runner.run_testsuites(loader.load_testsuites(suites), workers, backends, report_dir)
         finally:
             _reporting_session = None
     else:
-        report_dir = tempfile.mkdtemp()
+        report_dir = os.path.join(tempfile.mkdtemp(), "report")
+        os.mkdir(report_dir)
         try:
-            launcher.run_testsuites(Filter(), [b.name for b in backends], os.path.join(report_dir, "report"))
+            runner.run_testsuites(loader.load_testsuites(suites), workers, backends, report_dir)
         finally:
             shutil.rmtree(report_dir)
             # reset _reporting_session (either it has been set or not) at the end of each test run
@@ -158,12 +151,8 @@ def run_testsuites(suites, worker=None, backends=None, before_test_run_hook=None
     
     dump_report(get_runtime().report)
 
-def run_testsuite(suite, worker=None, backends=[], before_test_run_hook=None, after_test_run_hook=None, tmpdir=None):
-    run_testsuites(
-        [suite], worker=worker, backends=backends, before_test_run_hook=before_test_run_hook, 
-        after_test_run_hook=after_test_run_hook,
-        tmpdir=tmpdir
-    )
+def run_testsuite(suite, worker=None, backends=[], tmpdir=None):
+    run_testsuites([suite], worker=worker, backends=backends, tmpdir=tmpdir)
 
 def run_func_in_test(callback):
     class MySuite(lcc.TestSuite):

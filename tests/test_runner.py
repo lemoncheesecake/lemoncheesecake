@@ -11,7 +11,7 @@ import shutil
 
 import pytest
 
-from lemoncheesecake.launcher import Launcher
+from lemoncheesecake import runner
 from lemoncheesecake.testsuite import Filter
 from lemoncheesecake.worker import Worker
 from lemoncheesecake.runtime import get_runtime
@@ -155,38 +155,6 @@ def test_sub_testsuite_attr(reporting_session):
     run_testsuite(MyParentSuite)
     
     assert reporting_session.get_test_outcome("sometest") == True
-
-def test_hook_before_test_run(reporting_session):
-    class MySuite(lcc.TestSuite):
-        @lcc.test("Some test")
-        def sometest(self):
-            pass
-    
-    hook_has_been_executed = [False]
-    def hook(report_dir):
-        assert os.path.exists(report_dir)
-        hook_has_been_executed[0] = True
-    
-    run_testsuite(MySuite, before_test_run_hook=hook)
-    
-    assert reporting_session.get_test_outcome("sometest") == True
-    assert hook_has_been_executed[0] == True
-
-def test_hook_after_test_run(reporting_session):
-    class MySuite(lcc.TestSuite):
-        @lcc.test("Some test")
-        def sometest(self):
-            pass
-    
-    hook_has_been_executed = [False]
-    def hook(report_dir):
-        assert os.path.exists(report_dir)
-        hook_has_been_executed[0] = True
-    
-    run_testsuite(MySuite, after_test_run_hook=hook)
-    
-    assert reporting_session.get_test_outcome("sometest") == True
-    assert hook_has_been_executed[0] == True
 
 def test_worker_accessible_through_testsuite(reporting_session):
     class MySuite(lcc.TestSuite):

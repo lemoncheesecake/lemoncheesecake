@@ -129,6 +129,3 @@ def load_testsuites(suite_classes, metadata_policy=None):
         suites.append(suite)
         _load_testsuite(suite, loaded_tests, loaded_suites, metadata_policy)
     return suites
-
-def load_testsuites_from_project(project):
-    return load_testsuites(project.get_testsuites_classes(), project.get_metadata_policy())
