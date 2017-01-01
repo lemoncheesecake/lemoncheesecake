@@ -10,11 +10,16 @@ from setuptools import setup, find_packages
 
 setup(
     name = "lemoncheesecake",
-    version = "0.3.8",
+    version = "0.4.0-dev",
     packages = find_packages(),
     include_package_data = True,
     install_requires = ["colorama", "termcolor"],
     extras_require = {
         "xml": "lxml"
+    },
+    entry_points={
+        "console_scripts": [
+            "lcc-run = lemoncheesecake.commands.run:run"
+        ]
     }
 )
