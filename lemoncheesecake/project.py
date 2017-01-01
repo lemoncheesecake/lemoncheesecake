@@ -20,11 +20,7 @@ from lemoncheesecake.exceptions import ProjectError
 DEFAULT_REPORTING_BACKENDS = reporting.get_available_backends()
 
 def find_project_file():
-    if "LEMONCHEESECAKE_PROJECT_FILE" in os.environ:
-        project_file = os.environ["LEMONCHEESECAKE_PROJECT_FILE"]
-    else:
-        project_file = os.path.join(os.getcwd(), "project.py")
-    
+    project_file = os.environ.get("LCC_PROJECT_FILE", os.path.join(os.getcwd(), "project.py"))
     if not os.path.exists(project_file):
         raise ProjectError(project_file, "project file does not exist")
     
@@ -132,7 +128,7 @@ class Project:
     
     def get_report_dir_creation_cb(self):
         return self._get_param("REPORT_DIR_CREATION", 
-            _check_func(args_nb=1), required=False, default=lambda: report_dir_with_archives(archive_dirname_datetime)
+            _check_func(args_nb=1), required=False, default=lambda top_dir: report_dir_with_archives(top_dir, archive_dirname_datetime)
         )
     
     def get_testsuites_classes(self):

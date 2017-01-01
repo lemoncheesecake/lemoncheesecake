@@ -27,12 +27,11 @@ def archive_dirname_datetime(ts, archives_dir):
     return time.strftime("report-%Y%m%d-%H%M%S", time.localtime(ts))
 
 # TODO: create two different functions
-def report_dir_with_archives(dirname_callback):
-    script_dir = os.path.dirname(sys.argv[0])
-    archives_dir = os.path.join(script_dir, "reports")
+def report_dir_with_archives(top_dir, dirname_callback):
+    archives_dir = os.path.join(top_dir, "reports")
     
     if platform.system() == "Windows":
-        report_dir = os.path.join(script_dir, "report")
+        report_dir = os.path.join(top_dir, "report")
         if os.path.exists(report_dir):
             if not os.path.exists(archives_dir):
                 os.mkdir(archives_dir)
@@ -70,36 +69,35 @@ def get_abspath_from_launcher(path):
     return path if os.path.isabs(path) else os.path.join(get_launcher_abspath(), path)
 
 class Launcher:
-    def __init__(self):
+    def __init__(self, report_top_dir):
         self.cli_parser = argparse.ArgumentParser()
 
         ###
         # CLI setup
         ###
-        subparsers = self.cli_parser.add_subparsers(dest="command")
-        self.cli_run_parser = subparsers.add_parser(COMMAND_RUN)
-        self.cli_run_parser.add_argument("--test-id", "-t", nargs="+", default=[], help="Filters on test IDs")
-        self.cli_run_parser.add_argument("--test-desc", nargs="+", default=[], help="Filters on test descriptions")
-        self.cli_run_parser.add_argument("--suite-id", "-s", nargs="+", default=[], help="Filters on test suite IDs")
-        self.cli_run_parser.add_argument("--suite-desc", nargs="+", default=[], help="Filters on test suite descriptions")
-        self.cli_run_parser.add_argument("--tag", "-a", nargs="+", default=[], help="Filters on test & test suite tags")
-        self.cli_run_parser.add_argument("--property", "-m", nargs="+", type=property_value, default=[], help="Filters on test & test suite property")
-        self.cli_run_parser.add_argument("--link", "-l", nargs="+", default=[], help="Filters on test & test suite link names")
-        self.cli_run_parser.add_argument("--report-dir", "-r", required=False, help="Directory where report data will be stored")
-        self.cli_run_parser.add_argument("--reporting", nargs="+", required=False,
+        self.cli_parser.add_argument("--test-id", "-t", nargs="+", default=[], help="Filters on test IDs")
+        self.cli_parser.add_argument("--test-desc", nargs="+", default=[], help="Filters on test descriptions")
+        self.cli_parser.add_argument("--suite-id", "-s", nargs="+", default=[], help="Filters on test suite IDs")
+        self.cli_parser.add_argument("--suite-desc", nargs="+", default=[], help="Filters on test suite descriptions")
+        self.cli_parser.add_argument("--tag", "-a", nargs="+", default=[], help="Filters on test & test suite tags")
+        self.cli_parser.add_argument("--property", "-m", nargs="+", type=property_value, default=[], help="Filters on test & test suite property")
+        self.cli_parser.add_argument("--link", "-l", nargs="+", default=[], help="Filters on test & test suite link names")
+        self.cli_parser.add_argument("--report-dir", "-r", required=False, help="Directory where report data will be stored")
+        self.cli_parser.add_argument("--reporting", nargs="+", required=False,
             help="The list of reporting backends to use"
         )
-        self.cli_run_parser.add_argument("--enable-reporting", nargs="+", required=False,
+        self.cli_parser.add_argument("--enable-reporting", nargs="+", required=False,
             help="The list of reporting backends to add (to base backends)"
         )
-        self.cli_run_parser.add_argument("--disable-reporting", nargs="+", required=False,
+        self.cli_parser.add_argument("--disable-reporting", nargs="+", required=False,
             help="The list of reporting backends to remove (from base backends)"
         )
         
         ###
         # Working data
         ###
-        self.report_dir_creation_callback = lambda: report_dir_with_archives(archive_dirname_datetime)
+        self._report_top_dir = report_top_dir
+        self._report_dir_creation_callback = lambda: report_dir_with_archives(archive_dirname_datetime)
         self._testsuites = [ ]
         self._workers = {}
         self.metadata_policy = MetadataPolicy()
@@ -112,14 +110,15 @@ class Launcher:
         self.before_test_run_hook = None
         self.after_test_run_hook = None
             
-    def load_testsuites(self, suites):
-        """Load testsuites classes into the launcher.
-        
-        - testsuite classes get instantiated into objects
-        - sanity checks are performed (among which unicity constraints)
-        - test and testsuites properties are checked using self.metadata_policy (MetadataPolicy instance)
-        """
-        self._testsuites = load_testsuites(suites, self.metadata_policy)
+    def get_cli_args_parser(self):
+        return self.cli_parser
+
+    def set_report_dir_creation_callback(self, callback):
+        self._report_dir_creation_callback = callback
+
+    def set_testsuites(self, suites):
+        "Set already loaded testsuites into the test launcher."
+        self._testsuites = suites
     
     def add_worker(self, worker_name, worker):
         self._workers[worker_name] = worker
@@ -261,7 +260,7 @@ class Launcher:
         if report_dir:
             os.mkdir(report_dir)
         else:
-            report_dir = self.report_dir_creation_callback()
+            report_dir = self._report_dir_creation_callback(self._report_top_dir)
         
         if self.before_test_run_hook:
             self.before_test_run_hook(report_dir)
@@ -358,9 +357,8 @@ class Launcher:
         """
         try:
             args = self.cli_parser.parse_args()
-            if args.command == COMMAND_RUN:
-                self.cli_run_testsuites(args)
+            self.cli_run_testsuites(args)
         except LemonCheesecakeException as e:
-            sys.exit(e)
+            return e
         
-        sys.exit(0)
+        return 0

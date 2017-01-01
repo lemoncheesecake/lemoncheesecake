@@ -2,7 +2,9 @@ import os.path
 
 import pytest
 
+import lemoncheesecake as lcc
 from lemoncheesecake import loader
+from lemoncheesecake.launcher.validators import MetadataPolicy
 from lemoncheesecake.exceptions import *
 from helpers import build_test_module
 
@@ -66,3 +68,23 @@ def test_import_testsuites_from_files_exclude(tmpdir):
     klasses = loader.import_testsuites_from_files(tmpdir.join("*.py").strpath, "*/testsuite*.py")
     assert len(klasses) == 1
     assert klasses[0].__name__ == "mysuite"
+
+def test_metadata_policy():
+    class MySuite1(lcc.TestSuite):
+        @lcc.prop("foo", 3)
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+        
+    @lcc.prop("foo", 3)
+    class MySuite2(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+    
+    policy = MetadataPolicy()
+    policy.add_property_rule("foo", (1, 2))
+    with pytest.raises(InvalidMetadataError):
+        loader.load_testsuites([MySuite1], policy)
+    with pytest.raises(InvalidMetadataError):
+        loader.load_testsuites([MySuite2], policy)

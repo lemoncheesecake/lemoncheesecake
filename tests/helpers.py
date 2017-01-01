@@ -14,6 +14,7 @@ import shutil
 import pytest
 
 import lemoncheesecake as lcc
+from lemoncheesecake import loader
 from lemoncheesecake.launcher import Launcher, Filter
 from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
@@ -120,8 +121,8 @@ def reporting_session():
 def run_testsuites(suites, worker=None, backends=None, before_test_run_hook=None, after_test_run_hook=None, tmpdir=None):
     global _reporting_session
     
-    launcher = Launcher()
-    launcher.load_testsuites(suites)
+    launcher = Launcher(None)
+    launcher.set_testsuites(loader.load_testsuites(suites))
     
     if worker:
         launcher.add_worker("testworker", worker)

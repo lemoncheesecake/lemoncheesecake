@@ -8,7 +8,8 @@ from lemoncheesecake.exceptions import MethodNotImplemented
 from lemoncheesecake.utils import object_has_method
 
 __all__ = (
-    "get_available_backends", "ReportingBackend", "ReportingSession"
+    "get_available_backends", "ReportingBackend", "ReportingSession",
+    "CAPABILITY_REPORTING_SESSION", "CAPABILITY_SERIALIZE", "CAPABILITY_UNSERIALIZE"
 )
 
 CAPABILITY_REPORTING_SESSION = 0x1
