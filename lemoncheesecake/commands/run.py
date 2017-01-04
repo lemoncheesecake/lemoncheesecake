@@ -50,6 +50,9 @@ def do_run():
     # Process CLI arguments
     ###
     cli_args = cli_parser.parse_args()
+    
+    if len(testsuites) == 0:
+        raise LemonCheesecakeException("No testsuites are defined in your lemoncheesecake project.")
 
     # apply filter
     filter = testsuitefilter.get_filter_from_cli_args(cli_args)
