@@ -126,7 +126,7 @@ class Project:
         if callback:
             callback(cli_args_parser)
     
-    def get_report_dir_creation_cb(self):
+    def get_report_dir_creation_callback(self):
         return self._get_param("REPORT_DIR_CREATION", 
             _check_func(args_nb=1), required=False, 
             default=lambda top_dir: reportdir.report_dir_with_archiving(top_dir, reportdir.archive_dirname_datetime)

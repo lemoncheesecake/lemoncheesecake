@@ -25,7 +25,7 @@ def do_run():
             project.get_reporting_backends(capabilities=reporting.CAPABILITY_REPORTING_SESSION, active_only=False)
     }
     default_reporting_backend_names = project.get_active_reporting_backend_names()
-    default_report_dir_creation_callback = project.get_report_dir_creation_cb()
+    default_report_dir_creation_callback = project.get_report_dir_creation_callback()
     before_run_hook = project.get_before_test_run_hook()
     after_run_hook = project.get_after_test_run_hook()
 

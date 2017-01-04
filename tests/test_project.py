@@ -23,7 +23,7 @@ def test_project_minimal_parameters(tmpdir):
     classes = project.get_testsuites_classes()
     assert classes[0].__name__ == "mysuite"
     
-    assert project.get_report_dir_creation_cb() != None
+    assert project.get_report_dir_creation_callback() != None
     
     assert [p.name for p in project.get_reporting_backends()] == ["console", "xml", "json", "html"]
     
@@ -101,7 +101,7 @@ def custom_report_dir(top_dir):
     
     project = Project(project_file.strpath)
 
-    assert project.get_report_dir_creation_cb().__name__ == "custom_report_dir"
+    assert project.get_report_dir_creation_callback().__name__ == "custom_report_dir"
 
 def test_project_with_cli_extra_args(tmpdir):
     params = {}
