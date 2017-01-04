@@ -1,7 +1,7 @@
 import sys
 import argparse
 
-from lemoncheesecake.project import Project
+from lemoncheesecake.project import Project, create_project, load_project
 from lemoncheesecake.reporting import backends
 
 from helpers import build_test_project, build_test_module
@@ -120,6 +120,19 @@ def add_cli_args(cli_parser):
     project.add_cli_extra_args(cli_parser)
     
     assert "foobar" in [a.dest for a in cli_parser._actions]
+
+def test_project_creation(tmpdir):
+    create_project(tmpdir.strpath)
+    project = load_project(tmpdir.strpath)
+    assert len(project.get_testsuites_classes()) == 0
+    assert project.get_workers() == {}
+    assert project.get_cli_extra_args_callback() != None
+    assert project.get_metadata_policy() != None
+    assert len(project._get_reporting_backends()) > 0
+    assert len(project.get_active_reporting_backend_names()) > 0
+    assert project.get_report_dir_creation_callback() != None
+    assert project.get_before_test_run_hook() != None
+    assert project.get_after_test_run_hook() != None
 
 # TODO: add tests on get_capabilities arguments
 

@@ -4,6 +4,7 @@ Created on Mar 18, 2016
 @author: nicolas
 '''
 
+import os
 import sys
 
 IS_PYTHON3 = sys.version_info > (3,)
@@ -32,3 +33,6 @@ def object_has_method(obj, method_name):
         return callable(getattr(obj, method_name))
     except AttributeError:
         return False
+
+def get_resource_path(relpath):
+    return os.path.join(os.path.dirname(__file__), "resources", relpath)

@@ -19,7 +19,8 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "lcc-run = lemoncheesecake.commands.run:run"
+            "lcc-run = lemoncheesecake.commands.run:run",
+            "lcc-create-project = lemoncheesecake.commands.create_project:create_project"
         ]
     }
 )

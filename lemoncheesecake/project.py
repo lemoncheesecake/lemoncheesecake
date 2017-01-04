@@ -6,6 +6,7 @@ Created on Dec 10, 2016
 
 import os
 import sys
+import shutil
 import imp
 import inspect
 
@@ -16,11 +17,14 @@ from lemoncheesecake.reporting import reportdir, backends
 from lemoncheesecake import reporting
 from lemoncheesecake import loader
 from lemoncheesecake.exceptions import ProjectError
+from lemoncheesecake.utils import get_resource_path
 
 DEFAULT_REPORTING_BACKENDS = reporting.get_available_backends()
 
+PROJECT_SETTINGS_FILE = "project.py"
+
 def find_project_file():
-    project_file = os.environ.get("LCC_PROJECT_FILE", os.path.join(os.getcwd(), "project.py"))
+    project_file = os.environ.get("LCC_PROJECT_FILE", os.path.join(os.getcwd(), PROJECT_SETTINGS_FILE))
     if not os.path.exists(project_file):
         raise ProjectError(project_file, "project file does not exist")
     
@@ -121,8 +125,11 @@ class Project:
             self._cache[name] = value
         return value
     
+    def get_cli_extra_args_callback(self):
+        return self._get_param("CLI_EXTRA_ARGS", _check_func(args_nb=1), required=False)
+    
     def add_cli_extra_args(self, cli_args_parser):
-        callback = self._get_param("CLI_EXTRA_ARGS", _check_func(args_nb=1), required=False)
+        callback = self.get_cli_extra_args_callback()
         if callback:
             callback(cli_args_parser)
     
@@ -189,10 +196,18 @@ class Project:
         return self._get_param("METADATA_POLICY", _check_class_instance(MetadataPolicy), required=False, default=MetadataPolicy())
     
     def get_before_test_run_hook(self):
-        return self._get_param("BEFORE_RUN_HOOK", _check_func(args_nb=1), required=False)
+        return self._get_param("RUN_HOOK_BEFORE_TESTS", _check_func(args_nb=1), required=False)
 
     def get_after_test_run_hook(self):
-        return self._get_param("AFTER_RUN_HOOK", _check_func(args_nb=1), required=False)
+        return self._get_param("RUN_HOOK_AFTER_TESTS", _check_func(args_nb=1), required=False)
     
     def load_testsuites(self):
         return loader.load_testsuites(self.get_testsuites_classes(), self.get_metadata_policy())
+
+def create_project(project_dir):
+    p = os.path
+    shutil.copyfile(get_resource_path(p.join("project", "template.py")), p.join(project_dir, PROJECT_SETTINGS_FILE))
+    os.mkdir(p.join(project_dir, "tests"))
+
+def load_project(project_dir):
+    return Project(os.path.join(project_dir, PROJECT_SETTINGS_FILE))
