@@ -33,6 +33,8 @@ def do_run():
     # CLI setup
     ###
     cli_parser = argparse.ArgumentParser()
+    project.add_cli_extra_args(cli_parser)
+    testsuitefilter.add_filter_args_to_cli_parser(cli_parser)
     cli_parser.add_argument("--report-dir", "-r", required=False, help="Directory where report data will be stored")
     cli_parser.add_argument("--reporting", nargs="+", required=False,
         help="The list of reporting backends to use", default=default_reporting_backend_names
@@ -43,8 +45,6 @@ def do_run():
     cli_parser.add_argument("--disable-reporting", nargs="+", required=False,
         help="The list of reporting backends to remove (from base backends)"
     )
-    testsuitefilter.add_filter_args_to_cli_parser(cli_parser)
-    project.add_cli_extra_args(cli_parser)
     
     ###
     # Process CLI arguments
