@@ -98,7 +98,7 @@ Statistics :
 
 The generated HTML report is available in report/report.html:
 
-![alt text](https://bytebucket.org/ndelon/lemoncheesecake/raw/7f4a450fcf97b1a99e173a6ba901fed6ea1b9581/misc/report-screenshot.png "Test Report")
+![alt text](https://bytebucket.org/ndelon/lemoncheesecake/raw/5cd93fe6cc55eff146fc973a355554c67d3a25cd/misc/report-screenshot.png "Test Report")
 
 # Writing tests
 
