@@ -11,7 +11,7 @@ import fnmatch
 import re
 import importlib
 
-from lemoncheesecake.exceptions import ImportTestSuiteError
+from lemoncheesecake.exceptions import ImportTestSuiteError, InvalidMetadataError
 
 __all__ = "import_testsuite_from_file", "import_testsuites_from_directory"
 
@@ -91,4 +91,41 @@ def import_testsuites_from_directory(dir, recursive=True):
         suites.append(suite)
     if len(list(filter(lambda s: hasattr(s, "_rank"), suites))) == len(suites):
         suites.sort(key=lambda s: s._rank)
+    return suites
+
+def _load_testsuite(suite, loaded_tests, loaded_suites, metadata_policy):
+        # process suite
+        if suite.id in loaded_suites:
+            raise InvalidMetadataError("A test suite with id '%s' has been registered more than one time" % suite.id)
+        if metadata_policy:
+            metadata_policy.check_suite_compliance(suite)
+        loaded_suites[suite.id] = suite
+
+        # process tests
+        for test in suite.get_tests():
+            if test.id in loaded_tests:
+                raise InvalidMetadataError("A test with id '%s' has been registered more than one time" % test.id)
+            if metadata_policy:
+                metadata_policy.check_test_compliance(test)
+            loaded_tests[test.id] = test
+        
+        # process sub suites
+        for sub_suite in suite.get_sub_testsuites():
+            _load_testsuite(sub_suite, loaded_tests, loaded_suites, metadata_policy)
+
+def load_testsuites(suite_classes, metadata_policy=None):
+    """Load testsuites classes.
+    
+    - testsuite classes get instantiated into objects
+    - sanity checks are performed (among which unicity constraints)
+    - test and testsuites are checked using metadata_policy
+    """
+    loaded_tests = {}
+    loaded_suites = {}
+    suites = []
+    for suite_class in suite_classes:
+        suite = suite_class()
+        suite.load()
+        suites.append(suite)
+        _load_testsuite(suite, loaded_tests, loaded_suites, metadata_policy)
     return suites

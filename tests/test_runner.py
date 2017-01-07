@@ -11,8 +11,9 @@ import shutil
 
 import pytest
 
-from lemoncheesecake.launcher import Launcher, Filter
-from lemoncheesecake.workers import Worker
+from lemoncheesecake import runner
+from lemoncheesecake.testsuite import Filter
+from lemoncheesecake.worker import Worker
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.exceptions import *
 import lemoncheesecake as lcc
@@ -155,37 +156,31 @@ def test_sub_testsuite_attr(reporting_session):
     
     assert reporting_session.get_test_outcome("sometest") == True
 
-def test_hook_before_test_run(reporting_session):
+def test_worker_accessible_through_testsuite(reporting_session):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
-            pass
+            assert self.testworker != None
     
-    hook_has_been_executed = [False]
-    def hook(report_dir):
-        assert os.path.exists(report_dir)
-        hook_has_been_executed[0] = True
+    class MyWorker(Worker):
+        pass
     
-    run_testsuite(MySuite, before_test_run_hook=hook)
+    run_testsuite(MySuite, worker=MyWorker())
     
-    assert reporting_session.get_test_outcome("sometest") == True
-    assert hook_has_been_executed[0] == True
+    assert reporting_session.get_last_test_outcome() == True
 
-def test_hook_after_test_run(reporting_session):
+def test_worker_accessible_through_runtime(reporting_session):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
-            pass
+            assert lcc.get_worker("testworker") != None
     
-    hook_has_been_executed = [False]
-    def hook(report_dir):
-        assert os.path.exists(report_dir)
-        hook_has_been_executed[0] = True
+    class MyWorker(Worker):
+        pass
     
-    run_testsuite(MySuite, after_test_run_hook=hook)
+    run_testsuite(MySuite, worker=MyWorker())
     
-    assert reporting_session.get_test_outcome("sometest") == True
-    assert hook_has_been_executed[0] == True
+    assert reporting_session.get_last_test_outcome() == True
 
 def test_hook_worker_before_all_tests(reporting_session):
     class MyWorker(Worker):
@@ -408,23 +403,3 @@ def test_hook_error_worker_after_all_tests_because_of_error_log(reporting_sessio
 
     assert reporting_session.get_last_test_outcome() == True
     assert_report_errors(1)
-
-def test_metadata_policy():
-    class MySuite1(lcc.TestSuite):
-        @lcc.prop("foo", 3)
-        @lcc.test("Some test")
-        def sometest(self):
-            pass
-        
-    @lcc.prop("foo", 3)
-    class MySuite2(lcc.TestSuite):
-        @lcc.test("Some test")
-        def sometest(self):
-            pass
-    
-    launcher = Launcher()
-    launcher.metadata_policy.add_property_rule("foo", (1, 2))
-    with pytest.raises(InvalidMetadataError):
-        launcher.load_testsuites([MySuite1])
-    with pytest.raises(InvalidMetadataError):
-        launcher.load_testsuites([MySuite2])

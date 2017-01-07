@@ -7,7 +7,7 @@ Created on Oct 29, 2016
 import pytest
 
 import lemoncheesecake as lcc
-from lemoncheesecake.launcher.validators import MetadataPolicy
+from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.exceptions import InvalidMetadataError
 
 def test_property_value_validation():

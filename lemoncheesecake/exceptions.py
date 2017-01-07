@@ -19,6 +19,20 @@ class LemonCheesecakeInternalError(LemonCheesecakeException):
 class ProgrammingError(LemonCheesecakeException):
     message_prefix = "Programing error"
 
+class ProjectError(LemonCheesecakeException):
+    def __init__(self, project_file=None, reason=None):
+        self.project_file = project_file
+        self.reason = reason
+    
+    def __str__(self):
+        if self.project_file:
+            error = "Cannot load project file '%s'" % self.project_file
+        else:
+            error = "Cannot load project"
+        if self.reason:
+            error += ": %s" % self.reason
+        return error
+
 class MethodNotImplemented(ProgrammingError):
     def __init__(self, obj, method_name):
         ProgrammingError.__init__(self, "Class '%s' must implement the method '%s'" % (obj.__class__._name__, method_name))

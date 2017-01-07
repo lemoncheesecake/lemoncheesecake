@@ -4,6 +4,7 @@ Created on Dec 1, 2016
 @author: nicolas
 '''
 
+import sys
 import re
 from types import FunctionType
 
@@ -460,7 +461,7 @@ def test_assert_eq_success(reporting_session):
 def test_assert_eq_failure(reporting_session):
     run_func_in_test(lambda: lcc.assert_eq("param", "bar", "foo"))
     description, outcome, details = reporting_session.get_last_check()
-    
+     
     assert "param" in description and "foo" in description
     assert outcome == False
     assert "bar" in details

@@ -8,35 +8,52 @@ One of the key features of lemoncheesecake is it's reporting capabilities, provi
 
 # Getting started
 
-## Implementing the launcher
-The first step to creating your tests is to implement the launcher.
-The launcher is in charge of loading the testsuites and running the tests according to the user options passed through the CLI:
+## Creating a new test project
 
-```python
-# mytests.py file:
-from lemoncheesecake.launcher import Launcher, import_testsuites_from_directory
+Before writing lemoncheesecake tests, you need to setup a lemoncheeseake project.
 
-launcher = Launcher()
-launcher.load_testsuites(import_testsuites_from_directory("tests"))
-launcher.handle_cli()
+The command:
+```
+$ lcc-create-project myproject
 ```
 
-The `load_testsuites` methods takes a list of `TestSuite` classes.
+creates a new project directory "myproject" containing one file "project.py" (that represents your project settings) and a "tests" directory where you can put your testsuites.
 
-The `import_testsuites_from_directory` will look
-for test modules in a directory named "tests"; each module must contain a testsuite class of the same name, meaning that if a test module is named "my_first_testsuite.py" then the module must contain a testsuite class named "my_first_testsuite".
+## Writing a testsuite
+
+A lemoncheesecake testsuite is a class that inherits from `TestSuite` and contains tests and/or sub testsuites:
+```python
+ # tests/my_first_testsuite.py file:
+from lemoncheesecake import *
+
+class my_first_testsuite(TestSuite):
+    @test("Some test")
+    def some_test(self):
+        check_str_eq("value", "foo", "foo")
+```
+
+The code above declares:
+
+- a testsuite whose id is `my_first_testsuite` (the suite's id and description can be set through the `id` and `description` attributes of the testsuite class, otherwise they will be set to the class name)
+- a test whose id is `some_test` and description is `Some test`
+
+All lemoncheesecake functions and classes used in test modules can be imported safely through a wild import of the `lemoncheesecake` package (like in the example above).
 
 ## Running the tests
 
-Once the launcher has been implemented, it provides a way to run the tests with a variety of options:
+The command lcc-run is in charge of running the tests, it provides several option to filter the test to be run and to set the reporting backends that will be used.
 ```
-usage: mytests.py run [-h] [--test-id TEST_ID [TEST_ID ...]]
-                      [--test-desc TEST_DESC [TEST_DESC ...]]
-                      [--suite-id SUITE_ID [SUITE_ID ...]]
-                      [--suite-desc SUITE_DESC [SUITE_DESC ...]]
-                      [--tag TAG [TAG ...]]
-                      [--property PROPERTY [PROPERTY ...]]
-                      [--link LINK [LINK ...]] [--report-dir REPORT_DIR]
+$ lcc-run --help
+usage: lcc-run    [-h] [--test-id TEST_ID [TEST_ID ...]]
+                  [--test-desc TEST_DESC [TEST_DESC ...]]
+                  [--suite-id SUITE_ID [SUITE_ID ...]]
+                  [--suite-desc SUITE_DESC [SUITE_DESC ...]]
+                  [--tag TAG [TAG ...]] [--property PROPERTY [PROPERTY ...]]
+                  [--link LINK [LINK ...]] [--report-dir REPORT_DIR]
+                  [--reporting REPORTING [REPORTING ...]]
+                  [--enable-reporting ENABLE_REPORTING [ENABLE_REPORTING ...]]
+                  [--disable-reporting DISABLE_REPORTING [DISABLE_REPORTING ...]]
+
 optional arguments:
   -h, --help            show this help message and exit
   --test-id TEST_ID [TEST_ID ...], -t TEST_ID [TEST_ID ...]
@@ -54,50 +71,38 @@ optional arguments:
   --link LINK [LINK ...], -l LINK [LINK ...]
                         Filters on test & test suite link names
   --report-dir REPORT_DIR, -r REPORT_DIR
-                        Directory where reporting data will be stored
+                        Directory where report data will be stored
+  --reporting REPORTING [REPORTING ...]
+                        The list of reporting backends to use
+  --enable-reporting ENABLE_REPORTING [ENABLE_REPORTING ...]
+                        The list of reporting backends to add (to base
+                        backends)
+  --disable-reporting DISABLE_REPORTING [DISABLE_REPORTING ...]
+                        The list of reporting backends to remove (from base
+                        backends)
 ```
 
-Options like --test-id, --test-desc, --tag filter the tests to be run based on their metadata. Available metadata will be detailed later in this document.
-
-The tests are run like this:
+Tests are run like this:
 ```
-$ ./mytests.py run
-============================== my_first_testsuite ======================
- OK  1 # some_test    
-
-============================== my_second_testsuite =====================
- OK  1 # some_other_test    
+$ lcc-run
+============================= my_first_testsuite ==============================
+ OK  1 # some_test                
 
 Statistics :
  * Duration: 0s
- * Tests: 2
- * Successes: 2 (100%)
+ * Tests: 1
+ * Successes: 1 (100%)
  * Failures: 0
+
 ```
 
-Generated HTML test report:
+The generated HTML report is available in report/report.html:
 
-![alt text](https://bytebucket.org/ndelon/lemoncheesecake/raw/7f4a450fcf97b1a99e173a6ba901fed6ea1b9581/misc/report-screenshot.png "Test Report")
+![alt text](https://bytebucket.org/ndelon/lemoncheesecake/raw/5cd93fe6cc55eff146fc973a355554c67d3a25cd/misc/report-screenshot.png "Test Report")
 
-## Testsuite
+# Writing tests
 
-A lemoncheesecake testsuite is a class that inherits from `TestSuite` and contains tests and/or sub testsuites:
-```python
-# tests/my_first_testsuite.py file:
-from lemoncheesecake import *
-
-class my_first_testsuite(TestSuite):
-    @test("Some test")
-    def some_test(self):
-        pass
-```
-
-The code above declares:
-
-- a testsuite whose id is `my_first_testsuite` (the suite's id and description can be set through the `id` and `description` attributes of the testsuite class, otherwise they will be set to the class name)
-- a test whose id is `some_test` and description is `Some test`
-
-All lemoncheesecake functions and classes used in test modules can be imported safely through a wild import of the `lemoncheesecake` package (like in the example above).
+Lemoncheeseacke provides several API functions to check data and to set various information into the test report.
 
 ## Checkers
 
@@ -186,13 +191,13 @@ with open(path, "w") as fh:
 
 ## Workers
 
-Workers are used to maintain a custom state for the user across the execution of all testsuites. It is also advised to use workers as a level of abstraction between the tests and the system under tests:
+Workers are used to maintain a custom state for the user across the execution of all testsuites. It is also advised to use workers as a level of abstraction between the tests and the system under tests.
+
+First, you need to reference your Worker in the "project.py" file:
 
 ```python
-# launcher file:
-from lemoncheesecake.launcher import Launcher
-from lemoncheesecake.workers import Worker, add_worker
-
+ # project.py:
+[...]
 class MyWorker(Worker):
     def cli_initialize(self, cli_args):
         self.config_file = cli_args.config
@@ -203,16 +208,16 @@ class MyWorker(Worker):
     def do_some_operation(self, some_value):
         return some_func(self.config, some_value)
 
-add_worker("myworker", MyWorker())
+WORKERS = {"myworker": MyWorker()}
+[...]
+```
 
-launcher = Launcher()
-launcher.load_testsuites(import_testsuites_from_directory("tests"))
-launcher.handle_cli()
-
-# test module file:
+Then, you can access and use the worker through the name you associated it to:
+```
+ # tests/my_suite.py:
 from lemoncheesecake import *
 
-class MySuite(TestSuite):
+class my_suite(TestSuite):
     @test("Some test")
     def some_test(self):
         self.myworker.do_some_operation(42)
@@ -325,43 +330,46 @@ These metadata:
 
 ## Metadata Policy
 
-The launcher provides a metadata policy that can be used to add constraints to metadata.
+The project settings provides a metadata policy that can be used to add constraints to metadata.
 
 For example, for the usage of a property "priority" on all tests with a given set of values:
 
 ```python
-launcher = Launcher()
-launcher.metadata_policy.add_property_rule(
+ # project.py:
+[...]
+mp = validators.MetadataPolicy()
+mp.add_property_rule(
     "priority", ("low", "medium", "high")), required=True
 )
-launcher.load_testsuites(...)
+METADATA_POLICY = mp
+[...]
 ```
 
 Add a limited set of tags available for both tests and testsuites and forbid the usage of any other tags:
 
 ```python
-launcher = Launcher()
-launcher.metadata_policy.add_tag_rule(
+
+ # project.py:
+[...]
+mp = validators.MetadataPolicy()
+mp.add_tag_rule(
     ("todo", "known_defect"), on_test=True, on_suite=True
 )
-launcher.metadata_policy.disallow_unknown_tags()
-launcher.load_testsuites(...)
+mp.disallow_unknown_tags()
+METADATA_POLICY = mp
 ```
 
-See `lemoncheesecake.launcher.validators.MetadataPolicy` for more information.
+See `lemoncheesecake.validators.MetadataPolicy` for more information.
 
 # Put it all together
 
-Here is a launcher/worker/testsuite example. The purpose of the test is to test the omdbapi Web Service API. We lookup 'The Matrix' movie and then check several elements of the returned data.
+Here is a project/testsuite example. The purpose of the test is to test the omdbapi Web Service API. We lookup 'The Matrix' movie and then check several elements of the returned data.
 ```python
-# test-omdbapi.py:
+ # project.py:
+[...]
 import urllib
 import urllib2
 import json
-
-from lemoncheesecake.launcher import Launcher, import_testsuites_from_directory
-from lemoncheesecake.worker import Worker, add_worker
-from lemoncheesecake import *
 
 class OmdbapiWorker(Worker):
     def __init__(self):
@@ -381,17 +389,14 @@ class OmdbapiWorker(Worker):
         except ValueError:
             raise AbortTest("The returned JSON is not valid")
 
-add_worker("omdb", OmdbapiWorker())
+WORKERS = {"omdb": OmdbapiWorker()}
+[...]
 
-launcher = Launcher()
-launcher.load_testsuites(import_testsuites_from_directory("tests"))
-launcher.handle_cli()
-
-# tests/movies.py
+ # tests/movies.py
 from lemoncheesecake import *
 
 class movies(TestSuite):
-	@test("Some test")
+	@test("Retrieve Matrix main information on omdb")
 	def test_matrix(self):
 		data = self.omdb.get_movie_info("matrix", 1999)
 		set_step("Check movie information")
