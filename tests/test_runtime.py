@@ -353,11 +353,11 @@ def test_save_attachment_file(tmpdir):
     assert test.outcome == True
     assert open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename)).read() == "some other content"
 
-def test_save_attachment_content(tmpdir):
+def _test_save_attachment_content(tmpdir, file_name, file_content, encoding=None):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
-            lcc.save_attachment_content("foobar", "foobar.txt")
+            lcc.save_attachment_content(file_content, file_name, binary_mode=not encoding)
     
     run_testsuite(MySuite, tmpdir=tmpdir)
     
@@ -367,10 +367,25 @@ def test_save_attachment_content(tmpdir):
     assert_report_stats(report, expected_test_successes=1)
 
     test = report.get_test("sometest")
-    assert test.steps[0].entries[0].filename.endswith("foobar.txt")
-    assert test.steps[0].entries[0].description == "foobar.txt"
+    assert test.steps[0].entries[0].filename.endswith(file_name)
+    assert test.steps[0].entries[0].description == file_name
     assert test.outcome == True
-    assert open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename)).read() == "foobar"
+    fh = open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename), "rb")
+    actual_content = fh.read()
+    if encoding != None:
+        actual_content = actual_content.decode(encoding)
+    assert actual_content == file_content
+
+def test_save_attachment_text_ascii(tmpdir):
+    _test_save_attachment_content(tmpdir, "foobar.txt", "foobar", encoding="ascii")
+
+def test_save_attachment_text_utf8(tmpdir):
+    _test_save_attachment_content(tmpdir, "foobar.txt", u"éééçççààà", encoding="utf-8")
+
+def test_save_attachment_binary(tmpdir):
+    p = os.path
+    content = open(p.join(p.dirname(__file__), p.pardir, "misc", "report-screenshot.png"), "rb").read()
+    _test_save_attachment_content(tmpdir, "foobar.png", content)
 
 def test_unicode(tmpdir):
     class MySuite(lcc.TestSuite):

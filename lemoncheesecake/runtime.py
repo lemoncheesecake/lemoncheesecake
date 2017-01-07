@@ -250,11 +250,11 @@ class _Runtime:
         target_filename = self.prepare_attachment(os.path.basename(filename), description)
         shutil.copy(filename, target_filename)
     
-    def save_attachment_content(self, content, filename, description=None):
+    def save_attachment_content(self, content, filename, description=None, binary_mode=False):
         target_filename = self.prepare_attachment(filename, description)
         
         fh = open(target_filename, "wb")
-        fh.write(content)
+        fh.write(content if binary_mode else content.encode("utf-8"))
         fh.close()
     
 def log_debug(content):
@@ -304,11 +304,11 @@ def save_attachment_file(filename, description=None):
     """
     get_runtime().save_attachment_file(filename, description)
 
-def save_attachment_content(content, filename, description=None):
+def save_attachment_content(content, filename, description=None, binary_mode=False):
     """
     Save a given content as attachment using pseudo filename and optional description.
     """
-    get_runtime().save_attachment_content(content, filename, description)
+    get_runtime().save_attachment_content(content, filename, description, binary_mode)
 
 def get_worker(worker_name):
     """
