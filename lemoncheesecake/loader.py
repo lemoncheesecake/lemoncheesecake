@@ -47,6 +47,7 @@ def _import_module(filename):
     sys.path.insert(0, mod_dir)
     try:
         mod = importlib.import_module(mod_name)
+        del sys.modules[mod_name]
     except ImportError as e:
         raise ImportTestSuiteError("Cannot import module %s: %s" % (mod_name, str(e)))
     finally:
