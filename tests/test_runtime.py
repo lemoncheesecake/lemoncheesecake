@@ -115,7 +115,7 @@ def test_multiple_testsuites_and_tests():
             @lcc.prop("foo", "baz")
             @lcc.test("Some test 2")
             def test_3_2(self):
-                raise lcc.AbortTest()
+                raise lcc.AbortTest("error")
             
             @lcc.test("Some test 3")
             def test_3_3(self):
