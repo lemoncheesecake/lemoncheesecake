@@ -31,6 +31,15 @@ class {name}(TestSuite):
         pass
 """.format(name=name)
 
+def build_fixture_module(name="myfixture"):
+    return """
+from lemoncheesecake import *
+
+@fixture()
+def {name}():
+    pass
+""".format(name=name)
+
 def build_test_project(params={}, extra_imports=[], static_content=""):
     return """
 from lemoncheesecake import worker

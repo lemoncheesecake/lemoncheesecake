@@ -124,6 +124,6 @@ def test_load_fixture_from_files(dir_with_fixtures):
     assert len(fixtures) == 2
 
 def test_load_fixture_from_dir(dir_with_fixtures):
-    fixtures = loader.import_fixtures_from_dir(dir_with_fixtures)
+    fixtures = loader.import_fixtures_from_directory(dir_with_fixtures)
     
     assert len(fixtures) == 2

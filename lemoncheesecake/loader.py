@@ -165,7 +165,7 @@ def import_fixtures_from_files(patterns, excluding=[]):
         fixtures.extend(import_fixtures_from_file(file))
     return fixtures
 
-def import_fixtures_from_dir(dir):
+def import_fixtures_from_directory(dir):
     fixtures = []
     for file in _get_py_files_from_dir(dir):
         fixtures.extend(import_fixtures_from_file(file))

@@ -9,6 +9,7 @@ project_dir = os.path.dirname(__file__)
 
 # Test suites and workers
 TESTSUITES = loader.import_testsuites_from_directory(os.path.join(project_dir, "tests"))
+FIXTURES = loader.import_fixtures_from_directory(os.path.join(project_dir, "fixtures"))
 WORKERS = {}
 def add_cli_args(cli_parser):
     pass

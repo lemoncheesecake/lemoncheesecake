@@ -1,15 +1,18 @@
+import os
 import sys
 import argparse
 
 from lemoncheesecake.project import Project, create_project, load_project
 from lemoncheesecake.reporting import backends
 
-from helpers import build_test_project, build_test_module
+from helpers import build_test_project, build_test_module, build_fixture_module
 
 def set_project_testsuites_param(params, testsuite_name, project_dir):
     testsuite_file = project_dir.join("%s.py" % testsuite_name)
     testsuite_file.write(build_test_module(testsuite_name))
-    params["TESTSUITES"] = "[ loader.import_testsuite_from_file('%s.py') ]" % (testsuite_name)    
+    params["TESTSUITES"] = "[ loader.import_testsuite_from_file('%s.py') ]" % (
+        project_dir.join(testsuite_name).strpath
+    )    
 
 def test_project_minimal_parameters(tmpdir):
     params = {}
@@ -73,6 +76,21 @@ class MyWorker(worker.Worker):
     assert list(workers.keys()) == ["myworker"]
     assert workers["myworker"].__class__.__name__ == "MyWorker"
 
+def test_project_with_fixtures(tmpdir):
+    params = {}
+    set_project_testsuites_param(params, "mysuite", tmpdir)
+    tmpdir.join("myfixtures.py").write(build_fixture_module("myfixture"))
+    params["FIXTURES"] = "loader.import_fixtures_from_file('%s')" % tmpdir.join("myfixtures.py").strpath
+    project_file = tmpdir.join("project.py")
+    project_file.write(build_test_project(params))
+    
+    project = Project(project_file.strpath)
+    
+    fixtures = project.get_fixtures()
+    assert len(fixtures) == 1
+    assert fixtures[0].__name__ == "myfixture"
+    assert hasattr(fixtures[0], "_lccfixtureinfo")
+
 def test_project_with_metadata_policy(tmpdir):
     params = {}
     set_project_testsuites_param(params, "mysuite", tmpdir)
@@ -125,6 +143,7 @@ def test_project_creation(tmpdir):
     create_project(tmpdir.strpath)
     project = load_project(tmpdir.strpath)
     assert len(project.get_testsuites_classes()) == 0
+    assert len(project.get_fixtures()) == 0
     assert project.get_workers() == {}
     assert project.get_cli_extra_args_callback() != None
     assert project.get_metadata_policy() != None
