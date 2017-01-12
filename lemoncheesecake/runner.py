@@ -51,20 +51,20 @@ class _Runner:
     
         self.session.begin_suite(suite)
 
-        if suite.has_hook("before_suite"):
-            self.session.begin_before_suite()
+        if suite.has_hook("setup_suite"):
+            self.session.begin_suite_setup()
             if not self.abort_testsuite and not self.abort_all_tests:
                 try:
-                    suite.before_suite()
+                    suite.setup_suite()
                 except Exception as e:
                     self.handle_exception(e, suite)
                     self.abort_testsuite = suite
                 except KeyboardInterrupt as e:
                     self.handle_exception(e, suite)
             suite_data = self.session.report.get_suite(suite.id)
-            if suite_data.before_suite.has_failure():
+            if suite_data.suite_setup.has_failure():
                 self.abort_testsuite = suite
-            self.session.end_before_suite()
+            self.session.end_suite_setup()
         
         for test in suite.get_tests(filtered=True):
             self.session.begin_test(test)
@@ -78,8 +78,8 @@ class _Runner:
                 continue
 
             try:
-                if suite.has_hook("before_test"):
-                    suite.before_test(test.id)
+                if suite.has_hook("setup_test"):
+                    suite.setup_test(test.id)
                 test.callback(suite)
             except Exception as e:
                 self.handle_exception(e, suite)
@@ -88,9 +88,9 @@ class _Runner:
             except KeyboardInterrupt as e:
                 self.handle_exception(e, suite)
             
-            if suite.has_hook("after_test"):
+            if suite.has_hook("teardown_test"):
                 try:
-                    suite.after_test(test.id)
+                    suite.teardown_test(test.id)
                 except Exception as e:
                     self.handle_exception(e, suite)
                     self.session.end_test()
@@ -103,15 +103,15 @@ class _Runner:
         for sub_suite in suite.get_sub_testsuites(filtered=True):
             self.run_testsuite(sub_suite)
 
-        if suite.has_hook("after_suite"):
-            self.session.begin_after_suite()
+        if suite.has_hook("teardown_suite"):
+            self.session.begin_suite_teardown()
             try:
-                suite.after_suite()
+                suite.teardown_suite()
             except Exception as e:
                 self.handle_exception(e, suite)
             except KeyboardInterrupt as e:
                 self.handle_exception(e, suite)
-            self.session.end_after_suite()
+            self.session.end_suite_teardown()
         
         self.session.end_suite()
         
@@ -132,38 +132,38 @@ class _Runner:
         
         self.session.begin_tests()
         
-        # workers hook before_all_tests handling
-        workers = self.get_workers_with_hook("before_all_tests")
+        # setup_test_session handling
+        workers = self.get_workers_with_hook("setup_test_session")
         if workers:
-            self.session.begin_worker_hook_before_all_tests()
+            self.session.begin_test_session_setup()
             for worker in workers:
                 try:
-                    worker.before_all_tests()
+                    worker.setup_test_session()
                 except Exception as e:
                     self.handle_exception(e)
                     self.abort_all_tests = True
                 except KeyboardInterrupt as e:
                     self.handle_exception(e)
-            self.session.end_worker_hook_before_all_tests()
-            if self.session.report.before_all_tests.has_failure():
+            self.session.end_test_session_setup()
+            if self.session.report.test_session_setup.has_failure():
                 self.abort_all_tests = True
         
         # run tests
         for suite in self.testsuites:
             self.run_testsuite(suite)
         
-        # workers after_test hook
-        workers = self.get_workers_with_hook("after_all_tests")
+        # teardown_test_session handling
+        workers = self.get_workers_with_hook("teardown_test_session")
         if workers:
-            self.session.begin_worker_hook_after_all_tests()
+            self.session.begin_test_session_teardown()
             for worker in workers:
                 try:
-                    worker.after_all_tests()
+                    worker.teardown_test_session()
                 except Exception as e:
                     self.handle_exception(e)
                 except KeyboardInterrupt as e:
                     self.handle_exception(e)
-            self.session.end_worker_hook_after_all_tests()
+            self.session.end_test_session_teardown()
     
         self.session.end_tests()
 

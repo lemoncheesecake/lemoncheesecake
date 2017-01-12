@@ -82,10 +82,10 @@ class TestSuiteData:
         self.tags = [ ]
         self.properties = {}
         self.links = [ ]
-        self.before_suite = None
+        self.suite_setup = None
         self.tests = [ ]
         self.sub_testsuites = [ ]
-        self.after_suite = None
+        self.suite_teardown = None
     
     def get_test(self, test_id):
         for test in self.tests:
@@ -122,15 +122,15 @@ class ReportStats:
         self.error_logs = 0
         self.warning_logs = 0
         
-        if report.before_all_tests:
-            if report.before_all_tests.has_failure():
+        if report.test_session_setup:
+            if report.test_session_setup.has_failure():
                 self.errors += 1
-            self._walk_steps(report.before_all_tests.steps)
+            self._walk_steps(report.test_session_setup.steps)
         
-        if report.after_all_tests:
-            if report.after_all_tests.has_failure():
+        if report.test_session_teardown:
+            if report.test_session_teardown.has_failure():
                 self.errors += 1
-            self._walk_steps(report.after_all_tests.steps)
+            self._walk_steps(report.test_session_teardown.steps)
         
         for suite in report.testsuites:
             self._walk_testsuite(suite)
@@ -151,15 +151,15 @@ class ReportStats:
                         self.error_logs += 1
         
     def _walk_testsuite(self, suite):
-        if suite.before_suite:
-            if suite.before_suite.has_failure():
+        if suite.suite_setup:
+            if suite.suite_setup.has_failure():
                 self.errors += 1
-            self._walk_steps(suite.before_suite.steps)
+            self._walk_steps(suite.suite_setup.steps)
         
-        if suite.after_suite:
-            if suite.after_suite.has_failure():
+        if suite.suite_teardown:
+            if suite.suite_teardown.has_failure():
                 self.errors += 1
-            self._walk_steps(suite.after_suite.steps)
+            self._walk_steps(suite.suite_teardown.steps)
         
         for test in suite.tests:
             self.tests += 1
@@ -175,8 +175,8 @@ class ReportStats:
 class Report:
     def __init__(self):
         self.info = [ ]
-        self.before_all_tests = None
-        self.after_all_tests = None
+        self.test_session_setup = None
+        self.test_session_teardown = None
         self.testsuites = [ ]
         self.start_time = None
         self.end_time = None

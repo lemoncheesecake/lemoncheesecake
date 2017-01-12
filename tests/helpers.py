@@ -243,7 +243,7 @@ def assert_testsuite_data(actual, expected):
     assert actual.properties == expected.properties
     assert actual.links == expected.links
     
-    assert_hook_data(actual.before_suite, expected.before_suite)
+    assert_hook_data(actual.suite_setup, expected.suite_setup)
     
     assert len(actual.tests) == len(expected.tests)
     for actual_test, expected_test in zip(actual.tests, expected.tests):
@@ -253,7 +253,7 @@ def assert_testsuite_data(actual, expected):
     for actual_subsuite, expected_subsuite in zip(actual.sub_testsuites, expected.sub_testsuites):
         assert_testsuite_data(actual_subsuite, expected_subsuite)
 
-    assert_hook_data(actual.after_suite, expected.after_suite)
+    assert_hook_data(actual.suite_teardown, expected.suite_teardown)
 
 def assert_report(actual, expected):
     assert actual.info == expected.info
@@ -262,12 +262,12 @@ def assert_report(actual, expected):
     assert actual.report_generation_time == expected.report_generation_time
     assert len(actual.testsuites) == len(expected.testsuites)
     
-    assert_hook_data(actual.before_all_tests, expected.before_all_tests)
+    assert_hook_data(actual.test_session_setup, expected.test_session_setup)
     
     for actual_testsuite, expected_testsuite in zip(actual.testsuites, expected.testsuites):
         assert_testsuite_data(actual_testsuite, expected_testsuite)
 
-    assert_hook_data(actual.after_all_tests, expected.after_all_tests)
+    assert_hook_data(actual.test_session_teardown, expected.test_session_teardown)
 
 def assert_steps_data(steps):
     for step in steps:
@@ -290,11 +290,11 @@ def assert_testsuite_data_from_testsuite(testsuite_data, testsuite):
     assert testsuite_data.properties == testsuite.properties
     assert testsuite_data.links == testsuite.links
     
-    if testsuite.has_hook("before_suite"):
-        assert testsuite_data.before_suite != None
-        assert testsuite_data.before_suite.start_time != None
-        assert testsuite_data.before_suite.end_time != None
-        assert_steps_data(testsuite_data.before_suite.steps)
+    if testsuite.has_hook("setup_suite"):
+        assert testsuite_data.suite_setup != None
+        assert testsuite_data.suite_setup.start_time != None
+        assert testsuite_data.suite_setup.end_time != None
+        assert_steps_data(testsuite_data.suite_setup.steps)
     
     assert len(testsuite_data.tests) == len(testsuite.get_tests())
     for test_data, test in zip(testsuite_data.tests, testsuite.get_tests()):
@@ -304,11 +304,11 @@ def assert_testsuite_data_from_testsuite(testsuite_data, testsuite):
     for sub_testsuite_data, sub_testsuite in zip(testsuite_data.sub_testsuites, testsuite.get_sub_testsuites()):
         assert_testsuite_data_from_testsuite(sub_testsuite_data, sub_testsuite)
 
-    if testsuite.has_hook("after_suite"):
-        assert testsuite_data.after_suite != None
-        assert testsuite_data.after_suite.start_time != None
-        assert testsuite_data.after_suite.end_time != None
-        assert_steps_data(testsuite_data.after_suite.steps)
+    if testsuite.has_hook("teardown_suite"):
+        assert testsuite_data.suite_teardown != None
+        assert testsuite_data.suite_teardown.start_time != None
+        assert testsuite_data.suite_teardown.end_time != None
+        assert_steps_data(testsuite_data.suite_teardown.steps)
     
 def assert_report_from_testsuites(report, suite_classes):
     assert report.start_time != None

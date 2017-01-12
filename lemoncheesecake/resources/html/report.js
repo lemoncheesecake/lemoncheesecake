@@ -173,17 +173,17 @@ function TestSuite(data, parents) {
     this.tags = data.tags;
     this.properties = data.properties;
     this.links = data.links;
-    this.before_suite = null;
-    this.after_suite = null;
+    this.setup_suite = null;
+    this.teardown_suite = null;
     this.tests = [ ];
     this.sub_suites = [ ];
 
-    if (data.before_suite) {
-    	this.before_suite = new Test("n/a", " - Before suite -", data.before_suite.outcome, data.before_suite.steps);
+    if (data.setup_suite) {
+    	this.setup_suite = new Test("n/a", " - Setup suite -", data.setup_suite.outcome, data.setup_suite.steps);
     }
 
-    if (data.after_suite) {
-    	this.after_suite = new Test("n/a", " - After suite -", data.after_suite.outcome, data.after_suite.steps)
+    if (data.teardown_suite) {
+    	this.teardown_suite = new Test("n/a", " - Teardown suite -", data.teardown_suite.outcome, data.teardown_suite.steps)
     }
 
     for (var i = 0; i < data.tests.length; i++) {
@@ -228,14 +228,14 @@ TestSuite.prototype = {
 			panels.push($panel);
 
 			var rows = [ ];
-			if (this.before_suite) {
-				rows = rows.concat(this.before_suite.render());
+			if (this.setup_suite) {
+				rows = rows.concat(this.setup_suite.render());
 			}
 			for (var i = 0; i < this.tests.length; i++) {
 			    rows = rows.concat(this.tests[i].render());
 			}
-			if (this.after_suite) {
-				rows = rows.concat(this.after_suite.render());
+			if (this.teardown_suite) {
+				rows = rows.concat(this.teardown_suite.render());
 			}
 			
 			var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
@@ -257,14 +257,14 @@ function Report(data, node) {
 	this.data = data;
 	this.suites = [];
 	this.node = node;
-	this.before_all_tests = null;
-	this.after_all_tests = null;
+	this.setup_test_session = null;
+	this.teardown_test_session = null;
 	
-	if (data.before_all_tests) {
-		this.before_all_tests = new Test("n/a", " - Before all tests -", data.before_all_tests.outcome, data.before_all_tests.steps);
+	if (data.setup_test_session) {
+		this.setup_test_session = new Test("n/a", " - Setup test session -", data.setup_test_session.outcome, data.setup_test_session.steps);
 	}
-	if (data.after_all_tests) {
-		this.after_all_tests = new Test("n/a", " - After all tests -", data.after_all_tests.outcome, data.after_all_tests.steps);
+	if (data.teardown_test_session) {
+		this.teardown_test_session = new Test("n/a", " - Teardown test session -", data.teardown_test_session.outcome, data.teardown_test_session.steps);
 	}
 	
 	for (var i = 0; i < data.suites.length; i++) {
@@ -307,8 +307,8 @@ Report.prototype = {
 		
 		$("<h1>Test results</h1>").appendTo(this.node);
 		
-		if (this.before_all_tests) {
-			$panel = this.render_hook_data(this.before_all_tests, "- Before all tests -");
+		if (this.setup_test_session) {
+			$panel = this.render_hook_data(this.setup_test_session, "- Before all tests -");
 			$panel.appendTo(this.node);
 		}
 		
@@ -319,8 +319,8 @@ Report.prototype = {
 			}
 		}
 		
-		if (this.after_all_tests) {
-			$panel = this.render_hook_data(this.after_all_tests, "- After all tests -");
+		if (this.teardown_test_session) {
+			$panel = this.render_hook_data(this.teardown_test_session, "- After all tests -");
 			$panel.appendTo(this.node);
 		}
 	}	

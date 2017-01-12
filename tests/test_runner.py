@@ -182,9 +182,9 @@ def test_worker_accessible_through_runtime(reporting_session):
     
     assert reporting_session.get_last_test_outcome() == True
 
-def test_hook_worker_before_all_tests(reporting_session):
+def test_hook_setup_test_session(reporting_session):
     class MyWorker(Worker):
-        def before_all_tests(self):
+        def setup_test_session(self):
             lcc.log_info("hook called")
     
     class MySuite(lcc.TestSuite):
@@ -196,9 +196,9 @@ def test_hook_worker_before_all_tests(reporting_session):
     
     assert reporting_session.get_last_log() == "hook called"
 
-def test_hook_worker_after_all_tests(reporting_session):
+def test_hook_teardown_test_session(reporting_session):
     class MyWorker(Worker):
-        def after_all_tests(self):
+        def teardown_test_session(self):
             lcc.log_info("hook called")
     
     class MySuite(lcc.TestSuite):
@@ -210,9 +210,9 @@ def test_hook_worker_after_all_tests(reporting_session):
     
     assert reporting_session.get_last_log() == "hook called"
 
-def test_hook_before_test(reporting_session):
+def test_hook_setup_test(reporting_session):
     class MySuite(lcc.TestSuite):
-        def before_test(self, test_name):
+        def setup_test(self, test_name):
             lcc.log_info("hook called")
         
         @lcc.test("Some test")
@@ -223,9 +223,9 @@ def test_hook_before_test(reporting_session):
 
     assert reporting_session.get_last_log() == "hook called"
 
-def test_hook_after_test(reporting_session):
+def test_hook_teardown_test(reporting_session):
     class MySuite(lcc.TestSuite):
-        def after_test(self, test_name):
+        def teardown_test(self, test_name):
             lcc.log_info("hook called")
         
         @lcc.test("Some test")
@@ -236,9 +236,9 @@ def test_hook_after_test(reporting_session):
 
     assert reporting_session.get_last_log() == "hook called"
 
-def test_hook_before_suite(reporting_session):
+def test_hook_setup_suite(reporting_session):
     class MySuite(lcc.TestSuite):
-        def before_suite(self):
+        def setup_suite(self):
             lcc.log_info("hook called")
         
         @lcc.test("Some test")
@@ -249,9 +249,9 @@ def test_hook_before_suite(reporting_session):
 
     assert reporting_session.get_last_log() == "hook called"
 
-def test_hook_after_suite(reporting_session):
+def test_hook_teardown_suite(reporting_session):
     class MySuite(lcc.TestSuite):
-        def after_suite(self):
+        def teardown_suite(self):
             lcc.log_info("hook called")
         
         @lcc.test("Some test")
@@ -262,9 +262,9 @@ def test_hook_after_suite(reporting_session):
 
     assert reporting_session.get_last_log() == "hook called"
 
-def test_hook_error_before_test(reporting_session):
+def test_hook_setup_test_error(reporting_session):
     class MySuite(lcc.TestSuite):
-        def before_test(self, test_name):
+        def setup_test(self, test_name):
             1 / 0
         
         @lcc.test("Some test")
@@ -275,9 +275,9 @@ def test_hook_error_before_test(reporting_session):
 
     assert reporting_session.get_test_outcome("sometest") == False
 
-def test_hook_error_after_test(reporting_session):
+def test_hook_teardown_test_error(reporting_session):
     class MySuite(lcc.TestSuite):
-        def after_test(self, test_name):
+        def teardown_test(self, test_name):
             1 / 0
         
         @lcc.test("Some test")
@@ -288,9 +288,9 @@ def test_hook_error_after_test(reporting_session):
 
     assert reporting_session.get_test_outcome("sometest") == False
 
-def test_hook_error_before_suite_because_of_exception(reporting_session):
+def test_hook_setup_suite_error_because_of_exception(reporting_session):
     class MySuite(lcc.TestSuite):
-        def before_suite(self):
+        def setup_suite(self):
             1 / 0
         
         @lcc.test("Some test")
@@ -302,9 +302,9 @@ def test_hook_error_before_suite_because_of_exception(reporting_session):
     assert reporting_session.get_last_test_outcome() == False
     assert_report_errors(1)
 
-def test_hook_error_before_suite_because_of_error_log(reporting_session):
+def test_hook_setup_suite_error_because_of_error_log(reporting_session):
     class MySuite(lcc.TestSuite):
-        def before_suite(self):
+        def setup_suite(self):
             lcc.log_error("some error")
         
         @lcc.test("Some test")
@@ -316,13 +316,13 @@ def test_hook_error_before_suite_because_of_error_log(reporting_session):
     assert reporting_session.get_last_test_outcome() == False
     assert_report_errors(1)
 
-def test_hook_error_after_suite_because_of_exception(reporting_session):
+def test_hook_teardown_suite_error_because_of_exception(reporting_session):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
 
-        def after_suite(self):
+        def teardown_suite(self):
             1 / 0
         
     run_testsuite(MySuite)
@@ -330,13 +330,13 @@ def test_hook_error_after_suite_because_of_exception(reporting_session):
     assert reporting_session.get_last_test_outcome() == True
     assert_report_errors(1)
 
-def test_hook_error_after_suite_because_of_error_log(reporting_session):
+def test_hook_teardown_suite_error_because_of_error_log(reporting_session):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
 
-        def after_suite(self):
+        def teardown_suite(self):
             lcc.log_error("some error")
         
     run_testsuite(MySuite)
@@ -344,14 +344,14 @@ def test_hook_error_after_suite_because_of_error_log(reporting_session):
     assert reporting_session.get_last_test_outcome() == True
     assert_report_errors(1)
 
-def test_hook_error_worker_before_all_tests_because_of_exception(reporting_session):
+def test_hook_setup_test_session_error_because_of_exception(reporting_session):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
 
     class MyWorker(Worker):
-        def before_all_tests(self):
+        def setup_test_session(self):
             1 / 0
 
     run_testsuite(MySuite, worker=MyWorker())
@@ -359,14 +359,14 @@ def test_hook_error_worker_before_all_tests_because_of_exception(reporting_sessi
     assert reporting_session.get_last_test_outcome() == False
     assert_report_errors(1)
 
-def test_hook_error_worker_before_all_tests_because_of_error_log(reporting_session):
+def test_hook_setup_test_session_error_because_of_error_log(reporting_session):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
 
     class MyWorker(Worker):
-        def before_all_tests(self):
+        def setup_test_session(self):
             lcc.log_error("some error")
 
     run_testsuite(MySuite, worker=MyWorker())
@@ -374,14 +374,14 @@ def test_hook_error_worker_before_all_tests_because_of_error_log(reporting_sessi
     assert reporting_session.get_last_test_outcome() == False
     assert_report_errors(1)
 
-def test_hook_error_worker_after_all_tests_because_of_exception(reporting_session):
+def test_hook_teardown_test_session_error_because_of_exception(reporting_session):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
 
     class MyWorker(Worker):
-        def after_all_tests(self):
+        def teardown_test_session(self):
             1 / 0
             
     run_testsuite(MySuite, worker=MyWorker())
@@ -389,14 +389,14 @@ def test_hook_error_worker_after_all_tests_because_of_exception(reporting_sessio
     assert reporting_session.get_last_test_outcome() == True
     assert_report_errors(1)
 
-def test_hook_error_worker_after_all_tests_because_of_error_log(reporting_session):
+def test_hook_teardown_test_session_error_because_of_error_log(reporting_session):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
 
     class MyWorker(Worker):
-        def after_all_tests(self):
+        def teardown_test_session(self):
             lcc.log_error("some error")
         
     run_testsuite(MySuite, worker=MyWorker())

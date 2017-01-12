@@ -81,30 +81,30 @@ class _Runtime:
         self.report.report_generation_time = self.report.end_time
         self.for_each_reporting_sessions(lambda b: b.end_tests())
     
-    def begin_worker_hook_before_all_tests(self):
-        self.report.before_all_tests = self._start_hook()
-        self.current_step_data_list = self.report.before_all_tests.steps
-        self.default_step_description = "Before all tests"
+    def begin_test_session_setup(self):
+        self.report.test_session_setup = self._start_hook()
+        self.current_step_data_list = self.report.test_session_setup.steps
+        self.default_step_description = "Setup test session"
     
-        self.for_each_reporting_sessions(lambda b: b.begin_worker_before_all_tests())
+        self.for_each_reporting_sessions(lambda b: b.begin_test_session_setup())
     
-    def end_worker_hook_before_all_tests(self):
-        self._end_hook(self.report.before_all_tests)
+    def end_test_session_setup(self):
+        self._end_hook(self.report.test_session_setup)
         self.end_current_step()
 
-        self.for_each_reporting_sessions(lambda b: b.end_worker_before_all_tests())
+        self.for_each_reporting_sessions(lambda b: b.end_test_session_setup())
 
-    def begin_worker_hook_after_all_tests(self):
-        self.report.after_all_tests = self._start_hook()
-        self.current_step_data_list = self.report.after_all_tests.steps
-        self.default_step_description = "After all tests"
+    def begin_test_session_teardown(self):
+        self.report.test_session_teardown = self._start_hook()
+        self.current_step_data_list = self.report.test_session_teardown.steps
+        self.default_step_description = "Teardown test session"
         
-        self.for_each_reporting_sessions(lambda b: b.begin_worker_after_all_tests())
+        self.for_each_reporting_sessions(lambda b: b.begin_test_session_teardown())
     
-    def end_worker_hook_after_all_tests(self):
-        self._end_hook(self.report.after_all_tests)
+    def end_test_session_teardown(self):
+        self._end_hook(self.report.test_session_teardown)
         self.end_current_step()
-        self.for_each_reporting_sessions(lambda b: b.end_worker_after_all_tests())
+        self.for_each_reporting_sessions(lambda b: b.end_test_session_teardown())
 
     def begin_suite(self, testsuite):
         self.current_testsuite = testsuite
@@ -120,31 +120,31 @@ class _Runtime:
         
         self.for_each_reporting_sessions(lambda b: b.begin_suite(testsuite))
     
-    def begin_before_suite(self):
-        self.current_testsuite_data.before_suite = self._start_hook()
-        self.current_step_data_list = self.current_testsuite_data.before_suite.steps
-        self.default_step_description = "Before suite"
+    def begin_suite_setup(self):
+        self.current_testsuite_data.suite_setup = self._start_hook()
+        self.current_step_data_list = self.current_testsuite_data.suite_setup.steps
+        self.default_step_description = "Setup suite"
 
-        self.for_each_reporting_sessions(lambda b: b.begin_before_suite(self.current_testsuite))
+        self.for_each_reporting_sessions(lambda b: b.begin_suite_setup(self.current_testsuite))
     
-    def end_before_suite(self):
+    def end_suite_setup(self):
         now = time.time()
-        self._end_hook(self.current_testsuite_data.before_suite, now)
+        self._end_hook(self.current_testsuite_data.suite_setup, now)
         self.end_current_step(now)
-        self.for_each_reporting_sessions(lambda b: b.end_before_suite(self.current_testsuite))
+        self.for_each_reporting_sessions(lambda b: b.end_suite_setup(self.current_testsuite))
         
-    def begin_after_suite(self):
-        self.current_testsuite_data.after_suite = self._start_hook()
-        self.current_step_data_list = self.current_testsuite_data.after_suite.steps
-        self.default_step_description = "After suite"
+    def begin_suite_teardown(self):
+        self.current_testsuite_data.suite_teardown = self._start_hook()
+        self.current_step_data_list = self.current_testsuite_data.suite_teardown.steps
+        self.default_step_description = "Teardown suite"
             
-        self.for_each_reporting_sessions(lambda b: b.begin_after_suite(self.current_testsuite))
+        self.for_each_reporting_sessions(lambda b: b.begin_suite_teardown(self.current_testsuite))
 
-    def end_after_suite(self):
+    def end_suite_teardown(self):
         now = time.time()
         self.end_current_step(now)
-        self._end_hook(self.current_testsuite_data.after_suite, now)
-        self.for_each_reporting_sessions(lambda b: b.end_after_suite(self.current_testsuite))
+        self._end_hook(self.current_testsuite_data.suite_teardown, now)
+        self.for_each_reporting_sessions(lambda b: b.end_suite_teardown(self.current_testsuite))
     
     def end_suite(self):
         self.for_each_reporting_sessions(lambda b: b.end_suite(self.current_testsuite))
