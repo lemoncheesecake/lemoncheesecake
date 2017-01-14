@@ -144,7 +144,7 @@ class Project:
         return self._get_param("TESTSUITES", _check_class(TestSuite), is_list=True)
 
     def get_fixtures(self):
-        return self._get_param("FIXTURES", _check_func(), is_list=True, default=[])
+        return self._get_param("FIXTURES", _check_func(), is_list=True, required=False, default=[])
     
     def get_workers(self):
         return self._get_param("WORKERS", _check_class_instance(Worker), is_dict=True, required=False, default={})

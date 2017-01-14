@@ -164,6 +164,18 @@ class _Runtime:
         self.current_step_data_list = self.current_test_data.steps
         self.default_step_description = test.description
     
+    def begin_test_setup(self):
+        self.set_step("Setup test")
+    
+    def end_test_setup(self):
+        pass
+    
+    def begin_test_teardown(self):
+        self.set_step("Teardown test")
+    
+    def end_test_teardown(self):
+        pass
+    
     def end_test(self):
         now = time.time()
         self.current_test_data.outcome = not self.has_pending_failure

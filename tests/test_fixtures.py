@@ -334,20 +334,20 @@ def build_registry(*executed_fixtures):
     return registry
 
 def test_filter_fixtures_all():
-    assert sorted([f.name for f in build_registry().filter_fixtures()]) == ["fix1", "fix2", "fix3", "fix4", "fix5"]
+    assert sorted(build_registry().filter_fixtures()) == ["fix1", "fix2", "fix3", "fix4", "fix5"]
     
 def test_filter_fixtures_on_scope():
-    assert sorted([f.name for f in build_registry().filter_fixtures(scope="testsuite")]) == ["fix2"]
+    assert sorted(build_registry().filter_fixtures(scope="testsuite")) == ["fix2"]
 
 def test_filter_fixtures_on_executed():
     registry = build_registry("fix3", "fix4")
-    assert sorted([f.name for f in registry.filter_fixtures(is_executed=True)]) == ["fix3", "fix4"]
-    assert sorted([f.name for f in registry.filter_fixtures(is_executed=False)]) == ["fix1", "fix2", "fix5"]
+    assert sorted(registry.filter_fixtures(is_executed=True)) == ["fix3", "fix4"]
+    assert sorted(registry.filter_fixtures(is_executed=False)) == ["fix1", "fix2", "fix5"]
 
 def test_filter_fixtures_on_base_names():
-    assert sorted([f.name for f in build_registry().filter_fixtures(base_names=["fix1"])]) == ["fix1"]
+    assert sorted(build_registry().filter_fixtures(base_names=["fix1"])) == ["fix1"]
 
 def test_filter_fixtures_on_all_criteria():
     registry = build_registry("fix5")
     fixtures = registry.filter_fixtures(base_names=["fix5"], is_executed=True, scope="test")
-    assert sorted([f.name for f in fixtures]) == ["fix5"]
+    assert sorted(fixtures) == ["fix5"]

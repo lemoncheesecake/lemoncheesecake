@@ -160,7 +160,7 @@ class FixtureRegistry:
         dependencies = self._get_fixture_dependencies(name, None)
         return get_distincts_in_list(dependencies)
     
-    def filter_fixtures(self, base_names=[], scope=None, is_executed=None):
+    def filter_fixtures(self, base_names=[], scope=None, is_executed=None, with_dependencies=False):
         def do_filter_fixture(fixture):
             if scope != None and fixture.scope != scope:
                 return False
@@ -169,7 +169,8 @@ class FixtureRegistry:
             return True
         
         names = base_names if base_names else self._fixtures.keys()
-        return filter(do_filter_fixture, [self._fixtures[name] for name in names])
+        fixtures = filter(do_filter_fixture, [self._fixtures[name] for name in names])
+        return [f.name for f in fixtures]
     
     def check_dependencies(self):
         """
@@ -192,6 +193,9 @@ class FixtureRegistry:
                         fixture.name, fixture.scope, dependency_fixture.scope, dependency_fixture.name
                     ))
 
+    def get_fixture_scope(self, name):
+        return self._fixtures[name].scope
+    
     def execute_fixture(self, name):
         fixture = self._fixtures[name]
         params = {}
@@ -204,3 +208,15 @@ class FixtureRegistry:
         
     def get_fixture_result(self, name):
         return self._fixtures[name].get_result()
+    
+    def is_fixture_executed(self, name):
+        return self._fixtures[name].is_executed()
+    
+    def get_fixture_results_as_params(self, names):
+        results = {}
+        for name in names:
+            results[name] = self.get_fixture_result(name)
+        return results
+    
+    def teardown_fixture(self, name):
+        self._fixtures[name].teardown()

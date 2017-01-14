@@ -20,6 +20,7 @@ from lemoncheesecake.testsuite import Filter
 from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
+from lemoncheesecake.fixtures import FixtureRegistry
 
 def build_test_module(name="mytestsuite"):
     return """
@@ -58,11 +59,19 @@ from lemoncheesecake import validators
     STATIC_CONTENT=static_content
 )
 
+def build_fixture_registry(*funcs):
+    registry = FixtureRegistry()
+    for func in funcs:
+        registry.add_fixtures(lcc.load_fixtures_from_func(func))
+    return registry
+
 class TestReportingSession(reporting.ReportingSession):
     def __init__(self):
         self._test_outcomes = {}
         self._last_test_outcome = None
         self._test_nb = 0
+        self._test_failing_nb = 0
+        self._test_success_nb = 0
         self._last_log = None
         self._last_test = None
         self._last_check_description = None
@@ -89,6 +98,12 @@ class TestReportingSession(reporting.ReportingSession):
     def get_last_check(self):
         return self._last_check_description, self._last_check_outcome, self._last_check_details
     
+    def get_failing_test_nb(self):
+        return self._test_failing_nb
+    
+    def get_successful_test_nb(self):
+        return self._test_success_nb
+    
     def begin_test(self, test):
         self._last_test_outcome = None
     
@@ -97,6 +112,10 @@ class TestReportingSession(reporting.ReportingSession):
         self._test_outcomes[test.id] = outcome
         self._last_test_outcome = outcome
         self._test_nb += 1
+        if outcome:
+            self._test_success_nb += 1
+        else:
+            self._test_failing_nb += 1
     
     def log(self, level, content):
         if level == "error":
@@ -128,8 +147,16 @@ def get_reporting_session():
 def reporting_session():
     return get_reporting_session()
 
-def run_testsuites(suites, worker=None, backends=None, tmpdir=None):
+def run_testsuites(suites, fixtures=None, worker=None, backends=None, tmpdir=None):
     global _reporting_session
+    
+    if fixtures == None:
+        fixture_registry = FixtureRegistry()
+    else:
+        if isinstance(fixtures, FixtureRegistry):
+            fixture_registry = fixtures
+        else:
+            fixture_registry = build_fixture_registry(*fixtures)
     
     workers = {}
     if worker:
@@ -145,14 +172,14 @@ def run_testsuites(suites, worker=None, backends=None, tmpdir=None):
         try:
             report_dir = os.path.join(tmpdir.strpath, "report")
             os.mkdir(report_dir)
-            runner.run_testsuites(loader.load_testsuites(suites), workers, backends, report_dir)
+            runner.run_testsuites(loader.load_testsuites(suites), fixture_registry, workers, backends, report_dir)
         finally:
             _reporting_session = None
     else:
         report_dir = os.path.join(tempfile.mkdtemp(), "report")
         os.mkdir(report_dir)
         try:
-            runner.run_testsuites(loader.load_testsuites(suites), workers, backends, report_dir)
+            runner.run_testsuites(loader.load_testsuites(suites), fixture_registry, workers, backends, report_dir)
         finally:
             shutil.rmtree(report_dir)
             # reset _reporting_session (either it has been set or not) at the end of each test run
@@ -160,8 +187,8 @@ def run_testsuites(suites, worker=None, backends=None, tmpdir=None):
     
     dump_report(get_runtime().report)
 
-def run_testsuite(suite, worker=None, backends=[], tmpdir=None):
-    run_testsuites([suite], worker=worker, backends=backends, tmpdir=tmpdir)
+def run_testsuite(suite, fixtures=None, worker=None, backends=[], tmpdir=None):
+    run_testsuites([suite], fixtures=fixtures, worker=worker, backends=backends, tmpdir=tmpdir)
 
 def run_func_in_test(callback):
     class MySuite(lcc.TestSuite):
