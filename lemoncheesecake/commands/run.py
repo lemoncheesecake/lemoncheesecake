@@ -24,6 +24,7 @@ def do_run():
     fixture_registry.add_fixture(BuiltinFixture("cli_args", lambda: cli_args))
     for fixture_func in project.get_fixtures():
         fixture_registry.add_fixtures(load_fixtures_from_func(fixture_func))
+    fixture_registry.check_dependencies()
     workers = project.get_workers()
     reporting_backends = { 
         backend.name: backend for backend in
