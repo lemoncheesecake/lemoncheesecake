@@ -189,6 +189,37 @@ with open(path, "w") as fh:
     fh.write(image_data)
 ```
 
+## Fixtures
+
+Lemoncheesecake provides a fixture system similar to what pytest provides (please refer to: http://doc.pytest.org/en/latest/fixture.html#fixture).
+Fixtures are a powerful and modular way to inject dependencies into your tests.
+
+```python
+ # fixtures/myfixtures.py:
+import httplib
+
+@fixture(scope="session")
+def conn():
+    return httplib.HTTPSConnection("www.someonlineapi.io")
+
+ # tests/my_suite.py:
+from lemoncheesecake import *
+
+class my_suite(TestSuite):
+    @test("Some test")
+    def some_test(self, conn):
+        conn.request("GET", "/some/resource")
+        resp =  conn.getresponse()
+```
+
+Three scopes are supported: "session", "testsuite" and "test" which is the default. Like in pytest:
+- fixture teardown can be implemented using yield to initially return the fixture value. 
+- fixtures can be used in fixture
+
+Lemoncheesecake provides a special builtin fixtures named **cli_args** that can be used to access custom command line arguments previous setup by the function referenced by **CLI_EXTRA_ARGS** parameter of project.py file.
+
+Using the default project.py file, fixtures will be loaded from the fixtures/ sub directory.
+
 ## Workers
 
 Workers are used to maintain a custom state for the user across the execution of all testsuites. It is also advised to use workers as a level of abstraction between the tests and the system under tests.
@@ -328,39 +359,6 @@ These metadata:
 - can be used to filter the tests to be run (see the `--tag`, `--property` and `--link` of the CLI launcher)
 - will be available in the test report
 
-## Metadata Policy
-
-The project settings provides a metadata policy that can be used to add constraints to metadata.
-
-For example, for the usage of a property "priority" on all tests with a given set of values:
-
-```python
- # project.py:
-[...]
-mp = validators.MetadataPolicy()
-mp.add_property_rule(
-    "priority", ("low", "medium", "high")), required=True
-)
-METADATA_POLICY = mp
-[...]
-```
-
-Add a limited set of tags available for both tests and testsuites and forbid the usage of any other tags:
-
-```python
-
- # project.py:
-[...]
-mp = validators.MetadataPolicy()
-mp.add_tag_rule(
-    ("todo", "known_defect"), on_test=True, on_suite=True
-)
-mp.disallow_unknown_tags()
-METADATA_POLICY = mp
-```
-
-See `lemoncheesecake.validators.MetadataPolicy` for more information.
-
 # Put it all together
 
 Here is a project/testsuite example. The purpose of the test is to test the omdbapi Web Service API. We lookup 'The Matrix' movie and then check several elements of the returned data.
@@ -406,6 +404,58 @@ class movies(TestSuite):
 		if check_dict_has_key("imdbRating", data):
 			check_gt("imdbRating", float(data["imdbRating"]), 8.5)
 ```
+
+# Advanced features
+
+## Custom command line arguments
+
+Custom command line arguments are can be added to lcc-run:
+
+```python
+ # project.py:
+
+[...]
+def add_cli_args(cli_parser):
+    cli_parser.add_argument("--host", required=True, help="Target host")
+    cli_parser.add_argument("--port", type=int, default=443, help="Target port")
+CLI_EXTRA_ARGS = add_cli_args
+[...]
+```
+
+**cli_parser** is an ArgumentParser instance of the argparse module.
+
+## Metadata Policy
+
+The project settings provides a metadata policy that can be used to add constraints to metadata.
+
+For example, for the usage of a property "priority" on all tests with a given set of values:
+
+```python
+ # project.py:
+[...]
+mp = validators.MetadataPolicy()
+mp.add_property_rule(
+    "priority", ("low", "medium", "high")), required=True
+)
+METADATA_POLICY = mp
+[...]
+```
+
+Add a limited set of tags available for both tests and testsuites and forbid the usage of any other tags:
+
+```python
+
+ # project.py:
+[...]
+mp = validators.MetadataPolicy()
+mp.add_tag_rule(
+    ("todo", "known_defect"), on_test=True, on_suite=True
+)
+mp.disallow_unknown_tags()
+METADATA_POLICY = mp
+```
+
+See `lemoncheesecake.validators.MetadataPolicy` for more information.
 
 # Contact
 
