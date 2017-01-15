@@ -264,6 +264,8 @@ def test_teardown_suite(reporting_session):
     assert reporting_session.get_last_log() == "hook called"
 
 def test_setup_test_error(reporting_session):
+    marker = []
+    
     class MySuite(lcc.TestSuite):
         def setup_test(self, test_name):
             1 / 0
@@ -271,10 +273,14 @@ def test_setup_test_error(reporting_session):
         @lcc.test("Some test")
         def sometest(self):
             pass
+        
+        def teardown_test(self, test_name):
+            marker.append(test_name)
 
     run_testsuite(MySuite)
 
     assert reporting_session.get_test_outcome("sometest") == False
+    assert len(marker) == 0
 
 def test_setup_test_error_in_fixture(reporting_session):
     @lcc.fixture()
@@ -319,6 +325,8 @@ def test_teardown_test_error_in_fixture(reporting_session):
     assert reporting_session.get_test_outcome("sometest") == False
 
 def test_setup_suite_error_because_of_exception(reporting_session):
+    marker = []
+    
     class MySuite(lcc.TestSuite):
         def setup_suite(self):
             1 / 0
@@ -326,13 +334,19 @@ def test_setup_suite_error_because_of_exception(reporting_session):
         @lcc.test("Some test")
         def sometest(self):
             pass
+        
+        def teardown_suite(self):
+            marker.append("teardown")
 
     run_testsuite(MySuite)
 
     assert reporting_session.get_last_test_outcome() == False
     assert_report_errors(1)
+    assert len(marker) == 0
 
 def test_setup_suite_error_because_of_error_log(reporting_session):
+    marker = []
+
     class MySuite(lcc.TestSuite):
         def setup_suite(self):
             lcc.log_error("some error")
@@ -341,12 +355,18 @@ def test_setup_suite_error_because_of_error_log(reporting_session):
         def sometest(self):
             pass
 
+        def teardown_suite(self):
+            marker.append("teardown")
+
     run_testsuite(MySuite)
 
     assert reporting_session.get_last_test_outcome() == False
     assert_report_errors(1)
+    assert len(marker) == 0
 
 def test_setup_suite_error_because_of_fixture(reporting_session):
+    marker = []
+    
     @lcc.fixture(scope="testsuite")
     def fix():
         1 / 0
@@ -359,11 +379,15 @@ def test_setup_suite_error_because_of_fixture(reporting_session):
         @lcc.test("Some other test")
         def sometest_bis(self):
             pass
+        
+        def teardown_suite(self):
+            marker.append("teardown")
 
     run_testsuite(MySuite, fixtures=[fix])
 
     assert reporting_session.get_failing_test_nb() == 2
     assert_report_errors(1)
+    assert len(marker) == 1
 
 def test_teardown_suite_error_because_of_exception(reporting_session):
     class MySuite(lcc.TestSuite):
@@ -394,6 +418,8 @@ def test_teardown_suite_error_because_of_error_log(reporting_session):
     assert_report_errors(1)
 
 def test_teardown_suite_error_because_of_fixture(reporting_session):
+    marker = []
+
     @lcc.fixture(scope="testsuite")
     def fix():
         yield 2
@@ -403,13 +429,19 @@ def test_teardown_suite_error_because_of_fixture(reporting_session):
         @lcc.test("Some test")
         def sometest(self, fix):
             pass
+        
+        def teardown_suite(self):
+            marker.append("teardown")
 
     run_testsuite(MySuite, fixtures=[fix])
 
     assert reporting_session.get_last_test_outcome() == True
     assert_report_errors(1)
+    assert len(marker) == 1
 
 def test_setup_test_session_error_because_of_exception(reporting_session):
+    marker = []
+    
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
@@ -418,13 +450,19 @@ def test_setup_test_session_error_because_of_exception(reporting_session):
     class MyWorker(Worker):
         def setup_test_session(self):
             1 / 0
+        
+        def teardown_test_session(self):
+            marker.append("teardown")
 
     run_testsuite(MySuite, worker=MyWorker())
 
     assert reporting_session.get_last_test_outcome() == False
     assert_report_errors(1)
+    assert len(marker) == 0
 
 def test_setup_test_session_error_because_of_fixture(reporting_session):
+    marker = []
+    
     @lcc.fixture(scope="session")
     def fix():
         1 / 0
@@ -438,42 +476,68 @@ def test_setup_test_session_error_because_of_fixture(reporting_session):
         def sometest_bis(self):
             pass
 
-    run_testsuite(MySuite, fixtures=[fix])
+    class MyWorker(Worker):
+        def setup_test_session(self):
+            marker.append("setup")
+        
+        def teardown_test_session(self):
+            marker.append("teardown")
+
+    run_testsuite(MySuite, fixtures=[fix], worker=MyWorker())
 
     assert reporting_session.get_failing_test_nb() == 2
     assert_report_errors(1)
+    assert "teardown" in marker
 
 def test_teardown_test_session_error_because_of_exception(reporting_session):
+    marker = []
+    
+    @lcc.fixture()
+    def fix():
+        yield 1
+        marker.append("teardown")
+    
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
-        def sometest(self):
+        def sometest(self, fix):
             pass
 
     class MyWorker(Worker):
         def teardown_test_session(self):
             1 / 0
             
-    run_testsuite(MySuite, worker=MyWorker())
+    run_testsuite(MySuite, worker=MyWorker(), fixtures=[fix])
 
     assert reporting_session.get_last_test_outcome() == True
     assert_report_errors(1)
+    assert "teardown" in marker
 
 def test_teardown_test_session_error_because_of_error_log(reporting_session):
+    marker = []
+    
+    @lcc.fixture()
+    def fix():
+        yield 1
+        marker.append("teardown")
+    
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
-        def sometest(self):
+        def sometest(self, fix):
             pass
 
     class MyWorker(Worker):
         def teardown_test_session(self):
             lcc.log_error("some error")
         
-    run_testsuite(MySuite, worker=MyWorker())
+    run_testsuite(MySuite, worker=MyWorker(), fixtures=[fix])
 
     assert reporting_session.get_last_test_outcome() == True
     assert_report_errors(1)
+    assert "teardown" in marker
 
 def test_teardown_test_session_error_because_of_fixture(reporting_session):
+    marker = []
+    
     @lcc.fixture(scope="session")
     def fix():
         yield 1
@@ -487,11 +551,16 @@ def test_teardown_test_session_error_because_of_fixture(reporting_session):
         @lcc.test("Some other test")
         def sometest_bis(self):
             pass
-        
-    run_testsuite(MySuite, fixtures=[fix])
+    
+    class MyWorker(Worker):
+        def teardown_test_session(self):
+            marker.append("teardown")
+    
+    run_testsuite(MySuite, fixtures=[fix], worker=MyWorker())
 
     assert reporting_session.get_successful_test_nb() == 2
     assert_report_errors(1)
+    assert "teardown" in marker
 
 def test_run_with_fixture():
     marker = []
