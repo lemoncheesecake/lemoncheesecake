@@ -82,8 +82,6 @@ class _Runner:
                     self.handle_exception(e, suite)
                     self.session.end_test()
                     return
-                except KeyboardInterrupt as e:
-                    self.handle_exception(e, suite)
         
             for fixture in fixtures:
                 try:
@@ -92,8 +90,6 @@ class _Runner:
                     self.handle_exception(e, suite)
                     self.session.end_test()
                     return
-                except KeyboardInterrupt as e:
-                    self.handle_exception(e, suite)
             self.session.end_test_setup()
 
         # run test:
@@ -104,8 +100,6 @@ class _Runner:
             self.handle_exception(e, suite)
             self.session.end_test()
             return
-        except KeyboardInterrupt as e:
-            self.handle_exception(e, suite)
         
         # teardown test:
         if suite.has_hook("teardown_test") or fixtures:
@@ -117,8 +111,6 @@ class _Runner:
                     self.handle_exception(e, suite)
                     self.session.end_test()
                     return
-                except KeyboardInterrupt as e:
-                    self.handle_exception(e, suite)
 
             for fixture in fixtures:
                 if not self.fixture_registry.is_fixture_executed(fixture):
@@ -129,8 +121,6 @@ class _Runner:
                     self.handle_exception(e, suite)
                     self.session.end_test()
                     return
-                except KeyboardInterrupt as e:
-                    self.handle_exception(e, suite)
             self.session.end_test_teardown()
         
         self.session.end_test()
@@ -156,8 +146,6 @@ class _Runner:
                     except Exception as e:
                         self.handle_exception(e, suite)
                         self.abort_testsuite = suite
-                    except KeyboardInterrupt as e:
-                        self.handle_exception(e, suite)
 
             for fixture in fixtures:
                 try:
@@ -165,8 +153,6 @@ class _Runner:
                 except Exception as e:
                     self.handle_exception(e, suite)
                     self.abort_testsuite = suite
-                except KeyboardInterrupt as e:
-                    self.handle_exception(e, suite)
                 
             suite_data = self.session.report.get_suite(suite.id)
             if suite_data.suite_setup.has_failure():
@@ -186,8 +172,6 @@ class _Runner:
                     suite.teardown_suite()
                 except Exception as e:
                     self.handle_exception(e, suite)
-                except KeyboardInterrupt as e:
-                    self.handle_exception(e, suite)
 
             for fixture in fixtures:
                 if not self.fixture_registry.is_fixture_executed(fixture):
@@ -195,8 +179,6 @@ class _Runner:
                 try:
                     self.fixture_registry.teardown_fixture(fixture)
                 except Exception as e:
-                    self.handle_exception(e, suite)
-                except KeyboardInterrupt as e:
                     self.handle_exception(e, suite)
             
             self.session.end_suite_teardown()
@@ -231,8 +213,6 @@ class _Runner:
                 except Exception as e:
                     self.handle_exception(e)
                     self.abort_all_tests = True
-                except KeyboardInterrupt as e:
-                    self.handle_exception(e)
                 
             for fixture in fixtures:
                 try:
@@ -240,8 +220,6 @@ class _Runner:
                 except Exception as e:
                     self.handle_exception(e)
                     self.abort_all_tests = True
-                except KeyboardInterrupt as e:
-                    self.handle_exception(e)
                 
             self.session.end_test_session_setup()
 
@@ -261,8 +239,6 @@ class _Runner:
                     worker.teardown_test_session()
                 except Exception as e:
                     self.handle_exception(e)
-                except KeyboardInterrupt as e:
-                    self.handle_exception(e)
             
             for fixture in fixtures:
                 if not self.fixture_registry.is_fixture_executed(fixture):
@@ -270,8 +246,6 @@ class _Runner:
                 try:
                     self.fixture_registry.teardown_fixture(fixture)
                 except Exception as e:
-                    self.handle_exception(e)
-                except KeyboardInterrupt as e:
                     self.handle_exception(e)
                 
             self.session.end_test_session_teardown()
