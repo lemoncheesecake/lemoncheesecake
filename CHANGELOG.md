@@ -1,3 +1,15 @@
+# 0.4.0 (2017-01-15)
+
+- **lcc-run**: replace the custom test launcher by a generic test runner (lcc-run) that uses a project.py file to
+  retrieve the parameters of the test project; the initial project structure can be created through
+  the lcc-create-project command
+- **fixtures**: introduce a new fixture system similar to what pytest offers
+- use a more standard vocabulary by renaming all methods (and related methods and data) from "before_*" and "after_*" to
+  "setup_*" and "teardown_*"
+- improve the dependency system between setup and teardown methods (it also apply to fixtures setup/teardown) 
+- fix save_attachment_content when used with str on Python 3 (a new parameter binary_mode, set to False by default, 
+  has been introduced)
+
 # 0.3.8 (2016-12-30)
 
 - Various bug fixes, among which: fix binary attachment saving on Windows, be fault tolerant when an exception
