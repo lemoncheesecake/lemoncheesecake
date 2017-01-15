@@ -125,8 +125,8 @@ def _serialize_testsuite_data(suite):
         link_node.text = link[0]
     
     # before suite
-    if suite.before_suite:
-        _serialize_hook_data(suite.before_suite, _xml_child(suite_node, "before-suite"))
+    if suite.suite_setup:
+        _serialize_hook_data(suite.suite_setup, _xml_child(suite_node, "suite-setup"))
     
     # tests
     for test in suite.tests:
@@ -139,8 +139,8 @@ def _serialize_testsuite_data(suite):
         suite_node.append(sub_suite_node)
     
     # after suite
-    if suite.after_suite:
-        _serialize_hook_data(suite.after_suite, _xml_child(suite_node, "after-suite"))
+    if suite.suite_teardown:
+        _serialize_hook_data(suite.suite_teardown, _xml_child(suite_node, "suite-teardown"))
     
     return suite_node
 
@@ -157,15 +157,15 @@ def serialize_report_as_tree(report):
         stat_node = _xml_child(xml, "stat", "name", name)
         stat_node.text = value
 
-    if report.before_all_tests:
-        _serialize_hook_data(report.before_all_tests, _xml_child(xml, "before-all-tests"))
+    if report.test_session_setup:
+        _serialize_hook_data(report.test_session_setup, _xml_child(xml, "test-session-setup"))
 
     for suite in report.testsuites:
         suite_node = _serialize_testsuite_data(suite)
         xml.append(suite_node)
 
-    if report.after_all_tests:
-        _serialize_hook_data(report.after_all_tests, _xml_child(xml, "after-all-tests"))
+    if report.test_session_teardown:
+        _serialize_hook_data(report.test_session_teardown, _xml_child(xml, "test-session-teardown"))
     
     return xml
 
@@ -231,17 +231,17 @@ def _unserialize_testsuite_data(xml, parent=None):
     suite.properties = { node.attrib["name"]: node.text for node in xml.xpath("property") }
     suite.links = [ (link.text, link.attrib["name"]) for link in xml.xpath("link") ]
     
-    before_suite = xml.xpath("before-suite")
-    before_suite = before_suite[0] if len(before_suite) > 0 else None
-    if before_suite != None:
-        suite.before_suite = _unserialize_hook_data(before_suite)
+    suite_setup = xml.xpath("suite-setup")
+    suite_setup = suite_setup[0] if len(suite_setup) > 0 else None
+    if suite_setup != None:
+        suite.suite_setup = _unserialize_hook_data(suite_setup)
         
     suite.tests = [ _unserialize_test_data(t) for t in xml.xpath("test") ]
     
-    after_suite = xml.xpath("after-suite")
-    after_suite = after_suite[0] if len(after_suite) > 0 else None
-    if after_suite != None:
-        suite.after_suite = _unserialize_hook_data(after_suite)
+    suite_teardown = xml.xpath("suite-teardown")
+    suite_teardown = suite_teardown[0] if len(suite_teardown) > 0 else None
+    if suite_teardown != None:
+        suite.suite_teardown = _unserialize_hook_data(suite_teardown)
     
     suite.sub_testsuites = [ _unserialize_testsuite_data(s, suite) for s in xml.xpath("suite") ]
     
@@ -263,18 +263,18 @@ def unserialize_report_from_file(filename):
     report.info = _unserialize_keyvalue_list(root.xpath("info"))
     report.stats = _unserialize_keyvalue_list(root.xpath("stat"))
     
-    before_all_tests = xml.xpath("before-all-tests")
-    before_all_tests = before_all_tests[0] if len(before_all_tests) else None
-    if before_all_tests:
-        report.before_all_tests = _unserialize_hook_data(before_all_tests)
+    test_session_setup = xml.xpath("test-session-setup")
+    test_session_setup = test_session_setup[0] if len(test_session_setup) else None
+    if test_session_setup:
+        report.test_session_setup = _unserialize_hook_data(test_session_setup)
         
     for xml_suite in root.xpath("suite"):
         report.testsuites.append(_unserialize_testsuite_data(xml_suite))
 
-    after_all_tests = xml.xpath("after-all-tests")
-    after_all_tests = after_all_tests[0] if len(after_all_tests) else None
-    if after_all_tests:
-        report.after_all_tests = _unserialize_hook_data(after_all_tests)
+    test_session_teardown = xml.xpath("test-session-teardown")
+    test_session_teardown = test_session_teardown[0] if len(test_session_teardown) else None
+    if test_session_teardown:
+        report.test_session_teardown = _unserialize_hook_data(test_session_teardown)
     
     return report
 

@@ -18,39 +18,12 @@ __all__ = "import_testsuite_from_file", "import_testsuites_from_directory"
 def _strip_py_ext(filename):
     return re.sub("\.py$", "", filename)
 
-def import_testsuite_from_file(filename):
-    """Get testsuite class from Python module.
-    
-    The testsuite class must have the same name as the containing Python module.
-    
-    Raise a ImportTestSuiteError if the testsuite class cannot be imported.
-    """
-    mod_dir = os.path.dirname(filename)
-    mod_name = _strip_py_ext(os.path.basename(filename))
+def _get_py_files_from_dir(dir):
+    return list(filter(
+        lambda f: not os.path.basename(f).startswith("__"), glob.glob(os.path.join(dir, "*.py"))
+    ))
 
-    sys.path.insert(0, mod_dir)
-    try:
-        loaded_mod = importlib.import_module(mod_name)
-    except ImportError as e:
-        raise ImportTestSuiteError("Cannot import module %s: %s" % (mod_name, str(e)))
-    finally:
-        del sys.path[0]
-    
-    try:
-        klass = getattr(loaded_mod, mod_name)
-    except AttributeError:
-        raise ImportTestSuiteError("Cannot find class '%s' in '%s'" % (mod_name, loaded_mod.__file__))
-    return klass
-
-def import_testsuites_from_files(patterns, excluding=[]):
-    """
-    Import testsuites from a list of files:
-    - patterns: a mandatory list (a simple string can also be used instead of a single element list)
-      of files to import; the wildcard '*' character can be used
-    - exclude: an optional list (a simple string can also be used instead of a single element list)
-      of elements to exclude from the expanded list of files to import
-    Example: import_testsuites_from_files("test_*.py")
-    """
+def _get_matching_files(patterns, excluding=[]):
     if type(patterns) not in (list, tuple):
         patterns = [patterns]
     if type(excluding) not in (list, tuple):
@@ -65,7 +38,52 @@ def import_testsuites_from_files(patterns, excluding=[]):
                 if fnmatch.fnmatch(file, excluded):
                     files.remove(file)
                     break
-    return [import_testsuite_from_file(f) for f in files]
+    return files
+
+def _import_module(filename):
+    mod_dir = os.path.dirname(filename)
+    mod_name = _strip_py_ext(os.path.basename(filename))
+
+    sys.path.insert(0, mod_dir)
+    try:
+        # FIXME: possibly mess-up a module with the same name
+        try:
+            del sys.modules[mod_name]
+        except KeyError:
+            pass
+        mod = importlib.import_module(mod_name)
+    except ImportError as e:
+        raise ImportTestSuiteError("Cannot import module %s: %s" % (mod_name, str(e)))
+    finally:
+        del sys.path[0]
+    
+    return mod
+
+def import_testsuite_from_file(filename):
+    """Get testsuite class from Python module.
+    
+    The testsuite class must have the same name as the containing Python module.
+    
+    Raise a ImportTestSuiteError if the testsuite class cannot be imported.
+    """
+    mod = _import_module(filename)
+    mod_name = _strip_py_ext(os.path.basename(filename))
+    try:
+        klass = getattr(mod, mod_name)
+    except AttributeError:
+        raise ImportTestSuiteError("Cannot find class '%s' in '%s'" % (mod_name, mod.__file__))
+    return klass
+
+def import_testsuites_from_files(patterns, excluding=[]):
+    """
+    Import testsuites from a list of files:
+    - patterns: a mandatory list (a simple string can also be used instead of a single element list)
+      of files to import; the wildcard '*' character can be used
+    - exclude: an optional list (a simple string can also be used instead of a single element list)
+      of elements to exclude from the expanded list of files to import
+    Example: import_testsuites_from_files("test_*.py")
+    """
+    return [import_testsuite_from_file(f) for f in _get_matching_files(patterns, excluding)]
 
 def import_testsuites_from_directory(dir, recursive=True):
     """Find testsuite classes in modules found in dir.
@@ -80,9 +98,7 @@ def import_testsuites_from_directory(dir, recursive=True):
     Raise ImportTestSuiteError if one or more testsuite cannot be imported.
     """
     suites = [ ]
-    for filename in glob.glob(os.path.join(dir, "*.py")):
-        if os.path.basename(filename).startswith("__"):
-            continue
+    for filename in _get_py_files_from_dir(dir):
         suite = import_testsuite_from_file(filename)
         if recursive:
             subsuites_dir = _strip_py_ext(filename)
@@ -129,3 +145,32 @@ def load_testsuites(suite_classes, metadata_policy=None):
         suites.append(suite)
         _load_testsuite(suite, loaded_tests, loaded_suites, metadata_policy)
     return suites
+
+def import_fixtures_from_file(filename):
+    mod = _import_module(filename)
+    funcs = []
+    for sym_name in dir(mod):
+        sym = getattr(mod, sym_name)
+        if hasattr(sym, "_lccfixtureinfo"):
+            funcs.append(sym)
+    return funcs
+
+def import_fixtures_from_files(patterns, excluding=[]):
+    """
+    Import fixtures from a list of files:
+    - patterns: a mandatory list (a simple string can also be used instead of a single element list)
+      of files to import; the wildcard '*' character can be used
+    - exclude: an optional list (a simple string can also be used instead of a single element list)
+      of elements to exclude from the expanded list of files to import
+    Example: import_testsuites_from_files("test_*.py")
+    """
+    fixtures = []
+    for file in _get_matching_files(patterns, excluding):
+        fixtures.extend(import_fixtures_from_file(file))
+    return fixtures
+
+def import_fixtures_from_directory(dir):
+    fixtures = []
+    for file in _get_py_files_from_dir(dir):
+        fixtures.extend(import_fixtures_from_file(file))
+    return fixtures

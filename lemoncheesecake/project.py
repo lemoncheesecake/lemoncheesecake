@@ -11,6 +11,7 @@ import imp
 import inspect
 
 from lemoncheesecake.testsuite import TestSuite
+from lemoncheesecake.fixtures import Fixture
 from lemoncheesecake.worker import Worker
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.reporting import reportdir, backends
@@ -51,12 +52,12 @@ def _check_type(type_):
         return None
     return wrapper
 
-def _check_func(args_nb):
+def _check_func(args_nb=None):
     def wrapper(name, value):
         if not callable(value):
             return "'%s' has an incorrect value, '%s' is not a function" % (name, value)
         argspec = inspect.getargspec(value)
-        if len(argspec.args) != args_nb:
+        if args_nb != None and len(argspec.args) != args_nb:
             return "'%s' function takes %s arguments instead of %d" % (len(argspec.args), args_nb)
         return None
     return wrapper
@@ -141,6 +142,9 @@ class Project:
     
     def get_testsuites_classes(self):
         return self._get_param("TESTSUITES", _check_class(TestSuite), is_list=True)
+
+    def get_fixtures(self):
+        return self._get_param("FIXTURES", _check_func(), is_list=True, required=False, default=[])
     
     def get_workers(self):
         return self._get_param("WORKERS", _check_class_instance(Worker), is_dict=True, required=False, default={})
@@ -208,6 +212,7 @@ def create_project(project_dir):
     p = os.path
     shutil.copyfile(get_resource_path(p.join("project", "template.py")), p.join(project_dir, PROJECT_SETTINGS_FILE))
     os.mkdir(p.join(project_dir, "tests"))
+    os.mkdir(p.join(project_dir, "fixtures"))
 
 def load_project(project_dir):
     return Project(os.path.join(project_dir, PROJECT_SETTINGS_FILE))

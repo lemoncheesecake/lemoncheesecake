@@ -19,10 +19,10 @@ class Worker:
     def has_hook(self, hook_name):
         return object_has_method(self, hook_name)
 
-#     def before_all_tests(self):
+#     def test_session_setup(self):
 #         """Hook method called before the beginning of tests execution"""
 #         pass
     
-#     def after_all_tests(self):
+#     def test_session_teardown(self):
 #         """Hook method called after the end of tests execution"""
 #         pass

@@ -36,3 +36,10 @@ def object_has_method(obj, method_name):
 
 def get_resource_path(relpath):
     return os.path.join(os.path.dirname(__file__), "resources", relpath)
+
+def get_distincts_in_list(lst):
+    distincts = []
+    for elem in lst:
+        if elem not in distincts:
+            distincts.append(elem)
+    return distincts

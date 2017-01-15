@@ -7,7 +7,7 @@ Created on Sep 8, 2016
 import inspect
 
 from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError
-from lemoncheesecake.utils import object_has_method
+from lemoncheesecake.utils import object_has_method, get_distincts_in_list
 
 __all__ = "TestSuite", "Test"
 
@@ -23,6 +23,9 @@ class Test:
         self.links = [ ]
         self.rank = force_rank if force_rank != None else Test.test_current_rank
         Test.test_current_rank += 1
+    
+    def get_params(self):
+        return inspect.getargspec(self.callback).args[1:]
         
     def __str__(self):
         return "%s (%s) # %d" % (self.id, self.description, self.rank)
@@ -141,6 +144,16 @@ class TestSuite:
     
     def get_suite_description(self):
         return self.description
+    
+    def get_fixtures(self, filtered=True, recursive=True):
+        fixtures = []
+        for test in self.get_tests(filtered):
+            fixtures.extend(test.get_params())
+        if recursive:
+            for sub_suite in self.get_sub_testsuites(filtered):
+                fixtures.extend(sub_suite.get_fixtures())
+        
+        return get_distincts_in_list(fixtures)
     
     def register_test(self, new_test, before_test=None, after_test=None):
         if before_test and after_test:

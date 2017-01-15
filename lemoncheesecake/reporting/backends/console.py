@@ -83,33 +83,33 @@ class ConsoleReportingSession(ReportingSession):
         sys.stdout.write("=" * padding_left + " " + colored(label, attrs=["bold"]) + " " + "=" * padding_right + "\n")
         self.previous_obj = testsuite
     
-    def begin_before_suite(self, testsuite):
-        self.step_prefix = " => before suite: "
+    def begin_suite_setup(self, testsuite):
+        self.step_prefix = " => setup suite: "
         self.lp.print_line(self.step_prefix + "...")
     
-    def begin_after_suite(self, testsuite):
-        self.step_prefix = " => after suite: "
+    def begin_suite_teardown(self, testsuite):
+        self.step_prefix = " => teardown suite: "
         self.lp.print_line(self.step_prefix + "...")
     
-    def begin_worker_before_all_tests(self):
-        self.step_prefix = " => before all tests: "
+    def begin_test_session_setup(self):
+        self.step_prefix = " => setup test session: "
         self.lp.print_line(self.step_prefix + "...")
     
-    def begin_worker_after_all_tests(self):
-        self.step_prefix = " => after all tests: "
+    def begin_test_session_teardown(self):
+        self.step_prefix = " => teardown test session: "
         self.lp.print_line(self.step_prefix + "...")
     
-    def end_before_suite(self, testsuite):
+    def end_suite_setup(self, testsuite):
         self.lp.erase_line()
         self.custom_step_prefix = None
     
-    end_after_suite = end_before_suite
+    end_suite_teardown = end_suite_setup
     
-    def end_worker_before_all_tests(self):
+    def end_test_session_setup(self):
         self.lp.erase_line()
         self.custom_step_prefix = None
     
-    end_worker_after_all_tests = end_worker_before_all_tests
+    end_test_session_teardown = end_test_session_setup
             
     def begin_test(self, test):
         self.step_prefix = " -- %2s # %s" % (self.current_test_idx, test.id)

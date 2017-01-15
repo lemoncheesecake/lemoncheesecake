@@ -193,9 +193,9 @@ def test_attachment(backend, tmpdir):
     
     do_test_serialization(MySuite, backend, tmpdir)
 
-def test_before_suite_success(backend, tmpdir):
+def test_setup_suite_success(backend, tmpdir):
     class MySuite(lcc.TestSuite):
-        def before_suite(self):
+        def setup_suite(self):
             lcc.log_info("some log")
         
         @lcc.test("Some test")
@@ -204,9 +204,9 @@ def test_before_suite_success(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir)
 
-def test_before_suite_failure(backend, tmpdir):
+def test_setup_suite_failure(backend, tmpdir):
     class MySuite(lcc.TestSuite):
-        def before_suite(self):
+        def setup_suite(self):
             lcc.log_error("something bad happened")
         
         @lcc.test("Some test")
@@ -215,101 +215,101 @@ def test_before_suite_failure(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir)
 
-def test_after_suite_success(backend, tmpdir):
+def test_teardown_suite_success(backend, tmpdir):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
 
-        def after_suite(self):
+        def teardown_suite(self):
             lcc.log_info("some log")
 
     do_test_serialization(MySuite, backend, tmpdir)
 
-def test_after_suite_failure(backend, tmpdir):
+def test_teardown_suite_failure(backend, tmpdir):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
 
-        def after_suite(self):
+        def teardown_suite(self):
             lcc.log_error("something bad happened")
 
     do_test_serialization(MySuite, backend, tmpdir)
 
-def test_before_and_after_suite(backend, tmpdir):
+def test_setup_and_teardown_suite(backend, tmpdir):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
         
-        def before_suite(self):
+        def setup_suite(self):
             lcc.log_info("some log")
 
-        def after_suite(self):
+        def teardown_suite(self):
             lcc.log_info("some other log")
 
     do_test_serialization(MySuite, backend, tmpdir)
 
-def test_worker_before_all_tests_success(backend, tmpdir):
+def test_setup_test_session_success(backend, tmpdir):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
 
     class MyWorker(Worker):
-        def before_all_tests(self):
+        def setup_test_session(self):
             lcc.log_info("some log")
 
     do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
 
-def test_worker_before_all_tests_failure(backend, tmpdir):
+def test_setup_test_session_failure(backend, tmpdir):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
 
     class MyWorker(Worker):
-        def before_all_tests(self):
+        def setup_test_session(self):
             lcc.log_error("something bad happened")
 
     do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
 
-def test_worker_after_all_tests_success(backend, tmpdir):
+def test_teardown_test_session_success(backend, tmpdir):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
 
     class MyWorker(Worker):
-        def after_all_tests(self):
+        def teardown_test_session(self):
             lcc.log_info("some log")
 
     do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
 
-def test_worker_after_all_tests_failure(backend, tmpdir):
+def test_teardown_test_session_failure(backend, tmpdir):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
 
     class MyWorker(Worker):
-        def after_all_tests(self):
+        def teardown_test_session(self):
             lcc.log_error("something bad happened")
     
     do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
 
-def test_worker_before_and_after_all_tests(backend, tmpdir):
+def test_setup_and_teardown_test_session(backend, tmpdir):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
 
     class MyWorker(Worker):
-        def before_all_tests(self):
+        def setup_test_session(self):
             lcc.log_info("some log")
             
-        def after_all_tests(self):
+        def teardown_test_session(self):
             lcc.log_info("some other log")
 
     do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())

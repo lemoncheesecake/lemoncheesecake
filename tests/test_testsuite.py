@@ -200,3 +200,51 @@ def test_register_tests_with_before_and_after():
     suite.load()
     
     assert [t.id for t in suite.get_tests()] == ["foo1", "foo2", "bar1", "bar2", "baz1", "baz2"]
+
+def test_get_fixtures():
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Test 1")
+        def test_1(self, foo):
+            pass
+        
+        class MySubSuite(lcc.TestSuite):
+            @lcc.test("Test 2")
+            def test_2(self, bar, baz):
+                pass
+
+            @lcc.test("Test 3")
+            def test_3(self, baz):
+                pass
+
+            @lcc.test("Test 4")
+            def test_4(self):
+                pass
+
+    suite = MySuite()
+    suite.load()
+    
+    assert suite.get_fixtures() == ["foo", "bar", "baz"]
+
+def test_get_fixtures_non_recursive():
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Test 1")
+        def test_1(self, foo):
+            pass
+        
+        class MySubSuite(lcc.TestSuite):
+            @lcc.test("Test 2")
+            def test_2(self, bar, baz):
+                pass
+
+            @lcc.test("Test 3")
+            def test_3(self, baz):
+                pass
+
+            @lcc.test("Test 4")
+            def test_4(self):
+                pass
+
+    suite = MySuite()
+    suite.load()
+    
+    assert suite.get_fixtures(recursive=False) == ["foo"]

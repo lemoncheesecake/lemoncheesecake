@@ -33,31 +33,31 @@ class ReportingSession:
     def end_tests(self):
         pass
     
-    def begin_worker_before_all_tests(self):
+    def begin_test_session_setup(self):
         pass
     
-    def end_worker_before_all_tests(self):
+    def end_test_session_setup(self):
         pass
     
-    def begin_worker_after_all_tests(self):
+    def begin_test_session_teardown(self):
         pass
     
-    def end_worker_after_all_tests(self):
+    def end_test_session_teardown(self):
         pass
     
     def begin_suite(self, testsuite):
         pass
     
-    def begin_before_suite(self, testsuite):
+    def begin_suite_setup(self, testsuite):
         pass
     
-    def end_before_suite(self, testsuite):
+    def end_suite_setup(self, testsuite):
         pass
         
-    def begin_after_suite(self, testsuite):
+    def begin_suite_teardown(self, testsuite):
         pass
     
-    def end_after_suite(self, testsuite):
+    def end_suite_teardown(self, testsuite):
         pass
     
     def end_suite(self, testsuite):
@@ -115,19 +115,19 @@ class FileReportSession(ReportingSession):
             self.save()
             return
             
-    def end_worker_before_all_tests(self):
-        self._handle_code_end(self.report.before_all_tests.has_failure())
+    def end_test_session_setup(self):
+        self._handle_code_end(self.report.test_session_setup.has_failure())
     
-    def end_worker_after_all_tests(self):
-        self._handle_code_end(self.report.after_all_tests.has_failure())
+    def end_test_session_teardown(self):
+        self._handle_code_end(self.report.test_session_teardown.has_failure())
     
-    def end_before_suite(self, testsuite):
+    def end_suite_setup(self, testsuite):
         suite_data = self.report.get_suite(testsuite.id)
-        self._handle_code_end(suite_data.before_suite.has_failure())
+        self._handle_code_end(suite_data.suite_setup.has_failure())
 
-    def end_after_suite(self, testsuite):
+    def end_suite_teardown(self, testsuite):
         suite_data = self.report.get_suite(testsuite.id)
-        self._handle_code_end(suite_data.after_suite.has_failure())
+        self._handle_code_end(suite_data.suite_teardown.has_failure())
     
     def end_test(self, test, outcome):
         self._handle_code_end(not outcome)

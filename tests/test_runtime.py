@@ -115,7 +115,7 @@ def test_multiple_testsuites_and_tests():
             @lcc.prop("foo", "baz")
             @lcc.test("Some test 2")
             def test_3_2(self):
-                raise lcc.AbortTest()
+                raise lcc.AbortTest("error")
             
             @lcc.test("Some test 3")
             def test_3_3(self):
@@ -414,9 +414,9 @@ def test_unicode(tmpdir):
     assert step.entries[2].description == u"éééààà"
     assert open(os.path.join(get_runtime().report_dir, step.entries[2].filename)).read() == "A" * 1024
 
-def test_before_suite_success():
+def test_setup_suite_success():
     class MySuite(lcc.TestSuite):
-        def before_suite(self):
+        def setup_suite(self):
             lcc.log_info("some log")
         
         @lcc.test("Some test")
@@ -431,16 +431,16 @@ def test_before_suite_success():
     assert_report_stats(report, expected_test_successes=1)
     
     suite = report.get_suite("MySuite")
-    assert suite.before_suite.outcome == True
-    assert suite.before_suite.start_time != None
-    assert suite.before_suite.end_time != None
-    assert suite.before_suite.steps[0].entries[0].message == "some log"
-    assert suite.before_suite.has_failure() == False
+    assert suite.suite_setup.outcome == True
+    assert suite.suite_setup.start_time != None
+    assert suite.suite_setup.end_time != None
+    assert suite.suite_setup.steps[0].entries[0].message == "some log"
+    assert suite.suite_setup.has_failure() == False
     assert report.get_test("sometest").outcome == True
 
-def test_before_suite_failure():
+def test_setup_suite_failure():
     class MySuite(lcc.TestSuite):
-        def before_suite(self):
+        def setup_suite(self):
             lcc.log_error("something bad happened")
         
         @lcc.test("Some test")
@@ -455,20 +455,20 @@ def test_before_suite_failure():
     assert_report_stats(report, expected_test_failures=1, expected_errors=1, expected_error_logs=2)
     
     suite = report.get_suite("MySuite")
-    assert suite.before_suite.outcome == False
-    assert suite.before_suite.start_time != None
-    assert suite.before_suite.end_time != None
-    assert suite.before_suite.steps[0].entries[0].message == "something bad happened"
-    assert suite.before_suite.has_failure() == True
+    assert suite.suite_setup.outcome == False
+    assert suite.suite_setup.start_time != None
+    assert suite.suite_setup.end_time != None
+    assert suite.suite_setup.steps[0].entries[0].message == "something bad happened"
+    assert suite.suite_setup.has_failure() == True
     assert report.get_test("sometest").outcome == False
 
-def test_after_suite_success():
+def test_teardown_suite_success():
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
 
-        def after_suite(self):
+        def teardown_suite(self):
             lcc.log_info("some log")
     
     run_testsuite(MySuite)
@@ -479,20 +479,20 @@ def test_after_suite_success():
     assert_report_stats(report, expected_test_successes=1)
     
     suite = report.get_suite("MySuite")
-    assert suite.after_suite.outcome == True
-    assert suite.after_suite.start_time != None
-    assert suite.after_suite.end_time != None
-    assert suite.after_suite.steps[0].entries[0].message == "some log"
-    assert suite.after_suite.has_failure() == False
+    assert suite.suite_teardown.outcome == True
+    assert suite.suite_teardown.start_time != None
+    assert suite.suite_teardown.end_time != None
+    assert suite.suite_teardown.steps[0].entries[0].message == "some log"
+    assert suite.suite_teardown.has_failure() == False
     assert report.get_test("sometest").outcome == True
 
-def test_after_suite_failure():
+def test_teardown_suite_failure():
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
 
-        def after_suite(self):
+        def teardown_suite(self):
             lcc.check_eq("val", 1, 2)
         
     run_testsuite(MySuite)
@@ -503,21 +503,21 @@ def test_after_suite_failure():
     assert_report_stats(report, expected_test_successes=1, expected_errors=1, expected_check_failures=1)
     
     suite = report.get_suite("MySuite")
-    assert suite.after_suite.outcome == False
-    assert suite.after_suite.start_time != None
-    assert suite.after_suite.end_time != None
-    assert suite.after_suite.steps[0].entries[0].outcome == False
-    assert suite.after_suite.has_failure() == True
+    assert suite.suite_teardown.outcome == False
+    assert suite.suite_teardown.start_time != None
+    assert suite.suite_teardown.end_time != None
+    assert suite.suite_teardown.steps[0].entries[0].outcome == False
+    assert suite.suite_teardown.has_failure() == True
     assert report.get_test("sometest").outcome == True
 
-def test_worker_before_all_tests_success():
+def test_setup_test_session_success():
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
     
     class MyWorker(Worker):
-        def before_all_tests(self):
+        def setup_test_session(self):
             lcc.log_info("some log")
     
     run_testsuite(MySuite, worker=MyWorker())
@@ -527,21 +527,21 @@ def test_worker_before_all_tests_success():
     assert_report_from_testsuite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1)
     
-    assert report.before_all_tests.outcome == True
-    assert report.before_all_tests.start_time != None
-    assert report.before_all_tests.end_time != None
-    assert report.before_all_tests.steps[0].entries[0].message == "some log"
-    assert report.before_all_tests.has_failure() == False
+    assert report.test_session_setup.outcome == True
+    assert report.test_session_setup.start_time != None
+    assert report.test_session_setup.end_time != None
+    assert report.test_session_setup.steps[0].entries[0].message == "some log"
+    assert report.test_session_setup.has_failure() == False
     assert report.get_test("sometest").outcome == True
 
-def test_worker_before_all_tests_failure():
+def test_setup_test_session_failure():
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
     
     class MyWorker(Worker):
-        def before_all_tests(self):
+        def setup_test_session(self):
             lcc.log_error("something bad happened")
     
     run_testsuite(MySuite, worker=MyWorker())
@@ -551,21 +551,21 @@ def test_worker_before_all_tests_failure():
     assert_report_from_testsuite(report, MySuite)
     assert_report_stats(report, expected_test_failures=1, expected_errors=1, expected_error_logs=2)
     
-    assert report.before_all_tests.outcome == False
-    assert report.before_all_tests.start_time != None
-    assert report.before_all_tests.end_time != None
-    assert report.before_all_tests.steps[0].entries[0].message == "something bad happened"
-    assert report.before_all_tests.has_failure() == True
+    assert report.test_session_setup.outcome == False
+    assert report.test_session_setup.start_time != None
+    assert report.test_session_setup.end_time != None
+    assert report.test_session_setup.steps[0].entries[0].message == "something bad happened"
+    assert report.test_session_setup.has_failure() == True
     assert report.get_test("sometest").outcome == False
  
-def test_worker_after_all_tests_success():
+def test_teardown_test_session_success():
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
     
     class MyWorker(Worker):
-        def after_all_tests(self):
+        def teardown_test_session(self):
             lcc.log_info("some log")
     
     run_testsuite(MySuite, worker=MyWorker())
@@ -575,21 +575,21 @@ def test_worker_after_all_tests_success():
     assert_report_from_testsuite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1)
     
-    assert report.after_all_tests.outcome == True
-    assert report.after_all_tests.start_time != None
-    assert report.after_all_tests.end_time != None
-    assert report.after_all_tests.steps[0].entries[0].message == "some log"
-    assert report.after_all_tests.has_failure() == False
+    assert report.test_session_teardown.outcome == True
+    assert report.test_session_teardown.start_time != None
+    assert report.test_session_teardown.end_time != None
+    assert report.test_session_teardown.steps[0].entries[0].message == "some log"
+    assert report.test_session_teardown.has_failure() == False
     assert report.get_test("sometest").outcome == True
  
-def test_worker_after_all_tests_failure():
+def test_teardown_test_session_failure():
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
         def sometest(self):
             pass
     
     class MyWorker(Worker):
-        def after_all_tests(self):
+        def teardown_test_session(self):
             lcc.check_eq("val", 1, 2)
     
     run_testsuite(MySuite, worker=MyWorker())
@@ -599,9 +599,9 @@ def test_worker_after_all_tests_failure():
     assert_report_from_testsuite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1, expected_errors=1, expected_check_failures=1)
     
-    assert report.after_all_tests.outcome == False
-    assert report.after_all_tests.start_time != None
-    assert report.after_all_tests.end_time != None
-    assert report.after_all_tests.steps[0].entries[0].outcome == False
-    assert report.after_all_tests.has_failure() == True
+    assert report.test_session_teardown.outcome == False
+    assert report.test_session_teardown.start_time != None
+    assert report.test_session_teardown.end_time != None
+    assert report.test_session_teardown.steps[0].entries[0].outcome == False
+    assert report.test_session_teardown.has_failure() == True
     assert report.get_test("sometest").outcome == True

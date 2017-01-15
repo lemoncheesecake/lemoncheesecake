@@ -77,10 +77,10 @@ def _serialize_testsuite_data(suite):
         "tests", [ _serialize_test_data(t) for t in suite.tests ],
         "sub_suites", [ _serialize_testsuite_data(s) for s in suite.sub_testsuites ]
     ))
-    if suite.before_suite:
-        json_suite["before_suite"] = _serialize_hook_data(suite.before_suite)
-    if suite.after_suite:
-        json_suite["after_suite"] = _serialize_hook_data(suite.after_suite)
+    if suite.suite_setup:
+        json_suite["suite_setup"] = _serialize_hook_data(suite.suite_setup)
+    if suite.suite_teardown:
+        json_suite["suite_teardown"] = _serialize_hook_data(suite.suite_teardown)
     
     return json_suite
 
@@ -93,13 +93,13 @@ def serialize_report(report):
         "stats", [ [ n, v ] for n, v in report.serialize_stats() ]
     )
     
-    if report.before_all_tests:
-        serialized["before_all_tests"] = _serialize_hook_data(report.before_all_tests)
+    if report.test_session_setup:
+        serialized["test_session_setup"] = _serialize_hook_data(report.test_session_setup)
     
     serialized["suites"] = [ _serialize_testsuite_data(s) for s in report.testsuites ]
     
-    if report.after_all_tests:
-        serialized["after_all_tests"] = _serialize_hook_data(report.after_all_tests)
+    if report.test_session_teardown:
+        serialized["test_session_teardown"] = _serialize_hook_data(report.test_session_teardown)
     
     return serialized
 
@@ -154,13 +154,13 @@ def _unserialize_testsuite_data(js, parent=None):
     suite.properties = js["properties"]
     suite.links = [ (link["url"], link["name"]) for link in js["links"] ]
 
-    if "before_suite" in js:
-        suite.before_suite = _unserialize_hook_data(js["before_suite"])
+    if "suite_setup" in js:
+        suite.suite_setup = _unserialize_hook_data(js["suite_setup"])
 
     suite.tests = [ _unserialize_test_data(t) for t in js["tests"] ]
     
-    if "after_suite" in js:
-        suite.after_suite = _unserialize_hook_data(js["after_suite"])
+    if "suite_teardown" in js:
+        suite.suite_teardown = _unserialize_hook_data(js["suite_teardown"])
     
     suite.sub_testsuites = [ _unserialize_testsuite_data(s, suite) for s in js["sub_suites"] ]
     
@@ -179,13 +179,13 @@ def unserialize_report_from_file(filename):
     report.end_time = float(js["end_time"])
     report.report_generation_time = float(js["generation_time"])
     
-    if "before_all_tests" in js:
-        report.before_all_tests = _unserialize_hook_data(js["before_all_tests"])
+    if "test_session_setup" in js:
+        report.test_session_setup = _unserialize_hook_data(js["test_session_setup"])
     
     report.testsuites = [ _unserialize_testsuite_data(s) for s in js["suites"] ]
     
-    if "after_all_tests" in js:
-        report.after_all_tests = _unserialize_hook_data(js["after_all_tests"])
+    if "test_session_teardown" in js:
+        report.test_session_teardown = _unserialize_hook_data(js["test_session_teardown"])
     
     return report
 
