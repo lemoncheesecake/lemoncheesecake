@@ -8,7 +8,7 @@ import os
 import argparse
 
 from lemoncheesecake.project import Project
-from lemoncheesecake.fixtures import FixtureRegistry, load_fixtures_from_func
+from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture, load_fixtures_from_func
 from lemoncheesecake import runner
 import lemoncheesecake.testsuite.filter as testsuitefilter
 from lemoncheesecake import reporting
@@ -20,7 +20,8 @@ def do_run():
     ###
     project = Project()
     testsuites = project.load_testsuites()
-    fixture_registry = FixtureRegistry(runner.get_reserved_fixtures())
+    fixture_registry = FixtureRegistry()
+    fixture_registry.add_fixture(BuiltinFixture("cli_args", lambda: cli_args))
     for fixture_func in project.get_fixtures():
         fixture_registry.add_fixtures(load_fixtures_from_func(fixture_func))
     workers = project.get_workers()

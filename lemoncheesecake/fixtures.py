@@ -6,8 +6,7 @@ Created on Jan 7, 2017
 
 import inspect
 
-from lemoncheesecake.exceptions import ProgrammingError, MethodNotImplemented,\
-    LemonCheesecakeException
+from lemoncheesecake.exceptions import ProgrammingError, LemonCheesecakeException
 from lemoncheesecake.utils import get_distincts_in_list
 
 __all__ = ("fixture", "load_fixtures_from_func")
@@ -28,7 +27,7 @@ def fixture(names=None, scope="test"):
     return wrapper
 
 class BaseFixture:
-    def is_reserved(self):
+    def is_builtin(self):
         return False
     
     def get_scope_level(self):
@@ -37,6 +36,9 @@ class BaseFixture:
             "testsuite": 2,
             "session": 3
         }[self.scope]
+
+    def is_executed(self):
+        return hasattr(self, "_result")
 
     def teardown(self):
         pass
@@ -51,9 +53,6 @@ class Fixture(BaseFixture):
         self.scope = scope
         self.params = params
         self._generator = None
-
-    def is_executed(self):
-        return hasattr(self, "_result")
 
     def execute(self, params={}):
         assert not self.is_executed()
@@ -86,24 +85,21 @@ class Fixture(BaseFixture):
         delattr(self, "_result")
         self._generator = None
 
-class ReservedFixture(BaseFixture):
-    def __init__(self, name):
+class BuiltinFixture(BaseFixture):
+    def __init__(self, name, value):
         self.name = name
         self.scope = "session"
         self.params = []
-        self._value = None
-    
-    def is_reserved(self):
-        return True
-        
-    def set_value(self, value):
         self._value = value
     
+    def is_builtin(self):
+        return True
+        
     def execute(self, params={}):
-        pass
+        self._result = self._value() if callable(self._value) else self._value
     
     def get_result(self):
-        return self._value
+        return self._result
 
 def load_fixtures_from_func(func):
     assert hasattr(func, "_lccfixtureinfo")
@@ -115,17 +111,12 @@ def load_fixtures_from_func(func):
     return [Fixture(name, func, scope, params) for name in names]
 
 class FixtureRegistry:
-    def __init__(self, reserved_fixture_names=[]):
+    def __init__(self):
         self._fixtures = {}
-        for name in reserved_fixture_names:
-            self._fixtures[name] = ReservedFixture(name)
-    
-    def get_reserved_fixture_names(self):
-        return [f.name for f in self._fixtures.values() if f.is_reserved()]
     
     def add_fixture(self, fixture):
-        if fixture.name in self.get_reserved_fixture_names():
-            raise LemonCheesecakeException("'%s' is a reserved fixture name" % fixture.name)
+        if fixture.name in self._fixtures and self._fixtures[fixture.name].is_builtin():
+            raise ProgrammingError("'%s' is a builtin fixture name" % fixture.name)
         self._fixtures[fixture.name] = fixture
     
     def add_fixtures(self, fixtures):
@@ -134,11 +125,6 @@ class FixtureRegistry:
     
     def get_fixture(self, name):
         return self._fixtures[name]
-    
-    def set_fixture_value(self, name, value):
-        """Set a reserved fixture value, will raise if the fixture is not reserved"""
-        assert self._fixture[name].is_reserved()
-        self._fixture[name].set_value(value)
     
     def _get_fixture_dependencies(self, name, orig_fixture):
         try:

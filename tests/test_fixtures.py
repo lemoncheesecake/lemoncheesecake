@@ -3,7 +3,7 @@ import sys
 import pytest
 
 import lemoncheesecake as lcc
-from lemoncheesecake.fixtures import FixtureRegistry
+from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture
 from lemoncheesecake import exceptions
 
 def test_fixture_decorator():
@@ -63,6 +63,16 @@ def test_execute_fixture():
         return 42
     
     fixture = lcc.load_fixtures_from_func(myfixture)[0]
+    fixture.execute()
+    assert fixture.get_result() == 42
+
+def test_execute_fixture_builtin():
+    fixture = BuiltinFixture("fix", 42)
+    fixture.execute()
+    assert fixture.get_result() == 42
+
+def test_execute_fixture_builtin_lambda():
+    fixture = BuiltinFixture("fix", lambda: 42)
     fixture.execute()
     assert fixture.get_result() == 42
 

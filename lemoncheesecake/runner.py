@@ -272,9 +272,6 @@ class _Runner:
     
         self.session.end_tests()
 
-def get_reserved_fixtures():
-    return []
-
 def run_testsuites(testsuites, fixture_registry, workers, reporting_backends, report_dir):
     """
     Run testsuites.
