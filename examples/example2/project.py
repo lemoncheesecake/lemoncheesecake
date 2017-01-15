@@ -6,11 +6,12 @@ import json
 
 from lemoncheesecake import loader
 from lemoncheesecake import worker
+from lemoncheesecake import fixtures
 import lemoncheesecake as lcc
 
-class OmdbapiWorker(worker.Worker):
-    def __init__(self):
-        self.host = "www.omdbapi.com"
+class OmdbAPI:
+    def __init__(self, host):
+        self.host = host
     
     def get_movie_info(self, movie, year):
         lcc.set_step("Make HTTP request")
@@ -28,12 +29,13 @@ class OmdbapiWorker(worker.Worker):
         except ValueError:
             raise lcc.AbortTest("The returned JSON is not valid")
 
-# launcher = Launcher()
-# launcher.add_worker("omdb", OmdbapiWorker())
-# for backend in get_available_backends():
-#     launcher.add_reporting_backend(backend)
-# launcher.load_testsuites(import_testsuites_from_directory("tests"))
-# launcher.handle_cli()
+@lcc.fixture(scope="session")
+def omdb(cli_args):
+    return OmdbAPI(cli_args.host)
 
-WORKERS = {"omdb": OmdbapiWorker()}
+def add_cli_args(cli_parser):
+    cli_parser.add_argument("--host", default="www.omdbapi.com", help="omdb API host")
+CLI_EXTRA_ARGS = add_cli_args
+
 TESTSUITES = loader.import_testsuites_from_directory("tests")
+FIXTURES = [omdb]
