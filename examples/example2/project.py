@@ -12,6 +12,7 @@ import lemoncheesecake as lcc
 class OmdbAPI:
     def __init__(self, host):
         self.host = host
+        lcc.log_info("Initialize OmdbAPI to %s" % self.host)
     
     def get_movie_info(self, movie, year):
         lcc.set_step("Make HTTP request")
