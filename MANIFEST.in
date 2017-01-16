@@ -8,3 +8,5 @@ include lemoncheesecake/resources/html/report_offline.html
 include lemoncheesecake/resources/html/bootstrap-slate.min.css
 recursive-include lemoncheesecake/resources/html/bootstrap-3.3.6-dist *
 include lemoncheesecake/resources/html/jquery-1.12.3.min.js
+
+include lemoncheesecake/resources/project/template.py
