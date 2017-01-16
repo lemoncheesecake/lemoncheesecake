@@ -46,7 +46,7 @@ class _Runner:
             if setup_func:
                 try:
                     setup_func()
-                except Exception as e:
+                except (Exception, KeyboardInterrupt) as e:
                     self.handle_exception(e)
                     break
                 else:
@@ -64,7 +64,7 @@ class _Runner:
             if teardown_func:
                 try:
                     teardown_func()
-                except Exception as e:
+                except (Exception, KeyboardInterrupt) as e:
                     self.handle_exception(e)
                 else:
                     count += 1
@@ -142,7 +142,7 @@ class _Runner:
             test_func_params = self.fixture_registry.get_fixture_results_as_params(test.get_params())
             try:
                 test.callback(suite, **test_func_params)
-            except Exception as e:
+            except (Exception, KeyboardInterrupt) as e:
                 self.handle_exception(e, suite)
         
         ###
