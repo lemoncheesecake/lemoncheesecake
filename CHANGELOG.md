@@ -1,3 +1,7 @@
+# 0.4.1 (2017-01-17)
+
+- fix several bugs and/or regressions introduced in 0.4.0
+
 # 0.4.0 (2017-01-15)
 
 - **lcc-run**: replace the custom test launcher by a generic test runner (lcc-run) that uses a project.py file to
