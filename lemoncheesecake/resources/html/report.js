@@ -1,5 +1,4 @@
 // borrowed from http://stackoverflow.com/questions/6234773/can-i-escape-html-special-chars-in-javascript
-
 function escapeHtml(unsafe) {
     return unsafe
          .replace(/&/g, "&amp;")
@@ -173,17 +172,17 @@ function TestSuite(data, parents) {
     this.tags = data.tags;
     this.properties = data.properties;
     this.links = data.links;
-    this.setup_suite = null;
-    this.teardown_suite = null;
+    this.suite_setup = null;
+    this.suite_teardown = null;
     this.tests = [ ];
     this.sub_suites = [ ];
 
-    if (data.setup_suite) {
-    	this.setup_suite = new Test("n/a", " - Setup suite -", data.setup_suite.outcome, data.setup_suite.steps);
+    if (data.suite_setup) {
+    	this.suite_setup = new Test("n/a", " - Setup suite -", data.suite_setup.outcome, data.suite_setup.steps);
     }
 
-    if (data.teardown_suite) {
-    	this.teardown_suite = new Test("n/a", " - Teardown suite -", data.teardown_suite.outcome, data.teardown_suite.steps)
+    if (data.suite_teardown) {
+    	this.suite_teardown = new Test("n/a", " - Teardown suite -", data.suite_teardown.outcome, data.suite_teardown.steps)
     }
 
     for (var i = 0; i < data.tests.length; i++) {
@@ -228,14 +227,14 @@ TestSuite.prototype = {
 			panels.push($panel);
 
 			var rows = [ ];
-			if (this.setup_suite) {
-				rows = rows.concat(this.setup_suite.render());
+			if (this.suite_setup) {
+				rows = rows.concat(this.suite_setup.render());
 			}
 			for (var i = 0; i < this.tests.length; i++) {
 			    rows = rows.concat(this.tests[i].render());
 			}
-			if (this.teardown_suite) {
-				rows = rows.concat(this.teardown_suite.render());
+			if (this.suite_teardown) {
+				rows = rows.concat(this.suite_teardown.render());
 			}
 			
 			var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
@@ -257,14 +256,14 @@ function Report(data, node) {
 	this.data = data;
 	this.suites = [];
 	this.node = node;
-	this.setup_test_session = null;
-	this.teardown_test_session = null;
+	this.test_session_setup = null;
+	this.test_session_teardown = null;
 	
-	if (data.setup_test_session) {
-		this.setup_test_session = new Test("n/a", " - Setup test session -", data.setup_test_session.outcome, data.setup_test_session.steps);
+	if (data.test_session_setup) {
+		this.test_session_setup = new Test("n/a", " - Setup test session -", data.test_session_setup.outcome, data.test_session_setup.steps);
 	}
-	if (data.teardown_test_session) {
-		this.teardown_test_session = new Test("n/a", " - Teardown test session -", data.teardown_test_session.outcome, data.teardown_test_session.steps);
+	if (data.test_session_teardown) {
+		this.test_session_teardown = new Test("n/a", " - Teardown test session -", data.test_session_teardown.outcome, data.test_session_teardown.steps);
 	}
 	
 	for (var i = 0; i < data.suites.length; i++) {
@@ -307,8 +306,8 @@ Report.prototype = {
 		
 		$("<h1>Test results</h1>").appendTo(this.node);
 		
-		if (this.setup_test_session) {
-			$panel = this.render_hook_data(this.setup_test_session, "- Before all tests -");
+		if (this.test_session_setup) {
+			$panel = this.render_hook_data(this.test_session_setup, "- Setup test session -");
 			$panel.appendTo(this.node);
 		}
 		
@@ -319,8 +318,8 @@ Report.prototype = {
 			}
 		}
 		
-		if (this.teardown_test_session) {
-			$panel = this.render_hook_data(this.teardown_test_session, "- After all tests -");
+		if (this.test_session_teardown) {
+			$panel = this.render_hook_data(this.test_session_teardown, "- Teardown test session -");
 			$panel.appendTo(this.node);
 		}
 	}	
