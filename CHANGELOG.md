@@ -1,3 +1,9 @@
+# 0.4.2 (2017-01-19)
+
+- fix various fixtures dependency handling issues
+- add a builtin fixture 'project_dir'
+- do not hide python stacktraces in lcc-run 
+
 # 0.4.1 (2017-01-17)
 
 - fix several bugs and/or regressions introduced in 0.4.0
