@@ -72,19 +72,15 @@ class Fixture(BaseFixture):
     
     def teardown(self):
         assert self.is_executed()
+        delattr(self, "_result")
         if self._generator:
             try:
                 next(self._generator)
             except StopIteration:
-                pass
+                self._generator = None
             else:
                 raise ProgrammingError("The fixture yields more than once, only one yield is supported") 
     
-    def reset(self):
-        assert self.is_executed()
-        delattr(self, "_result")
-        self._generator = None
-
 class BuiltinFixture(BaseFixture):
     def __init__(self, name, value):
         self.name = name

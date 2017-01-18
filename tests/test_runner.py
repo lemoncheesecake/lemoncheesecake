@@ -659,6 +659,26 @@ def test_run_with_fixtures_using_yield_and_dependencies():
     assert report.testsuites[0].tests[0].steps[0].entries[0].message == "test_fixture_setup"
     assert report.testsuites[0].tests[0].steps[1].entries[0].message == "test_fixture_teardown"
 
+def test_fixture_called_multiple_times(reporting_session):
+    marker = [0]
+    @lcc.fixture(scope="test")
+    def fixt():
+        marker[0] += 1
+        return marker[0]
+    
+    class MySuite(lcc.TestSuite):
+        @lcc.test("test 1")
+        def test_1(self, fixt):
+            assert fixt == 1
+        
+        @lcc.test("test 2")
+        def test_2(self, fixt):
+            assert fixt == 2
+    
+    run_testsuite(MySuite, fixtures=[fixt])
+    
+    assert reporting_session.get_successful_test_nb() == 2
+
 @pytest.fixture()
 def fixture_registry_sample():
     @lcc.fixture(scope="session")
