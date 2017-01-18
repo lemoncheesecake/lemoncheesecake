@@ -91,7 +91,6 @@ class _Runtime:
     def end_test_session_setup(self):
         self._end_hook(self.report.test_session_setup)
         self.end_current_step()
-
         self.for_each_reporting_sessions(lambda b: b.end_test_session_setup())
 
     def begin_test_session_teardown(self):
@@ -183,12 +182,12 @@ class _Runtime:
         
         self.for_each_reporting_sessions(lambda b: b.end_test(self.current_test, self.current_test_data.outcome))
 
+        self.end_current_step(now)
+
         self.current_test = None
         self.current_test_data = None
         self.current_step_data_list = None
         
-        self.end_current_step(now)
-
     def create_step_if_needed(self):
         if not self.current_step_data_list:
             self.set_step(self.default_step_description)
@@ -198,6 +197,10 @@ class _Runtime:
             self.current_step_data.end_time = ts or time.time()
             self.current_step_data = None
 
+        # remove previous step from report data if it was empty
+        if self.current_step_data_list and len(self.current_step_data_list[-1].entries) == 0:
+            del self.current_step_data_list[-1]
+        
     def set_step(self, description, force_lock=False):
         if self.step_lock and not force_lock:
             return
@@ -207,9 +210,6 @@ class _Runtime:
         self.current_step_data = StepData(description)
         self.current_step_data.start_time = time.time()
 
-        # remove previous step from report data if it was empty
-        if self.current_step_data_list and not self.current_step_data_list[-1].entries:
-            del self.current_step_data_list[-1]
         self.current_step_data_list.append(self.current_step_data)
 
         self.for_each_reporting_sessions(lambda b: b.set_step(description))
