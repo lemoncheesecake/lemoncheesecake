@@ -659,6 +659,81 @@ def test_run_with_fixtures_using_yield_and_dependencies():
     assert report.testsuites[0].tests[0].steps[0].entries[0].message == "test_fixture_setup"
     assert report.testsuites[0].tests[0].steps[1].entries[0].message == "test_fixture_teardown"
 
+def test_run_with_fixtures_dependencies_in_test_session_scope(reporting_session):
+    # in this test, fixture dependency is set on fixture alphabetical inverse
+    # order to highlight a bad dependency check implementation that use set data type  
+    
+    @lcc.fixture(names=["fixt_3"], scope="session")
+    def fixt3():
+        return 2
+    
+    @lcc.fixture(names=["fixt_2"], scope="session")
+    def fixt2(fixt_3):
+        return fixt_3 * 3
+    
+    @lcc.fixture(names=["fixt_1"], scope="session")
+    def fixt1(fixt_2):
+        return fixt_2 * 4
+    
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Test")
+        def test(self, fixt_1):
+            assert fixt_1 == 24
+    
+    run_testsuite(MySuite, fixtures=[fixt1, fixt2, fixt3])
+
+    assert reporting_session.get_successful_test_nb() == 1
+
+def test_run_with_fixtures_dependencies_in_suite_scope(reporting_session):
+    # in this test, fixture dependency is set on fixture alphabetical inverse
+    # order to highlight a bad dependency check implementation that use set data type  
+    
+    @lcc.fixture(names=["fixt_3"], scope="testsuite")
+    def fixt3():
+        return 2
+    
+    @lcc.fixture(names=["fixt_2"], scope="testsuite")
+    def fixt2(fixt_3):
+        return fixt_3 * 3
+    
+    @lcc.fixture(names=["fixt_1"], scope="testsuite")
+    def fixt1(fixt_2):
+        return fixt_2 * 4
+    
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Test")
+        def test(self, fixt_1):
+            assert fixt_1 == 24
+    
+    run_testsuite(MySuite, fixtures=[fixt1, fixt2, fixt3])
+
+    assert reporting_session.get_successful_test_nb() == 1
+
+def test_run_with_fixtures_dependencies_in_test_scope(reporting_session):
+    # in this test, fixture dependency is set on fixture alphabetical inverse
+    # order to highlight a bad dependency check implementation that use set data type  
+    
+    @lcc.fixture(names=["fixt_3"], scope="test")
+    def fixt3():
+        return 2
+    
+    @lcc.fixture(names=["fixt_2"], scope="test")
+    def fixt2(fixt_3):
+        return fixt_3 * 3
+    
+    @lcc.fixture(names=["fixt_1"], scope="test")
+    def fixt1(fixt_2):
+        return fixt_2 * 4
+    
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Test")
+        def test(self, fixt_1):
+            assert fixt_1 == 24
+    
+    run_testsuite(MySuite, fixtures=[fixt1, fixt2, fixt3])
+
+    assert reporting_session.get_successful_test_nb() == 1
+
 def test_fixture_called_multiple_times(reporting_session):
     marker = [0]
     @lcc.fixture(scope="test")

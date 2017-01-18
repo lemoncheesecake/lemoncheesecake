@@ -8,7 +8,7 @@ import sys
 import traceback
 
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
-from lemoncheesecake.utils import IS_PYTHON3
+from lemoncheesecake.utils import IS_PYTHON3, get_distincts_in_list
 from lemoncheesecake.exceptions import AbortTest, AbortTestSuite, AbortAllTests, ProgrammingError
 
 class _Runner:
@@ -23,16 +23,17 @@ class _Runner:
         return list(filter(lambda b: b.has_hook(hook_name), self.workers.values()))
     
     def get_fixtures_with_dependencies_for_scope(self, direct_fixtures, scope):
-        fixtures = set(direct_fixtures)
+        fixtures = []
         for fixture in direct_fixtures:
-            fixtures.update(self.fixture_registry.get_fixture_dependencies(fixture))
-        return [f for f in fixtures if self.fixture_registry.get_fixture_scope(f) == scope]
+            fixtures.extend(self.fixture_registry.get_fixture_dependencies(fixture))
+        fixtures.extend(direct_fixtures)
+        return [f for f in get_distincts_in_list(fixtures) if self.fixture_registry.get_fixture_scope(f) == scope]
     
     def get_fixtures_to_be_executed_for_session(self):
-        fixtures = set()
+        fixtures = []
         for testsuite in self.testsuites:
-            fixtures.update(testsuite.get_fixtures())
-        return self.get_fixtures_with_dependencies_for_scope(fixtures, "session")    
+            fixtures.extend(testsuite.get_fixtures())
+        return self.get_fixtures_with_dependencies_for_scope(get_distincts_in_list(fixtures), "session")    
 
     def get_fixtures_to_be_executed_for_testsuite(self, testsuite):
         return self.get_fixtures_with_dependencies_for_scope(testsuite.get_fixtures(), "testsuite")
