@@ -22,6 +22,7 @@ def do_run():
     testsuites = project.load_testsuites()
     fixture_registry = FixtureRegistry()
     fixture_registry.add_fixture(BuiltinFixture("cli_args", lambda: cli_args))
+    fixture_registry.add_fixture(BuiltinFixture("project_dir", lambda: project.get_project_dir()))
     for fixture_func in project.get_fixtures():
         fixture_registry.add_fixtures(load_fixtures_from_func(fixture_func))
     fixture_registry.check_dependencies()
