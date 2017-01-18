@@ -14,7 +14,7 @@ import lemoncheesecake.testsuite.filter as testsuitefilter
 from lemoncheesecake import reporting
 from lemoncheesecake.exceptions import LemonCheesecakeException
 
-def do_run():
+def run():
     ###
     # Project initialization
     ###
@@ -105,12 +105,7 @@ def do_run():
     
     if after_run_hook:
         after_run_hook(report_dir)
-
-def run():
-    try:
-        do_run()
-    except LemonCheesecakeException as e:
-        return e
+    
     return 0
 
 if __name__ == "__main__":
