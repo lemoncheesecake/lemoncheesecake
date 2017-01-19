@@ -92,8 +92,8 @@ class TestReportingSession(reporting.ReportingSession):
     def get_error_log_nb(self):
         return self._error_log_nb
     
-    def get_test_outcome(self, test_id):
-        return self._test_outcomes[test_id]
+    def get_test_outcome(self, test_name):
+        return self._test_outcomes[test_name]
     
     def get_last_check(self):
         return self._last_check_description, self._last_check_outcome, self._last_check_details
@@ -108,8 +108,8 @@ class TestReportingSession(reporting.ReportingSession):
         self._last_test_outcome = None
     
     def end_test(self, test, outcome):
-        self._last_test = test.id
-        self._test_outcomes[test.id] = outcome
+        self._last_test = test.name
+        self._test_outcomes[test.name] = outcome
         self._last_test_outcome = outcome
         self._test_nb += 1
         if outcome:
@@ -235,7 +235,7 @@ def assert_step_data(actual, expected):
             raise Exception("Unknown class '%s'" % actual.__class__.__name__)
 
 def assert_test_data(actual, expected):
-    assert actual.id == expected.id
+    assert actual.name == expected.name
     assert actual.description == expected.description
     assert actual.tags == expected.tags
     assert actual.properties == expected.properties
@@ -260,12 +260,12 @@ def assert_hook_data(actual, expected):
             assert_step_data(actual_step, expected_step)
 
 def assert_testsuite_data(actual, expected):
-    assert actual.id == expected.id
+    assert actual.name == expected.name
     assert actual.description == expected.description
     if expected.parent == None:
         assert actual.parent == None
     else:
-        assert actual.parent.id == expected.parent.id
+        assert actual.parent.name == expected.parent.name
     assert actual.tags == expected.tags
     assert actual.properties == expected.properties
     assert actual.links == expected.links
@@ -302,7 +302,7 @@ def assert_steps_data(steps):
         assert step.end_time >= step.start_time
 
 def assert_test_data_from_test(test_data, test):
-    assert test_data.id == test.id
+    assert test_data.name == test.name
     assert test_data.description == test.description
     assert test_data.tags == test.tags
     assert test_data.properties == test.properties
@@ -311,7 +311,7 @@ def assert_test_data_from_test(test_data, test):
     assert_steps_data(test_data.steps)
 
 def assert_testsuite_data_from_testsuite(testsuite_data, testsuite):
-    assert testsuite_data.id == testsuite.id
+    assert testsuite_data.name == testsuite.name
     assert testsuite_data.description == testsuite.description
     assert testsuite_data.tags == testsuite.tags
     assert testsuite_data.properties == testsuite.properties

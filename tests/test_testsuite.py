@@ -21,7 +21,7 @@ def test_decorator_test():
     suite = MySuite()
     suite.load()
     test = suite.get_tests()[0]
-    assert test.id == "mytest"
+    assert test.name == "mytest"
     assert test.description == "test_desc"
 
 def test_decorator_tags():
@@ -174,7 +174,7 @@ def test_register_test_with_before_and_after():
     suite = MySuite()
     suite.load()
     
-    assert [t.id for t in suite.get_tests()] == ["foo1", "foo2", "bar1", "bar2", "baz1", "baz2"]
+    assert [t.name for t in suite.get_tests()] == ["foo1", "foo2", "bar1", "bar2", "baz1", "baz2"]
 
 def test_register_tests_with_before_and_after():
     class MySuite(lcc.TestSuite):
@@ -199,7 +199,7 @@ def test_register_tests_with_before_and_after():
     suite = MySuite()
     suite.load()
     
-    assert [t.id for t in suite.get_tests()] == ["foo1", "foo2", "bar1", "bar2", "baz1", "baz2"]
+    assert [t.name for t in suite.get_tests()] == ["foo1", "foo2", "bar1", "bar2", "baz1", "baz2"]
 
 def test_get_fixtures():
     class MySuite(lcc.TestSuite):

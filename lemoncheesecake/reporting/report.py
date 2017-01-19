@@ -50,8 +50,8 @@ class StepData:
         return len(list(filter(lambda entry: entry.has_failure(), self.entries))) > 0
         
 class TestData:
-    def __init__(self, id, description):
-        self.id = id
+    def __init__(self, name, description):
+        self.name = name
         self.description = description
         self.tags = [ ]
         self.properties = {}
@@ -75,8 +75,8 @@ class HookData:
         return len(list(filter(lambda step: step.has_failure(), self.steps))) > 0
 
 class TestSuiteData:
-    def __init__(self, id, description, parent=None):
-        self.id = id
+    def __init__(self, name, description, parent=None):
+        self.name = name
         self.description = description
         self.parent = parent
         self.tags = [ ]
@@ -87,24 +87,24 @@ class TestSuiteData:
         self.sub_testsuites = [ ]
         self.suite_teardown = None
     
-    def get_test(self, test_id):
+    def get_test(self, test_name):
         for test in self.tests:
-            if test.id == test_id:
+            if test.name == test_name:
                 return test
         
         for suite in self.sub_testsuites:
-            test = suite.get_test(test_id)
+            test = suite.get_test(test_name)
             if test:
                 return test
         
         return None
     
-    def get_suite(self, suite_id):
-        if self.id == suite_id:
+    def get_suite(self, suite_name):
+        if self.name == suite_name:
             return self
         
         for sub_suite in self.sub_testsuites:
-            suite = sub_suite.get_suite(suite_id)
+            suite = sub_suite.get_suite(suite_name)
             if suite:
                 return suite
         
@@ -185,19 +185,19 @@ class Report:
     def add_info(self, name, value):
         self.info.append([name, value])
 
-    def get_test(self, test_id):
+    def get_test(self, test_name):
         for suite in self.testsuites:
-            test = suite.get_test(test_id)
+            test = suite.get_test(test_name)
             if test:
                 return test
         
         return None
     
-    def get_suite(self, suite_id):
+    def get_suite(self, suite_name):
         for suite in self.testsuites:
-            if suite.id == suite_id:
+            if suite.name == suite_name:
                 return suite
-            sub_suite = suite.get_suite(suite_id)
+            sub_suite = suite.get_suite(suite_name)
             if sub_suite:
                 return sub_suite
         

@@ -16,9 +16,9 @@ __all__ = ("Filter", "add_filter_args_to_cli_parser", "get_filter_from_cli_args"
 
 class Filter:
     def __init__(self):
-        self.test_id = []
+        self.test_name = []
         self.test_description = []
-        self.testsuite_id = []
+        self.testsuite_name = []
         self.testsuite_description = []
         self.tags = [ ]
         self.properties = {}
@@ -26,14 +26,14 @@ class Filter:
     
     def is_empty(self):
         count = 0
-        for value in self.test_id, self.testsuite_id, self.test_description, \
+        for value in self.test_name, self.testsuite_name, self.test_description, \
             self.testsuite_description, self.tags, self.properties, self.link_names:
             count += len(value)
         return count == 0
     
     def get_flags_to_match_testsuite(self):
         flags = 0
-        if self.testsuite_id:
+        if self.testsuite_name:
             flags |= FILTER_SUITE_MATCH_ID
         if self.testsuite_description:
             flags |= FILTER_SUITE_MATCH_DESCRIPTION
@@ -42,9 +42,9 @@ class Filter:
     def match_test(self, test, parent_suite_match=0):
         match = False
         
-        if self.test_id:
-            for id in self.test_id:
-                if fnmatch.fnmatch(test.id, id):
+        if self.test_name:
+            for name in self.test_name:
+                if fnmatch.fnmatch(test.name, name):
                     match = True
                     break
             if not match:
@@ -87,9 +87,9 @@ class Filter:
     def match_testsuite(self, suite, parent_suite_match=0):
         match = 0
         
-        if self.testsuite_id and not parent_suite_match & FILTER_SUITE_MATCH_ID:
-            for id in self.testsuite_id:
-                if fnmatch.fnmatch(suite.id, id):
+        if self.testsuite_name and not parent_suite_match & FILTER_SUITE_MATCH_ID:
+            for name in self.testsuite_name:
+                if fnmatch.fnmatch(suite.name, name):
                     match |= FILTER_SUITE_MATCH_ID
                     break
                 
@@ -136,9 +136,9 @@ def add_filter_args_to_cli_parser(cli_parser):
 
 def get_filter_from_cli_args(cli_args):
     filter = Filter()
-    filter.test_id = cli_args.test_id
+    filter.test_name = cli_args.test_name
     filter.test_description = cli_args.test_desc
-    filter.testsuite_id = cli_args.suite_id
+    filter.testsuite_name = cli_args.suite_name
     filter.testsuite_description = cli_args.suite_desc
     filter.tags = cli_args.tag
     filter.properties = dict(cli_args.property)

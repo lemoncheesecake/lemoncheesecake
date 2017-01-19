@@ -89,7 +89,7 @@ def _serialize_steps(steps, parent_node):
                 check_node.text = entry.details
 
 def _serialize_test_data(test):
-    test_node = _xml_node("test", "id", test.id, "description", test.description,
+    test_node = _xml_node("test", "name", test.name, "description", test.description,
                           "outcome", _serialize_outcome(test.outcome))
     _add_time_attr(test_node, "start-time", test.start_time)
     _add_time_attr(test_node, "end-time", test.end_time)
@@ -113,7 +113,7 @@ def _serialize_hook_data(data, node):
     _serialize_steps(data.steps, node)
 
 def _serialize_testsuite_data(suite):
-    suite_node = _xml_node("suite", "id", suite.id, "description", suite.description)
+    suite_node = _xml_node("suite", "name", suite.name, "description", suite.description)
     for tag in suite.tags:
         tag_node = _xml_child(suite_node, "tag")
         tag_node.text = tag
@@ -207,7 +207,7 @@ def _unserialize_step_data(xml):
     return step
 
 def _unserialize_test_data(xml):
-    test = TestData(xml.attrib["id"], xml.attrib["description"])
+    test = TestData(xml.attrib["name"], xml.attrib["description"])
     test.outcome = _unserialize_outcome(xml.attrib["outcome"])
     test.start_time = float(xml.attrib["start-time"])
     test.end_time = float(xml.attrib["end-time"])
@@ -226,7 +226,7 @@ def _unserialize_hook_data(xml):
     return data
 
 def _unserialize_testsuite_data(xml, parent=None):
-    suite = TestSuiteData(xml.attrib["id"], xml.attrib["description"], parent)
+    suite = TestSuiteData(xml.attrib["name"], xml.attrib["description"], parent)
     suite.tags = [ node.text for node in xml.xpath("tag") ]
     suite.properties = { node.attrib["name"]: node.text for node in xml.xpath("property") }
     suite.links = [ (link.text, link.attrib["name"]) for link in xml.xpath("link") ]

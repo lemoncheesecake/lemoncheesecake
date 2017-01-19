@@ -118,8 +118,8 @@ class _Runner:
         teardown_funcs = []
         
         setup_teardown_funcs.append([
-            (lambda: suite.setup_test(test.id)) if suite.has_hook("setup_test") else None,
-            (lambda: suite.teardown_test(test.id)) if suite.has_hook("teardown_test") else None
+            (lambda: suite.setup_test(test.name)) if suite.has_hook("setup_test") else None,
+            (lambda: suite.teardown_test(test.name)) if suite.has_hook("teardown_test") else None
         ])
         setup_teardown_funcs.extend([
             self.get_fixture_as_funcs(f) for f in self.get_fixtures_to_be_executed_for_test(test)

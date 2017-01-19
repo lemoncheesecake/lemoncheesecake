@@ -47,7 +47,7 @@ def _serialize_steps(steps):
 
 def _serialize_common_data(obj):
     return _dict(
-        "id", obj.id, "description", obj.description,
+        "name", obj.name, "description", obj.description,
         "tags", obj.tags,
         "properties", obj.properties,
         "links", [ _dict("name", link[1], "url", link[0]) for link in obj.links ]
@@ -129,7 +129,7 @@ def _unserialize_step_data(js):
     return step
 
 def _unserialize_test_data(js):
-    test = TestData(js["id"], js["description"])
+    test = TestData(js["name"], js["description"])
     test.outcome = js["outcome"]
     test.start_time = float(js["start_time"])
     test.end_time = float(js["end_time"])
@@ -149,7 +149,7 @@ def _unserialize_hook_data(js):
     return data
 
 def _unserialize_testsuite_data(js, parent=None):
-    suite = TestSuiteData(js["id"], js["description"], parent)
+    suite = TestSuiteData(js["name"], js["description"], parent)
     suite.tags = js["tags"]
     suite.properties = js["properties"]
     suite.links = [ (link["url"], link["name"]) for link in js["links"] ]

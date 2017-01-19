@@ -14,8 +14,8 @@ __all__ = "TestSuite", "Test"
 class Test:
     test_current_rank = 1
 
-    def __init__(self, id, description, callback, force_rank=None):
-        self.id = id
+    def __init__(self, name, description, callback, force_rank=None):
+        self.name = name
         self.description = description
         self.callback = callback
         self.tags = [ ]
@@ -28,7 +28,7 @@ class Test:
         return inspect.getargspec(self.callback).args[1:]
         
     def __str__(self):
-        return "%s (%s) # %d" % (self.id, self.description, self.rank)
+        return "%s (%s) # %d" % (self.name, self.description, self.rank)
 
 class TestSuite:
     tags = [ ]
@@ -42,11 +42,11 @@ class TestSuite:
     def load(self, parent_suite=None):
         self.parent_suite = parent_suite
         
-        # suite id & description
-        if not hasattr(self, "id"):
-            self.id = self.__class__.__name__
+        # suite name & description
+        if not hasattr(self, "name"):
+            self.name = self.__class__.__name__
         if not hasattr(self, "description"):
-            self.description = self.id
+            self.description = self.name
 
         # static tests
         self._tests = [ ]
@@ -80,7 +80,7 @@ class TestSuite:
             self._sub_testsuites.append(sub_suite)
 
         # filtering data
-        self._selected_test_ids = [ t.id for t in self._tests ]
+        self._selected_test_names = [ t.name for t in self._tests ]
         
     def get_path(self):
         suites = [ self ]
@@ -91,7 +91,7 @@ class TestSuite:
         return suites
     
     def get_path_str(self, sep=">"):
-        return (" %s " % sep).join([ s.id for s in self.get_path() ])
+        return (" %s " % sep).join([ s.name for s in self.get_path() ])
     
     def __str__(self):
         return self.get_path_str()
@@ -121,11 +121,11 @@ class TestSuite:
     def load_generated_tests(self):
         pass
     
-    def get_test(self, test_id):
+    def get_test(self, test_name):
         for test in self._tests:
-            if test.id == test_id:
+            if test.name == test_name:
                 return test
-        raise ProgrammingError("unknown test '%s'" % test_id)
+        raise ProgrammingError("unknown test '%s'" % test_name)
     
     def get_tests(self, filtered=True):
         if filtered:
@@ -139,8 +139,8 @@ class TestSuite:
         else:
             return self._sub_testsuites
     
-    def get_suite_id(self):
-        return self.id
+    def get_suite_name(self):
+        return self.name
     
     def get_suite_description(self):
         return self.description
@@ -161,17 +161,17 @@ class TestSuite:
         
         self.assert_test_description_is_unique(new_test.description)
         
-        ref_test_id = before_test if before_test else after_test
+        ref_test_name = before_test if before_test else after_test
         
-        if ref_test_id:
+        if ref_test_name:
             # find test corresponding to before_test/after_test
             ref_test, ref_test_idx = None, None
             for idx, test in enumerate(self._tests):
-                if test.id == ref_test_id:
+                if test.name == ref_test_name:
                     ref_test, ref_test_idx = test, idx
                     break
             if ref_test_idx == None:
-                raise InvalidMetadataError("Could not find any test named '%s' in the test suite '%s'" % (ref_test_id, self.get_suite_id()))
+                raise InvalidMetadataError("Could not find any test named '%s' in the test suite '%s'" % (ref_test_name, self.get_suite_name()))
             
             # set the test appropriate rank and shift all test's ranks coming after the new test
             new_test.rank = ref_test.rank + (1 if after_test else 0)
@@ -189,7 +189,7 @@ class TestSuite:
             previous_test = after_test
             for test in tests:
                 self.register_test(test, after_test=previous_test)
-                previous_test = test.id
+                previous_test = test.name
         else:
             for test in tests:
                 self.register_test(test, before_test=before_test)
@@ -199,7 +199,7 @@ class TestSuite:
     ###
     
     def apply_filter(self, filter, parent_suite_match=0):
-        self._selected_test_ids = [ ]
+        self._selected_test_names = [ ]
         
         suite_match = filter.match_testsuite(self, parent_suite_match)
         suite_match |= parent_suite_match
@@ -208,14 +208,14 @@ class TestSuite:
             for test in self._tests:
                 test_match = filter.match_test(test, suite_match)
                 if test_match:
-                    self._selected_test_ids.append(test.id)
+                    self._selected_test_names.append(test.name)
         
         for suite in self._sub_testsuites:
             suite.apply_filter(filter, suite_match)
 
     def has_selected_tests(self, deep=True):
         if deep:
-            if self._selected_test_ids:
+            if self._selected_test_names:
                 return True
              
             for suite in self._sub_testsuites:
@@ -224,7 +224,7 @@ class TestSuite:
              
             return False
         else:
-            return bool(self._selected_test_ids)
+            return bool(self._selected_test_names)
     
     def is_test_selected(self, test):
-        return test.id in self._selected_test_ids
+        return test.name in self._selected_test_names

@@ -72,7 +72,7 @@ class ConsoleReportingSession(ReportingSession):
         if self.previous_obj:
             sys.stdout.write("\n")
 
-        label = testsuite.get_path_str() if self.display_testsuite_full_path else testsuite.id
+        label = testsuite.get_path_str() if self.display_testsuite_full_path else testsuite.name
         label_len = len(label)
         max_width = min((self.terminal_width, 80))
         # -2 corresponds to the two space characters at the left and right of testsuite path + another character to avoid
@@ -112,16 +112,16 @@ class ConsoleReportingSession(ReportingSession):
     end_test_session_teardown = end_test_session_setup
             
     def begin_test(self, test):
-        self.step_prefix = " -- %2s # %s" % (self.current_test_idx, test.id)
+        self.step_prefix = " -- %2s # %s" % (self.current_test_idx, test.name)
         self.lp.print_line(self.step_prefix + "...")
         self.previous_obj = test
     
     def end_test(self, test, outcome):
         line = " %s %2s # %s" % (
             colored("OK", "green", attrs=["bold"]) if outcome else colored("KO", "red", attrs=["bold"]),
-            self.current_test_idx, test.id
+            self.current_test_idx, test.name
         )
-        raw_line = "%s %2s # %s" % ("OK" if outcome else "KO", self.current_test_idx, test.id)
+        raw_line = "%s %2s # %s" % ("OK" if outcome else "KO", self.current_test_idx, test.name)
         self.lp.print_line(line, force_len=len(raw_line))
         self.lp.new_line()
         self.current_test_idx += 1
