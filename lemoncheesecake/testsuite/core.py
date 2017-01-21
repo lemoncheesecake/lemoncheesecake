@@ -203,10 +203,10 @@ class TestSuite:
         
         suite_match = filter.match_testsuite(self, parent_suite_match)
         suite_match |= parent_suite_match
-        
-        if suite_match & filter.get_flags_to_match_testsuite() == filter.get_flags_to_match_testsuite():
+                
+        if suite_match & filter.get_testsuite_only_criteria_as_flags() == filter.get_testsuite_only_criteria_as_flags():
             for test in self._tests:
-                test_match = filter.match_test(test, suite_match)
+                test_match = filter.match_test(test, self, suite_match)
                 if test_match:
                     self._selected_test_names.append(test.name)
         
