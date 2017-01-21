@@ -53,7 +53,7 @@ class TestSuite:
         for attr in dir(self):
             obj = getattr(self, attr)
             if isinstance(obj, Test):
-                self.assert_test_description_is_unique(obj.description)
+                self.assert_test_is_unique_in_suite(obj)
                 self._tests.append(obj)
         self._tests = sorted(self._tests, key=lambda x: x.rank)
 
@@ -76,7 +76,7 @@ class TestSuite:
         for suite_class in suite_classes:
             sub_suite = suite_class()
             sub_suite.load(self)
-            self.assert_sub_test_suite_description_is_unique(sub_suite.description)
+            self.assert_sub_suite_is_unique_in_suite(sub_suite)
             self._sub_testsuites.append(sub_suite)
 
         # filtering data
@@ -104,18 +104,42 @@ class TestSuite:
             parent = parent.parent_suite
         return depth
     
-    def assert_test_description_is_unique(self, description):
-        result = list(filter(lambda t: t.description == description, self._tests))
-        if result:
+    def assert_test_is_unique_in_suite(self, test):
+        try:
+            next(t for t in self._tests if t.description == test.description)
+        except StopIteration:
+            pass
+        else:
             raise InvalidMetadataError(
-                "a test with description '%s' is already registered in test suite %s" % (description, self.get_path_str())
+                "a test with description '%s' is already registered in test suite %s" % (test.description, self.get_path_str())
             )
         
-    def assert_sub_test_suite_description_is_unique(self, description):
-        result = list(filter(lambda s: s.description == description, self._sub_testsuites))
-        if result:
+        try:
+            next(t for t in self._tests if t.name == test.name)
+        except StopIteration:
+            pass
+        else:
             raise InvalidMetadataError(
-                "a sub test suite with description '%s' is already registered in test suite %s" % (description, self.get_path_str())
+                "a test with name '%s' is already registered in test suite %s" % (test.name, self.get_path_str())
+            )
+        
+    def assert_sub_suite_is_unique_in_suite(self, sub_suite):
+        try:
+            next(s for s in self._sub_testsuites if s.description == sub_suite.description)
+        except StopIteration:
+            pass
+        else:
+            raise InvalidMetadataError(
+                "a sub test suite with description '%s' is already registered in test suite %s" % (sub_suite.name, self.get_path_str())
+            )
+        
+        try:
+            next(s for s in self._sub_testsuites if s.name == sub_suite.name)
+        except StopIteration:
+            pass
+        else:
+            raise InvalidMetadataError(
+                "a sub test suite with name '%s' is already registered in test suite %s" % (sub_suite.name, self.get_path_str())
             )
         
     def load_generated_tests(self):
@@ -159,7 +183,7 @@ class TestSuite:
         if before_test and after_test:
             raise ProgrammingError("before_test and after_test are mutually exclusive")
         
-        self.assert_test_description_is_unique(new_test.description)
+        self.assert_test_is_unique_in_suite(new_test)
         
         ref_test_name = before_test if before_test else after_test
         

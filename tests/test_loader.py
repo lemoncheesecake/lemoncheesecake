@@ -69,6 +69,48 @@ def test_import_testsuites_from_files_exclude(tmpdir):
     assert len(klasses) == 1
     assert klasses[0].__name__ == "mysuite"
 
+def test_load_suites_with_same_name():
+    class MySuite1(lcc.TestSuite):
+        class MySubSuite(lcc.TestSuite):
+            @lcc.test("foo")
+            def foo(self):
+                pass
+    
+    class MySuite2(lcc.TestSuite):
+        class MySubSuite(lcc.TestSuite):
+            @lcc.test("bar")
+            def bar(self):
+                pass
+    
+    suites = loader.load_testsuites([MySuite1, MySuite2])
+    
+    assert suites[0].get_suite_name() == "MySuite1"
+    assert suites[0].get_sub_testsuites()[0].get_suite_name() == "MySubSuite"
+    assert suites[1].get_suite_name() == "MySuite2"
+    assert suites[1].get_sub_testsuites()[0].get_suite_name() == "MySubSuite"
+
+def test_load_tests_with_same_name():
+    class MySuite1(lcc.TestSuite):
+        class MySubSuite1(lcc.TestSuite):
+            @lcc.test("foo")
+            def foo(self):
+                pass
+    
+    class MySuite2(lcc.TestSuite):
+        class MySubSuite2(lcc.TestSuite):
+            @lcc.test("foo")
+            def foo(self):
+                pass
+    
+    suites = loader.load_testsuites([MySuite1, MySuite2])
+    
+    assert suites[0].get_suite_name() == "MySuite1"
+    assert suites[0].get_sub_testsuites()[0].get_suite_name() == "MySubSuite1"
+    assert suites[0].get_sub_testsuites()[0].get_tests()[0].name == "foo"
+    assert suites[1].get_suite_name() == "MySuite2"
+    assert suites[1].get_sub_testsuites()[0].get_suite_name() == "MySubSuite2"
+    assert suites[1].get_sub_testsuites()[0].get_tests()[0].name == "foo"
+
 def test_metadata_policy():
     class MySuite1(lcc.TestSuite):
         @lcc.prop("foo", 3)
