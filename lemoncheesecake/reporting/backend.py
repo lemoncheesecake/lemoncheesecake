@@ -122,11 +122,11 @@ class FileReportSession(ReportingSession):
         self._handle_code_end(self.report.test_session_teardown.has_failure())
     
     def end_suite_setup(self, testsuite):
-        suite_data = self.report.get_suite(testsuite.id)
+        suite_data = self.report.get_suite(testsuite.name)
         self._handle_code_end(suite_data.suite_setup.has_failure())
 
     def end_suite_teardown(self, testsuite):
-        suite_data = self.report.get_suite(testsuite.id)
+        suite_data = self.report.get_suite(testsuite.name)
         self._handle_code_end(suite_data.suite_teardown.has_failure())
     
     def end_test(self, test, outcome):

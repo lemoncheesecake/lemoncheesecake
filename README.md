@@ -2,7 +2,7 @@
 
 lemoncheesecake is a lightweight functional testing framework for Python. It provides functionalities such as test launcher, tests organization (through hierarchical test suites, tags, properties), structured reporting data (JSON, XML) and HTML reports.
 
-Tests are defined as methods in a testsuite class that can also contain sub testsuites allowing the developer to define a complex hierarchy of tests. Tests and testsuites are identified by a unique id and a description. Tags, properties (key/value pairs), URLs can be associated with both test and testsuites. These metadata can be used later by the user to filter the test he wants to run.
+Tests are defined as methods in a testsuite class that can also contain sub testsuites allowing the developer to define a complex hierarchy of tests. Tests and testsuites are identified by a name and a description. Tags, properties (key/value pairs), URLs can be associated with both test and testsuites. These metadata can be used later by the user to filter the test he wants to run.
 
 One of the key features of lemoncheesecake is it's reporting capabilities, providing the user with various formats (XML, JSON, HTML) and the possibility to create his own reporting backend.
 
@@ -34,7 +34,7 @@ class my_first_testsuite(TestSuite):
 
 The code above declares:
 
-- a testsuite whose id is `my_first_testsuite` (the suite's id and description can be set through the `id` and `description` attributes of the testsuite class, otherwise they will be set to the class name)
+- a testsuite whose name is `my_first_testsuite` (the suite's name and description can be set through the `name` and `description` attributes of the testsuite class, otherwise they will be set to the class name)
 - a test whose id is `some_test` and description is `Some test`
 
 All lemoncheesecake functions and classes used in test modules can be imported safely through a wild import of the `lemoncheesecake` package (like in the example above).
@@ -43,25 +43,23 @@ All lemoncheesecake functions and classes used in test modules can be imported s
 
 The command lcc-run is in charge of running the tests, it provides several option to filter the test to be run and to set the reporting backends that will be used.
 ```
-$ lcc-run --help
-usage: lcc-run    [-h] [--test-id TEST_ID [TEST_ID ...]]
-                  [--test-desc TEST_DESC [TEST_DESC ...]]
-                  [--suite-id SUITE_ID [SUITE_ID ...]]
+usage: lcc-run.py [-h] [--test-desc TEST_DESC [TEST_DESC ...]]
                   [--suite-desc SUITE_DESC [SUITE_DESC ...]]
                   [--tag TAG [TAG ...]] [--property PROPERTY [PROPERTY ...]]
                   [--link LINK [LINK ...]] [--report-dir REPORT_DIR]
                   [--reporting REPORTING [REPORTING ...]]
                   [--enable-reporting ENABLE_REPORTING [ENABLE_REPORTING ...]]
                   [--disable-reporting DISABLE_REPORTING [DISABLE_REPORTING ...]]
+                  [path [path ...]]
+
+positional arguments:
+  path                  Filters on test/testsuite path (wildcard character '*'
+                        can be used)
 
 optional arguments:
   -h, --help            show this help message and exit
-  --test-id TEST_ID [TEST_ID ...], -t TEST_ID [TEST_ID ...]
-                        Filters on test IDs
   --test-desc TEST_DESC [TEST_DESC ...]
                         Filters on test descriptions
-  --suite-id SUITE_ID [SUITE_ID ...], -s SUITE_ID [SUITE_ID ...]
-                        Filters on test suite IDs
   --suite-desc SUITE_DESC [SUITE_DESC ...]
                         Filters on test suite descriptions
   --tag TAG [TAG ...], -a TAG [TAG ...]

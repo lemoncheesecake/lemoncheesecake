@@ -9,7 +9,7 @@ Created on Sep 30, 2016
 import pytest
 
 import lemoncheesecake as lcc
-from lemoncheesecake.exceptions import ProgrammingError
+from lemoncheesecake.exceptions import ProgrammingError, InvalidMetadataError
 
 from helpers import dummy_test_callback
 
@@ -21,7 +21,7 @@ def test_decorator_test():
     suite = MySuite()
     suite.load()
     test = suite.get_tests()[0]
-    assert test.id == "mytest"
+    assert test.name == "mytest"
     assert test.description == "test_desc"
 
 def test_decorator_tags():
@@ -126,6 +126,41 @@ def test_decorator_unicode():
     assert test.properties[u"ééé"] == u"ààà"
     assert test.tags == [u"ééé", u"ààà"]
 
+def test_duplicated_suite_description():
+    class MySuite(lcc.TestSuite):
+        class SubSuite1(lcc.TestSuite):
+            description = "somedesc"
+        class SubSuite2(lcc.TestSuite):
+            description = "somedesc"
+    
+    suite = MySuite()
+    with pytest.raises(InvalidMetadataError) as excinfo:
+        suite.load()
+
+def test_duplicated_test_description():
+    class MySuite(lcc.TestSuite):
+        @lcc.test("somedesc")
+        def foo(self):
+            pass
+        
+        @lcc.test("somedesc")
+        def bar(self):
+            pass
+    
+    suite = MySuite()
+    with pytest.raises(InvalidMetadataError) as excinfo:
+        suite.load()
+
+def test_duplicated_test_name():
+    class MySuite(lcc.TestSuite):
+        def load_generated_tests(self):
+            self.register_test(lcc.Test("mytest", "First test", dummy_test_callback))
+            self.register_test(lcc.Test("mytest", "Second test", dummy_test_callback))
+            
+    suite = MySuite()
+    with pytest.raises(InvalidMetadataError) as excinfo:
+        suite.load()
+
 def test_register_test():
     class MySuite(lcc.TestSuite):
         def load_generated_tests(self):
@@ -174,7 +209,7 @@ def test_register_test_with_before_and_after():
     suite = MySuite()
     suite.load()
     
-    assert [t.id for t in suite.get_tests()] == ["foo1", "foo2", "bar1", "bar2", "baz1", "baz2"]
+    assert [t.name for t in suite.get_tests()] == ["foo1", "foo2", "bar1", "bar2", "baz1", "baz2"]
 
 def test_register_tests_with_before_and_after():
     class MySuite(lcc.TestSuite):
@@ -199,7 +234,7 @@ def test_register_tests_with_before_and_after():
     suite = MySuite()
     suite.load()
     
-    assert [t.id for t in suite.get_tests()] == ["foo1", "foo2", "bar1", "bar2", "baz1", "baz2"]
+    assert [t.name for t in suite.get_tests()] == ["foo1", "foo2", "bar1", "bar2", "baz1", "baz2"]
 
 def test_get_fixtures():
     class MySuite(lcc.TestSuite):

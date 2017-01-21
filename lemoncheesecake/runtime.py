@@ -107,7 +107,7 @@ class _Runtime:
 
     def begin_suite(self, testsuite):
         self.current_testsuite = testsuite
-        suite_data = TestSuiteData(testsuite.id, testsuite.description, self.current_testsuite_data)
+        suite_data = TestSuiteData(testsuite.name, testsuite.description, self.current_testsuite_data)
         suite_data.tags.extend(testsuite.tags)
         suite_data.properties.update(testsuite.properties)
         suite_data.links.extend(testsuite.links)
@@ -153,7 +153,7 @@ class _Runtime:
     def begin_test(self, test):
         self.has_pending_failure = False
         self.current_test = test
-        self.current_test_data = TestData(test.id, test.description)
+        self.current_test_data = TestData(test.name, test.description)
         self.current_test_data.tags.extend(test.tags)
         self.current_test_data.properties.update(test.properties)
         self.current_test_data.links.extend(test.links)

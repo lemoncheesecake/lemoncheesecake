@@ -68,64 +68,64 @@ def build_fixture_registry(*funcs):
 class TestReportingSession(reporting.ReportingSession):
     def __init__(self):
         self._test_outcomes = {}
-        self._last_test_outcome = None
-        self._test_nb = 0
-        self._test_failing_nb = 0
-        self._test_success_nb = 0
-        self._last_log = None
-        self._last_test = None
-        self._last_check_description = None
-        self._last_check_outcome = None
-        self._last_check_details = None
-        self._error_log_nb = 0
+        self.last_test_outcome = None
+        self.test_nb = 0
+        self.test_failing_nb = 0
+        self.test_success_nb = 0
+        self.last_log = None
+        self.last_test = None
+        self.last_check_description = None
+        self.last_check_outcome = None
+        self.last_check_details = None
+        self.error_log_nb = 0
         self.backend = None
     
     def get_last_test(self):
-        return self._last_test
+        return self.last_test
     
     def get_last_test_outcome(self):
-        return self._last_test_outcome
+        return self.last_test_outcome
     
     def get_last_log(self):
-        return self._last_log
+        return self.last_log
     
     def get_error_log_nb(self):
-        return self._error_log_nb
+        return self.error_log_nb
     
-    def get_test_outcome(self, test_id):
-        return self._test_outcomes[test_id]
+    def get_test_outcome(self, test_name):
+        return self._test_outcomes[test_name]
     
     def get_last_check(self):
-        return self._last_check_description, self._last_check_outcome, self._last_check_details
+        return self.last_check_description, self.last_check_outcome, self.last_check_details
     
     def get_failing_test_nb(self):
-        return self._test_failing_nb
+        return self.test_failing_nb
     
     def get_successful_test_nb(self):
-        return self._test_success_nb
+        return self.test_success_nb
     
     def begin_test(self, test):
-        self._last_test_outcome = None
+        self.last_test_outcome = None
     
     def end_test(self, test, outcome):
-        self._last_test = test.id
-        self._test_outcomes[test.id] = outcome
-        self._last_test_outcome = outcome
-        self._test_nb += 1
+        self.last_test = test.name
+        self._test_outcomes[test.name] = outcome
+        self.last_test_outcome = outcome
+        self.test_nb += 1
         if outcome:
-            self._test_success_nb += 1
+            self.test_success_nb += 1
         else:
-            self._test_failing_nb += 1
+            self.test_failing_nb += 1
     
     def log(self, level, content):
         if level == "error":
-            self._error_log_nb += 1
-        self._last_log = content
+            self.error_log_nb += 1
+        self.last_log = content
     
     def check(self, description, outcome, details=None):
-        self._last_check_description = description
-        self._last_check_outcome = outcome
-        self._last_check_details = details
+        self.last_check_description = description
+        self.last_check_outcome = outcome
+        self.last_check_details = details
 
 _reporting_session = None
 
@@ -147,7 +147,7 @@ def get_reporting_session():
 def reporting_session():
     return get_reporting_session()
 
-def run_testsuites(suites, fixtures=None, worker=None, backends=None, tmpdir=None):
+def run_testsuites(suite_classes, filter=None, fixtures=None, worker=None, backends=None, tmpdir=None):
     global _reporting_session
     
     if fixtures == None:
@@ -167,19 +167,24 @@ def run_testsuites(suites, fixtures=None, worker=None, backends=None, tmpdir=Non
     
     if _reporting_session:
         backends.append(TestReportingBackend(_reporting_session))
+    
+    suites = loader.load_testsuites(suite_classes)
+    if filter:
+        for suite in suites:
+            suite.apply_filter(filter)
         
     if tmpdir:
         try:
             report_dir = os.path.join(tmpdir.strpath, "report")
             os.mkdir(report_dir)
-            runner.run_testsuites(loader.load_testsuites(suites), fixture_registry, workers, backends, report_dir)
+            runner.run_testsuites(suites, fixture_registry, workers, backends, report_dir)
         finally:
             _reporting_session = None
     else:
         report_dir = os.path.join(tempfile.mkdtemp(), "report")
         os.mkdir(report_dir)
         try:
-            runner.run_testsuites(loader.load_testsuites(suites), fixture_registry, workers, backends, report_dir)
+            runner.run_testsuites(suites, fixture_registry, workers, backends, report_dir)
         finally:
             shutil.rmtree(report_dir)
             # reset _reporting_session (either it has been set or not) at the end of each test run
@@ -187,8 +192,8 @@ def run_testsuites(suites, fixtures=None, worker=None, backends=None, tmpdir=Non
     
     dump_report(get_runtime().report)
 
-def run_testsuite(suite, fixtures=None, worker=None, backends=[], tmpdir=None):
-    run_testsuites([suite], fixtures=fixtures, worker=worker, backends=backends, tmpdir=tmpdir)
+def run_testsuite(suite, filter=None, fixtures=None, worker=None, backends=[], tmpdir=None):
+    run_testsuites([suite], filter=filter, fixtures=fixtures, worker=worker, backends=backends, tmpdir=tmpdir)
 
 def run_func_in_test(callback):
     class MySuite(lcc.TestSuite):
@@ -235,7 +240,7 @@ def assert_step_data(actual, expected):
             raise Exception("Unknown class '%s'" % actual.__class__.__name__)
 
 def assert_test_data(actual, expected):
-    assert actual.id == expected.id
+    assert actual.name == expected.name
     assert actual.description == expected.description
     assert actual.tags == expected.tags
     assert actual.properties == expected.properties
@@ -260,12 +265,12 @@ def assert_hook_data(actual, expected):
             assert_step_data(actual_step, expected_step)
 
 def assert_testsuite_data(actual, expected):
-    assert actual.id == expected.id
+    assert actual.name == expected.name
     assert actual.description == expected.description
     if expected.parent == None:
         assert actual.parent == None
     else:
-        assert actual.parent.id == expected.parent.id
+        assert actual.parent.name == expected.parent.name
     assert actual.tags == expected.tags
     assert actual.properties == expected.properties
     assert actual.links == expected.links
@@ -302,7 +307,7 @@ def assert_steps_data(steps):
         assert step.end_time >= step.start_time
 
 def assert_test_data_from_test(test_data, test):
-    assert test_data.id == test.id
+    assert test_data.name == test.name
     assert test_data.description == test.description
     assert test_data.tags == test.tags
     assert test_data.properties == test.properties
@@ -311,7 +316,7 @@ def assert_test_data_from_test(test_data, test):
     assert_steps_data(test_data.steps)
 
 def assert_testsuite_data_from_testsuite(testsuite_data, testsuite):
-    assert testsuite_data.id == testsuite.id
+    assert testsuite_data.name == testsuite.name
     assert testsuite_data.description == testsuite.description
     assert testsuite_data.tags == testsuite.tags
     assert testsuite_data.properties == testsuite.properties

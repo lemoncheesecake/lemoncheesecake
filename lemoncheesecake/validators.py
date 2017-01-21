@@ -80,7 +80,7 @@ class MetadataPolicy:
                 if not property_name in available_properties:
                     raise InvalidMetadataError(
                         "cannot load %s '%s', the property '%s' is not supported (available are: %s)" % (
-                        obj_type, obj.id, property_name, ", ".join(available_properties.keys())
+                        obj_type, obj.name, property_name, ", ".join(available_properties.keys())
                     ))
         
         # check forbidden properties
@@ -88,7 +88,7 @@ class MetadataPolicy:
             if property_name in forbidden_properties:
                 raise InvalidMetadataError(
                     "cannot load %s '%s', the property '%s' is not accepted on a %s" % (
-                        obj_type, obj.id, property_name, obj_type
+                        obj_type, obj.name, property_name, obj_type
                     )
                 )
         
@@ -97,7 +97,7 @@ class MetadataPolicy:
             if not required_property in obj.properties.keys():
                 raise InvalidMetadataError(
                     "cannot load %s '%s', the mandatory property '%s' is missing" % (
-                    obj_type, obj.id, required_property
+                    obj_type, obj.name, required_property
                 ))
         
         # check properties allowed values
@@ -107,7 +107,7 @@ class MetadataPolicy:
             if available_properties[name]["values"] and not value in available_properties[name]["values"]:
                 raise InvalidMetadataError(
                     "cannot load %s '%s', value '%s' of property '%s' is not among accepted values: %s" % (
-                    obj_type, obj.id, value, name, available_properties[name]["values"]
+                    obj_type, obj.name, value, name, available_properties[name]["values"]
                 ))
         
         # check unknown tags
@@ -116,7 +116,7 @@ class MetadataPolicy:
                 if tag not in available_tags.keys():
                     raise InvalidMetadataError(
                         "cannot load %s '%s', the tag '%s' is not supported (available are: %s)" % (
-                        obj_type, obj.id, tag, ", ".join(available_tags)
+                        obj_type, obj.name, tag, ", ".join(available_tags)
                     ))
         
         # check forbidden tags
@@ -124,7 +124,7 @@ class MetadataPolicy:
             if tag in forbidden_tags:
                 raise InvalidMetadataError(
                     "cannot load %s '%s', the tag '%s' is not accepted on a %s" % (
-                        obj_type, obj.id, tag, obj_type
+                        obj_type, obj.name, tag, obj_type
                     )
                 )
     

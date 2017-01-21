@@ -66,8 +66,8 @@ Step.prototype = {
 	}
 };
 
-function Test(id, description, outcome, steps, tags, properties, links) {
-	this.id = id;
+function Test(name, description, outcome, steps, tags, properties, links) {
+	this.name = name;
 	this.description = description;
 	this.outcome = outcome;
 	this.steps = [];
@@ -87,7 +87,7 @@ Test.prototype = {
 		var cols = [ ];
 
 		/* build description column */
-		var $test_desc = $("<h6><a>", {"name": this.id, "href": "#" + this.id}).text(this.description).append($("<br/><small>").text(this.id));
+		var $test_desc = $("<h6><a>", {"name": this.name, "href": "#" + this.name}).text(this.description).append($("<br/><small>").text(this.name));
 		cols.push($("<td>").append($test_desc));
 
 		/* build tags & properties column */
@@ -167,7 +167,7 @@ Test.prototype = {
 
 function TestSuite(data, parents) {
     this.parents = (parents == null) ? [] : parents;
-    this.id = data.id;
+    this.name = data.name;
     this.description = data.description;
     this.tags = data.tags;
     this.properties = data.properties;
@@ -187,7 +187,7 @@ function TestSuite(data, parents) {
 
     for (var i = 0; i < data.tests.length; i++) {
         var t = data.tests[i]
-    	this.tests.push(new Test(t.id, t.description, t.outcome, t.steps, t.tags, t.properties, t.links));
+    	this.tests.push(new Test(t.name, t.description, t.outcome, t.steps, t.tags, t.properties, t.links));
     }
 
     for (var i = 0; i < data.sub_suites.length; i++) {

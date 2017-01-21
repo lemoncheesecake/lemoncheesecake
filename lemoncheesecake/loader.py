@@ -111,19 +111,15 @@ def import_testsuites_from_directory(dir, recursive=True):
 
 def _load_testsuite(suite, loaded_tests, loaded_suites, metadata_policy):
         # process suite
-        if suite.id in loaded_suites:
-            raise InvalidMetadataError("A test suite with id '%s' has been registered more than one time" % suite.id)
         if metadata_policy:
             metadata_policy.check_suite_compliance(suite)
-        loaded_suites[suite.id] = suite
+        loaded_suites[suite.name] = suite
 
         # process tests
         for test in suite.get_tests():
-            if test.id in loaded_tests:
-                raise InvalidMetadataError("A test with id '%s' has been registered more than one time" % test.id)
             if metadata_policy:
                 metadata_policy.check_test_compliance(test)
-            loaded_tests[test.id] = test
+            loaded_tests[test.name] = test
         
         # process sub suites
         for sub_suite in suite.get_sub_testsuites():
