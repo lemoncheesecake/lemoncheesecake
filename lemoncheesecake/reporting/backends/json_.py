@@ -10,12 +10,14 @@ import json
 from collections import OrderedDict
 
 from lemoncheesecake.reporting.backend import FileReportBackend, SAVE_AT_EACH_FAILED_TEST
-from lemoncheesecake.reporting.report import *
+from lemoncheesecake.reporting.report import (LogData, CheckData, AttachmentData, StepData,
+                                              TestData, HookData, TestSuiteData, Report,
+                                              format_timestamp, parse_timestamp)
 
 JS_PREFIX = "var reporting_data = "
 
-def _time_value(value):
-    return value if value else None
+def _serialize_time(ts):
+    return format_timestamp(ts) if ts else None
 
 def _dict(*args):
     d = OrderedDict()
@@ -30,8 +32,8 @@ def _serialize_steps(steps):
     for step in steps:
         json_step = _dict(
             "description", step.description,
-            "start_time", _time_value(step.start_time),
-            "end_time", _time_value(step.end_time),
+            "start_time", _serialize_time(step.start_time),
+            "end_time", _serialize_time(step.end_time),
             "entries", []
         )
         json_steps.append(json_step)
@@ -56,8 +58,8 @@ def _serialize_common_data(obj):
 def _serialize_test_data(test):
     serialized = _serialize_common_data(test)
     serialized.update(_dict(
-        "start_time", _time_value(test.start_time),
-        "end_time", _time_value(test.end_time),
+        "start_time", _serialize_time(test.start_time),
+        "end_time", _serialize_time(test.end_time),
         "steps", _serialize_steps(test.steps),
         "outcome", test.outcome
     ))
@@ -65,8 +67,8 @@ def _serialize_test_data(test):
 
 def _serialize_hook_data(hook_data):
     return _dict(
-        "start_time", _time_value(hook_data.start_time),
-        "end_time", _time_value(hook_data.end_time),
+        "start_time", _serialize_time(hook_data.start_time),
+        "end_time", _serialize_time(hook_data.end_time),
         "steps", _serialize_steps(hook_data.steps),
         "outcome", hook_data.outcome
     )
@@ -86,9 +88,9 @@ def _serialize_testsuite_data(suite):
 
 def serialize_report(report):
     serialized = _dict(
-        "start_time", _time_value(report.start_time),
-        "end_time", _time_value(report.end_time),
-        "generation_time", _time_value(report.report_generation_time),
+        "start_time", _serialize_time(report.start_time),
+        "end_time", _serialize_time(report.end_time),
+        "generation_time", _serialize_time(report.report_generation_time),
         "info", [ [ n, v ] for n, v in report.info ],
         "stats", [ [ n, v ] for n, v in report.serialize_stats() ]
     )
@@ -114,10 +116,13 @@ def serialize_report_into_file(data, filename, javascript_compatibility=True, pr
         file.write(json.dumps(report))
     file.close()
 
+def _unserialize_time(t):
+    return parse_timestamp(t)
+
 def _unserialize_step_data(js):
     step = StepData(js["description"])
-    step.start_time = float(js["start_time"])
-    step.end_time = float(js["end_time"])
+    step.start_time = _unserialize_time(js["start_time"])
+    step.end_time = _unserialize_time(js["end_time"])
     for js_entry in js["entries"]:
         if js_entry["type"] == "log":
             entry = LogData(js_entry["level"], js_entry["message"])
@@ -131,8 +136,8 @@ def _unserialize_step_data(js):
 def _unserialize_test_data(js):
     test = TestData(js["name"], js["description"])
     test.outcome = js["outcome"]
-    test.start_time = float(js["start_time"])
-    test.end_time = float(js["end_time"])
+    test.start_time = _unserialize_time(js["start_time"])
+    test.end_time = _unserialize_time(js["end_time"])
     test.tags = js["tags"]
     test.properties = js["properties"]
     test.links = [ (link["url"], link["name"]) for link in js["links"] ]
@@ -142,8 +147,8 @@ def _unserialize_test_data(js):
 def _unserialize_hook_data(js):
     data = HookData()
     data.outcome = js["outcome"]
-    data.start_time = float(js["start_time"])
-    data.end_time = float(js["end_time"])
+    data.start_time = _unserialize_time(js["start_time"])
+    data.end_time = _unserialize_time(js["end_time"])
     data.steps = [ _unserialize_step_data(s) for s in js["steps"] ]
 
     return data
@@ -175,9 +180,9 @@ def unserialize_report_from_file(filename):
     js = json.loads(content)
     report.info = js["info"]
     report.stats = js["stats"]
-    report.start_time = float(js["start_time"])
-    report.end_time = float(js["end_time"])
-    report.report_generation_time = float(js["generation_time"])
+    report.start_time = _unserialize_time(js["start_time"])
+    report.end_time = _unserialize_time(js["end_time"])
+    report.report_generation_time = _unserialize_time(js["generation_time"])
     
     if "test_session_setup" in js:
         report.test_session_setup = _unserialize_hook_data(js["test_session_setup"])

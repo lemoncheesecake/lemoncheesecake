@@ -15,7 +15,9 @@ except ImportError:
     LXML_IS_AVAILABLE = False
 
 from lemoncheesecake.reporting.backend import FileReportBackend, SAVE_AT_EACH_FAILED_TEST
-from lemoncheesecake.reporting.report import *
+from lemoncheesecake.reporting.report import (LogData, CheckData, AttachmentData, StepData,
+                                              TestData, HookData, TestSuiteData, Report,
+                                              format_timestamp, parse_timestamp)
 from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.exceptions import ProgrammingError
 
@@ -62,7 +64,7 @@ def _xml_child(parent_node, name, *args):
 def _add_time_attr(node, name, value):
     if not value:
         return
-    node.attrib[name] = "%.8f" % value
+    node.attrib[name] = format_timestamp(value)
 
 def _serialize_outcome(outcome):
     if outcome == True:
@@ -182,6 +184,9 @@ def serialize_report_into_file(report, filename, indent_level):
     with open(filename, "w") as fh:
         fh.write(content)
 
+def _unserialize_datetime(value):
+    return parse_timestamp(value)
+
 def _unserialize_outcome(value):
     if value == OUTCOME_SUCCESS:
         return True
@@ -193,8 +198,8 @@ def _unserialize_outcome(value):
 
 def _unserialize_step_data(xml):
     step = StepData(xml.attrib["description"])
-    step.start_time = float(xml.attrib["start-time"])
-    step.end_time = float(xml.attrib["end-time"])
+    step.start_time = _unserialize_datetime(xml.attrib["start-time"])
+    step.end_time = _unserialize_datetime(xml.attrib["end-time"])
     for xml_entry in xml:
         if xml_entry.tag == "log":
             entry = LogData(xml_entry.attrib["level"], xml_entry.text)
@@ -209,8 +214,8 @@ def _unserialize_step_data(xml):
 def _unserialize_test_data(xml):
     test = TestData(xml.attrib["name"], xml.attrib["description"])
     test.outcome = _unserialize_outcome(xml.attrib["outcome"])
-    test.start_time = float(xml.attrib["start-time"])
-    test.end_time = float(xml.attrib["end-time"])
+    test.start_time = _unserialize_datetime(xml.attrib["start-time"])
+    test.end_time = _unserialize_datetime(xml.attrib["end-time"])
     test.tags = [ node.text for node in xml.xpath("tag") ]
     test.properties = { node.attrib["name"]: node.text for node in xml.xpath("property") }
     test.links = [ (link.text, link.attrib["name"]) for link in xml.xpath("link") ]
@@ -220,8 +225,8 @@ def _unserialize_test_data(xml):
 def _unserialize_hook_data(xml):
     data = HookData()
     data.outcome = _unserialize_outcome(xml.attrib["outcome"])
-    data.start_time = float(xml.attrib["start-time"])
-    data.end_time = float(xml.attrib["end-time"])
+    data.start_time = _unserialize_datetime(xml.attrib["start-time"])
+    data.end_time = _unserialize_datetime(xml.attrib["end-time"])
     data.steps = [ _unserialize_step_data(s) for s in xml.xpath("step") ]
     return data
 
@@ -257,9 +262,9 @@ def unserialize_report_from_file(filename):
     report = Report()
     xml = ET.parse(open(filename, "r"))
     root = xml.getroot().xpath("/lemoncheesecake-report")[0]
-    report.start_time = float(root.attrib["start-time"]) if "start-time" in root.attrib else None
-    report.end_time = float(root.attrib["end-time"]) if "end-time" in root.attrib else None
-    report.report_generation_time = float(root.attrib["generation-time"]) if "generation-time" in root.attrib else None
+    report.start_time = _unserialize_datetime(root.attrib["start-time"]) if "start-time" in root.attrib else None
+    report.end_time = _unserialize_datetime(root.attrib["end-time"]) if "end-time" in root.attrib else None
+    report.report_generation_time = _unserialize_datetime(root.attrib["generation-time"]) if "generation-time" in root.attrib else None
     report.info = _unserialize_keyvalue_list(root.xpath("info"))
     report.stats = _unserialize_keyvalue_list(root.xpath("stat"))
     

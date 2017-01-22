@@ -5,6 +5,7 @@ Created on Mar 26, 2016
 '''
 
 import time
+import re
 
 from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 from lemoncheesecake.utils import humanize_duration
@@ -13,6 +14,22 @@ __all__ = (
     "LogData", "CheckData", "AttachmentData", "StepData", "TestData",
     "TestSuiteData", "HookData", "Report"
 )
+
+# NB: it would be nicer to use:
+# datetime.isoformat(sep=' ', timespec='milliseconds')
+# unfortunately, the timespec argument is only available since Python 3.6
+
+def format_timestamp(ts):
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts)) + (".%d" % (round(ts % 1, 3) * 1000))
+
+def parse_timestamp(s):
+    m = re.compile("(.+)\.(\d+)").match(s)
+    if not m:
+        raise ValueError("s is not valid datetime representation with milliseconds precision")
+    
+    dt, milliseconds = m.group(1), int(m.group(2))
+    
+    return time.mktime(time.strptime(dt, "%Y-%m-%d %H:%M:%S")) + float(milliseconds) / 1000
 
 class LogData:
     def __init__(self, level, message):

@@ -224,8 +224,8 @@ def assert_attachment_data(actual, expected):
     assert actual.filename == expected.filename
 
 def assert_step_data(actual, expected):
-    assert actual.start_time == expected.start_time
-    assert actual.end_time == expected.end_time
+    assert round(actual.start_time, 3) == round(expected.start_time, 3)
+    assert round(actual.end_time, 3) == round(expected.end_time, 3)
     assert actual.description == expected.description
     assert len(actual.entries) == len(expected.entries)
     for actual_entry, expected_entry in zip(actual.entries, expected.entries):
@@ -246,8 +246,8 @@ def assert_test_data(actual, expected):
     assert actual.properties == expected.properties
     assert actual.links == expected.links
     assert actual.outcome == expected.outcome
-    assert actual.start_time == expected.start_time
-    assert actual.end_time == expected.end_time
+    assert round(actual.start_time, 3) == round(expected.start_time, 3)
+    assert round(actual.end_time, 3) == round(expected.end_time, 3)
     
     assert len(actual.steps) == len(expected.steps)
     for actual_step, expected_step in zip(actual.steps, expected.steps):
@@ -258,8 +258,8 @@ def assert_hook_data(actual, expected):
         assert actual == None
     else:
         assert actual.outcome == expected.outcome
-        assert actual.start_time == expected.start_time
-        assert actual.end_time == expected.end_time
+        assert round(actual.start_time, 3) == round(expected.start_time, 3)
+        assert round(actual.end_time, 3) == round(expected.end_time, 3)
         assert len(actual.steps) == len(expected.steps)
         for actual_step, expected_step in zip(actual.steps, expected.steps):
             assert_step_data(actual_step, expected_step)
@@ -289,9 +289,9 @@ def assert_testsuite_data(actual, expected):
 
 def assert_report(actual, expected):
     assert actual.info == expected.info
-    assert actual.start_time == expected.start_time
-    assert actual.end_time == expected.end_time
-    assert actual.report_generation_time == expected.report_generation_time
+    assert round(actual.start_time, 3) == round(expected.start_time, 3)
+    assert round(actual.end_time, 3) == round(expected.end_time, 3)
+    assert round(actual.report_generation_time, 3) == round(expected.report_generation_time, 3)
     assert len(actual.testsuites) == len(expected.testsuites)
     
     assert_hook_data(actual.test_session_setup, expected.test_session_setup)
