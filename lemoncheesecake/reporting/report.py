@@ -6,6 +6,7 @@ Created on Mar 26, 2016
 
 import time
 import re
+from decimal import Decimal
 
 from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 from lemoncheesecake.utils import humanize_duration
@@ -20,7 +21,8 @@ __all__ = (
 # unfortunately, the timespec argument is only available since Python 3.6
 
 def format_timestamp(ts):
-    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts)) + (".%d" % (round(ts % 1, 3) * 1000))
+    ts = round(ts, 3)
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts)) + (".%03d" % (Decimal(repr(ts)) % 1 * 1000))
 
 def parse_timestamp(s):
     m = re.compile("(.+)\.(\d+)").match(s)
