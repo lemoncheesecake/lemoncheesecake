@@ -231,7 +231,7 @@ class MyWorker(Worker):
     def cli_initialize(self, cli_args):
         self.config_file = cli_args.config
 
-    def before_tests(self):
+    def setup_test_session(self):
         self.config = do_something_with_config_file(self.config_file)
 
     def do_some_operation(self, some_value):
@@ -255,8 +255,8 @@ class my_suite(TestSuite):
 The Worker class provides three hooks detailed in the API documentation:
 
 - `cli_initialize`
-- `before_tests`
-- `after_tests`
+- `setup_test_session`
+- `teardown_test_session`
 
 # Testsuites hierarchy
 
@@ -289,19 +289,19 @@ my_main_testsuite	my_main_testsuite.py
 my_sub_testsuite.py
 ```
 
-# Testsuite hooks
+# Testsuite setup and teardown methods
 
 Testsuites provide several methods that give the user the possibility to execute code at particular steps of the testsuite execution:
 
-- `before_suite` is called before executing the tests of the testsuite; if something wrong happens (a call to `log_error` or a raised exception) then the whole testsuite execution is aborted
-- `before_test` takes the test name as argument and is called before each test; if something wrong happen then the test execution is aborted
-- `after_test` is called after each test (it takes the test name as argument); if something wrong happens the executed test will be mark as failed
-- `after_suite` is called after executing the tests of the testsuite
+- `setup_suite` is called before executing the tests of the testsuite; if something wrong happens (a call to `log_error` or a raised exception) then the whole testsuite execution is aborted
+- `setup_test` takes the test name as argument and is called before each test; if something wrong happen then the test execution is aborted
+- `teardown_test` is called after each test (it takes the test name as argument); if something wrong happens the executed test will be mark as failed
+- `teardown_suite` is called after executing the tests of the testsuite
 
 Note that:
 
-- code within `before_suite` and `after_suite` methods is executed in a dedicated context and the data it generates (checks, logs) will be represented the same way as a test in the test report
-- code within `before_test` and `after_test` methods is executed within the related test context and the data it generates will be associated to the given test
+- code within `setup_suite` and `teardown_suite` methods is executed in a dedicated context and the data it generates (checks, logs) will be represented the same way as a test in the test report
+- code within `setup_test` and `teardown_test` methods is executed within the related test context and the data it generates will be associated to the given test
 
 # Metadata
 
