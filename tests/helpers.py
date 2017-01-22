@@ -218,6 +218,7 @@ def assert_check_data(actual, expected):
 def assert_log_data(actual, expected):
     assert actual.level == expected.level
     assert actual.message == expected.message
+    assert round(actual.time, 3) == round(expected.time, 3)
 
 def assert_attachment_data(actual, expected):
     assert actual.description == expected.description

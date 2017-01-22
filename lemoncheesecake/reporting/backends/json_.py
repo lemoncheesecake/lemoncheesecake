@@ -39,7 +39,7 @@ def _serialize_steps(steps):
         json_steps.append(json_step)
         for entry in step.entries:
             if isinstance(entry, LogData):
-                entry = _dict("type", "log", "level", entry.level, "message", entry.message)
+                entry = _dict("type", "log", "level", entry.level, "message", entry.message, "time", _serialize_time(entry.time))
             elif isinstance(entry, AttachmentData):
                 entry = _dict("type", "attachment", "description", entry.description, "filename", entry.filename)
             else: # TestCheck
@@ -125,7 +125,7 @@ def _unserialize_step_data(js):
     step.end_time = _unserialize_time(js["end_time"])
     for js_entry in js["entries"]:
         if js_entry["type"] == "log":
-            entry = LogData(js_entry["level"], js_entry["message"])
+            entry = LogData(js_entry["level"], js_entry["message"], _unserialize_time(js_entry["time"]))
         elif js_entry["type"] == "attachment":
             entry = AttachmentData(js_entry["description"], js_entry["filename"])
         elif js_entry["type"] == "check":

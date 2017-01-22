@@ -32,9 +32,10 @@ def parse_timestamp(s):
     return time.mktime(time.strptime(dt, "%Y-%m-%d %H:%M:%S")) + float(milliseconds) / 1000
 
 class LogData:
-    def __init__(self, level, message):
+    def __init__(self, level, message, ts):
         self.level = level
         self.message = message
+        self.time = ts
     
     def has_failure(self):
         return self.level == LOG_LEVEL_ERROR

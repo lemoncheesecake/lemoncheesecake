@@ -81,6 +81,7 @@ def _serialize_steps(steps, parent_node):
         for entry in step.entries:
             if isinstance(entry, LogData):
                 log_node = _xml_child(step_node, "log", "level", entry.level)
+                _add_time_attr(log_node, "time", entry.time)
                 log_node.text = entry.message
             elif isinstance(entry, AttachmentData):
                 attachment_node = _xml_child(step_node, "attachment", "description", entry.description)
@@ -202,7 +203,7 @@ def _unserialize_step_data(xml):
     step.end_time = _unserialize_datetime(xml.attrib["end-time"])
     for xml_entry in xml:
         if xml_entry.tag == "log":
-            entry = LogData(xml_entry.attrib["level"], xml_entry.text)
+            entry = LogData(xml_entry.attrib["level"], xml_entry.text, _unserialize_datetime(xml_entry.attrib["time"]))
         elif xml_entry.tag == "attachment":
             entry = AttachmentData(xml_entry.attrib["description"], xml_entry.text)
         elif xml_entry.tag == "check":

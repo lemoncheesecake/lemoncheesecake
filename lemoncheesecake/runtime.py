@@ -199,28 +199,30 @@ class _Runtime:
         self.current_test_data = None
         self.current_step_data_list = None
         
-    def create_step_if_needed(self):
+    def create_step_if_needed(self, ts=None):
         if not self.current_step_data_list:
-            self.set_step(self.default_step_description)
+            self._set_step(self.default_step_description, ts or time.time())
 
-    def set_step(self, description, force_lock=False):
-        if self.step_lock and not force_lock:
-            return
-        
-        now = time.time()
-        
-        self.end_current_step(now)
+    def _set_step(self, description, ts):
+        self.end_current_step(ts)
         
         self.current_step_data = StepData(description)
-        self.current_step_data.start_time = now
+        self.current_step_data.start_time = ts
 
         self.current_step_data_list.append(self.current_step_data)
 
         self.for_each_reporting_sessions(lambda b: b.set_step(description))
         
+    def set_step(self, description, force_lock=False):
+        if self.step_lock and not force_lock:
+            return
+        
+        self._set_step(description, time.time())
+        
     def log(self, level, content):
-        self.create_step_if_needed()
-        self.current_step_data.entries.append(LogData(level, content))
+        now = time.time()
+        self.create_step_if_needed(now)
+        self.current_step_data.entries.append(LogData(level, content, now))
         self.for_each_reporting_sessions(lambda b: b.log(level, content))
     
     def log_debug(self, content):
