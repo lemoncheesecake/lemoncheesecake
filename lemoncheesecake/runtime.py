@@ -61,17 +61,26 @@ class _Runtime:
         for session in self.reporting_sessions:
             callback(session)
     
-    def _start_hook(self):
+    def _start_hook(self, ts):
         self.has_pending_failure = False
         hook_data = HookData()
-        hook_data.start_time = time.time()
+        hook_data.start_time = ts
         return hook_data
     
-    def _end_hook(self, hook_data, ts=None):
+    def _end_hook(self, hook_data, ts):
         if hook_data:
-            hook_data.end_time = ts or time.time()
+            hook_data.end_time = ts
             hook_data.outcome = not self.has_pending_failure
-    
+
+    def end_current_step(self, ts):
+        if self.current_step_data:
+            self.current_step_data.end_time = ts
+            self.current_step_data = None
+
+        # remove previous step from report data if it was empty
+        if self.current_step_data_list and len(self.current_step_data_list[-1].entries) == 0:
+            del self.current_step_data_list[-1]
+        
     def begin_tests(self):
         self.report.start_time = time.time()
         self.for_each_reporting_sessions(lambda b: b.begin_tests())
@@ -82,27 +91,29 @@ class _Runtime:
         self.for_each_reporting_sessions(lambda b: b.end_tests())
     
     def begin_test_session_setup(self):
-        self.report.test_session_setup = self._start_hook()
+        self.report.test_session_setup = self._start_hook(time.time())
         self.current_step_data_list = self.report.test_session_setup.steps
         self.default_step_description = "Setup test session"
     
         self.for_each_reporting_sessions(lambda b: b.begin_test_session_setup())
     
     def end_test_session_setup(self):
-        self._end_hook(self.report.test_session_setup)
-        self.end_current_step()
+        now = time.time()
+        self._end_hook(self.report.test_session_setup, now)
+        self.end_current_step(now)
         self.for_each_reporting_sessions(lambda b: b.end_test_session_setup())
 
     def begin_test_session_teardown(self):
-        self.report.test_session_teardown = self._start_hook()
+        self.report.test_session_teardown = self._start_hook(time.time())
         self.current_step_data_list = self.report.test_session_teardown.steps
         self.default_step_description = "Teardown test session"
         
         self.for_each_reporting_sessions(lambda b: b.begin_test_session_teardown())
     
     def end_test_session_teardown(self):
-        self._end_hook(self.report.test_session_teardown)
-        self.end_current_step()
+        now = time.time()
+        self._end_hook(self.report.test_session_teardown, now)
+        self.end_current_step(now)
         self.for_each_reporting_sessions(lambda b: b.end_test_session_teardown())
 
     def begin_suite(self, testsuite):
@@ -120,7 +131,7 @@ class _Runtime:
         self.for_each_reporting_sessions(lambda b: b.begin_suite(testsuite))
     
     def begin_suite_setup(self):
-        self.current_testsuite_data.suite_setup = self._start_hook()
+        self.current_testsuite_data.suite_setup = self._start_hook(time.time())
         self.current_step_data_list = self.current_testsuite_data.suite_setup.steps
         self.default_step_description = "Setup suite"
 
@@ -133,7 +144,7 @@ class _Runtime:
         self.for_each_reporting_sessions(lambda b: b.end_suite_setup(self.current_testsuite))
         
     def begin_suite_teardown(self):
-        self.current_testsuite_data.suite_teardown = self._start_hook()
+        self.current_testsuite_data.suite_teardown = self._start_hook(time.time())
         self.current_step_data_list = self.current_testsuite_data.suite_teardown.steps
         self.default_step_description = "Teardown suite"
             
@@ -151,13 +162,14 @@ class _Runtime:
         self.current_testsuite = self.current_testsuite.parent_suite
         
     def begin_test(self, test):
+        now = time.time()
         self.has_pending_failure = False
         self.current_test = test
         self.current_test_data = TestData(test.name, test.description)
         self.current_test_data.tags.extend(test.tags)
         self.current_test_data.properties.update(test.properties)
         self.current_test_data.links.extend(test.links)
-        self.current_test_data.start_time = time.time()
+        self.current_test_data.start_time = now
         self.current_testsuite_data.tests.append(self.current_test_data)
         self.for_each_reporting_sessions(lambda b: b.begin_test(test))
         self.current_step_data_list = self.current_test_data.steps
@@ -179,10 +191,9 @@ class _Runtime:
         now = time.time()
         self.current_test_data.outcome = not self.has_pending_failure
         self.current_test_data.end_time = now
+        self.end_current_step(now)
         
         self.for_each_reporting_sessions(lambda b: b.end_test(self.current_test, self.current_test_data.outcome))
-
-        self.end_current_step(now)
 
         self.current_test = None
         self.current_test_data = None
@@ -192,23 +203,16 @@ class _Runtime:
         if not self.current_step_data_list:
             self.set_step(self.default_step_description)
 
-    def end_current_step(self, ts=None):
-        if self.current_step_data:
-            self.current_step_data.end_time = ts or time.time()
-            self.current_step_data = None
-
-        # remove previous step from report data if it was empty
-        if self.current_step_data_list and len(self.current_step_data_list[-1].entries) == 0:
-            del self.current_step_data_list[-1]
-        
     def set_step(self, description, force_lock=False):
         if self.step_lock and not force_lock:
             return
         
-        self.end_current_step()
+        now = time.time()
+        
+        self.end_current_step(now)
         
         self.current_step_data = StepData(description)
-        self.current_step_data.start_time = time.time()
+        self.current_step_data.start_time = now
 
         self.current_step_data_list.append(self.current_step_data)
 
