@@ -90,8 +90,11 @@ class TestSuite:
             parent_suite = parent_suite.parent_suite
         return suites
     
-    def get_path_str(self, sep=">"):
-        return (" %s " % sep).join([ s.name for s in self.get_path() ])
+    def get_path_str(self, sep="."):
+        return sep.join([s.name for s in self.get_path()])
+    
+    def get_test_path_str(self, test, sep="."):
+        return self.get_path_str(sep=sep) + sep + test.name
     
     def __str__(self):
         return self.get_path_str()

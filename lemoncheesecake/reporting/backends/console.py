@@ -51,19 +51,26 @@ class LinePrinter:
         self.prev_len = 0
 
 class ConsoleReportingSession(ReportingSession):
-    def __init__(self, report, report_dir, terminal_width, display_testsuite_full_path):
+    def __init__(self, report, report_dir, terminal_width, show_test_full_path):
         ReportingSession.__init__(self, report, report_dir)
         init() # init colorama
         self.lp = LinePrinter(terminal_width)
         self.terminal_width = terminal_width
-        self.display_testsuite_full_path = display_testsuite_full_path
         self.context = None
         self.custom_step_prefix = None
+        self.current_suite = None
+        self.show_test_full_path = show_test_full_path
+    
+    def get_test_label(self, test):
+        if self.show_test_full_path:
+            return self.current_suite.get_test_path_str(test)
+        return test.name
     
     def begin_tests(self):
         self.previous_obj = None
  
     def begin_suite(self, testsuite):
+        self.current_suite = testsuite
         self.current_test_idx = 1
 
         if not testsuite.has_selected_tests(deep=False):
@@ -72,7 +79,7 @@ class ConsoleReportingSession(ReportingSession):
         if self.previous_obj:
             sys.stdout.write("\n")
 
-        label = testsuite.get_path_str() if self.display_testsuite_full_path else testsuite.name
+        label = testsuite.get_path_str()
         label_len = len(label)
         max_width = min((self.terminal_width, 80))
         # -2 corresponds to the two space characters at the left and right of testsuite path + another character to avoid
@@ -112,16 +119,16 @@ class ConsoleReportingSession(ReportingSession):
     end_test_session_teardown = end_test_session_setup
             
     def begin_test(self, test):
-        self.step_prefix = " -- %2s # %s" % (self.current_test_idx, test.name)
+        self.step_prefix = " -- %2s # %s" % (self.current_test_idx, self.get_test_label(test))
         self.lp.print_line(self.step_prefix + "...")
         self.previous_obj = test
     
     def end_test(self, test, outcome):
         line = " %s %2s # %s" % (
             colored("OK", "green", attrs=["bold"]) if outcome else colored("KO", "red", attrs=["bold"]),
-            self.current_test_idx, test.name
+            self.current_test_idx, self.get_test_label(test)
         )
-        raw_line = "%s %2s # %s" % ("OK" if outcome else "KO", self.current_test_idx, test.name)
+        raw_line = "%s %2s # %s" % ("OK" if outcome else "KO", self.current_test_idx, self.get_test_label(test))
         self.lp.print_line(line, force_len=len(raw_line))
         self.lp.new_line()
         self.current_test_idx += 1
@@ -149,7 +156,7 @@ class ConsoleBackend(ReportingBackend):
     def __init__(self):
         width, height = terminalsize.get_terminal_size()
         self.terminal_width = width
-        self.display_testsuite_full_path = True
+        self.show_test_full_path = False
 
     def create_reporting_session(self, report, report_dir):
-        return ConsoleReportingSession(report, report_dir, self.terminal_width, self.display_testsuite_full_path)
+        return ConsoleReportingSession(report, report_dir, self.terminal_width, self.show_test_full_path)
