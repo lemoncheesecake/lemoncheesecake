@@ -204,8 +204,13 @@ def run_func_in_test(callback):
     run_testsuite(MySuite)
 
 def dump_report(report):
-    xml = serialize_report_as_string(report)
-    print(xml, file=sys.stderr)
+    try:
+        import lxml
+    except ImportError:
+        pass
+    else:
+        xml = serialize_report_as_string(report)
+        print(xml, file=sys.stderr)
 
 def dummy_test_callback(suite):
     pass

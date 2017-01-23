@@ -8,7 +8,12 @@ import pytest
 
 from lemoncheesecake.reporting.backends import XmlBackend
 
-from report_serialization_tests import *
+try:
+    import lxml
+except ImportError:
+    pass
+else:
+    from report_serialization_tests import *
 
 @pytest.fixture
 def backend():

@@ -27,8 +27,13 @@ def test_project_minimal_parameters(tmpdir):
     assert classes[0].__name__ == "mysuite"
     
     assert project.get_report_dir_creation_callback() != None
-    
-    assert [p.name for p in project.get_reporting_backends()] == ["console", "xml", "json", "html"]
+
+    try:
+        import lxml
+    except ImportError:
+        assert [p.name for p in project.get_reporting_backends()] == ["console", "json", "html"]
+    else:
+        assert [p.name for p in project.get_reporting_backends()] == ["console", "xml", "json", "html"]
     
     assert len(project.get_workers()) == 0
     
