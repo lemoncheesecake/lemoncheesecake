@@ -157,9 +157,6 @@ class Project:
             _check_class_instance(reporting.ReportingBackend), is_list=True, required=False, default=DEFAULT_REPORTING_BACKENDS,
             cache_value=False
         )
-        for backend in backends:
-            if not backend.is_available():
-                raise ProjectError(self._project_file, "in REPORTING_BACKENDS, backend '%s' is not available" % backend.name)
         
         self._cache["REPORTING_BACKENDS"] = backends
         return backends
@@ -177,17 +174,24 @@ class Project:
         if "REPORTING_BACKENDS_ACTIVE" in self._cache:
             return self._cache["REPORTING_BACKENDS_ACTIVE"]
         
-        available = [backend.name for backend in self._get_reporting_backends()]
+        existing_backends = {backend.name: backend.is_available() for backend in self._get_reporting_backends()}
         active = self._get_param("REPORTING_BACKENDS_ACTIVE", 
-            _check_type(str), is_list=True, required=False, default=available,
+            _check_type(str), is_list=True, required=False, default=existing_backends,
             cache_value=False
         )
         for active_backend in active:
-            if active_backend not in available:
+            if active_backend in existing_backends:
+                if not existing_backends[active_backend]:
+                    raise ProjectError(
+                        self._project_file,
+                        "In parameter REPORTING_BACKENDS_ACTIVE, backend '%s' is not available (available backends are: %s)" % (
+                            active_backend, ", ".join([backend for backend, available in existing_backends.items() if available])
+                    ))
+            else:
                 raise ProjectError(
                     self._project_file,
-                    "In parameter REPORTING_BACKENDS_ACTIVE, backend '%s' is not among available backends (%s)" % (
-                        active_backend, ", ".join(available) 
+                    "In parameter REPORTING_BACKENDS_ACTIVE, backend '%s' does not exist (backends are: %s)" % (
+                        active_backend, ", ".join(existing_backends.keys())
                 ))
         
         self._cache["REPORTING_BACKENDS_ACTIVE"] = active
