@@ -55,7 +55,7 @@ class Fixture(BaseFixture):
         self._generator = None
 
     def execute(self, params={}):
-        assert not self.is_executed()
+        assert not self.is_executed(), "fixture '%s' has already been executed" % self.name
         for param_name in params.keys():
             assert param_name in self.params
 
@@ -67,11 +67,11 @@ class Fixture(BaseFixture):
             self._result = result
     
     def get_result(self):
-        assert self.is_executed()
+        assert self.is_executed(), "fixture '%s' has not been executed" % self.name
         return self._result
     
     def teardown(self):
-        assert self.is_executed()
+        assert self.is_executed(), "fixture '%s' has not been executed" % self.name
         delattr(self, "_result")
         if self._generator:
             try:
