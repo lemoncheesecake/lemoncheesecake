@@ -26,7 +26,7 @@ xml_backend = backends.XmlBackend()
 html_backend = backends.HtmlBackend()
 
 REPORTING_BACKENDS = console_backend, json_backend, xml_backend, html_backend
-REPORTING_BACKENDS_ACTIVE = console_backend.name, json_backend.name, xml_backend.name
+REPORTING_BACKENDS_ACTIVE = console_backend.name, json_backend.name, html_backend.name
 REPORT_DIR_CREATION = lambda top_dir: reportdir.report_dir_with_archiving(top_dir, reportdir.archive_dirname_datetime)
 
 # Test run hooks
