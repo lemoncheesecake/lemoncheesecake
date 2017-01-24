@@ -98,9 +98,12 @@ class _Runtime:
         self.for_each_reporting_sessions(lambda b: b.begin_test_session_setup())
     
     def end_test_session_setup(self):
-        now = time.time()
-        self._end_hook(self.report.test_session_setup, now)
-        self.end_current_step(now)
+        if self.report.test_session_setup.is_empty():
+            self.report.test_session_setup = None
+        else: 
+            now = time.time()
+            self._end_hook(self.report.test_session_setup, now)
+            self.end_current_step(now)
         self.for_each_reporting_sessions(lambda b: b.end_test_session_setup())
 
     def begin_test_session_teardown(self):
@@ -111,9 +114,12 @@ class _Runtime:
         self.for_each_reporting_sessions(lambda b: b.begin_test_session_teardown())
     
     def end_test_session_teardown(self):
-        now = time.time()
-        self._end_hook(self.report.test_session_teardown, now)
-        self.end_current_step(now)
+        if self.report.test_session_teardown.is_empty():
+            self.report.test_session_teardown = None
+        else:
+            now = time.time()
+            self._end_hook(self.report.test_session_teardown, now)
+            self.end_current_step(now)
         self.for_each_reporting_sessions(lambda b: b.end_test_session_teardown())
 
     def begin_suite(self, testsuite):
@@ -138,9 +144,12 @@ class _Runtime:
         self.for_each_reporting_sessions(lambda b: b.begin_suite_setup(self.current_testsuite))
     
     def end_suite_setup(self):
-        now = time.time()
-        self._end_hook(self.current_testsuite_data.suite_setup, now)
-        self.end_current_step(now)
+        if self.current_testsuite_data.suite_setup.is_empty():
+            self.current_testsuite_data.suite_setup = None
+        else:
+            now = time.time()
+            self._end_hook(self.current_testsuite_data.suite_setup, now)
+            self.end_current_step(now)
         self.for_each_reporting_sessions(lambda b: b.end_suite_setup(self.current_testsuite))
         
     def begin_suite_teardown(self):
@@ -151,9 +160,12 @@ class _Runtime:
         self.for_each_reporting_sessions(lambda b: b.begin_suite_teardown(self.current_testsuite))
 
     def end_suite_teardown(self):
-        now = time.time()
-        self.end_current_step(now)
-        self._end_hook(self.current_testsuite_data.suite_teardown, now)
+        if self.current_testsuite_data.suite_teardown.is_empty():
+            self.current_testsuite_data.suite_teardown = None
+        else:
+            now = time.time()
+            self.end_current_step(now)
+            self._end_hook(self.current_testsuite_data.suite_teardown, now)
         self.for_each_reporting_sessions(lambda b: b.end_suite_teardown(self.current_testsuite))
     
     def end_suite(self):

@@ -462,6 +462,24 @@ def test_setup_suite_failure():
     assert suite.suite_setup.has_failure() == True
     assert report.get_test("sometest").outcome == False
 
+def test_setup_suite_without_content():
+    marker = []
+    
+    class MySuite(lcc.TestSuite):
+        def setup_suite(self):
+            marker.append("setup")
+        
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+    
+    run_testsuite(MySuite)
+    
+    report = get_runtime().report
+    
+    assert report.testsuites[0].suite_setup == None
+    assert marker == ["setup"]
+
 def test_teardown_suite_success():
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
@@ -509,6 +527,24 @@ def test_teardown_suite_failure():
     assert suite.suite_teardown.steps[0].entries[0].outcome == False
     assert suite.suite_teardown.has_failure() == True
     assert report.get_test("sometest").outcome == True
+
+def test_teardown_suite_without_content():
+    marker = []
+    
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+        def teardown_suite(self):
+            marker.append("teardown")
+    
+    run_testsuite(MySuite)
+    
+    report = get_runtime().report
+    
+    assert report.testsuites[0].suite_teardown == None
+    assert marker == ["teardown"]
 
 def test_setup_test_session_success():
     class MySuite(lcc.TestSuite):
@@ -558,6 +594,25 @@ def test_setup_test_session_failure():
     assert report.test_session_setup.has_failure() == True
     assert report.get_test("sometest").outcome == False
  
+def test_setup_test_session_without_content():
+    marker = []
+    
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+    
+    class MyWorker(Worker):
+        def setup_test_session(self):
+            marker.append("setup")
+     
+    run_testsuite(MySuite, worker=MyWorker())
+
+    report = get_runtime().report
+    
+    assert report.test_session_setup == None
+    assert marker == ["setup"]
+ 
 def test_teardown_test_session_success():
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
@@ -605,3 +660,22 @@ def test_teardown_test_session_failure():
     assert report.test_session_teardown.steps[0].entries[0].outcome == False
     assert report.test_session_teardown.has_failure() == True
     assert report.get_test("sometest").outcome == True
+
+def test_teardown_test_session_without_content():
+    marker = []
+    
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+    
+    class MyWorker(Worker):
+        def teardown_test_session(self):
+            marker.append("teardown")
+
+    run_testsuite(MySuite, worker=MyWorker())
+
+    report = get_runtime().report
+    
+    assert report.test_session_teardown == None
+    assert marker == ["teardown"]

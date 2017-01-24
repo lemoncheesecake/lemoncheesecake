@@ -93,6 +93,9 @@ class HookData:
     
     def has_failure(self):
         return len(list(filter(lambda step: step.has_failure(), self.steps))) > 0
+    
+    def is_empty(self):
+        return len(self.steps) == 0
 
 class TestSuiteData:
     def __init__(self, name, description, parent=None):
