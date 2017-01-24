@@ -36,7 +36,7 @@ class _Runner:
         return self.get_fixtures_with_dependencies_for_scope(get_distincts_in_list(fixtures), "session")    
 
     def get_fixtures_to_be_executed_for_testsuite(self, testsuite):
-        return self.get_fixtures_with_dependencies_for_scope(testsuite.get_fixtures(), "testsuite")
+        return self.get_fixtures_with_dependencies_for_scope(testsuite.get_fixtures(recursive=False), "testsuite")
 
     def get_fixtures_to_be_executed_for_test(self, test):
         return self.get_fixtures_with_dependencies_for_scope(test.get_params(), "test")
@@ -168,12 +168,12 @@ class _Runner:
             setattr(suite, worker_name, worker)
     
         ###
-        # Begin testsuite
+        # Begin suite
         ###
         self.session.begin_suite(suite)
         
         ###
-        # Setup testsuite (testsuites and fixtures)
+        # Setup suite (testsuites and fixtures)
         ###
         setup_teardown_funcs = []
         teardown_funcs = []
@@ -203,18 +203,23 @@ class _Runner:
             self.run_test(test, suite)
         
         ###
-        # Run sub testsuites
-        ###
-        for sub_suite in suite.get_sub_testsuites(filtered=True):
-            self.run_testsuite(sub_suite)
-
-        ###
-        # Teardown
+        # Teardown suite
         ###
         if len(list(filter(lambda f: f != None, teardown_funcs))) > 0:
             self.session.begin_suite_teardown()
             self.run_teardown_funcs(teardown_funcs)
             self.session.end_suite_teardown()
+
+
+        # reset the abort suite flag
+        if self.abort_testsuite:
+            self.abort_testsuite = None
+    
+        ###
+        # Run sub testsuites
+        ###
+        for sub_suite in suite.get_sub_testsuites(filtered=True):
+            self.run_testsuite(sub_suite)
 
         ###
         # End of testsuite
@@ -222,10 +227,6 @@ class _Runner:
         
         self.session.end_suite()
         
-        # reset the abort suite flag
-        if self.abort_testsuite == suite:
-            self.abort_testsuite = None
-    
     def run(self):
         # initialize runtime & global test variables
         initialize_runtime(self.workers, self.reporting_backends, self.report_dir)

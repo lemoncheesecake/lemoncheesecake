@@ -324,6 +324,26 @@ def test_teardown_test_error_in_fixture(reporting_session):
 
     assert reporting_session.get_test_outcome("sometest") == False
 
+def test_setup_suite_error_and_subsuite(reporting_session):
+    marker = []
+    
+    class MySuite(lcc.TestSuite):
+        def setup_suite(self):
+            1 / 0
+        
+        @lcc.test("test")
+        def test(self):
+            marker.append("suite")
+        
+        class MySubSuite(lcc.TestSuite):
+            @lcc.test("test")
+            def test(self):
+                marker.append("sub_suite")
+        
+    run_testsuite(MySuite)
+
+    assert marker == ["sub_suite"]
+
 def test_setup_suite_error_because_of_exception(reporting_session):
     marker = []
     
@@ -336,8 +356,8 @@ def test_setup_suite_error_because_of_exception(reporting_session):
             pass
         
         def teardown_suite(self):
-            marker.append("teardown")
-
+            marker.append("suite_teardown")
+        
     run_testsuite(MySuite)
 
     assert reporting_session.get_last_test_outcome() == False
@@ -733,6 +753,34 @@ def test_run_with_fixtures_dependencies_in_test_scope(reporting_session):
     run_testsuite(MySuite, fixtures=[fixt1, fixt2, fixt3])
 
     assert reporting_session.get_successful_test_nb() == 1
+
+def test_run_with_testsuite_fixture_used_in_subsuite(reporting_session):
+    teardowns = []
+    
+    @lcc.fixture(scope="testsuite")
+    def fixt1():
+        yield 2
+        teardowns.append(True)
+    
+    class MySuiteA(lcc.TestSuite):
+        @lcc.test("Test")
+        def test(self, fixt1):
+            assert fixt1 == 2
+        
+        class MySuiteB(lcc.TestSuite):
+            @lcc.test("Test")
+            def test(self, fixt1):
+                assert fixt1 == 2
+
+            class MySuiteC(lcc.TestSuite):
+                @lcc.test("Test")
+                def test(self, fixt1):
+                    assert fixt1 == 2
+    
+    run_testsuite(MySuiteA, fixtures=[fixt1])
+    
+    assert reporting_session.get_successful_test_nb() == 3
+    assert len(teardowns) == 3
 
 def test_fixture_called_multiple_times(reporting_session):
     marker = [0]
