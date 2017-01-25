@@ -5,6 +5,9 @@
 - **lcc-run**: various filtering bug have been fixed
 - **JSON/XML report**: timestamp are now stored in 'YYYY-MM-DD HH:MM:SS.sss' format instead of float
 - **JSON/XML report**: add timestamp in log entries
+- **under the hood**: use tox to do unit testing on Python 2.7/3.3/3.4/3.5/3.6 with/without lxml installed
+- **under the hood**: put filtering module under unit testing
+- various bug fixes and improvements
 
 # 0.4.2 (2017-01-19)
 
