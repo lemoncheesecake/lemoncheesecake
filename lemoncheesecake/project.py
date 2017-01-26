@@ -25,11 +25,7 @@ DEFAULT_REPORTING_BACKENDS = reporting.get_available_backends()
 PROJECT_SETTINGS_FILE = "project.py"
 
 def find_project_file():
-    project_file = os.environ.get("LCC_PROJECT_FILE", os.path.join(os.getcwd(), PROJECT_SETTINGS_FILE))
-    if not os.path.exists(project_file):
-        raise ProjectError(project_file, "project file does not exist")
-    
-    return project_file
+    return os.environ.get("LCC_PROJECT_FILE", os.path.join(os.getcwd(), PROJECT_SETTINGS_FILE))
 
 def _check_class(klass):
     def wrapper(name, value):
