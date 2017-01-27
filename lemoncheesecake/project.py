@@ -9,6 +9,7 @@ import sys
 import shutil
 import imp
 import inspect
+import traceback
 
 from lemoncheesecake.testsuite import TestSuite
 from lemoncheesecake.fixtures import Fixture
@@ -17,7 +18,8 @@ from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.reporting import reportdir, backends
 from lemoncheesecake import reporting
 from lemoncheesecake import loader
-from lemoncheesecake.exceptions import ProjectError
+from lemoncheesecake.exceptions import ProjectError, ImportTestSuiteError,\
+    LemonCheesecakeException
 from lemoncheesecake.utils import get_resource_path
 
 DEFAULT_REPORTING_BACKENDS = reporting.get_available_backends()
@@ -25,7 +27,8 @@ DEFAULT_REPORTING_BACKENDS = reporting.get_available_backends()
 PROJECT_SETTINGS_FILE = "project.py"
 
 def find_project_file():
-    return os.environ.get("LCC_PROJECT_FILE", os.path.join(os.getcwd(), PROJECT_SETTINGS_FILE))
+    filename = os.environ.get("LCC_PROJECT_FILE", os.path.join(os.getcwd(), PROJECT_SETTINGS_FILE))
+    return filename if os.path.exists(filename) else None
 
 def _check_class(klass):
     def wrapper(name, value):
@@ -73,7 +76,9 @@ class Project:
         try:
             self._settings = imp.load_source("__project", self._project_file)
         except Exception as e:
-            raise ProjectError(self._project_file, e)
+            raise ProjectError("Got an unexpected error while loading project:\n%s" % (
+                "-" * 72 + "\n" + traceback.format_exc() + "-" * 72
+            ))
         finally:
             try:
                 del sys.modules["__project"]
@@ -90,7 +95,7 @@ class Project:
         
         if not hasattr(self._settings, name):
             if required:
-                raise ProjectError(self._project_file, "mandatory parameter '%s' is missing" % name)
+                raise ProjectError("mandatory parameter '%s' is missing")
             else:
                 if cache_value:
                     self._cache[name] = default
@@ -100,23 +105,23 @@ class Project:
 
         if is_list:
             if type(value) not in (list, tuple):
-                raise ProjectError(self._project_file, "parameter '%s' must be a list or a tuple" % name)
+                raise ProjectError("parameter '%s' must be a list or a tuple" % name)
             for v in value:
                 error = checker(name, v)
                 if error:
-                    raise ProjectError(self._project_file, error)
+                    raise ProjectError(error)
         elif is_dict:
             if type(value) != dict:
-                raise ProjectError(self._project_file, "parameter '%s' must be a dict" % name)
+                raise ProjectError("parameter '%s' must be a dict" % name)
             for v in value.values():
                 error = checker(name, v)
                 if error:
-                    raise ProjectError(self._project_file, error)
+                    raise ProjectError(error)
         
         else:
             error = checker(name, value)
             if error:
-                raise ProjectError(self._project_file, error)
+                raise ProjectError(error)
     
         if cache_value:
             self._cache[name] = value
@@ -179,13 +184,11 @@ class Project:
             if active_backend in existing_backends:
                 if not existing_backends[active_backend]:
                     raise ProjectError(
-                        self._project_file,
                         "In parameter REPORTING_BACKENDS_ACTIVE, backend '%s' is not available (available backends are: %s)" % (
                             active_backend, ", ".join([backend for backend, available in existing_backends.items() if available])
                     ))
             else:
                 raise ProjectError(
-                    self._project_file,
                     "In parameter REPORTING_BACKENDS_ACTIVE, backend '%s' does not exist (backends are: %s)" % (
                         active_backend, ", ".join(existing_backends.keys())
                 ))

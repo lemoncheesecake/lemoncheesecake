@@ -5,15 +5,14 @@ Created on Dec 31, 2016
 '''
 
 import os
-import argparse
 
 from lemoncheesecake.cli import Command
 from lemoncheesecake.project import find_project_file, Project
 from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture, load_fixtures_from_func
-from lemoncheesecake import runner
+from lemoncheesecake.runner import run_testsuites
 from lemoncheesecake.testsuite.filter import add_filter_args_to_cli_parser, get_filter_from_cli_args
 from lemoncheesecake import reporting
-from lemoncheesecake.exceptions import LemonCheesecakeException
+from lemoncheesecake.exceptions import ProjectError, FixtureError
 
 class RunCommand(Command):
     def get_name(self):
@@ -24,8 +23,8 @@ class RunCommand(Command):
     
     def add_cli_args(self, cli_parser):
         project_file = find_project_file()
+        default_reporting_backend_names = []
         if project_file:
-            default_reporting_backend_names = []
             try:
                 project = Project(project_file)
                 default_reporting_backend_names = project.get_active_reporting_backend_names()
@@ -52,17 +51,26 @@ class RunCommand(Command):
         ###
         # Project initialization
         ###
-        project = Project()
+        project_file = find_project_file()
+        if not project_file:
+            return "Cannot find project file"
+        try:
+            project = Project(project_file)
+        except ProjectError as e:
+            return str(e)
         testsuites = project.load_testsuites()
         if len(testsuites) == 0:
-            raise LemonCheesecakeException("No testsuites are defined in your lemoncheesecake project.")
+            return "No testsuites are defined in your lemoncheesecake project."
     
         fixture_registry = FixtureRegistry()
         fixture_registry.add_fixture(BuiltinFixture("cli_args", lambda: cli_args))
         fixture_registry.add_fixture(BuiltinFixture("project_dir", lambda: project.get_project_dir()))
         for fixture_func in project.get_fixtures():
             fixture_registry.add_fixtures(load_fixtures_from_func(fixture_func))
-        fixture_registry.check_dependencies()
+        try:
+            fixture_registry.check_dependencies()
+        except FixtureError as e:
+            return str(e)
         workers = project.get_workers()
         reporting_backends = { 
             backend.name: backend for backend in
@@ -84,7 +92,7 @@ class RunCommand(Command):
                 if suite.has_selected_tests():
                     tmp.append(suite)
             if not tmp:
-                raise LemonCheesecakeException("The test filter does not match any test.")
+                return "The test filter does not match any test."
             testsuites = tmp
     
         # set reporting backends
@@ -113,7 +121,7 @@ class RunCommand(Command):
         if before_run_hook:
             before_run_hook(report_dir)
         
-        runner.run_testsuites(
+        run_testsuites(
             testsuites, fixture_registry, workers, [reporting_backends[backend_name] for backend_name in reporting_backend_names], report_dir
         )
         

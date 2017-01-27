@@ -6,7 +6,7 @@ Created on Jan 7, 2017
 
 import inspect
 
-from lemoncheesecake.exceptions import ProgrammingError, LemonCheesecakeException
+from lemoncheesecake.exceptions import ProgrammingError, FixtureError, LemonCheesecakeException
 from lemoncheesecake.utils import get_distincts_in_list
 
 __all__ = ("fixture", "load_fixtures_from_func")
@@ -79,7 +79,7 @@ class Fixture(BaseFixture):
             except StopIteration:
                 self._generator = None
             else:
-                raise ProgrammingError("The fixture yields more than once, only one yield is supported") 
+                raise FixtureError("The fixture yields more than once, only one yield is supported") 
     
 class BuiltinFixture(BaseFixture):
     def __init__(self, name, value):
@@ -112,7 +112,7 @@ class FixtureRegistry:
     
     def add_fixture(self, fixture):
         if fixture.name in self._fixtures and self._fixtures[fixture.name].is_builtin():
-            raise ProgrammingError("'%s' is a builtin fixture name" % fixture.name)
+            raise FixtureError("'%s' is a builtin fixture name" % fixture.name)
         self._fixtures[fixture.name] = fixture
     
     def add_fixtures(self, fixtures):
@@ -126,10 +126,10 @@ class FixtureRegistry:
         try:
             fixture_params = self._fixtures[name].params
         except KeyError:
-            raise LemonCheesecakeException("Unknown fixture '%s'" % name)
+            raise FixtureError("Unknown fixture '%s'" % name)
             
         if orig_fixture and orig_fixture in fixture_params:
-            raise LemonCheesecakeException("Fixture '%s' has a circular dependency on fixture '%s'" % (orig_fixture, name))
+            raise FixtureError("Fixture '%s' has a circular dependency on fixture '%s'" % (orig_fixture, name))
 
         dependencies = []
         for param in fixture_params:
@@ -171,7 +171,7 @@ class FixtureRegistry:
             dependency_fixtures = [self._fixtures[param] for param in fixture.params]
             for dependency_fixture in dependency_fixtures:
                 if dependency_fixture.get_scope_level() < fixture.get_scope_level():
-                    raise LemonCheesecakeException("Fixture '%s' with scope '%s' is incompatible with scope '%s' of fixture '%s'" % (
+                    raise FixtureError("Fixture '%s' with scope '%s' is incompatible with scope '%s' of fixture '%s'" % (
                         fixture.name, fixture.scope, dependency_fixture.scope, dependency_fixture.name
                     ))
 
