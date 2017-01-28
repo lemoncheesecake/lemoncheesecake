@@ -116,21 +116,29 @@ class FileReportSession(ReportingSession):
             return
             
     def end_test_session_setup(self):
-        self._handle_code_end(self.report.test_session_setup.has_failure())
+        self._handle_code_end(
+            self.report.test_session_setup.has_failure() if self.report.test_session_setup else False
+        )
     
     def end_test_session_teardown(self):
-        self._handle_code_end(self.report.test_session_teardown.has_failure())
+        self._handle_code_end(
+            self.report.test_session_teardown.has_failure() if self.report.test_session_teardown else False
+        )
     
     def end_suite_setup(self, testsuite):
         suite_data = self.report.get_suite(testsuite.name)
-        self._handle_code_end(suite_data.suite_setup.has_failure())
+        self._handle_code_end(
+            suite_data.suite_setup.has_failure() if suite_data.suite_setup else False
+        )
 
     def end_suite_teardown(self, testsuite):
         suite_data = self.report.get_suite(testsuite.name)
-        self._handle_code_end(suite_data.suite_teardown.has_failure())
+        self._handle_code_end(
+            suite_data.suite_teardown.has_failure() if suite_data.suite_teardown else False
+        )
     
     def end_test(self, test, outcome):
-        self._handle_code_end(not outcome)
+        self._handle_code_end(test)
     
     def end_suite(self, testsuite):
         if self.save_mode == SAVE_AT_EACH_TESTSUITE:
