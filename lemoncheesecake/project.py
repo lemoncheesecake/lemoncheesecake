@@ -14,13 +14,13 @@ import traceback
 from lemoncheesecake.testsuite import TestSuite
 from lemoncheesecake.worker import Worker
 from lemoncheesecake.validators import MetadataPolicy
-from lemoncheesecake.reporting import reportdir, backends
-from lemoncheesecake import reporting
-from lemoncheesecake import loader
+from lemoncheesecake.reporting import ReportingBackend, get_available_backends
+from lemoncheesecake.reporting.reportdir import report_dir_with_archiving, archive_dirname_datetime
+from lemoncheesecake.loader import load_testsuites
 from lemoncheesecake.exceptions import ProjectError
 from lemoncheesecake.utils import get_resource_path
 
-DEFAULT_REPORTING_BACKENDS = reporting.get_available_backends()
+DEFAULT_REPORTING_BACKENDS = get_available_backends()
 
 PROJECT_SETTINGS_FILE = "project.py"
 
@@ -60,7 +60,7 @@ def _check_func(args_nb=None):
     return wrapper
 
 def _check_report_backend(name, value):
-    if not isinstance(value, reporting.ReportingBackend):
+    if not isinstance(value, ReportingBackend):
         return "%s does not inherit lemoncheesecake.reporting.ReportingBackend" % value
     return None
 
@@ -93,13 +93,13 @@ class Project:
         _("CLI_EXTRA_ARGS", _check_func(args_nb=1), required=False)
         _("REPORT_DIR_CREATION", 
             _check_func(args_nb=1), required=False, 
-            default=lambda top_dir: reportdir.report_dir_with_archiving(top_dir, reportdir.archive_dirname_datetime)
+            default=lambda top_dir: report_dir_with_archiving(top_dir, archive_dirname_datetime)
         )
         _("TESTSUITES", _check_class(TestSuite), is_list=True)
         _("FIXTURES", _check_func(), is_list=True, required=False, default=[])
         _("WORKERS", _check_class_instance(Worker), is_dict=True, required=False, default={})
         _("REPORTING_BACKENDS", 
-            _check_class_instance(reporting.ReportingBackend), is_list=True, required=False, default=DEFAULT_REPORTING_BACKENDS
+            _check_class_instance(ReportingBackend), is_list=True, required=False, default=DEFAULT_REPORTING_BACKENDS
         )
         _("REPORTING_BACKENDS_ACTIVE", 
             _check_type(str), is_list=True, required=False, default=None
@@ -212,7 +212,7 @@ class Project:
         return self._raw_params["RUN_HOOK_AFTER_TESTS"]
     
     def load_testsuites(self):
-        return loader.load_testsuites(self.get_testsuites_classes(), self.get_metadata_policy())
+        return load_testsuites(self.get_testsuites_classes(), self.get_metadata_policy())
 
 def create_project(project_dir):
     p = os.path
