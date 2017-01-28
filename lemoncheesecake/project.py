@@ -12,14 +12,12 @@ import inspect
 import traceback
 
 from lemoncheesecake.testsuite import TestSuite
-from lemoncheesecake.fixtures import Fixture
 from lemoncheesecake.worker import Worker
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.reporting import reportdir, backends
 from lemoncheesecake import reporting
 from lemoncheesecake import loader
-from lemoncheesecake.exceptions import ProjectError, ImportTestSuiteError,\
-    LemonCheesecakeException
+from lemoncheesecake.exceptions import ProjectError
 from lemoncheesecake.utils import get_resource_path
 
 DEFAULT_REPORTING_BACKENDS = reporting.get_available_backends()
@@ -70,7 +68,6 @@ class Project:
     def __init__(self, project_file=None):
         self._project_file = project_file or find_project_file()
         self._project_dir = os.path.dirname(self._project_file)
-        self._cache = {}
         
         sys.path.insert(0, self._project_dir)
         try:
@@ -85,20 +82,62 @@ class Project:
             except KeyError:
                 pass
             sys.path.pop(0)
+
+
+        ###
+        # Fetch parameters from project settings
+        ###
+        self._raw_params = {}
+        def _(name, *args, **kwargs):
+            self._raw_params[name] = self._get_param(name, *args, **kwargs)
+        _("CLI_EXTRA_ARGS", _check_func(args_nb=1), required=False)
+        _("REPORT_DIR_CREATION", 
+            _check_func(args_nb=1), required=False, 
+            default=lambda top_dir: reportdir.report_dir_with_archiving(top_dir, reportdir.archive_dirname_datetime)
+        )
+        _("TESTSUITES", _check_class(TestSuite), is_list=True)
+        _("FIXTURES", _check_func(), is_list=True, required=False, default=[])
+        _("WORKERS", _check_class_instance(Worker), is_dict=True, required=False, default={})
+        _("REPORTING_BACKENDS", 
+            _check_class_instance(reporting.ReportingBackend), is_list=True, required=False, default=DEFAULT_REPORTING_BACKENDS
+        )
+        _("REPORTING_BACKENDS_ACTIVE", 
+            _check_type(str), is_list=True, required=False, default=None
+        )
+        _("METADATA_POLICY", _check_class_instance(MetadataPolicy), required=False, default=MetadataPolicy())
+        _("RUN_HOOK_BEFORE_TESTS", _check_func(args_nb=1), required=False)
+        _("RUN_HOOK_AFTER_TESTS", _check_func(args_nb=1), required=False)
+        
+        ###
+        # Cross checks between parameters
+        ###
+        existing_backends = {backend.name: backend.is_available() for backend in self._raw_params["REPORTING_BACKENDS"]}
+        if self._raw_params["REPORTING_BACKENDS_ACTIVE"] != None:
+            for active_backend in self._raw_params["REPORTING_BACKENDS_ACTIVE"]:
+                if active_backend in existing_backends:
+                    if not existing_backends[active_backend]:
+                        raise ProjectError(
+                            "in parameter REPORTING_BACKENDS_ACTIVE, backend '%s' is not available (available backends are: %s)" % (
+                                active_backend, ", ".join([backend for backend, available in existing_backends.items() if available])
+                        ))
+                else:
+                    raise ProjectError(
+                        "in parameter REPORTING_BACKENDS_ACTIVE, backend '%s' does not exist (backends are: %s)" % (
+                            active_backend, ", ".join(existing_backends.keys())
+                    ))
+        else:
+            self._raw_params["REPORTING_BACKENDS_ACTIVE"] = [
+                backend for backend, is_available in existing_backends.items() if is_available  
+            ]
     
     def get_project_dir(self):
         return self._project_dir
         
-    def _get_param(self, name, checker, is_list=False, is_dict=False, required=True, default=None, cache_value=True):
-        if name in self._cache:
-            return self._cache[name]
-        
+    def _get_param(self, name, checker, is_list=False, is_dict=False, required=True, default=None):
         if not hasattr(self._settings, name):
             if required:
                 raise ProjectError("mandatory parameter '%s' is missing")
             else:
-                if cache_value:
-                    self._cache[name] = default
                 return default
             
         value = getattr(self._settings, name)
@@ -123,12 +162,10 @@ class Project:
             if error:
                 raise ProjectError(error)
     
-        if cache_value:
-            self._cache[name] = value
         return value
     
     def get_cli_extra_args_callback(self):
-        return self._get_param("CLI_EXTRA_ARGS", _check_func(args_nb=1), required=False)
+        return self._raw_params["CLI_EXTRA_ARGS"]
     
     def add_cli_extra_args(self, cli_args_parser):
         callback = self.get_cli_extra_args_callback()
@@ -136,31 +173,19 @@ class Project:
             callback(cli_args_parser)
     
     def get_report_dir_creation_callback(self):
-        return self._get_param("REPORT_DIR_CREATION", 
-            _check_func(args_nb=1), required=False, 
-            default=lambda top_dir: reportdir.report_dir_with_archiving(top_dir, reportdir.archive_dirname_datetime)
-        )
+        return self._raw_params["REPORT_DIR_CREATION"]
     
     def get_testsuites_classes(self):
-        return self._get_param("TESTSUITES", _check_class(TestSuite), is_list=True)
+        return self._raw_params["TESTSUITES"]
 
     def get_fixtures(self):
-        return self._get_param("FIXTURES", _check_func(), is_list=True, required=False, default=[])
+        return self._raw_params["FIXTURES"]
     
     def get_workers(self):
-        return self._get_param("WORKERS", _check_class_instance(Worker), is_dict=True, required=False, default={})
+        return self._raw_params["WORKERS"]
 
     def _get_reporting_backends(self):
-        if "REPORTING_BACKENDS" in self._cache:
-            return self._cache["REPORTING_BACKENDS"]
-        
-        backends = self._get_param("REPORTING_BACKENDS", 
-            _check_class_instance(reporting.ReportingBackend), is_list=True, required=False, default=DEFAULT_REPORTING_BACKENDS,
-            cache_value=False
-        )
-        
-        self._cache["REPORTING_BACKENDS"] = backends
-        return backends
+        return self._raw_params["REPORTING_BACKENDS"]
 
     def get_reporting_backends(self, capabilities=0, active_only=False):
         if active_only:
@@ -172,41 +197,19 @@ class Project:
         ))
     
     def get_active_reporting_backend_names(self):
-        if "REPORTING_BACKENDS_ACTIVE" in self._cache:
-            return self._cache["REPORTING_BACKENDS_ACTIVE"]
-        
-        existing_backends = {backend.name: backend.is_available() for backend in self._get_reporting_backends()}
-        active = self._get_param("REPORTING_BACKENDS_ACTIVE", 
-            _check_type(str), is_list=True, required=False, default=existing_backends,
-            cache_value=False
-        )
-        for active_backend in active:
-            if active_backend in existing_backends:
-                if not existing_backends[active_backend]:
-                    raise ProjectError(
-                        "In parameter REPORTING_BACKENDS_ACTIVE, backend '%s' is not available (available backends are: %s)" % (
-                            active_backend, ", ".join([backend for backend, available in existing_backends.items() if available])
-                    ))
-            else:
-                raise ProjectError(
-                    "In parameter REPORTING_BACKENDS_ACTIVE, backend '%s' does not exist (backends are: %s)" % (
-                        active_backend, ", ".join(existing_backends.keys())
-                ))
-        
-        self._cache["REPORTING_BACKENDS_ACTIVE"] = active
-        return active
+        return self._raw_params["REPORTING_BACKENDS_ACTIVE"]
 
     def is_reporting_backend_active(self, backend_name):
         return backend_name in self.get_active_reporting_backend_names()
     
     def get_metadata_policy(self):
-        return self._get_param("METADATA_POLICY", _check_class_instance(MetadataPolicy), required=False, default=MetadataPolicy())
+        return self._raw_params["METADATA_POLICY"]
     
     def get_before_test_run_hook(self):
-        return self._get_param("RUN_HOOK_BEFORE_TESTS", _check_func(args_nb=1), required=False)
+        return self._raw_params["RUN_HOOK_BEFORE_TESTS"]
 
     def get_after_test_run_hook(self):
-        return self._get_param("RUN_HOOK_AFTER_TESTS", _check_func(args_nb=1), required=False)
+        return self._raw_params["RUN_HOOK_AFTER_TESTS"]
     
     def load_testsuites(self):
         return loader.load_testsuites(self.get_testsuites_classes(), self.get_metadata_policy())
