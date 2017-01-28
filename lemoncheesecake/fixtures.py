@@ -6,7 +6,7 @@ Created on Jan 7, 2017
 
 import inspect
 
-from lemoncheesecake.exceptions import ProgrammingError, FixtureError, LemonCheesecakeException
+from lemoncheesecake.exceptions import FixtureError
 from lemoncheesecake.utils import get_distincts_in_list
 
 __all__ = ("fixture", "load_fixtures_from_func")

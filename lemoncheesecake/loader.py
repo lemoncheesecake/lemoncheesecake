@@ -53,7 +53,7 @@ def _import_module(filename):
             pass
         mod = importlib.import_module(mod_name)
     except ImportError as e:
-        raise ImportTestSuiteError("cannot import module %s: %s" % (mod_name, str(e)))
+        raise ImportTestSuiteError("Cannot import module %s: %s" % (mod_name, str(e)))
     finally:
         del sys.path[0]
     
@@ -71,7 +71,7 @@ def import_testsuite_from_file(filename):
     try:
         klass = getattr(mod, mod_name)
     except AttributeError:
-        raise ImportTestSuiteError("cannot find class '%s' in '%s'" % (mod_name, mod.__file__))
+        raise ImportTestSuiteError("Cannot find class '%s' in '%s'" % (mod_name, mod.__file__))
     return klass
 
 def import_testsuites_from_files(patterns, excluding=[]):
@@ -98,7 +98,7 @@ def import_testsuites_from_directory(dir, recursive=True):
     Raise ImportTestSuiteError if one or more testsuite cannot be imported.
     """
     if not os.path.exists(dir):
-        raise ImportTestSuiteError("directory '%s' does not exist" % dir)
+        raise ImportTestSuiteError("Directory '%s' does not exist" % dir)
     suites = [ ]
     for filename in _get_py_files_from_dir(dir):
         suite = import_testsuite_from_file(filename)

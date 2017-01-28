@@ -14,10 +14,10 @@ class LemonCheesecakeException(Exception):
         return s
 
 class LemonCheesecakeInternalError(LemonCheesecakeException):
-    message_prefix = "internal error"
+    pass
 
 class ProgrammingError(LemonCheesecakeException):
-    message_prefix = "programing error"
+    pass
 
 class ProjectError(LemonCheesecakeException):
     pass
@@ -27,16 +27,16 @@ class MethodNotImplemented(ProgrammingError):
         ProgrammingError.__init__(self, "Class '%s' must implement the method '%s'" % (obj.__class__._name__, method_name))
 
 class ImportTestSuiteError(LemonCheesecakeException):
-    message_prefix = "cannot import testsuite"
+    pass
 
 class FixtureError(LemonCheesecakeException):
     pass
 
 class InvalidMetadataError(ProgrammingError):
-    message_prefix = "invalid metadata"
+    pass
 
 class UnknownReportBackendError(LemonCheesecakeException):
-    message_prefix = "unknown report backend"
+    pass
 
 class AbortTest(LemonCheesecakeException):
     message_prefix = "The test has been aborted"

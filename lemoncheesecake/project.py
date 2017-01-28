@@ -64,6 +64,9 @@ def _check_report_backend(name, value):
         return "%s does not inherit lemoncheesecake.reporting.ReportingBackend" % value
     return None
 
+def _param_error(param_name, error_msg):
+    raise ProjectError("Error with parameter '%s' of the project file: %s" % (param_name, error_msg))
+
 class Project:
     def __init__(self, project_file=None):
         self._project_file = project_file or find_project_file()
@@ -116,13 +119,13 @@ class Project:
             for active_backend in self._raw_params["REPORTING_BACKENDS_ACTIVE"]:
                 if active_backend in existing_backends:
                     if not existing_backends[active_backend]:
-                        raise ProjectError(
-                            "in parameter REPORTING_BACKENDS_ACTIVE, backend '%s' is not available (available backends are: %s)" % (
+                        _param_error("REPORTING_BACKENDS_ACTIVE",
+                            "backend '%s' is not available (available backends are: %s)" % (
                                 active_backend, ", ".join([backend for backend, available in existing_backends.items() if available])
                         ))
                 else:
-                    raise ProjectError(
-                        "in parameter REPORTING_BACKENDS_ACTIVE, backend '%s' does not exist (backends are: %s)" % (
+                    _param_error("REPORTING_BACKENDS_ACTIVE",
+                        "backend '%s' does not exist (backends are: %s)" % (
                             active_backend, ", ".join(existing_backends.keys())
                     ))
         else:
@@ -136,7 +139,7 @@ class Project:
     def _get_param(self, name, checker, is_list=False, is_dict=False, required=True, default=None):
         if not hasattr(self._settings, name):
             if required:
-                raise ProjectError("mandatory parameter '%s' is missing")
+                _param_error(name, "required parameter is missing")
             else:
                 return default
             
@@ -144,24 +147,24 @@ class Project:
 
         if is_list:
             if type(value) not in (list, tuple):
-                raise ProjectError("parameter '%s' must be a list or a tuple" % name)
+                _param_error(name, "parameter must be a list or a tuple")
             for v in value:
                 error = checker(name, v)
                 if error:
-                    raise ProjectError(error)
+                    _param_error(name, error)
         elif is_dict:
             if type(value) != dict:
-                raise ProjectError("parameter '%s' must be a dict" % name)
+                _param_error(name, "parameter must be a dict")
             for v in value.values():
                 error = checker(name, v)
                 if error:
-                    raise ProjectError(error)
+                    _param_error(name, error)
         
         else:
             error = checker(name, value)
             if error:
-                raise ProjectError(error)
-    
+                _param_error(name, error)
+
         return value
     
     def get_cli_extra_args_callback(self):

@@ -12,7 +12,7 @@ from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture, load_fixtu
 from lemoncheesecake.runner import run_testsuites
 from lemoncheesecake.testsuite.filter import add_filter_args_to_cli_parser, get_filter_from_cli_args
 from lemoncheesecake import reporting
-from lemoncheesecake.exceptions import ProjectError, FixtureError
+from lemoncheesecake.exceptions import ProjectError, FixtureError, InvalidMetadataError
 
 class RunCommand(Command):
     def get_name(self):
@@ -58,7 +58,10 @@ class RunCommand(Command):
             project = Project(project_file)
         except ProjectError as e:
             return str(e)
-        testsuites = project.load_testsuites()
+        try:
+            testsuites = project.load_testsuites()
+        except InvalidMetadataError as e:
+            return "Invalid test/testsuite metadata has been found: %s" % e
         if len(testsuites) == 0:
             return "No testsuites are defined in your lemoncheesecake project."
     

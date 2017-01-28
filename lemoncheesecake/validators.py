@@ -78,16 +78,18 @@ class MetadataPolicy:
         if self._disallow_unknown_properties:
             for property_name in obj.properties.keys():
                 if not property_name in available_properties:
+                    help_msg = "available are %s" % ", ".join(available_properties.keys()) \
+                        if available_properties else "no property is available"
                     raise InvalidMetadataError(
-                        "cannot load %s '%s', the property '%s' is not supported (available are: %s)" % (
-                        obj_type, obj.name, property_name, ", ".join(available_properties.keys())
+                        "In %s '%s', the property '%s' is not supported (%s)" % (
+                        obj_type, obj.name, property_name, help_msg
                     ))
         
         # check forbidden properties
         for property_name in obj.properties.keys():
             if property_name in forbidden_properties:
                 raise InvalidMetadataError(
-                    "cannot load %s '%s', the property '%s' is not accepted on a %s" % (
+                    "In %s '%s', the property '%s' is not accepted on a %s" % (
                         obj_type, obj.name, property_name, obj_type
                     )
                 )
@@ -96,7 +98,7 @@ class MetadataPolicy:
         for required_property in filter(lambda p: available_properties[p]["required"], available_properties.keys()):
             if not required_property in obj.properties.keys():
                 raise InvalidMetadataError(
-                    "cannot load %s '%s', the mandatory property '%s' is missing" % (
+                    "In %s '%s', the mandatory property '%s' is missing" % (
                     obj_type, obj.name, required_property
                 ))
         
@@ -106,7 +108,7 @@ class MetadataPolicy:
                 continue
             if available_properties[name]["values"] and not value in available_properties[name]["values"]:
                 raise InvalidMetadataError(
-                    "cannot load %s '%s', value '%s' of property '%s' is not among accepted values: %s" % (
+                    "In %s '%s', value '%s' of property '%s' is not among accepted values: %s" % (
                     obj_type, obj.name, value, name, available_properties[name]["values"]
                 ))
         
@@ -114,16 +116,18 @@ class MetadataPolicy:
         if self._disallow_unknown_tags:
             for tag in obj.tags:
                 if tag not in available_tags.keys():
+                    help_msg = "available are %s" % ", ".join(available_tags.keys()) \
+                        if available_tags else "no property is available"
                     raise InvalidMetadataError(
-                        "cannot load %s '%s', the tag '%s' is not supported (available are: %s)" % (
-                        obj_type, obj.name, tag, ", ".join(available_tags)
+                        "In %s '%s', the tag '%s' is not supported (%s)" % (
+                        obj_type, obj.name, tag, help_msg
                     ))
         
         # check forbidden tags
         for tag in obj.tags:
             if tag in forbidden_tags:
                 raise InvalidMetadataError(
-                    "cannot load %s '%s', the tag '%s' is not accepted on a %s" % (
+                    "In %s '%s', the tag '%s' is not accepted on a %s" % (
                         obj_type, obj.name, tag, obj_type
                     )
                 )
@@ -148,7 +152,7 @@ class MetadataPolicy:
         Raise ProgrammingError if not compliant.
         """
         self._check_compliance(
-            suite, "suite", 
+            suite, "testsuite", 
             {prop_name: p for prop_name, p in self._properties.items() if p["on_suite"]},
             [prop_name for prop_name, p in self._properties.items() if not p["on_suite"]],
             {tag_name: t for tag_name, t in self._tags.items() if t["on_suite"]},
