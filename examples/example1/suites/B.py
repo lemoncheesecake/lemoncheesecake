@@ -12,5 +12,4 @@ class B(TestSuite):
     class BB2(TestSuite):
         @test("Test of BB2")
         def d_test_1(self):
-            save_attachment_file("mycar.jpg")
             save_attachment_content("blah " * 100, "sometext.txt", "Some text")
