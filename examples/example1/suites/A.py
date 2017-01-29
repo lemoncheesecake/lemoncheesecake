@@ -20,6 +20,8 @@ class A(TestSuite):
         set_step("test dict checkers")
         check_dict_has_key("foo", { "foo": 33 })
         check_dict_has_int("foo", { "foo": 33 })
+        check_dict_has_list("foo", { "foo": [1, 2] })
+        check_dict_has_dict("foo", { "foo": {"foo": "bar"} })
         check_dict_value("bar", { "bar": 33 }, 33, check_eq, key_label="bar key")
         set_step("test simple value checkers")
         log_info("something else")

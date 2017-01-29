@@ -431,7 +431,9 @@ def test_checkers_availability():
         "int": ("eq", "not_eq", "gt", "gteq", "lt", "lteq"),
         "float": ("eq", "not_eq", "gt", "gteq", "lt", "lteq"),
         "str": ("eq", "not_eq"),
-        "bool": ("eq",)
+        "bool": ("eq",),
+        "dict": (),
+        "list": ()
     }
     
     for type_, comparators in types.items():
