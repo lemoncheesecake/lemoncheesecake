@@ -94,10 +94,10 @@ Test.prototype = {
 		var $tags = $("<span>" + 
 			$.map(this.tags, function(tag) {
 				return escapeHtml(tag);
-			}).join("<br/>") +
+			}).concat(
 			$.map(this.properties, function(value, key) {
 				return escapeHtml(key + ": " + value);
-			}).join("<br/>") +
+			})).join("<br/>") +
 			"</span>"
 		);
 		cols.push($("<td>").append($tags));
