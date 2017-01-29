@@ -4,6 +4,9 @@ Created on Sep 8, 2016
 @author: nicolas
 '''
 
+import sys
+import traceback
+
 class LemonCheesecakeException(Exception):
     message_prefix = None
     
@@ -55,3 +58,9 @@ class AbortAllTests(LemonCheesecakeException):
 
     def __init__(self, reason):
         LemonCheesecakeException.__init__(self, reason)
+
+def serialize_current_exception(show_stacktrace=True):
+    if show_stacktrace:
+        return "\n" + "-" * 72 + "\n" + traceback.format_exc() + "-" * 72
+    else:
+        return " " + str(sys.exc_info()[1])

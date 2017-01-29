@@ -17,7 +17,7 @@ from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.reporting import ReportingBackend, get_available_backends
 from lemoncheesecake.reporting.reportdir import report_dir_with_archiving, archive_dirname_datetime
 from lemoncheesecake.loader import load_testsuites
-from lemoncheesecake.exceptions import ProjectError
+from lemoncheesecake.exceptions import ProjectError, serialize_current_exception
 from lemoncheesecake.utils import get_resource_path
 
 DEFAULT_REPORTING_BACKENDS = get_available_backends()
@@ -75,9 +75,9 @@ class Project:
         sys.path.insert(0, self._project_dir)
         try:
             self._settings = imp.load_source("__project", self._project_file)
-        except Exception as e:
-            raise ProjectError("Got an unexpected error while loading project:\n%s" % (
-                "-" * 72 + "\n" + traceback.format_exc() + "-" * 72
+        except Exception:
+            raise ProjectError("Got an unexpected error while loading project:%s" % (
+                serialize_current_exception()
             ))
         finally:
             try:
