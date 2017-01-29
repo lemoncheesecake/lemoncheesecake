@@ -361,3 +361,28 @@ def test_filter_fixtures_on_all_criteria():
     registry = build_registry("fix5")
     fixtures = registry.filter_fixtures(base_names=["fix5"], is_executed=True, scope="test")
     assert sorted(fixtures) == ["fix5"]
+
+def test_check_fixtures_in_testsuites_ok():
+    class MySuite(lcc.TestSuite):
+        class MySubSuite(lcc.TestSuite):
+            @lcc.test("test")
+            def sometest(self, fix1):
+                pass
+    
+    suite = MySuite()
+    suite.load()
+    registry = build_registry()
+    registry.check_fixtures_in_testsuites([suite])
+
+def test_check_fixtures_in_testsuites_not_ok():
+    class MySuite(lcc.TestSuite):
+        class MySubSuite(lcc.TestSuite):
+            @lcc.test("test")
+            def sometest(self, unknown_fix):
+                pass
+    
+    suite = MySuite()
+    suite.load()
+    registry = build_registry()
+    with pytest.raises(exceptions.FixtureError):
+        registry.check_fixtures_in_testsuites([suite])

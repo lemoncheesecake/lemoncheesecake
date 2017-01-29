@@ -172,6 +172,22 @@ class FixtureRegistry:
                     raise FixtureError("Fixture '%s' with scope '%s' is incompatible with scope '%s' of fixture '%s'" % (
                         fixture.name, fixture.scope, dependency_fixture.scope, dependency_fixture.name
                     ))
+    
+    def check_fixtures_in_test(self, test, suite):
+        for fixture in test.get_params():
+            if fixture not in self._fixtures:
+                raise FixtureError("Unknown fixture '%s' used in test '%s'" % (fixture, suite.get_test_path_str(test)))
+        
+    def check_fixtures_in_testsuite(self, suite):
+        for test in suite.get_tests():
+            self.check_fixtures_in_test(test, suite)
+        
+        for sub_suite in suite.get_sub_testsuites():
+            self.check_fixtures_in_testsuite(sub_suite)
+    
+    def check_fixtures_in_testsuites(self, suites):
+        for suite in suites:
+            self.check_fixtures_in_testsuite(suite)
 
     def get_fixture_scope(self, name):
         return self._fixtures[name].scope

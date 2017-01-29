@@ -14,6 +14,15 @@ from lemoncheesecake.testsuite.filter import add_filter_args_to_cli_parser, get_
 from lemoncheesecake import reporting
 from lemoncheesecake.exceptions import ProjectError, FixtureError, InvalidMetadataError
 
+def build_fixture_registry(project, cli_args):
+    registry = FixtureRegistry()
+    registry.add_fixture(BuiltinFixture("cli_args", lambda: cli_args))
+    registry.add_fixture(BuiltinFixture("project_dir", lambda: project.get_project_dir()))
+    for fixture_func in project.get_fixtures():
+        registry.add_fixtures(load_fixtures_from_func(fixture_func))
+    registry.check_dependencies()
+    return registry
+
 class RunCommand(Command):
     def get_name(self):
         return "run"
@@ -65,15 +74,13 @@ class RunCommand(Command):
         if len(testsuites) == 0:
             return "No testsuites are defined in your lemoncheesecake project."
     
-        fixture_registry = FixtureRegistry()
-        fixture_registry.add_fixture(BuiltinFixture("cli_args", lambda: cli_args))
-        fixture_registry.add_fixture(BuiltinFixture("project_dir", lambda: project.get_project_dir()))
-        for fixture_func in project.get_fixtures():
-            fixture_registry.add_fixtures(load_fixtures_from_func(fixture_func))
+        # build fixture registry:
         try:
-            fixture_registry.check_dependencies()
+            fixture_registry = build_fixture_registry(project, cli_args)
+            fixture_registry.check_fixtures_in_testsuites(testsuites)
         except FixtureError as e:
-            return str(e)
+            return "Cannot run tests: %s" % e
+                
         workers = project.get_workers()
         reporting_backends = { 
             backend.name: backend for backend in
