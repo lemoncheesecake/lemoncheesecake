@@ -123,16 +123,14 @@ class FixtureRegistry:
         return self._fixtures[name]
     
     def _get_fixture_dependencies(self, name, orig_fixture):
-        try:
-            fixture_params = self._fixtures[name].params
-        except KeyError:
-            raise FixtureError("Unknown fixture '%s'" % name)
-            
+        fixture_params = self._fixtures[name].params
         if orig_fixture and orig_fixture in fixture_params:
             raise FixtureError("Fixture '%s' has a circular dependency on fixture '%s'" % (orig_fixture, name))
 
         dependencies = []
         for param in fixture_params:
+            if param not in self._fixtures:
+                raise FixtureError("Fixture '%s' used by fixture '%s' does not exist" % (param, name))
             dependencies.extend(self._get_fixture_dependencies(param, orig_fixture if orig_fixture else name)) 
         dependencies.extend(fixture_params)
         

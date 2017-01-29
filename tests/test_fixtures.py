@@ -176,7 +176,7 @@ def test_registry_fixture_missing_dependency():
     registry.add_fixtures(lcc.load_fixtures_from_func(bar))
     with pytest.raises(exceptions.LemonCheesecakeException) as excinfo:
         registry.check_dependencies()
-    assert 'Unknown' in str(excinfo.value)
+    assert "does not exist" in str(excinfo.value)
 
 def test_registry_fixture_circular_dependency_direct():
     @lcc.fixture()
