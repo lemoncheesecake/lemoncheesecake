@@ -56,7 +56,7 @@ class Check:
         return check(description, outcome, details)
     
     def format_actual_value(self, value):
-        return "%s" % value
+        return "%s" % str(value)
     format_expected_value = format_actual_value
     
     def format_description(self, name, expected):
@@ -273,6 +273,12 @@ class CheckListContains(Check):
             return check(description, False, details)
         else:
             return check(description, True, None)
+
+@checker("choice")
+class CheckChoice(Check):
+    comparator_label = "is among"
+    always_display_details = True
+    comparator = staticmethod(lambda a, e: a in e)
 
 ################################################################################
 # dict checkers 

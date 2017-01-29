@@ -17,6 +17,8 @@ class A(TestSuite):
         check_list_len("my list", [1,2], 3)
         check_list_contains("my other list", [ 1, 2, 3 ], [ 1, 4])
         check_list_contains("param", ("foo", "baz"), ("bar", ))
+        check_choice("param", "foo", ("foo", "bar"))
+        check_choice("param", "baz", ("foo", "bar"))
         set_step("test dict checkers")
         check_dict_has_key("foo", { "foo": 33 })
         check_dict_has_int("foo", { "foo": 33 })

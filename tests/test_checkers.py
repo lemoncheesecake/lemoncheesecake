@@ -328,6 +328,22 @@ def test_check_list_contains_failure(reporting_session):
     assert outcome == False
     assert details != None
 
+def test_check_choice_success(reporting_session):
+    run_func_in_test(lambda: lcc.check_choice("param", "foo", ("foo", "bar")))
+    description, outcome, details = reporting_session.get_last_check()
+    
+    assert "param" in description and "foo" in description and "bar" in description
+    assert outcome == True
+    assert details != None
+
+def test_check_choice_failure(reporting_session):
+    run_func_in_test(lambda: lcc.check_choice("param", "baz", ("foo", "bar")))
+    description, outcome, details = reporting_session.get_last_check()
+    
+    assert "param" in description and "foo" in description and "bar" in description
+    assert outcome == False
+    assert details != None
+
 ###
 # dict checkers
 # TODO: key_label and show_actual arguments are not yet tested
