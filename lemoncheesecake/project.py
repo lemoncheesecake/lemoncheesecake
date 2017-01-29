@@ -55,7 +55,7 @@ def _check_func(args_nb=None):
             return "'%s' has an incorrect value, '%s' is not a function" % (name, value)
         argspec = inspect.getargspec(value)
         if args_nb != None and len(argspec.args) != args_nb:
-            return "'%s' function takes %s arguments instead of %d" % (len(argspec.args), args_nb)
+            return "'%s' function takes %s arguments instead of %d" % (name, len(argspec.args), args_nb)
         return None
     return wrapper
 
