@@ -1,13 +1,16 @@
-# 0.5.0 (2017-MM-DD)
+# 0.5.0 (2017-01-30)
 
 - **API**: test/testsuite ids have been replaced by names (the unicity of (former) ids has been dropped)
+- **CLI**: all commands are merge into a single lcc command with sub commands (lcc-run => lcc run, lcc-create-project => lcc bootstrap)
 - **CLI**: in lcc run, --test-id and --suite-id has been merged into a single positional test/suite "path" argument
 - **CLI**: in lcc run, various filtering bug have been fixed
 - **CLI**: improve error handling
 - **JSON/XML report**: timestamp are now stored in 'YYYY-MM-DD HH:MM:SS.sss' format instead of float
 - **JSON/XML report**: add timestamp in log entries
+- **API (checkers)**: add {assert,check}_dict_has_{list,dict} checkers and {assert,check}_choice
 - **under the hood**: use tox to do unit testing on Python 2.7/3.3/3.4/3.5/3.6 with/without lxml installed
 - **under the hood**: put filtering module under unit testing
+- **HTML report**: minor fixes
 - various bug fixes and improvements
 
 # 0.4.2 (2017-01-19)
