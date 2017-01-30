@@ -9,7 +9,7 @@ import sys
 import glob
 import fnmatch
 import re
-import importlib
+import imp
 
 from lemoncheesecake.exceptions import ImportTestSuiteError, InvalidMetadataError
 
@@ -41,17 +41,18 @@ def _get_matching_files(patterns, excluding=[]):
     return files
 
 def _import_module(filename):
-    mod_dir = os.path.dirname(filename)
-    mod_name = _strip_py_ext(os.path.basename(filename))
+    p = os.path
+    mod_dir = p.dirname(filename)
+    mod_name = _strip_py_ext(p.basename(filename))
 
     sys.path.insert(0, mod_dir)
     try:
-        # FIXME: possibly mess-up a module with the same name
+        package = "".join(p.splitdrive(mod_dir)[1].split(p.sep)[1:])
+        fh, path, description = imp.find_module(mod_name)
         try:
-            del sys.modules[mod_name]
-        except KeyError:
-            pass
-        mod = importlib.import_module(mod_name)
+            mod = imp.load_module(package + mod_name, fh, path, description)
+        finally:
+            fh.close()
     except ImportError as e:
         raise ImportTestSuiteError("Cannot import module %s: %s" % (mod_name, str(e)))
     finally:
