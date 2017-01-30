@@ -1,3 +1,7 @@
+# 0.5.1 (2017-01-30)
+
+- Fix module loading bug in case of multiple modules share the same name
+
 # 0.5.0 (2017-01-30)
 
 - **API**: test/testsuite ids have been replaced by names (the unicity of (former) ids has been dropped)
