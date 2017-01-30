@@ -14,7 +14,7 @@ Before writing lemoncheesecake tests, you need to setup a lemoncheeseake project
 
 The command:
 ```
-$ lcc-create-project myproject
+$ lcc bootstrap myproject
 ```
 
 creates a new project directory "myproject" containing one file "project.py" (that represents your project settings) and a "tests" directory where you can put your testsuites.
@@ -43,14 +43,14 @@ All lemoncheesecake functions and classes used in test modules can be imported s
 
 The command lcc-run is in charge of running the tests, it provides several option to filter the test to be run and to set the reporting backends that will be used.
 ```
-usage: lcc-run.py [-h] [--test-desc TEST_DESC [TEST_DESC ...]]
-                  [--suite-desc SUITE_DESC [SUITE_DESC ...]]
-                  [--tag TAG [TAG ...]] [--property PROPERTY [PROPERTY ...]]
-                  [--link LINK [LINK ...]] [--report-dir REPORT_DIR]
-                  [--reporting REPORTING [REPORTING ...]]
-                  [--enable-reporting ENABLE_REPORTING [ENABLE_REPORTING ...]]
-                  [--disable-reporting DISABLE_REPORTING [DISABLE_REPORTING ...]]
-                  [path [path ...]]
+usage: lcc run [-h] [--test-desc TEST_DESC [TEST_DESC ...]]
+               [--suite-desc SUITE_DESC [SUITE_DESC ...]]
+               [--tag TAG [TAG ...]] [--property PROPERTY [PROPERTY ...]]
+               [--link LINK [LINK ...]] [--report-dir REPORT_DIR]
+               [--reporting REPORTING [REPORTING ...]]
+               [--enable-reporting ENABLE_REPORTING [ENABLE_REPORTING ...]]
+               [--disable-reporting DISABLE_REPORTING [DISABLE_REPORTING ...]]
+               [path [path ...]]
 
 positional arguments:
   path                  Filters on test/testsuite path (wildcard character '*'
@@ -82,7 +82,7 @@ optional arguments:
 
 Tests are run like this:
 ```
-$ lcc-run
+$ lcc run
 ============================= my_first_testsuite ==============================
  OK  1 # some_test                
 
