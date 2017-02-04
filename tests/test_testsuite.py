@@ -9,83 +9,90 @@ Created on Sep 30, 2016
 import pytest
 
 import lemoncheesecake as lcc
+from lemoncheesecake.testsuite.core import load_testsuite_from_class, add_test_in_testsuite, add_tests_in_testsuite
 from lemoncheesecake.exceptions import ProgrammingError, InvalidMetadataError
 
 from helpers import dummy_test_callback
 
 def test_decorator_test():
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("My Suite")
+    class MySuite:
         @lcc.test("test_desc")
         def mytest(self):
             pass
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     test = suite.get_tests()[0]
     assert test.name == "mytest"
     assert test.description == "test_desc"
 
 def test_decorator_tags():
+    @lcc.testsuite("My Suite")
     @lcc.tags("tag3")
-    class MySuite(lcc.TestSuite):
-        @lcc.tags("tag1", "tag2")
+    class MySuite:
         @lcc.test("test_desc")
+        @lcc.tags("tag1", "tag2")
         def mytest(self):
             pass
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     assert suite.tags == ["tag3"]
     test = suite.get_tests()[0]
     assert test.tags == ["tag1", "tag2"]
 
 def test_decorator_prop():
+    @lcc.testsuite("My Suite")
     @lcc.prop("key1", "val1")
-    class MySuite(lcc.TestSuite):
-        @lcc.prop("key2", "val2")
+    class MySuite:
         @lcc.test("test_desc")
+        @lcc.prop("key2", "val2")
         def mytest(self):
             pass
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     assert suite.properties["key1"] == "val1"
     test = suite.get_tests()[0]
     assert test.properties["key2"] == "val2"
 
 def test_decorator_link():
+    @lcc.testsuite("My Suite")
     @lcc.link("http://www.example.com", "example")
-    class MySuite(lcc.TestSuite):
-        @lcc.link("http://www.example.com")
+    class MySuite:
         @lcc.test("test_desc")
+        @lcc.link("http://www.example.com")
         def mytest(self):
             pass
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     assert suite.links[0] == ("http://www.example.com", "example")
     test = suite.get_tests()[0]
     assert test.links[0] == ("http://www.example.com", None)
 
-def test_decorator_on_invalid_object():
+def test_test_decorator_on_invalid_object():
     with pytest.raises(ProgrammingError):
-        @lcc.tags("tag")
-        class NotATestSuite:
+        @lcc.test("test")
+        class NotAFunction():
+            pass
+
+def test_testsuite_decorator_on_invalid_object():
+    with pytest.raises(ProgrammingError):
+        @lcc.testsuite("suite")
+        def NotAClass():
             pass
 
 def test_decorator_with_testsuite_inheritance():
+    @lcc.testsuite("My Suite 1")
     @lcc.link("http://www.example1.com")
     @lcc.tags("tag1", "tag2")
     @lcc.prop("key1", "value1")
-    class MySuite1(lcc.TestSuite):
+    class MySuite1:
         pass
     
+    @lcc.testsuite("My Suite 2")
     @lcc.link("http://www.example2.com")
     @lcc.tags("tag3")
     @lcc.prop("key2", "value2")
     class MySuite2(MySuite1):
         pass
     
-    suite1 = MySuite1()
-    suite1.load()
-    suite2 = MySuite2()
-    suite2.load()
+    suite1 = load_testsuite_from_class(MySuite1)
+    suite2 = load_testsuite_from_class(MySuite2)
     
     assert len(suite1.links) == 1
     assert suite1.links[0] == ("http://www.example1.com", None)
@@ -102,19 +109,19 @@ def test_decorator_with_testsuite_inheritance():
     assert suite2.properties["key2"] == "value2"
 
 def test_decorator_unicode():
+    @lcc.testsuite(u"My Suite éééààà")
     @lcc.link("http://foo.bar", u"éééààà")
     @lcc.prop(u"ééé", u"ààà")
     @lcc.tags(u"ééé", u"ààà")
-    class MySuite(lcc.TestSuite):
+    class MySuite:
+        @lcc.test(u"Some test ààà")
         @lcc.link("http://foo.bar", u"éééààà")
         @lcc.prop(u"ééé", u"ààà")
         @lcc.tags(u"ééé", u"ààà")
-        @lcc.test(u"Some test ààà")
         def sometest(self):
             pass
     
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     
     assert suite.links[0] == ("http://foo.bar", u"éééààà")
     assert suite.properties[u"ééé"] == u"ààà"
@@ -127,18 +134,21 @@ def test_decorator_unicode():
     assert test.tags == [u"ééé", u"ààà"]
 
 def test_duplicated_suite_description():
-    class MySuite(lcc.TestSuite):
-        class SubSuite1(lcc.TestSuite):
-            description = "somedesc"
-        class SubSuite2(lcc.TestSuite):
-            description = "somedesc"
-    
-    suite = MySuite()
+    @lcc.testsuite("My Suite")
+    class MySuite:
+        @lcc.testsuite("somedesc")
+        class SubSuite1:
+            pass
+        @lcc.testsuite("somedesc")
+        class SubSuite2:
+            pass
+        
     with pytest.raises(InvalidMetadataError) as excinfo:
-        suite.load()
+        load_testsuite_from_class(MySuite)
 
 def test_duplicated_test_description():
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("My Suite")
+    class MySuite:
         @lcc.test("somedesc")
         def foo(self):
             pass
@@ -147,51 +157,47 @@ def test_duplicated_test_description():
         def bar(self):
             pass
     
-    suite = MySuite()
-    with pytest.raises(InvalidMetadataError) as excinfo:
-        suite.load()
+    with pytest.raises(InvalidMetadataError):
+        load_testsuite_from_class(MySuite)
 
 def test_duplicated_test_name():
-    class MySuite(lcc.TestSuite):
-        def load_generated_tests(self):
-            self.register_test(lcc.Test("mytest", "First test", dummy_test_callback))
-            self.register_test(lcc.Test("mytest", "Second test", dummy_test_callback))
-            
-    suite = MySuite()
-    with pytest.raises(InvalidMetadataError) as excinfo:
-        suite.load()
+    @lcc.testsuite("My Suite")
+    class MySuite:
+        def __init__(self):
+            add_test_in_testsuite(lcc.Test("mytest", "First test", dummy_test_callback()), self)
+            add_test_in_testsuite(lcc.Test("mytest", "Second test", dummy_test_callback()), self)
+             
+    with pytest.raises(ProgrammingError):
+        load_testsuite_from_class(MySuite)
 
 def test_register_test():
-    class MySuite(lcc.TestSuite):
-        def load_generated_tests(self):
-            self.register_test(lcc.Test("mytest", "My Test", dummy_test_callback))
+    @lcc.testsuite("My Suite")
+    class MySuite:
+        def __init__(self):
+            add_test_in_testsuite(lcc.Test("mytest", "My Test", dummy_test_callback()), self)
     
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     assert len(suite.get_tests()) == 1
 
 def test_register_test_multiple():
-    class MySuite(lcc.TestSuite):
-        def load_generated_tests(self):
-            for i in range(3):
-                self.register_test(lcc.Test("mytest_%d" % i, "My Test %d" % i, dummy_test_callback))
+    @lcc.testsuite("My Suite")
+    class MySuite:
+        def __init__(self):
+            for i in 1, 2, 3:
+                add_test_in_testsuite(lcc.Test("mytest_%d" % i, "My Test %d" % i, dummy_test_callback()), self)
     
-    suite = MySuite()
-    suite.load()
-    assert len(suite.get_tests()) == 3
-
-def test_register_tests():
-    class MySuite(lcc.TestSuite):
-        def load_generated_tests(self):
-            tests = [lcc.Test("mytest_%d" % i, "My Test %d" % i, dummy_test_callback) for i in range(3)]
-            self.register_tests(tests)
-    
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     assert len(suite.get_tests()) == 3
 
 def test_register_test_with_before_and_after():
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("My Suite")
+    class MySuite:
+        def __init__(self):
+            add_test_in_testsuite(lcc.Test("foo1", "Foo 1", dummy_test_callback()), self, before_test="bar1")
+            add_test_in_testsuite(lcc.Test("foo2", "Foo 2", dummy_test_callback()), self, before_test="bar1")
+            add_test_in_testsuite(lcc.Test("baz1", "Baz 1", dummy_test_callback()), self, after_test="bar2")
+            add_test_in_testsuite(lcc.Test("baz2", "Baz 2", dummy_test_callback()), self, after_test="baz1")
+        
         @lcc.test("Bar 1")
         def bar1(self):
             pass
@@ -200,19 +206,23 @@ def test_register_test_with_before_and_after():
         def bar2(self):
             pass
         
-        def load_generated_tests(self):
-            self.register_test(lcc.Test("foo1", "Foo 1", dummy_test_callback), before_test="bar1")
-            self.register_test(lcc.Test("foo2", "Foo 2", dummy_test_callback), before_test="bar1")
-            self.register_test(lcc.Test("baz1", "Baz 1", dummy_test_callback), after_test="bar2")
-            self.register_test(lcc.Test("baz2", "Baz 2", dummy_test_callback), after_test="baz1")
-    
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     
     assert [t.name for t in suite.get_tests()] == ["foo1", "foo2", "bar1", "bar2", "baz1", "baz2"]
 
 def test_register_tests_with_before_and_after():
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("My Suite")
+    class MySuite:
+        def __init__(self):
+            add_tests_in_testsuite(
+                [lcc.Test("foo1", "Foo 1", dummy_test_callback()), lcc.Test("foo2", "Foo 2", dummy_test_callback())],
+                self, before_test="bar1"
+            )
+            add_tests_in_testsuite(
+                [lcc.Test("baz1", "Baz 1", dummy_test_callback()), lcc.Test("baz2", "Baz 2", dummy_test_callback())],
+                self, after_test="bar2"
+            )
+        
         @lcc.test("Bar 1")
         def bar1(self):
             pass
@@ -221,28 +231,19 @@ def test_register_tests_with_before_and_after():
         def bar2(self):
             pass
         
-        def load_generated_tests(self):
-            self.register_tests(
-                [lcc.Test("foo1", "Foo 1", dummy_test_callback), lcc.Test("foo2", "Foo 2", dummy_test_callback)],
-                before_test="bar1"
-            )
-            self.register_tests(
-                [lcc.Test("baz1", "Baz 1", dummy_test_callback), lcc.Test("baz2", "Baz 2", dummy_test_callback)],
-                after_test="bar2"
-            )
-    
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     
     assert [t.name for t in suite.get_tests()] == ["foo1", "foo2", "bar1", "bar2", "baz1", "baz2"]
 
 def test_get_fixtures():
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("My Suite")
+    class MySuite:
         @lcc.test("Test 1")
         def test_1(self, foo):
             pass
         
-        class MySubSuite(lcc.TestSuite):
+        @lcc.testsuite("My Sub Suite")
+        class MySubSuite:
             @lcc.test("Test 2")
             def test_2(self, bar, baz):
                 pass
@@ -255,18 +256,19 @@ def test_get_fixtures():
             def test_4(self):
                 pass
 
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     
     assert suite.get_fixtures() == ["foo", "bar", "baz"]
 
 def test_get_fixtures_non_recursive():
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("My Suite")
+    class MySuite:
         @lcc.test("Test 1")
         def test_1(self, foo):
             pass
         
-        class MySubSuite(lcc.TestSuite):
+        @lcc.testsuite("My Sub Suite")
+        class MySubSuite:
             @lcc.test("Test 2")
             def test_2(self, bar, baz):
                 pass
@@ -279,8 +281,7 @@ def test_get_fixtures_non_recursive():
             def test_4(self):
                 pass
 
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     
     assert suite.get_fixtures(recursive=False) == ["foo"]
 

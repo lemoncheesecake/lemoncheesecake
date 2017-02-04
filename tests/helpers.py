@@ -212,8 +212,10 @@ def dump_report(report):
         xml = serialize_report_as_string(report)
         print(xml, file=sys.stderr)
 
-def dummy_test_callback(suite):
-    pass
+def dummy_test_callback():
+    def wrapped(suite):
+        pass
+    return wrapped
 
 def assert_check_data(actual, expected):
     assert actual.description == expected.description
