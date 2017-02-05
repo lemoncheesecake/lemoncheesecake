@@ -6,8 +6,10 @@ Created on Sep 8, 2016
 
 import inspect
 
-from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError
-from lemoncheesecake.utils import dict_cat, object_has_method, get_distincts_in_list
+from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError, InternalError
+from lemoncheesecake.utils import get_distincts_in_list
+
+TESTSUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
 
 class Test:
     def __init__(self, name, description, callback):
@@ -20,6 +22,10 @@ class Test:
     
     def get_params(self):
         return inspect.getargspec(self.callback).args[1:]
+
+def _assert_valid_hook_name(hook_name):
+    if hook_name not in TESTSUITE_HOOKS:
+        raise InternalError("Invalid hook name '%s'" % hook_name)
 
 class TestSuite:
     def __init__(self, obj, name, description, parent_suite=None):
@@ -36,12 +42,15 @@ class TestSuite:
         self._selected_test_names = []
     
     def add_hook(self, hook_name, func):
+        _assert_valid_hook_name(hook_name)
         self._hooks[hook_name] = func
     
     def has_hook(self, hook_name):
+        _assert_valid_hook_name(hook_name)
         return hook_name in self._hooks
     
     def get_hook(self, hook_name):
+        _assert_valid_hook_name(hook_name)
         return self._hooks.get(hook_name)
             
     def get_path(self):

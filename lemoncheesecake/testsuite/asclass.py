@@ -7,7 +7,7 @@ Created on Feb 5, 2017
 import inspect
 
 from lemoncheesecake.exceptions import ProgrammingError
-from lemoncheesecake.testsuite.core import Test, TestSuite
+from lemoncheesecake.testsuite.core import Test, TestSuite, TESTSUITE_HOOKS
 
 __all__ = ("load_testsuite_from_class", "add_test_in_testsuite", "add_tests_in_testsuite")
 
@@ -118,9 +118,9 @@ def load_testsuite_from_class(klass, parent_suite=None):
     suite.properties.update(md.properties)
     suite.links.extend(md.links)
     
-    for hook_name in "setup_test", "teardown_test", "setup_suite", "teardown_suite":
-        if hasattr(suite, hook_name):
-            suite.add_hook(hook_name, getattr(suite, hook_name))
+    for hook_name in TESTSUITE_HOOKS:
+        if hasattr(inst, hook_name):
+            suite.add_hook(hook_name, getattr(inst, hook_name))
 
     for test_method in get_test_methods_from_class(inst):
         suite.add_test(load_test_from_method(test_method))

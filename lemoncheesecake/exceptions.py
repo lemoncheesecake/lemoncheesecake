@@ -18,6 +18,7 @@ class LemonCheesecakeException(Exception):
 
 class LemonCheesecakeInternalError(LemonCheesecakeException):
     pass
+InternalError = LemonCheesecakeInternalError
 
 class ProgrammingError(LemonCheesecakeException):
     pass
