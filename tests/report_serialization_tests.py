@@ -32,7 +32,8 @@ def do_test_serialization(suites, backend, tmpdir, worker=None):
     assert_report(unserialized_report, report)    
 
 def test_simple_test(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             lcc.check_int_eq("foo", 1, 1)
@@ -40,7 +41,8 @@ def test_simple_test(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_test_with_all_metadata(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.link("http://foo.bar", "foobar")
         @lcc.prop("foo", "bar")
         @lcc.tags("foo", "bar")
@@ -54,7 +56,8 @@ def test_testsuite_with_all_metadata(backend, tmpdir):
     @lcc.link("http://foo.bar", "foobar")
     @lcc.prop("foo", "bar")
     @lcc.tags("foo", "bar")
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             lcc.check_int_eq("foo", 1, 1)
@@ -65,7 +68,8 @@ def test_unicode(backend, tmpdir):
     @lcc.link("http://foo.bar", u"éééààà")
     @lcc.prop(u"ééé", u"ààà")
     @lcc.tags(u"ééé", u"ààà")
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.link("http://foo.bar", u"éééààà")
         @lcc.prop(u"ééé", u"ààà")
         @lcc.tags(u"ééé", u"ààà")
@@ -79,7 +83,8 @@ def test_unicode(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_multiple_testsuites_and_tests(backend, tmpdir):
-    class MySuite1(lcc.TestSuite):
+    @lcc.testsuite("MySuite1")
+    class MySuite1:
         @lcc.tags("foo")
         @lcc.test("Some test 1")
         def test_1_1(self):
@@ -95,7 +100,8 @@ def test_multiple_testsuites_and_tests(backend, tmpdir):
         def test_1_3(self):
             lcc.check_int_eq("foo", 3, 2)
     
-    class MySuite2(lcc.TestSuite):
+    @lcc.testsuite("MySuite2")
+    class MySuite2:
         @lcc.prop("foo", "bar")
         @lcc.test("Some test 1")
         def test_2_1(self):
@@ -111,7 +117,8 @@ def test_multiple_testsuites_and_tests(backend, tmpdir):
             lcc.check_int_eq("foo", 2, 2)
     
         # suite3 is a sub suite of suite3
-        class MySuite3(lcc.TestSuite):
+        @lcc.testsuite("MySuite3")
+        class MySuite3:
             @lcc.prop("foo", "bar")
             @lcc.test("Some test 1")
             def test_3_1(self):
@@ -129,7 +136,8 @@ def test_multiple_testsuites_and_tests(backend, tmpdir):
     do_test_serialization((MySuite1, MySuite2), backend, tmpdir)
 
 def test_check_success(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
             lcc.check_eq("somevalue", "foo", "foo")
@@ -137,7 +145,8 @@ def test_check_success(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_check_failure(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
             lcc.check_eq("somevalue", "foo", "bar")
@@ -145,7 +154,8 @@ def test_check_failure(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_assert_success(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
             lcc.assert_eq("somevalue", "foo", "foo")
@@ -153,7 +163,8 @@ def test_assert_success(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_assert_failure(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
             lcc.assert_eq("somevalue", "foo", "bar")
@@ -161,7 +172,8 @@ def test_assert_failure(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_all_types_of_logs(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
             lcc.log_debug("some debug message")
@@ -175,7 +187,8 @@ def test_all_types_of_logs(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_multiple_steps(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             lcc.set_step("step 1")
@@ -186,7 +199,8 @@ def test_multiple_steps(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_attachment(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             lcc.save_attachment_content("foobar", "foobar.txt")
@@ -194,7 +208,8 @@ def test_attachment(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_setup_suite_success(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         def setup_suite(self):
             lcc.log_info("some log")
         
@@ -205,7 +220,8 @@ def test_setup_suite_success(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_setup_suite_failure(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         def setup_suite(self):
             lcc.log_error("something bad happened")
         
@@ -216,7 +232,8 @@ def test_setup_suite_failure(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_teardown_suite_success(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             pass
@@ -227,7 +244,8 @@ def test_teardown_suite_success(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_teardown_suite_failure(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             pass
@@ -238,7 +256,8 @@ def test_teardown_suite_failure(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_setup_and_teardown_suite(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             pass
@@ -252,7 +271,8 @@ def test_setup_and_teardown_suite(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_setup_test_session_success(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             pass
@@ -264,7 +284,8 @@ def test_setup_test_session_success(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
 
 def test_setup_test_session_failure(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             pass
@@ -276,7 +297,8 @@ def test_setup_test_session_failure(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
 
 def test_teardown_test_session_success(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             pass
@@ -288,7 +310,8 @@ def test_teardown_test_session_success(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
 
 def test_teardown_test_session_failure(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             pass
@@ -300,7 +323,8 @@ def test_teardown_test_session_failure(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
 
 def test_setup_and_teardown_test_session(backend, tmpdir):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             pass
