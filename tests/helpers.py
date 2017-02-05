@@ -16,7 +16,7 @@ import pytest
 import lemoncheesecake as lcc
 from lemoncheesecake import loader
 from lemoncheesecake import runner
-from lemoncheesecake.testsuite import Filter
+from lemoncheesecake.testsuite import Filter, load_testsuite_from_class
 from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
@@ -358,8 +358,7 @@ def assert_report_from_testsuites(report, suite_classes):
     assert report.report_generation_time != None
     assert len(report.testsuites) == len(suite_classes)
     for testsuite_data, testsuite_class in zip(report.testsuites, suite_classes):
-        testsuite = testsuite_class()
-        testsuite.load()
+        testsuite = load_testsuite_from_class(testsuite_class)
         assert_testsuite_data_from_testsuite(testsuite_data, testsuite)
 
 def assert_report_from_testsuite(report, suite_class):
