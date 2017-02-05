@@ -35,7 +35,7 @@ class {name}:
 
 def build_fixture_module(name="myfixture"):
     return """
-from lemoncheesecake import *
+import lemoncheesecake as lcc
 
 @fixture()
 def {name}():
@@ -197,7 +197,8 @@ def run_testsuite(suite, filter=None, fixtures=None, worker=None, backends=[], t
     run_testsuites([suite], filter=filter, fixtures=fixtures, worker=worker, backends=backends, tmpdir=tmpdir)
 
 def run_func_in_test(callback):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("My Suite")
+    class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             callback()
