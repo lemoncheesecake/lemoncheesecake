@@ -28,10 +28,14 @@ def find_project_file():
     filename = os.environ.get("LCC_PROJECT_FILE", os.path.join(os.getcwd(), PROJECT_SETTINGS_FILE))
     return filename if os.path.exists(filename) else None
 
-def _check_class(klass):
+def _check_class(klass=None):
     def wrapper(name, value):
-        if not inspect.isclass(value) or not issubclass(value, klass):
-            return "'%s' has an incorrect value, '%s' is not a subclass of %s" % (name, value, klass)
+        if klass:
+            if not inspect.isclass(value) or not issubclass(value, klass):
+                return "'%s' has an incorrect value, '%s' is not a subclass of %s" % (name, value, klass)
+        else:
+            if not inspect.isclass(value):
+                return "'%s' has an incorrect value, '%s' is not a class" % (name, value)
         return None
     return wrapper
 
@@ -98,7 +102,7 @@ class Project:
             _check_func(args_nb=1), required=False, 
             default=lambda top_dir: report_dir_with_archiving(top_dir, archive_dirname_datetime)
         )
-        _("TESTSUITES", _check_class(TestSuite), is_list=True)
+        _("TESTSUITES", _check_class(), is_list=True)
         _("FIXTURES", _check_func(), is_list=True, required=False, default=[])
         _("WORKERS", _check_class_instance(Worker), is_dict=True, required=False, default={})
         _("REPORTING_BACKENDS", 
