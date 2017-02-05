@@ -143,7 +143,7 @@ class _Runner:
         if not test_setup_error:
             test_func_params = self.fixture_registry.get_fixture_results_as_params(test.get_params())
             try:
-                test.callback(suite, **test_func_params)
+                test.callback(**test_func_params)
             except (Exception, KeyboardInterrupt) as e:
                 self.handle_exception(e, suite)
         
