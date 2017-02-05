@@ -9,7 +9,7 @@ Created on Sep 30, 2016
 import pytest
 
 import lemoncheesecake as lcc
-from lemoncheesecake.testsuite.core import load_testsuite_from_class, add_test_in_testsuite, add_tests_in_testsuite
+from lemoncheesecake.testsuite import load_testsuite_from_class, add_test_in_testsuite, add_tests_in_testsuite
 from lemoncheesecake.exceptions import ProgrammingError, InvalidMetadataError
 
 from helpers import dummy_test_callback

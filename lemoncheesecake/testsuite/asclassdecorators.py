@@ -7,10 +7,8 @@ Created on Sep 8, 2016
 import inspect
 import copy
 
-from lemoncheesecake.testsuite.core import Test, TestSuite, Metadata, get_metadata_next_rank
+from lemoncheesecake.testsuite.asclass import Metadata, get_metadata_next_rank
 from lemoncheesecake.exceptions import ProgrammingError
-
-__all__ = "test", "testsuite", "tags", "prop", "link"
 
 _objects_with_metadata = []
 def get_metadata(obj):
