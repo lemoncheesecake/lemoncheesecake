@@ -21,12 +21,13 @@ creates a new project directory "myproject" containing one file "project.py" (th
 
 ## Writing a testsuite
 
-A lemoncheesecake testsuite is a class that inherits from `TestSuite` and contains tests and/or sub testsuites:
+A lemoncheesecake testsuite is a class a decorated with `@testsuite` and contains tests and/or sub testsuites:
 ```python
  # tests/my_first_testsuite.py file:
 from lemoncheesecake import *
 
-class my_first_testsuite(TestSuite):
+@testsuite("My first testsuite")
+class my_first_testsuite:
     @test("Some test")
     def some_test(self):
         check_str_eq("value", "foo", "foo")
@@ -203,7 +204,8 @@ def conn():
  # tests/my_suite.py:
 from lemoncheesecake import *
 
-class my_suite(TestSuite):
+@testsuite("My Suite")
+class my_suite:
     @test("Some test")
     def some_test(self, conn):
         conn.request("GET", "/some/resource")
@@ -246,7 +248,8 @@ Then, you can access and use the worker through the name you associated it to:
  # tests/my_suite.py:
 from lemoncheesecake import *
 
-class my_suite(TestSuite):
+@testsuite("My Suite")
+class my_suite:
     @test("Some test")
     def some_test(self):
         self.myworker.do_some_operation(42)
@@ -266,17 +269,21 @@ There are various ways to include sub testsuites in a testsuite.
 
 By referencing it through the `sub_suite` attribute of the parent suite:
 ```python
-class my_sub_testsuite(TestSuite):
+@testsuite("My sub testsuite")
+class my_sub_testsuite:
     pass
 
-class my_main_testsuite(TestSuite):
+@testsuite("my main testsuite")
+class my_main_testsuite:
     sub_suites = [my_sub_testsuite]
 ```
 
 Through a nested class:
 ```python
-class my_main_testsuite(TestSuite):
-    class my_sub_testsuite(TestSuite):
+@testsuite("my main testsuite")
+class my_main_testsuite:
+    @testsuite("My sub testsuite")
+    class my_sub_testsuite:
         pass
 ```
 
@@ -391,7 +398,8 @@ WORKERS = {"omdb": OmdbapiWorker()}
  # tests/movies.py
 from lemoncheesecake import *
 
-class movies(TestSuite):
+@testsuite("Movies")
+class movies:
 	@test("Retrieve Matrix main information on omdb")
 	def test_matrix(self):
 		data = self.omdb.get_movie_info("matrix", 1999)
