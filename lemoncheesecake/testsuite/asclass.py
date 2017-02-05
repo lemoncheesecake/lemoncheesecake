@@ -6,7 +6,7 @@ Created on Feb 5, 2017
 
 import inspect
 
-from lemoncheesecake.exceptions import ProgrammingError
+from lemoncheesecake.exceptions import ProgrammingError, serialize_current_exception
 from lemoncheesecake.testsuite.core import Test, TestSuite, TESTSUITE_HOOKS
 
 __all__ = ("load_testsuite_from_class", "add_test_in_testsuite", "add_tests_in_testsuite")
@@ -112,7 +112,12 @@ def get_sub_suites_from_class(obj):
 
 def load_testsuite_from_class(klass, parent_suite=None):
     md = klass._lccmetadata
-    inst = klass()
+    try:
+        inst = klass()
+    except Exception:
+        raise ProgrammingError("Got an unexpected error while instanciating testsuite class '%s':%s" % (
+            klass.__name__, serialize_current_exception()
+        ))
     suite = TestSuite(inst, md.name, md.description, parent_suite)
     suite.tags.extend(md.tags)
     suite.properties.update(md.properties)

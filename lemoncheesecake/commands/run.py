@@ -13,7 +13,7 @@ from lemoncheesecake.runner import run_testsuites
 from lemoncheesecake.testsuite.filter import add_filter_args_to_cli_parser, get_filter_from_cli_args
 from lemoncheesecake import reporting
 from lemoncheesecake.exceptions import ProjectError, FixtureError, InvalidMetadataError,\
-    serialize_current_exception
+    ProgrammingError, serialize_current_exception
 
 def build_fixture_registry(project, cli_args):
     registry = FixtureRegistry()
@@ -69,12 +69,12 @@ class RunCommand(Command):
             return "Cannot find project file"
         try:
             project = Project(project_file)
-        except ProjectError as e:
-            return str(e)
-        try:
             testsuites = project.load_testsuites()
+        except (ProjectError, ProgrammingError) as e:
+            return str(e)
         except InvalidMetadataError as e:
             return "Invalid test/testsuite metadata has been found: %s" % e
+
         if len(testsuites) == 0:
             return "No testsuites are defined in your lemoncheesecake project."
     
@@ -84,7 +84,7 @@ class RunCommand(Command):
             fixture_registry.check_fixtures_in_testsuites(testsuites)
         except FixtureError as e:
             return "Cannot run tests: %s" % e
-                
+        
         workers = project.get_workers()
         reporting_backends = { 
             backend.name: backend for backend in
