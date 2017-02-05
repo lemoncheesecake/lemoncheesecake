@@ -22,7 +22,7 @@ class Metadata:
         self.properties = {}
         self.tags = []
         self.links = []
-        self.rank = None
+        self.rank = 0
 
 def get_metadata_next_rank():
     rank = Metadata._next_rank
@@ -304,11 +304,14 @@ def load_test_from_method(method):
     test.links.extend(md.links)
     return test
 
+def _list_object_attributes(obj):
+    return [getattr(obj, n) for n in dir(obj) if not n.startswith("__")]
+
 def get_test_methods_from_class(obj):
-    return sorted(filter(is_test, map(lambda n: getattr(obj, n), dir(obj))), key=lambda m: m._lccmetadata.rank)
+    return sorted(filter(is_test, _list_object_attributes(obj)), key=lambda m: m._lccmetadata.rank)
 
 def get_sub_suites_from_class(obj):
-    return sorted(filter(is_testsuite, map(lambda n: getattr(obj, n), dir(obj))), key=lambda c: c._lccmetadata.rank)
+    return sorted(filter(is_testsuite, _list_object_attributes(obj)), key=lambda c: c._lccmetadata.rank)
 
 def load_testsuite_from_class(klass, parent_suite=None):
     md = klass._lccmetadata
