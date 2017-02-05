@@ -26,7 +26,7 @@ def get_metadata(obj):
         return obj._lccmetadata
 
 def testsuite(description, rank=None):
-    """Decorator, make a test from a TestSuite method"""
+    """Decorator, mark a class as a testsuite class"""
     def wrapper(klass):
         if not inspect.isclass(klass):
             raise ProgrammingError("%s is not a class (testsuite decorator can only be used on a class)" % klass)
@@ -40,7 +40,7 @@ def testsuite(description, rank=None):
     return wrapper
 
 def test(description):
-    """Decorator, make a test from a TestSuite method"""
+    """Decorator, make a method as a test method"""
     def wrapper(func):
         if not inspect.isfunction(func):
             raise ProgrammingError("%s is not a function (test decorator can only be used on a function)" % func)
@@ -69,7 +69,7 @@ def prop(key, value):
     return wrapper
 
 def link(url, name=None):
-    """Decorator, set an LINK (with an optional friendly name) to a test or a testsuite"""
+    """Decorator, set a link (with an optional friendly name) to a test or a testsuite"""
     def wrapper(obj):
         md = get_metadata(obj)
         md.links.append((url, name))
