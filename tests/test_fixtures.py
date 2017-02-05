@@ -4,6 +4,7 @@ import pytest
 
 import lemoncheesecake as lcc
 from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture
+from lemoncheesecake.testsuite import load_testsuite_from_class
 from lemoncheesecake import exceptions
 
 def test_fixture_decorator():
@@ -363,26 +364,28 @@ def test_filter_fixtures_on_all_criteria():
     assert sorted(fixtures) == ["fix5"]
 
 def test_check_fixtures_in_testsuites_ok():
-    class MySuite(lcc.TestSuite):
-        class MySubSuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
+        @lcc.testsuite("MySubSuite")
+        class MySubSuite:
             @lcc.test("test")
             def sometest(self, fix1):
                 pass
     
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     registry = build_registry()
     registry.check_fixtures_in_testsuites([suite])
 
 def test_check_fixtures_in_testsuites_not_ok():
-    class MySuite(lcc.TestSuite):
-        class MySubSuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
+        @lcc.testsuite("MySubSuite")
+        class MySubSuite:
             @lcc.test("test")
             def sometest(self, unknown_fix):
                 pass
     
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     registry = build_registry()
     with pytest.raises(exceptions.FixtureError):
         registry.check_fixtures_in_testsuites([suite])
