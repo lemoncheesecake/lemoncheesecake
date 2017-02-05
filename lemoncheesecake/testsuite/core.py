@@ -115,9 +115,6 @@ class TestSuite:
         self.assert_sub_suite_is_unique_in_suite(sub_suite)
         self._sub_testsuites.append(sub_suite)
     
-    def load_generated_tests(self):
-        pass
-    
     def get_test(self, test_name):
         for test in self._tests:
             if test.name == test_name:
