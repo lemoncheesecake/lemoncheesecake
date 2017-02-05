@@ -11,7 +11,8 @@ import fnmatch
 import re
 import imp
 
-from lemoncheesecake.exceptions import ImportTestSuiteError, InvalidMetadataError
+from lemoncheesecake.testsuite import load_testsuite_from_class
+from lemoncheesecake.exceptions import ImportTestSuiteError
 
 __all__ = "import_testsuite_from_file", "import_testsuites_from_directory"
 
@@ -139,8 +140,7 @@ def load_testsuites(suite_classes, metadata_policy=None):
     loaded_suites = {}
     suites = []
     for suite_class in suite_classes:
-        suite = suite_class()
-        suite.load()
+        suite = load_testsuite_from_class(suite_class)
         suites.append(suite)
         _load_testsuite(suite, loaded_tests, loaded_suites, metadata_policy)
     return suites

@@ -24,10 +24,11 @@ from lemoncheesecake.fixtures import FixtureRegistry
 
 def build_test_module(name="mytestsuite"):
     return """
-from lemoncheesecake import *
+import lemoncheesecake as lcc
 
-class {name}(TestSuite):
-    @test("This is a test")
+@lcc.testsuite("Test Suite")
+class {name}:
+    @lcc.test("This is a test")
     def test_{name}(self):
         pass
 """.format(name=name)

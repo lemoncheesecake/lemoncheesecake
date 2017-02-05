@@ -107,7 +107,8 @@ def get_test_methods_from_class(obj):
     return sorted(filter(is_test, _list_object_attributes(obj)), key=lambda m: m._lccmetadata.rank)
 
 def get_sub_suites_from_class(obj):
-    return sorted(filter(is_testsuite, _list_object_attributes(obj)), key=lambda c: c._lccmetadata.rank)
+    sub_suites = obj.sub_suites[:] if hasattr(obj, "sub_suites") else []
+    return sorted(filter(is_testsuite, _list_object_attributes(obj) + sub_suites), key=lambda c: c._lccmetadata.rank)
 
 def load_testsuite_from_class(klass, parent_suite=None):
     md = klass._lccmetadata
