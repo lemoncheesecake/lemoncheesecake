@@ -1,6 +1,7 @@
-from lemoncheesecake import *
+import lemoncheesecake as lcc
 
-class my_second_testsuite(TestSuite):
-	@test("Some test")
+@lcc.testsuite("My second testsuite")
+class my_second_testsuite:
+	@lcc.test("Some test")
 	def some_other_test(self, project_dir):
-		log_info("project dir: %s" % project_dir)
+		lcc.log_info("project dir: %s" % project_dir)

@@ -1,7 +1,8 @@
 import re
 import lemoncheesecake as lcc
 
-class my_first_testsuite(lcc.TestSuite):
+@lcc.testsuite("My second testsuite")
+class my_first_testsuite:
 	@lcc.test("Some test")
 	def some_test(self, omdb):
 		data = omdb.get_movie_info("matrix", 1999)
