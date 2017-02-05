@@ -113,7 +113,7 @@ def get_sub_suites_from_class(obj):
 def load_testsuite_from_class(klass, parent_suite=None):
     md = klass._lccmetadata
     inst = klass()
-    suite = TestSuite(md.name, md.description)
+    suite = TestSuite(inst, md.name, md.description, parent_suite)
     suite.tags.extend(md.tags)
     suite.properties.update(md.properties)
     suite.links.extend(md.links)

@@ -162,11 +162,7 @@ class _Runner:
         # Set workers into testsuite
         ###
         for worker_name, worker in self.workers.items():
-            if hasattr(suite, worker_name):
-                raise ProgrammingError("Cannot set worker '%s' into testsuite '%s', it already has an attribute with that name" % (
-                    worker_name, suite
-                ))
-            setattr(suite, worker_name, worker)
+            suite.set_worker(worker_name, worker)
     
         ###
         # Begin suite

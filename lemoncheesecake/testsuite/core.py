@@ -22,8 +22,9 @@ class Test:
         return inspect.getargspec(self.callback).args[1:]
 
 class TestSuite:
-    def __init__(self, name, description, parent_suite=None):
-        self.parent_suite = None
+    def __init__(self, obj, name, description, parent_suite=None):
+        self.obj = obj
+        self.parent_suite = parent_suite
         self.name = name
         self.description = description
         self.tags = []
@@ -209,3 +210,12 @@ class TestSuite:
     
     def is_test_selected(self, test):
         return test.name in self._selected_test_names
+    
+    def set_worker(self, worker_name, worker):
+        if not self.obj:
+            return
+        if hasattr(self.obj, worker_name):
+            raise ProgrammingError("Cannot set worker '%s' into testsuite '%s', it already has an attribute with that name" % (
+                worker_name, self.obj
+            ))
+        setattr(self.obj, worker_name, worker)
