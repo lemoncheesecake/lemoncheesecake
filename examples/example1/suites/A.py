@@ -2,12 +2,20 @@ from lemoncheesecake import *
 import re
 import time
 
-@suite_rank(2)
+@testsuite("A")
 @tags("my_tag")
 @prop("key1", "value1")
 @prop("key2", "value2")
-class A(TestSuite):
+class A:
     description = "A Suite"
+    
+    def __init__(self):
+        tests = []
+        for i in range(4):
+            def dummy(suite):
+                log_info("do test dyn %d" % i)
+            tests.append(Test("test_%d" % i, "This is my dynamic test %d" % i, dummy))
+        add_tests_in_testsuite(tests, self, after_test="this_is_a_test")
     
     @tags("my_tag1")
     @test("My test description")
@@ -65,10 +73,11 @@ class A(TestSuite):
         check_gteq("value", 4, 2)
         check_str_contains("string", "foobar", "foo")
     
+    @testsuite("HTML Escaping")
     @tags("<h1>My Tag</h1>")    
     @prop("<h1>Prop name</h1>", "<h1>Prop value</h1>")
     @link("http://bugtracker.net/tickets/1234", "<h1>link name</h1>")    
-    class HtmlEscaping(TestSuite):
+    class HtmlEscaping:
         description = "<h1>Test suite</h1>"
 
         @tags("<h1>My Tag</h1>")    
@@ -81,22 +90,18 @@ class A(TestSuite):
             log_info("<h1>some log</h1>")
             save_attachment_content("content", "filename", "<h1>attachment</h1>")
     
-    class a_very_lllllllllllllllllllllllooooooooooooooooooooooooooooooooonnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnggggggggggggggggggggggg_testsuite_name(TestSuite):
+    @testsuite("A very loong testsuite")
+    class a_very_lllllllllllllllllllllllooooooooooooooooooooooooooooooooonnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnggggggggggggggggggggggg_testsuite_name:
         @test("A test within a testsuite with a long name")
         def the_test_within_the_testsuite_with_long_name(self):
             set_step("lllllllllllllllllllllllllllllllooooooooooooooooooooooonnnnnnnnnnngggggggggggggggg step")
             time.sleep(3)
     
-    class a_testsuite_without_direct_tests(TestSuite):
-        class a_testsuite_with_parent_without_direct_tests(TestSuite):
+    @testsuite("a_testsuite_without_direct_tests")
+    class a_testsuite_without_direct_tests:
+        @testsuite("a_testsuite_with_parent_without_direct_tests")
+        class a_testsuite_with_parent_without_direct_tests:
             @test("Yet Another Test")
             def yet_another_test(self):
                 check_str_not_eq("string", "foo", "foo")
         
-    def load_generated_tests(self):
-        tests = []
-        for i in range(4):
-            def dummy(suite):
-                log_info("do test dyn %d" % i)
-            tests.append(Test("test_%d" % i, "This is my dynamic test %d" % i, dummy))
-        self.register_tests(tests, after_test="this_is_a_test")

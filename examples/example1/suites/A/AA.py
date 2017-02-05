@@ -1,7 +1,9 @@
 from lemoncheesecake import *
 
+
+@testsuite("AA")
 @link("http://bugtracker.net/tickets/1234")
-class AA(TestSuite):
+class AA:
     def setup_suite(self):
         set_step("hep csdcnlns csdlcsdl cubsd ucds")
         log_info("some stuff in before suite")
@@ -14,7 +16,8 @@ class AA(TestSuite):
     def test_of_A(self):
         raise AbortTest("this test cannot be executed")
 
-    class AAA(TestSuite):
+    @testsuite("AAA")
+    class AAA:
         @test("Test of AAA")
         def test_of_B(self):
             assert_eq("value", 1, 2)
