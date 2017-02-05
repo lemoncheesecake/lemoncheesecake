@@ -37,7 +37,7 @@ def build_fixture_module(name="myfixture"):
     return """
 import lemoncheesecake as lcc
 
-@fixture()
+@lcc.fixture()
 def {name}():
     pass
 """.format(name=name)
