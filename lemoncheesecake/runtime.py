@@ -17,7 +17,7 @@ from lemoncheesecake.reporting import *
 
 __all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "set_step", \
     "prepare_attachment", "save_attachment_file", "save_attachment_content", \
-    "get_worker"
+    "get_worker", "add_report_info"
 
 _runtime = None # singleton
 
@@ -347,3 +347,7 @@ def get_worker(worker_name):
     """
     rt = get_runtime()
     return rt.workers[worker_name]
+
+def add_report_info(name, value):
+    report = get_runtime().report
+    report.add_info(name, value)

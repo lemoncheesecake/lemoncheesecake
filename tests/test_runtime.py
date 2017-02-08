@@ -704,3 +704,15 @@ def test_teardown_test_session_without_content():
     
     assert report.test_session_teardown == None
     assert marker == ["teardown"]
+
+def add_report_info():
+    class MySuite(lcc.TestSuite):
+        @lcc.test("Some test")
+        def sometest(self):
+            lcc.add_report_info("some info", "some data")
+    
+    run_testsuite(MySuite)
+    
+    report = get_runtime().report
+    
+    assert report.info[-1] == ["some info", "some data"]
