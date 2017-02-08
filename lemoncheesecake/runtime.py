@@ -191,7 +191,7 @@ class _Runtime:
         self.set_step("Setup test")
     
     def end_test_setup(self):
-        pass
+        self.set_step(self.current_test.description)
     
     def begin_test_teardown(self):
         self.set_step("Teardown test")

@@ -309,6 +309,31 @@ def test_default_step():
     assert test.steps[0].entries[0].level == "info"
     assert test.steps[0].entries[0].message == "do something"
 
+def test_step_after_test_setup():
+    class MySuite(lcc.TestSuite):
+        def setup_test(self, test_name):
+            lcc.log_info("in test setup")
+        
+        @lcc.test("Some test")
+        def sometest(self):
+            lcc.log_info("do something")
+    
+    run_testsuite(MySuite)
+    
+    report = get_runtime().report
+
+    assert_report_from_testsuite(report, MySuite)
+    assert_report_stats(report, expected_test_successes=1)
+    
+    test = report.get_test("sometest")
+    assert test.outcome == True
+    assert test.steps[0].description == "Setup test"
+    assert test.steps[0].entries[0].level == "info"
+    assert test.steps[0].entries[0].message == "in test setup"
+    assert test.steps[1].description == "Some test"
+    assert test.steps[1].entries[0].level == "info"
+    assert test.steps[1].entries[0].message == "do something"
+
 def test_prepare_attachment(tmpdir):
     class MySuite(lcc.TestSuite):
         @lcc.test("Some test")
