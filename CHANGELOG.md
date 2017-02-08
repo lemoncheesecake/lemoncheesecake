@@ -1,3 +1,8 @@
+# 0.5.2 (2017-02-09)
+
+- Add a new "add_report_info" function to add key/value info to the report from test context
+- After test setup, 'reset' test step to the test description
+
 # 0.5.1 (2017-01-30)
 
 - Fix module loading bug in case of multiple modules share the same name
