@@ -4,6 +4,7 @@ Created on Jan 24, 2016
 @author: nicolas
 '''
 
+import os
 import sys
 import traceback
 
@@ -236,7 +237,7 @@ class _Runner:
         self.abort_testsuite = None
         
         # init report information
-        self.session.report.add_info("Command line", " ".join(sys.argv))
+        self.session.report.add_info("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:]))
         
         self.session.begin_tests()
         
