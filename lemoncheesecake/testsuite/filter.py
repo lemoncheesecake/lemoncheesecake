@@ -18,6 +18,30 @@ __all__ = ("Filter", "add_filter_args_to_cli_parser", "get_filter_from_cli_args"
 def _get_path(suite, test=None):
     return ".".join([s.name for s in suite.get_path()] + ([test.name] if test else []))
 
+def value_match_patterns(value, patterns):
+    for pattern in patterns:
+        if fnmatch.fnmatch(value, pattern):
+            return 1
+    return 0
+
+def values_match_patterns(values, patterns):
+    for pattern in patterns:
+        if fnmatch.filter(values, pattern):
+            return 1
+    return 0
+
+def keyvalues_match_keyvalues(keyvalues, patterns):
+    for key, value in patterns.items():
+        if key in keyvalues and keyvalues[key] == value:
+            return 1
+    return 0
+
+def listelem_match_patterns(lsts, idx, patterns):
+    for pattern in patterns:
+        if pattern in map(lambda l: l[idx], lsts):
+            return 1
+    return 0
+
 class Filter:
     def __init__(self):
         self.path = []
@@ -59,26 +83,22 @@ class Filter:
         # so that the test match
         flags = self.get_test_criteria_as_flags() ^ parent_suite_match
 
-        # then, try to match applicable criteria one by one
-        try:
-            if flags & FILTER_SUITE_MATCH_PATH:
-                next(path for path in self.path if fnmatch.fnmatch(_get_path(suite, test), path))
+        funcs = []
+        if flags & FILTER_SUITE_MATCH_PATH:
+            funcs.append(lambda: value_match_patterns(_get_path(suite, test), self.path))
+        if flags & FILTER_SUITE_MATCH_TEST_DESCRIPTION:
+            funcs.append(lambda: value_match_patterns(test.description, self.test_description))
+        if flags & FILTER_SUITE_MATCH_TAG:
+            funcs.append(lambda: values_match_patterns(test.tags, self.tags))
+        if flags & FILTER_SUITE_MATCH_PROPERTY:
+            funcs.append(lambda: keyvalues_match_keyvalues(test.properties, self.properties))
+        if flags & FILTER_SUITE_MATCH_LINK_NAME:
+            funcs.append(lambda: listelem_match_patterns(test.links, 1, self.link_names))
         
-            if flags & FILTER_SUITE_MATCH_TEST_DESCRIPTION:
-                next(desc for desc in self.test_description if fnmatch.fnmatch(test.description, desc))
-            
-            if flags & FILTER_SUITE_MATCH_TAG:
-                next(tag for tag in self.tags if fnmatch.filter(test.tags, tag))
-            
-            if flags & FILTER_SUITE_MATCH_PROPERTY:
-                next(key for key, value in self.properties.items() if key in test.properties and test.properties[key] == value)
-            
-            if flags & FILTER_SUITE_MATCH_LINK_NAME:
-                next(link for link in self.link_names if link in [name for url, name in test.links if name])
-        
-        except StopIteration:
-            return False
-        
+        for func in funcs:
+            if func() <= 0:
+                return False
+                
         return True
     
     def match_testsuite(self, suite, parent_suite_match=0):
