@@ -43,3 +43,9 @@ def get_distincts_in_list(lst):
         if elem not in distincts:
             distincts.append(elem)
     return distincts
+
+def dict_cat(d1, d2):
+    new = dict()
+    new.update(d1)
+    new.update(d2)
+    return new

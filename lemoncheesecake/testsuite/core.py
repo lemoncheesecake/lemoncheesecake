@@ -7,7 +7,7 @@ Created on Sep 8, 2016
 import inspect
 
 from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError
-from lemoncheesecake.utils import object_has_method, get_distincts_in_list
+from lemoncheesecake.utils import dict_cat, object_has_method, get_distincts_in_list
 
 __all__ = "TestSuite", "Test"
 
@@ -220,6 +220,25 @@ class TestSuite:
         else:
             for test in tests:
                 self.register_test(test, before_test=before_test)
+    
+    ###
+    # Compute tests metadata with metadata inherited from parent suite
+    ###
+    
+    def get_inherited_test_paths(self, test):
+        return map(lambda s: s.get_path_str(), self.get_path()) + [self.get_test_path_str(test)]
+
+    def get_inherited_test_descriptions(self, test):
+        return map(lambda s: s.description, self.get_path()) + [test.description]
+    
+    def get_inherited_test_tags(self, test):
+        return get_distincts_in_list(reduce(lambda x, y: x + y, map(lambda s: s.tags, self.get_path()), []) + test.tags)
+    
+    def get_inherited_test_properties(self, test):
+        return dict_cat(reduce(lambda x, y: dict_cat(x, y), map(lambda s: s.properties, self.get_path()), {}), test.properties)
+    
+    def get_inherited_test_links(self, test):
+        return get_distincts_in_list(reduce(lambda x, y: x + y, map(lambda s: s.links, self.get_path()), []) + test.links)
     
     ###
     # Filtering methods
