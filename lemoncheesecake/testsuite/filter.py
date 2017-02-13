@@ -59,11 +59,7 @@ class Filter:
         self.link_names = [ ]
     
     def is_empty(self):
-        count = 0
-        for value in self.path, self.test_description, \
-            self.testsuite_description, self.tags, self.properties, self.link_names:
-            count += len(value)
-        return count == 0
+        return not any([self.path, self.description, self.tags, self.properties, self.link_names])
     
     def match_test(self, test, suite):
         funcs = [
