@@ -8,16 +8,19 @@ import fnmatch
 
 __all__ = ("Filter", "add_filter_args_to_cli_parser", "get_filter_from_cli_args")
 
-def _get_path(suite, test=None):
-    return ".".join([s.name for s in suite.get_path()] + ([test.name] if test else []))
+NEGATIVE_FILTER_CHARS = "-^~"
 
 def match_values(values, patterns):
     if not patterns:
         return 1
     
     for pattern in patterns:
-        if fnmatch.filter(values, pattern):
-            return 1
+        if pattern[0] in NEGATIVE_FILTER_CHARS:
+            if not fnmatch.filter(values, pattern[1:]):
+                return 1
+        else:
+            if fnmatch.filter(values, pattern):
+                return 1
     return 0
 
 def match_keyvalues(keyvalues, patterns):
@@ -25,8 +28,13 @@ def match_keyvalues(keyvalues, patterns):
         return 1
     
     for key, value in patterns.items():
-        if key in keyvalues and keyvalues[key] == value:
-            return 1
+        if key in keyvalues:
+            if value[0] in NEGATIVE_FILTER_CHARS:
+                if keyvalues[key] != value[1:]:
+                    return 1
+            else:
+                if keyvalues[key] == value:
+                    return 1
     return 0
 
 def match_listelem(lsts, idx, patterns):
@@ -34,8 +42,12 @@ def match_listelem(lsts, idx, patterns):
         return 1
     
     for pattern in patterns:
-        if pattern in map(lambda l: l[idx], lsts):
-            return 1
+        if pattern[0] in NEGATIVE_FILTER_CHARS:
+            if pattern[1:] not in map(lambda l: l[idx], lsts):
+                return 1
+        else:
+            if pattern in map(lambda l: l[idx], lsts):
+                return 1
     return 0
 
 class Filter:
