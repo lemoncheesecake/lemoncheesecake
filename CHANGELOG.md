@@ -1,3 +1,7 @@
+# 0.5.3 (2017-02-13)
+
+- Add support for negative filters (using a '-' or a '~' or a '^' before the filtered value)
+
 # 0.5.2 (2017-02-09)
 
 - Add a new "add_report_info" function to add key/value info to the report from test context
