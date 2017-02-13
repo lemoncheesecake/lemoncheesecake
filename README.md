@@ -41,15 +41,15 @@ All lemoncheesecake functions and classes used in test modules can be imported s
 
 ## Running the tests
 
-The command lcc-run is in charge of running the tests, it provides several option to filter the test to be run and to set the reporting backends that will be used.
+The command lcc run is in charge of running the tests, it provides several option to filter the test to be run and to set the reporting backends that will be used.
 ```
-usage: lcc run [-h] [--test-desc TEST_DESC [TEST_DESC ...]]
-               [--suite-desc SUITE_DESC [SUITE_DESC ...]]
-               [--tag TAG [TAG ...]] [--property PROPERTY [PROPERTY ...]]
+usage: lcc run [-h] [--desc DESC [DESC ...]] [--tag TAG [TAG ...]]
+               [--property PROPERTY [PROPERTY ...]]
                [--link LINK [LINK ...]] [--report-dir REPORT_DIR]
                [--reporting REPORTING [REPORTING ...]]
                [--enable-reporting ENABLE_REPORTING [ENABLE_REPORTING ...]]
                [--disable-reporting DISABLE_REPORTING [DISABLE_REPORTING ...]]
+               [--show-stacktrace]
                [path [path ...]]
 
 positional arguments:
@@ -58,10 +58,8 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  --test-desc TEST_DESC [TEST_DESC ...]
-                        Filters on test descriptions
-  --suite-desc SUITE_DESC [SUITE_DESC ...]
-                        Filters on test suite descriptions
+  --desc DESC [DESC ...]
+                        Filters on test/testsuite descriptions
   --tag TAG [TAG ...], -a TAG [TAG ...]
                         Filters on test & test suite tags
   --property PROPERTY [PROPERTY ...], -m PROPERTY [PROPERTY ...]
@@ -78,6 +76,8 @@ optional arguments:
   --disable-reporting DISABLE_REPORTING [DISABLE_REPORTING ...]
                         The list of reporting backends to remove (from base
                         backends)
+  --show-stacktrace     Show full stacktrace will getting an unexpected
+                        exception from user code
 ```
 
 Tests are run like this:

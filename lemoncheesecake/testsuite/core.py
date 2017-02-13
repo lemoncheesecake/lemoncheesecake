@@ -7,7 +7,7 @@ Created on Sep 8, 2016
 import inspect
 
 from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError
-from lemoncheesecake.utils import object_has_method, get_distincts_in_list
+from lemoncheesecake.utils import dict_cat, object_has_method, get_distincts_in_list
 
 __all__ = "TestSuite", "Test"
 
@@ -222,23 +222,49 @@ class TestSuite:
                 self.register_test(test, before_test=before_test)
     
     ###
+    # Compute tests metadata with metadata inherited from parent suite
+    ###
+    
+    def get_inherited_test_paths(self, test):
+        return list(map(lambda s: s.get_path_str(), self.get_path())) + [self.get_test_path_str(test)]
+
+    def get_inherited_test_descriptions(self, test):
+        return list(map(lambda s: s.description, self.get_path())) + [test.description]
+    
+    def get_inherited_test_tags(self, test):
+        tags = []
+        for suite in self.get_path():
+            tags.extend(suite.tags)
+        tags.extend(test.tags)
+        return get_distincts_in_list(tags)
+    
+    def get_inherited_test_properties(self, test):
+        properties = {}
+        for suite in self.get_path():
+            properties.update(suite.properties)
+        properties.update(test.properties)
+        return properties
+    
+    def get_inherited_test_links(self, test):
+        links = []
+        for suite in self.get_path():
+            links.extend(suite.links)
+        links.extend(test.links)
+        return get_distincts_in_list(links)
+    
+    ###
     # Filtering methods
     ###
     
-    def apply_filter(self, filter, parent_suite_match=0):
+    def apply_filter(self, filter):
         self._selected_test_names = [ ]
         
-        suite_match = filter.match_testsuite(self, parent_suite_match)
-        suite_match |= parent_suite_match
-                
-        if suite_match & filter.get_testsuite_only_criteria_as_flags() == filter.get_testsuite_only_criteria_as_flags():
-            for test in self._tests:
-                test_match = filter.match_test(test, self, suite_match)
-                if test_match:
-                    self._selected_test_names.append(test.name)
+        for test in self._tests:
+            if filter.match_test(test, self):
+                self._selected_test_names.append(test.name)
         
         for suite in self._sub_testsuites:
-            suite.apply_filter(filter, suite_match)
+            suite.apply_filter(filter)
 
     def has_selected_tests(self, deep=True):
         if deep:
