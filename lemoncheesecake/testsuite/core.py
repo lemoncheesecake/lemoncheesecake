@@ -226,19 +226,31 @@ class TestSuite:
     ###
     
     def get_inherited_test_paths(self, test):
-        return map(lambda s: s.get_path_str(), self.get_path()) + [self.get_test_path_str(test)]
+        return list(map(lambda s: s.get_path_str(), self.get_path())) + [self.get_test_path_str(test)]
 
     def get_inherited_test_descriptions(self, test):
-        return map(lambda s: s.description, self.get_path()) + [test.description]
+        return list(map(lambda s: s.description, self.get_path())) + [test.description]
     
     def get_inherited_test_tags(self, test):
-        return get_distincts_in_list(reduce(lambda x, y: x + y, map(lambda s: s.tags, self.get_path()), []) + test.tags)
+        tags = []
+        for suite in self.get_path():
+            tags.extend(suite.tags)
+        tags.extend(test.tags)
+        return get_distincts_in_list(tags)
     
     def get_inherited_test_properties(self, test):
-        return dict_cat(reduce(lambda x, y: dict_cat(x, y), map(lambda s: s.properties, self.get_path()), {}), test.properties)
+        properties = {}
+        for suite in self.get_path():
+            properties.update(suite.properties)
+        properties.update(test.properties)
+        return properties
     
     def get_inherited_test_links(self, test):
-        return get_distincts_in_list(reduce(lambda x, y: x + y, map(lambda s: s.links, self.get_path()), []) + test.links)
+        links = []
+        for suite in self.get_path():
+            links.extend(suite.links)
+        links.extend(test.links)
+        return get_distincts_in_list(links)
     
     ###
     # Filtering methods
