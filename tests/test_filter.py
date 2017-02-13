@@ -656,3 +656,20 @@ def test_filter_path_and_negative_tag_on_test(reporting_session):
       
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test3"
+
+def test_is_empty_true():
+    filt = Filter()
+    assert filt.is_empty() == True
+ 
+def test_is_empty_false():
+    def do_test(attr, val):
+        filt = Filter()
+        assert hasattr(filt, attr)
+        setattr(filt, attr, val)
+        assert filt.is_empty() == False
+     
+    do_test("path", "foo")
+    do_test("description", "foo")
+    do_test("tags", "foo")
+    do_test("properties", "foo")
+    do_test("link_names", "foo")
