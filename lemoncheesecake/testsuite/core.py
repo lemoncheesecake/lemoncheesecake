@@ -244,20 +244,15 @@ class TestSuite:
     # Filtering methods
     ###
     
-    def apply_filter(self, filter, parent_suite_match=0):
+    def apply_filter(self, filter):
         self._selected_test_names = [ ]
         
-        suite_match = filter.match_testsuite(self, parent_suite_match)
-        suite_match |= parent_suite_match
-                
-        if suite_match & filter.get_testsuite_only_criteria_as_flags() == filter.get_testsuite_only_criteria_as_flags():
-            for test in self._tests:
-                test_match = filter.match_test(test, self, suite_match)
-                if test_match:
-                    self._selected_test_names.append(test.name)
+        for test in self._tests:
+            if filter.match_test(test, self):
+                self._selected_test_names.append(test.name)
         
         for suite in self._sub_testsuites:
-            suite.apply_filter(filter, suite_match)
+            suite.apply_filter(filter)
 
     def has_selected_tests(self, deep=True):
         if deep:

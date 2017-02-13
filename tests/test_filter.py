@@ -108,7 +108,7 @@ def test_filter_description_on_test(reporting_session):
                 pass
     
     filter = Filter()
-    filter.test_description.append("desc2")
+    filter.description.append("desc2")
     
     run_testsuite(mysuite, filter=filter)
     
@@ -132,7 +132,7 @@ def test_filter_description_on_suite(reporting_session):
                 pass
     
     filter = Filter()
-    filter.testsuite_description.append("desc2")
+    filter.description.append("desc2")
     
     run_testsuite(mysuite, filter=filter)
     
@@ -306,7 +306,7 @@ def test_filter_description_on_suite_and_link_on_test(reporting_session):
                 pass
  
     filter = Filter()
-    filter.testsuite_description.append("Sub suite 2")
+    filter.description.append("Sub suite 2")
     filter.link_names.append("#1234")
       
     run_testsuite(mysuite, filter=filter)
