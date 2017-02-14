@@ -7,19 +7,20 @@ Created on Oct 29, 2016
 import pytest
 
 import lemoncheesecake as lcc
+from lemoncheesecake.testsuite import load_testsuite_from_class
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.exceptions import InvalidMetadataError
 
 def test_property_value_validation():
     @lcc.prop("foo", 1)
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.prop("foo", 2)
         @lcc.test("Some test")
         def sometest(self):
             pass
     
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     
     # passing case
     policy = MetadataPolicy()
@@ -37,14 +38,14 @@ def test_property_value_validation():
 
 def test_required_property():
     @lcc.prop("foo", 1)
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.prop("foo", 2)
         @lcc.test("Some test")
         def sometest(self):
             pass
     
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     
     # passing case
     policy = MetadataPolicy()
@@ -63,15 +64,15 @@ def test_required_property():
 def test_allowed_properties_and_tags():
     @lcc.prop("foo", 1)
     @lcc.tags("tag1")
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.prop("foo", 2)
         @lcc.tags("tag2")
         @lcc.test("Some test")
         def sometest(self):
             pass
     
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     
     # passing case
     policy = MetadataPolicy()
@@ -96,14 +97,14 @@ def test_allowed_properties_and_tags():
 
 def test_different_test_and_suite_property_configurations():
     @lcc.prop("foo", 1)
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.prop("bar", 2)
         @lcc.test("Some test")
         def sometest(self):
             pass
     
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     
     # passing case
     policy = MetadataPolicy()
@@ -124,14 +125,14 @@ def test_different_test_and_suite_property_configurations():
     
 def test_different_test_and_suite_tag_configurations():    
     @lcc.tags("tag1")
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.tags("tag2")
         @lcc.test("Some test")
         def sometest(self):
             pass
     
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     
     # passing case
     policy = MetadataPolicy()
@@ -152,14 +153,14 @@ def test_different_test_and_suite_tag_configurations():
 
 def test_disallow_unknown_property():
     @lcc.prop("foo", 1)
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.prop("bar", 2)
         @lcc.test("Some test")
         def sometest(self):
             pass
     
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     
     # passing case
     policy = MetadataPolicy()
@@ -177,14 +178,14 @@ def test_disallow_unknown_property():
     
 def test_disallow_unknown_tag():    
     @lcc.tags("tag1")
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("MySuite")
+    class MySuite:
         @lcc.tags("tag2")
         @lcc.test("Some test")
         def sometest(self):
             pass
     
-    suite = MySuite()
-    suite.load()
+    suite = load_testsuite_from_class(MySuite)
     
     # passing case
     policy = MetadataPolicy()

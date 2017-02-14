@@ -16,7 +16,7 @@ import pytest
 import lemoncheesecake as lcc
 from lemoncheesecake import loader
 from lemoncheesecake import runner
-from lemoncheesecake.testsuite import Filter
+from lemoncheesecake.testsuite import Filter, load_testsuite_from_class
 from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
@@ -24,19 +24,20 @@ from lemoncheesecake.fixtures import FixtureRegistry
 
 def build_test_module(name="mytestsuite"):
     return """
-from lemoncheesecake import *
+import lemoncheesecake as lcc
 
-class {name}(TestSuite):
-    @test("This is a test")
+@lcc.testsuite("Test Suite")
+class {name}:
+    @lcc.test("This is a test")
     def test_{name}(self):
         pass
 """.format(name=name)
 
 def build_fixture_module(name="myfixture"):
     return """
-from lemoncheesecake import *
+import lemoncheesecake as lcc
 
-@fixture()
+@lcc.fixture()
 def {name}():
     pass
 """.format(name=name)
@@ -196,7 +197,8 @@ def run_testsuite(suite, filter=None, fixtures=None, worker=None, backends=[], t
     run_testsuites([suite], filter=filter, fixtures=fixtures, worker=worker, backends=backends, tmpdir=tmpdir)
 
 def run_func_in_test(callback):
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("My Suite")
+    class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             callback()
@@ -212,8 +214,10 @@ def dump_report(report):
         xml = serialize_report_as_string(report)
         print(xml, file=sys.stderr)
 
-def dummy_test_callback(suite):
-    pass
+def dummy_test_callback():
+    def wrapped(suite):
+        pass
+    return wrapped
 
 def assert_check_data(actual, expected):
     assert actual.description == expected.description
@@ -354,8 +358,7 @@ def assert_report_from_testsuites(report, suite_classes):
     assert report.report_generation_time != None
     assert len(report.testsuites) == len(suite_classes)
     for testsuite_data, testsuite_class in zip(report.testsuites, suite_classes):
-        testsuite = testsuite_class()
-        testsuite.load()
+        testsuite = load_testsuite_from_class(testsuite_class)
         assert_testsuite_data_from_testsuite(testsuite_data, testsuite)
 
 def assert_report_from_testsuite(report, suite_class):

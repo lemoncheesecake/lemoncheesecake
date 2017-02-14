@@ -6,82 +6,53 @@ Created on Sep 8, 2016
 
 import inspect
 
-from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError
-from lemoncheesecake.utils import dict_cat, object_has_method, get_distincts_in_list
+from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError, InternalError
+from lemoncheesecake.utils import get_distincts_in_list
 
-__all__ = "TestSuite", "Test"
+TESTSUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
 
 class Test:
-    test_current_rank = 1
-
-    def __init__(self, name, description, callback, force_rank=None):
+    def __init__(self, name, description, callback):
         self.name = name
         self.description = description
         self.callback = callback
         self.tags = [ ]
         self.properties = {}
         self.links = [ ]
-        self.rank = force_rank if force_rank != None else Test.test_current_rank
-        Test.test_current_rank += 1
     
     def get_params(self):
         return inspect.getargspec(self.callback).args[1:]
-        
-    def __str__(self):
-        return "%s (%s) # %d" % (self.name, self.description, self.rank)
+
+def _assert_valid_hook_name(hook_name):
+    if hook_name not in TESTSUITE_HOOKS:
+        raise InternalError("Invalid hook name '%s'" % hook_name)
 
 class TestSuite:
-    tags = [ ]
-    properties = {}
-    links = [ ]
-    sub_suites = [ ]
+    def __init__(self, obj, name, description, parent_suite=None):
+        self.obj = obj
+        self.parent_suite = parent_suite
+        self.name = name
+        self.description = description
+        self.tags = []
+        self.properties = {}
+        self.links = []
+        self._hooks = {}
+        self._tests = []
+        self._sub_testsuites = []
+        self._selected_test_names = []
+    
+    def add_hook(self, hook_name, func):
+        _assert_valid_hook_name(hook_name)
+        self._hooks[hook_name] = func
     
     def has_hook(self, hook_name):
-        return object_has_method(self, hook_name)
+        _assert_valid_hook_name(hook_name)
+        return hook_name in self._hooks
     
-    def load(self, parent_suite=None):
-        self.parent_suite = parent_suite
-        
-        # suite name & description
-        if not hasattr(self, "name"):
-            self.name = self.__class__.__name__
-        if not hasattr(self, "description"):
-            self.description = self.name
-
-        # static tests
-        self._tests = [ ]
-        for attr in dir(self):
-            obj = getattr(self, attr)
-            if isinstance(obj, Test):
-                self.assert_test_is_unique_in_suite(obj)
-                self._tests.append(obj)
-        self._tests = sorted(self._tests, key=lambda x: x.rank)
-
-        # dynamic test        
-        self.load_generated_tests()
-        
-        # find sub testsuite classes
-        # - first: in the "sub_suites" attribute of the class
-        suite_classes = self.sub_suites[:]
-        # - second: in inline attributes
-        for attr_name in dir(self):
-            if attr_name.startswith("__"):
-                continue
-            attr = getattr(self, attr_name)
-            if inspect.isclass(attr) and issubclass(attr, TestSuite): 
-                suite_classes.append(attr) 
-        
-        # load sub testsuites
-        self._sub_testsuites = [ ]
-        for suite_class in suite_classes:
-            sub_suite = suite_class()
-            sub_suite.load(self)
-            self.assert_sub_suite_is_unique_in_suite(sub_suite)
-            self._sub_testsuites.append(sub_suite)
-
-        # filtering data
-        self._selected_test_names = [ t.name for t in self._tests ]
-        
+    def get_hook(self, hook_name):
+        _assert_valid_hook_name(hook_name)
+        return self._hooks.get(hook_name)
+            
     def get_path(self):
         suites = [ self ]
         parent_suite = self.parent_suite
@@ -144,9 +115,15 @@ class TestSuite:
             raise InvalidMetadataError(
                 "a sub test suite with name '%s' is already registered in test suite %s" % (sub_suite.name, self.get_path_str())
             )
-        
-    def load_generated_tests(self):
-        pass
+    
+    def add_test(self, test):
+        self.assert_test_is_unique_in_suite(test)
+        self._tests.append(test)
+        self._selected_test_names.append(test.name)
+    
+    def add_sub_testsuite(self, sub_suite):
+        self.assert_sub_suite_is_unique_in_suite(sub_suite)
+        self._sub_testsuites.append(sub_suite)
     
     def get_test(self, test_name):
         for test in self._tests:
@@ -181,46 +158,7 @@ class TestSuite:
                 fixtures.extend(sub_suite.get_fixtures())
         
         return get_distincts_in_list(fixtures)
-    
-    def register_test(self, new_test, before_test=None, after_test=None):
-        if before_test and after_test:
-            raise ProgrammingError("before_test and after_test are mutually exclusive")
         
-        self.assert_test_is_unique_in_suite(new_test)
-        
-        ref_test_name = before_test if before_test else after_test
-        
-        if ref_test_name:
-            # find test corresponding to before_test/after_test
-            ref_test, ref_test_idx = None, None
-            for idx, test in enumerate(self._tests):
-                if test.name == ref_test_name:
-                    ref_test, ref_test_idx = test, idx
-                    break
-            if ref_test_idx == None:
-                raise InvalidMetadataError("Could not find any test named '%s' in the test suite '%s'" % (ref_test_name, self.get_suite_name()))
-            
-            # set the test appropriate rank and shift all test's ranks coming after the new test
-            new_test.rank = ref_test.rank + (1 if after_test else 0)
-            for test in self._tests[ref_test_idx + (1 if after_test else 0):]:
-                test.rank += 1
-            self._tests.insert(ref_test_idx + (1 if after_test else 0), new_test)
-        else:
-            self._tests.append(new_test)
-    
-    def register_tests(self, tests, before_test=None, after_test=None):
-        if before_test and after_test:
-            raise ProgrammingError("before_test and after_test are mutually exclusive")
-        
-        if after_test:
-            previous_test = after_test
-            for test in tests:
-                self.register_test(test, after_test=previous_test)
-                previous_test = test.name
-        else:
-            for test in tests:
-                self.register_test(test, before_test=before_test)
-    
     ###
     # Compute tests metadata with metadata inherited from parent suite
     ###
@@ -281,3 +219,12 @@ class TestSuite:
     
     def is_test_selected(self, test):
         return test.name in self._selected_test_names
+    
+    def set_worker(self, worker_name, worker):
+        if not self.obj:
+            return
+        if hasattr(self.obj, worker_name):
+            raise ProgrammingError("Cannot set worker '%s' into testsuite '%s', it already has an attribute with that name" % (
+                worker_name, self.obj
+            ))
+        setattr(self.obj, worker_name, worker)
