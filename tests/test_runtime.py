@@ -323,7 +323,8 @@ def test_default_step():
     assert test.steps[0].entries[0].message == "do something"
 
 def test_step_after_test_setup():
-    class MySuite(lcc.TestSuite):
+    @lcc.testsuite("mysuite")
+    class MySuite:
         def setup_test(self, test_name):
             lcc.log_info("in test setup")
         
