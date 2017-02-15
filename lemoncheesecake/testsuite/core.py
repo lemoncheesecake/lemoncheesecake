@@ -52,7 +52,7 @@ class TestSuite:
     def get_hook(self, hook_name):
         _assert_valid_hook_name(hook_name)
         return self._hooks.get(hook_name)
-            
+    
     def get_path(self):
         suites = [ self ]
         parent_suite = self.parent_suite
@@ -71,7 +71,7 @@ class TestSuite:
         return self.get_path_str()
     
     def get_depth(self):
-        depth = 1
+        depth = 0
         parent = self.parent_suite
         while parent:
             depth += 1

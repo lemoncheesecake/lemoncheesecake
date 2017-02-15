@@ -1,0 +1,99 @@
+'''
+Created on Feb 14, 2017
+
+@author: nicolas
+'''
+
+import os
+
+from termcolor import colored
+
+from lemoncheesecake.cli import Command
+from lemoncheesecake.testsuite.filter import add_filter_args_to_cli_parser, get_filter_from_cli_args
+from lemoncheesecake.project import find_project_file, Project
+from lemoncheesecake.exceptions import ProjectError, ProgrammingError
+
+class Show:
+    def __init__(self, indent=4):
+        self.indent = indent
+        self.show_description = False
+        self.show_metadata = True
+        self.flat_mode = False
+        self.color_mode = True
+    
+    def get_padding(self, depth):
+        return " " * (depth * self.indent)
+    
+    def bold(self, val):
+        return colored(val, attrs=["bold"]) if self.color_mode else val
+
+    def serialize_metadata(self, obj):
+        return ", ".join(
+            obj.tags +
+            ["%s:%s" % (k, v) for k, v in obj.properties.items()] +
+            [link_name or link_url for link_url, link_name in obj.links]
+        )
+    
+    def show_test(self, test, suite):
+        md = self.serialize_metadata(test) if self.show_metadata else ""
+        if self.flat_mode:
+            print "%s%s" % (suite.get_test_path_str(test), " (%s)" % md if md else "")
+        else:
+            padding = self.get_padding(suite.get_depth() + 1)
+            test_label = test.description if self.show_description else suite.get_test_path_str(test)
+            print "%s- %s%s" % (padding, test_label, " (%s)" % md if md else "")
+        
+    def show_testsuite(self, suite):
+        md = self.serialize_metadata(suite) if self.show_metadata else ""
+        if self.flat_mode:
+            print "%s%s" % (self.bold(suite.get_path_str()), " (%s)" % md if md else "")
+        else:
+            padding = self.get_padding(suite.get_depth())
+            suite_label = suite.description if self.show_description else suite.get_path_str()
+            print "%s* %s%s:" % (padding, self.bold(suite_label), " (%s)" % md if md else "")
+
+        for test in suite.get_tests():
+            self.show_test(test, suite)
+        
+        for sub_suite in suite.get_sub_testsuites():
+            self.show_testsuite(sub_suite)
+    
+    def show_testsuites(self, suites):
+        for suite in suites:
+            self.show_testsuite(suite)
+
+class ShowCommand(Command):
+    def get_name(self):
+        return "show"
+    
+    def get_description(self):
+        return "Show the test tree"
+    
+    def add_cli_args(self, cli_parser):
+        cli_parser.add_argument("--hide-metadata", "-i", action="store_true", help="Hide testsuite and test metadata")
+        cli_parser.add_argument("--description", "-d", action="store_true", help="Display testsuite and test descriptions instead of path")
+        cli_parser.add_argument("--flat-mode", "-f", action="store_true", help="Enable flat mode: display all test and testsuite as path without indentation nor prefix")
+        cli_parser.add_argument("--no-colors", "-c", action="store_true", help="Disable colors")
+        add_filter_args_to_cli_parser(cli_parser)
+
+    def run_cmd(self, cli_args):
+        project_file = find_project_file()
+        if not project_file:
+            return "Cannot find project file"
+        try:
+            project = Project(project_file)
+            suites = project.load_testsuites()
+        except (ProjectError, ProgrammingError) as e:
+            return str(e)
+        
+        filter = get_filter_from_cli_args(cli_args)
+        
+        for suite in suites:
+            suite.apply_filter(filter)
+        
+        show = Show()
+        show.show_description = cli_args.description
+        show.show_metadata = not cli_args.hide_metadata
+        show.flat_mode = cli_args.flat_mode
+        show.color_mode = not cli_args.no_colors
+        show.show_testsuites(suites)
