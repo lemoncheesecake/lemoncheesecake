@@ -6,7 +6,7 @@ Created on Jan 7, 2017
 
 import inspect
 
-from lemoncheesecake.exceptions import FixtureError
+from lemoncheesecake.exceptions import FixtureError, ProgrammingError
 from lemoncheesecake.utils import get_distincts_in_list
 
 __all__ = ("fixture", "load_fixtures_from_func")
@@ -18,7 +18,7 @@ class FixtureInfo:
 
 def fixture(names=None, scope="test"):
     if scope not in ("test", "testsuite", "session"):
-        raise ValueError("Invalid fixture scope '%s'" % scope)
+        raise ProgrammingError("Invalid fixture scope '%s'" % scope)
     
     def wrapper(func):
         setattr(func, "_lccfixtureinfo", FixtureInfo(names, scope))
