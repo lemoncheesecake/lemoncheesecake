@@ -29,7 +29,7 @@ class RunCommand(Command):
         return "run"
     
     def get_description(self):
-        return "Run tests"
+        return "Run the tests"
     
     def add_cli_args(self, cli_parser):
         project_file = find_project_file()
