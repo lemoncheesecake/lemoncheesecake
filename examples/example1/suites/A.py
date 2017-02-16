@@ -19,7 +19,7 @@ class A:
     
     @tags("my_tag1")
     @test("My test description")
-    def this_is_a_test(self):
+    def this_is_a_test(self, fixt1, fixt9):
         set_step("test list checkers")
         log_info("do test 1 !")
         check_list_len("my list", [1,2], 3)
