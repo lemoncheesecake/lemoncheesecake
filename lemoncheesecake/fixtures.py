@@ -5,6 +5,7 @@ Created on Jan 7, 2017
 '''
 
 import inspect
+import re
 
 from lemoncheesecake.exceptions import FixtureError, ProgrammingError
 from lemoncheesecake.utils import get_distincts_in_list
@@ -25,6 +26,24 @@ def fixture(names=None, scope="test"):
         return func
     
     return wrapper
+
+def get_fixture_names(func):
+    return func._lccfixtureinfo.names or [func.__name__]
+
+def get_fixture_name(func):
+    return get_fixture_names(func)[0]
+
+def get_fixture_aliases(func):
+    return get_fixture_names(func)[1:]
+
+def get_fixture_scope(func):
+    return func._lccfixtureinfo.scope
+
+def get_fixture_params(func):
+    return inspect.getargspec(func).args
+
+def get_fixture_doc(func):
+    return re.sub("\n\s+", "\\\\n ", func.__doc__) if func.__doc__ else None
 
 class BaseFixture:
     def is_builtin(self):
