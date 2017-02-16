@@ -228,3 +228,12 @@ class TestSuite:
                 worker_name, self.obj
             ))
         setattr(self.obj, worker_name, worker)
+
+def walk_tests(testsuites, func):
+    def do_walk(suite, func):
+        for test in suite.get_tests():
+            func(test)
+        for sub_suite in suite.get_sub_testsuites():
+            do_walk(sub_suite, func)
+    for suite in testsuites:
+        do_walk(suite, func)
