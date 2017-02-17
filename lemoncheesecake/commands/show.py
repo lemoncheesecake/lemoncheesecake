@@ -18,6 +18,7 @@ class Show:
         self.indent = indent
         self.show_description = False
         self.show_metadata = True
+        self.short = False
         self.flat_mode = False
         self.color_mode = True
     
@@ -34,13 +35,27 @@ class Show:
             [link_name or link_url for link_url, link_name in obj.links]
         )
     
+    def get_test_label(self, test, suite):
+        if self.show_description:
+            return test.description
+        if self.short:
+            return test.name
+        return suite.get_test_path_str(test)
+    
+    def get_suite_label(self, suite):
+        if self.show_description:
+            return suite.description
+        if self.short:
+            return suite.name
+        return suite.get_path_str()
+    
     def show_test(self, test, suite):
         md = self.serialize_metadata(test) if self.show_metadata else ""
         if self.flat_mode:
             print "%s%s" % (suite.get_test_path_str(test), " (%s)" % md if md else "")
         else:
             padding = self.get_padding(suite.get_depth() + 1)
-            test_label = test.description if self.show_description else suite.get_test_path_str(test)
+            test_label = self.get_test_label(test, suite)
             print "%s- %s%s" % (padding, test_label, " (%s)" % md if md else "")
         
     def show_testsuite(self, suite):
@@ -49,7 +64,7 @@ class Show:
             print "%s%s" % (self.bold(suite.get_path_str()), " (%s)" % md if md else "")
         else:
             padding = self.get_padding(suite.get_depth())
-            suite_label = suite.description if self.show_description else suite.get_path_str()
+            suite_label = self.get_suite_label(suite)
             print "%s* %s%s:" % (padding, self.bold(suite_label), " (%s)" % md if md else "")
 
         for test in suite.get_tests():
@@ -70,8 +85,9 @@ class ShowCommand(Command):
         return "Show the test tree"
     
     def add_cli_args(self, cli_parser):
-        cli_parser.add_argument("--hide-metadata", "-i", action="store_true", help="Hide testsuite and test metadata")
-        cli_parser.add_argument("--description", "-d", action="store_true", help="Display testsuite and test descriptions instead of path")
+        cli_parser.add_argument("--no-metadata", "-i", action="store_true", help="Hide testsuite and test metadata")
+        cli_parser.add_argument("--short", "-s", action="store_true", help="Display testsuite and test names instead of path")
+        cli_parser.add_argument("--desc-mode", "-d", action="store_true", help="Display testsuite and test descriptions instead of path")
         cli_parser.add_argument("--flat-mode", "-f", action="store_true", help="Enable flat mode: display all test and testsuite as path without indentation nor prefix")
         cli_parser.add_argument("--no-colors", "-c", action="store_true", help="Disable colors")
         add_filter_args_to_cli_parser(cli_parser)
@@ -92,8 +108,9 @@ class ShowCommand(Command):
             suite.apply_filter(filt)
         
         show = Show()
-        show.show_description = cli_args.description
-        show.show_metadata = not cli_args.hide_metadata
+        show.short = cli_args.short
+        show.show_description = cli_args.desc_mode
+        show.show_metadata = not cli_args.no_metadata
         show.flat_mode = cli_args.flat_mode
         show.color_mode = not cli_args.no_colors
         show.show_testsuites(filter(lambda suite: suite.has_selected_tests(), suites))
