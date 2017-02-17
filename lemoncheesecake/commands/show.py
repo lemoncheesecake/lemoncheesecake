@@ -86,14 +86,14 @@ class ShowCommand(Command):
         except (ProjectError, ProgrammingError) as e:
             return str(e)
         
-        filter = get_filter_from_cli_args(cli_args)
+        filt = get_filter_from_cli_args(cli_args)
         
         for suite in suites:
-            suite.apply_filter(filter)
+            suite.apply_filter(filt)
         
         show = Show()
         show.show_description = cli_args.description
         show.show_metadata = not cli_args.hide_metadata
         show.flat_mode = cli_args.flat_mode
         show.color_mode = not cli_args.no_colors
-        show.show_testsuites(suites)
+        show.show_testsuites(filter(lambda suite: suite.has_selected_tests(), suites))
