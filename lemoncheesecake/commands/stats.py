@@ -4,6 +4,8 @@ Created on Feb 14, 2017
 @author: nicolas
 '''
 
+from __future__ import print_function
+
 from lemoncheesecake.cli import Command
 from lemoncheesecake.commands.cliutils import bold, print_table
 from lemoncheesecake.testsuite import add_filter_args_to_cli_parser, get_filter_from_cli_args, walk_testsuites
@@ -63,15 +65,15 @@ class StatsCommand(Command):
         
         # Show tags
         lines = []
-        for tag in sorted(set(test_stats.tags.keys() + suite_stats.tags.keys())):
+        for tag in sorted(set(list(test_stats.tags.keys()) + list(suite_stats.tags.keys()))):
             lines.append([bold(tag), test_stats.tags.get(tag, 0), suite_stats.tags.get(tag, 0)])
         print_table(bold("Tags"), ["Tag", "Used in tests", "Used in testsuites"], lines)
 
         # Show properties
         lines = []
-        for prop_name in sorted(set(test_stats.properties.keys() + suite_stats.properties.keys())):
+        for prop_name in sorted(set(list(test_stats.properties.keys()) + list(suite_stats.properties.keys()))):
             prop_values = sorted(set(
-                test_stats.properties.get(prop_name, {}).keys() + suite_stats.properties.get(prop_name, {}).keys()
+                list(test_stats.properties.get(prop_name, {}).keys()) + list(suite_stats.properties.get(prop_name, {}).keys())
             ))
             for prop_value in prop_values:
                 lines.append([
@@ -83,13 +85,13 @@ class StatsCommand(Command):
 
         # Show links
         lines = []
-        for link in sorted(set(test_stats.links.keys() + suite_stats.links.keys()), key=lambda l: l[0]):
+        for link in sorted(set(list(test_stats.links.keys()) + list(suite_stats.links.keys())), key=lambda l: l[0]):
             lines.append([
                 bold(link[1]) or "-", link[0], test_stats.links.get(link, 0), suite_stats.links.get(link, 0)
             ])
         print_table(bold("Links"), ["Name", "URL", "Used in tests", "Used in testsuites"], lines)
 
-        print "Total %s: %s" % (bold("testsuites"), suite_stats.nb)
-        print "Total %s: %s" % (bold("tests"), test_stats.nb)
-        print
+        print("Total %s: %s" % (bold("testsuites"), suite_stats.nb))
+        print("Total %s: %s" % (bold("tests"), test_stats.nb))
+        print()
         

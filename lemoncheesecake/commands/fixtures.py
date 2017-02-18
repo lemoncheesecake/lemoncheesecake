@@ -4,6 +4,8 @@ Created on Feb 14, 2017
 @author: nicolas
 '''
 
+from __future__ import print_function
+
 from lemoncheesecake.commands.cliutils import bold, print_table
 from lemoncheesecake.cli import Command
 from lemoncheesecake.testsuite import walk_tests
@@ -63,4 +65,4 @@ class FixturesCommand(Command):
         
         for scope in "session", "testsuite", "test":
             show_fixtures(scope, fixtures_by_scope.get(scope, []), used_by_tests, used_by_fixtures, cli_args.verbose)
-            print
+            print()
