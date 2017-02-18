@@ -52,7 +52,7 @@ class Show:
     def show_test(self, test, suite):
         md = self.serialize_metadata(test) if self.show_metadata else ""
         if self.flat_mode:
-            print "%s%s" % (suite.get_test_path_str(test), " (%s)" % md if md else "")
+            print "%s%s" % (self.get_test_label(test, suite), " (%s)" % md if md else "")
         else:
             padding = self.get_padding(suite.get_depth() + 1)
             test_label = self.get_test_label(test, suite)
@@ -61,7 +61,7 @@ class Show:
     def show_testsuite(self, suite):
         md = self.serialize_metadata(suite) if self.show_metadata else ""
         if self.flat_mode:
-            print "%s%s" % (self.bold(suite.get_path_str()), " (%s)" % md if md else "")
+            print "%s%s" % (self.bold(self.get_suite_label(suite)), " (%s)" % md if md else "")
         else:
             padding = self.get_padding(suite.get_depth())
             suite_label = self.get_suite_label(suite)
