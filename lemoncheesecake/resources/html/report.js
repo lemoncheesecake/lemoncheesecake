@@ -8,8 +8,9 @@ function escapeHtml(unsafe) {
          .replace(/'/g, "&#039;");
 }
 
-function Step(step) {
+function Step(step, nb) {
 	this.step = step;
+	this.nb = nb;
 };
 
 Step.prototype = {
@@ -18,7 +19,8 @@ Step.prototype = {
 	render: function () {
 		this.step_row = $("<tr style='display: none' class='step'>")
 			.append($("<td colspan='4'>")
-				.append($("<u>").text(this.step.description)));
+				.append($("<h6>")
+					.text(this.nb + ". " + this.step.description)));
 		this.entry_rows = [ ];
 		
 		for (i in this.step.entries) {
@@ -71,7 +73,7 @@ Step.prototype = {
 	}
 };
 
-function Test(name, description, status, status_details, steps, tags, properties, links) {
+function Test(name, description, status, status_details, steps, tags, properties, links, parents) {
 	this.name = name;
 	this.description = description;
 	this.status = status;
@@ -81,8 +83,9 @@ function Test(name, description, status, status_details, steps, tags, properties
 	this.properties = (properties != null) ? properties : [];
 	this.links = (links != null) ? links : [];
 	for (var i = 0; i < steps.length; i++) {
-		this.steps.push(new Step(steps[i]));
+		this.steps.push(new Step(steps[i], i+1));
 	}
+	this.parents = (parents != null) ? parents : [];
 	this.is_displayed = false;
 };
 
@@ -93,7 +96,8 @@ Test.prototype = {
 		var cols = [ ];
 
 		/* build description column */
-		var $test_desc = $("<h6><a>", {"name": this.name, "href": "#" + this.name}).text(this.description).append($("<br/><small>").text(this.name));
+		var path = this.parents.map(function(p) { return p.name }).concat(this.name).join(".");
+		var $test_desc = $("<h5><a>", {"name": path, "href": "#" + path}).text(this.description).append($("<br/><small>").text(path));
 		cols.push($("<td>").append($test_desc));
 
 		/* build tags & properties column */
@@ -194,7 +198,7 @@ function TestSuite(data, parents) {
 
     for (var i = 0; i < data.tests.length; i++) {
         var t = data.tests[i]
-    	this.tests.push(new Test(t.name, t.description, t.status, t.status_details, t.steps, t.tags, t.properties, t.links));
+    	this.tests.push(new Test(t.name, t.description, t.status, t.status_details, t.steps, t.tags, t.properties, t.links, this.parents.concat(this)));
     }
 
     for (var i = 0; i < data.sub_suites.length; i++) {
@@ -210,8 +214,10 @@ TestSuite.prototype = {
 
 		if (this.tests.length > 0) {
 			var description = this.parents.map(function(p) { return p.description }).concat(this.description).join(" > ");
+			var path = this.parents.map(function(p) { return p.name }).concat(this.name).join(".");
 			var $panel_heading = $("<div class='panel-heading'>");
-			$panel_heading.append($("<span>").text(description));
+
+			$panel_heading.append($("<h4>").text(description).append($("<br/><small>").text(path)));
 			if (this.properties.length > 0 || this.tags.length > 0) {
 				$panel_heading.append($("<br/>"));
 				$panel_heading.append($("<span style='font-size: 75%'>Properties/Tags: ").text(
@@ -229,7 +235,7 @@ TestSuite.prototype = {
 						return "<a href='" + escapeHtml(link.url) + "' title='" + escapeHtml(label) + "'>" + escapeHtml(label) + "</a>";
 				}).join(", ")));
 			}
-			var $panel = $("<div class='panel panel-default panel-primary' style='margin-left:" + (0 * this.parents.length) + "px'>")
+			var $panel = $("<div class='panel panel-default ' style='margin-left:" + (0 * this.parents.length) + "px'>")
 				.append($panel_heading);
 			panels.push($panel);
 
@@ -294,8 +300,8 @@ Report.prototype = {
 	},
 	
 	render_hook_data: function(test, label) {
-		var $panel_heading = $("<div class='panel-heading'>" + label + "</div>");
-		var $panel = $("<div class='panel panel-default panel-primary'>").append($panel_heading);
+		var $panel_heading = $("<div class='panel-heading'><h4>" + label + "</h4></div>");
+		var $panel = $("<div class='panel panel-default'>").append($panel_heading);
 		rows = test.render();
 		var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
 			.append($("<colgroup><col width='60%'><col width='20%'><col width='10%'><col width='10%'></colgroup>"))
