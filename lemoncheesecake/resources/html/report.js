@@ -101,7 +101,8 @@ Test.prototype = {
 		if (this.outcome == false) {
 			link_attrs["class"] = "text-danger";
 		}
-		var $test_desc = $("<h5>").append($("<a>", link_attrs).text(this.description)).append($("<br/><small>").text(path));
+		$test_link = $("<a>", link_attrs).text(this.description).click(this.toggle.bind(this));
+		var $test_desc = $("<h5>").append($test_link).append($("<br/><small>").text(path));
 		cols.push($("<td>").append($test_desc));
 
 		/* build tags & properties column */
@@ -142,7 +143,6 @@ Test.prototype = {
 			step_rows = step_rows.concat(this.steps[i].render());
 		}
 		rows = rows.concat(step_rows);
-		$test_desc.click(this.toggle.bind(this));
 		return rows;
 	},
 	
