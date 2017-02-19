@@ -1,3 +1,13 @@
+# 0.6.0 (2017-02-19)
+
+- **API**: a testsuite must now be declared using @lcc.testsuite decorator instead of inheriting lcc.TestSuite
+- **API**: the @lcc.test decorator now modifies the test method instead of wrapping it into a Test instance
+- **API**: Test and TestSuite classes are now only used internally and are disassociated from the representation
+  of testsuites and tests for the user
+- **CLI**: add a new command 'show' that displays the project test tree
+- **CLI**: add a new command 'fixtures' that displays the project fixtures
+- **CLI**: add a new command 'stats' that displays various statistics about the project test tree
+
 # 0.5.3 (2017-02-13)
 
 - Add support for negative filters (using a '-' or a '~' or a '^' before the filtered value)
