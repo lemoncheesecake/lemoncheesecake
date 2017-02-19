@@ -97,7 +97,11 @@ Test.prototype = {
 
 		/* build description column */
 		var path = this.parents.map(function(p) { return p.name }).concat(this.name).join(".");
-		var $test_desc = $("<h5><a>", {"name": path, "href": "#" + path}).text(this.description).append($("<br/><small>").text(path));
+		link_attrs = {"name": path, "href": "#" + path}
+		if (this.outcome == false) {
+			link_attrs["class"] = "text-danger";
+		}
+		var $test_desc = $("<h5>").append($("<a>", link_attrs).text(this.description)).append($("<br/><small>").text(path));
 		cols.push($("<td>").append($test_desc));
 
 		/* build tags & properties column */
@@ -121,20 +125,17 @@ Test.prototype = {
 
 		/* build status column */
 		var status;
-		var status_class;
 		if (this.status == "passed") {
-			$status_col = $("<td class='text-success'><strong>passed</strong></td>");
+			$status_col = $("<td><span class='text-success glyphicon glyphicon-ok' style='font-size:160%'></span></td>");
 		} else if (this.status == "failed") {
-			$status_col = $("<td><strong>failed</strong></td>");
-			status_class = "danger";
+			$status_col = $("<td><span class='text-danger glyphicon glyphicon-remove' style='font-size:160%'></span></td>");
 		} else {
 			$status_col = $("<td title='" + escapeHtml(this.status_details || "") + "'><strong>" + (this.status || "n/a") + "</strong></td>");
-			status_class = "danger";
 		}
 		cols.push($status_col);
 
 		/* build the whole line test with steps */
-		$test_row = $("<tr>", { "class": status_class }).append(cols);
+		$test_row = $("<tr>", { }).append(cols);
 		rows = [ $test_row ];
 		var step_rows = [ ];
 		for (i in this.steps) {
