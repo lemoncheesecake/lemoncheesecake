@@ -52,7 +52,7 @@ class TestSuite:
     def get_hook(self, hook_name):
         _assert_valid_hook_name(hook_name)
         return self._hooks.get(hook_name)
-            
+    
     def get_path(self):
         suites = [ self ]
         parent_suite = self.parent_suite
@@ -71,7 +71,7 @@ class TestSuite:
         return self.get_path_str()
     
     def get_depth(self):
-        depth = 1
+        depth = 0
         parent = self.parent_suite
         while parent:
             depth += 1
@@ -228,3 +228,18 @@ class TestSuite:
                 worker_name, self.obj
             ))
         setattr(self.obj, worker_name, worker)
+
+def walk_testsuites(testsuites, testsuite_func=None, test_func=None):
+    def do_walk(suite):
+        if testsuite_func:
+            testsuite_func(suite)
+        if test_func:
+            for test in suite.get_tests():
+                test_func(test)
+        for sub_suite in suite.get_sub_testsuites():
+            do_walk(sub_suite)
+    for suite in testsuites:
+        do_walk(suite)    
+
+def walk_tests(testsuites, func):
+    walk_testsuites(testsuites, test_func=func)
