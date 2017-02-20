@@ -87,7 +87,7 @@ class StatsCommand(Command):
         lines = []
         for link in sorted(set(list(test_stats.links.keys()) + list(suite_stats.links.keys())), key=lambda l: l[0]):
             lines.append([
-                bold(link[1]) or "-", link[0], test_stats.links.get(link, 0), suite_stats.links.get(link, 0)
+                bold(link[1] or "-"), link[0], test_stats.links.get(link, 0), suite_stats.links.get(link, 0)
             ])
         print_table(bold("Links"), ["Name", "URL", "Used in tests", "Used in testsuites"], lines)
 
