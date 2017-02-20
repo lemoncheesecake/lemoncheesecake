@@ -19,7 +19,7 @@ class Command:
     def run_cmd(self, cli_args):
         pass
 
-def main():
+def main(args=None):
     from lemoncheesecake.commands import get_commands
     
     cli_parser = argparse.ArgumentParser()
@@ -29,7 +29,7 @@ def main():
         cli_cmd_parser = cli_sub_parsers.add_parser(command.get_name(), help=command.get_description())
         command.add_cli_args(cli_cmd_parser)
     
-    cli_args = cli_parser.parse_args()
+    cli_args = cli_parser.parse_args(args)
     
     try:
         command = commands[cli_args.command]
