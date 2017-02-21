@@ -8,7 +8,7 @@ from __future__ import print_function
 
 from lemoncheesecake.cli import Command
 from lemoncheesecake.commands.cliutils import bold, print_table
-from lemoncheesecake.testsuite import add_filter_args_to_cli_parser, get_filter_from_cli_args, walk_testsuites
+from lemoncheesecake.testsuite import add_filter_args_to_cli_parser, get_filter_from_cli_args, filter_testsuites, walk_testsuites
 from lemoncheesecake.project import find_project_file, Project
 from lemoncheesecake.exceptions import ProjectError, ProgrammingError
 
@@ -33,10 +33,8 @@ class StatsCommand(Command):
             return str(e)
         
         filter = get_filter_from_cli_args(cli_args)
+        suites = filter_testsuites(suites, filter)
         
-        for suite in suites:
-            suite.apply_filter(filter)
-
         class Stats:
             def __init__(self):
                 self.nb = 0
