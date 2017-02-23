@@ -11,6 +11,7 @@ import os.path as osp
 import sys
 import tempfile
 import shutil
+import re
 
 import pytest
 
@@ -421,5 +422,12 @@ def cmdout(capsys):
         def assert_lines_nb(self, lines_nb, on_stderr=False):
             lines = self.get_lines(on_stderr)
             assert len(lines) == lines_nb
+        
+        def assert_lines_match(self, pattern, on_stderr=False):
+            lines = self.get_lines(on_stderr)
+            for line in lines:
+                if re.compile(pattern).search(line):
+                    return
+            raise Exception("No line matches pattern '%s' in \n<<<\n%s\n>>>" % (pattern, "\n".join(lines)))
     
     return _CmdOutput()
