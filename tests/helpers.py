@@ -63,10 +63,13 @@ from lemoncheesecake import validators
     STATIC_CONTENT=static_content
 )
 
-def generate_project_from_test_module(project_dir, module_name, module_content):
+def generate_project(project_dir, module_name, module_content, fixtures_content=None):
     create_project(project_dir)
     with open(osp.join(project_dir, "tests", "%s.py" % module_name), "w") as fh:
         fh.write(module_content)
+    if fixtures_content:
+        with open(osp.join(project_dir, "fixtures", "fixtures.py"), "w") as fh:
+            fh.write(fixtures_content)
 
 def build_fixture_registry(*funcs):
     registry = FixtureRegistry()

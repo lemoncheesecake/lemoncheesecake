@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from helpers import generate_project_from_test_module, cmdout
+from helpers import generate_project, cmdout
 
 from lemoncheesecake.cli import main
 
@@ -37,7 +37,7 @@ class mysuite:
 
 @pytest.fixture()
 def project(tmpdir):
-    generate_project_from_test_module(tmpdir.strpath, "mysuite", TEST_MODULE)
+    generate_project(tmpdir.strpath, "mysuite", TEST_MODULE)
     old_cwd = os.getcwd()
     os.chdir(tmpdir.strpath)
     yield
@@ -45,7 +45,7 @@ def project(tmpdir):
 
 @pytest.fixture()
 def empty_project(tmpdir):
-    generate_project_from_test_module(tmpdir.strpath, "mysuite", EMPTY_TEST_MODULE)
+    generate_project(tmpdir.strpath, "mysuite", EMPTY_TEST_MODULE)
     old_cwd = os.getcwd()
     os.chdir(tmpdir.strpath)
     yield
