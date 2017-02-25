@@ -29,20 +29,20 @@ def project(tmpdir):
     os.chdir(old_cwd)
 
 def test_show_default_options(project, cmdout):
-    main(["show"])
+    assert main(["show"]) == 0
     
     cmdout.assert_substrs_in_line(0, ["mysuite", "suite_prop", "suite_prop_value", "suite_tag", "#1234"])
     cmdout.assert_substrs_in_line(1, ["mysuite.mytest", "test_prop", "test_prop_value", "test_tag", "#1235"])
 
 def test_show_opt_short(project, cmdout):
-    main(["show", "--short"])
+    assert main(["show", "--short"]) == 0
 
     cmdout.assert_substrs_in_line(0, ["mysuite", "suite_prop", "suite_prop_value", "suite_tag", "#1234"])
     cmdout.assert_substrs_in_line(1, ["mytest", "test_prop", "test_prop_value", "test_tag", "#1235"])
 
 def test_show_opt_flat_mode(project, cmdout):
     # also add --no-color to make the startswith on suite easier
-    main(["show", "--flat-mode", "--no-color"])
+    assert main(["show", "--flat-mode", "--no-color"]) == 0
 
     cmdout.assert_line_startswith(0, "mysuite")
     cmdout.assert_substrs_in_line(0, ["suite_prop", "suite_prop_value", "suite_tag", "#1234"])
@@ -50,13 +50,13 @@ def test_show_opt_flat_mode(project, cmdout):
     cmdout.assert_substrs_in_line(1, ["test_prop", "test_prop_value", "test_tag", "#1235"])
 
 def test_show_opt_desc_mode(project, cmdout):
-    main(["show", "--desc-mode"])
+    assert main(["show", "--desc-mode"]) == 0
 
     cmdout.assert_substrs_in_line(0, ["My Suite", "suite_prop", "suite_prop_value", "suite_tag", "#1234"])
     cmdout.assert_substrs_in_line(1, ["My Test", "test_prop", "test_prop_value", "test_tag", "#1235"])
 
 def test_show_opt_no_metadata(project, cmdout):
-    main(["show", "--no-metadata"])
+    assert main(["show", "--no-metadata"]) == 0
 
     cmdout.assert_substrs_in_line(0, ["mysuite"])
     cmdout.assert_substrs_not_in_line(0, ["suite_prop", "suite_prop_value", "suite_tag", "#1234"])
@@ -64,7 +64,7 @@ def test_show_opt_no_metadata(project, cmdout):
     cmdout.assert_substrs_not_in_line(1, ["test_prop", "test_prop_value", "test_tag", "#1235"])
 
 def test_show_with_filter(project, cmdout):
-    main(["show", "--tag", "doesnotexist"])
+    assert main(["show", "--tag", "doesnotexist"]) == 0
     
     cmdout.assert_lines_nb(0)
     cmdout.assert_lines_nb(0, on_stderr=True)

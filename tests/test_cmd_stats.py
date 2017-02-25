@@ -52,7 +52,7 @@ def empty_project(tmpdir):
     os.chdir(old_cwd)
 
 def test_stats(project, cmdout):
-    main(["stats"])
+    assert main(["stats"]) == 0
     
     # tags:
     cmdout.assert_lines_match(".+suite_tag.+ 1 .+ 1 +")
@@ -73,7 +73,7 @@ def test_stats(project, cmdout):
     cmdout.assert_lines_match(".*tests.*: 2.*")
 
 def test_stats_empty_project(empty_project, cmdout):
-    main(["stats"])
+    assert main(["stats"]) == 0
     
     cmdout.assert_lines_match(".*Tags.*:.*none.*")
     cmdout.assert_lines_match(".*Properties.*:.*none.*")
@@ -84,7 +84,7 @@ def test_stats_empty_project(empty_project, cmdout):
     cmdout.assert_lines_match(".*tests.*: 0.*")
 
 def test_stats_with_filter(project, cmdout):
-    main(["stats", "mysuite.mytest1"])
+    assert main(["stats", "mysuite.mytest1"]) == 0
     
     # tags:
     cmdout.assert_lines_match(".+suite_tag.+ 1 .+ 1 +")

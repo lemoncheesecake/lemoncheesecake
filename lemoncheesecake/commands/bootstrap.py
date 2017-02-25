@@ -29,3 +29,5 @@ class BootstrapCommand(Command):
             create_project(cli_args.dir)
         except (IOError, OSError) as e:
             return "Cannot create project '%s': %s" % (cli_args.dir, e)
+        
+        return 0

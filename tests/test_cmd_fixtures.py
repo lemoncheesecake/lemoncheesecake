@@ -59,14 +59,14 @@ def notest_project(tmpdir):
     os.chdir(old_cwd)
 
 def test_fixtures(project, cmdout):
-    main(["fixtures"])
+    assert main(["fixtures"]) == 0
     
     cmdout.assert_lines_match(".+foo.+ 1 .+ 2 .+")
     cmdout.assert_lines_match(".+bar.+foo.+ 1 .+ 1 .+")
     cmdout.assert_lines_match(".+baz.+bar.+ 0 .+ 2 .+")
 
 def test_fixtures_empty_project(notest_project, cmdout):
-    main(["fixtures"])
+    assert main(["fixtures"]) == 0
     
     cmdout.assert_lines_match(".*session.*:.*none.*")
     cmdout.assert_lines_match(".*testsuite.*:.*none.*")

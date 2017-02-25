@@ -113,3 +113,5 @@ class ShowCommand(Command):
         show.flat_mode = cli_args.flat_mode
         show.color_mode = not cli_args.no_colors
         show.show_testsuites(suites)
+        
+        return 0

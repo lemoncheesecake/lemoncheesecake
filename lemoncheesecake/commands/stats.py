@@ -93,3 +93,4 @@ class StatsCommand(Command):
         print("Total %s: %s" % (bold("tests"), test_stats.nb))
         print()
         
+        return 0
