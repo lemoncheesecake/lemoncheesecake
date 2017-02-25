@@ -7,7 +7,7 @@ Created on Feb 14, 2017
 from __future__ import print_function
 
 from lemoncheesecake.cli import Command
-from lemoncheesecake.commands.cliutils import bold, print_table
+from lemoncheesecake.commands.cliutils import print_table
 from lemoncheesecake.testsuite import add_filter_args_to_cli_parser, get_filter_from_cli_args, filter_testsuites, walk_testsuites
 from lemoncheesecake.project import find_project_file, Project
 from lemoncheesecake.exceptions import ProjectError, ProgrammingError
@@ -20,9 +20,12 @@ class StatsCommand(Command):
         return "Display statistics about the project's tests"
     
     def add_cli_args(self, cli_parser):
+        self.add_color_cli_args(cli_parser)
         add_filter_args_to_cli_parser(cli_parser)
 
     def run_cmd(self, cli_args):
+        self.process_color_cli_args(cli_args)
+        
         project_file = find_project_file()
         if not project_file:
             return "Cannot find project file"
@@ -64,8 +67,8 @@ class StatsCommand(Command):
         # Show tags
         lines = []
         for tag in sorted(set(list(test_stats.tags.keys()) + list(suite_stats.tags.keys()))):
-            lines.append([bold(tag), test_stats.tags.get(tag, 0), suite_stats.tags.get(tag, 0)])
-        print_table(bold("Tags"), ["Tag", "Used in tests", "Used in testsuites"], lines)
+            lines.append([self.bold(tag), test_stats.tags.get(tag, 0), suite_stats.tags.get(tag, 0)])
+        print_table(self.bold("Tags"), ["Tag", "Used in tests", "Used in testsuites"], lines)
 
         # Show properties
         lines = []
@@ -75,22 +78,22 @@ class StatsCommand(Command):
             ))
             for prop_value in prop_values:
                 lines.append([
-                    bold(prop_name), bold(prop_value),
+                    self.bold(prop_name), self.bold(prop_value),
                     test_stats.properties.get(prop_name, {}).get(prop_value, 0),
                     suite_stats.properties.get(prop_name, {}).get(prop_value, 0)
                 ])
-        print_table(bold("Properties"), ["Property", "Value", "Used in tests", "Used in testsuites"], lines)
+        print_table(self.bold("Properties"), ["Property", "Value", "Used in tests", "Used in testsuites"], lines)
 
         # Show links
         lines = []
         for link in sorted(set(list(test_stats.links.keys()) + list(suite_stats.links.keys())), key=lambda l: l[0]):
             lines.append([
-                bold(link[1] or "-"), link[0], test_stats.links.get(link, 0), suite_stats.links.get(link, 0)
+                self.bold(link[1] or "-"), link[0], test_stats.links.get(link, 0), suite_stats.links.get(link, 0)
             ])
-        print_table(bold("Links"), ["Name", "URL", "Used in tests", "Used in testsuites"], lines)
+        print_table(self.bold("Links"), ["Name", "URL", "Used in tests", "Used in testsuites"], lines)
 
-        print("Total %s: %s" % (bold("testsuites"), suite_stats.nb))
-        print("Total %s: %s" % (bold("tests"), test_stats.nb))
+        print("Total %s: %s" % (self.bold("testsuites"), suite_stats.nb))
+        print("Total %s: %s" % (self.bold("tests"), test_stats.nb))
         print()
         
         return 0

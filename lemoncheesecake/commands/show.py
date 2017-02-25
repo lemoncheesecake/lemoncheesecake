@@ -6,29 +6,30 @@ Created on Feb 14, 2017
 
 from __future__ import print_function
 
-from termcolor import colored
-
 from lemoncheesecake.cli import Command
 from lemoncheesecake.testsuite.filter import add_filter_args_to_cli_parser, get_filter_from_cli_args
 from lemoncheesecake.project import find_project_file, Project
 from lemoncheesecake.exceptions import ProjectError, ProgrammingError
 from lemoncheesecake.testsuite import filter_testsuites
 
-class Show:
-    def __init__(self, indent=4):
-        self.indent = indent
-        self.show_description = False
-        self.show_metadata = True
-        self.short = False
-        self.flat_mode = False
-        self.color_mode = True
+class ShowCommand(Command):
+    def get_name(self):
+        return "show"
     
+    def get_description(self):
+        return "Show the test tree"
+    
+    def add_cli_args(self, cli_parser):
+        cli_parser.add_argument("--no-metadata", "-i", action="store_true", help="Hide testsuite and test metadata")
+        cli_parser.add_argument("--short", "-s", action="store_true", help="Display testsuite and test names instead of path")
+        cli_parser.add_argument("--desc-mode", "-d", action="store_true", help="Display testsuite and test descriptions instead of path")
+        cli_parser.add_argument("--flat-mode", "-f", action="store_true", help="Enable flat mode: display all test and testsuite as path without indentation nor prefix")
+        self.add_color_cli_args(cli_parser)
+        add_filter_args_to_cli_parser(cli_parser)
+
     def get_padding(self, depth):
         return " " * (depth * self.indent)
     
-    def bold(self, val):
-        return colored(val, attrs=["bold"]) if self.color_mode else val
-
     def serialize_metadata(self, obj):
         return ", ".join(
             obj.tags +
@@ -78,22 +79,15 @@ class Show:
         for suite in suites:
             self.show_testsuite(suite)
 
-class ShowCommand(Command):
-    def get_name(self):
-        return "show"
-    
-    def get_description(self):
-        return "Show the test tree"
-    
-    def add_cli_args(self, cli_parser):
-        cli_parser.add_argument("--no-metadata", "-i", action="store_true", help="Hide testsuite and test metadata")
-        cli_parser.add_argument("--short", "-s", action="store_true", help="Display testsuite and test names instead of path")
-        cli_parser.add_argument("--desc-mode", "-d", action="store_true", help="Display testsuite and test descriptions instead of path")
-        cli_parser.add_argument("--flat-mode", "-f", action="store_true", help="Enable flat mode: display all test and testsuite as path without indentation nor prefix")
-        cli_parser.add_argument("--no-colors", "-c", action="store_true", help="Disable colors")
-        add_filter_args_to_cli_parser(cli_parser)
-
     def run_cmd(self, cli_args):
+        self.process_color_cli_args(cli_args)
+
+        self.short = cli_args.short
+        self.show_description = cli_args.desc_mode
+        self.show_metadata = not cli_args.no_metadata
+        self.flat_mode = cli_args.flat_mode
+        self.indent = 4
+
         project_file = find_project_file()
         if not project_file:
             return "Cannot find project file"
@@ -106,12 +100,6 @@ class ShowCommand(Command):
         filt = get_filter_from_cli_args(cli_args)
         suites = filter_testsuites(suites, filt)
         
-        show = Show()
-        show.short = cli_args.short
-        show.show_description = cli_args.desc_mode
-        show.show_metadata = not cli_args.no_metadata
-        show.flat_mode = cli_args.flat_mode
-        show.color_mode = not cli_args.no_colors
-        show.show_testsuites(suites)
+        self.show_testsuites(suites)
         
         return 0

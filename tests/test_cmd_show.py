@@ -41,8 +41,7 @@ def test_show_opt_short(project, cmdout):
     cmdout.assert_substrs_in_line(1, ["mytest", "test_prop", "test_prop_value", "test_tag", "#1235"])
 
 def test_show_opt_flat_mode(project, cmdout):
-    # also add --no-color to make the startswith on suite easier
-    assert main(["show", "--flat-mode", "--no-color"]) == 0
+    assert main(["show", "--flat-mode"]) == 0
 
     cmdout.assert_line_startswith(0, "mysuite")
     cmdout.assert_substrs_in_line(0, ["suite_prop", "suite_prop_value", "suite_tag", "#1234"])
