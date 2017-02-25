@@ -243,3 +243,11 @@ def walk_testsuites(testsuites, testsuite_func=None, test_func=None):
 
 def walk_tests(testsuites, func):
     walk_testsuites(testsuites, test_func=func)
+
+def filter_testsuites(suites, filtr):
+    filtered = []
+    for suite in suites:
+        suite.apply_filter(filtr)
+        if suite.has_selected_tests():
+            filtered.append(suite)
+    return filtered

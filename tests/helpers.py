@@ -7,9 +7,11 @@ Created on Sep 30, 2016
 from __future__ import print_function
 
 import os
+import os.path as osp
 import sys
 import tempfile
 import shutil
+import re
 
 import pytest
 
@@ -21,6 +23,7 @@ from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 from lemoncheesecake.fixtures import FixtureRegistry
+from lemoncheesecake.project import create_project
 
 def build_test_module(name="mytestsuite"):
     return """
@@ -59,6 +62,14 @@ from lemoncheesecake import validators
     EXTRA_IMPORTS="\n".join(extra_imports),
     STATIC_CONTENT=static_content
 )
+
+def generate_project(project_dir, module_name, module_content, fixtures_content=None):
+    create_project(project_dir)
+    with open(osp.join(project_dir, "tests", "%s.py" % module_name), "w") as fh:
+        fh.write(module_content)
+    if fixtures_content:
+        with open(osp.join(project_dir, "fixtures", "fixtures.py"), "w") as fh:
+            fh.write(fixtures_content)
 
 def build_fixture_registry(*funcs):
     registry = FixtureRegistry()
@@ -378,3 +389,54 @@ def assert_report_stats(report,
     assert stats.check_failures == expected_check_failures
     assert stats.error_logs == expected_error_logs
     assert stats.warning_logs == expected_warning_logs
+
+@pytest.fixture()
+def cmdout(capsys):
+    class _CmdOutput:
+        def __init__(self):
+            self._stdout_lines = None
+            self._stderr_lines = None
+        
+        def get_lines(self, on_stderr=False):
+            if self._stdout_lines == None or self._stderr_lines == None:
+                stdout, stderr = capsys.readouterr()
+                self._stdout_lines = [line for line in stdout.split("\n") if line != ""]
+                self._stderr_lines = [line for line in stderr.split("\n") if line != ""]
+            return self._stderr_lines if on_stderr else self._stdout_lines
+        
+        def assert_substrs_in_line(self, line_nb, substrs, on_stderr=False):
+            lines = self.get_lines(on_stderr)
+            for substr in substrs:
+                assert substr in lines[line_nb]
+
+        def assert_substrs_not_in_line(self, line_nb, substrs, on_stderr=False):
+            lines = self.get_lines(on_stderr)
+            for substr in substrs:
+                assert substr not in lines[line_nb]
+
+        def assert_line_startswith(self, line_nb, substr, on_stderr=False):
+            lines = self.get_lines(on_stderr)
+            assert lines[line_nb].startswith(substr)
+        
+        def assert_line_not_startswith(self, line_nb, substr, on_stderr=False):
+            lines = self.get_lines(on_stderr)
+            assert not lines[line_nb].startswith(substr)
+        
+        def assert_lines_nb(self, lines_nb, on_stderr=False):
+            lines = self.get_lines(on_stderr)
+            assert len(lines) == lines_nb
+        
+        def assert_lines_match(self, pattern, on_stderr=False):
+            lines = self.get_lines(on_stderr)
+            for line in lines:
+                if re.compile(pattern).search(line):
+                    return
+            raise Exception("No line matches pattern '%s' in \n<<<\n%s\n>>>" % (pattern, "\n".join(lines)))
+        
+        def dump(self):
+            stdout = self.get_lines()
+            stderr = self.get_lines(on_stderr=True)
+            print("STDOUT:\n<<<\n%s\n>>>\n" % "\n".join(stdout))
+            print("STDERR:\n<<<\n%s\n>>>\n" % "\n".join(stderr))
+    
+    return _CmdOutput()

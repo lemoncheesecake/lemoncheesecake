@@ -11,6 +11,7 @@ from lemoncheesecake.project import find_project_file, Project
 from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture, load_fixtures_from_func
 from lemoncheesecake.runner import run_testsuites
 from lemoncheesecake.testsuite.filter import add_filter_args_to_cli_parser, get_filter_from_cli_args
+from lemoncheesecake.testsuite import filter_testsuites
 from lemoncheesecake import reporting
 from lemoncheesecake.exceptions import ProjectError, FixtureError, InvalidMetadataError,\
     ProgrammingError, serialize_current_exception
@@ -100,14 +101,7 @@ class RunCommand(Command):
         # apply filter
         filter = get_filter_from_cli_args(cli_args)
         if not filter.is_empty():
-            tmp = []
-            for suite in testsuites:
-                suite.apply_filter(filter)
-                if suite.has_selected_tests():
-                    tmp.append(suite)
-            if not tmp:
-                return "The test filter does not match any test."
-            testsuites = tmp
+            testsuites = filter_testsuites(testsuites, filter)
     
         # set reporting backends
         reporting_backend_names = set(cli_args.reporting)

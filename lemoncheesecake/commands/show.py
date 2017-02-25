@@ -12,6 +12,7 @@ from lemoncheesecake.cli import Command
 from lemoncheesecake.testsuite.filter import add_filter_args_to_cli_parser, get_filter_from_cli_args
 from lemoncheesecake.project import find_project_file, Project
 from lemoncheesecake.exceptions import ProjectError, ProgrammingError
+from lemoncheesecake.testsuite import filter_testsuites
 
 class Show:
     def __init__(self, indent=4):
@@ -103,9 +104,7 @@ class ShowCommand(Command):
             return str(e)
         
         filt = get_filter_from_cli_args(cli_args)
-        
-        for suite in suites:
-            suite.apply_filter(filt)
+        suites = filter_testsuites(suites, filt)
         
         show = Show()
         show.short = cli_args.short
@@ -113,4 +112,6 @@ class ShowCommand(Command):
         show.show_metadata = not cli_args.no_metadata
         show.flat_mode = cli_args.flat_mode
         show.color_mode = not cli_args.no_colors
-        show.show_testsuites(filter(lambda suite: suite.has_selected_tests(), suites))
+        show.show_testsuites(suites)
+        
+        return 0

@@ -66,3 +66,5 @@ class FixturesCommand(Command):
         for scope in "session", "testsuite", "test":
             show_fixtures(scope, fixtures_by_scope.get(scope, []), used_by_tests, used_by_fixtures, cli_args.verbose)
             print()
+
+        return 0
