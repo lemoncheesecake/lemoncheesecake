@@ -929,3 +929,45 @@ def test_get_fixtures_to_be_executed_for_test(fixture_registry_sample, testsuite
     assert sorted(run.get_fixtures_to_be_executed_for_test(testsuites_sample[0].get_tests()[0])) == []
     assert sorted(run.get_fixtures_to_be_executed_for_test(testsuites_sample[0].get_tests()[1])) == ["fixt_for_test3"]
     assert sorted(run.get_fixtures_to_be_executed_for_test(testsuites_sample[1].get_tests()[0])) == ["fixt_for_test1", "fixt_for_test2"]
+
+def test_fixture_name_scopes():
+    fixts = []
+    
+    @lcc.fixture(scope="session")
+    def fixt_session(fixture_name):
+        fixts.append(fixture_name)
+
+    @lcc.fixture(scope="testsuite")
+    def fixt_suite(fixture_name, fixt_session):
+        fixts.append(fixture_name)
+
+    @lcc.fixture(scope="test")
+    def fixt_test(fixture_name, fixt_suite):
+        fixts.append(fixture_name)
+
+    @lcc.testsuite("suite")
+    class suite:
+        @lcc.test("test")
+        def test(self, fixt_test):
+            pass
+    
+    run_testsuite(suite, fixtures=[fixt_session, fixt_suite, fixt_test])
+
+    assert fixts == ["fixt_session", "fixt_suite", "fixt_test"]
+
+def test_fixture_name_multiple_names():
+    fixts = []
+    
+    @lcc.fixture(scope="test", names=["fixt1", "fixt2"])
+    def fixt(fixture_name):
+        fixts.append(fixture_name)
+
+    @lcc.testsuite("suite")
+    class suite:
+        @lcc.test("test")
+        def test(self, fixt1, fixt2):
+            pass
+    
+    run_testsuite(suite, fixtures=[fixt])
+
+    assert sorted(fixts) == ["fixt1", "fixt2"]

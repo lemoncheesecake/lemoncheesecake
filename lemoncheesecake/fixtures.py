@@ -12,6 +12,8 @@ from lemoncheesecake.utils import get_distincts_in_list
 
 __all__ = ("fixture", "load_fixtures_from_func")
 
+FORBIDDEN_FIXTURE_NAMES = ("fixture_name", )
+
 class FixtureInfo:
     def __init__(self, names, scope):
         self.names = names
@@ -142,7 +144,7 @@ class FixtureRegistry:
         return self._fixtures[name]
     
     def _get_fixture_dependencies(self, name, orig_fixture):
-        fixture_params = self._fixtures[name].params
+        fixture_params = [p for p in self._fixtures[name].params if p != "fixture_name"]
         if orig_fixture and orig_fixture in fixture_params:
             raise FixtureError("Fixture '%s' has a circular dependency on fixture '%s'" % (orig_fixture, name))
 
@@ -177,13 +179,19 @@ class FixtureRegistry:
         - missing dependencies
         - circular dependencies
         - scope incoherence
-        raises a LemoncheesecakeException if a check fails
+        - forbidden fixture name
+        raises FixtureError if a check fails
         """
-        # first, check for missing & circular dependencies
+        # first, check for forbidden fixture name
+        for fixture_name in self._fixtures.keys():
+            if fixture_name in FORBIDDEN_FIXTURE_NAMES:
+                raise FixtureError("Fixture name '%s' is forbidden" % fixture_name)
+        
+        # second, check for missing & circular dependencies
         for fixture_name in self._fixtures.keys():
             self.get_fixture_dependencies(fixture_name)
         
-        # second, check fixture scope compliance with their direct fixture dependencies
+        # third, check fixture scope compliance with their direct fixture dependencies
         for fixture in self._fixtures.values():
             dependency_fixtures = [self._fixtures[param] for param in fixture.params]
             for dependency_fixture in dependency_fixtures:
@@ -191,6 +199,7 @@ class FixtureRegistry:
                     raise FixtureError("Fixture '%s' with scope '%s' is incompatible with scope '%s' of fixture '%s'" % (
                         fixture.name, fixture.scope, dependency_fixture.scope, dependency_fixture.name
                     ))
+        
     
     def check_fixtures_in_test(self, test, suite):
         for fixture in test.get_params():
@@ -215,10 +224,13 @@ class FixtureRegistry:
         fixture = self._fixtures[name]
         params = {}
         for param in fixture.params:
-            dependency_fixture = self._fixtures[param]
-            if not dependency_fixture.is_executed():
-                self.execute_fixture(dependency_fixture.name)
-            params[dependency_fixture.name] = dependency_fixture.get_result()
+            if param == "fixture_name":
+                params["fixture_name"] = name
+            else:
+                dependency_fixture = self._fixtures[param]
+                if not dependency_fixture.is_executed():
+                    self.execute_fixture(dependency_fixture.name)
+                params[dependency_fixture.name] = dependency_fixture.get_result()
         fixture.execute(params)
         
     def get_fixture_result(self, name):

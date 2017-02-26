@@ -293,6 +293,17 @@ def test_registry_incompatible_scope():
         registry.check_dependencies()
     assert 'incompatible' in str(excinfo.value)
 
+def test_registry_forbidden_fixture_name():
+    @lcc.fixture(scope="test")
+    def fixture_name():
+        return 0
+    
+    registry = FixtureRegistry()
+    registry.add_fixtures(lcc.load_fixtures_from_func(fixture_name))
+    with pytest.raises(exceptions.FixtureError) as excinfo:
+        registry.check_dependencies()
+    assert "forbidden" in str(excinfo.value)
+
 def test_registry_execute_fixture_without_dependency():
     @lcc.fixture()
     def foo():
