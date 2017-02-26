@@ -170,6 +170,66 @@ def test_duplicated_test_name():
     with pytest.raises(ProgrammingError):
         load_testsuite_from_class(MySuite)
 
+def test_suite_rank():
+    @lcc.testsuite("My Suite")
+    class MySuite1:
+        @lcc.testsuite("D")
+        class D:
+            @lcc.test("test")
+            def test(self): pass
+
+        @lcc.testsuite("C")
+        class C:
+            @lcc.test("test")
+            def test(self): pass
+
+        @lcc.testsuite("B")
+        class B:
+            @lcc.test("test")
+            def test(self): pass
+
+        @lcc.testsuite("A")
+        class A:
+            @lcc.test("test")
+            def test(self): pass
+    
+    suite = load_testsuite_from_class(MySuite1)
+    
+    assert suite.get_sub_testsuites()[0].name == "D"
+    assert suite.get_sub_testsuites()[1].name == "C"
+    assert suite.get_sub_testsuites()[2].name == "B"
+    assert suite.get_sub_testsuites()[3].name == "A"
+
+def test_suite_rank_forced():
+    @lcc.testsuite("My Suite")
+    class MySuite1:
+        @lcc.testsuite("A", rank=2)
+        class A:
+            @lcc.test("test")
+            def test(self): pass
+
+        @lcc.testsuite("B", rank=3)
+        class B:
+            @lcc.test("test")
+            def test(self): pass
+
+        @lcc.testsuite("C", rank=1)
+        class C:
+            @lcc.test("test")
+            def test(self): pass
+
+        @lcc.testsuite("D", rank=4)
+        class D:
+            @lcc.test("test")
+            def test(self): pass
+    
+    suite = load_testsuite_from_class(MySuite1)
+    
+    assert suite.get_sub_testsuites()[0].name == "C"
+    assert suite.get_sub_testsuites()[1].name == "A"
+    assert suite.get_sub_testsuites()[2].name == "B"
+    assert suite.get_sub_testsuites()[3].name == "D"
+
 def test_register_test():
     @lcc.testsuite("My Suite")
     class MySuite:

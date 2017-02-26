@@ -30,8 +30,7 @@ def testsuite(description, rank=None):
             raise ProgrammingError("%s is not a class (testsuite decorator can only be used on a class)" % klass)
         md = get_metadata(klass)
         md.is_testsuite = True
-        if rank != None:
-            md.rank = get_metadata_next_rank()
+        md.rank = rank if rank != None else get_metadata_next_rank()
         md.name = klass.__name__
         md.description = description
         return klass
