@@ -48,13 +48,13 @@ class RunCommand(Command):
             
         add_filter_args_to_cli_parser(cli_parser)
         cli_parser.add_argument("--report-dir", "-r", required=False, help="Directory where report data will be stored")
-        cli_parser.add_argument("--reporting", nargs="+", required=False,
-            help="The list of reporting backends to use", default=default_reporting_backend_names
+        cli_parser.add_argument("--reporting", nargs="+", default=default_reporting_backend_names,
+            help="The list of reporting backends to use"
         )
-        cli_parser.add_argument("--enable-reporting", nargs="+", required=False,
+        cli_parser.add_argument("--enable-reporting", nargs="+", default=[],
             help="The list of reporting backends to add (to base backends)"
         )
-        cli_parser.add_argument("--disable-reporting", nargs="+", required=False,
+        cli_parser.add_argument("--disable-reporting", nargs="+", default=[],
             help="The list of reporting backends to remove (from base backends)"
         )
         cli_parser.add_argument("--show-stacktrace", action="store_true",
@@ -104,13 +104,17 @@ class RunCommand(Command):
             testsuites = filter_testsuites(testsuites, filter)
     
         # set reporting backends
-        reporting_backend_names = set(cli_args.reporting)
-        if cli_args.enable_reporting:
-            for backend in cli_args.enable_reporting:
-                reporting_backend_names.add(backend)
-        if cli_args.disable_reporting:
-            for backend in cli_args.disable_reporting:
-                reporting_backend_names.remove(backend)
+        selected_reporting_backends = set()
+        for backend_name in cli_args.reporting + cli_args.enable_reporting:
+            try:
+                selected_reporting_backends.add(reporting_backends[backend_name])
+            except KeyError:
+                return "Unknown reporting backend '%s'" % backend_name
+        for backend_name in cli_args.disable_reporting:
+            try:
+                selected_reporting_backends.discard(reporting_backends[backend_name])
+            except KeyError:
+                return "Unknown reporting backend '%s'" % backend_name
         
         # initialize workers using CLI
         for worker_name, worker in workers.items():
@@ -147,7 +151,7 @@ class RunCommand(Command):
                     serialize_current_exception(cli_args.show_stacktrace)
         
         run_testsuites(
-            testsuites, fixture_registry, workers, [reporting_backends[backend_name] for backend_name in reporting_backend_names], report_dir
+            testsuites, fixture_registry, workers, selected_reporting_backends, report_dir
         )
         
         if after_run_hook:
