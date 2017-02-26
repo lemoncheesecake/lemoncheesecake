@@ -156,6 +156,7 @@ class Project:
                 error = checker(name, v)
                 if error:
                     _param_error(name, error)
+            value = list(value) # convert tuple in list
         elif is_dict:
             if type(value) != dict:
                 _param_error(name, "parameter must be a dict")
