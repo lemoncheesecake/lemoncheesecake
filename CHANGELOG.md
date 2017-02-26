@@ -1,3 +1,11 @@
+# 0.6.1 (2017-02-26)
+
+- **API**: rank option of @testsuite decorator was not properly taken into account
+- **API**: new special fixture 'fixture_name'
+- **CLI**: for commands show, fixtures and stats, do not display color is the output gets
+  redirected, adds a --color option to force it
+- **under the hood**: add unit tests for CLI commands
+
 # 0.6.0 (2017-02-19)
 
 - **API**: a testsuite must now be declared using @lcc.testsuite decorator instead of inheriting lcc.TestSuite
