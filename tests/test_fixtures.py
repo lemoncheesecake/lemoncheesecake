@@ -216,6 +216,15 @@ def test_registry_fixture_circular_dependency_indirect():
         registry.check_dependencies()
     assert 'circular' in str(excinfo.value)
 
+def test_registry_fixture_name():
+    @lcc.fixture()
+    def foo(fixture_name):
+        pass
+    
+    registry = FixtureRegistry()
+    registry.add_fixtures(lcc.load_fixtures_from_func(foo))
+    registry.check_dependencies()
+
 def test_registry_get_fixture_without_param_dependency():
     @lcc.fixture()
     def foo():

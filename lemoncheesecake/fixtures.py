@@ -193,7 +193,7 @@ class FixtureRegistry:
         
         # third, check fixture scope compliance with their direct fixture dependencies
         for fixture in self._fixtures.values():
-            dependency_fixtures = [self._fixtures[param] for param in fixture.params]
+            dependency_fixtures = [self._fixtures[param] for param in fixture.params if param != "fixture_name"]
             for dependency_fixture in dependency_fixtures:
                 if dependency_fixture.get_scope_level() < fixture.get_scope_level():
                     raise FixtureError("Fixture '%s' with scope '%s' is incompatible with scope '%s' of fixture '%s'" % (

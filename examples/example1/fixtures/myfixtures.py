@@ -1,7 +1,7 @@
 import lemoncheesecake as lcc
 
 @lcc.fixture(scope="session")
-def fixt1():
+def fixt1(fixture_name):
     return 1
 
 @lcc.fixture(scope="session")
