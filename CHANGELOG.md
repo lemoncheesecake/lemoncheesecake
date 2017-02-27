@@ -1,3 +1,7 @@
+# 0.6.2 (2017-02-27)
+
+- Fix project load failure when a fixture relies on 'fixture_name'
+
 # 0.6.1 (2017-02-26)
 
 - **API**: rank option of @testsuite decorator was not properly taken into account
