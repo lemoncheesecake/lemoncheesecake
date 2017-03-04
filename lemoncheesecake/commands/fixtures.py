@@ -29,7 +29,7 @@ class FixturesCommand(Command):
         for fixt in sorted(fixtures, key=lambda f: used_by_fixtures.get(get_fixture_name(f), 0), reverse=True):
             for fixt_name in get_fixture_names(fixt):
                 lines.append([
-                    self.bold(fixt_name), ", ".join(get_fixture_params(fixt)),
+                    self.bold(fixt_name), ", ".join(get_fixture_params(fixt) or "-"),
                     used_by_fixtures.get(fixt_name, 0), used_by_tests.get(fixt_name, 0)
                 ])
         print_table("Fixture with scope %s" % self.bold(scope), ["Fixture", "Dependencies", "Used by fixtures", "Used by tests"], lines)
