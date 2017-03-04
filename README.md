@@ -212,7 +212,7 @@ class my_suite:
         resp =  conn.getresponse()
 ```
 
-Three scopes are supported: "session", "testsuite" and "test" which is the default. Like in pytest:
+Four scopes are supported: "session_prerun", "session", "testsuite" and "test" which is the default. Like in pytest:
 - fixture teardown can be implemented using yield to initially return the fixture value. 
 - fixtures can be used in fixture
 

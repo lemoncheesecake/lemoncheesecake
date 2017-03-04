@@ -1,7 +1,11 @@
 import lemoncheesecake as lcc
 
+@lcc.fixture(scope="session_prerun")
+def fixt0():
+    pass 
+
 @lcc.fixture(scope="session")
-def fixt1(fixture_name):
+def fixt1(fixture_name, fixt0):
     return 1
 
 @lcc.fixture(scope="session")

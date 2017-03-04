@@ -623,6 +623,76 @@ def test_teardown_test_session_error_because_of_fixture(reporting_session):
     assert_report_errors(1)
     assert "teardown" in marker
 
+def test_session_prerun_fixture_exception(reporting_session):
+    @lcc.fixture(scope="session_prerun")
+    def fix():
+        1 / 0
+    
+    @lcc.testsuite("MySuite")
+    class MySuite:
+        @lcc.test("Some test")
+        def sometest(self, fix):
+            pass
+    
+    with pytest.raises(LemonCheesecakeException) as excinfo:    
+        run_testsuite(MySuite, fixtures=[fix])
+        assert "Got an unexpected" in str(excinfo.value)
+
+    assert reporting_session.test_nb == 0
+
+def test_session_prerun_fixture_user_error(reporting_session):
+    @lcc.fixture(scope="session_prerun")
+    def fix():
+        raise lcc.UserError("some error")
+    
+    @lcc.testsuite("MySuite")
+    class MySuite:
+        @lcc.test("Some test")
+        def sometest(self, fix):
+            pass
+    
+    with pytest.raises(LemonCheesecakeException) as excinfo:    
+        run_testsuite(MySuite, fixtures=[fix])
+        assert str(excinfo.value) == "some error"
+
+    assert reporting_session.test_nb == 0
+
+def test_session_prerun_fixture_teardown_exception(reporting_session):
+    @lcc.fixture(scope="session_prerun")
+    def fix():
+        yield
+        1 / 0
+    
+    @lcc.testsuite("MySuite")
+    class MySuite:
+        @lcc.test("Some test")
+        def sometest(self, fix):
+            pass
+    
+    with pytest.raises(LemonCheesecakeException) as excinfo:    
+        run_testsuite(MySuite, fixtures=[fix])
+        assert "Got an unexpected" in str(excinfo.value)
+
+    assert reporting_session.test_nb == 1
+
+def test_session_prerun_fixture_teardown_user_error(reporting_session):
+    @lcc.fixture(scope="session_prerun")
+    def fix():
+        yield
+        raise lcc.UserError("some error")
+    
+    @lcc.testsuite("MySuite")
+    class MySuite:
+        @lcc.test("Some test")
+        def sometest(self, fix):
+            pass
+    
+    with pytest.raises(LemonCheesecakeException) as excinfo:    
+        run_testsuite(MySuite, fixtures=[fix])
+        assert str(excinfo.value) == "some error"
+
+    assert reporting_session.test_nb == 1
+
 def test_run_with_fixture():
     marker = []
     
@@ -675,43 +745,50 @@ def test_run_with_fixture_with_logs():
 def test_run_with_fixtures_using_yield_and_dependencies():
     marker = []
     
-    @lcc.fixture(scope="session")
-    def session_fixture():
-        lcc.log_info("session_fixture_setup")
+    @lcc.fixture(scope="session_prerun")
+    def session_fixture_prerun():
         retval = 2
         marker.append(retval)
         yield retval
         marker.append(1)
+    
+    @lcc.fixture(scope="session")
+    def session_fixture(session_fixture_prerun):
+        lcc.log_info("session_fixture_setup")
+        retval = session_fixture_prerun * 3
+        marker.append(retval)
+        yield retval
+        marker.append(2)
         lcc.log_info("session_fixture_teardown")
     
     @lcc.fixture(scope="testsuite")
     def suite_fixture(session_fixture):
         lcc.log_info("suite_fixture_setup")
-        retval = session_fixture * 3
+        retval = session_fixture * 4
         marker.append(retval)
         yield retval
-        marker.append(2)
+        marker.append(3)
         lcc.log_info("suite_fixture_teardown")
 
     @lcc.fixture(scope="test")
     def test_fixture(suite_fixture):
         lcc.log_info("test_fixture_setup")
-        retval = suite_fixture * 4
+        retval = suite_fixture * 5
         marker.append(retval)
         yield retval
-        marker.append(3)
+        marker.append(4)
         lcc.log_info("test_fixture_teardown")
     
     @lcc.testsuite("MySuite")
     class MySuite:
         @lcc.test("Test")
         def test(self, test_fixture):
-            marker.append(test_fixture * 5)
+            marker.append(test_fixture * 6)
     
-    run_testsuite(MySuite, fixtures=(session_fixture, suite_fixture, test_fixture))
+    run_testsuite(MySuite, fixtures=(session_fixture_prerun, session_fixture, suite_fixture, test_fixture))
     
     # test that each fixture value is passed to test or fixture requiring the fixture
-    assert marker == [2, 6, 24, 120, 3, 2, 1]
+    assert marker == [2, 6, 24, 120, 720, 4, 3, 2, 1]
     
     report = get_runtime().report
     
@@ -722,6 +799,32 @@ def test_run_with_fixtures_using_yield_and_dependencies():
     assert report.testsuites[0].suite_teardown.steps[0].entries[0].message == "suite_fixture_teardown"
     assert report.testsuites[0].tests[0].steps[0].entries[0].message == "test_fixture_setup"
     assert report.testsuites[0].tests[0].steps[1].entries[0].message == "test_fixture_teardown"
+
+def test_run_with_fixtures_dependencies_in_test_session_prerun_scope(reporting_session):
+    # in this test, fixture dependency is set on fixture alphabetical inverse
+    # order to highlight a bad dependency check implementation that use set data type  
+    
+    @lcc.fixture(names=["fixt_3"], scope="session_prerun")
+    def fixt3():
+        return 2
+    
+    @lcc.fixture(names=["fixt_2"], scope="session_prerun")
+    def fixt2(fixt_3):
+        return fixt_3 * 3
+    
+    @lcc.fixture(names=["fixt_1"], scope="session_prerun")
+    def fixt1(fixt_2):
+        return fixt_2 * 4
+    
+    @lcc.testsuite("MySuite")
+    class MySuite:
+        @lcc.test("Test")
+        def test(self, fixt_1):
+            assert fixt_1 == 24
+    
+    run_testsuite(MySuite, fixtures=[fixt1, fixt2, fixt3])
+
+    assert reporting_session.get_successful_test_nb() == 1
 
 def test_run_with_fixtures_dependencies_in_test_session_scope(reporting_session):
     # in this test, fixture dependency is set on fixture alphabetical inverse
@@ -855,12 +958,16 @@ def test_fixture_called_multiple_times(reporting_session):
 
 @pytest.fixture()
 def fixture_registry_sample():
+    @lcc.fixture(scope="session_prerun")
+    def fixt_for_session_prerun1():
+        pass
+
     @lcc.fixture(scope="session")
     def fixt_for_session1():
         pass
     
     @lcc.fixture(scope="session")
-    def fixt_for_session2():
+    def fixt_for_session2(fixt_for_session_prerun1):
         pass
 
     @lcc.fixture(scope="session")
@@ -888,8 +995,9 @@ def fixture_registry_sample():
         pass
 
     return build_fixture_registry(
-        fixt_for_session1, fixt_for_session2, fixt_for_session3, fixt_for_testsuite1,
-        fixt_for_testsuite2, fixt_for_test1, fixt_for_test2, fixt_for_test3
+        fixt_for_session_prerun1, fixt_for_session1, fixt_for_session2, fixt_for_session3,
+        fixt_for_testsuite1, fixt_for_testsuite2,
+        fixt_for_test1, fixt_for_test2, fixt_for_test3
     )
 
 @pytest.fixture()
@@ -912,6 +1020,11 @@ def testsuites_sample():
     
     return loader.load_testsuites([suite1, suite2])
 
+def test_get_fixtures_to_be_executed_for_session_prerun(fixture_registry_sample, testsuites_sample):
+    run = runner._Runner(testsuites_sample, fixture_registry_sample, [], [], None)
+    
+    assert sorted(run.get_fixtures_to_be_executed_for_session_prerun()) == ["fixt_for_session_prerun1"]
+
 def test_get_fixtures_to_be_executed_for_session(fixture_registry_sample, testsuites_sample):
     run = runner._Runner(testsuites_sample, fixture_registry_sample, [], [], None)
     
@@ -932,9 +1045,13 @@ def test_get_fixtures_to_be_executed_for_test(fixture_registry_sample, testsuite
 
 def test_fixture_name_scopes():
     fixts = []
+
+    @lcc.fixture(scope="session")
+    def fixt_session_prerun(fixture_name):
+        fixts.append(fixture_name)
     
     @lcc.fixture(scope="session")
-    def fixt_session(fixture_name):
+    def fixt_session(fixture_name, fixt_session_prerun):
         fixts.append(fixture_name)
 
     @lcc.fixture(scope="testsuite")
@@ -951,9 +1068,9 @@ def test_fixture_name_scopes():
         def test(self, fixt_test):
             pass
     
-    run_testsuite(suite, fixtures=[fixt_session, fixt_suite, fixt_test])
+    run_testsuite(suite, fixtures=[fixt_session_prerun, fixt_session, fixt_suite, fixt_test])
 
-    assert fixts == ["fixt_session", "fixt_suite", "fixt_test"]
+    assert fixts == ["fixt_session_prerun", "fixt_session", "fixt_suite", "fixt_test"]
 
 def test_fixture_name_multiple_names():
     fixts = []

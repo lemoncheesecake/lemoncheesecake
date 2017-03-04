@@ -10,7 +10,8 @@ import traceback
 
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.utils import IS_PYTHON3, get_distincts_in_list
-from lemoncheesecake.exceptions import AbortTest, AbortTestSuite, AbortAllTests, ProgrammingError
+from lemoncheesecake.exceptions import AbortTest, AbortTestSuite, AbortAllTests, FixtureError, \
+    UserError, serialize_current_exception
 
 class _Runner:
     def __init__(self, testsuites, fixture_registry, workers, reporting_backends, report_dir):
@@ -30,6 +31,12 @@ class _Runner:
         fixtures.extend(direct_fixtures)
         return [f for f in get_distincts_in_list(fixtures) if self.fixture_registry.get_fixture_scope(f) == scope]
     
+    def get_fixtures_to_be_executed_for_session_prerun(self):
+        fixtures = []
+        for testsuite in self.testsuites:
+            fixtures.extend(testsuite.get_fixtures())
+        return self.get_fixtures_with_dependencies_for_scope(get_distincts_in_list(fixtures), "session_prerun")    
+
     def get_fixtures_to_be_executed_for_session(self):
         fixtures = []
         for testsuite in self.testsuites:
@@ -223,7 +230,7 @@ class _Runner:
         
         self.session.end_suite()
         
-    def run(self):
+    def run_session(self):
         # initialize runtime & global test variables
         initialize_runtime(self.workers, self.reporting_backends, self.report_dir)
         self.session = get_runtime()
@@ -269,6 +276,38 @@ class _Runner:
             self.session.end_test_session_teardown()
     
         self.session.end_tests()
+    
+    def run(self):
+        executed_fixtures = []
+        
+        errors = []
+        for fixture in self.get_fixtures_to_be_executed_for_session_prerun():
+            try:
+                self.fixture_registry.execute_fixture(fixture)
+            except UserError:
+                raise
+            except (Exception, KeyboardInterrupt):
+                errors.append("Got the following exception when executing fixture '%s' (scope 'session_prerun')%s" % (
+                    fixture, serialize_current_exception(show_stacktrace=True)
+                ))
+                break
+            executed_fixtures.append(fixture)
+        
+        if not errors:
+            self.run_session()
+        
+        for fixture in executed_fixtures:
+            try:
+                self.fixture_registry.teardown_fixture(fixture)
+            except UserError:
+                raise
+            except (Exception, KeyboardInterrupt):
+                errors.append("Got the following exception on fixture '%s' teardown (scope 'session_prerun')%s" % (
+                    fixture, serialize_current_exception(show_stacktrace=True)
+                ))
+        
+        if errors:
+            raise FixtureError("\n".join(errors))
 
 def run_testsuites(testsuites, fixture_registry, workers, reporting_backends, report_dir):
     """

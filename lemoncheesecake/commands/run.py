@@ -14,7 +14,7 @@ from lemoncheesecake.testsuite.filter import add_filter_args_to_cli_parser, get_
 from lemoncheesecake.testsuite import filter_testsuites
 from lemoncheesecake import reporting
 from lemoncheesecake.exceptions import ProjectError, FixtureError, InvalidMetadataError,\
-    ProgrammingError, serialize_current_exception
+    ProgrammingError, LemonCheesecakeException, UserError, serialize_current_exception
 
 def build_fixture_registry(project, cli_args):
     registry = FixtureRegistry()
@@ -57,14 +57,9 @@ class RunCommand(Command):
         cli_parser.add_argument("--disable-reporting", nargs="+", default=[],
             help="The list of reporting backends to remove (from base backends)"
         )
-        cli_parser.add_argument("--show-stacktrace", action="store_true",
-            help="Show full stacktrace will getting an unexpected exception from user code"
-        )
     
     def run_cmd(self, cli_args):
-        ###
         # Project initialization
-        ###
         project_file = find_project_file()
         if not project_file:
             return "Cannot find project file"
@@ -79,7 +74,7 @@ class RunCommand(Command):
         if len(testsuites) == 0:
             return "No testsuites are defined in your lemoncheesecake project."
     
-        # build fixture registry:
+        # Build fixture registry
         try:
             fixture_registry = build_fixture_registry(project, cli_args)
             fixture_registry.check_fixtures_in_testsuites(testsuites)
@@ -95,15 +90,12 @@ class RunCommand(Command):
         before_run_hook = project.get_before_test_run_hook()
         after_run_hook = project.get_after_test_run_hook()
         
-        ###
-        # Process CLI arguments
-        ###
-        # apply filter
+        # Apply filter
         filter = get_filter_from_cli_args(cli_args)
         if not filter.is_empty():
             testsuites = filter_testsuites(testsuites, filter)
     
-        # set reporting backends
+        # Set reporting backends
         selected_reporting_backends = set()
         for backend_name in cli_args.reporting + cli_args.enable_reporting:
             try:
@@ -116,16 +108,18 @@ class RunCommand(Command):
             except KeyError:
                 return "Unknown reporting backend '%s'" % backend_name
         
-        # initialize workers using CLI
+        # Initialize workers using CLI
         for worker_name, worker in workers.items():
             try:
                 worker.cli_initialize(cli_args)
+            except UserError as e:
+                return str(e)
             except Exception:
                 return "Got an unexpected exception while running 'cli_initalize' method of worker '%s':\n%s" (
-                    worker_name, serialize_current_exception(cli_args.show_stacktrace)
+                    worker_name, serialize_current_exception(show_stacktrace=True)
                 )
         
-        # create report dir
+        # Create report dir
         if cli_args.report_dir:
             report_dir = cli_args.report_dir
             try:
@@ -136,29 +130,39 @@ class RunCommand(Command):
             project_dir = project.get_project_dir()
             try:
                 report_dir = default_report_dir_creation_callback(project_dir)
+            except UserError as e:
+                return str(e)
             except Exception:
                 return "Got an unexpected exception while creating report directory:%s" % \
-                    serialize_current_exception(cli_args.show_stacktrace)
+                    serialize_current_exception(show_stacktrace=True)
     
-        ###
-        # Run tests
-        ###
+        # Handle before run hook 
         if before_run_hook:
             try:
                 before_run_hook(report_dir)
+            except UserError as e:
+                return str(e)
             except Exception:
                 return "Got an unexpected exception while running the before-run hook:%s" % \
-                    serialize_current_exception(cli_args.show_stacktrace)
+                    serialize_current_exception(show_stacktrace=True)
         
-        run_testsuites(
-            testsuites, fixture_registry, workers, selected_reporting_backends, report_dir
-        )
+        # Run tests 
+        try:
+            run_testsuites(
+                testsuites, fixture_registry, workers, selected_reporting_backends, report_dir
+            )
+        except LemonCheesecakeException as e:
+            return str(e)
         
+        # Handle after run hook 
         if after_run_hook:
             try:
                 after_run_hook(report_dir)
+            except UserError as e:
+                return str(e)
             except Exception:
-                return "Got an unexpected exception while running the after-run hook:%s" % \
-                    serialize_current_exception(cli_args.show_stacktrace)
+                return "Got an unexpected exception while running the after-run hook:%s" % (
+                    serialize_current_exception(show_stacktrace=True)
+                )
         
         return 0

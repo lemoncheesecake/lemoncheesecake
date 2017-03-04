@@ -339,6 +339,10 @@ def test_registry_execute_fixture_with_dependency():
     assert registry.get_fixture_result("foo") == 42
 
 def build_registry(*executed_fixtures):
+    @lcc.fixture(scope="session_prerun")
+    def fix0():
+        pass
+    
     @lcc.fixture(scope="session")
     def fix1():
         pass
@@ -356,7 +360,7 @@ def build_registry(*executed_fixtures):
         pass
 
     registry = FixtureRegistry()
-    for func in fix1, fix2, fix3, fix_:
+    for func in fix0, fix1, fix2, fix3, fix_:
         registry.add_fixtures(lcc.load_fixtures_from_func(func))
     
     for fixture_name in executed_fixtures:
@@ -365,7 +369,7 @@ def build_registry(*executed_fixtures):
     return registry
 
 def test_filter_fixtures_all():
-    assert sorted(build_registry().filter_fixtures()) == ["fix1", "fix2", "fix3", "fix4", "fix5"]
+    assert sorted(build_registry().filter_fixtures()) == ["fix0", "fix1", "fix2", "fix3", "fix4", "fix5"]
     
 def test_filter_fixtures_on_scope():
     assert sorted(build_registry().filter_fixtures(scope="testsuite")) == ["fix2"]
@@ -373,7 +377,7 @@ def test_filter_fixtures_on_scope():
 def test_filter_fixtures_on_executed():
     registry = build_registry("fix3", "fix4")
     assert sorted(registry.filter_fixtures(is_executed=True)) == ["fix3", "fix4"]
-    assert sorted(registry.filter_fixtures(is_executed=False)) == ["fix1", "fix2", "fix5"]
+    assert sorted(registry.filter_fixtures(is_executed=False)) == ["fix0", "fix1", "fix2", "fix5"]
 
 def test_filter_fixtures_on_base_names():
     assert sorted(build_registry().filter_fixtures(base_names=["fix1"])) == ["fix1"]

@@ -60,6 +60,9 @@ class AbortAllTests(LemonCheesecakeException):
     def __init__(self, reason):
         LemonCheesecakeException.__init__(self, reason)
 
+class UserError(LemonCheesecakeException):
+    pass
+
 def serialize_current_exception(show_stacktrace=True):
     if show_stacktrace:
         return "\n" + "-" * 72 + "\n" + traceback.format_exc() + "-" * 72

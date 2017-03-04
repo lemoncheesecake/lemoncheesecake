@@ -20,7 +20,7 @@ class FixtureInfo:
         self.scope = scope
 
 def fixture(names=None, scope="test"):
-    if scope not in ("test", "testsuite", "session"):
+    if scope not in ("test", "testsuite", "session", "session_prerun"):
         raise ProgrammingError("Invalid fixture scope '%s'" % scope)
     
     def wrapper(func):
@@ -55,7 +55,8 @@ class BaseFixture:
         return {
             "test": 1,
             "testsuite": 2,
-            "session": 3
+            "session": 3,
+            "session_prerun": 4
         }[self.scope]
 
     def is_executed(self):
@@ -105,7 +106,7 @@ class Fixture(BaseFixture):
 class BuiltinFixture(BaseFixture):
     def __init__(self, name, value):
         self.name = name
-        self.scope = "session"
+        self.scope = "session_prerun"
         self.params = []
         self._value = value
     
