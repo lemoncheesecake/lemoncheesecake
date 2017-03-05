@@ -26,7 +26,12 @@ class FixturesCommand(Command):
 
     def show_fixtures(self, scope, fixtures, used_by_tests, used_by_fixtures, verbose):
         lines = []
-        for fixt in sorted(fixtures, key=lambda f: used_by_fixtures.get(get_fixture_name(f), 0), reverse=True):
+        ordered_fixtures = sorted(
+            fixtures,
+            key=lambda f: used_by_fixtures.get(get_fixture_name(f), 0) + used_by_tests.get(get_fixture_name(f), 0),
+            reverse=True
+        )
+        for fixt in ordered_fixtures:
             for fixt_name in get_fixture_names(fixt):
                 lines.append([
                     self.bold(fixt_name), ", ".join(get_fixture_params(fixt) or "-"),
