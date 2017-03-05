@@ -235,7 +235,7 @@ def walk_testsuites(testsuites, testsuite_func=None, test_func=None):
             testsuite_func(suite)
         if test_func:
             for test in suite.get_tests():
-                test_func(test)
+                test_func(test, suite)
         for sub_suite in suite.get_sub_testsuites():
             do_walk(sub_suite)
     for suite in testsuites:

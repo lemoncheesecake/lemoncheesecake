@@ -5,6 +5,7 @@ Created on Feb 14, 2017
 '''
 
 from __future__ import print_function
+from functools import reduce
 
 from lemoncheesecake.cli import Command
 from lemoncheesecake.commands.cliutils import print_table
@@ -40,60 +41,66 @@ class StatsCommand(Command):
         
         class Stats:
             def __init__(self):
-                self.nb = 0
+                self.tests_nb = 0
+                self.testsuites_nb = 0
                 self.tags = {}
                 self.properties = {}
                 self.links = {}
-        test_stats = Stats()
-        suite_stats = Stats()
+        stats = Stats()
         
-        def handle_obj(stats):
-            def wrapped(obj):
-                stats.nb += 1
-                for tag in obj.tags:
-                    stats.tags[tag] = stats.tags.get(tag, 0) + 1
-                for prop, value in obj.properties.items():
-                    if prop not in stats.properties:
-                        stats.properties[prop] = {}
-                    if value not in stats.properties[prop]:
-                        stats.properties[prop][value] = 0
-                    stats.properties[prop][value] += 1
-                for link in obj.links:
-                    stats.links[link] = stats.links.get(link, 0) + 1
-            return wrapped
+        def handle_test(test, suite):
+            stats.tests_nb += 1
+            for tag in suite.get_inherited_test_tags(test):
+                stats.tags[tag] = stats.tags.get(tag, 0) + 1
+            for prop, value in suite.get_inherited_test_properties(test).items():
+                if prop not in stats.properties:
+                    stats.properties[prop] = {}
+                if value not in stats.properties[prop]:
+                    stats.properties[prop][value] = 0
+                stats.properties[prop][value] += 1
+            for link in suite.get_inherited_test_links(test):
+                stats.links[link] = stats.links.get(link, 0) + 1
         
-        walk_testsuites(suites, testsuite_func=handle_obj(suite_stats), test_func=handle_obj(test_stats))
+        def handle_suite(suite):
+            stats.testsuites_nb += 1
+        
+        walk_testsuites(suites, test_func=handle_test, testsuite_func=handle_suite)
         
         # Show tags
         lines = []
-        for tag in sorted(set(list(test_stats.tags.keys()) + list(suite_stats.tags.keys()))):
-            lines.append([self.bold(tag), test_stats.tags.get(tag, 0), suite_stats.tags.get(tag, 0)])
-        print_table(self.bold("Tags"), ["Tag", "Used in tests", "Used in testsuites"], lines)
+        for tag in sorted(stats.tags.keys(), key=lambda k: stats.tags[k], reverse=True):
+            lines.append([self.bold(tag), stats.tags.get(tag, 0)])
+        print_table(self.bold("Tags"), ["Tag", "Tests"], lines)
 
         # Show properties
         lines = []
-        for prop_name in sorted(set(list(test_stats.properties.keys()) + list(suite_stats.properties.keys()))):
-            prop_values = sorted(set(
-                list(test_stats.properties.get(prop_name, {}).keys()) + list(suite_stats.properties.get(prop_name, {}).keys())
-            ))
+        prop_names = sorted(
+            stats.properties.keys(),
+            key=lambda k: reduce(lambda x, y: x + y, stats.properties[k].values(), 0),
+            reverse=True
+        )
+        for prop_name in prop_names:
+            prop_values = sorted(
+                stats.properties[prop_name].keys(),
+                key=lambda k: stats.properties[prop_name][k],
+                reverse=True
+            )
             for prop_value in prop_values:
                 lines.append([
                     self.bold(prop_name), self.bold(prop_value),
-                    test_stats.properties.get(prop_name, {}).get(prop_value, 0),
-                    suite_stats.properties.get(prop_name, {}).get(prop_value, 0)
+                    stats.properties.get(prop_name, {}).get(prop_value, 0)
                 ])
-        print_table(self.bold("Properties"), ["Property", "Value", "Used in tests", "Used in testsuites"], lines)
+        print_table(self.bold("Properties"), ["Property", "Value", "Tests"], lines)
 
         # Show links
         lines = []
-        for link in sorted(set(list(test_stats.links.keys()) + list(suite_stats.links.keys())), key=lambda l: l[0]):
+        for link in sorted(stats.links.keys(), key=lambda k: stats.links[k], reverse=True):
             lines.append([
-                self.bold(link[1] or "-"), link[0], test_stats.links.get(link, 0), suite_stats.links.get(link, 0)
+                self.bold(link[1] or "-"), link[0], stats.links.get(link, 0)
             ])
-        print_table(self.bold("Links"), ["Name", "URL", "Used in tests", "Used in testsuites"], lines)
+        print_table(self.bold("Links"), ["Name", "URL", "Tests"], lines)
 
-        print("Total %s: %s" % (self.bold("testsuites"), suite_stats.nb))
-        print("Total %s: %s" % (self.bold("tests"), test_stats.nb))
+        print("Total: %s in %s" % (self.bold("%d tests" % stats.tests_nb), self.bold("%d testsuites" % stats.testsuites_nb)))
         print()
         
         return 0

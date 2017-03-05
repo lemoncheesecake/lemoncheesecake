@@ -55,22 +55,21 @@ def test_stats(project, cmdout):
     assert main(["stats"]) == 0
     
     # tags:
-    cmdout.assert_lines_match(".+suite_tag.+ 1 .+ 1 +")
-    cmdout.assert_lines_match(".+test_tag.+ 1 .+ 0 +")
-    cmdout.assert_lines_match(".+foo.+ 1 .+ 0 +")
+    cmdout.assert_lines_match(".+suite_tag.+ 2 .+")
+    cmdout.assert_lines_match(".+test_tag.+ 1 .+")
+    cmdout.assert_lines_match(".+foo.+ 1 .+")
 
     # properties:
-    cmdout.assert_lines_match(".+suite_prop.+suite_prop_value.+ 0 .+ 1 +")
-    cmdout.assert_lines_match(".+test_prop.+test_prop_value1.+ 1 .+ 0 +")
-    cmdout.assert_lines_match(".+test_prop.+test_prop_value2.+ 1 .+ 0 +")
+    cmdout.assert_lines_match(".+suite_prop.+suite_prop_value.+ 2 .+")
+    cmdout.assert_lines_match(".+test_prop.+test_prop_value1.+ 1 .+")
+    cmdout.assert_lines_match(".+test_prop.+test_prop_value2.+ 1 .+")
     
     # links:
-    cmdout.assert_lines_match(".+#1234.+http://bug.tra.cker/1234.+ 1 .+ 1 .+")
-    cmdout.assert_lines_match(".+-.+http://bug.tra.cker/1235.+ 1 .+ 0 .+")
+    cmdout.assert_lines_match(".+#1234.+http://bug.tra.cker/1234.+ 2 .+")
+    cmdout.assert_lines_match(".+-.+http://bug.tra.cker/1235.+ 1 .+")
     
     # totals:
-    cmdout.assert_lines_match(".*testsuites.*: 1.*")
-    cmdout.assert_lines_match(".*tests.*: 2.*")
+    cmdout.assert_lines_match(".+2.+tests.+1.+testsuites.*")
 
 def test_stats_empty_project(empty_project, cmdout):
     assert main(["stats"]) == 0
@@ -80,23 +79,21 @@ def test_stats_empty_project(empty_project, cmdout):
     cmdout.assert_lines_match(".*Links.*:.*none.*")
      
     # totals:
-    cmdout.assert_lines_match(".*testsuites.*: 0.*")
-    cmdout.assert_lines_match(".*tests.*: 0.*")
+    cmdout.assert_lines_match(".+0.+tests.+0.+testsuites.*")
 
 def test_stats_with_filter(project, cmdout):
     assert main(["stats", "mysuite.mytest1"]) == 0
     
     # tags:
-    cmdout.assert_lines_match(".+suite_tag.+ 1 .+ 1 +")
-    cmdout.assert_lines_match(".+test_tag.+ 1 .+ 0 +")
+    cmdout.assert_lines_match(".+suite_tag.+ 1 .+")
+    cmdout.assert_lines_match(".+test_tag.+ 1 .+")
 
     # properties:
-    cmdout.assert_lines_match(".+suite_prop.+suite_prop_value.+ 0 .+ 1 +")
-    cmdout.assert_lines_match(".+test_prop.+test_prop_value1.+ 1 .+ 0 +")
+    cmdout.assert_lines_match(".+suite_prop.+suite_prop_value.+ 1 .+")
+    cmdout.assert_lines_match(".+test_prop.+test_prop_value1.+ 1 .+")
     
     # links:
-    cmdout.assert_lines_match(".+#1234.+http://bug.tra.cker/1234.+ 1 .+ 1 .+")
+    cmdout.assert_lines_match(".+#1234.+http://bug.tra.cker/1234.+ 1 .+")
     
     # totals:
-    cmdout.assert_lines_match(".*testsuites.*: 1.*")
-    cmdout.assert_lines_match(".*tests.*: 1.*")
+    cmdout.assert_lines_match(".+1.+tests.+1.+testsuites.*")

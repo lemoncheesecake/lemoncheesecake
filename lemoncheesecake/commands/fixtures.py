@@ -56,7 +56,7 @@ class FixturesCommand(Command):
                 fixtures_by_scope[scope] = [fixt]
         
         used_by_tests = {}
-        def get_test_fixtures(test):
+        def get_test_fixtures(test, suite):
             for fixt_name in test.get_params():
                 used_by_tests[fixt_name] = used_by_tests.get(fixt_name, 0) + 1
         walk_tests(suites, get_test_fixtures)
