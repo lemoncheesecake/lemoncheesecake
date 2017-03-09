@@ -113,7 +113,7 @@ class TestSuite:
             pass
         else:
             raise InvalidMetadataError(
-                "a test with description '%s' is already registered in test suite %s" % (test.description, self.get_path_str())
+                "A test with description '%s' is already registered in test suite %s" % (test.description, self.get_path_str())
             )
         
         try:
@@ -122,7 +122,7 @@ class TestSuite:
             pass
         else:
             raise InvalidMetadataError(
-                "a test with name '%s' is already registered in test suite %s" % (test.name, self.get_path_str())
+                "A test with name '%s' is already registered in test suite %s" % (test.name, self.get_path_str())
             )
         
     def assert_sub_suite_is_unique_in_suite(self, sub_suite):
@@ -132,7 +132,7 @@ class TestSuite:
             pass
         else:
             raise InvalidMetadataError(
-                "a sub test suite with description '%s' is already registered in test suite %s" % (sub_suite.name, self.get_path_str())
+                "A sub test suite with description '%s' is already registered in test suite %s" % (sub_suite.name, self.get_path_str())
             )
         
         try:
@@ -141,7 +141,7 @@ class TestSuite:
             pass
         else:
             raise InvalidMetadataError(
-                "a sub test suite with name '%s' is already registered in test suite %s" % (sub_suite.name, self.get_path_str())
+                "A sub test suite with name '%s' is already registered in test suite %s" % (sub_suite.name, self.get_path_str())
             )
     
     def add_test(self, test):
