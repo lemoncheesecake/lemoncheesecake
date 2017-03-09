@@ -63,11 +63,11 @@ class Filter:
     
     def match_test(self, test, suite):
         funcs = [
-            lambda: match_values(suite.get_inherited_test_paths(test), self.path),
-            lambda: match_values(suite.get_inherited_test_descriptions(test), self.description),
-            lambda: match_values(suite.get_inherited_test_tags(test), self.tags),
-            lambda: match_keyvalues(suite.get_inherited_test_properties(test), self.properties),
-            lambda: match_listelem(suite.get_inherited_test_links(test), 1, self.link_names)
+            lambda: match_values(test.get_inherited_paths(), self.path),
+            lambda: match_values(test.get_inherited_descriptions(), self.description),
+            lambda: match_values(test.get_inherited_tags(), self.tags),
+            lambda: match_keyvalues(test.get_inherited_properties(), self.properties),
+            lambda: match_listelem(test.get_inherited_links(), 1, self.link_names)
         ]
         return all(func() for func in funcs)
 

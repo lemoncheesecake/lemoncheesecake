@@ -205,7 +205,7 @@ class FixtureRegistry:
     def check_fixtures_in_test(self, test, suite):
         for fixture in test.get_params():
             if fixture not in self._fixtures:
-                raise FixtureError("Unknown fixture '%s' used in test '%s'" % (fixture, suite.get_test_path_str(test)))
+                raise FixtureError("Unknown fixture '%s' used in test '%s'" % (fixture, test.get_path_str()))
         
     def check_fixtures_in_testsuite(self, suite):
         for test in suite.get_tests():

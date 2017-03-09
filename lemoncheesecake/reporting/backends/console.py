@@ -63,7 +63,7 @@ class ConsoleReportingSession(ReportingSession):
     
     def get_test_label(self, test):
         if self.show_test_full_path:
-            return self.current_suite.get_test_path_str(test)
+            return test.get_path_str()
         return test.name
     
     def begin_tests(self):

@@ -42,7 +42,7 @@ class ShowCommand(Command):
             return test.description
         if self.short:
             return test.name
-        return suite.get_test_path_str(test)
+        return test.get_path_str()
     
     def get_suite_label(self, suite):
         if self.show_description:

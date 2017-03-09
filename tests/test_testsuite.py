@@ -345,7 +345,7 @@ def test_get_fixtures_non_recursive():
     
     assert suite.get_fixtures(recursive=False) == ["foo"]
 
-def test_get_inherited_test_tags():
+def test_get_inherited_tags():
     @lcc.tags("tag1")
     @lcc.testsuite("MySuite")
     class MySuite:
@@ -358,10 +358,9 @@ def test_get_inherited_test_tags():
     
     suite = load_testsuite_from_class(MySuite)
     
-    assert suite.get_sub_testsuites()[0].get_inherited_test_tags(suite.get_sub_testsuites()[0].get_tests()[0]) \
-        == ["tag1", "tag2"]
+    assert suite.get_sub_testsuites()[0].get_tests()[0].get_inherited_tags() == ["tag1", "tag2"]
 
-def test_get_inherited_test_properties():
+def test_get_inherited_properties():
     @lcc.prop("prop1", "foo")
     @lcc.prop("prop2", "bar")
     @lcc.testsuite("MySuite")
@@ -376,10 +375,9 @@ def test_get_inherited_test_properties():
     
     suite = load_testsuite_from_class(MySuite)
     
-    assert suite.get_sub_testsuites()[0].get_inherited_test_properties(suite.get_sub_testsuites()[0].get_tests()[0]) \
-        == {"prop1": "baz", "prop2": "bar", "prop3": "foobar"}
+    assert suite.get_sub_testsuites()[0].get_tests()[0].get_inherited_properties() == {"prop1": "baz", "prop2": "bar", "prop3": "foobar"}
 
-def test_get_inherited_test_links():
+def test_get_inherited_links():
     @lcc.link("http://www.example.com/1234")
     @lcc.testsuite("MySuite")
     class MySuite:
@@ -392,10 +390,9 @@ def test_get_inherited_test_links():
     
     suite = load_testsuite_from_class(MySuite)
     
-    assert suite.get_sub_testsuites()[0].get_inherited_test_links(suite.get_sub_testsuites()[0].get_tests()[0]) \
-        == [("http://www.example.com/1234", None), ("http://www.example.com/1235", "#1235")]
+    assert suite.get_sub_testsuites()[0].get_tests()[0].get_inherited_links() == [("http://www.example.com/1234", None), ("http://www.example.com/1235", "#1235")]
 
-def test_get_inherited_test_paths():
+def test_get_inherited_paths():
     @lcc.testsuite("MySuite")
     class MySuite:
         @lcc.testsuite("MySubSuite")
@@ -406,10 +403,9 @@ def test_get_inherited_test_paths():
     
     suite = load_testsuite_from_class(MySuite)
     
-    assert suite.get_sub_testsuites()[0].get_inherited_test_paths(suite.get_sub_testsuites()[0].get_tests()[0]) \
-        == ["MySuite", "MySuite.MySubSuite", "MySuite.MySubSuite.test"]
+    assert suite.get_sub_testsuites()[0].get_tests()[0].get_inherited_paths() == ["MySuite", "MySuite.MySubSuite", "MySuite.MySubSuite.test"]
 
-def test_get_inherited_test_descriptions():
+def test_get_inherited_descriptions():
     @lcc.testsuite("My suite")
     class MySuite:
         @lcc.testsuite("My sub suite")
@@ -420,5 +416,4 @@ def test_get_inherited_test_descriptions():
     
     suite = load_testsuite_from_class(MySuite)
     
-    assert suite.get_sub_testsuites()[0].get_inherited_test_descriptions(suite.get_sub_testsuites()[0].get_tests()[0]) \
-        == ["My suite", "My sub suite", "Test"]
+    assert suite.get_sub_testsuites()[0].get_tests()[0].get_inherited_descriptions() == ["My suite", "My sub suite", "Test"]

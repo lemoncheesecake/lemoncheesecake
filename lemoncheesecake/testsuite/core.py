@@ -13,6 +13,7 @@ TESTSUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
 
 class Test:
     def __init__(self, name, description, callback):
+        self.parent_suite = None
         self.name = name
         self.description = description
         self.callback = callback
@@ -22,6 +23,36 @@ class Test:
     
     def get_params(self):
         return inspect.getargspec(self.callback).args[1:]
+
+    def get_path(self):
+        return self.parent_suite.get_path() + [self]
+    
+    def get_path_str(self, sep="."):
+        return sep.join([s.name for s in self.get_path()])
+
+    def get_inherited_paths(self):
+        return list(map(lambda s: s.get_path_str(), self.get_path()))
+
+    def get_inherited_descriptions(self):
+        return list(map(lambda s: s.description, self.get_path()))
+    
+    def get_inherited_tags(self):
+        tags = []
+        for suite in self.get_path():
+            tags.extend(suite.tags)
+        return get_distincts_in_list(tags)
+    
+    def get_inherited_properties(self):
+        properties = {}
+        for suite in self.get_path():
+            properties.update(suite.properties)
+        return properties
+    
+    def get_inherited_links(self):
+        links = []
+        for suite in self.get_path():
+            links.extend(suite.links)
+        return get_distincts_in_list(links)
 
 def _assert_valid_hook_name(hook_name):
     if hook_name not in TESTSUITE_HOOKS:
@@ -63,9 +94,6 @@ class TestSuite:
     
     def get_path_str(self, sep="."):
         return sep.join([s.name for s in self.get_path()])
-    
-    def get_test_path_str(self, test, sep="."):
-        return self.get_path_str(sep=sep) + sep + test.name
     
     def __str__(self):
         return self.get_path_str()
@@ -119,6 +147,7 @@ class TestSuite:
     def add_test(self, test):
         self.assert_test_is_unique_in_suite(test)
         self._tests.append(test)
+        test.parent_suite = self
         self._selected_test_names.append(test.name)
     
     def add_sub_testsuite(self, sub_suite):
@@ -158,37 +187,6 @@ class TestSuite:
                 fixtures.extend(sub_suite.get_fixtures())
         
         return get_distincts_in_list(fixtures)
-        
-    ###
-    # Compute tests metadata with metadata inherited from parent suite
-    ###
-    
-    def get_inherited_test_paths(self, test):
-        return list(map(lambda s: s.get_path_str(), self.get_path())) + [self.get_test_path_str(test)]
-
-    def get_inherited_test_descriptions(self, test):
-        return list(map(lambda s: s.description, self.get_path())) + [test.description]
-    
-    def get_inherited_test_tags(self, test):
-        tags = []
-        for suite in self.get_path():
-            tags.extend(suite.tags)
-        tags.extend(test.tags)
-        return get_distincts_in_list(tags)
-    
-    def get_inherited_test_properties(self, test):
-        properties = {}
-        for suite in self.get_path():
-            properties.update(suite.properties)
-        properties.update(test.properties)
-        return properties
-    
-    def get_inherited_test_links(self, test):
-        links = []
-        for suite in self.get_path():
-            links.extend(suite.links)
-        links.extend(test.links)
-        return get_distincts_in_list(links)
     
     ###
     # Filtering methods

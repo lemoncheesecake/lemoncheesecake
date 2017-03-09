@@ -50,15 +50,15 @@ class StatsCommand(Command):
         
         def handle_test(test, suite):
             stats.tests_nb += 1
-            for tag in suite.get_inherited_test_tags(test):
+            for tag in test.get_inherited_tags():
                 stats.tags[tag] = stats.tags.get(tag, 0) + 1
-            for prop, value in suite.get_inherited_test_properties(test).items():
+            for prop, value in test.get_inherited_properties().items():
                 if prop not in stats.properties:
                     stats.properties[prop] = {}
                 if value not in stats.properties[prop]:
                     stats.properties[prop][value] = 0
                 stats.properties[prop][value] += 1
-            for link in suite.get_inherited_test_links(test):
+            for link in test.get_inherited_links():
                 stats.links[link] = stats.links.get(link, 0) + 1
         
         def handle_suite(suite):
