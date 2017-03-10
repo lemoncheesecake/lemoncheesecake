@@ -9,6 +9,8 @@ import argparse
 
 import termcolor
 
+from lemoncheesecake.exceptions import UserError
+
 class Command:
     def __init__(self):
         self.force_color = False
@@ -57,4 +59,7 @@ def main(args=None):
     except KeyError:
         return "Unknown command '%s'" % cli_args.command
     
-    return command.run_cmd(cli_args)
+    try:
+        return command.run_cmd(cli_args)
+    except UserError as e:
+        return str(e)
