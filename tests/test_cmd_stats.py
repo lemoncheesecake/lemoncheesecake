@@ -72,14 +72,7 @@ def test_stats(project, cmdout):
     cmdout.assert_lines_match(".+2.+tests.+1.+testsuites.*")
 
 def test_stats_empty_project(empty_project, cmdout):
-    assert main(["stats"]) == 0
-    
-    cmdout.assert_lines_match(".*Tags.*:.*none.*")
-    cmdout.assert_lines_match(".*Properties.*:.*none.*")
-    cmdout.assert_lines_match(".*Links.*:.*none.*")
-     
-    # totals:
-    cmdout.assert_lines_match(".+0.+tests.+0.+testsuites.*")
+    assert "No test is defined" in main(["stats"])
 
 def test_stats_with_filter(project, cmdout):
     assert main(["stats", "mysuite.mytest1"]) == 0

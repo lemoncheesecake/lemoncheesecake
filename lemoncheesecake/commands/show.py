@@ -7,10 +7,10 @@ Created on Feb 14, 2017
 from __future__ import print_function
 
 from lemoncheesecake.cli import Command
-from lemoncheesecake.testsuite.filter import add_filter_args_to_cli_parser, get_filter_from_cli_args
+from lemoncheesecake.testsuite.filter import add_filter_args_to_cli_parser
 from lemoncheesecake.project import find_project_file, Project
+from lemoncheesecake.commands.cliutils import filter_testsuites_from_cli_args
 from lemoncheesecake.exceptions import ProjectError, ProgrammingError
-from lemoncheesecake.testsuite import filter_testsuites
 
 class ShowCommand(Command):
     def get_name(self):
@@ -97,8 +97,7 @@ class ShowCommand(Command):
         except (ProjectError, ProgrammingError) as e:
             return str(e)
         
-        filt = get_filter_from_cli_args(cli_args)
-        suites = filter_testsuites(suites, filt)
+        suites = filter_testsuites_from_cli_args(suites, cli_args)
         
         self.show_testsuites(suites)
         

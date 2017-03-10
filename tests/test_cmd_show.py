@@ -63,7 +63,4 @@ def test_show_opt_no_metadata(project, cmdout):
     cmdout.assert_substrs_not_in_line(1, ["test_prop", "test_prop_value", "test_tag", "#1235"])
 
 def test_show_with_filter(project, cmdout):
-    assert main(["show", "--tag", "doesnotexist"]) == 0
-    
-    cmdout.assert_lines_nb(0)
-    cmdout.assert_lines_nb(0, on_stderr=True)
+    assert "does not match" in main(["show", "--tag", "doesnotexist"])

@@ -9,8 +9,9 @@ from functools import reduce
 
 from lemoncheesecake.cli import Command
 from lemoncheesecake.commands.cliutils import print_table
-from lemoncheesecake.testsuite import add_filter_args_to_cli_parser, get_filter_from_cli_args, filter_testsuites, walk_testsuites
+from lemoncheesecake.testsuite import add_filter_args_to_cli_parser, walk_testsuites
 from lemoncheesecake.project import find_project_file, Project
+from lemoncheesecake.commands.cliutils import filter_testsuites_from_cli_args
 from lemoncheesecake.exceptions import ProjectError, ProgrammingError
 
 class StatsCommand(Command):
@@ -36,8 +37,7 @@ class StatsCommand(Command):
         except (ProjectError, ProgrammingError) as e:
             return str(e)
         
-        filter = get_filter_from_cli_args(cli_args)
-        suites = filter_testsuites(suites, filter)
+        suites = filter_testsuites_from_cli_args(suites, cli_args)
         
         class Stats:
             def __init__(self):

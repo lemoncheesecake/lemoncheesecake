@@ -7,11 +7,11 @@ Created on Dec 31, 2016
 import os
 
 from lemoncheesecake.cli import Command
+from lemoncheesecake.commands.cliutils import filter_testsuites_from_cli_args
 from lemoncheesecake.project import find_project_file, Project
 from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture, load_fixtures_from_func
 from lemoncheesecake.runner import run_testsuites
-from lemoncheesecake.testsuite.filter import add_filter_args_to_cli_parser, get_filter_from_cli_args
-from lemoncheesecake.testsuite import filter_testsuites
+from lemoncheesecake.testsuite.filter import add_filter_args_to_cli_parser
 from lemoncheesecake import reporting
 from lemoncheesecake.exceptions import ProjectError, FixtureError, InvalidMetadataError,\
     ProgrammingError, LemonCheesecakeException, UserError, serialize_current_exception
@@ -71,9 +71,6 @@ class RunCommand(Command):
         except InvalidMetadataError as e:
             return "Invalid test/testsuite metadata has been found: %s" % e
 
-        if len(testsuites) == 0:
-            return "No testsuites are defined in your lemoncheesecake project."
-    
         # Build fixture registry
         try:
             fixture_registry = build_fixture_registry(project, cli_args)
@@ -90,11 +87,8 @@ class RunCommand(Command):
         before_run_hook = project.get_before_test_run_hook()
         after_run_hook = project.get_after_test_run_hook()
         
-        # Apply filter
-        filter = get_filter_from_cli_args(cli_args)
-        if not filter.is_empty():
-            testsuites = filter_testsuites(testsuites, filter)
-    
+        testsuites = filter_testsuites_from_cli_args(testsuites, cli_args)
+        
         # Set reporting backends
         selected_reporting_backends = set()
         for backend_name in cli_args.reporting + cli_args.enable_reporting:
