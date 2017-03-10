@@ -139,11 +139,13 @@ def load_testsuites(suite_classes, metadata_policy=None):
     loaded_tests = {}
     loaded_suites = {}
     suites = []
+    suites_ranks = {}
     for suite_class in suite_classes:
         suite = load_testsuite_from_class(suite_class)
         suites.append(suite)
+        suites_ranks[suite] = suite_class._lccmetadata.rank
         _load_testsuite(suite, loaded_tests, loaded_suites, metadata_policy)
-    return suites
+    return sorted(suites, key=lambda suite: suites_ranks[suite])
 
 def import_fixtures_from_file(filename):
     mod = _import_module(filename)
