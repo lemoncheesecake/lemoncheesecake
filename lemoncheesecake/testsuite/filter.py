@@ -5,6 +5,7 @@ Created on Sep 8, 2016
 '''
 
 import fnmatch
+from functools import reduce
 
 __all__ = ("Filter", "add_filter_args_to_cli_parser", "get_filter_from_cli_args")
 
@@ -13,6 +14,8 @@ NEGATIVE_FILTER_CHARS = "-^~"
 def match_values(values, patterns):
     if not patterns:
         return True
+
+    values = [value or "" for value in values] # convert None to ""
     
     for pattern in patterns:
         if pattern[0] in NEGATIVE_FILTER_CHARS:
@@ -30,25 +33,18 @@ def match_keyvalues(keyvalues, patterns):
     for key, value in patterns.items():
         if key in keyvalues:
             if value[0] in NEGATIVE_FILTER_CHARS:
-                if keyvalues[key] != value[1:]:
+                if not fnmatch.fnmatch(keyvalues[key], value[1:]):
                     return True
             else:
-                if keyvalues[key] == value:
+                if fnmatch.fnmatch(keyvalues[key], value):
                     return True
     return False
 
-def match_listelem(lsts, idx, patterns):
-    if not patterns:
-        return True
-    
-    for pattern in patterns:
-        if pattern[0] in NEGATIVE_FILTER_CHARS:
-            if pattern[1:] not in map(lambda l: l[idx], lsts):
-                return True
-        else:
-            if pattern in map(lambda l: l[idx], lsts):
-                return True
-    return False
+def match_values_lists(lsts, patterns):
+    return match_values(
+        reduce(lambda x, y: list(x) + list(y), lsts, []), # make a flat list 
+        patterns
+    )
 
 class Filter:
     def __init__(self):
@@ -56,10 +52,10 @@ class Filter:
         self.description = []
         self.tags = [ ]
         self.properties = {}
-        self.link_names = [ ]
+        self.links = [ ]
     
     def is_empty(self):
-        return not any([self.path, self.description, self.tags, self.properties, self.link_names])
+        return not any([self.path, self.description, self.tags, self.properties, self.links])
     
     def match_test(self, test, suite):
         funcs = [
@@ -67,7 +63,7 @@ class Filter:
             lambda: match_values(test.get_inherited_descriptions(), self.description),
             lambda: match_values(test.get_inherited_tags(), self.tags),
             lambda: match_keyvalues(test.get_inherited_properties(), self.properties),
-            lambda: match_listelem(test.get_inherited_links(), 1, self.link_names)
+            lambda: match_values_lists(test.get_inherited_links(), self.links)
         ]
         return all(func() for func in funcs)
 
@@ -90,5 +86,5 @@ def get_filter_from_cli_args(cli_args):
     fltr.description = cli_args.desc
     fltr.tags = cli_args.tag
     fltr.properties = dict(cli_args.property)
-    fltr.link_names = cli_args.link
+    fltr.links = cli_args.link
     return fltr

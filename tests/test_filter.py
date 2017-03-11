@@ -468,7 +468,7 @@ def test_filter_property_on_suite_negative(reporting_session):
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "baz"
 
-def test_filter_link_on_test(reporting_session):
+def test_filter_link_on_test_without_name(reporting_session):
     @lcc.testsuite("mysuite")
     class mysuite:
         @lcc.testsuite("subsuite")
@@ -477,20 +477,20 @@ def test_filter_link_on_test(reporting_session):
             def baz(self):
                 pass
             
-            @lcc.link("http://bug.trac.ker/1234", "#1234")
+            @lcc.link("http://bug.trac.ker/1234")
             @lcc.test("test2")
             def test2(self):
                 pass
 
     filter = Filter()
-    filter.link_names.append("#1234")
+    filter.links.append("http://bug.trac.ker/1234")
     
     run_testsuite(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test2"
 
-def test_filter_link_on_test_negative(reporting_session):
+def test_filter_link_on_test_negative_with_name(reporting_session):
     @lcc.testsuite("mysuite")
     class mysuite:
         @lcc.testsuite("subsuite")
@@ -505,7 +505,7 @@ def test_filter_link_on_test_negative(reporting_session):
                 pass
 
     filter = Filter()
-    filter.link_names.append("-#1234")
+    filter.links.append("-#1234")
     
     run_testsuite(mysuite, filter=filter)
     
@@ -530,7 +530,7 @@ def test_filter_link_on_suite(reporting_session):
                 pass
 
     filter = Filter()
-    filter.link_names.append("#1235")
+    filter.links.append("#1235")
     
     run_testsuite(mysuite, filter=filter)
     
@@ -555,7 +555,7 @@ def test_filter_link_on_suite_negative(reporting_session):
                 pass
 
     filter = Filter()
-    filter.link_names.append("-#1235")
+    filter.links.append("-#1235")
     
     run_testsuite(mysuite, filter=filter)
     
@@ -630,7 +630,7 @@ def test_filter_description_on_suite_and_link_on_test(reporting_session):
  
     filter = Filter()
     filter.description.append("Sub suite 2")
-    filter.link_names.append("#1234")
+    filter.links.append("#1234")
       
     run_testsuite(mysuite, filter=filter)
       
@@ -738,4 +738,4 @@ def test_is_empty_false():
     do_test("description", "foo")
     do_test("tags", "foo")
     do_test("properties", "foo")
-    do_test("link_names", "foo")
+    do_test("links", "foo")
