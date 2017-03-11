@@ -85,10 +85,10 @@ def add_filter_args_to_cli_parser(cli_parser):
     cli_parser.add_argument("--link", "-l", nargs="+", default=[], help="Filters on test & test suite link names")
 
 def get_filter_from_cli_args(cli_args):
-    filter = Filter()
-    filter.path = cli_args.path
-    filter.description = cli_args.desc
-    filter.tags = cli_args.tag
-    filter.properties = dict(cli_args.property)
-    filter.link_names = cli_args.link
-    return filter
+    fltr = Filter()
+    fltr.path = cli_args.path
+    fltr.description = cli_args.desc
+    fltr.tags = cli_args.tag
+    fltr.properties = dict(cli_args.property)
+    fltr.link_names = cli_args.link
+    return fltr
