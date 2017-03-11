@@ -12,43 +12,43 @@ NEGATIVE_FILTER_CHARS = "-^~"
 
 def match_values(values, patterns):
     if not patterns:
-        return 1
+        return True
     
     for pattern in patterns:
         if pattern[0] in NEGATIVE_FILTER_CHARS:
             if not fnmatch.filter(values, pattern[1:]):
-                return 1
+                return True
         else:
             if fnmatch.filter(values, pattern):
-                return 1
-    return 0
+                return True
+    return False
 
 def match_keyvalues(keyvalues, patterns):
     if not patterns:
-        return 1
+        return True
     
     for key, value in patterns.items():
         if key in keyvalues:
             if value[0] in NEGATIVE_FILTER_CHARS:
                 if keyvalues[key] != value[1:]:
-                    return 1
+                    return True
             else:
                 if keyvalues[key] == value:
-                    return 1
-    return 0
+                    return True
+    return False
 
 def match_listelem(lsts, idx, patterns):
     if not patterns:
-        return 1
+        return True
     
     for pattern in patterns:
         if pattern[0] in NEGATIVE_FILTER_CHARS:
             if pattern[1:] not in map(lambda l: l[idx], lsts):
-                return 1
+                return True
         else:
             if pattern in map(lambda l: l[idx], lsts):
-                return 1
-    return 0
+                return True
+    return False
 
 class Filter:
     def __init__(self):
