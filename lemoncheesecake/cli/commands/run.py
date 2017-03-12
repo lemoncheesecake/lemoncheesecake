@@ -6,8 +6,8 @@ Created on Dec 31, 2016
 
 import os
 
-from lemoncheesecake.cli import Command
-from lemoncheesecake.commands.cliutils import filter_testsuites_from_cli_args
+from lemoncheesecake.cli.command import Command
+from lemoncheesecake.cli.utils import filter_testsuites_from_cli_args
 from lemoncheesecake.project import find_project_file, Project
 from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture, load_fixtures_from_func
 from lemoncheesecake.runner import run_testsuites

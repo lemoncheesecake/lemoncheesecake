@@ -6,7 +6,7 @@ Created on Jan 4, 2017
 
 import os
 
-from lemoncheesecake.cli import Command
+from lemoncheesecake.cli.command import Command
 from lemoncheesecake.project import create_project
 
 class BootstrapCommand(Command):

@@ -6,10 +6,10 @@ Created on Feb 14, 2017
 
 from __future__ import print_function
 
-from lemoncheesecake.cli import Command
+from lemoncheesecake.cli.command import Command
+from lemoncheesecake.cli.utils import filter_testsuites_from_cli_args
 from lemoncheesecake.testsuite.filter import add_filter_args_to_cli_parser
 from lemoncheesecake.project import find_project_file, Project
-from lemoncheesecake.commands.cliutils import filter_testsuites_from_cli_args
 from lemoncheesecake.exceptions import ProjectError, ProgrammingError
 
 class ShowCommand(Command):
