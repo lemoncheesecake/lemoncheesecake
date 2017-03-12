@@ -30,7 +30,7 @@ def match_keyvalues(keyvalues, patterns):
     if not patterns:
         return True
     
-    for key, value in patterns.items():
+    for key, value in patterns:
         if key in keyvalues:
             if value[0] in NEGATIVE_FILTER_CHARS:
                 if not fnmatch.fnmatch(keyvalues[key], value[1:]):
@@ -48,22 +48,22 @@ def match_values_lists(lsts, patterns):
 
 class Filter:
     def __init__(self):
-        self.path = []
-        self.description = []
+        self.paths = []
+        self.descriptions = []
         self.tags = [ ]
-        self.properties = {}
+        self.properties = []
         self.links = [ ]
     
     def is_empty(self):
-        return not any([self.path, self.description, self.tags, self.properties, self.links])
+        return not any([self.paths, self.descriptions, self.tags, self.properties, self.links])
     
     def match_test(self, test, suite):
         funcs = [
-            lambda: match_values(test.get_inherited_paths(), self.path),
-            lambda: match_values(test.get_inherited_descriptions(), self.description),
-            lambda: match_values(test.get_inherited_tags(), self.tags),
-            lambda: match_keyvalues(test.get_inherited_properties(), self.properties),
-            lambda: match_values_lists(test.get_inherited_links(), self.links)
+            lambda: match_values(test.get_inherited_paths(), self.paths),
+            lambda: all(match_values(test.get_inherited_descriptions(), descs) for descs in self.descriptions),
+            lambda: all(match_values(test.get_inherited_tags(), tags) for tags in self.tags),
+            lambda: all(match_keyvalues(test.get_inherited_properties(), props) for props in self.properties),
+            lambda: all(match_values_lists(test.get_inherited_links(), links) for links in self.links)
         ]
         return all(func() for func in funcs)
 
@@ -75,16 +75,16 @@ def add_filter_args_to_cli_parser(cli_parser):
         return splitted
 
     cli_parser.add_argument("path", nargs="*", default=[], help="Filters on test/testsuite path (wildcard character '*' can be used)")
-    cli_parser.add_argument("--desc", nargs="+", default=[], help="Filters on test/testsuite descriptions")
-    cli_parser.add_argument("--tag", "-a", nargs="+", default=[], help="Filters on test & test suite tags")
-    cli_parser.add_argument("--property", "-m", nargs="+", type=property_value, default=[], help="Filters on test & test suite property")
-    cli_parser.add_argument("--link", "-l", nargs="+", default=[], help="Filters on test & test suite link names")
+    cli_parser.add_argument("--desc", nargs="+", action="append", default=[], help="Filters on test/testsuite descriptions")
+    cli_parser.add_argument("--tag", "-a", nargs="+", action="append", default=[], help="Filters on test & test suite tags")
+    cli_parser.add_argument("--property", "-m", nargs="+", type=property_value, action="append", default=[], help="Filters on test & test suite property")
+    cli_parser.add_argument("--link", "-l", nargs="+", action="append", default=[], help="Filters on test & test suite link names")
 
 def get_filter_from_cli_args(cli_args):
     fltr = Filter()
-    fltr.path = cli_args.path
-    fltr.description = cli_args.desc
+    fltr.paths = cli_args.path
+    fltr.descriptions = cli_args.desc
     fltr.tags = cli_args.tag
-    fltr.properties = dict(cli_args.property)
+    fltr.properties = cli_args.property
     fltr.links = cli_args.link
     return fltr

@@ -17,7 +17,7 @@ def test_filter_full_path_on_test(reporting_session):
                 pass
 
     filter = Filter()
-    filter.path.append("mysuite.subsuite.baz")
+    filter.paths.append("mysuite.subsuite.baz")
     
     run_testsuite(mysuite, filter=filter)
     
@@ -38,7 +38,7 @@ def test_filter_full_path_on_test_negative(reporting_session):
                 pass
 
     filter = Filter()
-    filter.path.append("-mysuite.subsuite.baz")
+    filter.paths.append("-mysuite.subsuite.baz")
     
     run_testsuite(mysuite, filter=filter)
     
@@ -59,7 +59,7 @@ def test_filter_full_path_on_suite(reporting_session):
                 pass
 
     filter = Filter()
-    filter.path.append("mysuite.subsuite")
+    filter.paths.append("mysuite.subsuite")
     
     run_testsuite(mysuite, filter=filter)
     
@@ -79,7 +79,7 @@ def test_filter_path_on_suite_negative(reporting_session):
                 pass
 
     filter = Filter()
-    filter.path.append("-mysuite.subsuite.*")
+    filter.paths.append("-mysuite.subsuite.*")
     
     run_testsuite(mysuite, filter=filter)
     
@@ -99,7 +99,7 @@ def test_filter_path_complete_on_top_suite(reporting_session):
                 pass
 
     filter = Filter()
-    filter.path.append("mysuite")
+    filter.paths.append("mysuite")
     
     run_testsuite(mysuite, filter=filter)
     
@@ -119,7 +119,7 @@ def test_filter_path_wildcard_on_test(reporting_session):
                 pass
 
     filter = Filter()
-    filter.path.append("mysuite.subsuite.ba*")
+    filter.paths.append("mysuite.subsuite.ba*")
     
     run_testsuite(mysuite, filter=filter)
     
@@ -140,7 +140,7 @@ def test_filter_path_wildcard_on_test_negative(reporting_session):
                 pass
 
     filter = Filter()
-    filter.path.append("-mysuite.subsuite.ba*")
+    filter.paths.append("-mysuite.subsuite.ba*")
     
     run_testsuite(mysuite, filter=filter)
     
@@ -161,7 +161,7 @@ def test_filter_path_wildcard_on_suite(reporting_session):
                 pass
 
     filter = Filter()
-    filter.path.append("mysuite.sub*.baz")
+    filter.paths.append("mysuite.sub*.baz")
     
     run_testsuite(mysuite, filter=filter)
     
@@ -182,7 +182,7 @@ def test_filter_path_wildcard_on_suite_negative(reporting_session):
                 pass
 
     filter = Filter()
-    filter.path.append("-mysuite.sub*.baz")
+    filter.paths.append("~mysuite.sub*.baz")
     
     run_testsuite(mysuite, filter=filter)
     
@@ -203,7 +203,7 @@ def test_filter_description_on_test(reporting_session):
                 pass
     
     filter = Filter()
-    filter.description.append("desc2")
+    filter.descriptions.append(["desc2"])
     
     run_testsuite(mysuite, filter=filter)
     
@@ -224,7 +224,7 @@ def test_filter_description_on_test_negative(reporting_session):
                 pass
     
     filter = Filter()
-    filter.description.append("-desc2")
+    filter.descriptions.append(["~desc2"])
     
     run_testsuite(mysuite, filter=filter)
     
@@ -247,7 +247,7 @@ def test_filter_description_on_suite(reporting_session):
                 pass
     
     filter = Filter()
-    filter.description.append("desc2")
+    filter.descriptions.append(["desc2"])
     
     run_testsuite(mysuite, filter=filter)
     
@@ -272,7 +272,7 @@ def test_filter_description_on_suite_negative(reporting_session):
                 pass
     
     filter = Filter()
-    filter.description.append("-desc2")
+    filter.descriptions.append(["-desc2"])
     
     run_testsuite(mysuite, filter=filter)
     
@@ -294,7 +294,7 @@ def test_filter_tag_on_test(reporting_session):
                 pass
 
     filter = Filter()
-    filter.tags.append("tag1")
+    filter.tags.append(["tag1"])
     
     run_testsuite(mysuite, filter=filter)
     
@@ -316,7 +316,7 @@ def test_filter_tag_on_test_negative(reporting_session):
                 pass
 
     filter = Filter()
-    filter.tags.append("-tag1")
+    filter.tags.append(["-tag1"])
     
     run_testsuite(mysuite, filter=filter)
     
@@ -341,7 +341,7 @@ def test_filter_tag_on_suite(reporting_session):
                 pass
 
     filter = Filter()
-    filter.tags.append("tag2")
+    filter.tags.append(["tag2"])
     
     run_testsuite(mysuite, filter=filter)
     
@@ -366,7 +366,7 @@ def test_filter_tag_on_suite_negative(reporting_session):
                 pass
 
     filter = Filter()
-    filter.tags.append("-tag2")
+    filter.tags.append(["~tag2"])
     
     run_testsuite(mysuite, filter=filter)
     
@@ -388,7 +388,7 @@ def test_filter_property_on_test(reporting_session):
                 pass
 
     filter = Filter()
-    filter.properties["myprop"] = "foo"
+    filter.properties.append([("myprop", "foo")])
     
     run_testsuite(mysuite, filter=filter)
     
@@ -411,7 +411,7 @@ def test_filter_property_on_test_negative(reporting_session):
                 pass
 
     filter = Filter()
-    filter.properties["myprop"] = "-foo"
+    filter.properties.append([("myprop", "-foo")])
     
     run_testsuite(mysuite, filter=filter)
     
@@ -436,7 +436,7 @@ def test_filter_property_on_suite(reporting_session):
                 pass
 
     filter = Filter()
-    filter.properties["myprop"] = "bar"
+    filter.properties.append([("myprop", "bar")])
     
     run_testsuite(mysuite, filter=filter)
     
@@ -461,7 +461,7 @@ def test_filter_property_on_suite_negative(reporting_session):
                 pass
 
     filter = Filter()
-    filter.properties["myprop"] = "-bar"
+    filter.properties.append([("myprop", "~bar")])
     
     run_testsuite(mysuite, filter=filter)
     
@@ -483,7 +483,7 @@ def test_filter_link_on_test_without_name(reporting_session):
                 pass
 
     filter = Filter()
-    filter.links.append("http://bug.trac.ker/1234")
+    filter.links.append(["http://bug.trac.ker/1234"])
     
     run_testsuite(mysuite, filter=filter)
     
@@ -505,7 +505,7 @@ def test_filter_link_on_test_negative_with_name(reporting_session):
                 pass
 
     filter = Filter()
-    filter.links.append("-#1234")
+    filter.links.append(["-#1234"])
     
     run_testsuite(mysuite, filter=filter)
     
@@ -530,7 +530,7 @@ def test_filter_link_on_suite(reporting_session):
                 pass
 
     filter = Filter()
-    filter.links.append("#1235")
+    filter.links.append(["#1235"])
     
     run_testsuite(mysuite, filter=filter)
     
@@ -555,7 +555,7 @@ def test_filter_link_on_suite_negative(reporting_session):
                 pass
 
     filter = Filter()
-    filter.links.append("-#1235")
+    filter.links.append(["~#1235"])
     
     run_testsuite(mysuite, filter=filter)
     
@@ -577,8 +577,8 @@ def test_filter_path_on_suite_and_tag_on_test(reporting_session):
                 pass
  
     filter = Filter()
-    filter.path.append("mysuite.subsuite")
-    filter.tags.append("tag1")
+    filter.paths.append("mysuite.subsuite")
+    filter.tags.append(["tag1"])
       
     run_testsuite(mysuite, filter=filter)
       
@@ -600,8 +600,8 @@ def test_filter_path_on_suite_and_negative_tag_on_test(reporting_session):
                 pass
  
     filter = Filter()
-    filter.path.append("mysuite.subsuite")
-    filter.tags.append("-tag1")
+    filter.paths.append("mysuite.subsuite")
+    filter.tags.append(["-tag1"])
       
     run_testsuite(mysuite, filter=filter)
       
@@ -629,8 +629,8 @@ def test_filter_description_on_suite_and_link_on_test(reporting_session):
                 pass
  
     filter = Filter()
-    filter.description.append("Sub suite 2")
-    filter.links.append("#1234")
+    filter.descriptions.append(["Sub suite 2"])
+    filter.links.append(["#1234"])
       
     run_testsuite(mysuite, filter=filter)
       
@@ -655,8 +655,8 @@ def test_filter_path_and_tag_on_suite(reporting_session):
                 pass
  
     filter = Filter()
-    filter.path.append("mysuite.subsuite1")
-    filter.tags.append("foo")
+    filter.paths.append("mysuite.subsuite1")
+    filter.tags.append(["foo"])
       
     run_testsuite(mysuite, filter=filter)
       
@@ -685,8 +685,8 @@ def test_filter_path_and_tag_on_test(reporting_session):
                 pass
  
     filter = Filter()
-    filter.path.append("mysuite.subsuite2.*")
-    filter.tags.append("foo")
+    filter.paths.append("mysuite.subsuite2.*")
+    filter.tags.append(["foo"])
       
     run_testsuite(mysuite, filter=filter)
       
@@ -715,9 +715,9 @@ def test_filter_path_and_negative_tag_on_test(reporting_session):
                 pass
  
     filter = Filter()
-    filter.path.append("mysuite.subsuite2.*")
-    filter.tags.append("-foo")
-      
+    filter.paths.append("mysuite.subsuite2.*")
+    filter.tags.append(["-foo"])
+    
     run_testsuite(mysuite, filter=filter)
       
     assert reporting_session.test_nb == 1
@@ -734,8 +734,122 @@ def test_is_empty_false():
         setattr(filt, attr, val)
         assert filt.is_empty() == False
      
-    do_test("path", "foo")
-    do_test("description", "foo")
-    do_test("tags", "foo")
-    do_test("properties", "foo")
-    do_test("links", "foo")
+    do_test("paths", ["foo"])
+    do_test("descriptions", [["foo"]])
+    do_test("tags", [["foo"]])
+    do_test("properties", [[("foo", "bar")]])
+    do_test("links", ["foo"])
+
+def test_filter_description_and(reporting_session):
+    @lcc.testsuite("mysuite")
+    class mysuite:
+        @lcc.testsuite("subsuite")
+        class subsuite:
+            @lcc.test("test1")
+            def baz(self):
+                pass
+            
+            @lcc.test("test2")
+            def test2(self):
+                pass
+    
+    filter = Filter()
+    filter.descriptions = [["mysuite"], ["test1"]]
+    
+    run_testsuite(mysuite, filter=filter)
+    
+    assert reporting_session.test_nb == 1
+    assert reporting_session.last_test == "baz"
+
+def test_filter_tags_and(reporting_session):
+    @lcc.testsuite("mysuite")
+    class mysuite:
+        @lcc.testsuite("subsuite")
+        class subsuite:
+            @lcc.test("test1")
+            @lcc.tags("foo", "bar")
+            def baz(self):
+                pass
+            
+            @lcc.test("test2")
+            @lcc.tags("foo")
+            def test2(self):
+                pass
+    
+    filter = Filter()
+    filter.tags = [["foo"], ["bar"]]
+    
+    run_testsuite(mysuite, filter=filter)
+    
+    assert reporting_session.test_nb == 1
+    assert reporting_session.last_test == "baz"
+
+def test_filter_properties_and(reporting_session):
+    @lcc.testsuite("mysuite")
+    class mysuite:
+        @lcc.testsuite("subsuite")
+        class subsuite:
+            @lcc.test("test1")
+            @lcc.prop("foo", "1")
+            @lcc.prop("bar", "2")
+            def baz(self):
+                pass
+            
+            @lcc.test("test2")
+            @lcc.prop("foo", "1")
+            def test2(self):
+                pass
+    
+    filter = Filter()
+    filter.properties = [[("foo", "1")], [("bar", "2")]]
+    
+    run_testsuite(mysuite, filter=filter)
+    
+    assert reporting_session.test_nb == 1
+    assert reporting_session.last_test == "baz"
+
+def test_filter_links_and(reporting_session):
+    @lcc.testsuite("mysuite")
+    class mysuite:
+        @lcc.testsuite("subsuite")
+        class subsuite:
+            @lcc.test("test1")
+            @lcc.link("http://a.b.c/1234", "#1234")
+            @lcc.link("http://a.b.c/1235")
+            def baz(self):
+                pass
+            
+            @lcc.test("test2")
+            @lcc.link("http://a.b.c/1234", "#1234")
+            def test2(self):
+                pass
+    
+    filter = Filter()
+    filter.links = [["#1234"], ["*/1235"]]
+    
+    run_testsuite(mysuite, filter=filter)
+    
+    assert reporting_session.test_nb == 1
+    assert reporting_session.last_test == "baz"
+
+def test_filter_and_or(reporting_session):
+    @lcc.testsuite("mysuite")
+    class mysuite:
+        @lcc.testsuite("subsuite")
+        class subsuite:
+            @lcc.test("test1")
+            @lcc.tags("foo", "bar")
+            def baz(self):
+                pass
+            
+            @lcc.test("test2")
+            @lcc.tags("foo", "baz")
+            def test2(self):
+                pass
+    
+    filter = Filter()
+    filter.tags = [["foo"], ["bar", "baz"]]
+    
+    run_testsuite(mysuite, filter=filter)
+    
+    assert reporting_session.test_nb == 2
