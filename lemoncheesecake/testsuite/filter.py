@@ -74,11 +74,11 @@ def add_filter_args_to_cli_parser(cli_parser):
             raise ValueError()
         return splitted
 
-    cli_parser.add_argument("path", nargs="*", default=[], help="Filters on test/testsuite path (wildcard character '*' can be used)")
-    cli_parser.add_argument("--desc", nargs="+", action="append", default=[], help="Filters on test/testsuite descriptions")
-    cli_parser.add_argument("--tag", "-a", nargs="+", action="append", default=[], help="Filters on test & test suite tags")
-    cli_parser.add_argument("--property", "-m", nargs="+", type=property_value, action="append", default=[], help="Filters on test & test suite property")
-    cli_parser.add_argument("--link", "-l", nargs="+", action="append", default=[], help="Filters on test & test suite link names")
+    cli_parser.add_argument("path", nargs="*", default=[], help="Filter on test/testsuite path (wildcard character '*' can be used)")
+    cli_parser.add_argument("--desc", nargs="+", action="append", default=[], help="Filter on descriptions")
+    cli_parser.add_argument("--tag", "-a", nargs="+", action="append", default=[], help="Filter on tags")
+    cli_parser.add_argument("--property", "-m", nargs="+", type=property_value, action="append", default=[], help="Filter on properties")
+    cli_parser.add_argument("--link", "-l", nargs="+", action="append", default=[], help="Filter on links (names and URLs)")
 
 def get_filter_from_cli_args(cli_args):
     fltr = Filter()
