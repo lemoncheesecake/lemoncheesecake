@@ -43,6 +43,7 @@ class StatsCommand(Command):
             def __init__(self):
                 self.tests_nb = 0
                 self.testsuites_nb = 0
+                self.non_empty_testsuites_nb = 0
                 self.tags = {}
                 self.properties = {}
                 self.links = {}
@@ -66,6 +67,8 @@ class StatsCommand(Command):
         
         def handle_suite(suite):
             stats.testsuites_nb += 1
+            if suite.has_selected_tests(deep=False):
+                stats.non_empty_testsuites_nb += 1
         
         walk_testsuites(suites, test_func=handle_test, testsuite_func=handle_suite)
         
@@ -104,7 +107,13 @@ class StatsCommand(Command):
             ])
         print_table(self.bold("Links"), ["Name", "URL", "Tests", "In %"], lines)
 
-        print("Total: %s in %s" % (self.bold("%d tests" % stats.tests_nb), self.bold("%d testsuites" % stats.testsuites_nb)))
+        summary = "Total: %s in %s" % (
+            self.bold("%d tests" % stats.tests_nb), 
+            self.bold("%d testsuites" % stats.non_empty_testsuites_nb)
+        )
+        if stats.testsuites_nb > stats.non_empty_testsuites_nb:
+            summary += " (+ %d empty suites)" % (stats.testsuites_nb - stats.non_empty_testsuites_nb)
+        print(summary)
         print()
         
         return 0
