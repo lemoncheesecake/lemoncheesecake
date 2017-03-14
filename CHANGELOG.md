@@ -1,3 +1,8 @@
+# 0.6.4 (2017-03-14)
+
+- **lcc stats**: show tests percentage
+- **lcc stats**: display the number of testsuites which have direct tests
+
 # 0.6.3 (2017-03-12)
 
 - **API**: add a new fixture scope "session_prerun" for fixtures that needs to be
