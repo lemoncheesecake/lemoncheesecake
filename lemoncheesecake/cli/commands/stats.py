@@ -61,6 +61,9 @@ class StatsCommand(Command):
             for link in test.get_inherited_links():
                 stats.links[link] = stats.links.get(link, 0) + 1
         
+        def percent_of_tests(val):
+            return "%2d%%" % (float(val) / stats.tests_nb * 100)
+        
         def handle_suite(suite):
             stats.testsuites_nb += 1
         
@@ -69,8 +72,8 @@ class StatsCommand(Command):
         # Show tags
         lines = []
         for tag in sorted(stats.tags.keys(), key=lambda k: stats.tags[k], reverse=True):
-            lines.append([self.bold(tag), stats.tags.get(tag, 0)])
-        print_table(self.bold("Tags"), ["Tag", "Tests"], lines)
+            lines.append([self.bold(tag), stats.tags[tag], percent_of_tests(stats.tags[tag])])
+        print_table(self.bold("Tags"), ["Tag", "Tests", "In %"], lines)
 
         # Show properties
         lines = []
@@ -88,17 +91,18 @@ class StatsCommand(Command):
             for prop_value in prop_values:
                 lines.append([
                     self.bold(prop_name), self.bold(prop_value),
-                    stats.properties.get(prop_name, {}).get(prop_value, 0)
+                    stats.properties[prop_name][prop_value],
+                    percent_of_tests(stats.properties[prop_name][prop_value])
                 ])
-        print_table(self.bold("Properties"), ["Property", "Value", "Tests"], lines)
+        print_table(self.bold("Properties"), ["Property", "Value", "Tests", "In %"], lines)
 
         # Show links
         lines = []
         for link in sorted(stats.links.keys(), key=lambda k: stats.links[k], reverse=True):
             lines.append([
-                self.bold(link[1] or "-"), link[0], stats.links.get(link, 0)
+                self.bold(link[1] or "-"), link[0], stats.links[link], percent_of_tests(stats.links[link])
             ])
-        print_table(self.bold("Links"), ["Name", "URL", "Tests"], lines)
+        print_table(self.bold("Links"), ["Name", "URL", "Tests", "In %"], lines)
 
         print("Total: %s in %s" % (self.bold("%d tests" % stats.tests_nb), self.bold("%d testsuites" % stats.testsuites_nb)))
         print()

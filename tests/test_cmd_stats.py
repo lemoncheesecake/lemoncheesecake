@@ -55,18 +55,18 @@ def test_stats(project, cmdout):
     assert main(["stats"]) == 0
     
     # tags:
-    cmdout.assert_lines_match(".+suite_tag.+ 2 .+")
-    cmdout.assert_lines_match(".+test_tag.+ 1 .+")
-    cmdout.assert_lines_match(".+foo.+ 1 .+")
+    cmdout.assert_lines_match(".+suite_tag.+ 2 .+ 100%")
+    cmdout.assert_lines_match(".+test_tag.+ 1 .+ 50%")
+    cmdout.assert_lines_match(".+foo.+ 1 .+ 50%")
 
     # properties:
-    cmdout.assert_lines_match(".+suite_prop.+suite_prop_value.+ 2 .+")
-    cmdout.assert_lines_match(".+test_prop.+test_prop_value1.+ 1 .+")
-    cmdout.assert_lines_match(".+test_prop.+test_prop_value2.+ 1 .+")
+    cmdout.assert_lines_match(".+suite_prop.+suite_prop_value.+ 2 .+ 100%")
+    cmdout.assert_lines_match(".+test_prop.+test_prop_value1.+ 1 .+ 50%")
+    cmdout.assert_lines_match(".+test_prop.+test_prop_value2.+ 1 .+ 50%")
     
     # links:
-    cmdout.assert_lines_match(".+#1234.+http://bug.tra.cker/1234.+ 2 .+")
-    cmdout.assert_lines_match(".+-.+http://bug.tra.cker/1235.+ 1 .+")
+    cmdout.assert_lines_match(".+#1234.+http://bug.tra.cker/1234.+ 2 .+ 100%")
+    cmdout.assert_lines_match(".+-.+http://bug.tra.cker/1235.+ 1 .+ 50%")
     
     # totals:
     cmdout.assert_lines_match(".+2.+tests.+1.+testsuites.*")
@@ -78,15 +78,15 @@ def test_stats_with_filter(project, cmdout):
     assert main(["stats", "mysuite.mytest1"]) == 0
     
     # tags:
-    cmdout.assert_lines_match(".+suite_tag.+ 1 .+")
-    cmdout.assert_lines_match(".+test_tag.+ 1 .+")
+    cmdout.assert_lines_match(".+suite_tag.+ 1 .+ 100%")
+    cmdout.assert_lines_match(".+test_tag.+ 1 .+ 100%")
 
     # properties:
-    cmdout.assert_lines_match(".+suite_prop.+suite_prop_value.+ 1 .+")
-    cmdout.assert_lines_match(".+test_prop.+test_prop_value1.+ 1 .+")
+    cmdout.assert_lines_match(".+suite_prop.+suite_prop_value.+ 1 .+ 100%")
+    cmdout.assert_lines_match(".+test_prop.+test_prop_value1.+ 1 .+ 100%")
     
     # links:
-    cmdout.assert_lines_match(".+#1234.+http://bug.tra.cker/1234.+ 1 .+")
+    cmdout.assert_lines_match(".+#1234.+http://bug.tra.cker/1234.+ 1 .+ 100%")
     
     # totals:
     cmdout.assert_lines_match(".+1.+tests.+1.+testsuites.*")
