@@ -7,7 +7,7 @@ Created on Sep 8, 2016
 import inspect
 import copy
 
-from lemoncheesecake.testsuite.asclass import Metadata, get_metadata_next_rank
+from lemoncheesecake.testsuite.builder import Metadata, get_metadata_next_rank
 from lemoncheesecake.exceptions import ProgrammingError
 
 _objects_with_metadata = []

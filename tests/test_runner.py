@@ -21,7 +21,7 @@ from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 
 from helpers import reporting_session, run_testsuite, build_fixture_registry
 from lemoncheesecake.fixtures import FixtureRegistry
-from lemoncheesecake.testsuite.asclass import add_test_in_testsuite
+from lemoncheesecake.testsuite import add_test_in_testsuite
 
 # TODO: make launcher unit tests more independent from the reporting layer ?
 
