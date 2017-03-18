@@ -3,7 +3,7 @@ import os.path
 import pytest
 
 from lemoncheesecake.exceptions import *
-from lemoncheesecake.loader import import_fixtures_from_file, import_fixtures_from_files, import_fixtures_from_directory
+from lemoncheesecake.fixtures import import_fixtures_from_file, import_fixtures_from_files, import_fixtures_from_directory
 
 @pytest.fixture()
 def dir_with_fixtures(tmpdir):

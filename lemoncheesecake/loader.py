@@ -57,32 +57,3 @@ def import_module(filename):
         del sys.path[0]
     
     return mod
-
-def import_fixtures_from_file(filename):
-    mod = import_module(filename)
-    funcs = []
-    for sym_name in dir(mod):
-        sym = getattr(mod, sym_name)
-        if hasattr(sym, "_lccfixtureinfo"):
-            funcs.append(sym)
-    return funcs
-
-def import_fixtures_from_files(patterns, excluding=[]):
-    """
-    Import fixtures from a list of files:
-    - patterns: a mandatory list (a simple string can also be used instead of a single element list)
-      of files to import; the wildcard '*' character can be used
-    - exclude: an optional list (a simple string can also be used instead of a single element list)
-      of elements to exclude from the expanded list of files to import
-    Example: import_testsuites_from_files("test_*.py")
-    """
-    fixtures = []
-    for file in get_matching_files(patterns, excluding):
-        fixtures.extend(import_fixtures_from_file(file))
-    return fixtures
-
-def import_fixtures_from_directory(dir):
-    fixtures = []
-    for file in get_py_files_from_dir(dir):
-        fixtures.extend(import_fixtures_from_file(file))
-    return fixtures

@@ -1,6 +1,6 @@
 import os.path
 
-from lemoncheesecake.loader import import_fixtures_from_directory
+from lemoncheesecake.fixtures import import_fixtures_from_directory
 from lemoncheesecake.testsuite import import_testsuites_from_directory
 from lemoncheesecake.reporting.backends import ConsoleBackend, JsonBackend, XmlBackend, HtmlBackend
 from lemoncheesecake.reporting.reportdir import report_dir_with_archiving, archive_dirname_datetime
