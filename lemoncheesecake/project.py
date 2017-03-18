@@ -16,7 +16,7 @@ from lemoncheesecake.worker import Worker
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.reporting import ReportingBackend, get_available_backends
 from lemoncheesecake.reporting.reportdir import report_dir_with_archiving, archive_dirname_datetime
-from lemoncheesecake.loader import load_testsuites
+from lemoncheesecake.testsuite.loader import load_testsuites
 from lemoncheesecake.exceptions import ProjectError, serialize_current_exception
 from lemoncheesecake.utils import get_resource_path
 

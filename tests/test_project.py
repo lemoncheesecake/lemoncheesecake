@@ -10,7 +10,7 @@ from helpers import build_test_project, build_test_module, build_fixture_module
 def set_project_testsuites_param(params, testsuite_name, project_dir):
     testsuite_file = project_dir.join("%s.py" % testsuite_name)
     testsuite_file.write(build_test_module(testsuite_name))
-    params["TESTSUITES"] = "[ loader.import_testsuite_from_file('%s.py') ]" % (
+    params["TESTSUITES"] = "[ import_testsuite_from_file('%s.py') ]" % (
         project_dir.join(testsuite_name).strpath
     )    
 
@@ -85,7 +85,7 @@ def test_project_with_fixtures(tmpdir):
     params = {}
     set_project_testsuites_param(params, "mysuite", tmpdir)
     tmpdir.join("myfixtures.py").write(build_fixture_module("myfixture"))
-    params["FIXTURES"] = "loader.import_fixtures_from_file('%s')" % tmpdir.join("myfixtures.py").strpath
+    params["FIXTURES"] = "import_fixtures_from_file('%s')" % tmpdir.join("myfixtures.py").strpath
     project_file = tmpdir.join("project.py")
     project_file.write(build_test_project(params))
     

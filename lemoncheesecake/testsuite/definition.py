@@ -1,15 +1,17 @@
 '''
-Created on Feb 5, 2017
+Created on Sep 8, 2016
 
 @author: nicolas
 '''
 
 import inspect
+import copy
 
-from lemoncheesecake.exceptions import ProgrammingError, serialize_current_exception
-from lemoncheesecake.testsuite.core import Test, TestSuite, TESTSUITE_HOOKS
+from lemoncheesecake.testsuite.loader import get_test_methods_from_class
+from lemoncheesecake.exceptions import ProgrammingError
 
-__all__ = ("load_testsuite_from_class", "add_test_in_testsuite", "add_tests_in_testsuite")
+__all__ = "add_test_in_testsuite", "add_tests_in_testsuite", "get_metadata", \
+    "testsuite", "test", "tags", "prop", "link"
 
 class Metadata:
     _next_rank = 1
@@ -82,55 +84,65 @@ def add_tests_in_testsuite(tests, suite, before_test=None, after_test=None):
         for test in tests:
             add_test_in_testsuite(test, suite, before_test=before_test)
 
-def is_testsuite(obj):
-    return inspect.isclass(obj) and \
-        hasattr(obj, "_lccmetadata") and \
-        obj._lccmetadata.is_testsuite
-
-def is_test(obj):
-    return inspect.ismethod(obj) and \
-        hasattr(obj, "_lccmetadata") and \
-        obj._lccmetadata.is_test
-
-def load_test_from_method(method):
-    md = method._lccmetadata
-    test = Test(md.name, md.description, method)
-    test.tags.extend(md.tags)
-    test.properties.update(md.properties)
-    test.links.extend(md.links)
-    return test
-
-def _list_object_attributes(obj):
-    return [getattr(obj, n) for n in dir(obj) if not n.startswith("__")]
-
-def get_test_methods_from_class(obj):
-    return sorted(filter(is_test, _list_object_attributes(obj)), key=lambda m: m._lccmetadata.rank)
-
-def get_sub_suites_from_class(obj):
-    sub_suites = obj.sub_suites[:] if hasattr(obj, "sub_suites") else []
-    return sorted(filter(is_testsuite, _list_object_attributes(obj) + sub_suites), key=lambda c: c._lccmetadata.rank)
-
-def load_testsuite_from_class(klass, parent_suite=None):
-    md = klass._lccmetadata
-    try:
-        inst = klass()
-    except Exception:
-        raise ProgrammingError("Got an unexpected error while instanciating testsuite class '%s':%s" % (
-            klass.__name__, serialize_current_exception()
-        ))
-    suite = TestSuite(inst, md.name, md.description, parent_suite)
-    suite.tags.extend(md.tags)
-    suite.properties.update(md.properties)
-    suite.links.extend(md.links)
+_objects_with_metadata = []
+def get_metadata(obj):
+    global _objects_with_metadata
     
-    for hook_name in TESTSUITE_HOOKS:
-        if hasattr(inst, hook_name):
-            suite.add_hook(hook_name, getattr(inst, hook_name))
+    if hasattr(obj, "_lccmetadata"):
+        if obj not in _objects_with_metadata: # metadata comes from the superclass
+            obj._lccmetadata = copy.deepcopy(obj._lccmetadata)
+        return obj._lccmetadata
+    else:
+        obj._lccmetadata = Metadata()
+        _objects_with_metadata.append(obj)
+        return obj._lccmetadata
 
-    for test_method in get_test_methods_from_class(inst):
-        suite.add_test(load_test_from_method(test_method))
-    
-    for sub_suite_klass in get_sub_suites_from_class(inst):
-        suite.add_sub_testsuite(load_testsuite_from_class(sub_suite_klass, parent_suite=suite))
+def testsuite(description, rank=None):
+    """Decorator, mark a class as a testsuite class"""
+    def wrapper(klass):
+        if not inspect.isclass(klass):
+            raise ProgrammingError("%s is not a class (testsuite decorator can only be used on a class)" % klass)
+        md = get_metadata(klass)
+        md.is_testsuite = True
+        md.rank = rank if rank != None else get_metadata_next_rank()
+        md.name = klass.__name__
+        md.description = description
+        return klass
+    return wrapper
 
-    return suite
+def test(description):
+    """Decorator, make a method as a test method"""
+    def wrapper(func):
+        if not inspect.isfunction(func):
+            raise ProgrammingError("%s is not a function (test decorator can only be used on a function)" % func)
+        md = get_metadata(func)
+        md.is_test = True
+        md.rank = get_metadata_next_rank()
+        md.name = func.__name__
+        md.description = description
+        return func
+    return wrapper
+
+def tags(*tag_names):
+    """Decorator, add tags to a test or a testsuite"""
+    def wrapper(obj):
+        md = get_metadata(obj)
+        md.tags.extend(tag_names)
+        return obj
+    return wrapper
+
+def prop(key, value):
+    """Decorator, add a property (key/value) to a test or a testsuite"""
+    def wrapper(obj):
+        md = get_metadata(obj)
+        md.properties[key] = value
+        return obj
+    return wrapper
+
+def link(url, name=None):
+    """Decorator, set a link (with an optional friendly name) to a test or a testsuite"""
+    def wrapper(obj):
+        md = get_metadata(obj)
+        md.links.append((url, name))
+        return obj
+    return wrapper
