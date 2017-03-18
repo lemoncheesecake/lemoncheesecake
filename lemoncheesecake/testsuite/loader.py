@@ -7,7 +7,7 @@ Created on Feb 5, 2017
 import os.path as osp
 import inspect
 
-from lemoncheesecake.loader import get_matching_files, get_py_files_from_dir, import_module, strip_py_ext
+from lemoncheesecake.importer import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
 from lemoncheesecake.exceptions import ProgrammingError, ImportTestSuiteError, serialize_current_exception
 from lemoncheesecake.testsuite.core import Test, TestSuite, TESTSUITE_HOOKS
 

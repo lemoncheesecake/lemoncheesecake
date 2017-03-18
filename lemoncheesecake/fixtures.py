@@ -7,7 +7,7 @@ Created on Jan 7, 2017
 import inspect
 import re
 
-from lemoncheesecake.loader import import_module, get_matching_files, get_py_files_from_dir
+from lemoncheesecake.importer import import_module, get_matching_files, get_py_files_from_dir
 from lemoncheesecake.exceptions import FixtureError, ProgrammingError
 from lemoncheesecake.utils import get_distincts_in_list
 
