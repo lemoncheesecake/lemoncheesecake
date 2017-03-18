@@ -120,20 +120,20 @@ def import_testsuites_from_directory(dir, recursive=True):
     return suites
 
 def _load_testsuite(suite, loaded_tests, loaded_suites, metadata_policy):
-        # process suite
-        if metadata_policy:
-            metadata_policy.check_suite_compliance(suite)
-        loaded_suites[suite.name] = suite
+    # process suite
+    if metadata_policy:
+        metadata_policy.check_suite_compliance(suite)
+    loaded_suites[suite.name] = suite
 
-        # process tests
-        for test in suite.get_tests():
-            if metadata_policy:
-                metadata_policy.check_test_compliance(test)
-            loaded_tests[test.name] = test
-        
-        # process sub suites
-        for sub_suite in suite.get_sub_testsuites():
-            _load_testsuite(sub_suite, loaded_tests, loaded_suites, metadata_policy)
+    # process tests
+    for test in suite.get_tests():
+        if metadata_policy:
+            metadata_policy.check_test_compliance(test)
+        loaded_tests[test.name] = test
+    
+    # process sub suites
+    for sub_suite in suite.get_sub_testsuites():
+        _load_testsuite(sub_suite, loaded_tests, loaded_suites, metadata_policy)
 
 def load_testsuites(suite_classes, metadata_policy=None):
     """Load testsuites classes.
