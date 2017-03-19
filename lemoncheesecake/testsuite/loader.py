@@ -11,7 +11,7 @@ from lemoncheesecake.importer import get_matching_files, get_py_files_from_dir, 
 from lemoncheesecake.exceptions import ProgrammingError, ImportTestSuiteError, serialize_current_exception
 from lemoncheesecake.testsuite.core import Test, TestSuite, TESTSUITE_HOOKS
 
-__all__ = "import_testsuite_from_file", "import_testsuites_from_files", "import_testsuites_from_directory", \
+__all__ = "load_testsuite_from_file", "load_testsuites_from_files", "load_testsuites_from_directory", \
     "load_testsuite_from_class", "load_testsuites_from_classes"
 
 def is_testsuite(obj):
@@ -70,7 +70,7 @@ def load_testsuite_from_class(klass, parent_suite=None):
 def load_testsuites_from_classes(klasses):
     return [load_testsuite_from_class(klass) for klass in klasses]
 
-def import_testsuite_from_file(filename):
+def load_testsuite_from_file(filename):
     """Get testsuite class from Python module.
     
     The testsuite class must have the same name as the containing Python module.
@@ -85,18 +85,18 @@ def import_testsuite_from_file(filename):
         raise ImportTestSuiteError("Cannot find class '%s' in '%s'" % (mod_name, mod.__file__))
     return load_testsuite_from_class(klass)
 
-def import_testsuites_from_files(patterns, excluding=[]):
+def load_testsuites_from_files(patterns, excluding=[]):
     """
     Import testsuites from a list of files:
     - patterns: a mandatory list (a simple string can also be used instead of a single element list)
       of files to import; the wildcard '*' character can be used
     - exclude: an optional list (a simple string can also be used instead of a single element list)
       of elements to exclude from the expanded list of files to import
-    Example: import_testsuites_from_files("test_*.py")
+    Example: load_testsuites_from_files("test_*.py")
     """
-    return [import_testsuite_from_file(f) for f in get_matching_files(patterns, excluding)]
+    return [load_testsuite_from_file(f) for f in get_matching_files(patterns, excluding)]
 
-def import_testsuites_from_directory(dir, recursive=True):
+def load_testsuites_from_directory(dir, recursive=True):
     """Find testsuite classes in modules found in dir.
     
     The function expect that:
@@ -112,11 +112,11 @@ def import_testsuites_from_directory(dir, recursive=True):
         raise ImportTestSuiteError("Directory '%s' does not exist" % dir)
     suites = [ ]
     for filename in get_py_files_from_dir(dir):
-        suite = import_testsuite_from_file(filename)
+        suite = load_testsuite_from_file(filename)
         if recursive:
             subsuites_dir = strip_py_ext(filename)
             if osp.isdir(subsuites_dir):
-                suite.sub_suites = import_testsuites_from_directory(subsuites_dir, recursive=True)
+                suite.sub_suites = load_testsuites_from_directory(subsuites_dir, recursive=True)
         suites.append(suite)
     if len(list(filter(lambda s: hasattr(s, "_rank"), suites))) == len(suites):
         suites.sort(key=lambda s: s._rank)

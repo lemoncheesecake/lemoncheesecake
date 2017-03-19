@@ -3,69 +3,69 @@ import os.path
 import pytest
 
 import lemoncheesecake as lcc
-from lemoncheesecake.testsuite.loader import import_testsuites_from_directory, import_testsuite_from_file, load_testsuite_from_class, import_testsuites_from_files, load_testsuites_from_classes
+from lemoncheesecake.testsuite.loader import load_testsuites_from_directory, load_testsuite_from_file, load_testsuite_from_class, load_testsuites_from_files, load_testsuites_from_classes
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.exceptions import *
 from helpers import build_test_module
 
-def test_import_testsuite_from_file(tmpdir):
+def test_load_testsuite_from_file(tmpdir):
     file = tmpdir.join("mytestsuite.py")
     file.write(build_test_module())
-    klass = import_testsuite_from_file(file.strpath)
+    klass = load_testsuite_from_file(file.strpath)
     assert klass.name == "mytestsuite"
 
-def test_import_testsuite_from_file_invalid_module(tmpdir):
+def test_load_testsuite_from_file_invalid_module(tmpdir):
     file = tmpdir.join("doesnotexist.py")
     with pytest.raises(ImportTestSuiteError):
-        import_testsuite_from_file(file.strpath)
+        load_testsuite_from_file(file.strpath)
 
-def test_import_testsuite_from_file_invalid_class(tmpdir):
+def test_load_testsuite_from_file_invalid_class(tmpdir):
     file = tmpdir.join("anothertestsuite.py")
     file.write(build_test_module())
     with pytest.raises(ImportTestSuiteError):
-        import_testsuite_from_file(file.strpath)
+        load_testsuite_from_file(file.strpath)
 
-def test_import_testsuites_from_directory_without_modules(tmpdir):
-    klasses = import_testsuites_from_directory(tmpdir.strpath)
+def test_load_testsuites_from_directory_without_modules(tmpdir):
+    klasses = load_testsuites_from_directory(tmpdir.strpath)
     assert len(klasses) == 0
 
-def test_import_testsuites_from_directory_with_modules(tmpdir):
+def test_load_testsuites_from_directory_with_modules(tmpdir):
     names = []
     for i in range(3):
         name = "mytestsuite%d" % i
         names.append(name)
         tmpdir.join("%s.py" % name).write(build_test_module(name))
-    klasses = import_testsuites_from_directory(tmpdir.strpath)
+    klasses = load_testsuites_from_directory(tmpdir.strpath)
     for name in names:
         assert name in [k.name for k in klasses]
 
-def test_import_testsuites_from_directory_with_subdir(tmpdir):
+def test_load_testsuites_from_directory_with_subdir(tmpdir):
     file = tmpdir.join("parentsuite.py")
     file.write(build_test_module("parentsuite"))
     subdir = tmpdir.join("parentsuite")
     subdir.mkdir()
     file = subdir.join("childsuite.py")
     file.write(build_test_module("childsuite"))
-    klasses = import_testsuites_from_directory(tmpdir.strpath)
+    klasses = load_testsuites_from_directory(tmpdir.strpath)
     assert klasses[0].name == "parentsuite"
     assert len(klasses[0].sub_suites) == 1
 
-def test_import_testsuites_from_files(tmpdir):
+def test_load_testsuites_from_files(tmpdir):
     for name in "testsuite1", "testsuite2", "mysuite":
         tmpdir.join(name + ".py").write(build_test_module(name))
-    klasses = import_testsuites_from_files(tmpdir.join("testsuite*.py").strpath)
+    klasses = load_testsuites_from_files(tmpdir.join("testsuite*.py").strpath)
     assert len(klasses) == 2
     assert "testsuite1" in [k.name for k in klasses]
     assert "testsuite2" in [k.name for k in klasses]
 
-def test_import_testsuites_from_files_nomatch(tmpdir):
-    klasses = import_testsuites_from_files(tmpdir.join("*.py").strpath)
+def test_load_testsuites_from_files_nomatch(tmpdir):
+    klasses = load_testsuites_from_files(tmpdir.join("*.py").strpath)
     assert len(klasses) == 0
 
-def test_import_testsuites_from_files_exclude(tmpdir):
+def test_load_testsuites_from_files_exclude(tmpdir):
     for name in "testsuite1", "testsuite2", "mysuite":
         tmpdir.join(name + ".py").write(build_test_module(name))
-    klasses = import_testsuites_from_files(tmpdir.join("*.py").strpath, "*/testsuite*.py")
+    klasses = load_testsuites_from_files(tmpdir.join("*.py").strpath, "*/testsuite*.py")
     assert len(klasses) == 1
     assert klasses[0].name == "mysuite"
 

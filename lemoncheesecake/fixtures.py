@@ -31,7 +31,7 @@ def import_fixtures_from_files(patterns, excluding=[]):
       of files to import; the wildcard '*' character can be used
     - exclude: an optional list (a simple string can also be used instead of a single element list)
       of elements to exclude from the expanded list of files to import
-    Example: import_testsuites_from_files("test_*.py")
+    Example: load_testsuites_from_files("test_*.py")
     """
     fixtures = []
     for file in get_matching_files(patterns, excluding):
