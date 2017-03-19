@@ -50,7 +50,7 @@ def load_testsuite_from_class(klass, parent_suite=None):
         raise ProgrammingError("Got an unexpected error while instanciating testsuite class '%s':%s" % (
             klass.__name__, serialize_current_exception()
         ))
-    suite = TestSuite(inst, md.name, md.description, parent_suite)
+    suite = TestSuite(inst, md.name, md.description)
     suite.tags.extend(md.tags)
     suite.properties.update(md.properties)
     suite.links.extend(md.links)
@@ -63,7 +63,7 @@ def load_testsuite_from_class(klass, parent_suite=None):
         suite.add_test(load_test_from_method(test_method))
     
     for sub_suite_klass in get_sub_suites_from_class(inst):
-        suite.add_sub_testsuite(load_testsuite_from_class(sub_suite_klass, parent_suite=suite))
+        suite.add_sub_testsuite(load_testsuite_from_class(sub_suite_klass))
 
     return suite
 
@@ -116,7 +116,8 @@ def load_testsuites_from_directory(dir, recursive=True):
         if recursive:
             subsuites_dir = strip_py_ext(filename)
             if osp.isdir(subsuites_dir):
-                suite.sub_suites = load_testsuites_from_directory(subsuites_dir, recursive=True)
+                for sub_suite in load_testsuites_from_directory(subsuites_dir, recursive=True):
+                    suite.add_sub_testsuite(sub_suite)
         suites.append(suite)
     if len(list(filter(lambda s: hasattr(s, "_rank"), suites))) == len(suites):
         suites.sort(key=lambda s: s._rank)

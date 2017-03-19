@@ -48,7 +48,7 @@ def test_load_testsuites_from_directory_with_subdir(tmpdir):
     file.write(build_test_module("childsuite"))
     klasses = load_testsuites_from_directory(tmpdir.strpath)
     assert klasses[0].name == "parentsuite"
-    assert len(klasses[0].sub_suites) == 1
+    assert len(klasses[0].get_sub_testsuites()) == 1
 
 def test_load_testsuites_from_files(tmpdir):
     for name in "testsuite1", "testsuite2", "mysuite":
