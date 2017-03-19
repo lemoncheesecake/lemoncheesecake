@@ -10,7 +10,7 @@ def test_bootstrap(tmpdir):
     assert main(["bootstrap", project_dir]) == 0
     
     project = Project(osp.join(project_dir, "project.py"))
-    assert project.get_testsuites_classes() == []
+    assert project.get_testsuites() == []
 
 def test_bootstrap_existing_directory(tmpdir):
     out = main(["bootstrap", tmpdir.strpath])

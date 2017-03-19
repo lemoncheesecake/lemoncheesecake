@@ -3,7 +3,7 @@ import os.path
 import pytest
 
 import lemoncheesecake as lcc
-from lemoncheesecake.testsuite.loader import import_testsuites_from_directory, import_testsuite_from_file, load_testsuite_from_class, import_testsuites_from_files, load_testsuites
+from lemoncheesecake.testsuite.loader import import_testsuites_from_directory, import_testsuite_from_file, load_testsuite_from_class, import_testsuites_from_files, load_testsuites_from_classes
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.exceptions import *
 from helpers import build_test_module
@@ -12,7 +12,7 @@ def test_import_testsuite_from_file(tmpdir):
     file = tmpdir.join("mytestsuite.py")
     file.write(build_test_module())
     klass = import_testsuite_from_file(file.strpath)
-    assert klass.__name__ == "mytestsuite"
+    assert klass.name == "mytestsuite"
 
 def test_import_testsuite_from_file_invalid_module(tmpdir):
     file = tmpdir.join("doesnotexist.py")
@@ -37,7 +37,7 @@ def test_import_testsuites_from_directory_with_modules(tmpdir):
         tmpdir.join("%s.py" % name).write(build_test_module(name))
     klasses = import_testsuites_from_directory(tmpdir.strpath)
     for name in names:
-        assert name in [k.__name__ for k in klasses]
+        assert name in [k.name for k in klasses]
 
 def test_import_testsuites_from_directory_with_subdir(tmpdir):
     file = tmpdir.join("parentsuite.py")
@@ -47,7 +47,7 @@ def test_import_testsuites_from_directory_with_subdir(tmpdir):
     file = subdir.join("childsuite.py")
     file.write(build_test_module("childsuite"))
     klasses = import_testsuites_from_directory(tmpdir.strpath)
-    assert klasses[0].__name__ == "parentsuite"
+    assert klasses[0].name == "parentsuite"
     assert len(klasses[0].sub_suites) == 1
 
 def test_import_testsuites_from_files(tmpdir):
@@ -55,8 +55,8 @@ def test_import_testsuites_from_files(tmpdir):
         tmpdir.join(name + ".py").write(build_test_module(name))
     klasses = import_testsuites_from_files(tmpdir.join("testsuite*.py").strpath)
     assert len(klasses) == 2
-    assert "testsuite1" in [k.__name__ for k in klasses]
-    assert "testsuite2" in [k.__name__ for k in klasses]
+    assert "testsuite1" in [k.name for k in klasses]
+    assert "testsuite2" in [k.name for k in klasses]
 
 def test_import_testsuites_from_files_nomatch(tmpdir):
     klasses = import_testsuites_from_files(tmpdir.join("*.py").strpath)
@@ -67,7 +67,7 @@ def test_import_testsuites_from_files_exclude(tmpdir):
         tmpdir.join(name + ".py").write(build_test_module(name))
     klasses = import_testsuites_from_files(tmpdir.join("*.py").strpath, "*/testsuite*.py")
     assert len(klasses) == 1
-    assert klasses[0].__name__ == "mysuite"
+    assert klasses[0].name == "mysuite"
 
 def test_load_suites_with_same_name():
     @lcc.testsuite("My Suite 1")
@@ -86,7 +86,7 @@ def test_load_suites_with_same_name():
             def bar(self):
                 pass
     
-    suites = load_testsuites([MySuite1, MySuite2])
+    suites = load_testsuites_from_classes([MySuite1, MySuite2])
     
     assert suites[0].get_suite_name() == "MySuite1"
     assert suites[0].get_sub_testsuites()[0].get_suite_name() == "MySubSuite"
@@ -110,7 +110,7 @@ def test_load_tests_with_same_name():
             def foo(self):
                 pass
     
-    suites = load_testsuites([MySuite1, MySuite2])
+    suites = load_testsuites_from_classes([MySuite1, MySuite2])
     
     assert suites[0].get_suite_name() == "MySuite1"
     assert suites[0].get_sub_testsuites()[0].get_suite_name() == "MySubSuite1"
@@ -134,9 +134,12 @@ def test_metadata_policy():
         def sometest(self):
             pass
     
+    suite1 = load_testsuites_from_classes([MySuite1])
+    suite2 = load_testsuites_from_classes([MySuite2])
+    
     policy = MetadataPolicy()
     policy.add_property_rule("foo", (1, 2))
     with pytest.raises(InvalidMetadataError):
-        load_testsuites([MySuite1], policy)
+        policy.check_suites_compliance(suite1)
     with pytest.raises(InvalidMetadataError):
-        load_testsuites([MySuite2], policy)
+        policy.check_suites_compliance(suite2)

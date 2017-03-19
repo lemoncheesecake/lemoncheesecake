@@ -12,7 +12,7 @@ from lemoncheesecake.exceptions import ProgrammingError, ImportTestSuiteError, s
 from lemoncheesecake.testsuite.core import Test, TestSuite, TESTSUITE_HOOKS
 
 __all__ = "import_testsuite_from_file", "import_testsuites_from_files", "import_testsuites_from_directory", \
-    "load_testsuite_from_class", "load_testsuites"
+    "load_testsuite_from_class", "load_testsuites_from_classes"
 
 def is_testsuite(obj):
     return inspect.isclass(obj) and \
@@ -67,6 +67,9 @@ def load_testsuite_from_class(klass, parent_suite=None):
 
     return suite
 
+def load_testsuites_from_classes(klasses):
+    return [load_testsuite_from_class(klass) for klass in klasses]
+
 def import_testsuite_from_file(filename):
     """Get testsuite class from Python module.
     
@@ -80,7 +83,7 @@ def import_testsuite_from_file(filename):
         klass = getattr(mod, mod_name)
     except AttributeError:
         raise ImportTestSuiteError("Cannot find class '%s' in '%s'" % (mod_name, mod.__file__))
-    return klass
+    return load_testsuite_from_class(klass)
 
 def import_testsuites_from_files(patterns, excluding=[]):
     """
@@ -118,37 +121,3 @@ def import_testsuites_from_directory(dir, recursive=True):
     if len(list(filter(lambda s: hasattr(s, "_rank"), suites))) == len(suites):
         suites.sort(key=lambda s: s._rank)
     return suites
-
-def _load_testsuite(suite, loaded_tests, loaded_suites, metadata_policy):
-    # process suite
-    if metadata_policy:
-        metadata_policy.check_suite_compliance(suite)
-    loaded_suites[suite.name] = suite
-
-    # process tests
-    for test in suite.get_tests():
-        if metadata_policy:
-            metadata_policy.check_test_compliance(test)
-        loaded_tests[test.name] = test
-    
-    # process sub suites
-    for sub_suite in suite.get_sub_testsuites():
-        _load_testsuite(sub_suite, loaded_tests, loaded_suites, metadata_policy)
-
-def load_testsuites(suite_classes, metadata_policy=None):
-    """Load testsuites classes.
-    
-    - testsuite classes get instantiated into objects
-    - sanity checks are performed (among which unicity constraints)
-    - test and testsuites are checked using metadata_policy
-    """
-    loaded_tests = {}
-    loaded_suites = {}
-    suites = []
-    suites_ranks = {}
-    for suite_class in suite_classes:
-        suite = load_testsuite_from_class(suite_class)
-        suites.append(suite)
-        suites_ranks[suite] = suite_class._lccmetadata.rank
-        _load_testsuite(suite, loaded_tests, loaded_suites, metadata_policy)
-    return sorted(suites, key=lambda suite: suites_ranks[suite])

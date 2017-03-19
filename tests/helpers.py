@@ -16,7 +16,7 @@ import re
 import pytest
 
 import lemoncheesecake as lcc
-from lemoncheesecake.testsuite.loader import load_testsuites
+from lemoncheesecake.testsuite.loader import load_testsuites_from_classes
 from lemoncheesecake import runner
 from lemoncheesecake.testsuite import Filter, load_testsuite_from_class
 from lemoncheesecake import reporting
@@ -182,7 +182,7 @@ def run_testsuites(suite_classes, filter=None, fixtures=None, worker=None, backe
     if _reporting_session:
         backends.append(TestReportingBackend(_reporting_session))
     
-    suites = load_testsuites(suite_classes)
+    suites = load_testsuites_from_classes(suite_classes)
     if filter:
         for suite in suites:
             suite.apply_filter(filter)

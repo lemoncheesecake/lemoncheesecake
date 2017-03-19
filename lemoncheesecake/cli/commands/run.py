@@ -65,7 +65,7 @@ class RunCommand(Command):
             return "Cannot find project file"
         try:
             project = Project(project_file)
-            testsuites = project.load_testsuites()
+            testsuites = project.get_testsuites()
         except (ProjectError, ProgrammingError) as e:
             return str(e)
         except InvalidMetadataError as e:

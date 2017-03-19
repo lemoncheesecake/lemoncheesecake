@@ -1,11 +1,12 @@
 import os
 
-from lemoncheesecake import loader
+from lemoncheesecake.testsuite import import_testsuites_from_directory
+from lemoncheesecake.fixtures import import_fixtures_from_directory
 from lemoncheesecake.reporting import reportdir
 
 project_dir = os.path.dirname(__file__)
-TESTSUITES = loader.import_testsuites_from_directory("suites")
-FIXTURES = loader.import_fixtures_from_directory(os.path.join(project_dir, "fixtures"))
+TESTSUITES = import_testsuites_from_directory("suites")
+FIXTURES = import_fixtures_from_directory(os.path.join(project_dir, "fixtures"))
 
 def fail(dummy):
     raise Exception("operation has failed")

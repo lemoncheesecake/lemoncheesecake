@@ -23,8 +23,8 @@ def test_project_minimal_parameters(tmpdir):
 
     assert project.get_project_dir() == tmpdir.strpath
 
-    classes = project.get_testsuites_classes()
-    assert classes[0].__name__ == "mysuite"
+    classes = project.get_testsuites()
+    assert classes[0].name == "mysuite"
     
     assert project.get_report_dir_creation_callback() != None
 
@@ -147,7 +147,7 @@ def add_cli_args(cli_parser):
 def test_project_creation(tmpdir):
     create_project(tmpdir.strpath)
     project = load_project(tmpdir.strpath)
-    assert len(project.get_testsuites_classes()) == 0
+    assert len(project.get_testsuites()) == 0
     assert len(project.get_fixtures()) == 0
     assert project.get_workers() == {}
     assert project.get_cli_extra_args_callback() != None

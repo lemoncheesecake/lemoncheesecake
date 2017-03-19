@@ -47,7 +47,7 @@ class FixturesCommand(Command):
             return "Cannot find project file"
         try:
             project = Project(project_file)
-            suites = project.load_testsuites()
+            suites = project.get_testsuites()
             fixtures = project.get_fixtures()
         except (ProjectError, ProgrammingError) as e:
             return str(e)

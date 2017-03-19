@@ -93,7 +93,7 @@ class ShowCommand(Command):
             return "Cannot find project file"
         try:
             project = Project(project_file)
-            suites = project.load_testsuites()
+            suites = project.get_testsuites()
         except (ProjectError, ProgrammingError) as e:
             return str(e)
         
