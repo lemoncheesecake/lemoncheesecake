@@ -19,9 +19,33 @@ class mysuite:
     
 """
 
+FIXTURE_MODULE = """import lemoncheesecake as lcc
+@lcc.fixture()
+def fixt():
+    return 42
+"""
+
+TEST_MODULE_USING_FIXTURES = """import lemoncheesecake as lcc
+
+@lcc.testsuite("My Suite")
+class mysuite:
+    @lcc.test("My Test 1")
+    def mytest1(self, fixt):
+        lcc.check_eq("val", fixt, 42)
+"""
+
+
 @pytest.fixture()
 def project(tmpdir):
     generate_project(tmpdir.strpath, "mysuite", TEST_MODULE)
+    old_cwd = os.getcwd()
+    os.chdir(tmpdir.strpath)
+    yield
+    os.chdir(old_cwd)
+
+@pytest.fixture()
+def project_with_fixtures(tmpdir):
+    generate_project(tmpdir.strpath, "mysuite", TEST_MODULE_USING_FIXTURES, FIXTURE_MODULE)
     old_cwd = os.getcwd()
     os.chdir(tmpdir.strpath)
     yield
@@ -45,3 +69,13 @@ def test_run_with_filter(project, cmdout):
     cmdout.assert_lines_match(".+Tests: 1")
     cmdout.assert_lines_match(".+Successes: 0")
     cmdout.assert_lines_match(".+Failures: 1")
+
+def test_project_with_fixtures(project_with_fixtures, cmdout):
+    assert main(["run", "mysuite.mytest1"]) == 0
+    
+    cmdout.assert_lines_match(".+= mysuite =.+")
+    cmdout.assert_lines_match(".+OK.+mytest1.+")
+    cmdout.assert_lines_match(".+Tests: 1")
+    cmdout.assert_lines_match(".+Successes: 1")
+    cmdout.assert_lines_match(".+Failures: 0")
+    

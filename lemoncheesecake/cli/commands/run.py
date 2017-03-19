@@ -20,8 +20,8 @@ def build_fixture_registry(project, cli_args):
     registry = FixtureRegistry()
     registry.add_fixture(BuiltinFixture("cli_args", lambda: cli_args))
     registry.add_fixture(BuiltinFixture("project_dir", lambda: project.get_project_dir()))
-    for fixture_func in project.get_fixtures():
-        registry.add_fixtures(load_fixtures_from_func(fixture_func))
+    for fixture in project.get_fixtures():
+        registry.add_fixture(fixture)
     registry.check_dependencies()
     return registry
 
