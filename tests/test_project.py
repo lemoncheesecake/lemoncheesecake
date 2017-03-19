@@ -85,7 +85,7 @@ def test_project_with_fixtures(tmpdir):
     params = {}
     set_project_testsuites_param(params, "mysuite", tmpdir)
     tmpdir.join("myfixtures.py").write(build_fixture_module("myfixture"))
-    params["FIXTURES"] = "import_fixtures_from_file('%s')" % tmpdir.join("myfixtures.py").strpath
+    params["FIXTURES"] = "load_fixtures_from_file('%s')" % tmpdir.join("myfixtures.py").strpath
     project_file = tmpdir.join("project.py")
     project_file.write(build_test_project(params))
     
@@ -93,8 +93,7 @@ def test_project_with_fixtures(tmpdir):
     
     fixtures = project.get_fixtures()
     assert len(fixtures) == 1
-    assert fixtures[0].__name__ == "myfixture"
-    assert hasattr(fixtures[0], "_lccfixtureinfo")
+    assert fixtures[0].name == "myfixture"
 
 def test_project_with_metadata_policy(tmpdir):
     params = {}

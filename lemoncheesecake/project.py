@@ -12,6 +12,7 @@ import inspect
 import traceback
 
 from lemoncheesecake.testsuite import TestSuite
+from lemoncheesecake.fixtures import Fixture
 from lemoncheesecake.worker import Worker
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.reporting import ReportingBackend, get_available_backends
@@ -101,7 +102,7 @@ class Project:
             default=lambda top_dir: report_dir_with_archiving(top_dir, archive_dirname_datetime)
         )
         _("TESTSUITES", _check_class_instance(TestSuite), is_list=True)
-        _("FIXTURES", _check_func(), is_list=True, required=False, default=[])
+        _("FIXTURES", _check_class_instance(Fixture), is_list=True, required=False, default=[])
         _("WORKERS", _check_class_instance(Worker), is_dict=True, required=False, default={})
         _("REPORTING_BACKENDS", 
             _check_class_instance(ReportingBackend), is_list=True, required=False, default=DEFAULT_REPORTING_BACKENDS

@@ -49,7 +49,7 @@ def build_test_project(params={}, extra_imports=[], static_content=""):
     return """
 from lemoncheesecake import worker
 from lemoncheesecake.reporting import backends
-from lemoncheesecake.fixtures import import_fixtures_from_file, import_fixtures_from_files, import_fixtures_from_directory
+from lemoncheesecake.fixtures import load_fixtures_from_file, load_fixtures_from_files, load_fixtures_from_directory
 from lemoncheesecake.testsuite.loader import *
 
 from lemoncheesecake import validators

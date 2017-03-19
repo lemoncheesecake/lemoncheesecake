@@ -15,35 +15,6 @@ __all__ = ("fixture", "load_fixtures_from_func")
 
 FORBIDDEN_FIXTURE_NAMES = ("fixture_name", )
 
-def import_fixtures_from_file(filename):
-    mod = import_module(filename)
-    funcs = []
-    for sym_name in dir(mod):
-        sym = getattr(mod, sym_name)
-        if hasattr(sym, "_lccfixtureinfo"):
-            funcs.append(sym)
-    return funcs
-
-def import_fixtures_from_files(patterns, excluding=[]):
-    """
-    Import fixtures from a list of files:
-    - patterns: a mandatory list (a simple string can also be used instead of a single element list)
-      of files to import; the wildcard '*' character can be used
-    - exclude: an optional list (a simple string can also be used instead of a single element list)
-      of elements to exclude from the expanded list of files to import
-    Example: load_testsuites_from_files("test_*.py")
-    """
-    fixtures = []
-    for file in get_matching_files(patterns, excluding):
-        fixtures.extend(import_fixtures_from_file(file))
-    return fixtures
-
-def import_fixtures_from_directory(dir):
-    fixtures = []
-    for file in get_py_files_from_dir(dir):
-        fixtures.extend(import_fixtures_from_file(file))
-    return fixtures
-
 class FixtureInfo:
     def __init__(self, names, scope):
         self.names = names
@@ -58,24 +29,6 @@ def fixture(names=None, scope="test"):
         return func
     
     return wrapper
-
-def get_fixture_names(func):
-    return func._lccfixtureinfo.names or [func.__name__]
-
-def get_fixture_name(func):
-    return get_fixture_names(func)[0]
-
-def get_fixture_aliases(func):
-    return get_fixture_names(func)[1:]
-
-def get_fixture_scope(func):
-    return func._lccfixtureinfo.scope
-
-def get_fixture_params(func):
-    return inspect.getargspec(func).args
-
-def get_fixture_doc(func):
-    return re.sub("\n\s+", "\\\\n ", func.__doc__) if func.__doc__ else None
 
 class BaseFixture:
     def is_builtin(self):
@@ -148,15 +101,6 @@ class BuiltinFixture(BaseFixture):
     
     def get_result(self):
         return self._result
-
-def load_fixtures_from_func(func):
-    assert hasattr(func, "_lccfixtureinfo")
-    names = func._lccfixtureinfo.names
-    if not names:
-        names = [func.__name__]
-    scope = func._lccfixtureinfo.scope
-    params = inspect.getargspec(func).args
-    return [Fixture(name, func, scope, params) for name in names]
 
 class FixtureRegistry:
     def __init__(self):
@@ -278,3 +222,41 @@ class FixtureRegistry:
     
     def teardown_fixture(self, name):
         self._fixtures[name].teardown()
+
+def load_fixtures_from_func(func):
+    assert hasattr(func, "_lccfixtureinfo")
+    names = func._lccfixtureinfo.names
+    if not names:
+        names = [func.__name__]
+    scope = func._lccfixtureinfo.scope
+    params = inspect.getargspec(func).args
+    return [Fixture(name, func, scope, params) for name in names]
+
+def load_fixtures_from_file(filename):
+    mod = import_module(filename)
+    fixtures = []
+    for sym_name in dir(mod):
+        sym = getattr(mod, sym_name)
+        if hasattr(sym, "_lccfixtureinfo"):
+            fixtures.extend(load_fixtures_from_func(sym))
+    return fixtures
+
+def load_fixtures_from_files(patterns, excluding=[]):
+    """
+    Import fixtures from a list of files:
+    - patterns: a mandatory list (a simple string can also be used instead of a single element list)
+      of files to import; the wildcard '*' character can be used
+    - exclude: an optional list (a simple string can also be used instead of a single element list)
+      of elements to exclude from the expanded list of files to import
+    Example: load_testsuites_from_files("test_*.py")
+    """
+    fixtures = []
+    for file in get_matching_files(patterns, excluding):
+        fixtures.extend(load_fixtures_from_file(file))
+    return fixtures
+
+def load_fixtures_from_directory(dir):
+    fixtures = []
+    for file in get_py_files_from_dir(dir):
+        fixtures.extend(load_fixtures_from_file(file))
+    return fixtures
