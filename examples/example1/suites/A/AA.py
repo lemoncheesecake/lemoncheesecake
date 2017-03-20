@@ -1,6 +1,5 @@
 from lemoncheesecake import *
 
-
 @testsuite("AA")
 @link("http://bugtracker.net/tickets/1234")
 class AA:
