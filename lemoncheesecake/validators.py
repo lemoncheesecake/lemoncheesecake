@@ -135,7 +135,7 @@ class MetadataPolicy:
     def check_test_compliance(self, test):
         """
         Check if the test complies to the metadata policy.
-        Raise ProgrammingError if not compliant.
+        Raise InvalidMetadataError if not compliant.
         """
         self._check_compliance(
             test, "test", 
@@ -145,11 +145,11 @@ class MetadataPolicy:
             [tag_name for tag_name, t in self._tags.items() if not t["on_test"]]
         )
 
-    def check_suite_compliance(self, suite):
+    def check_suite_compliance(self, suite, recursive=True):
         """
         Check if the suite complies to the metadata policy.
-        The method is not recursive: the tests and sub suites contained in the given suite are not checked.
-        Raise ProgrammingError if not compliant.
+        If recursive if set to True (which is the default), then suite tests and sub suites are also checked.
+        Raise InvalidMetadataError if not compliant.
         """
         self._check_compliance(
             suite, "testsuite", 
@@ -158,3 +158,19 @@ class MetadataPolicy:
             {tag_name: t for tag_name, t in self._tags.items() if t["on_suite"]},
             [tag_name for tag_name, t in self._tags.items() if not t["on_suite"]]
         )
+        if not recursive:
+            return
+        
+        for test in suite.get_tests():
+            self.check_test_compliance(test)
+        
+        for sub_suite in suite.get_sub_testsuites():
+            self.check_suite_compliance(sub_suite, recursive=True)
+    
+    def check_suites_compliance(self, suites):
+        """
+        Check if the suites comply to the metadata policy.
+        Raise InvalidMetadataError if not compliant.
+        """
+        for suite in suites:
+            self.check_suite_compliance(suite, recursive=True)

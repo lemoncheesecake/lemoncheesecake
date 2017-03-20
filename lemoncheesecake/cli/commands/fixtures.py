@@ -11,7 +11,6 @@ from lemoncheesecake.cli.command import Command
 from lemoncheesecake.testsuite import walk_tests
 from lemoncheesecake.project import find_project_file, Project
 from lemoncheesecake.exceptions import ProjectError, ProgrammingError
-from lemoncheesecake.fixtures import get_fixture_name, get_fixture_names, get_fixture_scope, get_fixture_params
 
 class FixturesCommand(Command):
     def get_name(self):
@@ -28,15 +27,14 @@ class FixturesCommand(Command):
         lines = []
         ordered_fixtures = sorted(
             fixtures,
-            key=lambda f: used_by_fixtures.get(get_fixture_name(f), 0) + used_by_tests.get(get_fixture_name(f), 0),
+            key=lambda f: used_by_fixtures.get(f.name, 0) + used_by_tests.get(f.name, 0),
             reverse=True
         )
         for fixt in ordered_fixtures:
-            for fixt_name in get_fixture_names(fixt):
-                lines.append([
-                    self.bold(fixt_name), ", ".join(get_fixture_params(fixt) or "-"),
-                    used_by_fixtures.get(fixt_name, 0), used_by_tests.get(fixt_name, 0)
-                ])
+            lines.append([
+                self.bold(fixt.name), ", ".join(fixt.params or "-"),
+                used_by_fixtures.get(fixt.name, 0), used_by_tests.get(fixt.name, 0)
+            ])
         print_table("Fixture with scope %s" % self.bold(scope), ["Fixture", "Dependencies", "Used by fixtures", "Used by tests"], lines)
     
     def run_cmd(self, cli_args):
@@ -47,18 +45,17 @@ class FixturesCommand(Command):
             return "Cannot find project file"
         try:
             project = Project(project_file)
-            suites = project.load_testsuites()
+            suites = project.get_testsuites()
             fixtures = project.get_fixtures()
         except (ProjectError, ProgrammingError) as e:
             return str(e)
         
         fixtures_by_scope = {}
         for fixt in fixtures:
-            scope = get_fixture_scope(fixt)
-            if scope in fixtures_by_scope:
-                fixtures_by_scope[scope].append(fixt)
+            if fixt.scope in fixtures_by_scope:
+                fixtures_by_scope[fixt.scope].append(fixt)
             else:
-                fixtures_by_scope[scope] = [fixt]
+                fixtures_by_scope[fixt.scope] = [fixt]
         
         used_by_tests = {}
         def get_test_fixtures(test, suite):
@@ -68,7 +65,7 @@ class FixturesCommand(Command):
         
         used_by_fixtures = {}
         for fixt in fixtures:
-            for param in get_fixture_params(fixt):
+            for param in fixt.params:
                 used_by_fixtures[param] = used_by_fixtures.get(param, 0) + 1
         
         for scope in "session_prerun", "session", "testsuite", "test":

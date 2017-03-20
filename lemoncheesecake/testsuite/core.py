@@ -59,9 +59,9 @@ def _assert_valid_hook_name(hook_name):
         raise InternalError("Invalid hook name '%s'" % hook_name)
 
 class TestSuite:
-    def __init__(self, obj, name, description, parent_suite=None):
+    def __init__(self, obj, name, description):
         self.obj = obj
-        self.parent_suite = parent_suite
+        self.parent_suite = None
         self.name = name
         self.description = description
         self.tags = []
@@ -152,6 +152,7 @@ class TestSuite:
     
     def add_sub_testsuite(self, sub_suite):
         self.assert_sub_suite_is_unique_in_suite(sub_suite)
+        sub_suite.parent_suite = self
         self._sub_testsuites.append(sub_suite)
     
     def get_test(self, test_name):

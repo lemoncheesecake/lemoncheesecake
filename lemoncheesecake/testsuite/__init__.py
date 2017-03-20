@@ -1,4 +1,4 @@
 from .core import *
-from .asclass import *
-from .asclassdecorators import *
+from .loader import *
+from .definition import *
 from .filter import *

@@ -1,6 +1,7 @@
 import os.path
 
-from lemoncheesecake.loader import import_testsuites_from_directory, import_fixtures_from_directory
+from lemoncheesecake.fixtures import load_fixtures_from_directory
+from lemoncheesecake.testsuite import load_testsuites_from_directory
 from lemoncheesecake.reporting.backends import ConsoleBackend, JsonBackend, XmlBackend, HtmlBackend
 from lemoncheesecake.reporting.reportdir import report_dir_with_archiving, archive_dirname_datetime
 from lemoncheesecake.validators import MetadataPolicy
@@ -9,8 +10,8 @@ from lemoncheesecake.validators import MetadataPolicy
 project_dir = os.path.dirname(__file__)
 
 # Test suites and workers
-TESTSUITES = import_testsuites_from_directory(os.path.join(project_dir, "tests"))
-FIXTURES = import_fixtures_from_directory(os.path.join(project_dir, "fixtures"))
+TESTSUITES = load_testsuites_from_directory(os.path.join(project_dir, "tests"))
+FIXTURES = load_fixtures_from_directory(os.path.join(project_dir, "fixtures"))
 WORKERS = {}
 def add_cli_args(cli_parser):
     pass

@@ -12,11 +12,11 @@ import inspect
 import traceback
 
 from lemoncheesecake.testsuite import TestSuite
+from lemoncheesecake.fixtures import Fixture
 from lemoncheesecake.worker import Worker
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.reporting import ReportingBackend, get_available_backends
 from lemoncheesecake.reporting.reportdir import report_dir_with_archiving, archive_dirname_datetime
-from lemoncheesecake.loader import load_testsuites
 from lemoncheesecake.exceptions import ProjectError, serialize_current_exception
 from lemoncheesecake.utils import get_resource_path
 
@@ -32,10 +32,10 @@ def _check_class(klass=None):
     def wrapper(name, value):
         if klass:
             if not inspect.isclass(value) or not issubclass(value, klass):
-                return "'%s' has an incorrect value, '%s' is not a subclass of %s" % (name, value, klass)
+                return "'%s' has an incorrect value, %s is not a subclass of %s" % (name, repr(value), klass)
         else:
             if not inspect.isclass(value):
-                return "'%s' has an incorrect value, '%s' is not a class" % (name, value)
+                return "'%s' has an incorrect value, %s is not a class" % (name, repr(value))
         return None
     return wrapper
 
@@ -90,7 +90,6 @@ class Project:
                 pass
             sys.path.pop(0)
 
-
         ###
         # Fetch parameters from project settings
         ###
@@ -102,8 +101,8 @@ class Project:
             _check_func(args_nb=1), required=False, 
             default=lambda top_dir: report_dir_with_archiving(top_dir, archive_dirname_datetime)
         )
-        _("TESTSUITES", _check_class(), is_list=True)
-        _("FIXTURES", _check_func(), is_list=True, required=False, default=[])
+        _("TESTSUITES", _check_class_instance(TestSuite), is_list=True)
+        _("FIXTURES", _check_class_instance(Fixture), is_list=True, required=False, default=[])
         _("WORKERS", _check_class_instance(Worker), is_dict=True, required=False, default={})
         _("REPORTING_BACKENDS", 
             _check_class_instance(ReportingBackend), is_list=True, required=False, default=DEFAULT_REPORTING_BACKENDS
@@ -183,8 +182,12 @@ class Project:
     def get_report_dir_creation_callback(self):
         return self._raw_params["REPORT_DIR_CREATION"]
     
-    def get_testsuites_classes(self):
-        return self._raw_params["TESTSUITES"]
+    def get_testsuites(self, check_metadata_policy=True):
+        suites = self._raw_params["TESTSUITES"]
+        policy = self.get_metadata_policy()
+        if check_metadata_policy and policy:
+            policy.check_suites_compliance(suites)
+        return suites
 
     def get_fixtures(self):
         return self._raw_params["FIXTURES"]
@@ -218,9 +221,6 @@ class Project:
 
     def get_after_test_run_hook(self):
         return self._raw_params["RUN_HOOK_AFTER_TESTS"]
-    
-    def load_testsuites(self):
-        return load_testsuites(self.get_testsuites_classes(), self.get_metadata_policy())
 
 def create_project(project_dir):
     p = os.path

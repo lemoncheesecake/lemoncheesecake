@@ -11,8 +11,8 @@ import shutil
 
 import pytest
 
-from lemoncheesecake import runner, loader
-from lemoncheesecake.testsuite import Filter
+from lemoncheesecake import runner
+from lemoncheesecake.testsuite import Filter, load_testsuites_from_classes
 from lemoncheesecake.worker import Worker
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.exceptions import *
@@ -21,7 +21,7 @@ from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 
 from helpers import reporting_session, run_testsuite, build_fixture_registry
 from lemoncheesecake.fixtures import FixtureRegistry
-from lemoncheesecake.testsuite.asclass import add_test_in_testsuite
+from lemoncheesecake.testsuite import add_test_in_testsuite
 
 # TODO: make launcher unit tests more independent from the reporting layer ?
 
@@ -1018,7 +1018,7 @@ def testsuites_sample():
         def suite2_test1(self, fixt_for_test2):
             pass
     
-    return loader.load_testsuites([suite1, suite2])
+    return load_testsuites_from_classes([suite1, suite2])
 
 def test_get_fixtures_to_be_executed_for_session_prerun(fixture_registry_sample, testsuites_sample):
     run = runner._Runner(testsuites_sample, fixture_registry_sample, [], [], None)
