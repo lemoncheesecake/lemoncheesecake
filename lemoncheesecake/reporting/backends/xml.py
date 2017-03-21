@@ -19,7 +19,7 @@ from lemoncheesecake.reporting.report import (LogData, CheckData, AttachmentData
                                               TestData, HookData, TestSuiteData, Report,
                                               format_timestamp, parse_timestamp)
 from lemoncheesecake.utils import IS_PYTHON3
-from lemoncheesecake.exceptions import ProgrammingError
+from lemoncheesecake.exceptions import ProgrammingError, InvalidReportFile
 
 OUTCOME_NOT_AVAILABLE = "n/a"
 OUTCOME_FAILURE = "failure"
@@ -149,6 +149,8 @@ def _serialize_testsuite_data(suite):
 
 def serialize_report_as_tree(report):
     xml = E("lemoncheesecake-report")
+    version_node = _xml_child(xml, "lemoncheesecake-report-version")
+    version_node.text = str("1.0")
     _add_time_attr(xml, "start-time", report.start_time)
     _add_time_attr(xml, "end-time", report.end_time)
     _add_time_attr(xml, "generation-time", report.report_generation_time)
@@ -261,8 +263,15 @@ def _unserialize_keyvalue_list(nodes):
 
 def unserialize_report_from_file(filename):
     report = Report()
-    xml = ET.parse(open(filename, "r"))
-    root = xml.getroot().xpath("/lemoncheesecake-report")[0]
+    try:
+        xml = ET.parse(open(filename, "r"))
+    except ET.LxmlError as e:
+        raise InvalidReportFile(str(e))
+    try:
+        root = xml.getroot().xpath("/lemoncheesecake-report")[0]
+    except IndexError:
+        raise InvalidReportFile("Cannot lemoncheesecake-report element in XML")
+    
     report.start_time = _unserialize_datetime(root.attrib["start-time"]) if "start-time" in root.attrib else None
     report.end_time = _unserialize_datetime(root.attrib["end-time"]) if "end-time" in root.attrib else None
     report.report_generation_time = _unserialize_datetime(root.attrib["generation-time"]) if "generation-time" in root.attrib else None
