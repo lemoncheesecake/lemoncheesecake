@@ -6,7 +6,7 @@ Created on Nov 17, 2016
 
 import pytest
 
-from lemoncheesecake.reporting.backends.xml import XmlBackend, unserialize_report_from_file
+from lemoncheesecake.reporting.backends.xml import XmlBackend, load_report_from_file
 from lemoncheesecake.exceptions import InvalidReportFile
 
 try:
@@ -20,14 +20,14 @@ else:
 def backend():
     return XmlBackend()
 
-def test_unserialize_non_xml(tmpdir):
+def test_load_report_non_xml(tmpdir):
     file = tmpdir.join("report.xml")
     file.write("foobar")
     with pytest.raises(InvalidReportFile):
-        unserialize_report_from_file(file.strpath)
+        load_report_from_file(file.strpath)
 
-def test_unserialize_bad_xml(tmpdir):
+def test_load_report_bad_xml(tmpdir):
     file = tmpdir.join("report.xml")
     file.write("<value>foobar</value>")
     with pytest.raises(InvalidReportFile):
-        unserialize_report_from_file(file.strpath)
+        load_report_from_file(file.strpath)

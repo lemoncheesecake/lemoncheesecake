@@ -182,7 +182,7 @@ def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
         return ET.tostring(report, pretty_print=True, encoding="unicode")
     return ET.tostring(report, pretty_print=True, xml_declaration=True, encoding="utf-8")
 
-def serialize_report_into_file(report, filename, indent_level):
+def save_report_into_file(report, filename, indent_level):
     content = serialize_report_as_string(report, indent_level)
     with open(filename, "w") as fh:
         fh.write(content)
@@ -261,7 +261,7 @@ def _unserialize_keyvalue_list(nodes):
         ret.append([node.attrib["name"], node.text])
     return ret
 
-def unserialize_report_from_file(filename):
+def load_report_from_file(filename):
     report = Report()
     try:
         xml = ET.parse(open(filename, "r"))
@@ -306,8 +306,8 @@ class XmlBackend(FileReportBackend):
     def is_available(self):
         return LXML_IS_AVAILABLE
     
-    def serialize_report(self, filename, report):
-        serialize_report_into_file(report, filename, self.indent_level)
+    def save_report(self, filename, report):
+        save_report_into_file(report, filename, self.indent_level)
     
-    def unserialize_report(self, filename):
-        return unserialize_report_from_file(filename)
+    def load_report(self, filename):
+        return load_report_from_file(filename)

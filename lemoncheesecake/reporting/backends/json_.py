@@ -87,7 +87,7 @@ def _serialize_testsuite_data(suite):
     
     return json_suite
 
-def serialize_report(report):
+def serialize_report_into_json(report):
     serialized = _dict(
         "lemoncheesecake_report_version", 1.0,
         "start_time", _serialize_time(report.start_time),
@@ -107,8 +107,8 @@ def serialize_report(report):
     
     return serialized
 
-def serialize_report_into_file(data, filename, javascript_compatibility=True, pretty_formatting=False):
-    report = serialize_report(data)
+def save_report_into_file(data, filename, javascript_compatibility=True, pretty_formatting=False):
+    report = serialize_report_into_json(data)
     file = open(filename, "w")
     if javascript_compatibility:
         file.write(JS_PREFIX)
@@ -173,7 +173,7 @@ def _unserialize_testsuite_data(js, parent=None):
     
     return suite
 
-def unserialize_report_from_file(filename):
+def load_report_from_file(filename):
     report = Report()
     file = open(filename, "r")
     content = file.read()
@@ -215,11 +215,11 @@ class JsonBackend(FileReportBackend):
     def get_report_filename(self):
         return "report.json"
     
-    def serialize_report(self, filename, report):
-        serialize_report_into_file(
+    def save_report(self, filename, report):
+        save_report_into_file(
             report, filename,
             javascript_compatibility=self.javascript_compatibility, pretty_formatting=self.pretty_formatting
         )
     
-    def unserialize_report(self, filename):
-        return unserialize_report_from_file(filename)
+    def load_report(self, filename):
+        return load_report_from_file(filename)

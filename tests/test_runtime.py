@@ -17,7 +17,7 @@ import lemoncheesecake as lcc
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.worker import Worker
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
-from lemoncheesecake.reporting.backends.json_ import serialize_report
+from lemoncheesecake.reporting.backends.json_ import serialize_report_into_json
 
 from helpers import run_testsuite, run_testsuites, assert_report_from_testsuite, assert_report_from_testsuites, assert_report_stats, \
     dump_report
