@@ -18,10 +18,10 @@ class HtmlBackend(ReportingBackend):
     def __init__(self, offline_mode=False):
         self.offline_mode = offline_mode
     
-    def create_reporting_session(self, report, report_dir):
+    def create_reporting_session(self, report_dir, report):
         class WriteHtmlReport(ReportingSession):
-            def __init__(self, report, report_dir, offline_mode):
-                ReportingSession.__init__(self, report, report_dir)
+            def __init__(self, report_dir, offline_mode):
+                self.report_dir = report_dir
                 self.offline_mode = offline_mode
 
             def begin_tests(self):
@@ -41,4 +41,4 @@ class HtmlBackend(ReportingBackend):
                 else:
                     copy(p.join(html_resource_dir, "report.html"), self.report_dir)
     
-        return WriteHtmlReport(report, report_dir, self.offline_mode)
+        return WriteHtmlReport(report_dir, self.offline_mode)

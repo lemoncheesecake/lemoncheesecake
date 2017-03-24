@@ -212,13 +212,14 @@ class JsonBackend(FileReportBackend):
         self.javascript_compatibility = javascript_compatibility
         self.pretty_formatting = pretty_formatting
     
-    def serialize_report(self, report, report_dir):
+    def get_report_filename(self):
+        return "report.json"
+    
+    def serialize_report(self, filename, report):
         serialize_report_into_file(
-            report, os.path.join(report_dir, "report.json"),
+            report, filename,
             javascript_compatibility=self.javascript_compatibility, pretty_formatting=self.pretty_formatting
         )
     
-    def unserialize_report(self, report_path):
-        if os.path.isdir(report_path):
-            report_path = os.path.join(report_path, "report.json")
-        return unserialize_report_from_file(report_path)
+    def unserialize_report(self, filename):
+        return unserialize_report_from_file(filename)

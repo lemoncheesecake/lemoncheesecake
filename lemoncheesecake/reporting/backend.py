@@ -4,8 +4,10 @@ Created on Mar 29, 2016
 @author: nicolas
 '''
 
+import os.path
+
 from lemoncheesecake.exceptions import MethodNotImplemented, InvalidReportFile,\
-    ProgrammingError
+    ProgrammingError, method_not_implemented
 from lemoncheesecake.utils import object_has_method
 
 __all__ = (
@@ -25,10 +27,6 @@ SAVE_AT_EACH_FAILED_TEST = 4
 SAVE_AT_EACH_EVENT = 5
 
 class ReportingSession:
-    def __init__(self, report, report_dir):
-        self.report = report
-        self.report_dir = report_dir
-    
     def begin_tests(self):
         pass
     
@@ -94,23 +92,24 @@ class ReportingBackend:
             capabilities |= CAPABILITY_UNSERIALIZE
         return capabilities
     
-#     def create_reporting_session(self, report, report_dir):
-#         pass
-#      
-#     def serialize_report(self, report, report_dir):
-#         pass
-#      
-#     def unserialize_report(self, report_path):
-#         pass
+#     def create_reporting_session(self, dir, report):
+#         method_not_implemented("create_reporting_session", self)
+#       
+#     def serialize_report(self, filename, report):
+#         method_not_implemented("serialize_report", self)
+#       
+#     def unserialize_report(self, filename):
+#         method_not_implemented("unserialize_report", self)
 
 class FileReportSession(ReportingSession):
-    def __init__(self, report, report_dir, backend, save_mode):
-        ReportingSession.__init__(self, report, report_dir)
-        self.backend = backend
+    def __init__(self, report_filename, report, save_function, save_mode):
+        self.report_filename = report_filename
+        self.report = report
+        self.save_function = save_function
         self.save_mode = save_mode
     
     def save(self):
-        self.backend.serialize_report(self.report, self.report_dir)
+        self.save_function(self.report_filename, self.report)
     
     def _handle_code_end(self, is_failure):
         if (self.save_mode == SAVE_AT_EACH_TEST) or (self.save_mode == SAVE_AT_EACH_FAILED_TEST and is_failure):
@@ -161,11 +160,13 @@ class FileReportBackend(ReportingBackend):
     def __init__(self, save_mode=SAVE_AT_EACH_FAILED_TEST):
         self.save_mode = save_mode
     
-    def serialize_report(self, report, report_dir):
-        raise MethodNotImplemented(self, "serialize_report")
+    def get_report_filename(self):
+        method_not_implemented("get_report_filename", self)
     
-    def create_reporting_session(self, report, report_dir):
-        return FileReportSession(report, report_dir, self, self.save_mode)
+    def create_reporting_session(self, report_dir, report):
+        return FileReportSession(
+            os.path.join(report_dir, self.get_report_filename()), report, self.serialize_report, self.save_mode
+        )
 
 def get_available_backends():
     from lemoncheesecake.reporting.backends import ConsoleBackend, XmlBackend, JsonBackend, HtmlBackend

@@ -300,15 +300,14 @@ class XmlBackend(FileReportBackend):
         FileReportBackend.__init__(self, save_mode)
         self.indent_level = DEFAULT_INDENT_LEVEL
     
+    def get_report_filename(self):
+        return "report.xml"
+    
     def is_available(self):
         return LXML_IS_AVAILABLE
     
-    def serialize_report(self, report, report_dir):
-        serialize_report_into_file(
-            report, os.path.join(report_dir, "report.xml"), self.indent_level
-        )
+    def serialize_report(self, filename, report):
+        serialize_report_into_file(report, filename, self.indent_level)
     
-    def unserialize_report(self, report_path):
-        if os.path.isdir(report_path):
-            report_path = os.path.join(report_path, "report.xml")
-        return unserialize_report_from_file(report_path)
+    def unserialize_report(self, filename):
+        return unserialize_report_from_file(filename)
