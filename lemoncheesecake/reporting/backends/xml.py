@@ -182,7 +182,7 @@ def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
         return ET.tostring(report, pretty_print=True, encoding="unicode")
     return ET.tostring(report, pretty_print=True, xml_declaration=True, encoding="utf-8")
 
-def save_report_into_file(report, filename, indent_level):
+def save_report_into_file(report, filename, indent_level=DEFAULT_INDENT_LEVEL):
     content = serialize_report_as_string(report, indent_level)
     with open(filename, "w") as fh:
         fh.write(content)

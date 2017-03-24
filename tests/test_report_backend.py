@@ -4,11 +4,11 @@ import pytest
 
 from lemoncheesecake.reporting import Report, load_report, save_report, XmlBackend, JsonBackend
 from lemoncheesecake.reporting.backends.xml import \
-    save_report_into_file as xml_save, \
-    load_report_from_file as xml_load
+    save_report_into_file as save_xml, \
+    load_report_from_file as load_xml
 from lemoncheesecake.reporting.backends.json_ import \
-    save_report_into_file as json_save, \
-    load_report_from_file as json_load
+    save_report_into_file as save_json, \
+    load_report_from_file as load_json
 
 from helpers import assert_report
 
@@ -21,28 +21,26 @@ def sample_report():
     report.report_generation_time = ts
     return report
 
-def test_load_report_xml(tmpdir, sample_report):
-    filename = tmpdir.join("report.xml").strpath
-    xml_save(sample_report, filename, indent_level=4)
-    report, backend = load_report(tmpdir.join("report.xml").strpath)
-    assert backend.name == "xml"
-    assert_report(report, sample_report)
-
-def test_load_report_json(tmpdir, sample_report):
-    filename = tmpdir.join("report.json").strpath
-    json_save(sample_report, filename)
-    report, backend = load_report(filename)
-    assert backend.name == "json"
+def _test_save_report(tmpdir, sample_report, backend, load_func):
+    filename = tmpdir.join("report").strpath
+    save_report(filename, sample_report, backend)
+    report = load_func(filename)
     assert_report(report, sample_report)
 
 def test_save_report_xml(tmpdir, sample_report):
-    filename = tmpdir.join("report.json").strpath
-    save_report(filename, sample_report, XmlBackend())
-    report = xml_load(filename)
-    assert_report(report, sample_report)
+    _test_save_report(tmpdir, sample_report, XmlBackend(), load_xml)
 
 def test_save_report_json(tmpdir, sample_report):
-    filename = tmpdir.join("report.json").strpath
-    save_report(filename, sample_report, JsonBackend())
-    report = json_load(filename)
+    _test_save_report(tmpdir, sample_report, JsonBackend(), load_json)
+
+def _test_load_report(tmpdir, sample_report, save_func):
+    filename = tmpdir.join("report").strpath
+    save_func(sample_report, filename)
+    report, backend = load_report(filename)
     assert_report(report, sample_report)
+
+def test_load_report_xml(tmpdir, sample_report):
+    _test_load_report(tmpdir, sample_report, save_xml)
+
+def test_load_report_json(tmpdir, sample_report):
+    _test_load_report(tmpdir, sample_report, save_json)
