@@ -12,7 +12,7 @@ from lemoncheesecake.utils import object_has_method
 
 __all__ = (
     "get_available_backends", "ReportingBackend", "ReportingSession",
-    "load_report",
+    "load_report", "save_report",
     "CAPABILITY_REPORTING_SESSION", "CAPABILITY_SAVE_REPORT", "CAPABILITY_LOAD_REPORT"
 )
 
@@ -183,3 +183,8 @@ def load_report(filename, backends=None):
             except InvalidReportFile:
                 pass
     raise InvalidReportFile("Cannot find any suitable report backend to unserialize file '%s'" % filename)
+
+def save_report(filename, report, backend):
+    if not backend.get_capabilities() & CAPABILITY_SAVE_REPORT:
+        raise ProgrammingError("Reporting backend '%s' does not support save operation" % backend.name)
+    backend.save_report(filename, report)
