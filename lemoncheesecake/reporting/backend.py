@@ -4,11 +4,13 @@ Created on Mar 29, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.exceptions import MethodNotImplemented
+from lemoncheesecake.exceptions import MethodNotImplemented, InvalidReportFile,\
+    ProgrammingError
 from lemoncheesecake.utils import object_has_method
 
 __all__ = (
     "get_available_backends", "ReportingBackend", "ReportingSession",
+    "load_report",
     "CAPABILITY_REPORTING_SESSION", "CAPABILITY_SERIALIZE", "CAPABILITY_UNSERIALIZE"
 )
 
@@ -94,10 +96,10 @@ class ReportingBackend:
     
 #     def create_reporting_session(self, report, report_dir):
 #         pass
-#     
+#      
 #     def serialize_report(self, report, report_dir):
 #         pass
-#     
+#      
 #     def unserialize_report(self, report_path):
 #         pass
 
@@ -169,3 +171,14 @@ def get_available_backends():
     from lemoncheesecake.reporting.backends import ConsoleBackend, XmlBackend, JsonBackend, HtmlBackend
 
     return list(filter(lambda b: b.is_available(), [ConsoleBackend(), XmlBackend(), JsonBackend(), HtmlBackend()]))
+
+def load_report(filename, backends=None):
+    if backends == None:
+        backends = get_available_backends()
+    for backend in backends:
+        if backend.get_capabilities() & CAPABILITY_UNSERIALIZE:
+            try:
+                return backend.unserialize_report(filename), backend
+            except InvalidReportFile:
+                pass
+    raise InvalidReportFile("Cannot find any suitable report backend to unserialize file '%s'" % filename)
