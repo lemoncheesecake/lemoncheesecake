@@ -2,7 +2,7 @@ import time
 
 import pytest
 
-from lemoncheesecake.reporting import Report, load_report, save_report, XmlBackend, JsonBackend
+from lemoncheesecake.reporting import Report, XmlBackend, JsonBackend, save_report, load_report, load_reports_from_dir
 from lemoncheesecake.reporting.backends.xml import \
     save_report_into_file as save_xml, \
     load_report_from_file as load_xml
@@ -44,3 +44,13 @@ def test_load_report_xml(tmpdir, sample_report):
 
 def test_load_report_json(tmpdir, sample_report):
     _test_load_report(tmpdir, sample_report, save_json)
+
+def test_load_reports_from_dir(tmpdir, sample_report):
+    save_xml(sample_report, tmpdir.join("report.xml").strpath)
+    save_json(sample_report, tmpdir.join("report.json").strpath)
+    tmpdir.join("report.txt").write("foobar")
+    reports = load_reports_from_dir(tmpdir.strpath)
+    assert_report(reports[0][0], sample_report)
+    assert_report(reports[1][0], sample_report)
+    assert "json" in (reports[0][1].name, reports[1][1].name)
+    assert "xml" in (reports[0][1].name, reports[1][1].name)

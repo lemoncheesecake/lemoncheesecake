@@ -4,7 +4,7 @@ Created on Mar 29, 2016
 @author: nicolas
 '''
 
-import os.path
+import os
 
 from lemoncheesecake.exceptions import MethodNotImplemented, InvalidReportFile,\
     ProgrammingError, method_not_implemented
@@ -12,7 +12,7 @@ from lemoncheesecake.utils import object_has_method
 
 __all__ = (
     "get_available_backends", "ReportingBackend", "ReportingSession",
-    "load_report", "save_report",
+    "save_report", "load_reports_from_dir", "load_report",
     "CAPABILITY_REPORTING_SESSION", "CAPABILITY_SAVE_REPORT", "CAPABILITY_LOAD_REPORT"
 )
 
@@ -183,6 +183,17 @@ def load_report(filename, backends=None):
             except InvalidReportFile:
                 pass
     raise InvalidReportFile("Cannot find any suitable report backend to unserialize file '%s'" % filename)
+
+def load_reports_from_dir(dirname, backends=None):
+    reports = []
+    for filename in [os.path.join(dirname, filename) for filename in os.listdir(dirname)]:
+        if os.path.isfile(filename):
+            try:
+                report, backend = load_report(filename, backends)
+                reports.append((report, backend))
+            except InvalidReportFile:
+                pass
+    return reports
 
 def save_report(filename, report, backend):
     if not backend.get_capabilities() & CAPABILITY_SAVE_REPORT:
