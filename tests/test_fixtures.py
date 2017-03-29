@@ -3,7 +3,7 @@ import sys
 import pytest
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture
+from lemoncheesecake.fixtures import load_fixtures_from_func, FixtureRegistry, BuiltinFixture
 from lemoncheesecake.testsuite import load_testsuite_from_class
 from lemoncheesecake import exceptions
 
@@ -20,7 +20,7 @@ def test_load_from_func():
     def myfixture():
         pass
     
-    fixtures = lcc.load_fixtures_from_func(myfixture)
+    fixtures = load_fixtures_from_func(myfixture)
     
     assert len(fixtures) == 1
     assert fixtures[0].name == "myfixture"
@@ -33,7 +33,7 @@ def test_load_from_func_with_multiple_fixture_names():
     def myfixture():
         pass
     
-    fixtures = lcc.load_fixtures_from_func(myfixture)
+    fixtures = load_fixtures_from_func(myfixture)
     
     assert len(fixtures) == 2
     assert fixtures[0].name == "foo"
@@ -50,7 +50,7 @@ def test_load_from_func_with_parameters():
     def myfixture(foo, bar):
         pass
     
-    fixtures = lcc.load_fixtures_from_func(myfixture)
+    fixtures = load_fixtures_from_func(myfixture)
     
     assert len(fixtures) == 1
     assert fixtures[0].name == "myfixture"
@@ -63,7 +63,7 @@ def test_execute_fixture():
     def myfixture():
         return 42
     
-    fixture = lcc.load_fixtures_from_func(myfixture)[0]
+    fixture = load_fixtures_from_func(myfixture)[0]
     fixture.execute()
     assert fixture.get_result() == 42
 
@@ -82,7 +82,7 @@ def test_execute_fixture_with_yield():
     def myfixture():
         yield 42    
     
-    fixture = lcc.load_fixtures_from_func(myfixture)[0]
+    fixture = load_fixtures_from_func(myfixture)[0]
     fixture.execute()
     assert fixture.get_result() == 42
 
@@ -91,7 +91,7 @@ def test_teardown_fixture():
     def myfixture():
         return 42
     
-    fixture = lcc.load_fixtures_from_func(myfixture)[0]
+    fixture = load_fixtures_from_func(myfixture)[0]
     fixture.execute()
     fixture.get_result()
     fixture.teardown()
@@ -103,7 +103,7 @@ def test_teardown_fixture_with_yield():
         yield 42
         flag.append(True)
     
-    fixture = lcc.load_fixtures_from_func(myfixture)[0]
+    fixture = load_fixtures_from_func(myfixture)[0]
     fixture.execute()
     assert fixture.get_result() == 42
     assert not flag
@@ -115,7 +115,7 @@ def test_execute_fixture_with_parameters():
     def myfixture(val):
         return val * 2
     
-    fixture = lcc.load_fixtures_from_func(myfixture)[0]
+    fixture = load_fixtures_from_func(myfixture)[0]
     fixture.execute({"val": 3})
     assert fixture.get_result() == 6
 
@@ -124,7 +124,7 @@ def test_get_fixture_result_multiple_times():
     def myfixture():
         return 42
     
-    fixture = lcc.load_fixtures_from_func(myfixture)[0]
+    fixture = load_fixtures_from_func(myfixture)[0]
     fixture.execute()
     assert fixture.get_result() == 42
     assert fixture.get_result() == 42
@@ -135,7 +135,7 @@ def test_reset_fixture():
     def myfixture(val):
         return val * 2
     
-    fixture = lcc.load_fixtures_from_func(myfixture)[0]
+    fixture = load_fixtures_from_func(myfixture)[0]
     
     fixture.execute({"val": 3})
     assert fixture.get_result() == 6
@@ -151,7 +151,7 @@ def test_registry_fixture_without_params():
         return 42
 
     registry = FixtureRegistry()
-    registry.add_fixtures(lcc.load_fixtures_from_func(myfixture))
+    registry.add_fixtures(load_fixtures_from_func(myfixture))
     registry.check_dependencies()
 
 def test_registry_fixture_with_params():
@@ -164,8 +164,8 @@ def test_registry_fixture_with_params():
         return foo * 2
 
     registry = FixtureRegistry()
-    registry.add_fixtures(lcc.load_fixtures_from_func(foo))
-    registry.add_fixtures(lcc.load_fixtures_from_func(bar))
+    registry.add_fixtures(load_fixtures_from_func(foo))
+    registry.add_fixtures(load_fixtures_from_func(bar))
     registry.check_dependencies()
 
 def test_registry_fixture_missing_dependency():
@@ -174,7 +174,7 @@ def test_registry_fixture_missing_dependency():
         return foo * 2
 
     registry = FixtureRegistry()
-    registry.add_fixtures(lcc.load_fixtures_from_func(bar))
+    registry.add_fixtures(load_fixtures_from_func(bar))
     with pytest.raises(exceptions.LemonCheesecakeException) as excinfo:
         registry.check_dependencies()
     assert "does not exist" in str(excinfo.value)
@@ -189,8 +189,8 @@ def test_registry_fixture_circular_dependency_direct():
         return foo * 2
 
     registry = FixtureRegistry()
-    registry.add_fixtures(lcc.load_fixtures_from_func(foo))
-    registry.add_fixtures(lcc.load_fixtures_from_func(bar))
+    registry.add_fixtures(load_fixtures_from_func(foo))
+    registry.add_fixtures(load_fixtures_from_func(bar))
     with pytest.raises(exceptions.LemonCheesecakeException) as excinfo:
         registry.check_dependencies()
     assert 'circular' in str(excinfo.value)
@@ -209,9 +209,9 @@ def test_registry_fixture_circular_dependency_indirect():
         return bar * 2
 
     registry = FixtureRegistry()
-    registry.add_fixtures(lcc.load_fixtures_from_func(foo))
-    registry.add_fixtures(lcc.load_fixtures_from_func(bar))
-    registry.add_fixtures(lcc.load_fixtures_from_func(baz))
+    registry.add_fixtures(load_fixtures_from_func(foo))
+    registry.add_fixtures(load_fixtures_from_func(bar))
+    registry.add_fixtures(load_fixtures_from_func(baz))
     with pytest.raises(exceptions.LemonCheesecakeException) as excinfo:
         registry.check_dependencies()
     assert 'circular' in str(excinfo.value)
@@ -222,7 +222,7 @@ def test_registry_fixture_name():
         pass
     
     registry = FixtureRegistry()
-    registry.add_fixtures(lcc.load_fixtures_from_func(foo))
+    registry.add_fixtures(load_fixtures_from_func(foo))
     registry.check_dependencies()
 
 def test_registry_get_fixture_without_param_dependency():
@@ -231,7 +231,7 @@ def test_registry_get_fixture_without_param_dependency():
         return 42
 
     registry = FixtureRegistry()
-    registry.add_fixtures(lcc.load_fixtures_from_func(foo))
+    registry.add_fixtures(load_fixtures_from_func(foo))
     assert registry.get_fixture_dependencies("foo") == []
 
 def test_registry_get_fixture_with_param_dependency():
@@ -244,8 +244,8 @@ def test_registry_get_fixture_with_param_dependency():
         return bar * 2
 
     registry = FixtureRegistry()
-    registry.add_fixtures(lcc.load_fixtures_from_func(foo))
-    registry.add_fixtures(lcc.load_fixtures_from_func(bar))
+    registry.add_fixtures(load_fixtures_from_func(foo))
+    registry.add_fixtures(load_fixtures_from_func(bar))
     assert registry.get_fixture_dependencies("foo") == ["bar"]
 
 def test_registry_get_fixture_with_params_dependency():
@@ -266,10 +266,10 @@ def test_registry_get_fixture_with_params_dependency():
         return bar * baz
 
     registry = FixtureRegistry()
-    registry.add_fixtures(lcc.load_fixtures_from_func(foo))
-    registry.add_fixtures(lcc.load_fixtures_from_func(bar))
-    registry.add_fixtures(lcc.load_fixtures_from_func(baz))
-    registry.add_fixtures(lcc.load_fixtures_from_func(zoub))
+    registry.add_fixtures(load_fixtures_from_func(foo))
+    registry.add_fixtures(load_fixtures_from_func(bar))
+    registry.add_fixtures(load_fixtures_from_func(baz))
+    registry.add_fixtures(load_fixtures_from_func(zoub))
     assert registry.get_fixture_dependencies("foo") == ["zoub", "baz", "bar"]
 
 def test_registry_compatible_scope():
@@ -282,8 +282,8 @@ def test_registry_compatible_scope():
         return bar * 2
 
     registry = FixtureRegistry()
-    registry.add_fixtures(lcc.load_fixtures_from_func(foo))
-    registry.add_fixtures(lcc.load_fixtures_from_func(bar))
+    registry.add_fixtures(load_fixtures_from_func(foo))
+    registry.add_fixtures(load_fixtures_from_func(bar))
     registry.check_dependencies()
 
 def test_registry_incompatible_scope():
@@ -296,8 +296,8 @@ def test_registry_incompatible_scope():
         return bar * 2
 
     registry = FixtureRegistry()
-    registry.add_fixtures(lcc.load_fixtures_from_func(foo))
-    registry.add_fixtures(lcc.load_fixtures_from_func(bar))
+    registry.add_fixtures(load_fixtures_from_func(foo))
+    registry.add_fixtures(load_fixtures_from_func(bar))
     with pytest.raises(exceptions.LemonCheesecakeException) as excinfo:
         registry.check_dependencies()
     assert 'incompatible' in str(excinfo.value)
@@ -308,7 +308,7 @@ def test_registry_forbidden_fixture_name():
         return 0
     
     registry = FixtureRegistry()
-    registry.add_fixtures(lcc.load_fixtures_from_func(fixture_name))
+    registry.add_fixtures(load_fixtures_from_func(fixture_name))
     with pytest.raises(exceptions.FixtureError) as excinfo:
         registry.check_dependencies()
     assert "forbidden" in str(excinfo.value)
@@ -319,7 +319,7 @@ def test_registry_execute_fixture_without_dependency():
         return 42
 
     registry = FixtureRegistry()
-    registry.add_fixtures(lcc.load_fixtures_from_func(foo))
+    registry.add_fixtures(load_fixtures_from_func(foo))
     registry.execute_fixture("foo")
     assert registry.get_fixture_result("foo") == 42
 
@@ -333,8 +333,8 @@ def test_registry_execute_fixture_with_dependency():
         return bar * 2
 
     registry = FixtureRegistry()
-    registry.add_fixtures(lcc.load_fixtures_from_func(foo))
-    registry.add_fixtures(lcc.load_fixtures_from_func(bar))
+    registry.add_fixtures(load_fixtures_from_func(foo))
+    registry.add_fixtures(load_fixtures_from_func(bar))
     registry.execute_fixture("foo")
     assert registry.get_fixture_result("foo") == 42
 
@@ -361,7 +361,7 @@ def build_registry(*executed_fixtures):
 
     registry = FixtureRegistry()
     for func in fix0, fix1, fix2, fix3, fix_:
-        registry.add_fixtures(lcc.load_fixtures_from_func(func))
+        registry.add_fixtures(load_fixtures_from_func(func))
     
     for fixture_name in executed_fixtures:
         registry.execute_fixture(fixture_name)
