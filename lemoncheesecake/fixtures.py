@@ -11,7 +11,11 @@ from lemoncheesecake.importer import import_module, get_matching_files, get_py_f
 from lemoncheesecake.exceptions import FixtureError, ProgrammingError
 from lemoncheesecake.utils import get_distincts_in_list
 
-__all__ = ("fixture", "load_fixtures_from_func")
+__all__ = (
+    "fixture",
+    "load_fixtures_from_func", "load_fixtures_from_file",
+    "load_fixtures_from_files", "load_fixtures_from_directory"
+)
 
 FORBIDDEN_FIXTURE_NAMES = ("fixture_name", )
 
