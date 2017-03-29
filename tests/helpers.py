@@ -15,19 +15,19 @@ import re
 
 import pytest
 
-import lemoncheesecake as lcc
+import lemoncheesecake.api as lcc
 from lemoncheesecake.testsuite.loader import load_testsuites_from_classes
 from lemoncheesecake import runner
 from lemoncheesecake.testsuite import Filter, load_testsuite_from_class
 from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
-from lemoncheesecake.fixtures import FixtureRegistry
+from lemoncheesecake.fixtures import FixtureRegistry, load_fixtures_from_func
 from lemoncheesecake.project import create_project
 
 def build_test_module(name="mytestsuite"):
     return """
-import lemoncheesecake as lcc
+import lemoncheesecake.api as lcc
 
 @lcc.testsuite("Test Suite")
 class {name}:
@@ -38,7 +38,7 @@ class {name}:
 
 def build_fixture_module(name="myfixture"):
     return """
-import lemoncheesecake as lcc
+import lemoncheesecake.api as lcc
 
 @lcc.fixture()
 def {name}():
@@ -76,7 +76,7 @@ def generate_project(project_dir, module_name, module_content, fixtures_content=
 def build_fixture_registry(*funcs):
     registry = FixtureRegistry()
     for func in funcs:
-        registry.add_fixtures(lcc.load_fixtures_from_func(func))
+        registry.add_fixtures(load_fixtures_from_func(func))
     return registry
 
 class TestReportingSession(reporting.ReportingSession):

@@ -13,7 +13,7 @@ import tempfile
 import pytest
 
 from lemoncheesecake.exceptions import *
-import lemoncheesecake as lcc
+import lemoncheesecake.api as lcc
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.worker import Worker
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string

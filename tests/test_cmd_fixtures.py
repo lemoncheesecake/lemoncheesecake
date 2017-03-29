@@ -5,7 +5,7 @@ from helpers import generate_project, cmdout
 
 from lemoncheesecake.cli import main
 
-FIXTURES_MODULE = """import lemoncheesecake as lcc
+FIXTURES_MODULE = """import lemoncheesecake.api as lcc
 
 @lcc.fixture(scope="session_prerun")
 def qux():
@@ -25,7 +25,7 @@ def baz(bar):
     pass
 """
 
-TEST_MODULE = """import lemoncheesecake as lcc
+TEST_MODULE = """import lemoncheesecake.api as lcc
 
 @lcc.testsuite("My Suite")
 class mysuite:
@@ -39,7 +39,7 @@ class mysuite:
     
 """
 
-EMPTY_TEST_MODULE = """import lemoncheesecake as lcc
+EMPTY_TEST_MODULE = """import lemoncheesecake.api as lcc
 
 @lcc.testsuite("My Suite")
 class mysuite:

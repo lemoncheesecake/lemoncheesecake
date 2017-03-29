@@ -2,7 +2,7 @@ import os.path
 
 import pytest
 
-import lemoncheesecake as lcc
+import lemoncheesecake.api as lcc
 from lemoncheesecake.testsuite.loader import load_testsuites_from_directory, load_testsuite_from_file, \
     load_testsuite_from_class, load_testsuites_from_files, load_testsuites_from_classes, load_test_from_function, \
     load_test_from_method, is_test_function
@@ -221,7 +221,7 @@ def test_load_testsuite_from_module_with_all_metadata(tmpdir):
 def test_load_testsuite_from_module_with_test_function(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
-        """import lemoncheesecake as lcc
+        """import lemoncheesecake.api as lcc
 
 TESTSUITE = {
     "description": "My Suite"
@@ -239,7 +239,7 @@ def mytest():
 def test_load_testsuite_from_module_with_sub_suite(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
-        """import lemoncheesecake as lcc
+        """import lemoncheesecake.api as lcc
 
 TESTSUITE = {
     "description": "My Suite"
@@ -259,7 +259,7 @@ class subsuite:
 def test_load_testsuite_from_module_with_hooks(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
-        """import lemoncheesecake as lcc
+        """import lemoncheesecake.api as lcc
  
 TESTSUITE = {
     "description": "My Suite"
@@ -289,7 +289,7 @@ def mytest():
 
 def test_load_testsuites_from_directory_with_suite_and_sub_suite(tmpdir):
     tmpdir.join("mysuite.py").write(
-        """import lemoncheesecake as lcc
+        """import lemoncheesecake.api as lcc
 
 TESTSUITE = {
     "description": "My Suite"
@@ -301,7 +301,7 @@ def mytest1():
 """)
     
     tmpdir.mkdir("mysuite").join("subsuite.py").write(
-        """import lemoncheesecake as lcc
+        """import lemoncheesecake.api as lcc
 
 TESTSUITE = {
     "description": "Sub Suite"

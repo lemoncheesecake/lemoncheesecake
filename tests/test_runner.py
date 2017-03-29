@@ -16,7 +16,7 @@ from lemoncheesecake.testsuite import Filter, load_testsuites_from_classes
 from lemoncheesecake.worker import Worker
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.exceptions import *
-import lemoncheesecake as lcc
+import lemoncheesecake.api as lcc
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 
 from helpers import reporting_session, run_testsuite, build_fixture_registry

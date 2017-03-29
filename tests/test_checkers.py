@@ -8,7 +8,7 @@ import sys
 import re
 from types import FunctionType
 
-import lemoncheesecake as lcc
+import lemoncheesecake.api as lcc
 
 from helpers import reporting_session, run_func_in_test
 

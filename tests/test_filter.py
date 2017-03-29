@@ -1,4 +1,4 @@
-import lemoncheesecake as lcc
+import lemoncheesecake.api as lcc
 from lemoncheesecake.testsuite.filter import Filter
 
 from helpers import run_testsuite, reporting_session
