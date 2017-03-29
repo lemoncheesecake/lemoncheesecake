@@ -27,9 +27,6 @@ def _test_save_report(tmpdir, sample_report, backend, load_func):
     report = load_func(filename)
     assert_report(report, sample_report)
 
-def test_save_report_xml(tmpdir, sample_report):
-    _test_save_report(tmpdir, sample_report, XmlBackend(), load_xml)
-
 def test_save_report_json(tmpdir, sample_report):
     _test_save_report(tmpdir, sample_report, JsonBackend(), load_json)
 
@@ -39,18 +36,26 @@ def _test_load_report(tmpdir, sample_report, save_func):
     report, backend = load_report(filename)
     assert_report(report, sample_report)
 
-def test_load_report_xml(tmpdir, sample_report):
-    _test_load_report(tmpdir, sample_report, save_xml)
-
 def test_load_report_json(tmpdir, sample_report):
     _test_load_report(tmpdir, sample_report, save_json)
 
-def test_load_reports_from_dir(tmpdir, sample_report):
-    save_xml(sample_report, tmpdir.join("report.xml").strpath)
-    save_json(sample_report, tmpdir.join("report.json").strpath)
-    tmpdir.join("report.txt").write("foobar")
-    reports = load_reports_from_dir(tmpdir.strpath)
-    assert_report(reports[0][0], sample_report)
-    assert_report(reports[1][0], sample_report)
-    assert "json" in (reports[0][1].name, reports[1][1].name)
-    assert "xml" in (reports[0][1].name, reports[1][1].name)
+try:
+    import lxml
+except ImportError:
+    pass
+else:
+    def test_load_report_xml(tmpdir, sample_report):
+        _test_load_report(tmpdir, sample_report, save_xml)
+
+    def test_save_report_xml(tmpdir, sample_report):
+        _test_save_report(tmpdir, sample_report, XmlBackend(), load_xml)
+
+    def test_load_reports_from_dir(tmpdir, sample_report):
+        save_xml(sample_report, tmpdir.join("report.xml").strpath)
+        save_json(sample_report, tmpdir.join("report.json").strpath)
+        tmpdir.join("report.txt").write("foobar")
+        reports = load_reports_from_dir(tmpdir.strpath)
+        assert_report(reports[0][0], sample_report)
+        assert_report(reports[1][0], sample_report)
+        assert "json" in (reports[0][1].name, reports[1][1].name)
+        assert "xml" in (reports[0][1].name, reports[1][1].name)
