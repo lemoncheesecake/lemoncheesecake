@@ -11,6 +11,10 @@ from lemoncheesecake.utils import get_distincts_in_list
 
 TESTSUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
 
+__all__ = (
+    "Test", "TestSuite", "walk_testsuites", "walk_tests", "filter_testsuites"
+)
+
 class Test:
     def __init__(self, name, description, callback):
         self.parent_suite = None
