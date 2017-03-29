@@ -15,7 +15,7 @@ import re
 
 import pytest
 
-import lemoncheesecake as lcc
+import lemoncheesecake.api as lcc
 from lemoncheesecake.testsuite.loader import load_testsuites_from_classes
 from lemoncheesecake import runner
 from lemoncheesecake.testsuite import Filter, load_testsuite_from_class
@@ -27,7 +27,7 @@ from lemoncheesecake.project import create_project
 
 def build_test_module(name="mytestsuite"):
     return """
-import lemoncheesecake as lcc
+import lemoncheesecake.api as lcc
 
 @lcc.testsuite("Test Suite")
 class {name}:
@@ -38,7 +38,7 @@ class {name}:
 
 def build_fixture_module(name="myfixture"):
     return """
-import lemoncheesecake as lcc
+import lemoncheesecake.api as lcc
 
 @lcc.fixture()
 def {name}():

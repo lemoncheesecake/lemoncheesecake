@@ -5,7 +5,7 @@ from helpers import generate_project, cmdout
 
 from lemoncheesecake.cli import main
 
-TEST_MODULE = """import lemoncheesecake as lcc
+TEST_MODULE = """import lemoncheesecake.api as lcc
 
 @lcc.testsuite("My Suite")
 class mysuite:
@@ -19,13 +19,13 @@ class mysuite:
     
 """
 
-FIXTURE_MODULE = """import lemoncheesecake as lcc
+FIXTURE_MODULE = """import lemoncheesecake.api as lcc
 @lcc.fixture()
 def fixt():
     return 42
 """
 
-TEST_MODULE_USING_FIXTURES = """import lemoncheesecake as lcc
+TEST_MODULE_USING_FIXTURES = """import lemoncheesecake.api as lcc
 
 @lcc.testsuite("My Suite")
 class mysuite:

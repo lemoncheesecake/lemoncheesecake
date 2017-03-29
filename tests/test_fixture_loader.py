@@ -7,7 +7,7 @@ from lemoncheesecake.fixtures import load_fixtures_from_file, load_fixtures_from
 
 @pytest.fixture()
 def dir_with_fixtures(tmpdir):
-    module_content = """import lemoncheesecake as lcc
+    module_content = """import lemoncheesecake.api as lcc
 
 @lcc.fixture()
 def bar():

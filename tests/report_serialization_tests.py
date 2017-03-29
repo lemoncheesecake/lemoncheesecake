@@ -10,7 +10,7 @@ from __future__ import print_function
 
 import sys
 
-import lemoncheesecake as lcc
+import lemoncheesecake.api as lcc
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.worker import Worker
 

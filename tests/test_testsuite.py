@@ -8,7 +8,7 @@ Created on Sep 30, 2016
 
 import pytest
 
-import lemoncheesecake as lcc
+import lemoncheesecake.api as lcc
 from lemoncheesecake.testsuite import load_testsuite_from_class, add_test_in_testsuite, add_tests_in_testsuite
 from lemoncheesecake.exceptions import ProgrammingError, InvalidMetadataError
 

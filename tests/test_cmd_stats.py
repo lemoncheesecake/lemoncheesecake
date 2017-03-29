@@ -5,7 +5,7 @@ from helpers import generate_project, cmdout
 
 from lemoncheesecake.cli import main
 
-TEST_MODULE = """import lemoncheesecake as lcc
+TEST_MODULE = """import lemoncheesecake.api as lcc
 
 @lcc.testsuite("My Suite")
 @lcc.prop("suite_prop", "suite_prop_value")
@@ -28,7 +28,7 @@ class mysuite:
     
 """
 
-EMPTY_TEST_MODULE = """import lemoncheesecake as lcc
+EMPTY_TEST_MODULE = """import lemoncheesecake.api as lcc
 
 @lcc.testsuite("My Suite")
 class mysuite:
