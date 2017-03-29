@@ -7,13 +7,12 @@ Created on Mar 19, 2016
 from __future__ import print_function
 
 import sys
-import re
 
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
 from lemoncheesecake.utils import IS_PYTHON3, humanize_duration
 from lemoncheesecake.reporting.backends import terminalsize
 
-from colorama import init, Style, Fore
+import colorama
 from termcolor import colored
 
 class LinePrinter:
@@ -51,15 +50,15 @@ class LinePrinter:
         self.prev_len = 0
 
 class ConsoleReportingSession(ReportingSession):
-    def __init__(self, report, report_dir, terminal_width, show_test_full_path):
-        ReportingSession.__init__(self, report, report_dir)
-        init() # init colorama
-        self.lp = LinePrinter(terminal_width)
+    def __init__(self, terminal_width, show_test_full_path, report):
         self.terminal_width = terminal_width
+        self.show_test_full_path = show_test_full_path
+        self.report = report
+        colorama.init()
+        self.lp = LinePrinter(self.terminal_width)
         self.context = None
         self.custom_step_prefix = None
         self.current_suite = None
-        self.show_test_full_path = show_test_full_path
     
     def get_test_label(self, test):
         if self.show_test_full_path:
@@ -158,5 +157,5 @@ class ConsoleBackend(ReportingBackend):
         self.terminal_width = width
         self.show_test_full_path = False
 
-    def create_reporting_session(self, report, report_dir):
-        return ConsoleReportingSession(report, report_dir, self.terminal_width, self.show_test_full_path)
+    def create_reporting_session(self, report_dir, report):
+        return ConsoleReportingSession(self.terminal_width, self.show_test_full_path, report)

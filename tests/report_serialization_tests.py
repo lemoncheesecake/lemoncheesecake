@@ -24,8 +24,9 @@ def do_test_serialization(suites, backend, tmpdir, worker=None):
     
     report = get_runtime().report
     
-    backend.serialize_report(report, tmpdir.strpath)
-    unserialized_report = backend.unserialize_report(tmpdir.strpath)
+    report_filename = tmpdir.join("report").strpath
+    backend.save_report(report_filename, report)
+    unserialized_report = backend.load_report(report_filename)
     
 #     dump_report(unserialized_report)
 

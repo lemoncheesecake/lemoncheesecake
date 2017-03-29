@@ -54,7 +54,7 @@ class _Runtime:
     
     def initialize_reporting_sessions(self):
         for backend in self.reporting_backends:
-            session = backend.create_reporting_session(self.report, self.report_dir)
+            session = backend.create_reporting_session(self.report_dir, self.report)
             self.reporting_sessions.append(session)
             
     def for_each_reporting_sessions(self, callback):

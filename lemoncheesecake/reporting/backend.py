@@ -4,17 +4,21 @@ Created on Mar 29, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.exceptions import MethodNotImplemented
+import os
+
+from lemoncheesecake.exceptions import MethodNotImplemented, InvalidReportFile,\
+    ProgrammingError, method_not_implemented
 from lemoncheesecake.utils import object_has_method
 
 __all__ = (
     "get_available_backends", "ReportingBackend", "ReportingSession",
-    "CAPABILITY_REPORTING_SESSION", "CAPABILITY_SERIALIZE", "CAPABILITY_UNSERIALIZE"
+    "save_report", "load_reports_from_dir", "load_report",
+    "CAPABILITY_REPORTING_SESSION", "CAPABILITY_SAVE_REPORT", "CAPABILITY_LOAD_REPORT"
 )
 
 CAPABILITY_REPORTING_SESSION = 0x1
-CAPABILITY_SERIALIZE = 0x2
-CAPABILITY_UNSERIALIZE = 0x4
+CAPABILITY_SAVE_REPORT = 0x2
+CAPABILITY_LOAD_REPORT = 0x4
 
 SAVE_AT_END_OF_TESTS = 1
 SAVE_AT_EACH_TESTSUITE = 2
@@ -23,10 +27,6 @@ SAVE_AT_EACH_FAILED_TEST = 4
 SAVE_AT_EACH_EVENT = 5
 
 class ReportingSession:
-    def __init__(self, report, report_dir):
-        self.report = report
-        self.report_dir = report_dir
-    
     def begin_tests(self):
         pass
     
@@ -86,29 +86,30 @@ class ReportingBackend:
         capabilities = 0
         if object_has_method(self, "create_reporting_session"):
             capabilities |= CAPABILITY_REPORTING_SESSION
-        if object_has_method(self, "serialize_report"):
-            capabilities |= CAPABILITY_SERIALIZE
-        if object_has_method(self, "unserialize_report"):
-            capabilities |= CAPABILITY_UNSERIALIZE
+        if object_has_method(self, "save_report"):
+            capabilities |= CAPABILITY_SAVE_REPORT
+        if object_has_method(self, "load_report"):
+            capabilities |= CAPABILITY_LOAD_REPORT
         return capabilities
     
-#     def create_reporting_session(self, report, report_dir):
-#         pass
-#     
-#     def serialize_report(self, report, report_dir):
-#         pass
-#     
-#     def unserialize_report(self, report_path):
-#         pass
+#     def create_reporting_session(self, dir, report):
+#         method_not_implemented("create_reporting_session", self)
+#       
+#     def save_report(self, filename, report):
+#         method_not_implemented("serialize_report", self)
+#       
+#     def load_report(self, filename):
+#         method_not_implemented("unserialize_report", self)
 
 class FileReportSession(ReportingSession):
-    def __init__(self, report, report_dir, backend, save_mode):
-        ReportingSession.__init__(self, report, report_dir)
-        self.backend = backend
+    def __init__(self, report_filename, report, save_func, save_mode):
+        self.report_filename = report_filename
+        self.report = report
+        self.save_func = save_func
         self.save_mode = save_mode
     
     def save(self):
-        self.backend.serialize_report(self.report, self.report_dir)
+        self.save_func(self.report_filename, self.report)
     
     def _handle_code_end(self, is_failure):
         if (self.save_mode == SAVE_AT_EACH_TEST) or (self.save_mode == SAVE_AT_EACH_FAILED_TEST and is_failure):
@@ -159,13 +160,42 @@ class FileReportBackend(ReportingBackend):
     def __init__(self, save_mode=SAVE_AT_EACH_FAILED_TEST):
         self.save_mode = save_mode
     
-    def serialize_report(self, report, report_dir):
-        raise MethodNotImplemented(self, "serialize_report")
+    def get_report_filename(self):
+        method_not_implemented("get_report_filename", self)
     
-    def create_reporting_session(self, report, report_dir):
-        return FileReportSession(report, report_dir, self, self.save_mode)
+    def create_reporting_session(self, report_dir, report):
+        return FileReportSession(
+            os.path.join(report_dir, self.get_report_filename()), report, self.save_report, self.save_mode
+        )
 
 def get_available_backends():
     from lemoncheesecake.reporting.backends import ConsoleBackend, XmlBackend, JsonBackend, HtmlBackend
 
     return list(filter(lambda b: b.is_available(), [ConsoleBackend(), XmlBackend(), JsonBackend(), HtmlBackend()]))
+
+def load_report(filename, backends=None):
+    if backends == None:
+        backends = get_available_backends()
+    for backend in backends:
+        if backend.get_capabilities() & CAPABILITY_LOAD_REPORT:
+            try:
+                return backend.load_report(filename), backend
+            except InvalidReportFile:
+                pass
+    raise InvalidReportFile("Cannot find any suitable report backend to unserialize file '%s'" % filename)
+
+def load_reports_from_dir(dirname, backends=None):
+    reports = []
+    for filename in [os.path.join(dirname, filename) for filename in os.listdir(dirname)]:
+        if os.path.isfile(filename):
+            try:
+                report, backend = load_report(filename, backends)
+                reports.append((report, backend))
+            except InvalidReportFile:
+                pass
+    return reports
+
+def save_report(filename, report, backend):
+    if not backend.get_capabilities() & CAPABILITY_SAVE_REPORT:
+        raise ProgrammingError("Reporting backend '%s' does not support save operation" % backend.name)
+    backend.save_report(filename, report)

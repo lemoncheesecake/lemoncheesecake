@@ -13,6 +13,7 @@ from lemoncheesecake.reporting.backend import FileReportBackend, SAVE_AT_EACH_FA
 from lemoncheesecake.reporting.report import (LogData, CheckData, AttachmentData, StepData,
                                               TestData, HookData, TestSuiteData, Report,
                                               format_timestamp, parse_timestamp)
+from lemoncheesecake.exceptions import InvalidReportFile
 
 JS_PREFIX = "var reporting_data = "
 
@@ -86,8 +87,9 @@ def _serialize_testsuite_data(suite):
     
     return json_suite
 
-def serialize_report(report):
+def serialize_report_into_json(report):
     serialized = _dict(
+        "lemoncheesecake_report_version", 1.0,
         "start_time", _serialize_time(report.start_time),
         "end_time", _serialize_time(report.end_time),
         "generation_time", _serialize_time(report.report_generation_time),
@@ -105,8 +107,8 @@ def serialize_report(report):
     
     return serialized
 
-def serialize_report_into_file(data, filename, javascript_compatibility=True, pretty_formatting=False):
-    report = serialize_report(data)
+def save_report_into_file(data, filename, javascript_compatibility=True, pretty_formatting=False):
+    report = serialize_report_into_json(data)
     file = open(filename, "w")
     if javascript_compatibility:
         file.write(JS_PREFIX)
@@ -171,13 +173,21 @@ def _unserialize_testsuite_data(js, parent=None):
     
     return suite
 
-def unserialize_report_from_file(filename):
+def load_report_from_file(filename):
     report = Report()
     file = open(filename, "r")
     content = file.read()
     file.close()
     content = re.sub("^" + JS_PREFIX, "", content)
-    js = json.loads(content)
+    
+    try:
+        js = json.loads(content)
+    except ValueError as e:
+        raise InvalidReportFile(str(e))
+    
+    if "lemoncheesecake_report_version" not in js:
+        raise InvalidReportFile("Cannot find 'lemoncheesecake_report_version' in JSON")
+    
     report.info = js["info"]
     report.stats = js["stats"]
     report.start_time = _unserialize_time(js["start_time"])
@@ -202,13 +212,14 @@ class JsonBackend(FileReportBackend):
         self.javascript_compatibility = javascript_compatibility
         self.pretty_formatting = pretty_formatting
     
-    def serialize_report(self, report, report_dir):
-        serialize_report_into_file(
-            report, os.path.join(report_dir, "report.json"),
+    def get_report_filename(self):
+        return "report.json"
+    
+    def save_report(self, filename, report):
+        save_report_into_file(
+            report, filename,
             javascript_compatibility=self.javascript_compatibility, pretty_formatting=self.pretty_formatting
         )
     
-    def unserialize_report(self, report_path):
-        if os.path.isdir(report_path):
-            report_path = os.path.join(report_path, "report.json")
-        return unserialize_report_from_file(report_path)
+    def load_report(self, filename):
+        return load_report_from_file(filename)

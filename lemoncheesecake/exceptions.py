@@ -28,7 +28,10 @@ class ProjectError(LemonCheesecakeException):
 
 class MethodNotImplemented(ProgrammingError):
     def __init__(self, obj, method_name):
-        ProgrammingError.__init__(self, "Class '%s' must implement the method '%s'" % (obj.__class__._name__, method_name))
+        ProgrammingError.__init__(self, "Class '%s' must implement the method '%s'" % (obj.__class__.__name__, method_name))
+
+def method_not_implemented(method_name, obj):
+    raise MethodNotImplemented(obj, method_name)
 
 class ImportTestSuiteError(LemonCheesecakeException):
     pass
@@ -61,6 +64,9 @@ class AbortAllTests(LemonCheesecakeException):
         LemonCheesecakeException.__init__(self, reason)
 
 class UserError(LemonCheesecakeException):
+    pass
+
+class InvalidReportFile(LemonCheesecakeException):
     pass
 
 def serialize_current_exception(show_stacktrace=True):
