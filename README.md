@@ -21,24 +21,38 @@ creates a new project directory "myproject" containing one file "project.py" (th
 
 ## Writing a testsuite
 
-A lemoncheesecake testsuite is a class a decorated with `@testsuite` and contains tests and/or sub testsuites:
-```python
- # tests/my_first_testsuite.py file:
-from lemoncheesecake import *
+A testsuite can be represented either:
 
-@testsuite("My first testsuite")
-class my_first_testsuite:
-    @test("Some test")
-    def some_test(self):
-        check_str_eq("value", "foo", "foo")
-```
+- as a module, each test is a function decorated with `@lcc.test`:
+  ```python
+  # tests/my_first_testsuite.py:
+  import lemoncheesecake.api as lcc
 
-The code above declares:
+  TESTSUITE = {
+      "description": "My first testsuite"
+  }
 
-- a testsuite whose name is `my_first_testsuite` (the suite's name and description can be set through the `name` and `description` attributes of the testsuite class, otherwise they will be set to the class name)
-- a test whose id is `some_test` and description is `Some test`
+  @lcc.test("My first test")
+  def my_first_test():
+      lcc.check_str_eq("value", "foo", "foo")
+  ```
+- as a class (in this case the class name must match the module name), each test is a method decorated with `@lcc.test`:
+  ```python
+  # tests/my_first_testsuite.py:
+  import lemoncheesecake.api as lcc
 
-All lemoncheesecake functions and classes used in test modules can be imported safely through a wild import of the `lemoncheesecake` package (like in the example above).
+  @lcc.testsuite("My first testsuite")
+  class my_first_testsuite:
+      @lcc.test("My first test")
+      def my_first_test():
+          lcc.check_str_eq("value", "foo", "foo")
+  ```
+
+The two examples above declare:
+- a testsuite whose name is `my_first_testsuite` (the module/class name) and description is `My first testsuite`
+- a test whose name is `my_first_test` (the function/method name) and description is `My first test`
+
+The `lemoncheesecake.api` module (aliased to lcc to be more developer-friendly) contains the lemoncheesecake test API needed to write tests.
 
 ## Running the tests
 
@@ -101,35 +115,35 @@ The generated HTML report is available in report/report.html:
 
 # Writing tests
 
-Lemoncheeseacke provides several API functions to check data and to set various information into the test report.
+Lemoncheesecake provides several API functions to check data and to set various information into the test report.
 
 ## Checkers
 
 lemoncheesecake comes with a wide variety of checkers that allow you to check if values fulfill given conditions, examples:
 ```python
-@test("Some test")
-def some_test(self):
-    check_eq("my value", 2 + 2, 4)
-    check_str_not_eq("my string", "foobaz", "foobar")
-    check_gt("other value", 5, 2)
+@lcc.test("Some test")
+def some_test():
+    lcc.check_eq("my value", 2 + 2, 4)
+    lcc.check_str_not_eq("my string", "foobaz", "foobar")
+    lcc.check_gt("other value", 5, 2)
 ```
 
 Checker functions like `check_int_eq` or `check_float_gteq` also perform a check on the actual value type, meaning:
 ```python
-check_int_eq("my value", 2.0, 2)
+lcc.check_int_eq("my value", 2.0, 2)
 ```
 will fail, whereas:
 
 ```python
-check_eq("my value", 2.0, 2)
+lcc.check_eq("my value", 2.0, 2)
 ```
 will succeed.
 
 All these checkers are also available in a dict variant (where the value to check is a dict entry) handling a possible key error:
 ```python
 d = {"foo": 42}
-check_dictval_eq("foo", d, 2)
-check_dictval_int_gt("bar", d, 3) # will properly fail by indicating that "bar" is not present
+lcc.check_dictval_eq("foo", d, 2)
+lcc.check_dictval_int_gt("bar", d, 3) # will properly fail by indicating that "bar" is not present
 ```
 
 `check_` functions return `True` if the check succeed and return `False` otherwise. All `check_` functions have their `assert_` equivalent that returns no value if the assertion succeeds and stops the test (by raising `AbortTest`) otherwise.
@@ -146,30 +160,30 @@ lemoncheesecake provides logging functions that give the user the ability to log
 - `log_error`: this log will set the test as failed
 
 ```python
-log_debug("Some debug message")
-log_info("More important, informational message")
-log_warn("Something looks abnormal")
-log_error("Something bad happened")
+lcc.log_debug("Some debug message")
+lcc.log_info("More important, informational message")
+lcc.log_warn("Something looks abnormal")
+lcc.log_error("Something bad happened")
 ```
 
 Steps provide a way to organize your checks and logs when they tend to be quite large:
 ```python
-set_step("Prepare stuff for test")
+lcc.set_step("Prepare stuff for test")
 value = 42
-log_info("Retrieve data for %d" % value)
+lcc.log_info("Retrieve data for %d" % value)
 data = some_function_that_provide_data(value)
-log_info("Got data: %s" % data)
+lcc.log_info("Got data: %s" % data)
 
-set_step("Check data")
-check_dictval_eq(data, "foo", 21)
-check_dictval_eq(data, "bar", 42)
+lcc.set_step("Check data")
+lcc.check_dictval_eq(data, "foo", 21)
+lcc.check_dictval_eq(data, "bar", 42)
 ```
 
 ## Attachments
 
 Within a test, you also have the possibility to attach files to the report:
 ```python
-save_attachment_file(filename, "The application screenshot")
+lcc.save_attachment_file(filename, "The application screenshot")
 ```
 
 The file will be copied into the report dir and is prefixed by a unique value, making it possible to save multiple times an attachment with the same name. The attachment description is optional (the given filename will be used as a description).
@@ -178,42 +192,45 @@ There are other ways to save attachment files depending on your need.
 
 If the file you want to save is loaded in memory:
 ```python
-save_attachment_content(image_data, "screenshot.png", "The application screenshot")
+lcc.save_attachment_content(image_data, "screenshot.png", "The application screenshot")
 ```
 
 If you need the effective file path to write into:
 ```python
-path = prepare_attachment("screenshot.png", "The application screenshot")
+path = lcc.prepare_attachment("screenshot.png", "The application screenshot")
 with open(path, "w") as fh:
     fh.write(image_data)
 ```
 
 ## Fixtures
 
-Lemoncheesecake provides a fixture system similar to what pytest provides (please refer to: http://doc.pytest.org/en/latest/fixture.html#fixture).
+Lemoncheesecake provides a fixture system similar to what pytest offers (please refer to: http://doc.pytest.org/en/latest/fixture.html#fixture).
 Fixtures are a powerful and modular way to inject dependencies into your tests.
 
 ```python
- # fixtures/myfixtures.py:
+# fixtures/myfixtures.py:
+import lemoncheesecake.api as lcc
 import httplib
 
-@fixture(scope="session")
+@lcc.fixture(scope="session")
 def conn():
     return httplib.HTTPSConnection("www.someonlineapi.io")
 
- # tests/my_suite.py:
-from lemoncheesecake import *
+# tests/my_suite.py:
+import lemoncheesecake.api as lcc
 
-@testsuite("My Suite")
-class my_suite:
-    @test("Some test")
-    def some_test(self, conn):
-        conn.request("GET", "/some/resource")
-        resp =  conn.getresponse()
+TESTSUITE = {
+    "description": "My Suite"
+}
+
+@test("Some test")
+def some_test(self, conn):
+    conn.request("GET", "/some/resource")
+    resp =  conn.getresponse()
 ```
 
-Four scopes are supported: "session_prerun", "session", "testsuite" and "test" which is the default. Like in pytest:
-- fixture teardown can be implemented using yield to initially return the fixture value. 
+Four scopes are supported: `session_prerun`, `session`, `testsuite` and `test` which is the default. Like in pytest:
+- fixture teardown can be implemented using yield to initially return the fixture value.
 - fixtures can be used in fixture
 
 Lemoncheesecake provides a special builtin fixtures named **cli_args** that can be used to access custom command line arguments previous setup by the function referenced by **CLI_EXTRA_ARGS** parameter of project.py file.
@@ -244,15 +261,13 @@ WORKERS = {"myworker": MyWorker()}
 ```
 
 Then, you can access and use the worker through the name you associated it to:
-```
+```python
  # tests/my_suite.py:
-from lemoncheesecake import *
+[...]
 
-@testsuite("My Suite")
-class my_suite:
-    @test("Some test")
-    def some_test(self):
-        self.myworker.do_some_operation(42)
+def some_test():
+    worker = lcc.get_worker("myworker")
+    myworker.do_some_operation(42)
 ```
 
 The Worker class provides three hooks detailed in the API documentation:
@@ -263,38 +278,58 @@ The Worker class provides three hooks detailed in the API documentation:
 
 # Testsuites hierarchy
 
-A testsuite can also contain sub testsuites.
+Sub testsuites can be declared in a testsuite in a lot of different ways:
 
-There are various ways to include sub testsuites in a testsuite.
+- as classes in testsuite module:
+  ```python
+  TESTSUITE = {
+    "description": "Parent suite"
+  }
 
-By referencing it through the `sub_suite` attribute of the parent suite:
-```python
-@testsuite("My sub testsuite")
-class my_sub_testsuite:
-    pass
+  @lcc.test("Test A")
+  def test_a():
+      pass
 
-@testsuite("my main testsuite")
-class my_main_testsuite:
-    sub_suites = [my_sub_testsuite]
+  @lcc.testsuite("Child suite 1")
+  class child_suite_1:
+      @lcc.test("Test B")
+      def test_b(self):
+          pass
+
+  @lcc.testsuite("Child suite 2")
+  class child_suite_2:
+      @lcc.test("Test C")
+      def test_c(self):
+          pass
 ```
+- by referencing it through the `sub_suites` attribute of the parent testsuite class:
+  ```python
+  @lcc.testsuite("Child suite")
+  class child_suite:
+      pass
 
-Through a nested class:
-```python
-@testsuite("my main testsuite")
-class my_main_testsuite:
-    @testsuite("My sub testsuite")
-    class my_sub_testsuite:
-        pass
-```
+  @lcc.testsuite("Parent suite")
+  class parent_suite:
+      sub_suites = [child_suite]
+  ```
+- using nested class:
+  ```python
+  @lcc.testsuite("Parent suite")
+  class parent_suite:
+      @lcc.testsuite("Child suite")
+      class child_suite:
+          pass
+  ```
+- by putting them in modules stored in a directory that matches the parent module name:
+  ```shell
+  $ tree
+  .
+  ├── parent_suite
+  │   └── child_suite.py
+  └── parent_suite.py
 
-When using `import_testsuites_*` functions, sub testsuites will be searched within a directory named from the parent test module:
-```shell
-$ ls -R
-my_main_testsuite	my_main_testsuite.py
-
-./my_main_testsuite:
-my_sub_testsuite.py
-```
+  1 directory, 2 files
+  ```
 
 # Testsuite setup and teardown methods
 
@@ -312,56 +347,73 @@ Note that:
 
 # Metadata
 
-Various metadata can be associated to tests and testsuites:
+Various metadata can be associated to tests:
 
 - tags: they are simple keywords used to tag tests or testsuites that have a particular characteristic:
+  ```python
+  @lcc.test("Test something")
+  @lcc.tags("important")
+  def test_something(self):
+      pass
 
-```python
-@tags("important")
-@test("Test something")
-def test_something(self):
-    pass
+  @lcc.test("Test something else")
+  @lcc.tags("slow")
+  def test_something_else(self):
+      pass
 
-@tags("slow")
-@test("Test something else")
-def test_something_else(self):
-    pass
-
-@tags("slow", "deprecated")
-@test("Test something else again")
-def test_something_else_again(self):
-    pass
-```
+  @lcc.test("Test something else again")
+  @lcc.tags("slow", "deprecated")
+  def test_something_else_again(self):
+      pass
+  ```
 - properties: they are used for keywords that have a (closed) choice of values:
+  ```python
+  @lcc.test("Test something")
+  @lcc.prop("type", "acceptance")
+  def test_something(self):
+      pass
 
-```python
-@prop("type", "acceptance")
-@test("Test something")
-def test_something(self):
-    pass
-
-@prop("type", "destructive")
-@test("Test something else")
-def test_something_else(self):
-    pass
-```
+  @lcc.test("Test something else")
+  @lcc.prop("type", "destructive")
+  def test_something_else(self):
+      pass
+  ```
 - links: they are used to associate a link (with an optional label) to a given test or testsuite:
+  ```python
+  @lcc.test("Test something")
+  @lcc.link("http://my.bug.tracker/issue/1234", "TICKET-1234")
+  def test_something(self):
+      pass
+
+  @lcc.test("Test something else")
+  @lcc.link("http://my.bug.tracker/issue/5678")
+  def test_something_else(self):
+      pass
+  ```
+
+These decorators can also be applied to testsuite classes:
 
 ```python
-@link("http://my.bug.tracker/issue/1234", "TICKET-1234")
-@test("Test something")
-def test_something(self):
-    pass
-
-@link("http://my.bug.tracker/issue/5678")
-@test("Test something else")
-def test_something_else(self):
-    pass
+@lcc.testsuite("My Suite")
+@lcc.tags("slow")
+class mysuite:
+    [...]
 ```
 
-These metadata:
+Metadata can also be associated to a testsuite module using the TESTSUITE dictionnary:
 
-- can be used to filter the tests to be run (see the `--tag`, `--property` and `--link` of the CLI launcher)
+```python
+TESTSUITE = {
+    "description": "My Suite",
+    "tags": "slow"
+}
+[...]
+```
+
+
+Once, the metadata are set, they:
+
+- can be used to filter the tests to be run (see the `--tag`, `--property` and `--link` of the CLI launcher), in this case a test inherits all these parents metadata
 - will be available in the test report
 
 # Put it all together
@@ -370,6 +422,8 @@ Here is a project/testsuite example. The purpose of the test is to test the omdb
 ```python
  # project.py:
 [...]
+import lemoncheesecake.api as lcc
+
 import urllib
 import urllib2
 import json
@@ -379,36 +433,36 @@ class OmdbapiWorker(Worker):
         self.host = "www.omdbapi.com"
 
     def get_movie_info(self, movie, year):
-        set_step("Make HTTP request")
+        lcc.set_step("Make HTTP request")
         req = urllib2.urlopen("http://{host}/?t={movie}&y={year}&plot=short&r=json".format(
             host=self.host, movie=urllib.quote(movie), year=int(year)
         ))
-        assert_eq("HTTP status code", req.code, 200)
+        lcc.assert_eq("HTTP status code", req.code, 200)
 
         content = req.read()
-        log_info("Response body: %s" % content)
+        lcc.log_info("Response body: %s" % content)
         try:
             return json.loads(content)
         except ValueError:
-            raise AbortTest("The returned JSON is not valid")
+            raise lcc.AbortTest("The returned JSON is not valid")
 
 WORKERS = {"omdb": OmdbapiWorker()}
 [...]
 
  # tests/movies.py
-from lemoncheesecake import *
+import lemoncheesecake.api as lcc
 
-@testsuite("Movies")
+@lcc.testsuite("Movies")
 class movies:
-	@test("Retrieve Matrix main information on omdb")
+	@lcc.test("Retrieve Matrix main information on omdb")
 	def test_matrix(self):
 		data = self.omdb.get_movie_info("matrix", 1999)
-		set_step("Check movie information")
-		check_dictval_str_eq("Title", data, "The Matrix")
-		check_dictval_str_contains("Actors", data, "Keanu Reeves")
-		check_dictval_str_match("Director", data, re.compile(".+Wachow?ski", re.I))
-		if check_dict_has_key("imdbRating", data):
-			check_gt("imdbRating", float(data["imdbRating"]), 8.5)
+		lcc.set_step("Check movie information")
+		lcc.check_dictval_str_eq("Title", data, "The Matrix")
+		lcc.check_dictval_str_contains("Actors", data, "Keanu Reeves")
+		lcc.check_dictval_str_match("Director", data, re.compile(".+Wachow?ski", re.I))
+		if lcc.check_dict_has_key("imdbRating", data):
+			lcc.check_gt("imdbRating", float(data["imdbRating"]), 8.5)
 ```
 
 # Advanced features
