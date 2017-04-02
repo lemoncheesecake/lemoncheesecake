@@ -1,3 +1,12 @@
+# 0.7.0 (2017-04-02)
+
+- **API**: add support for a new kind of testsuites where the a module can be a testsuite and its functions
+  (properly decorated) the tests
+- **API**: the public API that must be used to write testsuites is now accessible through lemoncheesecake.api
+  instead of lemoncheesecake
+- **API**: provide two new generic functions (lemoncheesecake.reporting.{save_report,load_report})
+  to read and write a report from/into file
+
 # 0.6.4 (2017-03-14)
 
 - **lcc stats**: show tests percentage
