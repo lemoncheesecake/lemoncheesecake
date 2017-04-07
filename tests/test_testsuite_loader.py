@@ -236,6 +236,25 @@ def mytest():
     assert test.name == "mytest"
     assert test.description == "My Test"
 
+def test_load_testsuite_from_module_with_test_function_and_fixtures(tmpdir):
+    file = tmpdir.join("mysuite.py")
+    file.write(
+        """import lemoncheesecake.api as lcc
+
+TESTSUITE = {
+    "description": "My Suite"
+}
+
+@lcc.test('My Test')
+def mytest(fixt1, fixt2):
+    pass
+""")
+    suite = load_testsuite_from_file(file.strpath)
+    test = suite.get_tests()[0]
+    assert test.name == "mytest"
+    assert test.description == "My Test"
+    assert test.get_params() == ["fixt1", "fixt2"]
+
 def test_load_testsuite_from_module_with_sub_suite(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(

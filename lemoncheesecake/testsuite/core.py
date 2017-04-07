@@ -26,7 +26,8 @@ class Test:
         self.links = [ ]
     
     def get_params(self):
-        return inspect.getargspec(self.callback).args[1:]
+        params_idx = 1 if inspect.ismethod(self.callback) else 0
+        return inspect.getargspec(self.callback).args[params_idx:]
 
     def get_path(self):
         return self.parent_suite.get_path() + [self]
@@ -185,6 +186,7 @@ class TestSuite:
     
     def get_fixtures(self, filtered=True, recursive=True):
         fixtures = []
+        
         for test in self.get_tests(filtered):
             fixtures.extend(test.get_params())
         if recursive:
