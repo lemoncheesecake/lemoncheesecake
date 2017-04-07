@@ -5,7 +5,8 @@ import urllib2
 import json
 
 from lemoncheesecake.testsuite import load_testsuites_from_directory
-import lemoncheesecake as lcc
+from lemoncheesecake.fixtures import load_fixtures_from_func
+import lemoncheesecake.api as lcc
 
 class OmdbAPI:
     def __init__(self, host):
@@ -37,4 +38,4 @@ def add_cli_args(cli_parser):
 CLI_EXTRA_ARGS = add_cli_args
 
 TESTSUITES = load_testsuites_from_directory("tests")
-FIXTURES = [omdb]
+FIXTURES = load_fixtures_from_func(omdb)

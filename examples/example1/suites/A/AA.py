@@ -1,22 +1,22 @@
-from lemoncheesecake import *
+import lemoncheesecake.api as lcc
 
-@testsuite("AA")
-@link("http://bugtracker.net/tickets/1234")
+@lcc.testsuite("AA")
+@lcc.link("http://bugtracker.net/tickets/1234")
 class AA:
     def setup_suite(self):
-        set_step("hep csdcnlns csdlcsdl cubsd ucds")
-        log_info("some stuff in before suite")
+        lcc.set_step("hep csdcnlns csdlcsdl cubsd ucds")
+        lcc.log_info("some stuff in before suite")
 
     def teardown_suite(self):
-        set_step("hopi csdknclsdc lsdclusbcl ubsd")
-        log_info("some other stuff in after suite")
+        lcc.set_step("hopi csdknclsdc lsdclusbcl ubsd")
+        lcc.log_info("some other stuff in after suite")
 
-    @test("Test of A")
+    @lcc.test("Test of A")
     def test_of_A(self):
-        raise AbortTest("this test cannot be executed")
+        raise lcc.AbortTest("this test cannot be executed")
 
-    @testsuite("AAA")
+    @lcc.testsuite("AAA")
     class AAA:
-        @test("Test of AAA")
+        @lcc.test("Test of AAA")
         def test_of_B(self):
-            assert_eq("value", 1, 2)
+            lcc.assert_eq("value", 1, 2)

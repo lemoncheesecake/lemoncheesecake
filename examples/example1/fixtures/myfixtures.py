@@ -1,4 +1,4 @@
-import lemoncheesecake as lcc
+import lemoncheesecake.api as lcc
 
 @lcc.fixture(scope="session_prerun")
 def fixt0():

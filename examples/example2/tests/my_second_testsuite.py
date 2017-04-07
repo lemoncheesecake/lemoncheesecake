@@ -1,4 +1,4 @@
-import lemoncheesecake as lcc
+import lemoncheesecake.api as lcc
 
 @lcc.testsuite("My second testsuite")
 class my_second_testsuite:
