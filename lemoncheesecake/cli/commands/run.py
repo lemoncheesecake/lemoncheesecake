@@ -36,15 +36,9 @@ class RunCommand(Command):
         project_file = find_project_file()
         default_reporting_backend_names = []
         if project_file:
-            try:
-                project = Project(project_file)
-                default_reporting_backend_names = project.get_active_reporting_backend_names()
-            except:
-                # do nothing if it fails here, otherwise
-                # the user won't even be able to get the command usage
-                pass
-            else:
-                project.add_cli_extra_args(cli_parser)
+            project = Project(project_file)
+            default_reporting_backend_names = project.get_active_reporting_backend_names()
+            project.add_cli_extra_args(cli_parser)
             
         add_filter_args_to_cli_parser(cli_parser)
         cli_parser.add_argument("--report-dir", "-r", required=False, help="Directory where report data will be stored")
