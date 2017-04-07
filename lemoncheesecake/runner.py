@@ -179,25 +179,26 @@ class _Runner:
         ###
         # Setup suite (testsuites and fixtures)
         ###
-        setup_teardown_funcs = []
         teardown_funcs = []
-        setup_teardown_funcs.append([
-            suite.get_hook("setup_suite"), suite.get_hook("teardown_suite")
-        ])
-        setup_teardown_funcs.extend([
-            self.get_fixture_as_funcs(f) for f in self.get_fixtures_to_be_executed_for_testsuite(suite)
-        ])
-
-        if len(list(filter(lambda p: p[0] != None, setup_teardown_funcs))) > 0:
-            self.session.begin_suite_setup()
-            teardown_funcs = self.run_setup_funcs(
-                setup_teardown_funcs, lambda: self.session.current_testsuite_data.suite_setup.has_failure()
-            )
-            self.session.end_suite_setup()
-            if len(teardown_funcs) != len(setup_teardown_funcs):
-                self.abort_testsuite = suite
-        else:
-            teardown_funcs = [p[1] for p in setup_teardown_funcs if p[1] != None]
+        if not self.abort_all_tests:
+            setup_teardown_funcs = []
+            setup_teardown_funcs.append([
+                suite.get_hook("setup_suite"), suite.get_hook("teardown_suite")
+            ])
+            setup_teardown_funcs.extend([
+                self.get_fixture_as_funcs(f) for f in self.get_fixtures_to_be_executed_for_testsuite(suite)
+            ])
+    
+            if len(list(filter(lambda p: p[0] != None, setup_teardown_funcs))) > 0:
+                self.session.begin_suite_setup()
+                teardown_funcs = self.run_setup_funcs(
+                    setup_teardown_funcs, lambda: self.session.current_testsuite_data.suite_setup.has_failure()
+                )
+                self.session.end_suite_setup()
+                if len(teardown_funcs) != len(setup_teardown_funcs):
+                    self.abort_testsuite = suite
+            else:
+                teardown_funcs = [p[1] for p in setup_teardown_funcs if p[1] != None]
 
         ###
         # Run tests

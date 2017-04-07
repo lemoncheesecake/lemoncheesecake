@@ -547,6 +547,28 @@ def test_setup_test_session_error_because_of_fixture(reporting_session):
     assert_report_errors(1)
     assert "teardown" in marker
 
+def test_setup_test_session_error_and_setup_suite(reporting_session):
+    marker = []
+    
+    @lcc.testsuite("MySuite")
+    class MySuite:
+        def setup_suite(self):
+            marker.append("setup_suite")
+        
+        @lcc.test("Some test")
+        def sometest(self):
+            pass
+
+    class MyWorker(Worker):
+        def setup_test_session(self):
+            1 / 0
+
+    run_testsuite(MySuite, worker=MyWorker())
+
+    assert reporting_session.get_last_test_outcome() == False
+    assert_report_errors(1)
+    assert len(marker) == 0
+
 def test_teardown_test_session_error_because_of_exception(reporting_session):
     marker = []
     
