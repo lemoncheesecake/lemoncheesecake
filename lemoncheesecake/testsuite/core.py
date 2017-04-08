@@ -15,6 +15,10 @@ __all__ = (
     "Test", "TestSuite", "walk_testsuites", "walk_tests", "filter_testsuites"
 )
 
+def _get_callable_params(callble):
+    params_idx = 1 if inspect.ismethod(callble) else 0
+    return inspect.getargspec(callble).args[params_idx:]
+
 class Test:
     def __init__(self, name, description, callback):
         self.parent_suite = None
@@ -26,9 +30,8 @@ class Test:
         self.links = [ ]
     
     def get_params(self):
-        params_idx = 1 if inspect.ismethod(self.callback) else 0
-        return inspect.getargspec(self.callback).args[params_idx:]
-
+        return _get_callable_params(self.callback)
+    
     def get_path(self):
         return self.parent_suite.get_path() + [self]
     
@@ -88,6 +91,11 @@ class TestSuite:
     def get_hook(self, hook_name):
         _assert_valid_hook_name(hook_name)
         return self._hooks.get(hook_name)
+    
+    def get_hook_params(self, hook_name):
+        hook = self.get_hook(hook_name)
+        assert hook != None
+        return _get_callable_params(hook)
     
     def get_path(self):
         suites = [ self ]
@@ -186,6 +194,10 @@ class TestSuite:
     
     def get_fixtures(self, filtered=True, recursive=True):
         fixtures = []
+        
+        suite_setup = self.get_hook("setup_suite")
+        if suite_setup:
+            fixtures.extend(_get_callable_params(suite_setup))
         
         for test in self.get_tests(filtered):
             fixtures.extend(test.get_params())

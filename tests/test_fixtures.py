@@ -400,7 +400,7 @@ def test_check_fixtures_in_testsuites_ok():
     registry = build_registry()
     registry.check_fixtures_in_testsuites([suite])
 
-def test_check_fixtures_in_testsuites_not_ok():
+def test_check_fixtures_in_testsuites_unknown_fixture_in_test():
     @lcc.testsuite("MySuite")
     class MySuite:
         @lcc.testsuite("MySubSuite")
@@ -408,6 +408,36 @@ def test_check_fixtures_in_testsuites_not_ok():
             @lcc.test("test")
             def sometest(self, unknown_fix):
                 pass
+    
+    suite = load_testsuite_from_class(MySuite)
+    registry = build_registry()
+    with pytest.raises(exceptions.FixtureError):
+        registry.check_fixtures_in_testsuites([suite])
+
+def test_check_fixtures_in_testsuites_unknown_fixture_in_setup_suite():
+    @lcc.testsuite("MySuite")
+    class MySuite:
+        def setup_suite(self, unknown_fix):
+            pass
+        
+        @lcc.test("test")
+        def sometest(self):
+            pass
+    
+    suite = load_testsuite_from_class(MySuite)
+    registry = build_registry()
+    with pytest.raises(exceptions.FixtureError):
+        registry.check_fixtures_in_testsuites([suite])
+
+def test_check_fixtures_in_testsuites_incompatible_fixture_in_setup_suite():
+    @lcc.testsuite("MySuite")
+    class MySuite:
+        def setup_suite(self, fix3):
+            pass
+        
+        @lcc.test("test")
+        def sometest(self):
+            pass
     
     suite = load_testsuite_from_class(MySuite)
     registry = build_registry()

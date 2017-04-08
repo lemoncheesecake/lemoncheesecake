@@ -85,7 +85,19 @@ class _Runner:
         return [
             lambda: self.fixture_registry.execute_fixture(fixture),
             lambda: self.fixture_registry.teardown_fixture(fixture)
-        ]        
+        ]
+    
+    def get_setup_suite_as_func(self, suite):
+        setup_suite = suite.get_hook("setup_suite")
+        if setup_suite == None:
+            return None
+        
+        param_names = suite.get_hook_params("setup_suite")
+        def func():
+            params = self.fixture_registry.get_fixture_results_as_params(param_names)
+            setup_suite(**params)
+
+        return func
     
     def handle_exception(self, excp, suite=None):        
         if isinstance(excp, AbortTest):
@@ -182,11 +194,11 @@ class _Runner:
         teardown_funcs = []
         if not self.abort_all_tests:
             setup_teardown_funcs = []
-            setup_teardown_funcs.append([
-                suite.get_hook("setup_suite"), suite.get_hook("teardown_suite")
-            ])
             setup_teardown_funcs.extend([
                 self.get_fixture_as_funcs(f) for f in self.get_fixtures_to_be_executed_for_testsuite(suite)
+            ])
+            setup_teardown_funcs.append([
+                self.get_setup_suite_as_func(suite), suite.get_hook("teardown_suite")
             ])
     
             if len(list(filter(lambda p: p[0] != None, setup_teardown_funcs))) > 0:

@@ -434,13 +434,13 @@ def test_setup_suite_error_because_of_fixture(reporting_session):
             pass
         
         def teardown_suite(self):
-            marker.append("teardown")
+            marker.append("must_not_be_executed")
 
     run_testsuite(MySuite, fixtures=[fix])
 
     assert reporting_session.get_failing_test_nb() == 2
     assert_report_errors(1)
-    assert len(marker) == 1
+    assert len(marker) == 0
 
 def test_teardown_suite_error_because_of_exception(reporting_session):
     @lcc.testsuite("MySuite")
@@ -956,6 +956,27 @@ def test_run_with_testsuite_fixture_used_in_subsuite(reporting_session):
     
     assert reporting_session.get_successful_test_nb() == 3
     assert len(teardowns) == 3
+
+def test_run_with_fixture_used_in_setup_suite(reporting_session):
+    marker = []
+      
+    @lcc.fixture(scope="testsuite")
+    def fixt1():
+        return "setup_suite"
+      
+    @lcc.testsuite("MySuiteA")
+    class MySuite:
+        def setup_suite(self, fixt1):
+            marker.append(fixt1)
+         
+        @lcc.test("sometest")
+        def sometest(self):
+            pass
+      
+    run_testsuite(MySuite, fixtures=[fixt1])
+      
+    assert reporting_session.get_successful_test_nb() == 1
+    assert marker[0] == "setup_suite"
 
 def test_fixture_called_multiple_times(reporting_session):
     marker = [0]

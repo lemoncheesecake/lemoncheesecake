@@ -18,6 +18,12 @@ __all__ = (
 )
 
 FORBIDDEN_FIXTURE_NAMES = ("fixture_name", )
+SCOPE_LEVELS = {
+    "test": 1,
+    "testsuite": 2,
+    "session": 3,
+    "session_prerun": 4
+}
 
 class FixtureInfo:
     def __init__(self, names, scope):
@@ -186,6 +192,15 @@ class FixtureRegistry:
                 raise FixtureError("Unknown fixture '%s' used in test '%s'" % (fixture, test.get_path_str()))
         
     def check_fixtures_in_testsuite(self, suite):
+        if suite.has_hook("setup_suite"):
+            for fixture in suite.get_hook_params("setup_suite"):
+                if fixture not in self._fixtures:
+                    raise FixtureError("Unknown fixture '%s' used in setup_suite of suite '%s'" % (fixture, suite.get_path_str()))
+                if self._fixtures[fixture].get_scope_level() < SCOPE_LEVELS["testsuite"]:
+                    raise FixtureError("In suite '%s' setup_suite uses fixture '%s' which has an incompatible scope" % (
+                        suite.get_path_str(), fixture
+                    ))
+        
         for test in suite.get_tests():
             self.check_fixtures_in_test(test, suite)
         
