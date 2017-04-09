@@ -19,9 +19,10 @@ from lemoncheesecake.exceptions import *
 import lemoncheesecake.api as lcc
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 
-from helpers import reporting_session, run_testsuite_class, build_fixture_registry
 from lemoncheesecake.fixtures import FixtureRegistry
 from lemoncheesecake.testsuite import add_test_in_testsuite
+
+from helpers import reporting_session, run_testsuite_class, build_fixture_registry, run_testsuite, build_testsuite_from_module
 
 # TODO: make launcher unit tests more independent from the reporting layer ?
 
@@ -50,6 +51,17 @@ def test_test_failure(reporting_session):
     run_testsuite_class(MySuite)
     
     assert reporting_session.get_last_test_outcome() == False
+
+def test_test_module(reporting_session):
+    suite = build_testsuite_from_module("""
+@lcc.test("Some test")
+def sometest():
+    pass
+""")
+    
+    run_testsuite(suite)
+    
+    assert reporting_session.get_test_outcome("sometest") == True
 
 def test_exception_unexpected(reporting_session):
     @lcc.testsuite("MySuite")
@@ -715,7 +727,7 @@ def test_session_prerun_fixture_teardown_user_error(reporting_session):
 
     assert reporting_session.test_nb == 1
 
-def test_run_with_fixture():
+def test_run_with_fixture_using_test_method():
     marker = []
     
     @lcc.fixture()
@@ -733,6 +745,21 @@ def test_run_with_fixture():
     run_testsuite_class(MySuite, fixtures=[test_fixture])
     
     assert marker == [2, 6]
+
+def test_run_with_fixture_using_test_function(reporting_session):
+    @lcc.fixture()
+    def test_fixture():
+        return 2
+    
+    suite = build_testsuite_from_module("""
+@lcc.test("Test")
+def test(test_fixture):
+    lcc.log_info(str(test_fixture * 3))
+""")
+    
+    run_testsuite(suite, fixtures=[test_fixture])
+    
+    assert reporting_session.get_last_log() == "6"
 
 def test_run_with_fixture_with_logs():
     marker = []

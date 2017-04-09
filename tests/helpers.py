@@ -16,7 +16,7 @@ import re
 import pytest
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.testsuite.loader import load_testsuites_from_classes
+from lemoncheesecake.testsuite.loader import load_testsuites_from_classes, load_testsuite_from_file
 from lemoncheesecake import runner
 from lemoncheesecake.testsuite import Filter, load_testsuite_from_class
 from lemoncheesecake import reporting
@@ -64,6 +64,17 @@ from lemoncheesecake import validators
     EXTRA_IMPORTS="\n".join(extra_imports),
     STATIC_CONTENT=static_content
 )
+
+def build_testsuite_from_module(module_content):
+    fd, filename = tempfile.mkstemp(suffix=".py")
+    fh = open(filename, "w")
+    fh.write("import lemoncheesecake.api as lcc\n\n")
+    fh.write("TESTSUITE = {'description': 'My Suite'}\n\n")
+    fh.write(module_content)
+    fh.close()
+    suite = load_testsuite_from_file(filename)
+    os.unlink(filename)
+    return suite
 
 def generate_project(project_dir, module_name, module_content, fixtures_content=None):
     create_project(project_dir)
