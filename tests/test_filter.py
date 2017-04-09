@@ -1,7 +1,7 @@
 import lemoncheesecake.api as lcc
 from lemoncheesecake.testsuite.filter import Filter
 
-from helpers import run_testsuite, reporting_session
+from helpers import run_testsuite_class, reporting_session
 
 def test_filter_full_path_on_test(reporting_session):
     @lcc.testsuite("mysuite")
@@ -19,7 +19,7 @@ def test_filter_full_path_on_test(reporting_session):
     filter = Filter()
     filter.paths.append("mysuite.subsuite.baz")
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "baz"
@@ -40,7 +40,7 @@ def test_filter_full_path_on_test_negative(reporting_session):
     filter = Filter()
     filter.paths.append("-mysuite.subsuite.baz")
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test2"
@@ -61,7 +61,7 @@ def test_filter_full_path_on_suite(reporting_session):
     filter = Filter()
     filter.paths.append("mysuite.subsuite")
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 2
 
@@ -81,7 +81,7 @@ def test_filter_path_on_suite_negative(reporting_session):
     filter = Filter()
     filter.paths.append("-mysuite.subsuite.*")
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 0
 
@@ -101,7 +101,7 @@ def test_filter_path_complete_on_top_suite(reporting_session):
     filter = Filter()
     filter.paths.append("mysuite")
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 2
 
@@ -121,7 +121,7 @@ def test_filter_path_wildcard_on_test(reporting_session):
     filter = Filter()
     filter.paths.append("mysuite.subsuite.ba*")
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "baz"
@@ -142,7 +142,7 @@ def test_filter_path_wildcard_on_test_negative(reporting_session):
     filter = Filter()
     filter.paths.append("-mysuite.subsuite.ba*")
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test2"
@@ -163,7 +163,7 @@ def test_filter_path_wildcard_on_suite(reporting_session):
     filter = Filter()
     filter.paths.append("mysuite.sub*.baz")
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "baz"
@@ -184,7 +184,7 @@ def test_filter_path_wildcard_on_suite_negative(reporting_session):
     filter = Filter()
     filter.paths.append("~mysuite.sub*.baz")
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test2"
@@ -205,7 +205,7 @@ def test_filter_description_on_test(reporting_session):
     filter = Filter()
     filter.descriptions.append(["desc2"])
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test2"    
@@ -226,7 +226,7 @@ def test_filter_description_on_test_negative(reporting_session):
     filter = Filter()
     filter.descriptions.append(["~desc2"])
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "baz"    
@@ -249,7 +249,7 @@ def test_filter_description_on_suite(reporting_session):
     filter = Filter()
     filter.descriptions.append(["desc2"])
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test2"
@@ -274,7 +274,7 @@ def test_filter_description_on_suite_negative(reporting_session):
     filter = Filter()
     filter.descriptions.append(["-desc2"])
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "baz"
@@ -296,7 +296,7 @@ def test_filter_tag_on_test(reporting_session):
     filter = Filter()
     filter.tags.append(["tag1"])
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test2"
@@ -318,7 +318,7 @@ def test_filter_tag_on_test_negative(reporting_session):
     filter = Filter()
     filter.tags.append(["-tag1"])
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "baz"
@@ -343,7 +343,7 @@ def test_filter_tag_on_suite(reporting_session):
     filter = Filter()
     filter.tags.append(["tag2"])
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test2"
@@ -368,7 +368,7 @@ def test_filter_tag_on_suite_negative(reporting_session):
     filter = Filter()
     filter.tags.append(["~tag2"])
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "baz"
@@ -390,7 +390,7 @@ def test_filter_property_on_test(reporting_session):
     filter = Filter()
     filter.properties.append([("myprop", "foo")])
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test2"
@@ -413,7 +413,7 @@ def test_filter_property_on_test_negative(reporting_session):
     filter = Filter()
     filter.properties.append([("myprop", "-foo")])
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "baz"
@@ -438,7 +438,7 @@ def test_filter_property_on_suite(reporting_session):
     filter = Filter()
     filter.properties.append([("myprop", "bar")])
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test2"
@@ -463,7 +463,7 @@ def test_filter_property_on_suite_negative(reporting_session):
     filter = Filter()
     filter.properties.append([("myprop", "~bar")])
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "baz"
@@ -485,7 +485,7 @@ def test_filter_link_on_test_without_name(reporting_session):
     filter = Filter()
     filter.links.append(["http://bug.trac.ker/1234"])
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test2"
@@ -507,7 +507,7 @@ def test_filter_link_on_test_negative_with_name(reporting_session):
     filter = Filter()
     filter.links.append(["-#1234"])
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "baz"
@@ -532,7 +532,7 @@ def test_filter_link_on_suite(reporting_session):
     filter = Filter()
     filter.links.append(["#1235"])
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test2"
@@ -557,7 +557,7 @@ def test_filter_link_on_suite_negative(reporting_session):
     filter = Filter()
     filter.links.append(["~#1235"])
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "baz"
@@ -580,7 +580,7 @@ def test_filter_path_on_suite_and_tag_on_test(reporting_session):
     filter.paths.append("mysuite.subsuite")
     filter.tags.append(["tag1"])
       
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
       
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test2"
@@ -603,7 +603,7 @@ def test_filter_path_on_suite_and_negative_tag_on_test(reporting_session):
     filter.paths.append("mysuite.subsuite")
     filter.tags.append(["-tag1"])
       
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
       
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "baz"
@@ -632,7 +632,7 @@ def test_filter_description_on_suite_and_link_on_test(reporting_session):
     filter.descriptions.append(["Sub suite 2"])
     filter.links.append(["#1234"])
       
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
       
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test2"
@@ -658,7 +658,7 @@ def test_filter_path_and_tag_on_suite(reporting_session):
     filter.paths.append("mysuite.subsuite1")
     filter.tags.append(["foo"])
       
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
       
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test1"
@@ -688,7 +688,7 @@ def test_filter_path_and_tag_on_test(reporting_session):
     filter.paths.append("mysuite.subsuite2.*")
     filter.tags.append(["foo"])
       
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
       
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test2"
@@ -718,7 +718,7 @@ def test_filter_path_and_negative_tag_on_test(reporting_session):
     filter.paths.append("mysuite.subsuite2.*")
     filter.tags.append(["-foo"])
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
       
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "test3"
@@ -756,7 +756,7 @@ def test_filter_description_and(reporting_session):
     filter = Filter()
     filter.descriptions = [["mysuite"], ["test1"]]
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "baz"
@@ -779,7 +779,7 @@ def test_filter_tags_and(reporting_session):
     filter = Filter()
     filter.tags = [["foo"], ["bar"]]
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "baz"
@@ -803,7 +803,7 @@ def test_filter_properties_and(reporting_session):
     filter = Filter()
     filter.properties = [[("foo", "1")], [("bar", "2")]]
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "baz"
@@ -827,7 +827,7 @@ def test_filter_links_and(reporting_session):
     filter = Filter()
     filter.links = [["#1234"], ["*/1235"]]
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 1
     assert reporting_session.last_test == "baz"
@@ -850,6 +850,6 @@ def test_filter_and_or(reporting_session):
     filter = Filter()
     filter.tags = [["foo"], ["bar", "baz"]]
     
-    run_testsuite(mysuite, filter=filter)
+    run_testsuite_class(mysuite, filter=filter)
     
     assert reporting_session.test_nb == 2

@@ -19,7 +19,7 @@ from lemoncheesecake.worker import Worker
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 from lemoncheesecake.reporting.backends.json_ import serialize_report_into_json
 
-from helpers import run_testsuite, run_testsuites, assert_report_from_testsuite, assert_report_from_testsuites, assert_report_stats, \
+from helpers import run_testsuite_class, run_testsuite_classes, assert_report_from_testsuite, assert_report_from_testsuites, assert_report_stats, \
     dump_report
 
 def test_simple_test():
@@ -29,7 +29,7 @@ def test_simple_test():
         def sometest(self):
             lcc.check_int_eq("foo", 1, 1)
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
 
@@ -48,7 +48,7 @@ def test_test_with_all_metadata():
         def sometest(self):
             lcc.check_int_eq("foo", 1, 1)
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
 
@@ -67,7 +67,7 @@ def test_testsuite_with_all_metadata():
         def sometest(self):
             lcc.check_int_eq("foo", 1, 1)
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
 
@@ -127,7 +127,7 @@ def test_multiple_testsuites_and_tests():
             def test_3_3(self):
                 lcc.check_int_eq("foo", 1, 1)
     
-    run_testsuites([MySuite1, MySuite2])
+    run_testsuite_classes([MySuite1, MySuite2])
     
     report = get_runtime().report
 
@@ -157,7 +157,7 @@ def test_check_success():
         def test_1(self):
             lcc.check_eq("somevalue", "foo", "foo")
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
 
@@ -179,7 +179,7 @@ def test_check_failure():
         def test_1(self):
             lcc.check_eq("somevalue", "foo", "bar")
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
 
@@ -201,7 +201,7 @@ def test_assert_success():
         def test_1(self):
             lcc.assert_eq("somevalue", "foo", "foo")
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
 
@@ -223,7 +223,7 @@ def test_assert_failure():
         def test_1(self):
             lcc.assert_eq("somevalue", "foo", "bar")
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
 
@@ -251,7 +251,7 @@ def test_all_types_of_logs():
         def test_2(self):
             lcc.log_error("some error message")
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
 
@@ -286,7 +286,7 @@ def test_multiple_steps():
             lcc.set_step("step 2")
             lcc.log_info("do something else")
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
 
@@ -309,7 +309,7 @@ def test_default_step():
         def sometest(self):
             lcc.log_info("do something")
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
 
@@ -332,7 +332,7 @@ def test_step_after_test_setup():
         def sometest(self):
             lcc.log_info("do something")
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
 
@@ -357,7 +357,7 @@ def test_prepare_attachment(tmpdir):
             with open(filename, "w") as fh:
                 fh.write("some content")
     
-    run_testsuite(MySuite, tmpdir=tmpdir)
+    run_testsuite_class(MySuite, tmpdir=tmpdir)
     
     report = get_runtime().report
     
@@ -381,7 +381,7 @@ def test_save_attachment_file(tmpdir):
                 fh.write("some other content")
             lcc.save_attachment_file(filename, "some other file")
     
-    run_testsuite(MySuite, tmpdir=tmpdir)
+    run_testsuite_class(MySuite, tmpdir=tmpdir)
     
     report = get_runtime().report
     
@@ -401,7 +401,7 @@ def _test_save_attachment_content(tmpdir, file_name, file_content, encoding=None
         def sometest(self):
             lcc.save_attachment_content(file_content, file_name, binary_mode=not encoding)
     
-    run_testsuite(MySuite, tmpdir=tmpdir)
+    run_testsuite_class(MySuite, tmpdir=tmpdir)
     
     report = get_runtime().report
     
@@ -439,7 +439,7 @@ def test_unicode(tmpdir):
             lcc.log_info(u"éééààà")
             lcc.save_attachment_content("A" * 1024, u"somefileààà", u"éééààà")
     
-    run_testsuite(MySuite, tmpdir=tmpdir)
+    run_testsuite_class(MySuite, tmpdir=tmpdir)
     
     report = get_runtime().report
     
@@ -467,7 +467,7 @@ def test_setup_suite_success():
         def sometest(self):
             pass
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
 
@@ -492,7 +492,7 @@ def test_setup_suite_failure():
         def sometest(self):
             pass
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
 
@@ -519,7 +519,7 @@ def test_setup_suite_without_content():
         def sometest(self):
             pass
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
     
@@ -536,7 +536,7 @@ def test_teardown_suite_success():
         def teardown_suite(self):
             lcc.log_info("some log")
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
 
@@ -561,7 +561,7 @@ def test_teardown_suite_failure():
         def teardown_suite(self):
             lcc.check_eq("val", 1, 2)
         
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
     
@@ -588,7 +588,7 @@ def test_teardown_suite_without_content():
         def teardown_suite(self):
             marker.append("teardown")
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
     
@@ -606,7 +606,7 @@ def test_setup_test_session_success():
         def setup_test_session(self):
             lcc.log_info("some log")
     
-    run_testsuite(MySuite, worker=MyWorker())
+    run_testsuite_class(MySuite, worker=MyWorker())
     
     report = get_runtime().report
 
@@ -631,7 +631,7 @@ def test_setup_test_session_failure():
         def setup_test_session(self):
             lcc.log_error("something bad happened")
     
-    run_testsuite(MySuite, worker=MyWorker())
+    run_testsuite_class(MySuite, worker=MyWorker())
     
     report = get_runtime().report
     
@@ -658,7 +658,7 @@ def test_setup_test_session_without_content():
         def setup_test_session(self):
             marker.append("setup")
      
-    run_testsuite(MySuite, worker=MyWorker())
+    run_testsuite_class(MySuite, worker=MyWorker())
 
     report = get_runtime().report
     
@@ -676,7 +676,7 @@ def test_teardown_test_session_success():
         def teardown_test_session(self):
             lcc.log_info("some log")
     
-    run_testsuite(MySuite, worker=MyWorker())
+    run_testsuite_class(MySuite, worker=MyWorker())
     
     report = get_runtime().report
  
@@ -701,7 +701,7 @@ def test_teardown_test_session_failure():
         def teardown_test_session(self):
             lcc.check_eq("val", 1, 2)
     
-    run_testsuite(MySuite, worker=MyWorker())
+    run_testsuite_class(MySuite, worker=MyWorker())
          
     report = get_runtime().report
      
@@ -728,7 +728,7 @@ def test_teardown_test_session_without_content():
         def teardown_test_session(self):
             marker.append("teardown")
 
-    run_testsuite(MySuite, worker=MyWorker())
+    run_testsuite_class(MySuite, worker=MyWorker())
 
     report = get_runtime().report
     
@@ -741,7 +741,7 @@ def add_report_info():
         def sometest(self):
             lcc.add_report_info("some info", "some data")
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
     
     report = get_runtime().report
     

@@ -161,7 +161,7 @@ def get_reporting_session():
 def reporting_session():
     return get_reporting_session()
 
-def run_testsuites(suite_classes, filter=None, fixtures=None, worker=None, backends=None, tmpdir=None):
+def run_testsuites(suites, filter=None, fixtures=None, worker=None, backends=None, tmpdir=None):
     global _reporting_session
     
     if fixtures == None:
@@ -182,7 +182,6 @@ def run_testsuites(suite_classes, filter=None, fixtures=None, worker=None, backe
     if _reporting_session:
         backends.append(TestReportingBackend(_reporting_session))
     
-    suites = load_testsuites_from_classes(suite_classes)
     if filter:
         for suite in suites:
             suite.apply_filter(filter)
@@ -206,8 +205,16 @@ def run_testsuites(suite_classes, filter=None, fixtures=None, worker=None, backe
     
     dump_report(get_runtime().report)
 
+def run_testsuite_classes(suite_classes, filter=None, fixtures=None, worker=None, backends=None, tmpdir=None):
+    suites = load_testsuites_from_classes(suite_classes)
+    run_testsuites(suites, filter=filter, fixtures=fixtures, worker=worker, backends=backends, tmpdir=tmpdir)
+
 def run_testsuite(suite, filter=None, fixtures=None, worker=None, backends=[], tmpdir=None):
     run_testsuites([suite], filter=filter, fixtures=fixtures, worker=worker, backends=backends, tmpdir=tmpdir)
+
+def run_testsuite_class(suite_class, filter=None, fixtures=None, worker=None, backends=[], tmpdir=None):
+    suite = load_testsuite_from_class(suite_class)
+    run_testsuite(suite, filter=filter, fixtures=fixtures, worker=worker, backends=backends, tmpdir=tmpdir)
 
 def run_func_in_test(callback):
     @lcc.testsuite("My Suite")
@@ -216,7 +223,7 @@ def run_func_in_test(callback):
         def sometest(self):
             callback()
     
-    run_testsuite(MySuite)
+    run_testsuite_class(MySuite)
 
 def dump_report(report):
     try:
