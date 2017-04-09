@@ -1,3 +1,8 @@
+# 0.7.1 (2017-04-09)
+
+- **API**: add support for fixtures in setup_suite hook
+- minor improvements and fixes
+
 # 0.7.0 (2017-04-02)
 
 - **API**: add support for a new kind of testsuites where the a module can be a testsuite and its functions
