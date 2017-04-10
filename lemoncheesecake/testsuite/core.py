@@ -75,6 +75,7 @@ class TestSuite:
         self.tags = []
         self.properties = {}
         self.links = []
+        self.rank = 0
         self._hooks = {}
         self._tests = []
         self._sub_testsuites = []

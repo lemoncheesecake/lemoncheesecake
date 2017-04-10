@@ -65,6 +65,7 @@ def load_testsuite_from_class(klass):
     suite.tags.extend(md.tags)
     suite.properties.update(md.properties)
     suite.links.extend(md.links)
+    suite.rank = md.rank
     
     for hook_name in TESTSUITE_HOOKS:
         if hasattr(inst, hook_name):
@@ -82,6 +83,9 @@ def load_testsuites_from_classes(klasses):
     return [load_testsuite_from_class(klass) for klass in klasses]
 
 def load_testsuite_from_module(mod):
+    # TODO: find a better way to workaround circular import 
+    from lemoncheesecake.testsuite.definition import get_metadata_next_rank
+    
     suite_info = getattr(mod, "TESTSUITE")
     suite_name = inspect.getmodulename(inspect.getfile(mod))
     
@@ -94,6 +98,7 @@ def load_testsuite_from_module(mod):
     suite.tags.extend(suite_info.get("tags", []))
     suite.properties.update(suite_info.get("properties", []))
     suite.links.extend(suite_info.get("links", []))
+    suite.rank = suite_info.get("rank", get_metadata_next_rank())
 
     for hook_name in TESTSUITE_HOOKS:
         if hasattr(mod, hook_name):
@@ -102,9 +107,13 @@ def load_testsuite_from_module(mod):
     for func in get_test_functions_from_module(mod):
         suite.add_test(load_test_from_function(func))
 
+    sub_suites = []
     for klass in get_suite_classes_from_module(mod):
-        suite.add_sub_testsuite(load_testsuite_from_class(klass))
-    
+        sub_suites.append(load_testsuite_from_class(klass))
+    sub_suites.sort(key=lambda suite: suite.rank)
+    for sub_suite in sub_suites:
+        suite.add_sub_testsuite(sub_suite)
+
     return suite
 
 def load_testsuite_from_file(filename):
@@ -167,6 +176,5 @@ def load_testsuites_from_directory(dir, recursive=True):
                 for sub_suite in load_testsuites_from_directory(subsuites_dir, recursive=True):
                     suite.add_sub_testsuite(sub_suite)
         suites.append(suite)
-    if len(list(filter(lambda s: hasattr(s, "_rank"), suites))) == len(suites):
-        suites.sort(key=lambda s: s._rank)
+    suites.sort(key=lambda suite: suite.rank)
     return suites
