@@ -1,7 +1,7 @@
 import re
 import lemoncheesecake.api as lcc
 
-@lcc.testsuite("My second testsuite")
+@lcc.testsuite("My first testsuite", rank=1)
 class my_first_testsuite:
 	@lcc.test("Some test")
 	def some_test(self, omdb):

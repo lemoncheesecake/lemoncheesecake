@@ -1,6 +1,6 @@
 import lemoncheesecake.api as lcc
 
-@lcc.testsuite("My second testsuite")
+@lcc.testsuite("My second testsuite", rank=2)
 class my_second_testsuite:
 	@lcc.test("Some test")
 	def some_other_test(self, project_dir):
