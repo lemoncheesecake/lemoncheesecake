@@ -1,3 +1,7 @@
+# 0.7.2 (2017-04-17)
+
+- **API**: rank option of @testsuite decorator was no longer properly taken into account (regression introduced in 0.7.0)
+
 # 0.7.1 (2017-04-09)
 
 - **API**: add support for fixtures in setup_suite hook
