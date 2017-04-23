@@ -130,7 +130,13 @@ def load_testsuite_from_file(filename):
     
     Raise a ImportTestSuiteError if the testsuite class cannot be imported.
     """
-    mod = import_module(filename)
+    try:
+        mod = import_module(filename)
+    except ImportError:
+        raise ImportTestSuiteError(
+            "Cannot import file '%s': %s" % (filename, serialize_current_exception(show_stacktrace=True))
+        )
+    
     if hasattr(mod, "TESTSUITE"):
         suite = load_testsuite_from_module(mod)
     else:

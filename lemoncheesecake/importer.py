@@ -11,8 +11,6 @@ import fnmatch
 import re
 import imp
 
-from lemoncheesecake.exceptions import ImportTestSuiteError
-
 def strip_py_ext(filename):
     return re.sub("\.py$", "", filename)
 
@@ -51,8 +49,6 @@ def import_module(filename):
             mod = imp.load_module(package + mod_name, fh, path, description)
         finally:
             fh.close()
-    except ImportError as e:
-        raise ImportTestSuiteError("Cannot import module %s: %s" % (mod_name, str(e)))
     finally:
         del sys.path[0]
     

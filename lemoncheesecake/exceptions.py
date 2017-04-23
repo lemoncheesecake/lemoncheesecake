@@ -36,6 +36,9 @@ def method_not_implemented(method_name, obj):
 class ImportTestSuiteError(LemonCheesecakeException):
     pass
 
+class ImportFixtureError(LemonCheesecakeException):
+    pass
+
 class FixtureError(LemonCheesecakeException):
     pass
 

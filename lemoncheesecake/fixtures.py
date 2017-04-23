@@ -8,7 +8,8 @@ import inspect
 import re
 
 from lemoncheesecake.importer import import_module, get_matching_files, get_py_files_from_dir
-from lemoncheesecake.exceptions import FixtureError, ProgrammingError
+from lemoncheesecake.exceptions import FixtureError, ImportFixtureError, ProgrammingError, \
+    serialize_current_exception
 from lemoncheesecake.utils import get_distincts_in_list
 
 __all__ = (
@@ -252,7 +253,12 @@ def load_fixtures_from_func(func):
     return [Fixture(name, func, scope, params) for name in names]
 
 def load_fixtures_from_file(filename):
-    mod = import_module(filename)
+    try:
+        mod = import_module(filename)
+    except ImportError:
+        raise ImportFixtureError(
+            "Cannot import file '%s': %s" % (filename, serialize_current_exception(show_stacktrace=True))
+        )
     fixtures = []
     for sym_name in dir(mod):
         sym = getattr(mod, sym_name)
