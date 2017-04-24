@@ -28,6 +28,7 @@ class AllOf(Matcher):
         return match_success(merge_match_result_descriptions(results))
 
 def all_of(*matchers):
+    """Test if all matchers match (logical AND between matchers)."""
     return AllOf(map(is_, matchers))
 
 class AnyOf(Matcher):
@@ -48,9 +49,12 @@ class AnyOf(Matcher):
         return match_failure(merge_match_result_descriptions(results))
 
 def any_of(*matchers):
+    """Test if at least one of the matcher match (logical OR between matchers)"""
     return AnyOf(map(is_, matchers))
 
 def is_(matcher):
+    """If the function argument is not an instance of Matcher, wrap it into
+    a matcher using equal_to, otherwise return the matcher argument as-is"""
     from lemoncheesecake.matching.matchers.value import equal_to
     return matcher if isinstance(matcher, Matcher) else equal_to(matcher)
 
@@ -66,4 +70,5 @@ class IsNot(Matcher):
         return match_result(not result.outcome, result.description)
 
 def is_not(matcher):
+    """Negates the matcher in argument"""
     return IsNot(is_(matcher))

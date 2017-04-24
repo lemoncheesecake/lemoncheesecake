@@ -23,6 +23,7 @@ class Equal(MatchExpected):
             return match_failure(got(actual))
 
 def equal_to(expected):
+    """Test if value is equal to expected"""
     return Equal(expected)
 
 class NotEqual(MatchExpected):
@@ -36,6 +37,7 @@ class NotEqual(MatchExpected):
             return match_failure(got(actual))
 
 def not_equal_to(expected):
+    """Test if value is not equal to expected"""
     return NotEqual(expected)
 
 class Greater(MatchExpected):
@@ -49,6 +51,7 @@ class Greater(MatchExpected):
             return match_failure(got(actual))
 
 def greater_than(expected):
+    """Test if value is greater than expected"""
     return Greater(expected)
 
 class GreaterThanOrEqualTo(MatchExpected):
@@ -62,11 +65,12 @@ class GreaterThanOrEqualTo(MatchExpected):
             return match_failure(got(actual))
 
 def greater_than_or_equal_to(expected):
+    """Test if value is greater or equal than expected"""
     return GreaterThanOrEqualTo(expected)
 
 class LessThan(MatchExpected):
     def description(self):
-        return "is less than %s"  % self.expected
+        return "is less than %s" % self.expected
     
     def matches(self, actual):
         if actual < self.expected:
@@ -75,6 +79,7 @@ class LessThan(MatchExpected):
             return match_failure(got(actual))
 
 def less_than(expected):
+    """Test if value is less than expected"""
     return LessThan(expected)
 
 class LessThanOrEqualTo(MatchExpected):
@@ -88,12 +93,15 @@ class LessThanOrEqualTo(MatchExpected):
             return match_failure(got(actual))
 
 def less_than_or_equal_to(expected):
+    """Test if value is less than or equal to expected"""
     return LessThanOrEqualTo(expected)
 
 def is_none():
+    """Test if value is None"""
     return equal_to(None)
 
 def is_not_none():
+    """Test if value is not None"""
     return not_equal_to(None)
 
 class HasLength(Matcher):
@@ -107,4 +115,5 @@ class HasLength(Matcher):
         return self.matcher.matches(len(actual))
 
 def has_length(length):
+    """Test if value has length"""
     return HasLength(is_(length))

@@ -32,4 +32,5 @@ class HasEntry(Matcher):
             return match_failure("No entry '%s'" % self.key)
 
 def has_entry(key, value_matcher=None):
+    """Test if dict has a <key> entry whose value matches (optional) value_matcher""" 
     return HasEntry(key, is_(value_matcher) if value_matcher != None else None)

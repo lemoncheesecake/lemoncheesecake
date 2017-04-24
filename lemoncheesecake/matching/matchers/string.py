@@ -22,6 +22,7 @@ class StartsWith(MatchExpected):
         return match_result(actual.startswith(self.expected), got(value_repr(actual)))
 
 def starts_with(s):
+    """Test if string begins with given prefix"""
     return StartsWith(s)
 
 class EndsWith(MatchExpected):
@@ -32,6 +33,7 @@ class EndsWith(MatchExpected):
         return match_result(actual.endswith(self.expected), got(value_repr(actual)))
 
 def ends_with(s):
+    """Test if string ends with given suffix"""
     return EndsWith(s)
 
 class MatchPattern(MatchExpected):
@@ -42,4 +44,5 @@ class MatchPattern(MatchExpected):
         return match_result(self.expected.match(actual) != None, got(value_repr(actual)))
 
 def match_pattern(pattern):
+    """Test if string matches given pattern"""
     return MatchPattern(pattern if type(pattern) == _REGEXP_TYPE else re.compile(pattern))

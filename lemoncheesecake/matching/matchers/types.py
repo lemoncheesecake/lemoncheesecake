@@ -38,6 +38,7 @@ def is_type(types, type_name):
         return IsValueOfType(
             types, type_name, is_(value_matcher) if value_matcher != None else None
         )
+    wrapper.__doc__ = "Test if value is of type %s" % type_name
     return wrapper
 
 is_integer = is_type([int], "integer")
