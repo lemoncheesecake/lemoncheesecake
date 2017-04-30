@@ -6,7 +6,7 @@ Created on Apr 4, 2017
 
 import re
 
-from lemoncheesecake.matching.base import MatchExpected, match_result, got, value_repr
+from lemoncheesecake.matching.base import MatchExpected, match_result, got_value
 
 __all__ = (
     "starts_with", "ends_with", "match_pattern"
@@ -19,7 +19,7 @@ class StartsWith(MatchExpected):
         return "starts with '%s'" % self.expected
     
     def matches(self, actual):
-        return match_result(actual.startswith(self.expected), got(value_repr(actual)))
+        return match_result(actual.startswith(self.expected), got_value(actual))
 
 def starts_with(s):
     """Test if string begins with given prefix"""
@@ -30,7 +30,7 @@ class EndsWith(MatchExpected):
         return "ends with '%s'" % self.expected
     
     def matches(self, actual):
-        return match_result(actual.endswith(self.expected), got(value_repr(actual)))
+        return match_result(actual.endswith(self.expected), got_value(actual))
 
 def ends_with(s):
     """Test if string ends with given suffix"""
@@ -41,7 +41,7 @@ class MatchPattern(MatchExpected):
         return "matches pattern '%s'" % self.expected.pattern
     
     def matches(self, actual):
-        return match_result(self.expected.match(actual) != None, got(value_repr(actual)))
+        return match_result(self.expected.match(actual) != None, got_value(actual))
 
 def match_pattern(pattern):
     """Test if string matches given pattern"""

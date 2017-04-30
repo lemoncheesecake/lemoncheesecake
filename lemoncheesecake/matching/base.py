@@ -46,6 +46,9 @@ def value_repr(value):
 def got(value):
     return "Got %s" % value
 
+def got_value(value):
+    return got(value_repr(value))
+
 def merge_match_result_descriptions(results):
     return ", ".join(
         get_distincts_in_list([result.description for result in results if result.description != None])

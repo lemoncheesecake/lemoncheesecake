@@ -5,7 +5,7 @@ Created on Apr 3, 2017
 '''
 
 from lemoncheesecake.utils import IS_PYTHON3
-from lemoncheesecake.matching.base import Matcher, match_success, match_failure, got, value_repr
+from lemoncheesecake.matching.base import Matcher, match_success, match_failure, got, value_repr, got_value
 from lemoncheesecake.matching.matchers.value import is_
 
 __all__ = (
@@ -29,7 +29,7 @@ class IsValueOfType(Matcher):
             if self.value_matcher:
                 return self.value_matcher.matches(actual)
             else:
-                return match_success(got(value_repr(actual)))
+                return match_success(got_value(actual))
         else:
             return match_failure(got("%s (%s)" % (value_repr(actual), type(actual).__name__)))
 
