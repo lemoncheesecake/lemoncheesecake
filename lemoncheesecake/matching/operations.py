@@ -6,8 +6,30 @@ Created on Mar 27, 2017
 
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.exceptions import AbortTest
+from lemoncheesecake.matching.matchers.dict import HasEntry
+from lemoncheesecake.matching.matchers.composites import is_
 
-__all__ = ("log_match_result", "check_that", "require_that", "assert_that")
+__all__ = (
+    "log_match_result",
+    "check_that", "check_that_entry",
+    "require_that", "require_that_entry",
+    "assert_that", "assert_that_entry"
+)
+
+class _HasEntry(HasEntry):
+    def description(self):
+        ret = "entry '%s'" % self.key
+        if self.value_matcher:
+            ret += " " + self.value_matcher.description()
+        return ret
+
+def _entry_operation(operation):
+    def wrapper(key, actual, matcher=None, quiet=False):
+        return operation(
+            "", actual, _HasEntry(key, matcher if matcher != None else is_(matcher)), quiet=quiet
+        )
+    wrapper.__doc__ = "Same as %s but takes dict key as first argument instead of hint." % operation.__name__
+    return wrapper
 
 def log_match_result(hint, matcher, result, quiet=False):
     """Add a check log to the report.
@@ -30,6 +52,8 @@ def check_that(hint, actual, matcher, quiet=False):
     log_match_result(hint, matcher, result, quiet=quiet)
     return result.outcome
 
+check_that_entry = _entry_operation(check_that)
+
 def require_that(hint, actual, matcher, quiet=False):
     """Require that actual matches given matcher.
     
@@ -42,6 +66,8 @@ def require_that(hint, actual, matcher, quiet=False):
     if result.is_failure():
         raise AbortTest("previous requirement was not fulfilled")
 
+require_that_entry = _entry_operation(require_that)
+
 def assert_that(hint, actual, matcher, quiet=False):
     """Assert that actual matches given matcher.
     
@@ -53,3 +79,5 @@ def assert_that(hint, actual, matcher, quiet=False):
     if result.is_failure():
         log_match_result(hint, matcher, result, quiet=quiet)
         raise AbortTest("assertion error")
+
+assert_that_entry = _entry_operation(assert_that)

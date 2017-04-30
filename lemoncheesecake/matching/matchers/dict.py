@@ -17,10 +17,10 @@ class HasEntry(Matcher):
         self.value_matcher = value_matcher
     
     def description(self):
+        ret = "has entry '%s'" % self.key
         if self.value_matcher:
-            return "has entry '%s' %s" % (self.key, self.value_matcher.description())
-        else:
-            return "has entry '%s'" % self.key
+            ret += " " + self.value_matcher.description()
+        return ret
     
     def matches(self, actual):
         if self.key in actual:
