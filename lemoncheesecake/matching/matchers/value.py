@@ -4,7 +4,7 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
-from lemoncheesecake.matching.base import MatchExpected, Matcher, match_success, match_failure, got
+from lemoncheesecake.matching.base import MatchExpected, Matcher, match_result, got_value, value_repr
 from lemoncheesecake.matching.matchers.composites import is_
 
 __all__ = (
@@ -12,89 +12,28 @@ __all__ = (
     "less_than", "less_than_or_equal_to", "is_none", "is_not_none", "has_length"
 )
 
-class Equal(MatchExpected):
-    def description(self):
-        return "is equal to %s"  % self.expected
-    
-    def matches(self, actual):
-        if actual == self.expected:
-            return match_success()
-        else:
-            return match_failure(got(actual))
+def _comparator(comparison_description, comparison_func):
+    def wrapper(expected):
+        class _Comparator(MatchExpected):
+            def description(self):
+                return "is %s %s" % (comparison_description, value_repr(self.expected))
+             
+            def matches(self, actual):
+                return match_result(comparison_func(actual, self.expected), got_value(actual))
+         
+        return _Comparator(expected)
+     
+    wrapper.__doc__ = """Test if value is %s than expected""" % comparison_description
+    return wrapper
 
-def equal_to(expected):
-    """Test if value is equal to expected"""
-    return Equal(expected)
+equal_to = _comparator("equal to", lambda a, e: a == e)
+not_equal_to = _comparator("not equal to", lambda a, e: a != e)
 
-class NotEqual(MatchExpected):
-    def description(self):
-        return "is not equal to %s"  % self.expected
-    
-    def matches(self, actual):
-        if actual != self.expected:
-            return match_success(got(actual))
-        else:
-            return match_failure(got(actual))
+greater_than = _comparator("greater than", lambda a, e: a > e)
+greater_than_or_equal_to = _comparator("greater than or equal to", lambda a, e: a >= e)
 
-def not_equal_to(expected):
-    """Test if value is not equal to expected"""
-    return NotEqual(expected)
-
-class Greater(MatchExpected):
-    def description(self):
-        return "is greater than %s"  % self.expected
-    
-    def matches(self, actual):
-        if actual > self.expected:
-            return match_success(got(actual))
-        else:
-            return match_failure(got(actual))
-
-def greater_than(expected):
-    """Test if value is greater than expected"""
-    return Greater(expected)
-
-class GreaterThanOrEqualTo(MatchExpected):
-    def description(self):
-        return "is greater than or equal to %s"  % self.expected
-    
-    def matches(self, actual):
-        if actual >= self.expected:
-            return match_success(got(actual))
-        else:
-            return match_failure(got(actual))
-
-def greater_than_or_equal_to(expected):
-    """Test if value is greater or equal than expected"""
-    return GreaterThanOrEqualTo(expected)
-
-class LessThan(MatchExpected):
-    def description(self):
-        return "is less than %s" % self.expected
-    
-    def matches(self, actual):
-        if actual < self.expected:
-            return match_success(got(actual))
-        else:
-            return match_failure(got(actual))
-
-def less_than(expected):
-    """Test if value is less than expected"""
-    return LessThan(expected)
-
-class LessThanOrEqualTo(MatchExpected):
-    def description(self):
-        return "is less than or equal to %s"  % self.expected
-    
-    def matches(self, actual):
-        if actual <= self.expected:
-            return match_success(got(actual))
-        else:
-            return match_failure(got(actual))
-
-def less_than_or_equal_to(expected):
-    """Test if value is less than or equal to expected"""
-    return LessThanOrEqualTo(expected)
+less_than = _comparator("less than", lambda a, e: a < e)
+less_than_or_equal_to = _comparator("greater than or equal to", lambda a, e: a <= e)
 
 def is_none():
     """Test if value is None"""
