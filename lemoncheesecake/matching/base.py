@@ -4,6 +4,8 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
+import json
+
 from lemoncheesecake.utils import get_distincts_in_list
 from lemoncheesecake.exceptions import method_not_implemented
 
@@ -39,7 +41,7 @@ class MatchExpected(Matcher):
         self.expected = expected
 
 def value_repr(value):
-    return repr(value)
+    return json.dumps(value, ensure_ascii=False)
 
 def got(value):
     return "Got %s" % value
