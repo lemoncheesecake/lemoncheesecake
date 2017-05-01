@@ -20,9 +20,9 @@ class IsValueOfType(Matcher):
     
     def description(self):
         if self.value_matcher:
-            return "is %s and %s" % (self.type_name, self.value_matcher.description())
+            return "to be %s and %s" % (self.type_name, self.value_matcher.description())
         else:
-            return "is %s" % self.type_name
+            return "to be %s" % self.type_name
     
     def matches(self, actual):
         if type(actual) in self.types:

@@ -16,7 +16,7 @@ def _comparator(comparison_description, comparison_func):
     def wrapper(expected):
         class _Comparator(MatchExpected):
             def description(self):
-                return "is %s %s" % (comparison_description, value_repr(self.expected))
+                return "to be %s %s" % (comparison_description, value_repr(self.expected))
              
             def matches(self, actual):
                 return match_result(comparison_func(actual, self.expected), got_value(actual))
@@ -48,11 +48,11 @@ class HasLength(Matcher):
         self.matcher = matcher
     
     def description(self):
-        return "whose length %s" % self.matcher.description()
+        return "to have a length %s" % self.matcher.description()
     
     def matches(self, actual):
         return self.matcher.matches(len(actual))
 
 def has_length(length):
-    """Test if value has length"""
+    """Test if value has a length of"""
     return HasLength(is_(length))

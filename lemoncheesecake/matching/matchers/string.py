@@ -16,7 +16,7 @@ _REGEXP_TYPE = type(re.compile("dummy"))
 
 class StartsWith(MatchExpected):
     def description(self):
-        return "starts with '%s'" % self.expected
+        return "to start with '%s'" % self.expected
     
     def matches(self, actual):
         return match_result(actual.startswith(self.expected), got_value(actual))
@@ -27,7 +27,7 @@ def starts_with(s):
 
 class EndsWith(MatchExpected):
     def description(self):
-        return "ends with '%s'" % self.expected
+        return "to end with '%s'" % self.expected
     
     def matches(self, actual):
         return match_result(actual.endswith(self.expected), got_value(actual))
@@ -38,7 +38,7 @@ def ends_with(s):
 
 class MatchPattern(MatchExpected):
     def description(self):
-        return "matches pattern '%s'" % self.expected.pattern
+        return "to match pattern '%s'" % self.expected.pattern
     
     def matches(self, actual):
         return match_result(self.expected.match(actual) != None, got_value(actual))

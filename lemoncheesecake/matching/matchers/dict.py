@@ -17,7 +17,7 @@ class HasEntry(Matcher):
         self.value_matcher = value_matcher
     
     def description(self):
-        ret = "has entry '%s'" % self.key
+        ret = "to have entry '%s'" % self.key
         if self.value_matcher:
             ret += " " + self.value_matcher.description()
         return ret
