@@ -95,6 +95,7 @@ class TestReportingSession(reporting.ReportingSession):
         self._test_outcomes = {}
         self.last_test_outcome = None
         self.test_nb = 0
+        self.check_nb = 0
         self.test_failing_nb = 0
         self.test_success_nb = 0
         self.last_log = None
@@ -148,6 +149,7 @@ class TestReportingSession(reporting.ReportingSession):
         self.last_log = content
     
     def check(self, description, outcome, details=None):
+        self.check_nb += 1
         self.last_check_description = description
         self.last_check_outcome = outcome
         self.last_check_details = details
