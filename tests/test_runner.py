@@ -46,7 +46,7 @@ def test_test_failure(reporting_session):
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
-            lcc.check_eq("val", 1, 2)
+            lcc.check_that("val", 1, lcc.equal_to(2))
     
     run_testsuite_class(MySuite)
     
