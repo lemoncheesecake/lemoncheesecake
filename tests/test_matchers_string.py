@@ -24,6 +24,16 @@ def test_ends_with_failure():
     assert result.is_failure()
     assert "bar" in result.description
 
+def test_contains_string_with_success():
+    result = contains_string("ob").matches("foobar")
+    assert result.is_success()
+    assert "foobar" in result.description
+
+def test_contains_string_with_failure():
+    result = contains_string("ob").matches("baz")
+    assert result.is_failure()
+    assert "baz" in result.description
+
 def test_match_pattern_success():
     result = match_pattern("^f").matches("foo")
     assert result.is_success()

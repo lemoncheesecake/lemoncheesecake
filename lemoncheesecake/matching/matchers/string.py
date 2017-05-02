@@ -9,7 +9,7 @@ import re
 from lemoncheesecake.matching.base import MatchExpected, match_result, got_value
 
 __all__ = (
-    "starts_with", "ends_with", "match_pattern"
+    "starts_with", "ends_with", "contains_string", "match_pattern"
 )
 
 _REGEXP_TYPE = type(re.compile("dummy"))
@@ -35,6 +35,17 @@ class EndsWith(MatchExpected):
 def ends_with(s):
     """Test if string ends with given suffix"""
     return EndsWith(s)
+
+class ContainsString(MatchExpected):
+    def description(self):
+        return "to contain '%s'" % self.expected
+    
+    def matches(self, actual):
+        return match_result(self.expected in actual, got_value(actual))
+
+def contains_string(s):
+    """Test if string contains sub string"""
+    return ContainsString(s)
 
 class MatchPattern(MatchExpected):
     def description(self):
