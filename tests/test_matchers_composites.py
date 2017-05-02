@@ -39,3 +39,8 @@ def test_any_of_failure():
     result = any_of(equal_to("foo"), equal_to("bar")).matches("baz")
     assert result.is_failure()
     assert "baz" in result.description
+
+def test_anything():
+    result = anything().matches("foo")
+    assert result.is_success()
+    assert "foo" in result.description
