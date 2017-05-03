@@ -30,7 +30,7 @@ def match_result(outcome, description=None):
     return MatchResult(outcome, description)
 
 class Matcher:
-    def description(self):
+    def description(self, conjugate=False):
         method_not_implemented("description", self)
     
     def matches(self, actual):
@@ -53,3 +53,9 @@ def merge_match_result_descriptions(results):
     return ", ".join(
         get_distincts_in_list([result.description for result in results if result.description != None])
     )
+
+def to_be(conjugate=False):
+    return "is" if conjugate else "to be"
+
+def to_have(conjugate=False):
+    return "has" if conjugate else "to have"

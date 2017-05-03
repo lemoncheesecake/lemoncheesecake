@@ -4,7 +4,7 @@ Created on Apr 1, 2017
 @author: nicolas
 '''
 
-from lemoncheesecake.matching.base import Matcher, match_failure, match_success, got
+from lemoncheesecake.matching.base import Matcher, match_failure, match_success, got, to_have
 from lemoncheesecake.matching.matchers.composites import is_
 
 __all__ = (
@@ -16,10 +16,10 @@ class HasEntry(Matcher):
         self.key = key
         self.value_matcher = value_matcher
     
-    def description(self):
-        ret = "to have entry '%s'" % self.key
+    def description(self, conjugate=False):
+        ret = "%s entry '%s'" % (to_have(conjugate), self.key)
         if self.value_matcher:
-            ret += " " + self.value_matcher.description()
+            ret += " " + self.value_matcher.description(conjugate=True)
         return ret
     
     def matches(self, actual):

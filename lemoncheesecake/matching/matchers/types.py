@@ -5,7 +5,7 @@ Created on Apr 3, 2017
 '''
 
 from lemoncheesecake.utils import IS_PYTHON3
-from lemoncheesecake.matching.base import Matcher, match_success, match_failure, got, value_repr, got_value
+from lemoncheesecake.matching.base import Matcher, match_success, match_failure, got, value_repr, got_value, to_be
 from lemoncheesecake.matching.matchers.value import is_
 
 __all__ = (
@@ -18,11 +18,12 @@ class IsValueOfType(Matcher):
         self.type_name = type_name
         self.value_matcher = value_matcher
     
-    def description(self):
+    def description(self, conjugate=False):
+        ret = "%s %s" % (to_be(conjugate), self.type_name)
         if self.value_matcher:
-            return "to be %s and %s" % (self.type_name, self.value_matcher.description())
-        else:
-            return "to be %s" % self.type_name
+            ret += " that %s" % self.value_matcher.description(conjugate=True)
+        
+        return ret
     
     def matches(self, actual):
         if type(actual) in self.types:
@@ -41,8 +42,8 @@ def is_type(types, type_name):
     wrapper.__doc__ = "Test if value is of type %s" % type_name
     return wrapper
 
-is_integer = is_type([int], "integer")
-is_float = is_type([float], "float")
-is_str = is_type([str], "string") if IS_PYTHON3 else is_type([str, unicode], "string")
-is_dict = is_type([dict], "collection")
-is_list = is_type([list, tuple], "array")
+is_integer = is_type([int], "an integer")
+is_float = is_type([float], "a float")
+is_str = is_type([str] if IS_PYTHON3 else [str, unicode], "a string")
+is_dict = is_type([dict], "a collection")
+is_list = is_type([list, tuple], "an array")

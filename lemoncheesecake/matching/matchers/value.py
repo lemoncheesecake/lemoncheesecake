@@ -4,7 +4,7 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
-from lemoncheesecake.matching.base import MatchExpected, Matcher, match_result, got_value, value_repr
+from lemoncheesecake.matching.base import MatchExpected, Matcher, match_result, got_value, value_repr, to_be
 from lemoncheesecake.matching.matchers.composites import is_
 
 __all__ = (
@@ -15,8 +15,8 @@ __all__ = (
 def _comparator(comparison_description, comparison_func):
     def wrapper(expected):
         class _Comparator(MatchExpected):
-            def description(self):
-                return "to be %s %s" % (comparison_description, value_repr(self.expected))
+            def description(self, conjugate=False):
+                return "%s %s %s" % (to_be(conjugate), comparison_description, value_repr(self.expected))
              
             def matches(self, actual):
                 return match_result(comparison_func(actual, self.expected), got_value(actual))

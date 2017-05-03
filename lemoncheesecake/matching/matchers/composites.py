@@ -15,7 +15,7 @@ class AllOf(Matcher):
     def __init__(self, matchers):
         self.matchers = matchers
     
-    def description(self):
+    def description(self, conjugate=False):
         return " and ".join([matcher.description() for matcher in self.matchers])
     
     def matches(self, actual):
@@ -36,7 +36,7 @@ class AnyOf(Matcher):
     def __init__(self, matchers):
         self.matchers = matchers
     
-    def description(self):
+    def description(self, conjugate=False):
         return " or ".join([matcher.description() for matcher in self.matchers])
     
     def matches(self, actual):
@@ -54,7 +54,7 @@ def any_of(*matchers):
     return AnyOf(map(is_, matchers))
 
 class Anything(Matcher):
-    def description(self):
+    def description(self, conjugate=False):
         return "anything"
     
     def matches(self, actual):
@@ -73,8 +73,8 @@ class IsNot(Matcher):
     def __init__(self, matcher):
         self.matcher = matcher
     
-    def description(self):
-        return "not %s" % self.matcher.description()
+    def description(self, conjugate=False):
+        return "not %s" % self.matcher.description(conjugate)
     
     def matches(self, actual):
         result = self.matcher.matches(actual)
