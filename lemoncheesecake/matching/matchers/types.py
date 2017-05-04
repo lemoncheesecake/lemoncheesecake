@@ -5,7 +5,7 @@ Created on Apr 3, 2017
 '''
 
 from lemoncheesecake.utils import IS_PYTHON3
-from lemoncheesecake.matching.base import Matcher, match_success, match_failure, got, value_repr, got_value, to_be
+from lemoncheesecake.matching.base import Matcher, match_success, match_failure, got, serialize_value, got_value, to_be
 from lemoncheesecake.matching.matchers.value import is_
 
 __all__ = (
@@ -32,7 +32,7 @@ class IsValueOfType(Matcher):
             else:
                 return match_success(got_value(actual))
         else:
-            return match_failure(got("%s (%s)" % (value_repr(actual), type(actual).__name__)))
+            return match_failure(got("%s (%s)" % (serialize_value(actual), type(actual).__name__)))
 
 def is_type(types, type_name):
     def wrapper(value_matcher=None):

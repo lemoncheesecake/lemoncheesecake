@@ -40,14 +40,14 @@ class MatchExpected(Matcher):
     def __init__(self, expected):
         self.expected = expected
 
-def value_repr(value):
+def serialize_value(value):
     return json.dumps(value, ensure_ascii=False)
 
 def got(value):
     return "Got %s" % value
 
 def got_value(value):
-    return got(value_repr(value))
+    return got(serialize_value(value))
 
 def merge_match_result_descriptions(results):
     return ", ".join(
