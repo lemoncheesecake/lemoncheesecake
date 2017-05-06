@@ -43,11 +43,17 @@ class MatchExpected(Matcher):
 def serialize_value(value):
     return json.dumps(value, ensure_ascii=False)
 
+def serialize_values(values):
+    return ", ".join(map(serialize_value, values))
+
 def got(value):
     return "Got %s" % value
 
 def got_value(value):
     return got(serialize_value(value))
+
+def got_values(values):
+    return got(serialize_values(values))
 
 def merge_match_result_descriptions(results):
     return ", ".join(
