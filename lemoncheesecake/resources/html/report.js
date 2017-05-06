@@ -67,10 +67,10 @@ Step.prototype = {
 	}
 };
 
-function Test(name, description, outcome, steps, tags, properties, links) {
+function Test(name, description, status, steps, tags, properties, links) {
 	this.name = name;
 	this.description = description;
-	this.outcome = outcome;
+	this.status = status;
 	this.steps = [];
 	this.tags = (tags != null) ? tags : [];
 	this.properties = (properties != null) ? properties : [];
@@ -113,9 +113,9 @@ Test.prototype = {
 		/* build status column */
 		var status;
 		var status_class;
-		if (this.outcome == true) {
+		if (this.status == "passed") {
 			$status_col = $("<td class='text-success'><strong>success</strong></td>");
-		} else if (this.outcome == false) {
+		} else if (this.status == "failed") {
 			$status_col = $("<td><strong>failure</strong></td>");
 			status_class = "danger";
 		} else {
@@ -188,7 +188,7 @@ function TestSuite(data, parents) {
 
     for (var i = 0; i < data.tests.length; i++) {
         var t = data.tests[i]
-    	this.tests.push(new Test(t.name, t.description, t.outcome, t.steps, t.tags, t.properties, t.links));
+    	this.tests.push(new Test(t.name, t.description, t.status, t.steps, t.tags, t.properties, t.links));
     }
 
     for (var i = 0; i < data.sub_suites.length; i++) {

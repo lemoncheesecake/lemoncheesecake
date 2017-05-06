@@ -201,11 +201,11 @@ class _Runtime:
     
     def end_test(self):
         now = time.time()
-        self.current_test_data.outcome = not self.has_pending_failure
+        self.current_test_data.status = "failed" if self.has_pending_failure else "passed"
         self.current_test_data.end_time = now
         self.end_current_step(now)
         
-        self.for_each_reporting_sessions(lambda b: b.end_test(self.current_test, self.current_test_data.outcome))
+        self.for_each_reporting_sessions(lambda b: b.end_test(self.current_test, self.current_test_data.status))
 
         self.current_test = None
         self.current_test_data = None

@@ -16,6 +16,8 @@ __all__ = (
     "TestSuiteData", "HookData", "Report"
 )
 
+TEST_STATUSES = "passed", "failed"
+
 # NB: it would be nicer to use:
 # datetime.isoformat(sep=' ', timespec='milliseconds')
 # unfortunately, the timespec argument is only available since Python 3.6
@@ -76,7 +78,7 @@ class TestData:
         self.tags = [ ]
         self.properties = {}
         self.links = [ ]
-        self.outcome = None
+        self.status = None
         self.steps = [ ]
         self.start_time = None
         self.end_time = None
@@ -136,8 +138,7 @@ class TestSuiteData:
 class ReportStats:
     def __init__(self, report):
         self.tests = 0
-        self.test_successes = 0
-        self.test_failures = 0
+        self.test_statuses = {s: 0 for s in TEST_STATUSES}
         self.errors = 0
         self.checks = 0
         self.check_successes = 0
@@ -186,10 +187,9 @@ class ReportStats:
         
         for test in suite.tests:
             self.tests += 1
-            if test.outcome == True:
-                self.test_successes += 1
-            elif test.outcome == False:
-                self.test_failures += 1
+            if test.status not in self.test_statuses:
+                self.test_statuses[test.status] = 0
+            self.test_statuses[test.status] += 1
             self._walk_steps(test.steps)
         
         for sub_suite in suite.sub_testsuites:
@@ -236,8 +236,8 @@ class Report:
             ("End time", time.asctime(time.localtime(self.end_time)) if self.end_time else "n/a"),
             ("Duration", humanize_duration(self.end_time - self.start_time) if self.end_time else "n/a"),
             ("Tests", str(stats.tests)),
-            ("Successful tests", str(stats.test_successes)),
-            ("Successful tests in %", "%d%%" % (float(stats.test_successes) / stats.tests * 100 if stats.tests else 0)),
-            ("Failed tests", str(stats.test_failures)),
+            ("Successful tests", str(stats.test_statuses["passed"])),
+            ("Successful tests in %", "%d%%" % (float(stats.test_statuses["passed"]) / stats.tests * 100 if stats.tests else 0)),
+            ("Failed tests", str(stats.test_statuses["failed"])),
             ("Errors", str(stats.errors))
         )

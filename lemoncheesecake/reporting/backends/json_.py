@@ -62,7 +62,7 @@ def _serialize_test_data(test):
         "start_time", _serialize_time(test.start_time),
         "end_time", _serialize_time(test.end_time),
         "steps", _serialize_steps(test.steps),
-        "outcome", test.outcome
+        "status", test.status
     ))
     return serialized
 
@@ -137,7 +137,7 @@ def _unserialize_step_data(js):
 
 def _unserialize_test_data(js):
     test = TestData(js["name"], js["description"])
-    test.outcome = js["outcome"]
+    test.status = js["status"]
     test.start_time = _unserialize_time(js["start_time"])
     test.end_time = _unserialize_time(js["end_time"])
     test.tags = js["tags"]

@@ -66,7 +66,7 @@ class ReportingSession:
     def begin_test(self, test):
         pass
     
-    def end_test(self, test, outcome):
+    def end_test(self, test, status):
         pass
     
     def set_step(self, description):
@@ -138,7 +138,7 @@ class FileReportSession(ReportingSession):
             suite_data.suite_teardown.has_failure() if suite_data.suite_teardown else False
         )
     
-    def end_test(self, test, outcome):
+    def end_test(self, test, status):
         self._handle_code_end(test)
     
     def end_suite(self, testsuite):
