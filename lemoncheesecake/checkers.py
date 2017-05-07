@@ -1,3 +1,10 @@
+"""
+DEPRECATED
+
+lemoncheesecake.checkers API is DEPRECATED.
+Please use lemoncheesecake.matching API instead.
+"""
+
 '''
 Created on Jan 24, 2016
 
