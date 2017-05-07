@@ -139,7 +139,7 @@ class TestReportingSession(reporting.ReportingSession):
     def begin_test(self, test):
         self.last_test_outcome = None
     
-    def end_test(self, test, status):
+    def end_test(self, test, status, status_details=None):
         self.last_test = test.name
         self._test_statuses[test.name] = status
         self.last_test_status = status
@@ -148,6 +148,9 @@ class TestReportingSession(reporting.ReportingSession):
             self.test_success_nb += 1
         else:
             self.test_failing_nb += 1
+    
+    def bypass_test(self, test, status, status_details):
+        self.end_test(test, status, status_details)
     
     def log(self, level, content):
         if level == "error":
@@ -295,6 +298,7 @@ def assert_test_data(actual, expected):
     assert actual.properties == expected.properties
     assert actual.links == expected.links
     assert actual.status == expected.status
+    assert actual.status_details == expected.status_details
     assert round(actual.start_time, 3) == round(expected.start_time, 3)
     assert round(actual.end_time, 3) == round(expected.end_time, 3)
     
@@ -404,13 +408,15 @@ def assert_report_from_testsuite(report, suite_class):
     assert_report_from_testsuites(report, [suite_class])
 
 def assert_report_stats(report,
-                        expected_test_successes=0, expected_test_failures=0, expected_errors=0,
+                        expected_test_successes=0, expected_test_failures=0, expected_test_skippeds=0,
+                        expected_errors=0,
                         expected_check_successes=0, expected_check_failures=0,
                         expected_error_logs=0, expected_warning_logs=0):
     stats = report.get_stats()
-    assert stats.tests == expected_test_successes + expected_test_failures
-    assert stats.test_statuses.get("passed", 0) == expected_test_successes
-    assert stats.test_statuses.get("failed", 0) == expected_test_failures
+    assert stats.tests == expected_test_successes + expected_test_failures + expected_test_skippeds
+    assert stats.test_statuses["passed"] == expected_test_successes
+    assert stats.test_statuses["failed"] == expected_test_failures
+    assert stats.test_statuses["skipped"] == expected_test_skippeds
     assert stats.errors == expected_errors
     assert stats.checks == expected_check_successes + expected_check_failures
     assert stats.check_successes == expected_check_successes

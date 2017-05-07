@@ -28,6 +28,9 @@ def assert_test_success(report, test_name):
 def assert_test_failure(report, test_name):
     assert report.get_test(test_name).status == "failed"
 
+def assert_test_skipped(report, test_name):
+    assert report.get_test(test_name).status == "skipped"
+
 def test_simple_test():
     @lcc.testsuite("MySuite")
     class MySuite:
@@ -503,7 +506,7 @@ def test_setup_suite_failure():
     report = get_runtime().report
 
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_test_failures=1, expected_errors=1, expected_error_logs=2)
+    assert_report_stats(report, expected_test_skippeds=1, expected_errors=1, expected_error_logs=1)
     
     suite = report.get_suite("MySuite")
     assert suite.suite_setup.outcome == False
@@ -511,7 +514,7 @@ def test_setup_suite_failure():
     assert suite.suite_setup.end_time != None
     assert suite.suite_setup.steps[0].entries[0].message == "something bad happened"
     assert suite.suite_setup.has_failure() == True
-    assert_test_failure(report, "sometest")
+    assert_test_skipped(report, "sometest")
 
 def test_setup_suite_without_content():
     marker = []
@@ -642,14 +645,14 @@ def test_setup_test_session_failure():
     report = get_runtime().report
     
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_test_failures=1, expected_errors=1, expected_error_logs=2)
+    assert_report_stats(report, expected_test_skippeds=1, expected_errors=1, expected_error_logs=1)
     
     assert report.test_session_setup.outcome == False
     assert report.test_session_setup.start_time != None
     assert report.test_session_setup.end_time != None
     assert report.test_session_setup.steps[0].entries[0].message == "something bad happened"
     assert report.test_session_setup.has_failure() == True
-    assert_test_failure(report, "sometest")
+    assert_test_skipped(report, "sometest")
  
 def test_setup_test_session_without_content():
     marker = []

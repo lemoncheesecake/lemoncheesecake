@@ -93,7 +93,7 @@ def _serialize_steps(steps, parent_node):
 
 def _serialize_test_data(test):
     test_node = _xml_node("test", "name", test.name, "description", test.description,
-                          "status", test.status)
+                          "status", test.status, "status-details", test.status_details)
     _add_time_attr(test_node, "start-time", test.start_time)
     _add_time_attr(test_node, "end-time", test.end_time)
     for tag in test.tags:
@@ -217,6 +217,7 @@ def _unserialize_step_data(xml):
 def _unserialize_test_data(xml):
     test = TestData(xml.attrib["name"], xml.attrib["description"])
     test.status = xml.attrib["status"]
+    test.status_details = xml.attrib.get("status-details", None)
     test.start_time = _unserialize_datetime(xml.attrib["start-time"])
     test.end_time = _unserialize_datetime(xml.attrib["end-time"])
     test.tags = [ node.text for node in xml.xpath("tag") ]

@@ -16,7 +16,7 @@ __all__ = (
     "TestSuiteData", "HookData", "Report"
 )
 
-TEST_STATUSES = "passed", "failed"
+TEST_STATUSES = "passed", "failed", "skipped"
 
 # NB: it would be nicer to use:
 # datetime.isoformat(sep=' ', timespec='milliseconds')
@@ -79,6 +79,7 @@ class TestData:
         self.properties = {}
         self.links = [ ]
         self.status = None
+        self.status_details = None
         self.steps = [ ]
         self.start_time = None
         self.end_time = None
@@ -187,8 +188,6 @@ class ReportStats:
         
         for test in suite.tests:
             self.tests += 1
-            if test.status not in self.test_statuses:
-                self.test_statuses[test.status] = 0
             self.test_statuses[test.status] += 1
             self._walk_steps(test.steps)
         
@@ -239,5 +238,6 @@ class Report:
             ("Successful tests", str(stats.test_statuses["passed"])),
             ("Successful tests in %", "%d%%" % (float(stats.test_statuses["passed"]) / stats.tests * 100 if stats.tests else 0)),
             ("Failed tests", str(stats.test_statuses["failed"])),
+            ("Skipped tests", str(stats.test_statuses["skipped"])),
             ("Errors", str(stats.errors))
         )

@@ -132,6 +132,16 @@ class ConsoleReportingSession(ReportingSession):
         self.lp.new_line()
         self.current_test_idx += 1
     
+    def bypass_test(self, test, status, status_details):
+        line = " %s %2s # %s" % (
+            colored("KO", "yellow", attrs=["bold"]),
+            self.current_test_idx, self.get_test_label(test)
+        )
+        raw_line = "%s %2s # %s" % ("KO", self.current_test_idx, self.get_test_label(test))
+        self.lp.print_line(line, force_len=len(raw_line))
+        self.lp.new_line()
+        self.current_test_idx += 1
+    
     def set_step(self, description):
         self.lp.print_line("%s (%s...)" % (self.step_prefix, description))
     
@@ -141,15 +151,17 @@ class ConsoleReportingSession(ReportingSession):
     def end_tests(self):
         report = self.report
         stats = report.get_stats()
-        successes = stats.test_statuses["passed"]
-        failures = stats.test_statuses["failed"]
         
         print()
         print(colored("Statistics", attrs=["bold"]), ":")
         print(" * Duration: %s" % humanize_duration(report.end_time - report.start_time))
         print(" * Tests: %d" % stats.tests)
-        print(" * Successes: %d (%d%%)" % (successes, float(successes) / stats.tests * 100 if stats.tests else 0))
-        print(" * Failures: %d" % (failures))
+        print(" * Successes: %d (%d%%)" % (
+            stats.test_statuses["passed"], float(stats.test_statuses["passed"]) / stats.tests * 100 if stats.tests else 0)
+        )
+        print(" * Failures: %d" % (stats.test_statuses["failed"]))
+        if stats.test_statuses["skipped"]:
+            print(" * Skipped: %d" % (stats.test_statuses["skipped"]))
         print()
 
 class ConsoleBackend(ReportingBackend):

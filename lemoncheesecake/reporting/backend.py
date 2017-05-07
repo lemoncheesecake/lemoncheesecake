@@ -69,6 +69,9 @@ class ReportingSession:
     def end_test(self, test, status):
         pass
     
+    def bypass_test(self, test, status, status_details):
+        pass
+    
     def set_step(self, description):
         pass
     
