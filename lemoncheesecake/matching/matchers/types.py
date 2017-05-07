@@ -4,13 +4,30 @@ Created on Apr 3, 2017
 @author: nicolas
 '''
 
-from lemoncheesecake.utils import IS_PYTHON3
+from lemoncheesecake.utils import IS_PYTHON3, IS_PYTHON2
 from lemoncheesecake.matching.base import Matcher, match_success, match_failure, got, serialize_value, got_value, to_be
 from lemoncheesecake.matching.matchers.value import is_
 
 __all__ = (
     "is_integer", "is_float", "is_str", "is_dict", "is_list"
 )
+
+TYPE_NAMES = {
+    int: "integer",
+    float: "float",
+    str: "string",
+    dict: "collection",
+    list: "array", tuple: "array"
+}
+
+if IS_PYTHON2:
+    TYPE_NAMES[unicode] = "string",
+
+def get_value_type_name(value):
+    try:
+        return TYPE_NAMES[type(value)]
+    except KeyError:
+        return str(type(value))
 
 class IsValueOfType(Matcher):
     def __init__(self, types, type_name, value_matcher):
@@ -32,7 +49,7 @@ class IsValueOfType(Matcher):
             else:
                 return match_success(got_value(actual))
         else:
-            return match_failure(got("%s (%s)" % (serialize_value(actual), type(actual).__name__)))
+            return match_failure(got("%s (%s)" % (serialize_value(actual), get_value_type_name(actual))))
 
 def is_type(types, type_name):
     def wrapper(value_matcher=None):
