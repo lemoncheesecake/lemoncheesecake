@@ -17,7 +17,7 @@ class HasEntry(Matcher):
         self.value_matcher = value_matcher
     
     def description(self, conjugate=False):
-        ret = "%s entry '%s'" % (to_have(conjugate), self.key)
+        ret = '%s entry "%s"' % (to_have(conjugate), self.key)
         if self.value_matcher:
             ret += " " + self.value_matcher.description(conjugate=True)
         return ret
@@ -29,7 +29,7 @@ class HasEntry(Matcher):
             else:
                 return match_success(got(actual[self.key]))
         else:
-            return match_failure("No entry '%s'" % self.key)
+            return match_failure('No entry "%s"' % self.key)
 
 def has_entry(key, value_matcher=None):
     """Test if dict has a <key> entry whose value matches (optional) value_matcher""" 

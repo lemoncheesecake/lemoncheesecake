@@ -18,7 +18,7 @@ __all__ = (
 
 class _HasEntry(HasEntry):
     def description(self):
-        ret = "entry '%s'" % self.key
+        ret = 'entry "%s"' % self.key
         if self.value_matcher:
             ret += " " + self.value_matcher.description()
         return ret
