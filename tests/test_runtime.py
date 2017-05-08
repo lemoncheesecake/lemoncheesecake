@@ -22,6 +22,15 @@ from lemoncheesecake.reporting.backends.json_ import serialize_report_into_json
 from helpers import run_testsuite_class, run_testsuite_classes, assert_report_from_testsuite, assert_report_from_testsuites, assert_report_stats, \
     dump_report
 
+def assert_test_success(report, test_name):
+    assert report.get_test(test_name).status == "passed"
+
+def assert_test_failure(report, test_name):
+    assert report.get_test(test_name).status == "failed"
+
+def assert_test_skipped(report, test_name):
+    assert report.get_test(test_name).status == "skipped"
+
 def test_simple_test():
     @lcc.testsuite("MySuite")
     class MySuite:
@@ -36,7 +45,7 @@ def test_simple_test():
     assert_report_from_testsuite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
     
-    assert report.get_test("sometest").outcome == True
+    assert_test_success(report, "sometest")
 
 def test_test_with_all_metadata():
     @lcc.testsuite("MySuite")
@@ -55,7 +64,7 @@ def test_test_with_all_metadata():
     assert_report_from_testsuite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
 
-    assert report.get_test("sometest").outcome == True
+    assert_test_success(report, "sometest")
 
 def test_testsuite_with_all_metadata():
     @lcc.link("http://foo.bar", "foobar")
@@ -74,7 +83,7 @@ def test_testsuite_with_all_metadata():
     assert_report_from_testsuite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
     
-    assert report.get_test("sometest").outcome == True
+    assert_test_success(report, "sometest")
 
 def test_multiple_testsuites_and_tests():
     @lcc.testsuite("MySuite1")
@@ -138,17 +147,17 @@ def test_multiple_testsuites_and_tests():
         expected_check_successes=6, expected_check_failures=1, expected_error_logs=2
     )
     
-    assert report.get_test("test_1_1").outcome == True
-    assert report.get_test("test_1_2").outcome == True
-    assert report.get_test("test_1_3").outcome == False
+    assert_test_success(report, "test_1_1")
+    assert_test_success(report, "test_1_2")
+    assert_test_failure(report, "test_1_3")
 
-    assert report.get_test("test_2_1").outcome == False
-    assert report.get_test("test_2_2").outcome == True
-    assert report.get_test("test_2_3").outcome == True
+    assert_test_failure(report, "test_2_1")
+    assert_test_success(report, "test_2_2")
+    assert_test_success(report, "test_2_3")
 
-    assert report.get_test("test_3_1").outcome == True
-    assert report.get_test("test_3_2").outcome == False
-    assert report.get_test("test_3_3").outcome == True
+    assert_test_success(report, "test_3_1")
+    assert_test_failure(report, "test_3_2")
+    assert_test_success(report, "test_3_3")
     
 def test_check_success():
     @lcc.testsuite("MySuite")
@@ -165,7 +174,7 @@ def test_check_success():
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
     
     test = report.get_test("test_1")
-    assert test.outcome == True
+    assert test.status == "passed"
     step = test.steps[0]
     assert "somevalue" in step.entries[0].description
     assert "foo" in step.entries[0].description
@@ -187,7 +196,7 @@ def test_check_failure():
     assert_report_stats(report, expected_test_failures=1, expected_check_failures=1)
     
     test = report.get_test("test_1")
-    assert test.outcome == False
+    assert test.status == "failed"
     step = test.steps[0]
     assert "somevalue" in step.entries[0].description
     assert "bar" in step.entries[0].description
@@ -209,7 +218,7 @@ def test_require_success():
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
     
     test = report.get_test("test_1")
-    assert test.outcome == True
+    assert test.status == "passed"
     step = test.steps[0]
     assert "somevalue" in step.entries[0].description
     assert "foo" in step.entries[0].description
@@ -231,7 +240,7 @@ def test_require_failure():
     assert_report_stats(report, expected_test_failures=1, expected_check_failures=1, expected_error_logs=1)
     
     test = report.get_test("test_1")
-    assert test.outcome == False
+    assert test.status == "failed"
     step = test.steps[0]
     assert "somevalue" in step.entries[0].description
     assert "bar" in step.entries[0].description
@@ -262,7 +271,7 @@ def test_all_types_of_logs():
     )
     
     test = report.get_test("test_1")
-    assert test.outcome == True
+    assert test.status == "passed"
     step = test.steps[0]
     assert step.entries[0].level == "debug"
     assert step.entries[0].message == "some debug message"
@@ -271,7 +280,7 @@ def test_all_types_of_logs():
     assert step.entries[2].level == "warn"
     
     test = report.get_test("test_2")
-    assert test.outcome == False
+    assert test.status == "failed"
     step = test.steps[0]    
     assert step.entries[0].message == "some error message"
     assert step.entries[0].level == "error"
@@ -294,7 +303,7 @@ def test_multiple_steps():
     assert_report_stats(report, expected_test_successes=1)
 
     test = report.get_test("sometest")
-    assert test.outcome == True
+    assert test.status == "passed"
     assert test.steps[0].description == "step 1"
     assert test.steps[0].entries[0].level == "info"
     assert test.steps[0].entries[0].message == "do something"
@@ -317,7 +326,7 @@ def test_default_step():
     assert_report_stats(report, expected_test_successes=1)
     
     test = report.get_test("sometest")
-    assert test.outcome == True
+    assert test.status == "passed"
     assert test.steps[0].description == "Some test"
     assert test.steps[0].entries[0].level == "info"
     assert test.steps[0].entries[0].message == "do something"
@@ -340,7 +349,7 @@ def test_step_after_test_setup():
     assert_report_stats(report, expected_test_successes=1)
     
     test = report.get_test("sometest")
-    assert test.outcome == True
+    assert test.status == "passed"
     assert test.steps[0].description == "Setup test"
     assert test.steps[0].entries[0].level == "info"
     assert test.steps[0].entries[0].message == "in test setup"
@@ -367,7 +376,7 @@ def test_prepare_attachment(tmpdir):
     test = report.get_test("sometest")
     assert test.steps[0].entries[0].filename.endswith("foobar.txt")
     assert test.steps[0].entries[0].description == "some description"
-    assert test.outcome == True
+    assert test.status == "passed"
     assert open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename)).read() == "some content"
 
 def test_save_attachment_file(tmpdir):
@@ -391,7 +400,7 @@ def test_save_attachment_file(tmpdir):
     test = report.get_test("sometest")
     assert test.steps[0].entries[0].filename.endswith("somefile.txt")
     assert test.steps[0].entries[0].description == "some other file"
-    assert test.outcome == True
+    assert test.status == "passed"
     assert open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename)).read() == "some other content"
 
 def _test_save_attachment_content(tmpdir, file_name, file_content, encoding=None):
@@ -411,7 +420,7 @@ def _test_save_attachment_content(tmpdir, file_name, file_content, encoding=None
     test = report.get_test("sometest")
     assert test.steps[0].entries[0].filename.endswith(file_name)
     assert test.steps[0].entries[0].description == file_name
-    assert test.outcome == True
+    assert test.status == "passed"
     fh = open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename), "rb")
     actual_content = fh.read()
     if encoding != None:
@@ -447,7 +456,7 @@ def test_unicode(tmpdir):
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
 
     test = report.get_test("sometest")
-    assert test.outcome == True
+    assert test.status == "passed"
     step = test.steps[0]
     assert step.description == u"éééààà"
     assert u"éééààà" in step.entries[0].description
@@ -480,7 +489,7 @@ def test_setup_suite_success():
     assert suite.suite_setup.end_time != None
     assert suite.suite_setup.steps[0].entries[0].message == "some log"
     assert suite.suite_setup.has_failure() == False
-    assert report.get_test("sometest").outcome == True
+    assert_test_success(report, "sometest")
 
 def test_setup_suite_failure():
     @lcc.testsuite("MySuite")
@@ -497,7 +506,7 @@ def test_setup_suite_failure():
     report = get_runtime().report
 
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_test_failures=1, expected_errors=1, expected_error_logs=2)
+    assert_report_stats(report, expected_test_skippeds=1, expected_errors=1, expected_error_logs=1)
     
     suite = report.get_suite("MySuite")
     assert suite.suite_setup.outcome == False
@@ -505,7 +514,7 @@ def test_setup_suite_failure():
     assert suite.suite_setup.end_time != None
     assert suite.suite_setup.steps[0].entries[0].message == "something bad happened"
     assert suite.suite_setup.has_failure() == True
-    assert report.get_test("sometest").outcome == False
+    assert_test_skipped(report, "sometest")
 
 def test_setup_suite_without_content():
     marker = []
@@ -549,7 +558,7 @@ def test_teardown_suite_success():
     assert suite.suite_teardown.end_time != None
     assert suite.suite_teardown.steps[0].entries[0].message == "some log"
     assert suite.suite_teardown.has_failure() == False
-    assert report.get_test("sometest").outcome == True
+    assert_test_success(report, "sometest")
 
 def test_teardown_suite_failure():
     @lcc.testsuite("MySuite")
@@ -574,7 +583,7 @@ def test_teardown_suite_failure():
     assert suite.suite_teardown.end_time != None
     assert suite.suite_teardown.steps[0].entries[0].outcome == False
     assert suite.suite_teardown.has_failure() == True
-    assert report.get_test("sometest").outcome == True
+    assert_test_success(report, "sometest")
 
 def test_teardown_suite_without_content():
     marker = []
@@ -618,7 +627,7 @@ def test_setup_test_session_success():
     assert report.test_session_setup.end_time != None
     assert report.test_session_setup.steps[0].entries[0].message == "some log"
     assert report.test_session_setup.has_failure() == False
-    assert report.get_test("sometest").outcome == True
+    assert_test_success(report, "sometest")
 
 def test_setup_test_session_failure():
     @lcc.testsuite("MySuite")
@@ -636,14 +645,14 @@ def test_setup_test_session_failure():
     report = get_runtime().report
     
     assert_report_from_testsuite(report, MySuite)
-    assert_report_stats(report, expected_test_failures=1, expected_errors=1, expected_error_logs=2)
+    assert_report_stats(report, expected_test_skippeds=1, expected_errors=1, expected_error_logs=1)
     
     assert report.test_session_setup.outcome == False
     assert report.test_session_setup.start_time != None
     assert report.test_session_setup.end_time != None
     assert report.test_session_setup.steps[0].entries[0].message == "something bad happened"
     assert report.test_session_setup.has_failure() == True
-    assert report.get_test("sometest").outcome == False
+    assert_test_skipped(report, "sometest")
  
 def test_setup_test_session_without_content():
     marker = []
@@ -688,7 +697,7 @@ def test_teardown_test_session_success():
     assert report.test_session_teardown.end_time != None
     assert report.test_session_teardown.steps[0].entries[0].message == "some log"
     assert report.test_session_teardown.has_failure() == False
-    assert report.get_test("sometest").outcome == True
+    assert_test_success(report, "sometest")
  
 def test_teardown_test_session_failure():
     @lcc.testsuite("MySuite")
@@ -713,7 +722,7 @@ def test_teardown_test_session_failure():
     assert report.test_session_teardown.end_time != None
     assert report.test_session_teardown.steps[0].entries[0].outcome == False
     assert report.test_session_teardown.has_failure() == True
-    assert report.get_test("sometest").outcome == True
+    assert_test_success(report, "sometest")
 
 def test_teardown_test_session_without_content():
     marker = []
@@ -735,8 +744,9 @@ def test_teardown_test_session_without_content():
     assert report.test_session_teardown == None
     assert marker == ["teardown"]
 
-def add_report_info():
-    class MySuite(lcc.TestSuite):
+def test_add_report_info():
+    @lcc.testsuite("Some suite")
+    class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             lcc.add_report_info("some info", "some data")

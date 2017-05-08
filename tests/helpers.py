@@ -92,8 +92,8 @@ def build_fixture_registry(*funcs):
 
 class TestReportingSession(reporting.ReportingSession):
     def __init__(self):
-        self._test_outcomes = {}
-        self.last_test_outcome = None
+        self._test_statuses = {}
+        self.last_test_status = None
         self.test_nb = 0
         self.check_nb = 0
         self.test_failing_nb = 0
@@ -109,8 +109,11 @@ class TestReportingSession(reporting.ReportingSession):
     def get_last_test(self):
         return self.last_test
     
+    def get_last_test_status(self):
+        return self.last_test_status
+    
     def get_last_test_outcome(self):
-        return self.last_test_outcome
+        return self.get_last_test_status() == "passed"
     
     def get_last_log(self):
         return self.last_log
@@ -118,8 +121,11 @@ class TestReportingSession(reporting.ReportingSession):
     def get_error_log_nb(self):
         return self.error_log_nb
     
+    def get_test_status(self, test_name):
+        return self._test_statuses[test_name]
+    
     def get_test_outcome(self, test_name):
-        return self._test_outcomes[test_name]
+        return self.get_test_status(test_name) == "passed"
     
     def get_last_check(self):
         return self.last_check_description, self.last_check_outcome, self.last_check_details
@@ -133,15 +139,18 @@ class TestReportingSession(reporting.ReportingSession):
     def begin_test(self, test):
         self.last_test_outcome = None
     
-    def end_test(self, test, outcome):
+    def end_test(self, test, status, status_details=None):
         self.last_test = test.name
-        self._test_outcomes[test.name] = outcome
-        self.last_test_outcome = outcome
+        self._test_statuses[test.name] = status
+        self.last_test_status = status
         self.test_nb += 1
-        if outcome:
+        if status == "passed":
             self.test_success_nb += 1
         else:
             self.test_failing_nb += 1
+    
+    def bypass_test(self, test, status, status_details):
+        self.end_test(test, status, status_details)
     
     def log(self, level, content):
         if level == "error":
@@ -288,7 +297,8 @@ def assert_test_data(actual, expected):
     assert actual.tags == expected.tags
     assert actual.properties == expected.properties
     assert actual.links == expected.links
-    assert actual.outcome == expected.outcome
+    assert actual.status == expected.status
+    assert actual.status_details == expected.status_details
     assert round(actual.start_time, 3) == round(expected.start_time, 3)
     assert round(actual.end_time, 3) == round(expected.end_time, 3)
     
@@ -398,13 +408,15 @@ def assert_report_from_testsuite(report, suite_class):
     assert_report_from_testsuites(report, [suite_class])
 
 def assert_report_stats(report,
-                        expected_test_successes=0, expected_test_failures=0, expected_errors=0,
+                        expected_test_successes=0, expected_test_failures=0, expected_test_skippeds=0,
+                        expected_errors=0,
                         expected_check_successes=0, expected_check_failures=0,
                         expected_error_logs=0, expected_warning_logs=0):
     stats = report.get_stats()
-    assert stats.tests == expected_test_successes + expected_test_failures
-    assert stats.test_successes == expected_test_successes
-    assert stats.test_failures == expected_test_failures
+    assert stats.tests == expected_test_successes + expected_test_failures + expected_test_skippeds
+    assert stats.test_statuses["passed"] == expected_test_successes
+    assert stats.test_statuses["failed"] == expected_test_failures
+    assert stats.test_statuses["skipped"] == expected_test_skippeds
     assert stats.errors == expected_errors
     assert stats.checks == expected_check_successes + expected_check_failures
     assert stats.check_successes == expected_check_successes

@@ -201,16 +201,33 @@ class _Runtime:
     
     def end_test(self):
         now = time.time()
-        self.current_test_data.outcome = not self.has_pending_failure
+        self.current_test_data.status = "failed" if self.has_pending_failure else "passed"
         self.current_test_data.end_time = now
         self.end_current_step(now)
         
-        self.for_each_reporting_sessions(lambda b: b.end_test(self.current_test, self.current_test_data.outcome))
+        self.for_each_reporting_sessions(lambda b: b.end_test(self.current_test, self.current_test_data.status))
 
         self.current_test = None
         self.current_test_data = None
         self.current_step_data_list = None
+    
+    def _bypass_test(self, test, status, status_details):
+        now = time.time()
         
+        test_data = TestData(test.name, test.description)
+        test_data.tags.extend(test.tags)
+        test_data.properties.update(test.properties)
+        test_data.links.extend(test.links)
+        test_data.end_time = test_data.start_time = now
+        test_data.status = status
+        test_data.status_details = status_details
+        self.current_testsuite_data.tests.append(test_data)
+
+        self.for_each_reporting_sessions(lambda b: b.bypass_test(test, status, status_details))
+    
+    def skip_test(self, test, reason):
+        self._bypass_test(test, "skipped", reason)
+    
     def create_step_if_needed(self, ts=None):
         if not self.current_step_data_list:
             self._set_step(self.default_step_description, ts or time.time())

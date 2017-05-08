@@ -119,17 +119,23 @@ class _Runner:
             self.session.log_error("Caught unexpected exception while running test: " + stacktrace)
     
     def run_test(self, test, suite):
+        ###
+        # Checker whether the test must be executed or not
+        ###
+        if self.abort_testsuite:
+            self.session.skip_test(test, "Cannot execute this test: the tests of this test suite have been aborted.")
+            return
+        
+        if self.abort_all_tests:
+            self.session.skip_test(test, "Cannot execute this test: all tests have been aborted.")
+            return
+        
+        ###
+        # Begin test
+        ###
+        
         self.session.begin_test(test)
         
-        if self.abort_testsuite:
-            self.session.log_error("Cannot execute this test: the tests of this test suite have been aborted.")
-            self.session.end_test()
-            return
-        if self.abort_all_tests:
-            self.session.log_error("Cannot execute this test: all tests have been aborted.")
-            self.session.end_test()
-            return
-
         ###
         # Setup test (setup and fixtures)
         ###
