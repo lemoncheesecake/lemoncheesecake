@@ -27,6 +27,7 @@ A testsuite can be represented either:
   ```python
   # tests/my_first_testsuite.py:
   import lemoncheesecake.api as lcc
+  from lemoncheesecake.matching import *
 
   TESTSUITE = {
       "description": "My first testsuite"
@@ -34,18 +35,19 @@ A testsuite can be represented either:
 
   @lcc.test("My first test")
   def my_first_test():
-      lcc.check_str_eq("value", "foo", "foo")
+      check_that("value", "foo", equal_to("foo"))
   ```
 - as a class (in this case the class name must match the module name), each test is a method decorated with `@lcc.test`:
   ```python
   # tests/my_first_testsuite.py:
   import lemoncheesecake.api as lcc
+  from lemoncheesecake.matching import *
 
   @lcc.testsuite("My first testsuite")
   class my_first_testsuite:
       @lcc.test("My first test")
       def my_first_test():
-          lcc.check_str_eq("value", "foo", "foo")
+          check_that("value", "foo", equal_to("foo"))
   ```
 
 The two examples above declare:
@@ -117,38 +119,53 @@ The generated HTML report is available in report/report.html:
 
 Lemoncheesecake provides several API functions to check data and to set various information into the test report.
 
-## Checkers
+## Matchers
 
-lemoncheesecake comes with a wide variety of checkers that allow you to check if values fulfill given conditions, examples:
+Lemoncheesecake comes with support of matchers, a functionality inspired by [Hamcrest](http://hamcrest.org/) / [PyHamcrest](https://github.com/hamcrest/PyHamcrest).
+
+The following stock matchers are available:
+
+- Values:
+  - *equal_to(expected)*: match using *==* operator
+  - *not_equal_to(expected)*: match using *!=* operator
+  - *greater_than(expected)*: match using *>* operator
+  - *greater_than_or_equal_to(expected)*: match using *>=* operator
+  - *less_than(expected)*: match using *<* operator
+  - *less_than_or_equal_to(expected)*: match using *<=* operator
+  - *is_none()*: match using *== None*
+  - *is_not_none()*: match using *!= None*
+  - *has_length(expected)*: match if value has expected length while expected can be a value or a Matcher object
+- Character strings:
+  - *starts_with(expected)*: match beginning of the string
+  - *ends_with(expected)*: match end of the string
+  - *match_pattern(expected)*: match using regexp (expected can be a raw string or an object returned by re.compile())
+- Types (expected is a value or a Matcher object):
+  - *is_integer(expected)*: match type *int*
+  - *is_float(expected)*: match type *float*
+  - *is_str(expected)*: match types *str* and *unicode* (Python 2.x)
+  - *is_dict(expected)*: match type *dict*
+  - *is_list(expected)*: match types *list* and *tuple*
+- Iterable:
+  - *has_item(expected)*: the iterable has an element that matches expected (value or matcher)
+  - *has_values(values)*: the iterable contains (at least) the values passed as argument
+  - *has_only_values(values)*: the iterable only contains the values passed as argument
+- Dict:
+ - *has_entry(key[, value])*: match dict key and optionally match associated value (with value or Matcher object)
+
+ Those matcher are used by a matching operation:
+ - *check_that*: run the matcher, log the result and return the matching result as a boolean
+ - *require_that*: run the matcher, log the result and raise an *AbortTest* exception in case of match failure
+ - *assert_that*: run the match, in case of match failure log the result and raise an *AbortTest* exception
+
+Each of these matching operations:
+- has a *quiet* flag that do not log the check details when set to True
+- has a shortcut for matching operations on dict, example:
 ```python
-@lcc.test("Some test")
-def some_test():
-    lcc.check_eq("my value", 2 + 2, 4)
-    lcc.check_str_not_eq("my string", "foobaz", "foobar")
-    lcc.check_gt("other value", 5, 2)
+check_that_entry("foo", {"foo": "bar"}, equal_to("bar")) # is a shortcut for:
+check_that("entry 'foo'", {"foo": "bar"}, has_entry("foo", equal_to("bar")))
 ```
 
-Checker functions like `check_int_eq` or `check_float_gteq` also perform a check on the actual value type, meaning:
-```python
-lcc.check_int_eq("my value", 2.0, 2)
-```
-will fail, whereas:
-
-```python
-lcc.check_eq("my value", 2.0, 2)
-```
-will succeed.
-
-All these checkers are also available in a dict variant (where the value to check is a dict entry) handling a possible key error:
-```python
-d = {"foo": 42}
-lcc.check_dictval_eq("foo", d, 2)
-lcc.check_dictval_int_gt("bar", d, 3) # will properly fail by indicating that "bar" is not present
-```
-
-`check_` functions return `True` if the check succeed and return `False` otherwise. All `check_` functions have their `assert_` equivalent that returns no value if the assertion succeeds and stops the test (by raising `AbortTest`) otherwise.
-
-If one check fails in a test, this test will be marked as failed.
+If one match fails in a test, this test will be marked as failed.
 
 ## Logs and steps
 
@@ -423,6 +440,7 @@ Here is a project/testsuite example. The purpose of the test is to test the omdb
  # project.py:
 [...]
 import lemoncheesecake.api as lcc
+from lemoncheesecake.matching import *
 
 import urllib
 import urllib2
@@ -437,7 +455,7 @@ class OmdbapiWorker(Worker):
         req = urllib2.urlopen("http://{host}/?t={movie}&y={year}&plot=short&r=json".format(
             host=self.host, movie=urllib.quote(movie), year=int(year)
         ))
-        lcc.assert_eq("HTTP status code", req.code, 200)
+        require_that("HTTP status code", req.code, equal_to(200))
 
         content = req.read()
         lcc.log_info("Response body: %s" % content)
@@ -451,6 +469,7 @@ WORKERS = {"omdb": OmdbapiWorker()}
 
  # tests/movies.py
 import lemoncheesecake.api as lcc
+from lemoncheesecake.matching import *
 
 @lcc.testsuite("Movies")
 class movies:
@@ -458,11 +477,11 @@ class movies:
 	def test_matrix(self):
 		data = self.omdb.get_movie_info("matrix", 1999)
 		lcc.set_step("Check movie information")
-		lcc.check_dictval_str_eq("Title", data, "The Matrix")
-		lcc.check_dictval_str_contains("Actors", data, "Keanu Reeves")
-		lcc.check_dictval_str_match("Director", data, re.compile(".+Wachow?ski", re.I))
-		if lcc.check_dict_has_key("imdbRating", data):
-			lcc.check_gt("imdbRating", float(data["imdbRating"]), 8.5)
+    check_that_entry("Title", data, equal_to("The Matrix"))
+    check_that_entry("Actors", data, contains_string("Keanu Reeves"))
+    check_that_entry("Director", data, match_pattern(re.compile(".+Wachow?ski", re.I)))
+		if check_that_entry("imdbRating", data, is_(anything())):
+		    check_that("entry 'imdbRating'", float(data["imdbRating"]), is_(8.5))
 ```
 
 # Advanced features

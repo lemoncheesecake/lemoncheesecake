@@ -37,7 +37,7 @@ def test_simple_test(backend, tmpdir):
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
-            lcc.check_int_eq("foo", 1, 1)
+            lcc.check_that("foo", 1, lcc.equal_to(1))
     
     do_test_serialization(MySuite, backend, tmpdir)
 
@@ -49,7 +49,7 @@ def test_test_with_all_metadata(backend, tmpdir):
         @lcc.tags("foo", "bar")
         @lcc.test("Some test")
         def sometest(self):
-            lcc.check_int_eq("foo", 1, 1)
+            lcc.check_that("foo", 1, lcc.equal_to(1))
     
     do_test_serialization(MySuite, backend, tmpdir)
 
@@ -61,7 +61,7 @@ def test_testsuite_with_all_metadata(backend, tmpdir):
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
-            lcc.check_int_eq("foo", 1, 1)
+            lcc.check_that("foo", 1, lcc.equal_to(1))
     
     do_test_serialization(MySuite, backend, tmpdir)
 
@@ -77,7 +77,7 @@ def test_unicode(backend, tmpdir):
         @lcc.test(u"Some test ààà")
         def sometest(self):
             lcc.set_step(u"éééààà")
-            lcc.check_int_eq(u"éééààà", 1, 1)
+            lcc.check_that(u"éééààà", 1, lcc.equal_to(1))
             lcc.log_info(u"éééààà")
             lcc.save_attachment_content("A" * 1024, u"somefileààà", u"éééààà")
     
@@ -89,17 +89,17 @@ def test_multiple_testsuites_and_tests(backend, tmpdir):
         @lcc.tags("foo")
         @lcc.test("Some test 1")
         def test_1_1(self):
-            lcc.check_int_eq("foo", 2, 2)
+            lcc.check_that("foo", 2, lcc.equal_to(2))
         
         @lcc.tags("bar")
         @lcc.test("Some test 2")
         def test_1_2(self):
-            lcc.check_int_eq("foo", 2, 2)
+            lcc.check_that("foo", 2, lcc.equal_to(2))
         
         @lcc.tags("baz")
         @lcc.test("Some test 3")
         def test_1_3(self):
-            lcc.check_int_eq("foo", 3, 2)
+            lcc.check_that("foo", 3, lcc.equal_to(2))
     
     @lcc.testsuite("MySuite2")
     class MySuite2:
@@ -111,11 +111,11 @@ def test_multiple_testsuites_and_tests(backend, tmpdir):
         @lcc.prop("foo", "baz")
         @lcc.test("Some test 2")
         def test_2_2(self):
-            lcc.check_int_eq("foo", 2, 2)
+            lcc.check_that("foo", 2, lcc.equal_to(2))
         
         @lcc.test("Some test 3")
         def test_2_3(self):
-            lcc.check_int_eq("foo", 2, 2)
+            lcc.check_that("foo", 2, lcc.equal_to(2))
     
         # suite3 is a sub suite of suite3
         @lcc.testsuite("MySuite3")
@@ -123,7 +123,7 @@ def test_multiple_testsuites_and_tests(backend, tmpdir):
             @lcc.prop("foo", "bar")
             @lcc.test("Some test 1")
             def test_3_1(self):
-                lcc.check_int_eq("foo", 1, 1)
+                lcc.check_that("foo", 1, lcc.equal_to(1))
             
             @lcc.prop("foo", "baz")
             @lcc.test("Some test 2")
@@ -132,7 +132,7 @@ def test_multiple_testsuites_and_tests(backend, tmpdir):
             
             @lcc.test("Some test 3")
             def test_3_3(self):
-                lcc.check_int_eq("foo", 1, 1)
+                lcc.check_that("foo", 1, lcc.equal_to(1))
     
     do_test_serialization((MySuite1, MySuite2), backend, tmpdir)
 
@@ -141,7 +141,7 @@ def test_check_success(backend, tmpdir):
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
-            lcc.check_eq("somevalue", "foo", "foo")
+            lcc.check_that("somevalue", "foo", lcc.equal_to("foo"))
     
     do_test_serialization(MySuite, backend, tmpdir)
 
@@ -150,16 +150,25 @@ def test_check_failure(backend, tmpdir):
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
-            lcc.check_eq("somevalue", "foo", "bar")
+            lcc.check_that("somevalue", "foo", lcc.equal_to("bar"))
     
     do_test_serialization(MySuite, backend, tmpdir)
 
-def test_assert_success(backend, tmpdir):
+def test_require_success(backend, tmpdir):
     @lcc.testsuite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
-            lcc.assert_eq("somevalue", "foo", "foo")
+            lcc.require_that("somevalue", "foo", lcc.equal_to("foo"))
+    
+    do_test_serialization(MySuite, backend, tmpdir)
+
+def test_require_failure(backend, tmpdir):
+    @lcc.testsuite("MySuite")
+    class MySuite:
+        @lcc.test("Test 1")
+        def test_1(self):
+            lcc.require_that("somevalue", "foo", lcc.equal_to("bar"))
     
     do_test_serialization(MySuite, backend, tmpdir)
 
@@ -168,7 +177,7 @@ def test_assert_failure(backend, tmpdir):
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
-            lcc.assert_eq("somevalue", "foo", "bar")
+            lcc.assert_that("somevalue", "foo", lcc.equal_to("bar"))
     
     do_test_serialization(MySuite, backend, tmpdir)
 

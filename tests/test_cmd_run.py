@@ -31,7 +31,7 @@ TEST_MODULE_USING_FIXTURES = """import lemoncheesecake.api as lcc
 class mysuite:
     @lcc.test("My Test 1")
     def mytest1(self, fixt):
-        lcc.check_eq("val", fixt, 42)
+        lcc.check_that("val", fixt, lcc.equal_to(42))
 """
 
 

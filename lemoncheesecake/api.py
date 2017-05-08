@@ -8,6 +8,7 @@ from lemoncheesecake.testsuite import Test, add_test_in_testsuite, add_tests_in_
     get_metadata, testsuite, test, tags, prop, link
 from lemoncheesecake.runtime import *
 from lemoncheesecake.checkers import *
+from lemoncheesecake.matching import *
 from lemoncheesecake.fixtures import fixture
 from lemoncheesecake.exceptions import AbortTest, AbortTestSuite, AbortAllTests, UserError
 
