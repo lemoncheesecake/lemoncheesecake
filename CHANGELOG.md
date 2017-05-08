@@ -1,3 +1,8 @@
+# 0.8.0 (2017-05-08)
+
+- **API**: introduce new lemoncheesecake.matching API
+- **API**: replace test outcome by test status
+
 # 0.7.2 (2017-04-17)
 
 - **API**: rank option of @testsuite decorator was no longer properly taken into account (regression introduced in 0.7.0)
