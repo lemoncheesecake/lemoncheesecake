@@ -5,7 +5,7 @@ Created on Mar 28, 2017
 '''
 
 from lemoncheesecake.matching.base import Matcher, match_success, match_failure, match_result, \
-    got_value, merge_match_result_descriptions
+    got_value, to_be, merge_match_result_descriptions
 
 __all__ = (
     "all_of", "any_of", "anything", "is_", "is_not"
@@ -55,7 +55,7 @@ def any_of(*matchers):
 
 class Anything(Matcher):
     def description(self, conjugate=False):
-        return "anything"
+        return "%s anything" % to_be(conjugate)
     
     def matches(self, actual):
         return match_success(got_value(actual))
