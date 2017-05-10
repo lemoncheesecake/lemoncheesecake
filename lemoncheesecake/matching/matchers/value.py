@@ -4,7 +4,7 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
-from lemoncheesecake.matching.base import MatchExpected, Matcher, match_result, got_value, serialize_value, to_be
+from lemoncheesecake.matching.base import MatchExpected, Matcher, match_result, got_value, serialize_value, to_be, to_have
 from lemoncheesecake.matching.matchers.composites import is_
 
 __all__ = (
@@ -47,8 +47,8 @@ class HasLength(Matcher):
     def __init__(self, matcher):
         self.matcher = matcher
     
-    def description(self):
-        return "to have a length %s" % self.matcher.description()
+    def description(self, conjugate=False):
+        return "%s a length that %s" % (to_have(conjugate), self.matcher.description(conjugate=True))
     
     def matches(self, actual):
         return self.matcher.matches(len(actual))
