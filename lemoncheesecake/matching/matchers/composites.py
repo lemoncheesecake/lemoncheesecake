@@ -8,7 +8,7 @@ from lemoncheesecake.matching.base import Matcher, match_success, match_failure,
     got_value, to_be, merge_match_result_descriptions
 
 __all__ = (
-    "all_of", "any_of", "anything", "is_", "is_not"
+    "all_of", "any_of", "anything", "something", "existing", "is_", "is_not"
 )
 
 class AllOf(Matcher):
@@ -54,14 +54,26 @@ def any_of(*matchers):
     return AnyOf(map(is_, matchers))
 
 class Anything(Matcher):
+    def __init__(self, wording="anything"):
+        self.wording = wording
+    
     def description(self, conjugate=False):
-        return "%s anything" % to_be(conjugate)
+        return "%s %s" % (to_be(conjugate), self.wording)
     
     def matches(self, actual):
         return match_success(got_value(actual))
 
 def anything():
+    """Matches anything (always success, whatever the actual value)"""
     return Anything()
+
+def something():
+    """Same thing as the 'anything' matcher but use 'something' in the matcher description"""
+    return Anything(wording="something")
+
+def existing():
+    """Same thing as the 'anything' matcher but use 'existing' in the matcher description"""
+    return Anything(wording="existing")
 
 def is_(matcher):
     """If the function argument is not an instance of Matcher, wrap it into
