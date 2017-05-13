@@ -4,10 +4,10 @@ Created on May 2, 2017
 @author: nicolas
 '''
 
-from lemoncheesecake.matching.base import Matcher, MatchExpected, match_failure, match_success, got_value, to_have, serialize_values
+from lemoncheesecake.matching.base import MatchExpected, match_failure, match_success, match_result, got_value, to_have, to_be, serialize_values
 from lemoncheesecake.matching.matchers.composites import is_
 
-__all__ = ("has_item", "has_values", "has_only_values")
+__all__ = ("has_item", "has_values", "has_only_values", "is_in")
 
 class HasItem(MatchExpected):
     def description(self, conjugate=False):
@@ -73,3 +73,13 @@ class HasOnlyValues(MatchExpected):
 def has_only_values(values):
     "Test if iterable only contains the given values"
     return HasOnlyValues(values)
+
+class IsIn(MatchExpected):
+    def description(self, conjugate=False):
+        return "%s in %s" % (to_be(conjugate), serialize_values(self.expected))
+    
+    def matches(self, actual):
+        return match_result(actual in self.expected, got_value(actual))
+
+def is_in(expected):
+    return IsIn(expected)

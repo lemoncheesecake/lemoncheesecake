@@ -34,3 +34,13 @@ def test_has_only_values_extra_missing():
     result = has_only_values([1, 2, 3]).matches([4, 1, 2, 3])
     assert result.is_failure()
     assert "Extra" in result.description and "4" in result.description
+
+def test_is_in_success():
+    result = is_in([1, 2, 3]).matches(1)
+    assert result.is_success()
+    assert "1" in result.description
+
+def test_is_in_failure():
+    result = is_in([1, 2, 3]).matches(4)
+    assert result.is_failure()
+    assert "4" in result.description

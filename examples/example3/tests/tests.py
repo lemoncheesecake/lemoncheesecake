@@ -32,6 +32,10 @@ def test():
 
     check_that("list", [3, 1, 2], has_only_values([1, 2]))
 
+    check_that("list", [3, 1, 2], has_length(equal_to(3)))
+
+    check_that("val", 1, is_in([1, 2, 3]))
+
     # Expect value to be integer and to be greater than 0
     
     # Expect value to be an integer that is greater than 0
