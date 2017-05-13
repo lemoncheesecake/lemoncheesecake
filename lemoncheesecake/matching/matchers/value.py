@@ -9,7 +9,8 @@ from lemoncheesecake.matching.matchers.composites import is_
 
 __all__ = (
     "equal_to", "not_equal_to", "greater_than", "greater_than_or_equal_to",
-    "less_than", "less_than_or_equal_to", "is_none", "is_not_none", "has_length"
+    "less_than", "less_than_or_equal_to",
+    "is_between", "is_none", "is_not_none", "has_length"
 )
 
 def _comparator(comparison_description, comparison_func):
@@ -34,6 +35,21 @@ greater_than_or_equal_to = _comparator("greater than or equal to", lambda a, e: 
 
 less_than = _comparator("less than", lambda a, e: a < e)
 less_than_or_equal_to = _comparator("greater than or equal to", lambda a, e: a <= e)
+
+class IsBetween(Matcher):
+    def __init__(self, min, max):
+        self.min = min
+        self.max = max
+    
+    def description(self, conjugate=False):
+        return "%s between %s and %s" % (to_be(conjugate), self.min, self.max)
+    
+    def matches(self, actual):
+        return match_result(actual >= self.min and actual <= self.max, got_value(actual))
+
+def is_between(min, max):
+    """Test if value is between min and max"""
+    return IsBetween(min, max)
 
 def is_none():
     """Test if value is None"""

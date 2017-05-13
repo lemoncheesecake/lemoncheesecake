@@ -60,6 +60,16 @@ def test_less_than_or_equal_to_failure():
     assert result.is_failure()
     assert "2" in result.description
 
+def test_is_between_success():
+    result = is_between(1, 3).matches(2)
+    assert result.is_success()
+    assert "2" in result.description
+
+def test_is_between_failure():
+    result = is_between(1, 3).matches(4)
+    assert result.is_failure()
+    assert "4" in result.description
+
 def test_is_none_success():
     result = is_none().matches(None)
     assert result.is_success()

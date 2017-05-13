@@ -35,6 +35,8 @@ def test():
     check_that("list", [3, 1, 2], has_length(equal_to(3)))
 
     check_that("val", 1, is_in([1, 2, 3]))
+    
+    check_that("val", 2, is_between(1, 3))
 
     # Expect value to be integer and to be greater than 0
     
