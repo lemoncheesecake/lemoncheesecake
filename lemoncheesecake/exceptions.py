@@ -74,6 +74,6 @@ class InvalidReportFile(LemonCheesecakeException):
 
 def serialize_current_exception(show_stacktrace=True):
     if show_stacktrace:
-        return "\n" + "-" * 72 + "\n" + traceback.format_exc() + "-" * 72
+        return "\n" + "<" * 72 + "\n" + traceback.format_exc() + ">" * 72
     else:
         return " " + str(sys.exc_info()[1])
