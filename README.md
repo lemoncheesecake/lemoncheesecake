@@ -132,6 +132,7 @@ The following stock matchers are available:
   - *greater_than_or_equal_to(expected)*: match using *>=* operator
   - *less_than(expected)*: match using *<* operator
   - *less_than_or_equal_to(expected)*: match using *<=* operator
+  - *is_between(min, max)*: match if actual value is between min and max
   - *is_none()*: match using *== None*
   - *is_not_none()*: match using *!= None*
   - *has_length(expected)*: match if value has expected length while expected can be a value or a Matcher object
@@ -149,8 +150,15 @@ The following stock matchers are available:
   - *has_item(expected)*: the iterable has an element that matches expected (value or matcher)
   - *has_values(values)*: the iterable contains (at least) the values passed as argument
   - *has_only_values(values)*: the iterable only contains the values passed as argument
+  - *is_in(values)*: match if the actual value is among the given values 
 - Dict:
  - *has_entry(key[, value])*: match dict key and optionally match associated value (with value or Matcher object)
+- Logical:
+ - *is_(expected)*: return the matcher if *expected* is a matcher, otherwise wraps its value with *equal_to*
+ - *is_not(expected)*: make the negation of the matcher in argument (or *equal_to* in the argument is not a matcher)
+ - *all_of(matcher1, [matcher2, [...]])*: logical **AND** between all the matchers in argument
+ - *any_of(matcher1, [matcher2, [...]])*: logical **OR** between all the matchers in argument
+- *anything()*, *something()*, *existing()*: those matchers always return success whatever the actual value (only the matcher description change between them)
 
  Those matcher are used by a matching operation:
  - *check_that*: run the matcher, log the result and return the matching result as a boolean
