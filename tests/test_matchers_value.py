@@ -5,6 +5,17 @@ def test_equal_to_success():
     assert result.is_success()
     assert "1" in result.description
 
+def test_equal_to_success_with_details():
+    from lemoncheesecake import matching
+    matching.DISPLAY_DETAILS_WHEN_EQUAL = False
+    
+    try:
+        result = equal_to(1).matches(1)
+        assert result.is_success()
+        assert result.description == None
+    finally:
+        matching.DISPLAY_DETAILS_WHEN_EQUAL = True
+
 def test_equal_to_failure():
     result = equal_to(1).matches(2)
     assert result.is_failure()

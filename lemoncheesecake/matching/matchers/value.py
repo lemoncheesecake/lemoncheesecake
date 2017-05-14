@@ -4,7 +4,10 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
-from lemoncheesecake.matching.base import MatchExpected, Matcher, match_result, got_value, serialize_value, to_be, to_have
+from lemoncheesecake.matching.base import (
+    MatchExpected, Matcher, match_result, match_success, match_failure,
+    got_value, serialize_value, to_be, to_have
+)
 from lemoncheesecake.matching.matchers.composites import is_
 
 __all__ = (
@@ -12,6 +15,22 @@ __all__ = (
     "less_than", "less_than_or_equal_to",
     "is_between", "is_none", "is_not_none", "has_length"
 )
+
+class EqualTo(MatchExpected):
+    def description(self, conjugate=False):
+        return "%s equal to %s" % (to_be(conjugate), serialize_value(self.expected))
+    
+    def matches(self, actual):
+        from lemoncheesecake.matching import DISPLAY_DETAILS_WHEN_EQUAL
+
+        if actual == self.expected:
+            return match_success(got_value(actual)) if DISPLAY_DETAILS_WHEN_EQUAL else match_success()
+        else:
+            return match_failure(got_value(actual))
+
+def equal_to(expected):
+    """Test if value is equal to expected"""
+    return EqualTo(expected)
 
 def _comparator(comparison_description, comparison_func):
     def wrapper(expected):
@@ -27,7 +46,6 @@ def _comparator(comparison_description, comparison_func):
     wrapper.__doc__ = """Test if value is %s expected""" % comparison_description
     return wrapper
 
-equal_to = _comparator("equal to", lambda a, e: a == e)
 not_equal_to = _comparator("not equal to", lambda a, e: a != e)
 
 greater_than = _comparator("greater than", lambda a, e: a > e)
