@@ -1,3 +1,10 @@
+# 0.8.1 (2017-05-14)
+
+- **matchers**: add the following new matchers: *something*, *existing*, *is_in*, *is_between*
+- **matchers**: add a constant *DISPLAY_DETAILS_WHEN_EQUAL* in *lemoncheesecake.matching* that can be used to hide matchers details when the actual value is equal to the expected value
+- **matchers**: fix various matcher description wording issues
+- **packaging**: set additional metadata information in setuptools
+
 # 0.8.0 (2017-05-08)
 
 - **API**: introduce new lemoncheesecake.matching API
@@ -88,7 +95,7 @@
 
 - fix various fixtures dependency handling issues
 - add a builtin fixture 'project_dir'
-- do not hide python stacktraces in lcc-run 
+- do not hide python stacktraces in lcc-run
 
 # 0.4.1 (2017-01-17)
 
@@ -102,8 +109,8 @@
 - **fixtures**: introduce a new fixture system similar to what pytest offers
 - use a more standard vocabulary by renaming all methods (and related methods and data) from "before_*" and "after_*" to
   "setup_*" and "teardown_*"
-- improve the dependency system between setup and teardown methods (it also apply to fixtures setup/teardown) 
-- fix save_attachment_content when used with str on Python 3 (a new parameter binary_mode, set to False by default, 
+- improve the dependency system between setup and teardown methods (it also apply to fixtures setup/teardown)
+- fix save_attachment_content when used with str on Python 3 (a new parameter binary_mode, set to False by default,
   has been introduced)
 
 # 0.3.8 (2016-12-30)
