@@ -24,7 +24,7 @@ def _comparator(comparison_description, comparison_func):
          
         return _Comparator(expected)
      
-    wrapper.__doc__ = """Test if value is %s than expected""" % comparison_description
+    wrapper.__doc__ = """Test if value is %s expected""" % comparison_description
     return wrapper
 
 equal_to = _comparator("equal to", lambda a, e: a == e)
