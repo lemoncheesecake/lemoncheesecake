@@ -11,7 +11,7 @@ __all__ = ("has_item", "has_values", "has_only_values", "is_in")
 
 class HasItem(MatchExpected):
     def description(self, conjugate=False):
-        return "%s item whose value %s" % (to_have(conjugate), self.expected.description(conjugate=True))
+        return "%s an item whose value %s" % (to_have(conjugate), self.expected.description(conjugate=True))
     
     def matches(self, actual):
         for item in actual:

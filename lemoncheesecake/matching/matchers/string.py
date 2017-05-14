@@ -49,7 +49,7 @@ def contains_string(s):
 
 class MatchPattern(MatchExpected):
     def description(self, conjugate=False):
-        return '%s with "%s"' % ("matches pattern" if conjugate else "to match pattern", self.expected.pattern)
+        return '%s "%s"' % ("matches pattern" if conjugate else "to match pattern", self.expected.pattern)
     
     def matches(self, actual):
         return match_result(self.expected.match(actual) != None, got_value(actual))

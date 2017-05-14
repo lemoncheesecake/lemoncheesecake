@@ -19,7 +19,7 @@ class HasEntry(Matcher):
     def description(self, conjugate=False):
         ret = '%s entry "%s"' % (to_have(conjugate), self.key)
         if self.value_matcher:
-            ret += " " + self.value_matcher.description(conjugate=True)
+            ret += " that " + self.value_matcher.description(conjugate=True)
         return ret
     
     def matches(self, actual):
