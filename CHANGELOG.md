@@ -1,3 +1,8 @@
+# 0.8.2 (2017-05-15)
+
+- Support UserError exception as a 'special' exception when loading testsuites (UserError can now be used for 
+  example while generating dynamically a testsuite to display an error message to the user)
+
 # 0.8.1 (2017-05-14)
 
 - **matchers**: add the following new matchers: *something*, *existing*, *is_in*, *is_between*
