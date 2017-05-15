@@ -8,7 +8,7 @@ import os.path as osp
 import inspect
 
 from lemoncheesecake.importer import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
-from lemoncheesecake.exceptions import ProgrammingError, ImportTestSuiteError, InvalidMetadataError, serialize_current_exception
+from lemoncheesecake.exceptions import UserError, ProgrammingError, ImportTestSuiteError, InvalidMetadataError, serialize_current_exception
 from lemoncheesecake.testsuite.core import Test, TestSuite, TESTSUITE_HOOKS
 
 __all__ = "load_testsuite_from_file", "load_testsuites_from_files", "load_testsuites_from_directory", \
@@ -57,6 +57,8 @@ def load_testsuite_from_class(klass):
     md = klass._lccmetadata
     try:
         inst = klass()
+    except UserError as e:
+        raise e # propagate UserError
     except Exception:
         raise ProgrammingError("Got an unexpected error while instanciating testsuite class '%s':%s" % (
             klass.__name__, serialize_current_exception()
