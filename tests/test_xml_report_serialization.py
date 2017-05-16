@@ -16,7 +16,7 @@ except ImportError:
 else:
     from report_serialization_tests import *
 
-    @pytest.fixture
+    @pytest.fixture(scope="function")
     def backend():
         return XmlBackend()
     

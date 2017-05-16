@@ -13,6 +13,8 @@ import sys
 import lemoncheesecake.api as lcc
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.worker import Worker
+from lemoncheesecake.reporting.backend import SAVE_AT_EACH_EVENT, SAVE_AT_EACH_FAILED_TEST, \
+    SAVE_AT_EACH_TEST, SAVE_AT_EACH_TESTSUITE, SAVE_AT_END_OF_TESTS
 
 from helpers import run_testsuite_class, run_testsuite_classes, assert_report, dump_report
 
@@ -347,3 +349,26 @@ def test_setup_and_teardown_test_session(backend, tmpdir):
             lcc.log_info("some other log")
 
     do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
+
+# TODO: see below, the behavior of each save mode is not tested in fact, but
+# at least we want to make sure that each of this mode is not failing
+
+def test_save_at_end_of_tests(backend, tmpdir):
+    backend.save_mode = SAVE_AT_END_OF_TESTS
+    test_simple_test(backend, tmpdir)
+
+def test_save_at_end_of_each_event(backend, tmpdir):
+    backend.save_mode = SAVE_AT_EACH_EVENT
+    test_simple_test(backend, tmpdir)
+
+def test_save_at_each_failed_test(backend, tmpdir):
+    backend.save_mode = SAVE_AT_EACH_FAILED_TEST
+    test_simple_test(backend, tmpdir)
+
+def test_save_at_each_test(backend, tmpdir):
+    backend.save_mode = SAVE_AT_EACH_TEST
+    test_simple_test(backend, tmpdir)
+
+def test_save_at_each_testsuite(backend, tmpdir):
+    backend.save_mode = SAVE_AT_EACH_TESTSUITE
+    test_simple_test(backend, tmpdir)

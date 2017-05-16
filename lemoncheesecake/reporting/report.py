@@ -188,7 +188,8 @@ class ReportStats:
         
         for test in suite.tests:
             self.tests += 1
-            self.test_statuses[test.status] += 1
+            if test.status != None:
+                self.test_statuses[test.status] += 1
             self._walk_steps(test.steps)
         
         for sub_suite in suite.sub_testsuites:

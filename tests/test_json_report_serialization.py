@@ -11,7 +11,7 @@ from lemoncheesecake.exceptions import InvalidReportFile
 
 from report_serialization_tests import *
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def backend():
     return JsonBackend()
 
