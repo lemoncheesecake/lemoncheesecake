@@ -1,6 +1,11 @@
+# 0.8.3 (2017-05-17)
+
+- Fix crash when using the SAVE_AT_EACH_EVENT report saving mode (JSON & XML)
+- Add support for smarter key lookup in imbricated dicts in *has_entry* matcher
+
 # 0.8.2 (2017-05-15)
 
-- Support UserError exception as a 'special' exception when loading testsuites (UserError can now be used for 
+- Support UserError exception as a 'special' exception when loading testsuites (UserError can now be used for
   example while generating dynamically a testsuite to display an error message to the user)
 
 # 0.8.1 (2017-05-14)

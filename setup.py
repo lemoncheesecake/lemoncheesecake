@@ -10,7 +10,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "lemoncheesecake",
-    version = "0.8.2",
+    version = "0.8.3",
     description = "A framework for functional QA testing",
     author = "Nicolas Delon",
     author_email = "nicolas dot delon at gmail dot com",
