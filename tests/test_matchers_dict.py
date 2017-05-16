@@ -21,3 +21,13 @@ def test_has_entry_with_matcher_failure():
     result = has_entry("foo", equal_to("bar")).matches({"foo": "baz"})
     assert result.is_failure()
     assert "baz" in result.description
+
+def test_has_entry_using_list_success():
+    result = has_entry(["foo", "bar"]).matches({"foo": {"bar": "baz"}})
+    assert result.is_success()
+    assert "baz" in result.description
+
+def test_has_entry_using_list_failure():
+    result = has_entry(["foo", "bar"]).matches({"foo": "baz"})
+    assert result.is_failure()
+    assert "No entry" in result.description

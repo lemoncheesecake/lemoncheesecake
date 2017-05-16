@@ -37,6 +37,10 @@ def test():
     check_that("val", 1, is_in([1, 2, 3]))
     
     check_that("val", 2, is_between(1, 3))
+    
+#     check_that_entry(["foo", "bar"], {"foo": {"bar": 2}}, greater_than(1))
+
+    check_that("dict", {"foo": {"bar": 2}}, has_entry(["foo", "bar"], greater_than(1)))
 
     # Expect value to be integer and to be greater than 0
     
