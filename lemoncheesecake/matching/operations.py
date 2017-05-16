@@ -6,7 +6,7 @@ Created on Mar 27, 2017
 
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.exceptions import AbortTest
-from lemoncheesecake.matching.matchers.dict import HasEntry
+from lemoncheesecake.matching.matchers.dict import HasEntry, wrap_key_matcher
 from lemoncheesecake.matching.matchers.composites import is_
 
 __all__ = (
@@ -18,16 +18,15 @@ __all__ = (
 
 class _HasEntry(HasEntry):
     def description(self):
-        ret = 'entry "%s"' % self.key
+        ret = 'entry %s' % self.key_matcher.description()
         if self.value_matcher:
             ret += " " + self.value_matcher.description()
         return ret
 
 def _entry_operation(operation):
-    def wrapper(key, actual, matcher=None, quiet=False):
-        return operation(
-            "", actual, _HasEntry(key, matcher if matcher != None else is_(matcher)), quiet=quiet
-        )
+    def wrapper(key_matcher, actual, value_matcher=None, quiet=False):
+        matcher = _HasEntry(wrap_key_matcher(key_matcher), value_matcher if value_matcher != None else is_(value_matcher))
+        return operation("", actual, matcher, quiet=quiet)
     wrapper.__doc__ = "Same as %s but takes dict key as first argument instead of hint." % operation.__name__
     return wrapper
 
