@@ -58,7 +58,7 @@ The `lemoncheesecake.api` module (aliased to lcc to be more developer-friendly) 
 
 ## Running the tests
 
-The command lcc run is in charge of running the tests, it provides several option to filter the test to be run and to set the reporting backends that will be used.
+The command `lcc run` is in charge of running the tests, it provides several option to filter the test to be run and to set the reporting backends that will be used.
 ```
 usage: lcc run [-h] [--desc DESC [DESC ...]] [--tag TAG [TAG ...]]
                [--property PROPERTY [PROPERTY ...]]
@@ -126,47 +126,48 @@ Lemoncheesecake comes with support of matchers, a functionality inspired by [Ham
 The following stock matchers are available:
 
 - Values:
-  - *equal_to(expected)*: match using *==* operator
-  - *not_equal_to(expected)*: match using *!=* operator
-  - *greater_than(expected)*: match using *>* operator
-  - *greater_than_or_equal_to(expected)*: match using *>=* operator
-  - *less_than(expected)*: match using *<* operator
-  - *less_than_or_equal_to(expected)*: match using *<=* operator
-  - *is_between(min, max)*: match if actual value is between min and max
-  - *is_none()*: match using *== None*
-  - *is_not_none()*: match using *!= None*
-  - *has_length(expected)*: match if value has expected length while expected can be a value or a Matcher object
+  - `equal_to(expected)`: match using `==` operator
+  - `not_equal_to(expected)`: match using `!=` operator
+  - `greater_than(expected)`: match using `>` operator
+  - `greater_than_or_equal_to(expected)`: match using `>=` operator
+  - `less_than(expected)`: match using `<` operator
+  - `less_than_or_equal_to(expected)`: match using `<=` operator
+  - `is_between(min, max)`: match if actual value is between min and max
+  - `is_none()`: match using `== None`
+  - `is_not_none()`: match using `!= None`
+  - `has_length(expected)`: match if value has expected length while expected can be a value or a Matcher object
 - Character strings:
-  - *starts_with(expected)*: match beginning of the string
-  - *ends_with(expected)*: match end of the string
-  - *match_pattern(expected)*: match using regexp (expected can be a raw string or an object returned by re.compile())
+  - `starts_with(expected)`: match beginning of the string
+  - `ends_with(expected)`: match end of the string
+  - `match_pattern(expected)`: match using regexp (expected can be a raw string or an object returned by re.compile())
 - Types (expected is a value or a Matcher object):
-  - *is_integer(expected)*: match type *int*
-  - *is_float(expected)*: match type *float*
-  - *is_str(expected)*: match types *str* and *unicode* (Python 2.x)
-  - *is_dict(expected)*: match type *dict*
-  - *is_list(expected)*: match types *list* and *tuple*
+  - `is_integer(expected)`: match type `int`
+  - `is_float(expected)`: match type `float`
+  - `is_str(expected)`: match types `str` and `unicode` (Python 2.x)
+  - `is_dict(expected)`: match type `dict`
+  - `is_list(expected)`: match types `list` and `tuple`
 - Iterable:
-  - *has_item(expected)*: the iterable has an element that matches expected (value or matcher)
-  - *has_values(values)*: the iterable contains (at least) the values passed as argument
-  - *has_only_values(values)*: the iterable only contains the values passed as argument
-  - *is_in(values)*: match if the actual value is among the given values 
+  - `has_item(expected)`: the iterable has an element that matches expected (value or matcher)
+  - `has_values(values)`: the iterable contains (at least) the values passed as argument
+  - `has_only_values(values)`: the iterable only contains the values passed as argument
+  - `is_in(values)`: match if the actual value is among the given values
 - Dict:
- - *has_entry(key[, value])*: match dict key and optionally match associated value (with value or Matcher object)
+  - `has_entry(key[, value])`: match dict key and optionally match associated value (with value or Matcher object)
 - Logical:
- - *is_(expected)*: return the matcher if *expected* is a matcher, otherwise wraps its value with *equal_to*
- - *is_not(expected)*: make the negation of the matcher in argument (or *equal_to* in the argument is not a matcher)
- - *all_of(matcher1, [matcher2, [...]])*: logical **AND** between all the matchers in argument
- - *any_of(matcher1, [matcher2, [...]])*: logical **OR** between all the matchers in argument
-- *anything()*, *something()*, *existing()*: those matchers always return success whatever the actual value (only the matcher description change between them)
+  - `is_(expected)`: return the matcher if `expected` is a matcher, otherwise wraps its value with `equal_to`
+  - `is_not(expected)`: make the negation of the matcher in argument (or `equal_to` in the argument is not a matcher)
+  - `all_of(matcher1, [matcher2, [...]])`: logical **AND** between all the matchers in argument
+  - `any_of(matcher1, [matcher2, [...]])`: logical **OR** between all the matchers in argument
+  - `anything()`, `something()`, `existing()`: those matchers always return success whatever the actual value (only the matcher description change between them)
+
 
  Those matcher are used by a matching operation:
- - *check_that*: run the matcher, log the result and return the matching result as a boolean
- - *require_that*: run the matcher, log the result and raise an *AbortTest* exception in case of match failure
- - *assert_that*: run the match, in case of match failure log the result and raise an *AbortTest* exception
+ - `check_that`: run the matcher, log the result and return the matching result as a boolean
+ - `require_that`: run the matcher, log the result and raise an `AbortTest` exception in case of match failure
+ - `assert_that`: run the match, in case of match failure log the result and raise an `AbortTest` exception
 
 Each of these matching operations:
-- has a *quiet* flag that do not log the check details when set to True
+- has a `quiet` flag that do not log the check details when set to `True`
 - has a shortcut for matching operations on dict, example:
 ```python
 check_that_entry("foo", {"foo": "bar"}, equal_to("bar")) # is a shortcut for:
@@ -248,7 +249,7 @@ TESTSUITE = {
     "description": "My Suite"
 }
 
-@test("Some test")
+@lcc.test("Some test")
 def some_test(self, conn):
     conn.request("GET", "/some/resource")
     resp =  conn.getresponse()
@@ -258,7 +259,7 @@ Four scopes are supported: `session_prerun`, `session`, `testsuite` and `test` w
 - fixture teardown can be implemented using yield to initially return the fixture value.
 - fixtures can be used in fixture
 
-Lemoncheesecake provides a special builtin fixtures named **cli_args** that can be used to access custom command line arguments previous setup by the function referenced by **CLI_EXTRA_ARGS** parameter of project.py file.
+Lemoncheesecake provides a special builtin fixtures named `cli_args` that can be used to access custom command line arguments previous setup by the function referenced by `CLI_EXTRA_ARGS` parameter of project.py file.
 
 Using the default project.py file, fixtures will be loaded from the fixtures/ sub directory.
 
@@ -326,7 +327,7 @@ Sub testsuites can be declared in a testsuite in a lot of different ways:
       @lcc.test("Test C")
       def test_c(self):
           pass
-```
+  ```
 - by referencing it through the `sub_suites` attribute of the parent testsuite class:
   ```python
   @lcc.testsuite("Child suite")
@@ -509,7 +510,7 @@ CLI_EXTRA_ARGS = add_cli_args
 [...]
 ```
 
-**cli_parser** is an ArgumentParser instance of the argparse module.
+`cli_parser` is an ArgumentParser instance of the argparse module.
 
 ## Metadata Policy
 
