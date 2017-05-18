@@ -37,7 +37,7 @@ def log_match_result(hint, matcher, result, quiet=False):
     """
     description = "Expect %s %s" % (hint, matcher.description())
     return get_runtime().check(
-        description, result.outcome, str(result.description) if not quiet and result.description != None else None
+        description, result.outcome, result.description if not quiet and result.description != None else None
     )
 
 def check_that(hint, actual, matcher, quiet=False):

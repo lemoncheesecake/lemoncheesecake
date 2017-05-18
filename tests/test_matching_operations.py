@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 '''
 Created on Dec 1, 2016
 
@@ -93,3 +95,11 @@ def test_assert_that_entry(reporting_session):
     run_func_in_test(lambda: lcc.assert_that_entry("foo", {"foo": "bar"}, lcc.equal_to("bar")))
 
     assert reporting_session.check_nb == 0
+
+def test_unicode(reporting_session):
+    run_func_in_test(lambda: lcc.check_that(u"ééé", u"éééààà", lcc.starts_with(u"ééé")))
+    description, outcome, details = reporting_session.get_last_check()
+
+    assert u"ééé" in description
+    assert outcome == True
+    assert u"éééààà" in details
