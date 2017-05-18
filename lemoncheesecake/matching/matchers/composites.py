@@ -8,7 +8,7 @@ from lemoncheesecake.matching.base import Matcher, match_success, match_failure,
     got_value, to_be, merge_match_result_descriptions
 
 __all__ = (
-    "all_of", "any_of", "anything", "something", "existing", "is_", "is_not"
+    "all_of", "any_of", "anything", "something", "existing", "is_", "not_"
 )
 
 class AllOf(Matcher):
@@ -81,7 +81,7 @@ def is_(matcher):
     from lemoncheesecake.matching.matchers.value import equal_to
     return matcher if isinstance(matcher, Matcher) else equal_to(matcher)
 
-class IsNot(Matcher):
+class Not(Matcher):
     def __init__(self, matcher):
         self.matcher = matcher
     
@@ -92,6 +92,6 @@ class IsNot(Matcher):
         result = self.matcher.matches(actual)
         return match_result(not result.outcome, result.description)
 
-def is_not(matcher):
+def not_(matcher):
     """Negates the matcher in argument"""
-    return IsNot(is_(matcher))
+    return Not(is_(matcher))

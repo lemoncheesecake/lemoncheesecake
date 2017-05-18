@@ -11,12 +11,12 @@ def test_is_with_matcher():
     assert "2" in result.description
 
 def test_is_not_success():
-    result = is_not(greater_than(1)).matches(1)
+    result = not_(greater_than(1)).matches(1)
     assert result.is_success()
     assert "1" in result.description
 
 def test_is_not_failure():
-    result = is_not(greater_than(1)).matches(2)
+    result = not_(greater_than(1)).matches(2)
     assert result.is_failure()
     assert "2" in result.description
 
