@@ -55,11 +55,11 @@ th, td {
 	padding-left: 15px;
 }
 
-.step, .check, .log, .attachment {
+.step, .check, .log, .attachment, .url {
 	background-color: #353d44;
 }
 
-.check td:first-child, .log td:first-child, .attachment td:first-child {
+.check td:first-child, .log td:first-child, .attachment td:first-child, .url td:first-child {
 	padding-left: 30px;
 }
 

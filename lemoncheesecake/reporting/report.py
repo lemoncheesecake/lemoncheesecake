@@ -12,7 +12,7 @@ from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 from lemoncheesecake.utils import humanize_duration
 
 __all__ = (
-    "LogData", "CheckData", "AttachmentData", "StepData", "TestData",
+    "LogData", "CheckData", "AttachmentData", "UrlData", "StepData", "TestData",
     "TestSuiteData", "HookData", "Report"
 )
 
@@ -57,6 +57,14 @@ class AttachmentData:
     def __init__(self, description, filename):
         self.description = description
         self.filename = filename
+    
+    def has_failure(self):
+        return False
+
+class UrlData:
+    def __init__(self, description, url):
+        self.description = description
+        self.url = url
     
     def has_failure(self):
         return False

@@ -15,9 +15,10 @@ except ImportError:
     LXML_IS_AVAILABLE = False
 
 from lemoncheesecake.reporting.backend import FileReportBackend, SAVE_AT_EACH_FAILED_TEST
-from lemoncheesecake.reporting.report import (LogData, CheckData, AttachmentData, StepData,
-                                              TestData, HookData, TestSuiteData, Report,
-                                              format_timestamp, parse_timestamp)
+from lemoncheesecake.reporting.report import (
+    LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, TestSuiteData,
+    Report, format_timestamp, parse_timestamp
+)
 from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.exceptions import ProgrammingError, InvalidReportFile
 
@@ -86,6 +87,9 @@ def _serialize_steps(steps, parent_node):
             elif isinstance(entry, AttachmentData):
                 attachment_node = _xml_child(step_node, "attachment", "description", entry.description)
                 attachment_node.text = entry.filename
+            elif isinstance(entry, UrlData):
+                url_node = _xml_child(step_node, "url", "description", entry.description)
+                url_node.text = entry.url
             else: # TestCheck
                 check_node = _xml_child(step_node, "check", "description", entry.description,
                                         "outcome", _serialize_outcome(entry.outcome))
@@ -208,6 +212,8 @@ def _unserialize_step_data(xml):
             entry = LogData(xml_entry.attrib["level"], xml_entry.text, _unserialize_datetime(xml_entry.attrib["time"]))
         elif xml_entry.tag == "attachment":
             entry = AttachmentData(xml_entry.attrib["description"], xml_entry.text)
+        elif xml_entry.tag == "url":
+            entry = UrlData(xml_entry.attrib["description"], xml_entry.text)
         elif xml_entry.tag == "check":
             entry = CheckData(xml_entry.attrib["description"], _unserialize_outcome(xml_entry.attrib["outcome"]),
                               xml_entry.text)

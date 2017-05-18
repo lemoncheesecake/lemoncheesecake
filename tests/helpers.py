@@ -275,6 +275,10 @@ def assert_attachment_data(actual, expected):
     assert actual.description == expected.description
     assert actual.filename == expected.filename
 
+def assert_url_data(actual, expected):
+    assert actual.description == expected.description
+    assert actual.url == expected.url
+
 def assert_step_data(actual, expected):
     assert round(actual.start_time, 3) == round(expected.start_time, 3)
     assert round(actual.end_time, 3) == round(expected.end_time, 3)
@@ -288,6 +292,8 @@ def assert_step_data(actual, expected):
             assert_check_data(actual_entry, expected_entry)
         elif isinstance(actual_entry, reporting.AttachmentData):
             assert_attachment_data(actual_entry, expected_entry)
+        elif isinstance(actual_entry, reporting.UrlData):
+            assert_url_data(actual_entry, expected_entry)
         else:
             raise Exception("Unknown class '%s'" % actual.__class__.__name__)
 

@@ -82,6 +82,7 @@ def test_unicode(backend, tmpdir):
             lcc.check_that(u"éééààà", 1, lcc.equal_to(1))
             lcc.log_info(u"éééààà")
             lcc.save_attachment_content("A" * 1024, u"somefileààà", u"éééààà")
+            lcc.log_url("http://example.com", "example")
     
     do_test_serialization(MySuite, backend, tmpdir)
 
@@ -216,6 +217,15 @@ def test_attachment(backend, tmpdir):
         @lcc.test("Some test")
         def sometest(self):
             lcc.save_attachment_content("foobar", "foobar.txt")
+    
+    do_test_serialization(MySuite, backend, tmpdir)
+
+def test_log_url(backend, tmpdir):
+    @lcc.testsuite("MySuite")
+    class MySuite:
+        @lcc.test("Some test")
+        def sometest(self):
+            lcc.log_url("http://www.example.com", "example")
     
     do_test_serialization(MySuite, backend, tmpdir)
 

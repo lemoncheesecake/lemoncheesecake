@@ -46,6 +46,10 @@ Step.prototype = {
 				$row.addClass("attachment");
 				$row.append($("<td colspan='3'>").append($("<a>", { "target": "_blank", "href": entry.filename }).text(entry.description)));
 				$row.append($("<td class='text-uppercase'>").text("ATTACHMENT"));
+			} else if (entry.type == "url") {
+				$row.addClass("url");
+				$row.append($("<td colspan='3'>").append($("<a>", { "target": "_blank", "href": entry.url }).text(entry.description)));
+				$row.append($("<td class='text-uppercase'>").text("URL"));
 			}
 		}
 		

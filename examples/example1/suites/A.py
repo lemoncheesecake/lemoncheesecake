@@ -47,6 +47,7 @@ class A:
         lcc.check_dictval_int_eq("foo", {"foo": None}, None)
         lcc.check_int_eq("some value", 42, None)
         lcc.check_bool_eq("some bool", False, False)
+        lcc.log_url("http://example.com")
         
     def foo(self):
         pass

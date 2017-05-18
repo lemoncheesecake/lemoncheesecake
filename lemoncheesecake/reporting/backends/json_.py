@@ -10,9 +10,10 @@ import json
 from collections import OrderedDict
 
 from lemoncheesecake.reporting.backend import FileReportBackend, SAVE_AT_EACH_FAILED_TEST
-from lemoncheesecake.reporting.report import (LogData, CheckData, AttachmentData, StepData,
-                                              TestData, HookData, TestSuiteData, Report,
-                                              format_timestamp, parse_timestamp)
+from lemoncheesecake.reporting.report import (
+    LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, TestSuiteData,
+    Report, format_timestamp, parse_timestamp
+)
 from lemoncheesecake.exceptions import InvalidReportFile
 
 JS_PREFIX = "var reporting_data = "
@@ -43,6 +44,8 @@ def _serialize_steps(steps):
                 entry = _dict("type", "log", "level", entry.level, "message", entry.message, "time", _serialize_time(entry.time))
             elif isinstance(entry, AttachmentData):
                 entry = _dict("type", "attachment", "description", entry.description, "filename", entry.filename)
+            elif isinstance(entry, UrlData):
+                entry = _dict("type", "url", "description", entry.description, "url", entry.url)
             else: # TestCheck
                 entry = _dict("type", "check", "description", entry.description, "outcome", entry.outcome, "details", entry.details)
             json_step["entries"].append(entry)
@@ -131,6 +134,8 @@ def _unserialize_step_data(js):
             entry = LogData(js_entry["level"], js_entry["message"], _unserialize_time(js_entry["time"]))
         elif js_entry["type"] == "attachment":
             entry = AttachmentData(js_entry["description"], js_entry["filename"])
+        elif js_entry["type"] == "url":
+            entry = UrlData(js_entry["description"], js_entry["url"])
         elif js_entry["type"] == "check":
             entry = CheckData(js_entry["description"], js_entry["outcome"], js_entry["details"])
         step.entries.append(entry)

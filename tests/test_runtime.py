@@ -438,6 +438,25 @@ def test_save_attachment_binary(tmpdir):
     content = open(p.join(p.dirname(__file__), p.pardir, "misc", "report-screenshot.png"), "rb").read()
     _test_save_attachment_content(tmpdir, "foobar.png", content)
 
+def test_log_url():
+    @lcc.testsuite("MySuite")
+    class MySuite:
+        @lcc.test("Some test")
+        def sometest(self):
+            lcc.log_url("http://example.com", "example")
+    
+    run_testsuite_class(MySuite)
+    
+    report = get_runtime().report
+
+    assert_report_from_testsuite(report, MySuite)
+    assert_report_stats(report, expected_test_successes=1)
+
+    test = report.get_test("sometest")
+
+    assert test.steps[0].entries[0].description == "example"
+    assert test.steps[0].entries[0].url == "http://example.com"
+
 def test_unicode(tmpdir):
     @lcc.testsuite("MySuite")
     class MySuite:

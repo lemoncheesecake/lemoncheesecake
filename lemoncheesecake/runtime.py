@@ -15,7 +15,7 @@ from lemoncheesecake.consts import ATTACHEMENT_DIR, \
     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
 from lemoncheesecake.reporting import *
 
-__all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "set_step", \
+__all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "log_url", "set_step", \
     "prepare_attachment", "save_attachment_file", "save_attachment_content", \
     "get_worker", "add_report_info"
 
@@ -304,6 +304,15 @@ class _Runtime:
         fh.write(content if binary_mode else content.encode("utf-8"))
         fh.close()
     
+    def log_url(self, url, description=None):
+        self.create_step_if_needed()
+        
+        if not description:
+            description = url
+        
+        self.current_step_data.entries.append(UrlData(description, url))        
+        # TODO: add hook for URL
+
 def log_debug(content):
     """
     Log a debug level message.
@@ -356,6 +365,12 @@ def save_attachment_content(content, filename, description=None, binary_mode=Fal
     Save a given content as attachment using pseudo filename and optional description.
     """
     get_runtime().save_attachment_content(content, filename, description, binary_mode)
+
+def log_url(url, description=None):
+    """
+    Log an URL.
+    """
+    get_runtime().log_url(url, description)
 
 def get_worker(worker_name):
     """
