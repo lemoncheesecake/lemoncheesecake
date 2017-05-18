@@ -1,3 +1,10 @@
+# 0.8.4 (2017-05-19 )
+
+- Add `log_url` function that logs URLs into the report
+- Add `is_bool` matcher
+- Rename `is_not` matcher into `not_`
+- Fix encoding issue when match result description is unicode
+
 # 0.8.3 (2017-05-17)
 
 - Fix crash when using the SAVE_AT_EACH_EVENT report saving mode (JSON & XML)
