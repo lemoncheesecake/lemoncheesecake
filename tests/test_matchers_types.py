@@ -32,6 +32,16 @@ def test_is_integer_failure():
     assert result.is_failure()
     assert "1.2" in result.description
 
+def test_is_bool_success():
+    result = is_bool().matches(True)
+    assert result.is_success()
+    assert "true" in result.description
+
+def test_is_bool_failure():
+    result = is_bool().matches(1)
+    assert result.is_failure()
+    assert "1" in result.description
+
 def test_is_list_success():
     result = is_list().matches([])
     assert result.is_success()

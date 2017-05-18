@@ -9,7 +9,7 @@ from lemoncheesecake.matching.base import Matcher, match_success, match_failure,
 from lemoncheesecake.matching.matchers.value import is_
 
 __all__ = (
-    "is_integer", "is_float", "is_str", "is_dict", "is_list"
+    "is_integer", "is_float", "is_bool", "is_str", "is_dict", "is_list"
 )
 
 TYPE_NAMES = {
@@ -61,6 +61,7 @@ def is_type(types, type_name):
 
 is_integer = is_type([int], "an integer")
 is_float = is_type([float], "a float")
+is_bool = is_type([bool], "a boolean")
 is_str = is_type([str] if IS_PYTHON3 else [str, unicode], "a string")
 is_dict = is_type([dict], "a collection")
 is_list = is_type([list, tuple], "a list")
