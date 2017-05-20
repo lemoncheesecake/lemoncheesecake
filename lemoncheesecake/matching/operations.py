@@ -24,9 +24,9 @@ class _HasEntry(HasEntry):
         return ret
 
 def _entry_operation(operation):
-    def wrapper(key_matcher, actual, value_matcher=None, quiet=False):
+    def wrapper(key_matcher, value_matcher=None, in_=None, quiet=False):
         matcher = _HasEntry(wrap_key_matcher(key_matcher), value_matcher if value_matcher != None else is_(value_matcher))
-        return operation("", actual, matcher, quiet=quiet)
+        return operation("", in_, matcher, quiet=quiet)
     wrapper.__doc__ = "Same as %s but takes dict key as first argument instead of hint." % operation.__name__
     return wrapper
 
