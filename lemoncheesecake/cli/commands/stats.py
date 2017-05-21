@@ -22,7 +22,8 @@ class StatsCommand(Command):
         return "Display statistics about the project's tests"
     
     def add_cli_args(self, cli_parser):
-        self.add_color_cli_args(cli_parser)
+        group = cli_parser.add_argument_group("Display")
+        self.add_color_cli_args(group)
         add_filter_args_to_cli_parser(cli_parser)
 
     def run_cmd(self, cli_args):

@@ -20,12 +20,14 @@ class ShowCommand(Command):
         return "Show the test tree"
     
     def add_cli_args(self, cli_parser):
-        cli_parser.add_argument("--no-metadata", "-i", action="store_true", help="Hide testsuite and test metadata")
-        cli_parser.add_argument("--short", "-s", action="store_true", help="Display testsuite and test names instead of path")
-        cli_parser.add_argument("--desc-mode", "-d", action="store_true", help="Display testsuite and test descriptions instead of path")
-        cli_parser.add_argument("--flat-mode", "-f", action="store_true", help="Enable flat mode: display all test and testsuite as path without indentation nor prefix")
-        self.add_color_cli_args(cli_parser)
         add_filter_args_to_cli_parser(cli_parser)
+
+        group = cli_parser.add_argument_group("Display")
+        group.add_argument("--no-metadata", "-i", action="store_true", help="Hide testsuite and test metadata")
+        group.add_argument("--short", "-s", action="store_true", help="Display testsuite and test names instead of path")
+        group.add_argument("--desc-mode", "-d", action="store_true", help="Display testsuite and test descriptions instead of path")
+        group.add_argument("--flat-mode", "-f", action="store_true", help="Enable flat mode: display all test and testsuite as path without indentation nor prefix")
+        self.add_color_cli_args(group)
 
     def get_padding(self, depth):
         return " " * (depth * self.indent)

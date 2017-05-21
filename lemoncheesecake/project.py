@@ -179,7 +179,8 @@ class Project:
     def add_cli_extra_args(self, cli_args_parser):
         callback = self.get_cli_extra_args_callback()
         if callback:
-            callback(cli_args_parser)
+            group = cli_args_parser.add_argument_group("Project custom options")
+            callback(group)
     
     def get_report_dir_creation_callback(self):
         return self._raw_params["REPORT_DIR_CREATION"]

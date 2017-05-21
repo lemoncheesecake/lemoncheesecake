@@ -34,24 +34,29 @@ class RunCommand(Command):
     
     def add_cli_args(self, cli_parser):
         project_file = find_project_file()
+        project = None
         default_reporting_backend_names = []
         if project_file:
             project = Project(project_file)
             default_reporting_backend_names = project.get_active_reporting_backend_names()
-            project.add_cli_extra_args(cli_parser)
             
         add_filter_args_to_cli_parser(cli_parser)
-        cli_parser.add_argument("--report-dir", "-r", required=False, help="Directory where report data will be stored")
-        cli_parser.add_argument("--reporting", nargs="+", default=default_reporting_backend_names,
+        
+        group = cli_parser.add_argument_group("Runner")
+        group.add_argument("--report-dir", "-r", required=False, help="Directory where report data will be stored")
+        group.add_argument("--reporting", nargs="+", default=default_reporting_backend_names,
             help="The list of reporting backends to use"
         )
-        cli_parser.add_argument("--enable-reporting", nargs="+", default=[],
+        group.add_argument("--enable-reporting", nargs="+", default=[],
             help="The list of reporting backends to add (to base backends)"
         )
-        cli_parser.add_argument("--disable-reporting", nargs="+", default=[],
+        group.add_argument("--disable-reporting", nargs="+", default=[],
             help="The list of reporting backends to remove (from base backends)"
         )
-    
+
+        if project:
+            project.add_cli_extra_args(cli_parser)
+
     def run_cmd(self, cli_args):
         # Project initialization
         project_file = find_project_file()

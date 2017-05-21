@@ -20,8 +20,9 @@ class FixturesCommand(Command):
         return "Show the fixtures available in the project"
     
     def add_cli_args(self, cli_parser):
-        self.add_color_cli_args(cli_parser)
-        cli_parser.add_argument("--verbose", "-v", action="store_true", help="Show extra fixture information")
+        group = cli_parser.add_argument_group("Display")
+        self.add_color_cli_args(group)
+        group.add_argument("--verbose", "-v", action="store_true", help="Show extra fixture information")
 
     def show_fixtures(self, scope, fixtures, used_by_tests, used_by_fixtures, verbose):
         lines = []
