@@ -52,7 +52,7 @@ class github:
 
 And here are the corresponding test results:
 
--![alt text](https://github.com/lemoncheesecake/lemoncheesecake/blob/master/misc/github-testsuite.png?raw=true "test result")
+![alt text](https://github.com/lemoncheesecake/lemoncheesecake/blob/master/misc/github-testsuite.png?raw=true "test result")
 
 # Getting started
 
