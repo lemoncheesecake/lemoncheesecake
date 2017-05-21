@@ -277,13 +277,29 @@ def some_test(self, conn):
     resp =  conn.getresponse()
 ```
 
-Four scopes are supported: `session_prerun`, `session`, `testsuite` and `test` which is the default. Like in pytest:
-- fixture teardown can be implemented using yield to initially return the fixture value.
-- fixtures can be used in fixture
+Four fixture scopes are available (higher to lower scope):
+- `session_prerun`: fixtures with this scope will be called before the test session is started, meaning that the fixture cannot use any of the `log_*`, `check_*`, etc... functions; this scope can be very handy because exception happening on a fixtures using this scope will prevent test session to start
+- `session`: fixtures with this scope are initialized at the global level
+- `testsuite`: fixtures with this scope are initialized at the test suite level; if a testsuite "A" uses a `testsuite` scoped fixture (through a test for example), and a sub testsuite "B" uses the same fixture, then the fixture is initialized two times: one time for "A" and the other time for "B"
+- `test`: fixtures with this scope are initialized at the test level
 
-Lemoncheesecake provides a special builtin fixtures named `cli_args` that can be used to access custom command line arguments previous setup by the function referenced by `CLI_EXTRA_ARGS` parameter of project.py file.
+Please note that:
+- a fixture can be called through multiple names specified in the `names` parameter (otherwise the fixture name is fixture function name):
+```python
+@lcc.fixture(names=("fixt_a", "fixt_b"))
+def fixt():
+    [...]
+```
+- fixture teardown can be implemented using yield to initially return the fixture value and then to de-initialize the fixture
+- a fixture can use fixtures as parameters
+- when a fixture uses an other fixture, the scope level compatibility must be respected: for example: a `test` scoped fixture can use a `session` scoped fixture, but the opposite is not true
 
-Using the default project.py file, fixtures will be loaded from the fixtures/ sub directory.
+Lemoncheesecake provides several special builtin fixtures:
+- `cli_args` is the object returned by `parse_args` of the `argparse` module that contains the actual CLI arguments; this fixture can be used to access custom command line arguments previously setup by the function by `CLI_EXTRA_ARGS` in the lemoncheesecake project file
+- `project_dir` is the path of the project, meaning the directory of the project file
+- `fixture_name` is the name of the called fixture (it can be used for example if the fixture has several names and the fixture behavior changes depending on the name with which it is called)
+
+Using the default project.py file, fixtures will be loaded from the "fixtures/" sub directory.
 
 ## Workers
 
