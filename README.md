@@ -111,7 +111,7 @@ Statistics :
 
 ```
 
-The generated HTML report is available in report/report.html:
+The generated HTML report is available in the file "report/report.html":
 
 ![alt text](https://bytebucket.org/ndelon/lemoncheesecake/raw/5cd93fe6cc55eff146fc973a355554c67d3a25cd/misc/report-screenshot.png "Test Report")
 
