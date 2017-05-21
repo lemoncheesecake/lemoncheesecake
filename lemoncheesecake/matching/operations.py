@@ -5,7 +5,7 @@ Created on Mar 27, 2017
 '''
 
 from lemoncheesecake.runtime import get_runtime
-from lemoncheesecake.exceptions import AbortTest
+from lemoncheesecake.exceptions import AbortTest, ProgrammingError
 from lemoncheesecake.matching.matchers.dict import HasEntry, wrap_key_matcher
 from lemoncheesecake.matching.matchers.composites import is_
 
@@ -13,7 +13,8 @@ __all__ = (
     "log_match_result",
     "check_that", "check_that_entry",
     "require_that", "require_that_entry",
-    "assert_that", "assert_that_entry"
+    "assert_that", "assert_that_entry",
+    "this_dict"
 )
 
 class _HasEntry(HasEntry):
@@ -23,11 +24,42 @@ class _HasEntry(HasEntry):
             ret += " " + self.value_matcher.description()
         return ret
 
+class ThisDict():
+    _actual_dicts = []
+    
+    def __init__(self, actual):
+        self.actual = actual
+    
+    def __enter__(self):
+        self._actual_dicts.append(self.actual)
+        return self.actual
+    
+    def __exit__(self, type_, value, traceback):
+        self._actual_dicts.pop()
+    
+    @staticmethod
+    def get_current_dict():
+        try:
+            return ThisDict._actual_dicts[-1]
+        except IndexError:
+            return None
+
+def this_dict(actual):
+    """
+    Set actual to be used as implict dict in *_that_entry functions when used
+    within a 'with' statement.
+    """
+    return ThisDict(actual)
+
 def _entry_operation(operation):
     def wrapper(key_matcher, value_matcher=None, in_=None, quiet=False):
+        actual = in_ if in_ != None else ThisDict.get_current_dict()
+        if actual == None:
+            raise ProgrammingError("Actual dict must be set either using in_ argument or using 'with this_dict(...)' statement")
         matcher = _HasEntry(wrap_key_matcher(key_matcher), value_matcher if value_matcher != None else is_(value_matcher))
-        return operation("", in_, matcher, quiet=quiet)
-    wrapper.__doc__ = "Same as %s but takes dict key as first argument instead of hint." % operation.__name__
+        return operation("", actual, matcher, quiet=quiet)
+    wrapper.__doc__ = "Helper function for %s, takes the actual dict using in_ parameter or using 'with this_dict(...)' statement" % \
+        operation.__name__
     return wrapper
 
 def log_match_result(hint, matcher, result, quiet=False):

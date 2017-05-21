@@ -102,6 +102,43 @@ def test_assert_that_entry_failure(reporting_session):
     description, outcome, details = reporting_session.get_last_check()
     assert outcome == False
 
+def test_this_dict(reporting_session):
+    def func():
+        with lcc.this_dict({"foo": "bar"}):
+            lcc.check_that_entry("foo", lcc.equal_to("bar"))
+    
+    run_func_in_test(func)
+    
+    description, outcome, details = reporting_session.get_last_check()
+
+    assert "foo" in description and "bar" in description
+    assert outcome == True
+    assert "bar" in details
+
+def test_this_dict_multiple(reporting_session):
+    def func():
+        with lcc.this_dict({"foo": "bar"}):
+            lcc.check_that_entry("foo", lcc.equal_to("bar"))
+        with lcc.this_dict({"foo": "baz"}):
+            lcc.check_that_entry("foo", lcc.equal_to("baz"))
+    
+    run_func_in_test(func)
+    
+    assert reporting_session.check_success_nb == 2
+
+def test_this_dict_imbricated(reporting_session):
+    def func():
+        with lcc.this_dict({"foo": "bar"}):
+            lcc.check_that_entry("foo", lcc.equal_to("bar"))
+            with lcc.this_dict({"foo": "baz"}):
+                lcc.check_that_entry("foo", lcc.equal_to("baz"))
+        with lcc.this_dict({"foo": "foo"}):
+            lcc.check_that_entry("foo", lcc.equal_to("foo"))
+    
+    run_func_in_test(func)
+    
+    assert reporting_session.check_success_nb == 3
+
 def test_unicode(reporting_session):
     run_func_in_test(lambda: lcc.check_that(u"ééé", u"éééààà", lcc.starts_with(u"ééé")))
     description, outcome, details = reporting_session.get_last_check()
