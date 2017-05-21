@@ -161,17 +161,38 @@ The following stock matchers are available:
   - `anything()`, `something()`, `existing()`: those matchers always return success whatever the actual value (only the matcher description change between them)
 
 
- Those matcher are used by a matching operation:
+ Those matcher are used by a matching function:
  - `check_that`: run the matcher, log the result and return the matching result as a boolean
  - `require_that`: run the matcher, log the result and raise an `AbortTest` exception in case of match failure
  - `assert_that`: run the match, in case of match failure log the result and raise an `AbortTest` exception
 
-Each of these matching operations:
-- has a `quiet` flag that do not log the check details when set to `True`
-- has a shortcut for matching operations on dict, example:
+These matching functions take the following arguments:
+- a hint that will be used to build the matcher description
+- the actual value to be matched
+- the matcher instance
+- an optional `quiet` flag that is used to hide matching details in the report (`False` by default)
+
+The `lemoncheesecake.matching` module also provides helper functions to ease operations on dict object:
+
+The code:
 ```python
-check_that_entry("foo", {"foo": "bar"}, equal_to("bar")) # is a shortcut for:
-check_that("entry 'foo'", {"foo": "bar"}, has_entry("foo", equal_to("bar")))
+data = {"foo": 1, "bar": 2}
+check_that("data", data, has_entry("foo", equal_to(1)))
+check_that("data", data, has_entry("bar", equal_to(2)))
+```
+
+Can be shortened like this:
+```python
+data = {"foo": 1, "bar": 2}
+check_that_entry("foo", equal_to(1), in_=data)
+check_that_entry("bar", equal_to(2), in_=data)
+```
+
+And made even shorter (while still nicely readable) like this:
+```python
+with this_dict({"foo": 1, "bar": 2}):
+    check_that_entry("foo", equal_to(1))
+    check_that_entry("bar", equal_to(2))
 ```
 
 If one match fails in a test, this test will be marked as failed.
