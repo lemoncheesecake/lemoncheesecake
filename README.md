@@ -222,8 +222,9 @@ data = some_function_that_provide_data(value)
 lcc.log_info("Got data: %s" % data)
 
 lcc.set_step("Check data")
-lcc.check_dictval_eq(data, "foo", 21)
-lcc.check_dictval_eq(data, "bar", 42)
+with this_dict(data):
+    check_that_entry("foo", equal_to(21))
+    check_that_entry("bar", equal_to(42))
 ```
 
 ## Attachments
