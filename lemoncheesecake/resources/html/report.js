@@ -124,7 +124,7 @@ Test.prototype = {
 			$status_col = $("<td><strong>failed</strong></td>");
 			status_class = "danger";
 		} else {
-			$status_col = $("<td title='" + escapeHtml(this.status_details) + "'><strong>" + this.status + "</strong></td>");
+			$status_col = $("<td title='" + escapeHtml(this.status_details || "") + "'><strong>" + (this.status || "n/a") + "</strong></td>");
 			status_class = "danger";
 		}
 		cols.push($status_col);
