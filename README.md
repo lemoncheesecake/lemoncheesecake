@@ -1,10 +1,58 @@
 # Introduction
 
-lemoncheesecake is a lightweight functional testing framework for Python. It provides functionalities such as test launcher, tests organization (through hierarchical test suites, tags, properties), structured reporting data (JSON, XML) and HTML reports.
+lemoncheesecake is a lightweight functional / QA testing framework for Python. It provides functionalities such as test launcher, tests organization (through hierarchical test suites, tags, properties), fixtures, matchers, structured reporting data (JSON, XML) and HTML reports.
 
-Tests are defined as methods in a testsuite class that can also contain sub testsuites allowing the developer to define a complex hierarchy of tests. Tests and testsuites are identified by a name and a description. Tags, properties (key/value pairs), URLs can be associated with both test and testsuites. These metadata can be used later by the user to filter the test he wants to run.
+Tests are defined as methods in a testsuite class that can also contain sub testsuites allowing the developer to define a complex hierarchy of tests. Tests and testsuites are identified by a name and a description. Tags, properties (key/value pairs), links can be associated with both test and testsuites. These metadata can be used later by the user to filter the test he wants to run.
 
 One of the key features of lemoncheesecake is it's reporting capabilities, providing the user with various formats (XML, JSON, HTML) and the possibility to create his own reporting backend.
+
+lemoncheesecake is compatible with Python 2.7, 3.3-3.6 .
+
+# How does it look ?
+
+Like this. Here is testsuite that test a GitHub API end-point:
+
+```python
+import json
+import requests
+
+import lemoncheesecake.api as lcc
+from lemoncheesecake.matching import *
+
+URL  = "https://api.github.com/orgs/lemoncheesecake"
+
+@lcc.testsuite("Github tests")
+class github:
+    @lcc.test("Test Organization end-point")
+    def organization(self):
+        lcc.set_step("Get lemoncheesecake organization information")
+        lcc.log_info("GET %s" % URL)
+        resp = requests.get(URL)
+        require_that("HTTP code", resp.status_code, is_(200))
+        data = resp.json()
+        lcc.log_info("Response\n%s" % json.dumps(data, indent=4))
+
+        lcc.set_step("Check API response")
+        with this_dict(data):
+            check_that_entry("type", is_("Organization"))
+            check_that_entry("id", is_integer())
+            check_that_entry("description", is_none())
+            check_that_entry("login", is_(existing()))
+            check_that_entry("created_at", match_pattern("^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$"))
+            check_that_entry("has_organization_projects", is_bool(True))
+            check_that_entry("followers", greater_than_or_equal_to(0))
+            check_that_entry("following", greater_than_or_equal_to(0))
+            check_that_entry("repos_url", ends_with("/repos"))
+            check_that_entry("issues_url", ends_with("/issues"))
+            check_that_entry("events_url", ends_with("/events"))
+            check_that_entry("hooks_url", ends_with("/hooks"))
+            check_that_entry("members_url", ends_with("/members{/member}"))
+            check_that_entry("public_members_url", ends_with("/public_members{/member}"))
+```
+
+And here are the corresponding test results:
+
+-![alt text](https://github.com/lemoncheesecake/lemoncheesecake/blob/master/misc/github-testsuite.png?raw=true "test result")
 
 # Getting started
 
@@ -112,8 +160,6 @@ Statistics :
 ```
 
 The generated HTML report is available in the file "report/report.html":
-
-![alt text](https://bytebucket.org/ndelon/lemoncheesecake/raw/5cd93fe6cc55eff146fc973a355554c67d3a25cd/misc/report-screenshot.png "Test Report")
 
 # Writing tests
 
@@ -292,7 +338,7 @@ def fixt():
 ```
 - fixture teardown can be implemented using yield to initially return the fixture value and then to de-initialize the fixture
 - a fixture can use fixtures as parameters
-- when a fixture uses an other fixture, the scope level compatibility must be respected: for example: a `test` scoped fixture can use a `session` scoped fixture, but the opposite is not true
+- when a fixture uses an other fixture, the scope level compatibility must be respected: for example, a `test` scoped fixture can use a `session` scoped fixture, but the opposite is not true
 
 Lemoncheesecake provides several special builtin fixtures:
 - `cli_args` is the object returned by `parse_args` of the `argparse` module that contains the actual CLI arguments; this fixture can be used to access custom command line arguments previously setup by the function by `CLI_EXTRA_ARGS` in the lemoncheesecake project file
@@ -479,57 +525,6 @@ Once, the metadata are set, they:
 
 - can be used to filter the tests to be run (see the `--tag`, `--property` and `--link` of the CLI launcher), in this case a test inherits all these parents metadata
 - will be available in the test report
-
-# Put it all together
-
-Here is a project/testsuite example. The purpose of the test is to test the omdbapi Web Service API. We lookup 'The Matrix' movie and then check several elements of the returned data.
-```python
- # project.py:
-[...]
-import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import *
-
-import urllib
-import urllib2
-import json
-
-class OmdbapiWorker(Worker):
-    def __init__(self):
-        self.host = "www.omdbapi.com"
-
-    def get_movie_info(self, movie, year):
-        lcc.set_step("Make HTTP request")
-        req = urllib2.urlopen("http://{host}/?t={movie}&y={year}&plot=short&r=json".format(
-            host=self.host, movie=urllib.quote(movie), year=int(year)
-        ))
-        require_that("HTTP status code", req.code, equal_to(200))
-
-        content = req.read()
-        lcc.log_info("Response body: %s" % content)
-        try:
-            return json.loads(content)
-        except ValueError:
-            raise lcc.AbortTest("The returned JSON is not valid")
-
-WORKERS = {"omdb": OmdbapiWorker()}
-[...]
-
- # tests/movies.py
-import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import *
-
-@lcc.testsuite("Movies")
-class movies:
-	@lcc.test("Retrieve Matrix main information on omdb")
-	def test_matrix(self):
-		data = self.omdb.get_movie_info("matrix", 1999)
-		lcc.set_step("Check movie information")
-    check_that_entry("Title", data, equal_to("The Matrix"))
-    check_that_entry("Actors", data, contains_string("Keanu Reeves"))
-    check_that_entry("Director", data, match_pattern(re.compile(".+Wachow?ski", re.I)))
-		if check_that_entry("imdbRating", data, is_(anything())):
-		    check_that("entry 'imdbRating'", float(data["imdbRating"]), is_(8.5))
-```
 
 # Advanced features
 
