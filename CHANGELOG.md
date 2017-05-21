@@ -1,4 +1,10 @@
-# 0.8.4 (2017-05-19 )
+# 0.8.5 (2017-05-21)
+
+- **API**: Change `*_that_entry` API by passing actual in a 'in_' parameter and add
+  a Context Manager named `this_dict` that helps passing the actual value to those functions
+- **HTML report**: Fix handling of tests being executed at the time of html report rendering
+
+# 0.8.4 (2017-05-19)
 
 - Add `log_url` function that logs URLs into the report
 - Add `is_bool` matcher
