@@ -139,6 +139,32 @@ def test_this_dict_imbricated(reporting_session):
     
     assert reporting_session.check_success_nb == 3
 
+def test_this_dict_using_base_key(reporting_session):
+    def func():
+        with lcc.this_dict({"foo": {"bar": "baz"}}).using_base_key("foo"):
+            lcc.check_that_entry("bar", lcc.equal_to("baz"))
+    
+    run_func_in_test(func)
+    
+    description, outcome, details = reporting_session.get_last_check()
+
+    assert "foo" in description and "bar" in description
+    assert outcome == True
+    assert "baz" in details
+
+def test_this_dict_using_base_key_as_list(reporting_session):
+    def func():
+        with lcc.this_dict({"foo": {"bar": "baz"}}).using_base_key(["foo"]):
+            lcc.check_that_entry("bar", lcc.equal_to("baz"))
+    
+    run_func_in_test(func)
+    
+    description, outcome, details = reporting_session.get_last_check()
+
+    assert "foo" in description and "bar" in description
+    assert outcome == True
+    assert "baz" in details
+
 def test_unicode(reporting_session):
     run_func_in_test(lambda: lcc.check_that(u"ééé", u"éééààà", lcc.starts_with(u"ééé")))
     description, outcome, details = reporting_session.get_last_check()

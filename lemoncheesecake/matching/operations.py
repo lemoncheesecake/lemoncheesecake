@@ -24,23 +24,32 @@ class _HasEntry(HasEntry):
             ret += " " + self.value_matcher.description()
         return ret
 
+class DictContext:
+    def __init__(self, actual, base_key):
+        self.actual = actual
+        self.base_key = base_key
+
 class ThisDict():
-    _actual_dicts = []
+    _contexts = []
     
     def __init__(self, actual):
-        self.actual = actual
+        self.context = DictContext(actual, [])
+    
+    def using_base_key(self, base_key):
+        self.context.base_key = base_key if type(base_key) in (list, tuple) else [base_key]
+        return self
     
     def __enter__(self):
-        self._actual_dicts.append(self.actual)
-        return self.actual
+        self._contexts.append(self.context)
+        return self.context.actual
     
     def __exit__(self, type_, value, traceback):
-        self._actual_dicts.pop()
+        self._contexts.pop()
     
     @staticmethod
-    def get_current_dict():
+    def get_current_context():
         try:
-            return ThisDict._actual_dicts[-1]
+            return ThisDict._contexts[-1]
         except IndexError:
             return None
 
@@ -53,10 +62,18 @@ def this_dict(actual):
 
 def _entry_operation(operation):
     def wrapper(key_matcher, value_matcher=None, in_=None, quiet=False):
-        actual = in_ if in_ != None else ThisDict.get_current_dict()
-        if actual == None:
-            raise ProgrammingError("Actual dict must be set either using in_ argument or using 'with this_dict(...)' statement")
-        matcher = _HasEntry(wrap_key_matcher(key_matcher), value_matcher if value_matcher != None else is_(value_matcher))
+        actual = in_
+        base_key = []
+        if not actual:
+            context = ThisDict.get_current_context()
+            if not context:
+                raise ProgrammingError("Actual dict must be set either using in_ argument or using 'with this_dict(...)' statement")
+            actual = context.actual
+            base_key = context.base_key
+        matcher = _HasEntry(
+            wrap_key_matcher(key_matcher, base_key=base_key),
+            value_matcher if value_matcher != None else is_(value_matcher)
+        )
         return operation("", actual, matcher, quiet=quiet)
     wrapper.__doc__ = "Helper function for %s, takes the actual dict using in_ parameter or using 'with this_dict(...)' statement" % \
         operation.__name__

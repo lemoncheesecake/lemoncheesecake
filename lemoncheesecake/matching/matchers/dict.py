@@ -20,18 +20,7 @@ class EntryMatcher:
         """Return the value of dict corresponding to entry matching or raise KeyError if entry is not found""" 
         method_not_implemented("get_entry", self)
 
-class KeyMatcher(EntryMatcher):
-    """Dict lookup through simple key""" 
-    def __init__(self, key):
-        self.key = key
-    
-    def description(self):
-        return serialize_value(self.key)
-    
-    def get_entry(self, actual):
-        return actual[self.key]
-
-class PathMatcher(EntryMatcher):
+class KeyPathMatcher(EntryMatcher):
     """Dict lookup through a list of key, each key represent a level of depth of the dict"""
     def __init__(self, path):
         self.path = path
@@ -48,12 +37,12 @@ class PathMatcher(EntryMatcher):
                 raise KeyError()
         return d
 
-def wrap_key_matcher(key_matcher):
+def wrap_key_matcher(key_matcher, base_key=[]):
     if isinstance(key_matcher, EntryMatcher):
         return key_matcher
-    if type(key_matcher) in (list, tuple):
-        return PathMatcher(key_matcher)
-    return KeyMatcher(key_matcher)
+    if type(key_matcher) not in (list, tuple):
+        key_matcher = [key_matcher]
+    return KeyPathMatcher(base_key + key_matcher)
 
 class HasEntry(Matcher):
     def __init__(self, key_matcher, value_matcher):
