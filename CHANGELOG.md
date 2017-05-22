@@ -1,3 +1,8 @@
+# 0.8.6 (2017-05-23)
+
+- **CLI**: in --help of lcc commands, split arguments by groups
+- **matchers**: add a `using_base_key` method in `this_dict` context manager
+
 # 0.8.5 (2017-05-21)
 
 - **API**: Change `*_that_entry` API by passing actual in a 'in_' parameter and add
