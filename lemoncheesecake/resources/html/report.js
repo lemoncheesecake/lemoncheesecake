@@ -249,7 +249,6 @@ TestSuite.prototype = {
 			
 			var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
 				.append($("<colgroup><col width='10%'><col width='60%'><col width='20%'><col width='10%'></colgroup>"))
-				.append($("<thead><tr><th style='width: 10%'>Outcome</th><th style='width: 60%'>Test</th><th style='width: 20%'>Properties/Tags</th><th style='width: 10%'>Links</th></tr></thead>"))
 				.append($("<tbody>").append(rows));
 			$panel.append($table);
 		}
