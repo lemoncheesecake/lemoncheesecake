@@ -95,6 +95,17 @@ Test.prototype = {
 	render: function() {
 		var cols = [ ];
 
+		/* build status column */
+		if (this.status == "passed") {
+			status_text_class = "text-success";
+		} else if (this.status == "failed") {
+			status_text_class = "text-danger";
+		} else {
+			status_text_class = "text-warning";
+		}
+		$status_col = $("<td class='test_status'><span class='" + status_text_class + "' style='font-size:120%'>" + this.status.toUpperCase() + "</span></td>");
+		cols.push($status_col);
+
 		/* build description column */
 		var path = this.parents.map(function(p) { return p.name }).concat(this.name).join(".");
 		link_attrs = {"name": path, "href": "#" + path}
@@ -123,17 +134,6 @@ Test.prototype = {
 			return "<a href='" + escapeHtml(link.url) + "' title='" + escapeHtml(label) + "'>" + escapeHtml(label) + "</a>";
 		}).join(", ");
 		cols.push($("<td>").append($links));
-
-		/* build status column */
-		var status;
-		if (this.status == "passed") {
-			$status_col = $("<td><span class='text-success glyphicon glyphicon-ok' style='font-size:160%'></span></td>");
-		} else if (this.status == "failed") {
-			$status_col = $("<td><span class='text-danger glyphicon glyphicon-remove' style='font-size:160%'></span></td>");
-		} else {
-			$status_col = $("<td title='" + escapeHtml(this.status_details || "") + "'><strong>" + (this.status || "n/a") + "</strong></td>");
-		}
-		cols.push($status_col);
 
 		/* build the whole line test with steps */
 		$test_row = $("<tr>", { }).append(cols);
@@ -252,8 +252,8 @@ TestSuite.prototype = {
 			}
 			
 			var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
-				.append($("<colgroup><col width='60%'><col width='20%'><col width='10%'><col width='10%'></colgroup>"))
-				.append($("<thead><tr><th style='width: 60%'>Test</th><th style='width: 20%'>Properties/Tags</th><th style='width: 10%'>Links</th><th style='width: 10%'>Outcome</th></tr></thead>"))
+				.append($("<colgroup><col width='10%'><col width='60%'><col width='20%'><col width='10%'></colgroup>"))
+				.append($("<thead><tr><th style='width: 10%'>Outcome</th><th style='width: 60%'>Test</th><th style='width: 20%'>Properties/Tags</th><th style='width: 10%'>Links</th></tr></thead>"))
 				.append($("<tbody>").append(rows));
 			$panel.append($table);
 		}
@@ -305,7 +305,7 @@ Report.prototype = {
 		var $panel = $("<div class='panel panel-default'>").append($panel_heading);
 		rows = test.render();
 		var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
-			.append($("<colgroup><col width='60%'><col width='20%'><col width='10%'><col width='10%'></colgroup>"))
+			.append($("<colgroup><col width='10%'><col width='60%'><col width='20%'><col width='10%'></colgroup>"))
 			.append($("<tbody>").append(rows));
 		$panel.append($table);
 		return $panel;

@@ -63,6 +63,11 @@ th, td {
 	padding-left: 30px;
 }
 
+.test_status {
+	text-align: center ! important;
+    vertical-align: middle ! important;
+}
+
 pre, samp {
     border: 0px;
     padding: 0px;
