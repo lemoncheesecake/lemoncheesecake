@@ -18,9 +18,10 @@ Step.prototype = {
 	
 	render: function () {
 		this.step_row = $("<tr style='display: none' class='step'>")
-			.append($("<td colspan='4'>")
-				.append($("<h6>")
-					.text(this.nb + ". " + this.step.description)));
+			.append($("<td>"))
+				.append($("<td colspan='3'>")
+					.append($("<h6>")
+						.text(this.nb + ". " + this.step.description)));
 		this.entry_rows = [ ];
 		
 		for (i in this.step.entries) {
@@ -29,29 +30,24 @@ Step.prototype = {
 			this.entry_rows.push($row);
 			if (entry.type == "check") {
 				$row.addClass("check");
+				$row.append($("<td>", {"class": entry.outcome ? 'text-success' : 'text-danger'}).text("CHECK"));
 				$row.append($("<td>").text(entry.description));
 				$row.append($("<td colspan='2'>").text(entry.details ? entry.details : ""));
-				if (entry.outcome) {
-					$row.append($("<td class='text-success'><strong>success</strong></td>"));
-				} else {
-					$row.append($("<td><strong>failure</strong></td>"));
-					$row.addClass("danger");
-				}
 			} else if (entry.type == "log") {
 				$row.addClass("log");
-				$row.append($("<td colspan='3'>").append($("<samp>").text(entry.message)));
 				$row.append($("<td class='text-uppercase'>").text(entry.level));
+				$row.append($("<td colspan='3'>").append($("<samp>").text(entry.message)));
 				if (entry.level == "error") {
 					$row.addClass("danger");
 				}
 			} else if (entry.type == "attachment") {
 				$row.addClass("attachment");
-				$row.append($("<td colspan='3'>").append($("<a>", { "target": "_blank", "href": entry.filename }).text(entry.description)));
 				$row.append($("<td class='text-uppercase'>").text("ATTACHMENT"));
+				$row.append($("<td colspan='3'>").append($("<a>", { "target": "_blank", "href": entry.filename }).text(entry.description)));
 			} else if (entry.type == "url") {
 				$row.addClass("url");
-				$row.append($("<td colspan='3'>").append($("<a>", { "target": "_blank", "href": entry.url }).text(entry.description)));
 				$row.append($("<td class='text-uppercase'>").text("URL"));
+				$row.append($("<td colspan='3'>").append($("<a>", { "target": "_blank", "href": entry.url }).text(entry.description)));
 			}
 		}
 		
