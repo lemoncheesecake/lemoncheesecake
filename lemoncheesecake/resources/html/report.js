@@ -21,7 +21,8 @@ Step.prototype = {
 			.append($("<td>"))
 				.append($("<td colspan='3'>")
 					.append($("<h6>")
-						.text(this.nb + ". " + this.step.description)));
+							.append($("<strong style='font-size:120%'>")
+								.text(this.nb + ". " + this.step.description))));
 		this.entry_rows = [ ];
 		
 		for (i in this.step.entries) {
