@@ -100,18 +100,14 @@ Test.prototype = {
 		} else {
 			status_text_class = "text-warning";
 		}
-		$status_col = $("<td class='test_status'><span class='" + status_text_class + "' style='font-size:120%'>" + this.status.toUpperCase() + "</span></td>");
+		$status_col = $("<td class='test_status' style='cursor: pointer;'><span class='" + status_text_class + "' style='font-size:120%'>" + this.status.toUpperCase() + "</span></td>");
+		$status_col.click(this.toggle.bind(this));
 		cols.push($status_col);
 
 		/* build description column */
-		var path = this.parents.map(function(p) { return p.name }).concat(this.name).join(".");
-		link_attrs = {"name": path, "href": "#" + path}
-		if (this.outcome == false) {
-			link_attrs["class"] = "text-danger";
-		}
-		$test_link = $("<a>", link_attrs).text(this.description).click(this.toggle.bind(this));
-		var $test_desc = $("<h5>").append($test_link).append($("<br/><small>").text(path));
-		cols.push($("<td>").append($test_desc));
+		var test_path = this.parents.map(function(p) { return p.name }).concat(this.name).join(".");
+		var $test_col_content = $("<h5>").text(this.description).append($("<br/><small>").text(test_path));
+		cols.push($("<td>").append($test_col_content));
 
 		/* build tags & properties column */
 		var $tags = $("<span>" + 
@@ -133,7 +129,7 @@ Test.prototype = {
 		cols.push($("<td>").append($links));
 
 		/* build the whole line test with steps */
-		$test_row = $("<tr>", { }).append(cols);
+		$test_row = $("<tr>", { "id": test_path }).append(cols);
 		rows = [ $test_row ];
 		var step_rows = [ ];
 		for (i in this.steps) {
