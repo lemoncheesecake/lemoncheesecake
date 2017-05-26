@@ -59,12 +59,8 @@ th, td {
 	background-color: #353d44;
 }
 
-.check td:first-child, .log td:first-child, .attachment td:first-child, .url td:first-child {
-	padding-left: 30px;
-}
-
-.test_status {
-	text-align: center ! important;
+.check td:first-child, .log td:first-child, .attachment td:first-child, .url td:first-child, .test_status {
+    text-align: center ! important;
     vertical-align: middle ! important;
 }
 
