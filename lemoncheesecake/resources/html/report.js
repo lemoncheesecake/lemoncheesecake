@@ -30,12 +30,12 @@ Step.prototype = {
 			$row = $("<tr style='display: none'>");
 			this.entry_rows.push($row);
 			if (entry.type == "check") {
-				$row.addClass("check");
+				$row.addClass("step_entry check");
 				$row.append($("<td>", {"class": entry.outcome ? 'text-success' : 'text-danger'}).text("CHECK"));
 				$row.append($("<td>").text(entry.description));
 				$row.append($("<td colspan='2'>").text(entry.details ? entry.details : ""));
 			} else if (entry.type == "log") {
-				$row.addClass("log");
+				$row.addClass("step_entry log");
 				if (entry.level == "error") {
 					log_level_class = "text-danger";
 				} else if (entry.level == "warn") {
@@ -46,11 +46,11 @@ Step.prototype = {
 				$row.append($("<td class='text-uppercase " + log_level_class + "'>").text(entry.level));
 				$row.append($("<td colspan='3'>").append($("<samp>").text(entry.message)));
 			} else if (entry.type == "attachment") {
-				$row.addClass("attachment");
+				$row.addClass("step_entry attachment");
 				$row.append($("<td class='text-uppercase text-info'>").text("ATTACHMENT"));
 				$row.append($("<td colspan='3'>").append($("<a>", { "target": "_blank", "href": entry.filename }).text(entry.description)));
 			} else if (entry.type == "url") {
-				$row.addClass("url");
+				$row.addClass("step_entry url");
 				$row.append($("<td class='text-uppercase text-info'>").text("URL"));
 				$row.append($("<td colspan='3'>").append($("<a>", { "target": "_blank", "href": entry.url }).text(entry.description)));
 			}
@@ -136,7 +136,7 @@ Test.prototype = {
 		cols.push($("<td>").append($links));
 
 		/* build the whole line test with steps */
-		$test_row = $("<tr>", { "id": test_path }).append(cols);
+		$test_row = $("<tr>", { "id": test_path, "class": "test" }).append(cols);
 		rows = [ $test_row ];
 		var step_rows = [ ];
 		for (i in this.steps) {
