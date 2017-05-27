@@ -36,18 +36,22 @@ Step.prototype = {
 				$row.append($("<td colspan='2'>").text(entry.details ? entry.details : ""));
 			} else if (entry.type == "log") {
 				$row.addClass("log");
-				$row.append($("<td class='text-uppercase'>").text(entry.level));
-				$row.append($("<td colspan='3'>").append($("<samp>").text(entry.message)));
 				if (entry.level == "error") {
-					$row.addClass("danger");
+					log_level_class = "text-danger";
+				} else if (entry.level == "warn") {
+					log_level_class = "text-warning";
+				} else {
+					log_level_class = "text-info";
 				}
+				$row.append($("<td class='text-uppercase " + log_level_class + "'>").text(entry.level));
+				$row.append($("<td colspan='3'>").append($("<samp>").text(entry.message)));
 			} else if (entry.type == "attachment") {
 				$row.addClass("attachment");
-				$row.append($("<td class='text-uppercase'>").text("ATTACHMENT"));
+				$row.append($("<td class='text-uppercase text-info'>").text("ATTACHMENT"));
 				$row.append($("<td colspan='3'>").append($("<a>", { "target": "_blank", "href": entry.filename }).text(entry.description)));
 			} else if (entry.type == "url") {
 				$row.addClass("url");
-				$row.append($("<td class='text-uppercase'>").text("URL"));
+				$row.append($("<td class='text-uppercase text-info'>").text("URL"));
 				$row.append($("<td colspan='3'>").append($("<a>", { "target": "_blank", "href": entry.url }).text(entry.description)));
 			}
 		}
