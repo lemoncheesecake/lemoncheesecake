@@ -104,8 +104,11 @@ Test.prototype = {
 		} else {
 			status_text_class = "text-warning";
 		}
-		$status_col = $("<td class='test_status' style='cursor: pointer;'><span class='" + status_text_class + "' style='font-size:120%'>" + this.status.toUpperCase() + "</span></td>");
-		$status_col.click(this.toggle.bind(this));
+		$status_col = $("<td class='test_status'><span class='" + status_text_class + "' style='font-size:120%'>" + this.status.toUpperCase() + "</span></td>");
+		if (this.steps.length > 0) {
+			$status_col.css("cursor", "pointer");
+			$status_col.click(this.toggle.bind(this));
+		}
 		cols.push($status_col);
 
 		/* build description column */
