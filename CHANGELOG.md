@@ -1,3 +1,7 @@
+# 0.8.7 (2017-05-28)
+
+- Various visual improvements in HTML report
+
 # 0.8.6 (2017-05-23)
 
 - **CLI**: in --help of lcc commands, split arguments by groups
