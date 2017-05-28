@@ -8,8 +8,9 @@ function escapeHtml(unsafe) {
          .replace(/'/g, "&#039;");
 }
 
-function Step(step) {
+function Step(step, nb) {
 	this.step = step;
+	this.nb = nb;
 };
 
 Step.prototype = {
@@ -17,8 +18,11 @@ Step.prototype = {
 	
 	render: function () {
 		this.step_row = $("<tr style='display: none' class='step'>")
-			.append($("<td colspan='4'>")
-				.append($("<u>").text(this.step.description)));
+			.append($("<td>"))
+				.append($("<td colspan='3'>")
+					.append($("<h6>")
+							.append($("<strong style='font-size:120%'>")
+								.text(this.nb + ". " + this.step.description))));
 		this.entry_rows = [ ];
 		
 		for (i in this.step.entries) {
@@ -26,30 +30,29 @@ Step.prototype = {
 			$row = $("<tr style='display: none'>");
 			this.entry_rows.push($row);
 			if (entry.type == "check") {
-				$row.addClass("check");
+				$row.addClass("step_entry check");
+				$row.append($("<td>", {"class": entry.outcome ? 'text-success' : 'text-danger'}).text("CHECK"));
 				$row.append($("<td>").text(entry.description));
 				$row.append($("<td colspan='2'>").text(entry.details ? entry.details : ""));
-				if (entry.outcome) {
-					$row.append($("<td class='text-success'><strong>success</strong></td>"));
-				} else {
-					$row.append($("<td><strong>failure</strong></td>"));
-					$row.addClass("danger");
-				}
 			} else if (entry.type == "log") {
-				$row.addClass("log");
-				$row.append($("<td colspan='3'>").append($("<samp>").text(entry.message)));
-				$row.append($("<td class='text-uppercase'>").text(entry.level));
+				$row.addClass("step_entry log");
 				if (entry.level == "error") {
-					$row.addClass("danger");
+					log_level_class = "text-danger";
+				} else if (entry.level == "warn") {
+					log_level_class = "text-warning";
+				} else {
+					log_level_class = "text-info";
 				}
+				$row.append($("<td class='text-uppercase " + log_level_class + "'>").text(entry.level));
+				$row.append($("<td colspan='3'>").append($("<samp>").text(entry.message)));
 			} else if (entry.type == "attachment") {
-				$row.addClass("attachment");
+				$row.addClass("step_entry attachment");
+				$row.append($("<td class='text-uppercase text-info'>").text("ATTACHMENT"));
 				$row.append($("<td colspan='3'>").append($("<a>", { "target": "_blank", "href": entry.filename }).text(entry.description)));
-				$row.append($("<td class='text-uppercase'>").text("ATTACHMENT"));
 			} else if (entry.type == "url") {
-				$row.addClass("url");
+				$row.addClass("step_entry url");
+				$row.append($("<td class='text-uppercase text-info'>").text("URL"));
 				$row.append($("<td colspan='3'>").append($("<a>", { "target": "_blank", "href": entry.url }).text(entry.description)));
-				$row.append($("<td class='text-uppercase'>").text("URL"));
 			}
 		}
 		
@@ -71,7 +74,7 @@ Step.prototype = {
 	}
 };
 
-function Test(name, description, status, status_details, steps, tags, properties, links) {
+function Test(name, description, status, status_details, steps, tags, properties, links, parents) {
 	this.name = name;
 	this.description = description;
 	this.status = status;
@@ -81,8 +84,9 @@ function Test(name, description, status, status_details, steps, tags, properties
 	this.properties = (properties != null) ? properties : [];
 	this.links = (links != null) ? links : [];
 	for (var i = 0; i < steps.length; i++) {
-		this.steps.push(new Step(steps[i]));
+		this.steps.push(new Step(steps[i], i+1));
 	}
+	this.parents = (parents != null) ? parents : [];
 	this.is_displayed = false;
 };
 
@@ -92,9 +96,25 @@ Test.prototype = {
 	render: function() {
 		var cols = [ ];
 
+		/* build status column */
+		if (this.status == "passed") {
+			status_text_class = "text-success";
+		} else if (this.status == "failed") {
+			status_text_class = "text-danger";
+		} else {
+			status_text_class = "text-warning";
+		}
+		$status_col = $("<td class='test_status'><span class='" + status_text_class + "' style='font-size:120%'>" + this.status.toUpperCase() + "</span></td>");
+		if (this.steps.length > 0) {
+			$status_col.css("cursor", "pointer");
+			$status_col.click(this.toggle.bind(this));
+		}
+		cols.push($status_col);
+
 		/* build description column */
-		var $test_desc = $("<h6><a>", {"name": this.name, "href": "#" + this.name}).text(this.description).append($("<br/><small>").text(this.name));
-		cols.push($("<td>").append($test_desc));
+		var test_path = this.parents.map(function(p) { return p.name }).concat(this.name).join(".");
+		var $test_col_content = $("<h5>").text(this.description).append($("<br/><small>").text(test_path));
+		cols.push($("<td>").append($test_col_content));
 
 		/* build tags & properties column */
 		var $tags = $("<span>" + 
@@ -115,29 +135,14 @@ Test.prototype = {
 		}).join(", ");
 		cols.push($("<td>").append($links));
 
-		/* build status column */
-		var status;
-		var status_class;
-		if (this.status == "passed") {
-			$status_col = $("<td class='text-success'><strong>passed</strong></td>");
-		} else if (this.status == "failed") {
-			$status_col = $("<td><strong>failed</strong></td>");
-			status_class = "danger";
-		} else {
-			$status_col = $("<td title='" + escapeHtml(this.status_details || "") + "'><strong>" + (this.status || "n/a") + "</strong></td>");
-			status_class = "danger";
-		}
-		cols.push($status_col);
-
 		/* build the whole line test with steps */
-		$test_row = $("<tr>", { "class": status_class }).append(cols);
+		$test_row = $("<tr>", { "id": test_path, "class": "test" }).append(cols);
 		rows = [ $test_row ];
 		var step_rows = [ ];
 		for (i in this.steps) {
 			step_rows = step_rows.concat(this.steps[i].render());
 		}
 		rows = rows.concat(step_rows);
-		$test_desc.click(this.toggle.bind(this));
 		return rows;
 	},
 	
@@ -194,7 +199,7 @@ function TestSuite(data, parents) {
 
     for (var i = 0; i < data.tests.length; i++) {
         var t = data.tests[i]
-    	this.tests.push(new Test(t.name, t.description, t.status, t.status_details, t.steps, t.tags, t.properties, t.links));
+    	this.tests.push(new Test(t.name, t.description, t.status, t.status_details, t.steps, t.tags, t.properties, t.links, this.parents.concat(this)));
     }
 
     for (var i = 0; i < data.sub_suites.length; i++) {
@@ -210,8 +215,10 @@ TestSuite.prototype = {
 
 		if (this.tests.length > 0) {
 			var description = this.parents.map(function(p) { return p.description }).concat(this.description).join(" > ");
+			var path = this.parents.map(function(p) { return p.name }).concat(this.name).join(".");
 			var $panel_heading = $("<div class='panel-heading'>");
-			$panel_heading.append($("<span>").text(description));
+
+			$panel_heading.append($("<h4>").text(description).append($("<br/><small>").text(path)));
 			if (this.properties.length > 0 || this.tags.length > 0) {
 				$panel_heading.append($("<br/>"));
 				$panel_heading.append($("<span style='font-size: 75%'>Properties/Tags: ").text(
@@ -229,7 +236,7 @@ TestSuite.prototype = {
 						return "<a href='" + escapeHtml(link.url) + "' title='" + escapeHtml(label) + "'>" + escapeHtml(label) + "</a>";
 				}).join(", ")));
 			}
-			var $panel = $("<div class='panel panel-default panel-primary' style='margin-left:" + (0 * this.parents.length) + "px'>")
+			var $panel = $("<div class='panel panel-default ' style='margin-left:" + (0 * this.parents.length) + "px'>")
 				.append($panel_heading);
 			panels.push($panel);
 
@@ -245,8 +252,7 @@ TestSuite.prototype = {
 			}
 			
 			var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
-				.append($("<colgroup><col width='60%'><col width='20%'><col width='10%'><col width='10%'></colgroup>"))
-				.append($("<thead><tr><th style='width: 60%'>Test</th><th style='width: 20%'>Properties/Tags</th><th style='width: 10%'>Links</th><th style='width: 10%'>Outcome</th></tr></thead>"))
+				.append($("<colgroup><col width='10%'><col width='60%'><col width='20%'><col width='10%'></colgroup>"))
 				.append($("<tbody>").append(rows));
 			$panel.append($table);
 		}
@@ -294,11 +300,11 @@ Report.prototype = {
 	},
 	
 	render_hook_data: function(test, label) {
-		var $panel_heading = $("<div class='panel-heading'>" + label + "</div>");
-		var $panel = $("<div class='panel panel-default panel-primary'>").append($panel_heading);
+		var $panel_heading = $("<div class='panel-heading'><h4>" + label + "</h4></div>");
+		var $panel = $("<div class='panel panel-default'>").append($panel_heading);
 		rows = test.render();
 		var $table = $("<table class='table table-hover table-bordered table-condensed'/>")
-			.append($("<colgroup><col width='60%'><col width='20%'><col width='10%'><col width='10%'></colgroup>"))
+			.append($("<colgroup><col width='10%'><col width='60%'><col width='20%'><col width='10%'></colgroup>"))
 			.append($("<tbody>").append(rows));
 		$panel.append($table);
 		return $panel;
