@@ -96,10 +96,13 @@ Test.prototype = {
 			status_text_class = "text-success";
 		} else if (this.data.status == "failed") {
 			status_text_class = "text-danger";
+		} else if (this.data.status == null) {
+			status_text_class = "";
 		} else {
 			status_text_class = "text-warning";
 		}
-		$status_col = $("<td class='test_status'><span class='" + status_text_class + "' style='font-size:120%'>" + this.data.status.toUpperCase() + "</span></td>");
+		$status_col = $("<td class='test_status' title='" + (this.data.status_details ? escapeHtml(this.data.status_details) : "") + "'>" + 
+				"<span class='" + status_text_class + "' style='font-size:120%'>" + (this.data.status ? this.data.status.toUpperCase() : "n/a") + "</span></td>");
 		if (this.steps.length > 0) {
 			$status_col.css("cursor", "pointer");
 			$status_col.click(this.toggle.bind(this));
