@@ -24,9 +24,23 @@ DEFAULT_REPORTING_BACKENDS = get_available_backends()
 
 PROJECT_SETTINGS_FILE = "project.py"
 
+def _find_file_going_up(filename, dirname):
+    if os.path.exists(os.path.join(dirname, filename)):
+        return os.path.join(dirname, filename)
+    
+    parent_dirname = os.path.dirname(dirname)
+    if parent_dirname == dirname:
+        return None # root directory has been reached
+    
+    return _find_file_going_up(filename, parent_dirname)
+
 def find_project_file():
-    filename = os.environ.get("LCC_PROJECT_FILE", os.path.join(os.getcwd(), PROJECT_SETTINGS_FILE))
-    return filename if os.path.exists(filename) else None
+    filename = os.environ.get("LCC_PROJECT_FILE")
+    if filename != None:
+        return filename if os.path.exists(filename) else None
+    
+    filename = _find_file_going_up(PROJECT_SETTINGS_FILE, os.getcwd())
+    return filename # filename can be None
 
 def _check_class(klass=None):
     def wrapper(name, value):
