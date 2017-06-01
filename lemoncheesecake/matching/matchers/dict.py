@@ -59,7 +59,7 @@ class HasEntry(Matcher):
         try:
             value = self.key_matcher.get_entry(actual)
         except KeyError:
-            return match_failure('No entry "%s"' % self.key_matcher.description())
+            return match_failure('No entry %s' % self.key_matcher.description())
         
         if self.value_matcher:
             return self.value_matcher.matches(value)
