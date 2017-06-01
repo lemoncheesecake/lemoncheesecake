@@ -18,11 +18,10 @@ Step.prototype = {
 	
 	render: function () {
 		this.step_row = $("<tr style='display: none' class='step'>")
-			.append($("<td>"))
-				.append($("<td colspan='3'>")
-					.append($("<h6>")
-							.append($("<strong style='font-size:120%'>")
-								.text(this.nb + ". " + this.step.description))));
+			.append($("<td colspan='4'>")
+				.append($("<h6>")
+						.append($("<strong style='font-size:120%'>")
+							.text(this.nb + ". " + this.step.description))));
 		this.entry_rows = [ ];
 		
 		for (i in this.step.entries) {
