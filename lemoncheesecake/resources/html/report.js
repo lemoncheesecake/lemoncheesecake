@@ -18,11 +18,10 @@ Step.prototype = {
 	
 	render: function () {
 		this.step_row = $("<tr style='display: none' class='step'>")
-			.append($("<td>"))
-				.append($("<td colspan='3'>")
-					.append($("<h6>")
-							.append($("<strong style='font-size:120%'>")
-								.text(this.nb + ". " + this.step.description))));
+			.append($("<td colspan='4'>")
+				.append($("<h6>")
+						.append($("<strong style='font-size:120%'>")
+							.text(this.nb + ". " + this.step.description))));
 		this.entry_rows = [ ];
 		
 		for (i in this.step.entries) {
@@ -74,19 +73,14 @@ Step.prototype = {
 	}
 };
 
-function Test(name, description, status, status_details, steps, tags, properties, links, parents) {
-	this.name = name;
-	this.description = description;
-	this.status = status;
-	this.status_details = status_details;
+function Test(data, parents, special) {
+	this.data = data;
 	this.steps = [];
-	this.tags = (tags != null) ? tags : [];
-	this.properties = (properties != null) ? properties : [];
-	this.links = (links != null) ? links : [];
-	for (var i = 0; i < steps.length; i++) {
-		this.steps.push(new Step(steps[i], i+1));
+	for (var i = 0; i < data.steps.length; i++) {
+		this.steps.push(new Step(data.steps[i], i+1));
 	}
 	this.parents = (parents != null) ? parents : [];
+	this.special = special;
 	this.is_displayed = false;
 };
 
@@ -97,14 +91,17 @@ Test.prototype = {
 		var cols = [ ];
 
 		/* build status column */
-		if (this.status == "passed") {
+		if (this.data.status == "passed") {
 			status_text_class = "text-success";
-		} else if (this.status == "failed") {
+		} else if (this.data.status == "failed") {
 			status_text_class = "text-danger";
+		} else if (this.data.status == null) {
+			status_text_class = "";
 		} else {
 			status_text_class = "text-warning";
 		}
-		$status_col = $("<td class='test_status'><span class='" + status_text_class + "' style='font-size:120%'>" + this.status.toUpperCase() + "</span></td>");
+		$status_col = $("<td class='test_status' title='" + (this.data.status_details ? escapeHtml(this.data.status_details) : "") + "'>" + 
+				"<span class='" + status_text_class + "' style='font-size:120%'>" + (this.data.status ? this.data.status.toUpperCase() : "n/a") + "</span></td>");
 		if (this.steps.length > 0) {
 			$status_col.css("cursor", "pointer");
 			$status_col.click(this.toggle.bind(this));
@@ -112,16 +109,19 @@ Test.prototype = {
 		cols.push($status_col);
 
 		/* build description column */
-		var test_path = this.parents.map(function(p) { return p.name }).concat(this.name).join(".");
-		var $test_col_content = $("<h5>").text(this.description).append($("<br/><small>").text(test_path));
+		var test_path = this.parents.map(function(p) { return p.data.name }).concat(this.data.name).join(".");
+		var $test_col_content = $("<h5>").text(this.data.description).append($("<br/><small>").text(test_path));
+		if (this.special) {
+			$test_col_content.addClass("special")
+		}
 		cols.push($("<td>").append($test_col_content));
 
 		/* build tags & properties column */
 		var $tags = $("<span>" + 
-			$.map(this.tags, function(tag) {
+			$.map(this.data.tags, function(tag) {
 				return escapeHtml(tag);
 			}).concat(
-			$.map(this.properties, function(value, key) {
+			$.map(this.data.properties, function(value, key) {
 				return escapeHtml(key + ": " + value);
 			})).join("<br/>") +
 			"</span>"
@@ -129,7 +129,7 @@ Test.prototype = {
 		cols.push($("<td>").append($tags));
 		
 		/* build links column */
-		var $links = $.map(this.links, function (link) {
+		var $links = $.map(this.data.links, function (link) {
 			var label = link.name ? link.name : link.url;
 			return "<a href='" + escapeHtml(link.url) + "' title='" + escapeHtml(label) + "'>" + escapeHtml(label) + "</a>";
 		}).join(", ");
@@ -178,28 +178,33 @@ Test.prototype = {
 }
 
 function TestSuite(data, parents) {
+	this.data = data;
     this.parents = (parents == null) ? [] : parents;
-    this.name = data.name;
-    this.description = data.description;
-    this.tags = data.tags;
-    this.properties = data.properties;
-    this.links = data.links;
-    this.suite_setup = null;
-    this.suite_teardown = null;
     this.tests = [ ];
     this.sub_suites = [ ];
 
     if (data.suite_setup) {
-    	this.suite_setup = new Test("n/a", " - Setup suite -", data.suite_setup.outcome ? "passed" : "failed", null, data.suite_setup.steps);
+    	test_data = Object();
+    	test_data.name = "n/a";
+    	test_data.description = " - Setup suite -";
+    	test_data.status = data.suite_setup.outcome ? "passed" : "failed";
+    	test_data.status_details = null;
+    	test_data.steps = data.suite_setup.steps;
+    	this.suite_setup = new Test(test_data, [], true);
     }
 
     if (data.suite_teardown) {
-    	this.suite_teardown = new Test("n/a", " - Teardown suite -", data.suite_teardown.outcome ? "passed" : "failed", null, data.suite_teardown.steps)
+    	test_data = Object();
+    	test_data.name = "n/a";
+    	test_data.description = " - Teardown suite -";
+    	test_data.status = data.suite_teardown.outcome ? "passed" : "failed";
+    	test_data.status_details = null;
+    	test_data.steps = data.suite_teardown.steps;
+    	this.suite_teardown = new Test(test_data, [], true);
     }
 
     for (var i = 0; i < data.tests.length; i++) {
-        var t = data.tests[i]
-    	this.tests.push(new Test(t.name, t.description, t.status, t.status_details, t.steps, t.tags, t.properties, t.links, this.parents.concat(this)));
+    	this.tests.push(new Test(data.tests[i], this.parents.concat(this)));
     }
 
     for (var i = 0; i < data.sub_suites.length; i++) {
@@ -214,24 +219,24 @@ TestSuite.prototype = {
 		var panels = [ ];
 
 		if (this.tests.length > 0) {
-			var description = this.parents.map(function(p) { return p.description }).concat(this.description).join(" > ");
-			var path = this.parents.map(function(p) { return p.name }).concat(this.name).join(".");
+			var description = this.parents.map(function(p) { return p.data.description }).concat(this.data.description).join(" > ");
+			var path = this.parents.map(function(p) { return p.data.name }).concat(this.data.name).join(".");
 			var $panel_heading = $("<div class='panel-heading'>");
 
 			$panel_heading.append($("<h4>").text(description).append($("<br/><small>").text(path)));
-			if (this.properties.length > 0 || this.tags.length > 0) {
+			if (this.data.properties.length > 0 || this.data.tags.length > 0) {
 				$panel_heading.append($("<br/>"));
 				$panel_heading.append($("<span style='font-size: 75%'>Properties/Tags: ").text(
-					this.tags.join(", ") + (this.tags.length > 0 ? ", " : "") +
-					$.map(this.properties, function(value, key) {
+					this.data.tags.join(", ") + (this.data.tags.length > 0 ? ", " : "") +
+					$.map(this.data.properties, function(value, key) {
 						return key + ": " + value;
 					}).join(", ")
 				));
 			}
-			if (this.links.length > 0) {
+			if (this.data.links.length > 0) {
 				$panel_heading.append($("<br/>"));
 				$panel_heading.append($("<span style='font-size: 75%'>links: " +
-					$.map(this.links, function (link) {
+					$.map(this.data.links, function (link) {
 						var label = link.name ? link.name : link.url;
 						return "<a href='" + escapeHtml(link.url) + "' title='" + escapeHtml(label) + "'>" + escapeHtml(label) + "</a>";
 				}).join(", ")));
@@ -241,13 +246,13 @@ TestSuite.prototype = {
 			panels.push($panel);
 
 			var rows = [ ];
-			if (this.suite_setup) {
+			if (this.data.suite_setup) {
 				rows = rows.concat(this.suite_setup.render());
 			}
 			for (var i = 0; i < this.tests.length; i++) {
 			    rows = rows.concat(this.tests[i].render());
 			}
-			if (this.suite_teardown) {
+			if (this.data.suite_teardown) {
 				rows = rows.concat(this.suite_teardown.render());
 			}
 			
@@ -273,10 +278,22 @@ function Report(data, node) {
 	this.test_session_teardown = null;
 	
 	if (data.test_session_setup) {
-		this.test_session_setup = new Test("n/a", " - Setup test session -", data.test_session_setup.outcome ? "passed" : "failed", null, data.test_session_setup.steps);
+		test_data = Object();
+		test_data.name = "n/a";
+		test_data.description = " - Setup test session -";
+		test_data.status = data.test_session_setup.outcome ? "passed" : "failed";
+		test_data.status_details = null;
+		test_data.steps = data.test_session_setup.steps;
+		this.test_session_setup = new Test(test_data, null, true);
 	}
 	if (data.test_session_teardown) {
-		this.test_session_teardown = new Test("n/a", " - Teardown test session -", data.test_session_teardown.outcome ? "passed" : "failed", null, data.test_session_teardown.steps);
+		test_data = Object();
+		test_data.name = "n/a";
+		test_data.description = " - Teardown test session -";
+		test_data.status = data.test_session_teardown.outcome ? "passed" : "failed";
+		test_data.status_detail = null;
+		test_data.steps = steps;
+		this.test_session_teardown = new Test(test_data, null, true);
 	}
 	
 	for (var i = 0; i < data.suites.length; i++) {
@@ -300,7 +317,7 @@ Report.prototype = {
 	},
 	
 	render_hook_data: function(test, label) {
-		var $panel_heading = $("<div class='panel-heading'><h4>" + label + "</h4></div>");
+		var $panel_heading = $("<div class='panel-heading'><h4 class='special'>" + label + "</h4></div>");
 		var $panel = $("<div class='panel panel-default'>").append($panel_heading);
 		rows = test.render();
 		var $table = $("<table class='table table-hover table-bordered table-condensed'/>")

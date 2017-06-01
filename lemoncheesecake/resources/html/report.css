@@ -68,6 +68,10 @@ th, td {
     vertical-align: middle ! important;
 }
 
+.special {
+	font-style: italic;
+}
+
 pre, samp {
     border: 0px;
     padding: 0px;
