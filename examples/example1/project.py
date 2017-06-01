@@ -7,7 +7,7 @@ from lemoncheesecake.reporting.backend import SAVE_AT_EACH_EVENT
 from lemoncheesecake.reporting.backends import ConsoleBackend, JsonBackend, XmlBackend, HtmlBackend
 
 project_dir = os.path.dirname(__file__)
-TESTSUITES = load_testsuites_from_directory("suites")
+TESTSUITES = load_testsuites_from_directory(os.path.join(project_dir, "suites"))
 FIXTURES = load_fixtures_from_directory(os.path.join(project_dir, "fixtures"))
 
 def fail(dummy):
