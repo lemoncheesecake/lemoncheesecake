@@ -2,7 +2,7 @@ import os
 import sys
 import argparse
 
-from lemoncheesecake.project import Project, create_project, load_project
+from lemoncheesecake.project import Project, create_project, load_project, find_project_file
 from lemoncheesecake.reporting import backends
 
 from helpers import build_test_project, build_test_module, build_fixture_module
@@ -157,5 +157,52 @@ def test_project_creation(tmpdir):
     assert project.get_before_test_run_hook() != None
     assert project.get_after_test_run_hook() != None
 
-# TODO: add tests on get_capabilities arguments
+def test_find_project_file_not_found(tmpdir):
+    old_cwd = os.getcwd()
+    os.chdir(tmpdir.strpath)
+    try:
+        actual = find_project_file()
+        assert actual == None
+    finally:
+        os.chdir(old_cwd)
 
+def test_find_project_file_in_current_dir(tmpdir):
+    old_cwd = os.getcwd()
+    os.chdir(tmpdir.strpath)
+    try:
+        tmpdir.join("project.py").write("")
+        actual = find_project_file()
+        assert actual == tmpdir.join("project.py").strpath
+    finally:
+        os.chdir(old_cwd)
+
+def test_find_project_file_in_parent_dir(tmpdir):
+    old_cwd = os.getcwd()
+    tmpdir.join("project.py").write("")
+    tmpdir.join("subdir").mkdir()
+    os.chdir(tmpdir.join("subdir").strpath)
+    try:
+        actual = find_project_file()
+        assert actual == tmpdir.join("project.py").strpath
+    finally:
+        os.chdir(old_cwd)
+
+def test_find_project_file_env_var_not_found(tmpdir):
+    os.environ["LCC_PROJECT_FILE"] = tmpdir.join("project.py").strpath
+    try:
+        actual = find_project_file()
+        assert actual == None
+    finally:
+        del os.environ["LCC_PROJECT_FILE"]
+
+def test_find_project_file_env_var_found(tmpdir):
+    tmpdir.join("project.py").write("")
+    os.environ["LCC_PROJECT_FILE"] = tmpdir.join("project.py").strpath
+    
+    try:
+        actual = find_project_file()
+        assert actual == tmpdir.join("project.py").strpath
+    finally:
+        del os.environ["LCC_PROJECT_FILE"]
+        
+# TODO: add tests on get_capabilities arguments
