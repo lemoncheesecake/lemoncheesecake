@@ -1,3 +1,10 @@
+# 0.8.8 (2017-06-01)
+
+- **HTML report**: fix handling of tests being executed at the time of html report rendering (again, regression was introduced in 0.8.7)
+- **HTML report**: minor visual improvements
+- **CLI**: find project file (`project.py`) also in parent directories
+- **matchers**: fix has_entry matcher detail message when no entry is found (double double quotes issue)
+
 # 0.8.7 (2017-05-28)
 
 - Various visual improvements in HTML report
