@@ -44,8 +44,7 @@ def get_test_methods_from_class(obj):
     return sorted(filter(is_test_method, _list_object_attributes(obj)), key=lambda m: m._lccmetadata.rank)
 
 def get_sub_suites_from_class(obj):
-    sub_suites = obj.sub_suites[:] if hasattr(obj, "sub_suites") else []
-    return sorted(filter(is_testsuite_class, _list_object_attributes(obj) + sub_suites), key=lambda c: c._lccmetadata.rank)
+    return sorted(filter(is_testsuite_class, _list_object_attributes(obj)), key=lambda c: c._lccmetadata.rank)
 
 def get_test_functions_from_module(mod):
     return filter(is_test_function, _list_object_attributes(mod))

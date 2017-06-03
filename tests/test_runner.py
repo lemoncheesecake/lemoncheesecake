@@ -171,20 +171,6 @@ def test_sub_testsuite_inline(reporting_session):
     
     assert reporting_session.get_test_outcome("sometest") == True
 
-def test_sub_testsuite_attr(reporting_session):
-    @lcc.testsuite("MyChildSuite")
-    class MyChildSuite:
-            @lcc.test("Some test")
-            def sometest(self):
-                pass
-    @lcc.testsuite("MyParentSuite")
-    class MyParentSuite:
-        sub_suites = [MyChildSuite]
-    
-    run_testsuite_class(MyParentSuite)
-    
-    assert reporting_session.get_test_outcome("sometest") == True
-
 def test_worker_accessible_through_testsuite(reporting_session):
     @lcc.testsuite("MySuite")
     class MySuite:

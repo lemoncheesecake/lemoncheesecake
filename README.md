@@ -390,7 +390,7 @@ The Worker class provides three hooks detailed in the API documentation:
 
 Sub testsuites can be declared in a testsuite in a lot of different ways:
 
-- as classes in testsuite module:
+- as classes in a testsuite module:
   ```python
   TESTSUITE = {
     "description": "Parent suite"
@@ -412,17 +412,7 @@ Sub testsuites can be declared in a testsuite in a lot of different ways:
       def test_c(self):
           pass
   ```
-- by referencing it through the `sub_suites` attribute of the parent testsuite class:
-  ```python
-  @lcc.testsuite("Child suite")
-  class child_suite:
-      pass
-
-  @lcc.testsuite("Parent suite")
-  class parent_suite:
-      sub_suites = [child_suite]
-  ```
-- using nested class:
+- as nested class:
   ```python
   @lcc.testsuite("Parent suite")
   class parent_suite:
@@ -430,7 +420,7 @@ Sub testsuites can be declared in a testsuite in a lot of different ways:
       class child_suite:
           pass
   ```
-- by putting them in modules stored in a directory that matches the parent module name:
+- as module in a sub directory whose name matches the parent testsuite module:
   ```shell
   $ tree
   .
