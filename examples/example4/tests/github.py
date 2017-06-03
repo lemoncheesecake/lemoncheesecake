@@ -21,7 +21,7 @@ class github:
         with this_dict(data):
             check_that_entry("type", is_("Organization"))
             check_that_entry("id", is_integer())
-            check_that_entry("description", is_none())
+            check_that_entry("description", is_not_none())
             check_that_entry("login", is_(existing()))
             check_that_entry("created_at", match_pattern("^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$"))
             check_that_entry("has_organization_projects", is_bool(True))
