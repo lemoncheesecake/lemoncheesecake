@@ -42,7 +42,7 @@ class RunCommand(Command):
             
         add_filter_args_to_cli_parser(cli_parser)
         
-        group = cli_parser.add_argument_group("Runner")
+        group = cli_parser.add_argument_group("Reporting")
         group.add_argument("--report-dir", "-r", required=False, help="Directory where report data will be stored")
         group.add_argument("--reporting", nargs="+", default=default_reporting_backend_names,
             help="The list of reporting backends to use"
