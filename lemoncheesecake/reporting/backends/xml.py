@@ -287,7 +287,7 @@ def load_report_from_file(filename):
     
     test_session_setup = xml.xpath("test-session-setup")
     test_session_setup = test_session_setup[0] if len(test_session_setup) else None
-    if test_session_setup:
+    if test_session_setup != None:
         report.test_session_setup = _unserialize_hook_data(test_session_setup)
         
     for xml_suite in root.xpath("suite"):
@@ -295,7 +295,7 @@ def load_report_from_file(filename):
 
     test_session_teardown = xml.xpath("test-session-teardown")
     test_session_teardown = test_session_teardown[0] if len(test_session_teardown) else None
-    if test_session_teardown:
+    if test_session_teardown != None:
         report.test_session_teardown = _unserialize_hook_data(test_session_teardown)
     
     return report
