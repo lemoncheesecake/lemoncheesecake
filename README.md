@@ -1,16 +1,16 @@
 # Introduction
 
-lemoncheesecake is a lightweight functional / QA testing framework for Python. It provides functionalities such as test launcher, tests organization (through hierarchical test suites, tags, properties), fixtures, matchers, structured reporting data (JSON, XML) and HTML reports.
+lemoncheesecake is a functional/QA testing framework for Python. It provides functionalities such as test launcher, tests organization (using hierarchical test suites, tags, properties, links), fixtures, matchers, structured reporting data (JSON, XML) and HTML report.
 
-Tests are defined as methods in a testsuite class that can also contain sub testsuites allowing the developer to define a complex hierarchy of tests. Tests and testsuites are identified by a name and a description. Tags, properties (key/value pairs), links can be associated with both test and testsuites. These metadata can be used later by the user to filter the test he wants to run.
+Tests are organized within testsuites that themselves can contain sub testsuites allowing the building of a complex tests hierarchy. Every tests and testsuites must have a name and a description. Tags, properties (key/value pairs), links can be associated to both tests and testsuites. These metadata are then available in reports and can be used for test filtering in the lemoncheesecake CLI tool `lcc`.
 
-One of the key features of lemoncheesecake is it's reporting capabilities, providing the user with various formats (XML, JSON, HTML) and the possibility to create his own reporting backend.
+One of the key features of lemoncheesecake is its reporting capabilities, providing the user with various formats (XML, JSON, HTML) and the possibility to create his own reporting backend.
 
-lemoncheesecake is compatible with Python 2.7, 3.3-3.6 .
+lemoncheesecake is compatible with Python 2.7, 3.3-3.6.
 
 # How does it look ?
 
-Like this. Here is testsuite that test a GitHub API end-point:
+Like this. Here is a testsuite that tests a GitHub API end-point:
 
 ```python
 import json
@@ -36,7 +36,7 @@ class github:
         with this_dict(data):
             check_that_entry("type", is_("Organization"))
             check_that_entry("id", is_integer())
-            check_that_entry("description", is_none())
+            check_that_entry("description", is_not_none())
             check_that_entry("login", is_(existing()))
             check_that_entry("created_at", match_pattern("^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$"))
             check_that_entry("has_organization_projects", is_bool(True))
@@ -58,14 +58,14 @@ And here are the corresponding test results:
 
 ## Creating a new test project
 
-Before writing lemoncheesecake tests, you need to setup a lemoncheeseake project.
+Before writing tests, you need to setup a lemoncheesecake project.
 
 The command:
 ```
 $ lcc bootstrap myproject
 ```
 
-creates a new project directory "myproject" containing one file "project.py" (that represents your project settings) and a "tests" directory where you can put your testsuites.
+creates a new project directory "myproject" containing one file "project.py" (it contains your project settings) and a "tests" directory where you can add your testsuites.
 
 ## Writing a testsuite
 
@@ -102,35 +102,47 @@ The two examples above declare:
 - a testsuite whose name is `my_first_testsuite` (the module/class name) and description is `My first testsuite`
 - a test whose name is `my_first_test` (the function/method name) and description is `My first test`
 
-The `lemoncheesecake.api` module (aliased to lcc to be more developer-friendly) contains the lemoncheesecake test API needed to write tests.
+About imports:
+- `lemoncheesecake.api` module (aliased to lcc to be shorter) contains the lemoncheesecake test API needed to write tests
+- `lemoncheesecake.matching` is imported using wildcard import to make matching operations more pleasant to read:
+```python
+# this, is more easier to read:
+check_that("value", 1, is_integer(greater_than(0)))
+# than that:
+lcc.check_that("value", 1, lcc.is_integer(lcc.greater_than(0)))
+```
+
+Using the default `project.py` file, testsuites will be loaded from the `testsuites` sub directory.
 
 ## Running the tests
 
 The command `lcc run` is in charge of running the tests, it provides several option to filter the test to be run and to set the reporting backends that will be used.
 ```
+$ lcc run --help
 usage: lcc run [-h] [--desc DESC [DESC ...]] [--tag TAG [TAG ...]]
-               [--property PROPERTY [PROPERTY ...]]
-               [--link LINK [LINK ...]] [--report-dir REPORT_DIR]
-               [--reporting REPORTING [REPORTING ...]]
-               [--enable-reporting ENABLE_REPORTING [ENABLE_REPORTING ...]]
-               [--disable-reporting DISABLE_REPORTING [DISABLE_REPORTING ...]]
-               [--show-stacktrace]
-               [path [path ...]]
-
-positional arguments:
-  path                  Filters on test/testsuite path (wildcard character '*'
-                        can be used)
+                  [--property PROPERTY [PROPERTY ...]]
+                  [--link LINK [LINK ...]] [--report-dir REPORT_DIR]
+                  [--reporting REPORTING [REPORTING ...]]
+                  [--enable-reporting ENABLE_REPORTING [ENABLE_REPORTING ...]]
+                  [--disable-reporting DISABLE_REPORTING [DISABLE_REPORTING ...]]
+                  [path [path ...]]
 
 optional arguments:
   -h, --help            show this help message and exit
+
+Filtering:
+  path                  Filter on test/testsuite path (wildcard character '*'
+                        can be used)
   --desc DESC [DESC ...]
-                        Filters on test/testsuite descriptions
+                        Filter on descriptions
   --tag TAG [TAG ...], -a TAG [TAG ...]
-                        Filters on test & test suite tags
+                        Filter on tags
   --property PROPERTY [PROPERTY ...], -m PROPERTY [PROPERTY ...]
-                        Filters on test & test suite property
+                        Filter on properties
   --link LINK [LINK ...], -l LINK [LINK ...]
-                        Filters on test & test suite link names
+                        Filter on links (names and URLs)
+
+Reporting:
   --report-dir REPORT_DIR, -r REPORT_DIR
                         Directory where report data will be stored
   --reporting REPORTING [REPORTING ...]
@@ -141,8 +153,6 @@ optional arguments:
   --disable-reporting DISABLE_REPORTING [DISABLE_REPORTING ...]
                         The list of reporting backends to remove (from base
                         backends)
-  --show-stacktrace     Show full stacktrace will getting an unexpected
-                        exception from user code
 ```
 
 Tests are run like this:
@@ -163,7 +173,7 @@ The generated HTML report is available in the file "report/report.html":
 
 # Writing tests
 
-Lemoncheesecake provides several API functions to check data and to set various information into the test report.
+lemoncheesecake provides several API functions to check data and to set various information into the test report.
 
 ## Matchers
 
@@ -172,51 +182,47 @@ Lemoncheesecake comes with support of matchers, a functionality inspired by [Ham
 The following stock matchers are available:
 
 - Values:
-  - `equal_to(expected)`: match using `==` operator
-  - `not_equal_to(expected)`: match using `!=` operator
-  - `greater_than(expected)`: match using `>` operator
-  - `greater_than_or_equal_to(expected)`: match using `>=` operator
-  - `less_than(expected)`: match using `<` operator
-  - `less_than_or_equal_to(expected)`: match using `<=` operator
-  - `is_between(min, max)`: match if actual value is between min and max
-  - `is_none()`: match using `== None`
-  - `is_not_none()`: match using `!= None`
-  - `has_length(expected)`: match if value has expected length while expected can be a value or a Matcher object
+  - `equal_to(expected)`: check if actual `==` expected
+  - `not_equal_to(expected)`: check if actual `!=` expected
+  - `greater_than(expected)`: check if actual `>` expected
+  - `greater_than_or_equal_to(expected)`: check if actual `>=` expected
+  - `less_than(expected)`: check if actual `<` expected
+  - `less_than_or_equal_to(expected)`: check if actual `<=` expected
+  - `is_between(min, max)`: check if actual is between min and max
+  - `is_none()`: check if actual `== None`
+  - `is_not_none()`: check if actual `!= None`
+  - `has_length(expected)`: check if value has expected length (expected can be a value or a Matcher object)
 - Character strings:
-  - `starts_with(expected)`: match beginning of the string
-  - `ends_with(expected)`: match end of the string
-  - `match_pattern(expected)`: match using regexp (expected can be a raw string or an object returned by re.compile())
+  - `starts_with(expected)`: check if actual string starts with expected
+  - `ends_with(expected)`: check if actual string ends with expected
+  - `match_pattern(expected)`: check if actual match expected regexp (expected can be a raw string or an object returned by `re.compile()`)
 - Types (expected is a value or a Matcher object):
-  - `is_integer(expected)`: match type `int`
-  - `is_float(expected)`: match type `float`
-  - `is_str(expected)`: match types `str` and `unicode` (Python 2.x)
-  - `is_dict(expected)`: match type `dict`
-  - `is_list(expected)`: match types `list` and `tuple`
+  - `is_integer(expected)`: check if actual is of type  `int`
+  - `is_float(expected)`: check if actual is of type `float`
+  - `is_str(expected)`: check if actual is of type `str` (or `unicode` if Python 2.7)
+  - `is_dict(expected)`: check if actual is of type `dict`
+  - `is_list(expected)`: check if actual is of type `list` or `tuple`
 - Iterable:
-  - `has_item(expected)`: the iterable has an element that matches expected (value or matcher)
-  - `has_values(values)`: the iterable contains (at least) the values passed as argument
-  - `has_only_values(values)`: the iterable only contains the values passed as argument
-  - `is_in(values)`: match if the actual value is among the given values
+  - `has_item(expected)`: check is actual iterable has an element that matches expected (expected can be a value or a Matcher)
+  - `has_values(expected)`: check is actual iterable contains **at least** the expected values
+  - `has_only_values(expected)`: check if actual iterable **only contains** the expected values
+  - `is_in(expected)`: check if actual value **is among** the expected values
 - Dict:
-  - `has_entry(key[, value])`: match dict key and optionally match associated value (with value or Matcher object)
+  - `has_entry(expected_key [,expected_value])`: check if actual dict has `expected_key` and (optionally) the expected associated value `expected_value` (`expected_value` can be a value or a matcher)
 - Logical:
-  - `is_(expected)`: return the matcher if `expected` is a matcher, otherwise wraps its value with `equal_to`
-  - `is_not(expected)`: make the negation of the matcher in argument (or `equal_to` in the argument is not a matcher)
-  - `all_of(matcher1, [matcher2, [...]])`: logical **AND** between all the matchers in argument
-  - `any_of(matcher1, [matcher2, [...]])`: logical **OR** between all the matchers in argument
-  - `anything()`, `something()`, `existing()`: those matchers always return success whatever the actual value (only the matcher description change between them)
+  - `is_(expected)`: return the matcher if `expected` is a matcher, otherwise wraps `expected` in the `equal_to` matcher
+  - `is_not(expected)`: make the negation of the `expected` matcher (or `equal_to` in the argument is not a matcher)
+  - `all_of(matcher1, [matcher2, [...]])`: check if all the matchers succeed (logical **AND** between all the matchers)
+  - `any_of(matcher1, [matcher2, [...]])`: check if any of the matchers succeed (logical **OR** between all the matchers)
+  - `anything()`, `something()`, `existing()`: these matchers always succeed whatever the actual value is (only the matcher description changes to fit the matcher's name)
 
 
  Those matcher are used by a matching function:
- - `check_that`: run the matcher, log the result and return the matching result as a boolean
- - `require_that`: run the matcher, log the result and raise an `AbortTest` exception in case of match failure
- - `assert_that`: run the match, in case of match failure log the result and raise an `AbortTest` exception
+ - `check_that(hint, actual, matcher, quiet=False)`: run the matcher, log the result and return the matching result as a boolean
+ - `require_that(hint, actual, matcher, quiet=False)`: run the matcher, log the result and raise an `AbortTest` exception in case of match failure
+ - `assert_that(hint, actual, matcher, quiet=False)`: run the match, in case of match failure log the result and raise an `AbortTest` exception
 
-These matching functions take the following arguments:
-- a hint that will be used to build the matcher description
-- the actual value to be matched
-- the matcher instance
-- an optional `quiet` flag that is used to hide matching details in the report (`False` by default)
+The `quiet` flag can be set to `True` to hide the matching result details in the report.
 
 The `lemoncheesecake.matching` module also provides helper functions to ease operations on dict object:
 
@@ -245,21 +251,24 @@ If one match fails in a test, this test will be marked as failed.
 
 ## Logs and steps
 
-lemoncheesecake provides logging functions that give the user the ability to log information beyond the check functions. There are four logging functions available corresponding to four logging levels:
+lemoncheesecake provides logging functions that give the user the ability to log information beyond the check functions:
 
-- `log_debug`
-- `log_info`
-- `log_warn`
-- `log_error`: this log will set the test as failed
+- `log_debug(msg)`
+- `log_info(msg)`
+- `log_warn(msg)`
+- `log_error(msg)`: this log will mark the test as failed
+- `log_url(url[, description])`
 
+Examples:
 ```python
 lcc.log_debug("Some debug message")
 lcc.log_info("More important, informational message")
-lcc.log_warn("Something looks abnormal")
+lcc.log_warning("Something looks abnormal")
 lcc.log_error("Something bad happened")
+lcc.log_url("http://example.com", "Example dot com")
 ```
 
-Steps provide a way to organize your checks and logs when they tend to be quite large:
+Steps provide a way to organize your checks within logical steps:
 ```python
 lcc.set_step("Prepare stuff for test")
 value = 42
@@ -280,9 +289,9 @@ Within a test, you also have the possibility to attach files to the report:
 lcc.save_attachment_file(filename, "The application screenshot")
 ```
 
-The file will be copied into the report dir and is prefixed by a unique value, making it possible to save multiple times an attachment with the same name. The attachment description is optional (the given filename will be used as a description).
+The file will be copied into the report dir and is prefixed by a unique value, making it possible to save multiple times an attachment with the same base file name. The attachment description is optional.
 
-There are other ways to save attachment files depending on your need.
+There are other ways to save attachment files depending on your needs.
 
 If the file you want to save is loaded in memory:
 ```python
@@ -303,12 +312,20 @@ Fixtures are a powerful and modular way to inject dependencies into your tests.
 
 ```python
 # fixtures/myfixtures.py:
+import requests
 import lemoncheesecake.api as lcc
-import httplib
 
 @lcc.fixture(scope="session")
-def conn():
-    return httplib.HTTPSConnection("www.someonlineapi.io")
+def user_auth(cli_args):
+    # we assume that custom cli arguments "user" and "password" have been
+    # previously set through project file
+    return cli_args.user, cli_args.password
+
+@lcc.fixture(scope="session")
+def api(user_auth):
+    session = requests.Session()
+    session.auth = user_auth
+    return session
 
 # tests/my_suite.py:
 import lemoncheesecake.api as lcc
@@ -318,40 +335,46 @@ TESTSUITE = {
 }
 
 @lcc.test("Some test")
-def some_test(self, conn):
-    conn.request("GET", "/some/resource")
-    resp =  conn.getresponse()
+def some_test(self, api):
+    resp = api.get("GET", "/some/resource")
+    [...]
 ```
 
 Four fixture scopes are available (higher to lower scope):
-- `session_prerun`: fixtures with this scope will be called before the test session is started, meaning that the fixture cannot use any of the `log_*`, `check_*`, etc... functions; this scope can be very handy because exception happening on a fixtures using this scope will prevent test session to start
+- `session_prerun`: fixtures with this scope will be called before the test session is started, meaning that the fixture cannot use any of the `log_*`, `check_*`, etc... functions. If a fixture with this scope raises an exception, it will prevent the tests to be executed. This behavior can be used in conjunction with the `UserError` exception and the `cli_args` fixture to handle bad CLI arguments
 - `session`: fixtures with this scope are initialized at the global level
 - `testsuite`: fixtures with this scope are initialized at the test suite level; if a testsuite "A" uses a `testsuite` scoped fixture (through a test for example), and a sub testsuite "B" uses the same fixture, then the fixture is initialized two times: one time for "A" and the other time for "B"
 - `test`: fixtures with this scope are initialized at the test level
 
 Please note that:
-- a fixture can be called through multiple names specified in the `names` parameter (otherwise the fixture name is fixture function name):
-```python
-@lcc.fixture(names=("fixt_a", "fixt_b"))
-def fixt():
-    [...]
-```
-- fixture teardown can be implemented using yield to initially return the fixture value and then to de-initialize the fixture
-- a fixture can use fixtures as parameters
-- when a fixture uses an other fixture, the scope level compatibility must be respected: for example, a `test` scoped fixture can use a `session` scoped fixture, but the opposite is not true
+- a fixture can be called through multiple names specified in the `names` parameter (otherwise the fixture name is the fixture function name):
+  ```python
+  @lcc.fixture(names=("fixt_a", "fixt_b"))
+  def fixt():
+      [...]
+  ```
+- fixture teardown can be implemented using yield to initially return the fixture value and then to de-initialize the fixture:
+  ```python
+  @lcc.fixture()
+  def resource_file():
+      fh = open("/some/file", "r")
+      yield fh
+      fh.close()
+  ```
+- a fixture can use other fixtures as arguments, in this case the scope level compatibility must be respected: for example, a `test` scoped fixture can use a `session` scoped fixture, but the opposite is not true
 
 Lemoncheesecake provides several special builtin fixtures:
-- `cli_args` is the object returned by `parse_args` of the `argparse` module that contains the actual CLI arguments; this fixture can be used to access custom command line arguments previously setup by the function by `CLI_EXTRA_ARGS` in the lemoncheesecake project file
-- `project_dir` is the path of the project, meaning the directory of the project file
-- `fixture_name` is the name of the called fixture (it can be used for example if the fixture has several names and the fixture behavior changes depending on the name with which it is called)
+- `cli_args` (`session_prerun`) is the object returned by `parse_args` of the `argparse` module that contains the actual CLI arguments; this fixture can be used to access custom command line arguments previously setup by the function by `CLI_EXTRA_ARGS` in the lemoncheesecake project file
+- `project_dir` (`session_prerun`) is the path of the project, meaning the directory of the project file
+- `fixture_name` is the name of the called fixture and can only be used by a fixture. A typical use case is a fixture with multiple names, `fixture_name` can be used to identify through which name the fixture has been called and adapt its behavior accordingly
 
-Using the default project.py file, fixtures will be loaded from the "fixtures/" sub directory.
+Using the default `project.py` file, fixtures will be loaded from the `fixtures` sub directory.
 
 ## Workers
 
 Workers are used to maintain a custom state for the user across the execution of all testsuites. It is also advised to use workers as a level of abstraction between the tests and the system under tests.
 
-First, you need to reference your Worker in the "project.py" file:
+First, you need to reference your Worker in the `project.py` file:
 
 ```python
  # project.py:
@@ -447,58 +470,49 @@ Note that:
 
 # Metadata
 
-Various metadata can be associated to tests:
+Various metadata can be associated to both tests and testsuites:
 
-- tags: they are simple keywords used to tag tests or testsuites that have a particular characteristic:
+- tags (takes one or more tag name as argument):
   ```python
   @lcc.test("Test something")
   @lcc.tags("important")
   def test_something(self):
-      pass
+      [...]
 
   @lcc.test("Test something else")
   @lcc.tags("slow")
   def test_something_else(self):
-      pass
+      [...]
 
   @lcc.test("Test something else again")
   @lcc.tags("slow", "deprecated")
   def test_something_else_again(self):
-      pass
+      [...]
   ```
-- properties: they are used for keywords that have a (closed) choice of values:
+- properties (takes a name/value pair):
   ```python
   @lcc.test("Test something")
   @lcc.prop("type", "acceptance")
   def test_something(self):
-      pass
+      [...]
 
   @lcc.test("Test something else")
   @lcc.prop("type", "destructive")
   def test_something_else(self):
-      pass
+      [...]
   ```
-- links: they are used to associate a link (with an optional label) to a given test or testsuite:
+- links (takes an URL and an optional description):
   ```python
   @lcc.test("Test something")
   @lcc.link("http://my.bug.tracker/issue/1234", "TICKET-1234")
   def test_something(self):
-      pass
+      [...]
 
   @lcc.test("Test something else")
   @lcc.link("http://my.bug.tracker/issue/5678")
   def test_something_else(self):
-      pass
+      [...]
   ```
-
-These decorators can also be applied to testsuite classes:
-
-```python
-@lcc.testsuite("My Suite")
-@lcc.tags("slow")
-class mysuite:
-    [...]
-```
 
 Metadata can also be associated to a testsuite module using the TESTSUITE dictionnary:
 
@@ -510,7 +524,6 @@ TESTSUITE = {
 [...]
 ```
 
-
 Once, the metadata are set, they:
 
 - can be used to filter the tests to be run (see the `--tag`, `--property` and `--link` of the CLI launcher), in this case a test inherits all these parents metadata
@@ -520,26 +533,31 @@ Once, the metadata are set, they:
 
 ## Custom command line arguments
 
-Custom command line arguments are can be added to lcc-run:
+Custom command line arguments are can be added to `lcc run`:
 
 ```python
  # project.py:
 
-[...]
 def add_cli_args(cli_parser):
     cli_parser.add_argument("--host", required=True, help="Target host")
     cli_parser.add_argument("--port", type=int, default=443, help="Target port")
 CLI_EXTRA_ARGS = add_cli_args
-[...]
 ```
 
-`cli_parser` is an ArgumentParser instance of the argparse module.
+And then accessed through the `cli_args` fixture:
+```python
+# fixtures/fixtures.py:
+def target_url(cli_args):
+    return "https://%s:%s" % (cli_args.host, cli_args.port)
+```
+
+`cli_parser` is an `ArgumentParser` instance of the `argparse` module.
 
 ## Metadata Policy
 
-The project settings provides a metadata policy that can be used to add constraints to metadata.
+The project settings provides a metadata policy that can be used to add constraints to tests and testsuites concerning the usage of metadata.
 
-For example, for the usage of a property "priority" on all tests with a given set of values:
+The following example requires that every tests provide a property "priority" whose value is among "low", "medium" and "high":
 
 ```python
  # project.py:
@@ -552,10 +570,9 @@ METADATA_POLICY = mp
 [...]
 ```
 
-Add a limited set of tags available for both tests and testsuites and forbid the usage of any other tags:
+In this other example set, the metadata policy makes two tags available ("todo" and "known_defect") for both tests and testsuites while forbidding the usage of any other tag:
 
 ```python
-
  # project.py:
 [...]
 mp = validators.MetadataPolicy()
@@ -567,6 +584,107 @@ METADATA_POLICY = mp
 ```
 
 See `lemoncheesecake.validators.MetadataPolicy` for more information.
+
+# Other CLI commands
+
+In addition to the main sub command `run`, the `lcc` command provides other sub commands that display various information about the test hierarchy:
+
+- Show the tests hierarchy with metadata:
+  ```
+  $ lcc tree
+  * suite_1:
+      - suite_1.test_1 (slow, priority:low)
+      - suite_1.test_2 (priority:low)
+      - suite_1.test_3 (priority:medium, #1235)
+      - suite_1.test_4 (priority:low)
+      - suite_1.test_5 (priority:high)
+      - suite_1.test_6 (slow, priority:high)
+      - suite_1.test_7 (priority:high)
+      - suite_1.test_8 (priority:medium)
+      - suite_1.test_9 (priority:medium)
+  * suite_2:
+      - suite_2.test_1 (priority:low)
+      - suite_2.test_2 (priority:low)
+      - suite_2.test_3 (priority:high)
+      - suite_2.test_4 (priority:medium)
+      - suite_2.test_5 (priority:low)
+      - suite_2.test_6 (priority:low)
+      - suite_2.test_7 (priority:medium)
+      - suite_2.test_8 (slow, priority:low, #1234)
+      - suite_2.test_9 (slow, priority:medium)
+  ```
+- Show available fixtures:
+  ```
+  $ lcc fixtures
+
+  Fixture with scope session_prerun:
+  +---------+--------------+------------------+---------------+
+  | Fixture | Dependencies | Used by fixtures | Used by tests |
+  +---------+--------------+------------------+---------------+
+  | fixt_1  | -            | 1                | 1             |
+  +---------+--------------+------------------+---------------+
+
+
+  Fixture with scope session:
+  +---------+--------------+------------------+---------------+
+  | Fixture | Dependencies | Used by fixtures | Used by tests |
+  +---------+--------------+------------------+---------------+
+  | fixt_2  | fixt_1       | 1                | 2             |
+  | fixt_3  | -            | 2                | 1             |
+  +---------+--------------+------------------+---------------+
+
+
+  Fixture with scope testsuite:
+  +---------+--------------+------------------+---------------+
+  | Fixture | Dependencies | Used by fixtures | Used by tests |
+  +---------+--------------+------------------+---------------+
+  | fixt_4  | fixt_3       | 0                | 2             |
+  | fixt_6  | fixt_3       | 1                | 1             |
+  | fixt_5  | -            | 0                | 0             |
+  +---------+--------------+------------------+---------------+
+
+
+  Fixture with scope test:
+  +---------+----------------+------------------+---------------+
+  | Fixture | Dependencies   | Used by fixtures | Used by tests |
+  +---------+----------------+------------------+---------------+
+  | fixt_7  | fixt_6, fixt_2 | 0                | 2             |
+  | fixt_8  | -              | 0                | 1             |
+  | fixt_9  | -              | 0                | 1             |
+  +---------+----------------+------------------+---------------+
+
+  ```
+- Show statictics on test hierarchy based on metadata:
+  ```
+  $ lcc stats
+  Tags:
+  +------+-------+------+
+  | Tag  | Tests | In % |
+  +------+-------+------+
+  | slow | 4     | 22%  |
+  +------+-------+------+
+
+  Properties:
+  +----------+--------+-------+------+
+  | Property | Value  | Tests | In % |
+  +----------+--------+-------+------+
+  | priority | low    | 8     | 44%  |
+  | priority | medium | 6     | 33%  |
+  | priority | high   | 4     | 22%  |
+  +----------+--------+-------+------+
+
+  Links:
+  +-------+-------------------------+-------+------+
+  | Name  | URL                     | Tests | In % |
+  +-------+-------------------------+-------+------+
+  | #1234 | http://example.com/1234 | 1     |  5%  |
+  | #1235 | http://example.com/1235 | 1     |  5%  |
+  +-------+-------------------------+-------+------+
+
+  Total: 18 tests in 2 testsuites
+  ```
+
+Also see the `--help` of these sub commands.
 
 # Contact
 
