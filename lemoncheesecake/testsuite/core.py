@@ -7,17 +7,13 @@ Created on Sep 8, 2016
 import inspect
 
 from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError, InternalError
-from lemoncheesecake.utils import get_distincts_in_list
+from lemoncheesecake.utils import get_distincts_in_list, get_callable_args
 
 TESTSUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
 
 __all__ = (
     "Test", "TestSuite", "walk_testsuites", "walk_tests", "filter_testsuites"
 )
-
-def _get_callable_params(callble):
-    params_idx = 1 if inspect.ismethod(callble) else 0
-    return inspect.getargspec(callble).args[params_idx:]
 
 class Test:
     def __init__(self, name, description, callback):
@@ -30,7 +26,7 @@ class Test:
         self.links = [ ]
     
     def get_params(self):
-        return _get_callable_params(self.callback)
+        return get_callable_args(self.callback)
     
     def get_path(self):
         return self.parent_suite.get_path() + [self]
@@ -96,7 +92,7 @@ class TestSuite:
     def get_hook_params(self, hook_name):
         hook = self.get_hook(hook_name)
         assert hook != None
-        return _get_callable_params(hook)
+        return get_callable_args(hook)
     
     def get_path(self):
         suites = [ self ]
@@ -198,7 +194,7 @@ class TestSuite:
         
         suite_setup = self.get_hook("setup_suite")
         if suite_setup:
-            fixtures.extend(_get_callable_params(suite_setup))
+            fixtures.extend(get_callable_args(suite_setup))
         
         for test in self.get_tests(filtered):
             fixtures.extend(test.get_params())

@@ -6,6 +6,7 @@ Created on Mar 18, 2016
 
 import os
 import sys
+import inspect
 
 IS_PYTHON3 = sys.version_info > (3,)
 IS_PYTHON2 = sys.version_info < (3,)
@@ -34,6 +35,11 @@ def object_has_method(obj, method_name):
         return callable(getattr(obj, method_name))
     except AttributeError:
         return False
+
+def get_callable_args(cb):
+    spec = inspect.getfullargspec(cb) if IS_PYTHON3 else inspect.getargspec(cb)
+    args_start = 1 if inspect.ismethod(cb) else 0    
+    return spec.args[args_start:]
 
 def get_resource_path(relpath):
     return os.path.join(os.path.dirname(__file__), "resources", relpath)

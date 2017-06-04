@@ -9,7 +9,6 @@ import sys
 import shutil
 import imp
 import inspect
-import traceback
 
 from lemoncheesecake.testsuite import TestSuite
 from lemoncheesecake.fixtures import Fixture
@@ -18,7 +17,7 @@ from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.reporting import ReportingBackend, get_available_backends
 from lemoncheesecake.reporting.reportdir import report_dir_with_archiving, archive_dirname_datetime
 from lemoncheesecake.exceptions import ProjectError, UserError, serialize_current_exception
-from lemoncheesecake.utils import get_resource_path
+from lemoncheesecake.utils import get_resource_path, get_callable_args
 
 DEFAULT_REPORTING_BACKENDS = get_available_backends()
 
@@ -71,9 +70,10 @@ def _check_func(args_nb=None):
     def wrapper(name, value):
         if not callable(value):
             return "'%s' has an incorrect value, '%s' is not a function" % (name, value)
-        argspec = inspect.getargspec(value)
-        if args_nb != None and len(argspec.args) != args_nb:
-            return "'%s' function takes %s arguments instead of %d" % (name, len(argspec.args), args_nb)
+        if args_nb != None:
+            args = get_callable_args(value)
+            if len(args) != args_nb:
+                return "'%s' function expect %s arguments, got %d" % (name, args_nb, len(args))
         return None
     return wrapper
 
