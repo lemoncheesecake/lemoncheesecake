@@ -10,6 +10,7 @@ import glob
 import fnmatch
 import re
 import imp
+import warnings
 
 def strip_py_ext(filename):
     return re.sub("\.py$", "", filename)
@@ -44,7 +45,10 @@ def import_module(filename):
     sys.path.insert(0, mod_dir)
     try:
         package = "".join(p.splitdrive(mod_dir)[1].split(p.sep)[1:])
-        fh, path, description = imp.find_module(mod_name)
+        with warnings.catch_warnings():
+            # would raise a warning since module's directory does not need to have a __init__.py
+            warnings.simplefilter("ignore", ImportWarning)
+            fh, path, description = imp.find_module(mod_name)
         try:
             mod = imp.load_module(package + mod_name, fh, path, description)
         finally:
