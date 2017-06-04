@@ -271,7 +271,8 @@ def _unserialize_keyvalue_list(nodes):
 def load_report_from_file(filename):
     report = Report()
     try:
-        xml = ET.parse(open(filename, "r"))
+        with open(filename, "r") as fh:
+            xml = ET.parse(fh)
     except ET.LxmlError as e:
         raise InvalidReportFile(str(e))
     try:
