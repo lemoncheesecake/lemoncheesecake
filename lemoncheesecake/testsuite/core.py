@@ -234,15 +234,6 @@ class TestSuite:
     def is_test_selected(self, test):
         return test.name in self._selected_test_names
     
-    def set_worker(self, worker_name, worker):
-        if not self.obj:
-            return
-        if hasattr(self.obj, worker_name):
-            raise ProgrammingError("Cannot set worker '%s' into testsuite '%s', it already has an attribute with that name" % (
-                worker_name, self.obj
-            ))
-        setattr(self.obj, worker_name, worker)
-
 def walk_testsuites(testsuites, testsuite_func=None, test_func=None):
     def do_walk(suite):
         if testsuite_func:

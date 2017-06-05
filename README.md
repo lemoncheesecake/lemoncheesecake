@@ -370,45 +370,6 @@ Lemoncheesecake provides several special builtin fixtures:
 
 Using the default `project.py` file, fixtures will be loaded from the `fixtures` sub directory.
 
-## Workers
-
-Workers are used to maintain a custom state for the user across the execution of all testsuites. It is also advised to use workers as a level of abstraction between the tests and the system under tests.
-
-First, you need to reference your Worker in the `project.py` file:
-
-```python
- # project.py:
-[...]
-class MyWorker(Worker):
-    def cli_initialize(self, cli_args):
-        self.config_file = cli_args.config
-
-    def setup_test_session(self):
-        self.config = do_something_with_config_file(self.config_file)
-
-    def do_some_operation(self, some_value):
-        return some_func(self.config, some_value)
-
-WORKERS = {"myworker": MyWorker()}
-[...]
-```
-
-Then, you can access and use the worker through the name you associated it to:
-```python
- # tests/my_suite.py:
-[...]
-
-def some_test():
-    worker = lcc.get_worker("myworker")
-    myworker.do_some_operation(42)
-```
-
-The Worker class provides three hooks detailed in the API documentation:
-
-- `cli_initialize`
-- `setup_test_session`
-- `teardown_test_session`
-
 # Testsuites hierarchy
 
 Sub testsuites can be declared in a testsuite in a lot of different ways:

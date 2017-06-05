@@ -17,13 +17,13 @@ from lemoncheesecake.reporting import *
 
 __all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "log_url", "set_step", \
     "prepare_attachment", "save_attachment_file", "save_attachment_content", \
-    "get_worker", "add_report_info"
+    "add_report_info"
 
 _runtime = None # singleton
 
-def initialize_runtime(workers, reporting_backends, report_dir):
+def initialize_runtime(reporting_backends, report_dir):
     global _runtime
-    _runtime = _Runtime(workers, reporting_backends, report_dir)
+    _runtime = _Runtime(reporting_backends, report_dir)
 
 def get_runtime():
     if not _runtime:
@@ -31,8 +31,7 @@ def get_runtime():
     return _runtime
 
 class _Runtime:
-    def __init__(self, workers, reporting_backends, report_dir):
-        self.workers = workers
+    def __init__(self, reporting_backends, report_dir):
         self.reporting_backends = reporting_backends
         self.report_dir = report_dir
         self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
@@ -371,14 +370,6 @@ def log_url(url, description=None):
     Log an URL.
     """
     get_runtime().log_url(url, description)
-
-def get_worker(worker_name):
-    """
-    Return the requested worker. 
-    Raise KeyError if the worker does not exist.
-    """
-    rt = get_runtime()
-    return rt.workers[worker_name]
 
 def add_report_info(name, value):
     report = get_runtime().report
