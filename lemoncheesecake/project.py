@@ -9,7 +9,6 @@ import sys
 import shutil
 import imp
 import inspect
-import traceback
 
 from lemoncheesecake.testsuite import TestSuite
 from lemoncheesecake.fixtures import Fixture
@@ -18,7 +17,8 @@ from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.reporting import ReportingBackend, get_available_backends
 from lemoncheesecake.reporting.reportdir import report_dir_with_archiving, archive_dirname_datetime
 from lemoncheesecake.exceptions import ProjectError, UserError, serialize_current_exception
-from lemoncheesecake.utils import get_resource_path
+from lemoncheesecake.utils import get_resource_path, get_callable_args
+from lemoncheesecake.importer import import_module
 
 DEFAULT_REPORTING_BACKENDS = get_available_backends()
 
@@ -71,9 +71,10 @@ def _check_func(args_nb=None):
     def wrapper(name, value):
         if not callable(value):
             return "'%s' has an incorrect value, '%s' is not a function" % (name, value)
-        argspec = inspect.getargspec(value)
-        if args_nb != None and len(argspec.args) != args_nb:
-            return "'%s' function takes %s arguments instead of %d" % (name, len(argspec.args), args_nb)
+        if args_nb != None:
+            args = get_callable_args(value)
+            if len(args) != args_nb:
+                return "'%s' function expect %s arguments, got %d" % (name, args_nb, len(args))
         return None
     return wrapper
 
@@ -89,22 +90,15 @@ class Project:
     def __init__(self, project_file=None):
         self._project_file = project_file or find_project_file()
         self._project_dir = os.path.dirname(self._project_file)
-        
-        sys.path.insert(0, self._project_dir)
+
         try:
-            self._settings = imp.load_source("__project", self._project_file)
+            self._settings = import_module(project_file)
         except UserError as e:
             raise e # propagate UserError
         except Exception:
             raise ProjectError("Got an unexpected error while loading project:%s" % (
                 serialize_current_exception()
             ))
-        finally:
-            try:
-                del sys.modules["__project"]
-            except KeyError:
-                pass
-            sys.path.pop(0)
 
         ###
         # Fetch parameters from project settings

@@ -377,7 +377,8 @@ def test_prepare_attachment(tmpdir):
     assert test.steps[0].entries[0].filename.endswith("foobar.txt")
     assert test.steps[0].entries[0].description == "some description"
     assert test.status == "passed"
-    assert open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename)).read() == "some content"
+    with open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename)) as fh:
+        assert fh.read() == "some content"
 
 def test_save_attachment_file(tmpdir):
     @lcc.testsuite("MySuite")
@@ -401,7 +402,8 @@ def test_save_attachment_file(tmpdir):
     assert test.steps[0].entries[0].filename.endswith("somefile.txt")
     assert test.steps[0].entries[0].description == "some other file"
     assert test.status == "passed"
-    assert open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename)).read() == "some other content"
+    with open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename)) as fh:
+        assert fh.read() == "some other content"
 
 def _test_save_attachment_content(tmpdir, file_name, file_content, encoding=None):
     @lcc.testsuite("MySuite")
@@ -421,8 +423,8 @@ def _test_save_attachment_content(tmpdir, file_name, file_content, encoding=None
     assert test.steps[0].entries[0].filename.endswith(file_name)
     assert test.steps[0].entries[0].description == file_name
     assert test.status == "passed"
-    fh = open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename), "rb")
-    actual_content = fh.read()
+    with open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename), "rb") as fh:
+        actual_content = fh.read()
     if encoding != None:
         actual_content = actual_content.decode(encoding)
     assert actual_content == file_content
@@ -435,7 +437,8 @@ def test_save_attachment_text_utf8(tmpdir):
 
 def test_save_attachment_binary(tmpdir):
     p = os.path
-    content = open(p.join(p.dirname(__file__), p.pardir, "misc", "report-screenshot.png"), "rb").read()
+    with open(p.join(p.dirname(__file__), p.pardir, "misc", "report-screenshot.png"), "rb") as fh:
+        content = fh.read()
     _test_save_attachment_content(tmpdir, "foobar.png", content)
 
 def test_log_url():
@@ -483,7 +486,8 @@ def test_unicode(tmpdir):
     assert step.entries[1].message == u"éééààà"
     assert step.entries[2].filename.endswith(u"somefileààà")
     assert step.entries[2].description == u"éééààà"
-    assert open(os.path.join(get_runtime().report_dir, step.entries[2].filename)).read() == "A" * 1024
+    with open(os.path.join(get_runtime().report_dir, step.entries[2].filename)) as fh:
+        assert fh.read() == "A" * 1024
 
 def test_setup_suite_success():
     @lcc.testsuite("MySuite")

@@ -10,7 +10,7 @@ import re
 from lemoncheesecake.importer import import_module, get_matching_files, get_py_files_from_dir
 from lemoncheesecake.exceptions import FixtureError, ImportFixtureError, ProgrammingError, \
     serialize_current_exception
-from lemoncheesecake.utils import get_distincts_in_list
+from lemoncheesecake.utils import get_distincts_in_list, get_callable_args
 
 __all__ = (
     "fixture",
@@ -249,8 +249,8 @@ def load_fixtures_from_func(func):
     if not names:
         names = [func.__name__]
     scope = func._lccfixtureinfo.scope
-    params = inspect.getargspec(func).args
-    return [Fixture(name, func, scope, params) for name in names]
+    args = get_callable_args(func)
+    return [Fixture(name, func, scope, args) for name in names]
 
 def load_fixtures_from_file(filename):
     try:
