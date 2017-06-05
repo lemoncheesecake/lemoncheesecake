@@ -105,12 +105,12 @@ The two examples above declare:
 About imports:
 - `lemoncheesecake.api` module (aliased to lcc to be shorter) contains the lemoncheesecake test API needed to write tests
 - `lemoncheesecake.matching` is imported using wildcard import to make matching operations more pleasant to read:
-```python
-# this, is more easier to read:
-check_that("value", 1, is_integer(greater_than(0)))
-# than that:
-lcc.check_that("value", 1, lcc.is_integer(lcc.greater_than(0)))
-```
+  ```python
+  # this, is more easier to read:
+  check_that("value", 1, is_integer(greater_than(0)))
+  # than that:
+  lcc.check_that("value", 1, lcc.is_integer(lcc.greater_than(0)))
+  ```
 
 Using the default `project.py` file, testsuites will be loaded from the `testsuites` sub directory.
 
