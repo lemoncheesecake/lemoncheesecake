@@ -12,7 +12,6 @@ import inspect
 
 from lemoncheesecake.testsuite import TestSuite
 from lemoncheesecake.fixtures import Fixture
-from lemoncheesecake.worker import Worker
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.reporting import ReportingBackend, get_available_backends
 from lemoncheesecake.reporting.reportdir import report_dir_with_archiving, archive_dirname_datetime
@@ -113,7 +112,6 @@ class Project:
         )
         _("TESTSUITES", _check_class_instance(TestSuite), is_list=True)
         _("FIXTURES", _check_class_instance(Fixture), is_list=True, required=False, default=[])
-        _("WORKERS", _check_class_instance(Worker), is_dict=True, required=False, default={})
         _("REPORTING_BACKENDS", 
             _check_class_instance(ReportingBackend), is_list=True, required=False, default=DEFAULT_REPORTING_BACKENDS
         )
@@ -203,9 +201,6 @@ class Project:
     def get_fixtures(self):
         return self._raw_params["FIXTURES"]
     
-    def get_workers(self):
-        return self._raw_params["WORKERS"]
-
     def _get_reporting_backends(self):
         return self._raw_params["REPORTING_BACKENDS"]
 

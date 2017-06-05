@@ -77,7 +77,6 @@ class RunCommand(Command):
         except FixtureError as e:
             return "Cannot run tests: %s" % e
         
-        workers = project.get_workers()
         reporting_backends = { 
             backend.name: backend for backend in
                 project.get_reporting_backends(capabilities=reporting.CAPABILITY_REPORTING_SESSION, active_only=False)
@@ -100,17 +99,6 @@ class RunCommand(Command):
                 selected_reporting_backends.discard(reporting_backends[backend_name])
             except KeyError:
                 return "Unknown reporting backend '%s'" % backend_name
-        
-        # Initialize workers using CLI
-        for worker_name, worker in workers.items():
-            try:
-                worker.cli_initialize(cli_args)
-            except UserError as e:
-                return str(e)
-            except Exception:
-                return "Got an unexpected exception while running 'cli_initalize' method of worker '%s':\n%s" (
-                    worker_name, serialize_current_exception(show_stacktrace=True)
-                )
         
         # Create report dir
         if cli_args.report_dir:
@@ -142,7 +130,7 @@ class RunCommand(Command):
         # Run tests 
         try:
             run_testsuites(
-                testsuites, fixture_registry, workers, selected_reporting_backends, report_dir
+                testsuites, fixture_registry, selected_reporting_backends, report_dir
             )
         except LemonCheesecakeException as e:
             return str(e)

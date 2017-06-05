@@ -12,11 +12,18 @@ from lemoncheesecake.validators import MetadataPolicy
 project_dir = os.path.dirname(__file__)
 
 ###
-# Test suites and workers
+# Test suites
 ###
 TESTSUITES = load_testsuites_from_directory(os.path.join(project_dir, "tests"))
+
+###
+# Fixtures
+###
 FIXTURES = load_fixtures_from_directory(os.path.join(project_dir, "fixtures"))
-WORKERS = {}
+
+###
+# Custom CLI arguments
+###
 def add_cli_args(cli_parser):
     pass
 CLI_EXTRA_ARGS = add_cli_args

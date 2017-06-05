@@ -13,7 +13,6 @@ import pytest
 
 from lemoncheesecake import runner
 from lemoncheesecake.testsuite import Filter, load_testsuites_from_classes
-from lemoncheesecake.worker import Worker
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.exceptions import *
 import lemoncheesecake.api as lcc
@@ -170,64 +169,6 @@ def test_sub_testsuite_inline(reporting_session):
     run_testsuite_class(MyParentSuite)
     
     assert reporting_session.get_test_outcome("sometest") == True
-
-def test_worker_accessible_through_testsuite(reporting_session):
-    @lcc.testsuite("MySuite")
-    class MySuite:
-        @lcc.test("Some test")
-        def sometest(self):
-            assert self.testworker != None
-    
-    class MyWorker(Worker):
-        pass
-    
-    run_testsuite_class(MySuite, worker=MyWorker())
-    
-    assert reporting_session.get_last_test_outcome() == True
-
-def test_worker_accessible_through_runtime(reporting_session):
-    @lcc.testsuite("MySuite")
-    class MySuite:
-        @lcc.test("Some test")
-        def sometest(self):
-            assert lcc.get_worker("testworker") != None
-    
-    class MyWorker(Worker):
-        pass
-    
-    run_testsuite_class(MySuite, worker=MyWorker())
-    
-    assert reporting_session.get_last_test_outcome() == True
-
-def test_setup_test_session(reporting_session):
-    class MyWorker(Worker):
-        def setup_test_session(self):
-            lcc.log_info("hook called")
-    
-    @lcc.testsuite("MySuite")
-    class MySuite:
-        @lcc.test("Some test")
-        def sometest(self):
-            pass
-    
-    run_testsuite_class(MySuite, worker=MyWorker())
-    
-    assert reporting_session.get_last_log() == "hook called"
-
-def test_teardown_test_session(reporting_session):
-    class MyWorker(Worker):
-        def teardown_test_session(self):
-            lcc.log_info("hook called")
-    
-    @lcc.testsuite("MySuite")
-    class MySuite:
-        @lcc.test("Some test")
-        def sometest(self):
-            pass
-    
-    run_testsuite_class(MySuite, worker=MyWorker())
-    
-    assert reporting_session.get_last_log() == "hook called"
 
 def test_setup_test(reporting_session):
     @lcc.testsuite("MySuite")
@@ -494,130 +435,48 @@ def test_teardown_suite_error_because_of_fixture(reporting_session):
     assert len(marker) == 1
 
 def test_setup_test_session_error_because_of_exception(reporting_session):
-    marker = []
-    
-    @lcc.testsuite("MySuite")
-    class MySuite:
-        @lcc.test("Some test")
-        def sometest(self):
-            pass
-
-    class MyWorker(Worker):
-        def setup_test_session(self):
-            1 / 0
-        
-        def teardown_test_session(self):
-            marker.append("teardown")
-
-    run_testsuite_class(MySuite, worker=MyWorker())
-
-    assert reporting_session.get_last_test_outcome() == False
-    assert_report_errors(1)
-    assert len(marker) == 0
-
-def test_setup_test_session_error_because_of_fixture(reporting_session):
-    marker = []
-    
     @lcc.fixture(scope="session")
-    def fix():
+    def fixt():
         1 / 0
     
     @lcc.testsuite("MySuite")
     class MySuite:
         @lcc.test("Some test")
-        def sometest(self, fix):
+        def sometest(self, fixt):
             pass
         
         @lcc.test("Some other test")
         def sometest_bis(self):
             pass
 
-    class MyWorker(Worker):
-        def setup_test_session(self):
-            marker.append("setup")
-        
-        def teardown_test_session(self):
-            marker.append("teardown")
-
-    run_testsuite_class(MySuite, fixtures=[fix], worker=MyWorker())
+    run_testsuite_class(MySuite, fixtures=[fixt])
 
     assert reporting_session.get_failing_test_nb() == 2
     assert_report_errors(1)
-    assert "teardown" in marker
 
 def test_setup_test_session_error_and_setup_suite(reporting_session):
     marker = []
     
     @lcc.testsuite("MySuite")
     class MySuite:
-        def setup_suite(self):
+        def setup_suite(self, fixt):
             marker.append("setup_suite")
         
         @lcc.test("Some test")
         def sometest(self):
             pass
 
-    class MyWorker(Worker):
-        def setup_test_session(self):
-            1 / 0
+    @lcc.fixture(scope="session")
+    def fixt():
+        1 / 0
 
-    run_testsuite_class(MySuite, worker=MyWorker())
+    run_testsuite_class(MySuite, fixtures=[fixt])
 
     assert reporting_session.get_last_test_outcome() == False
     assert_report_errors(1)
     assert len(marker) == 0
 
 def test_teardown_test_session_error_because_of_exception(reporting_session):
-    marker = []
-    
-    @lcc.fixture()
-    def fix():
-        yield 1
-        marker.append("teardown")
-    
-    @lcc.testsuite("MySuite")
-    class MySuite:
-        @lcc.test("Some test")
-        def sometest(self, fix):
-            pass
-
-    class MyWorker(Worker):
-        def teardown_test_session(self):
-            1 / 0
-            
-    run_testsuite_class(MySuite, worker=MyWorker(), fixtures=[fix])
-
-    assert reporting_session.get_last_test_outcome() == True
-    assert_report_errors(1)
-    assert "teardown" in marker
-
-def test_teardown_test_session_error_because_of_error_log(reporting_session):
-    marker = []
-    
-    @lcc.fixture()
-    def fix():
-        yield 1
-        marker.append("teardown")
-    
-    @lcc.testsuite("MySuite")
-    class MySuite:
-        @lcc.test("Some test")
-        def sometest(self, fix):
-            pass
-
-    class MyWorker(Worker):
-        def teardown_test_session(self):
-            lcc.log_error("some error")
-        
-    run_testsuite_class(MySuite, worker=MyWorker(), fixtures=[fix])
-
-    assert reporting_session.get_last_test_outcome() == True
-    assert_report_errors(1)
-    assert "teardown" in marker
-
-def test_teardown_test_session_error_because_of_fixture(reporting_session):
-    marker = []
-    
     @lcc.fixture(scope="session")
     def fix():
         yield 1
@@ -633,15 +492,10 @@ def test_teardown_test_session_error_because_of_fixture(reporting_session):
         def sometest_bis(self):
             pass
     
-    class MyWorker(Worker):
-        def teardown_test_session(self):
-            marker.append("teardown")
-    
-    run_testsuite_class(MySuite, fixtures=[fix], worker=MyWorker())
+    run_testsuite_class(MySuite, fixtures=[fix])
 
     assert reporting_session.get_successful_test_nb() == 2
     assert_report_errors(1)
-    assert "teardown" in marker
 
 def test_session_prerun_fixture_exception(reporting_session):
     @lcc.fixture(scope="session_prerun")
@@ -1077,23 +931,23 @@ def testsuites_sample():
     return load_testsuites_from_classes([suite1, suite2])
 
 def test_get_fixtures_to_be_executed_for_session_prerun(fixture_registry_sample, testsuites_sample):
-    run = runner._Runner(testsuites_sample, fixture_registry_sample, [], [], None)
+    run = runner._Runner(testsuites_sample, fixture_registry_sample, [], None)
     
     assert sorted(run.get_fixtures_to_be_executed_for_session_prerun()) == ["fixt_for_session_prerun1"]
 
 def test_get_fixtures_to_be_executed_for_session(fixture_registry_sample, testsuites_sample):
-    run = runner._Runner(testsuites_sample, fixture_registry_sample, [], [], None)
+    run = runner._Runner(testsuites_sample, fixture_registry_sample, [], None)
     
     assert sorted(run.get_fixtures_to_be_executed_for_session()) == ["fixt_for_session1", "fixt_for_session2"]
 
 def test_get_fixtures_to_be_executed_for_testsuite(fixture_registry_sample, testsuites_sample):
-    run = runner._Runner(testsuites_sample, fixture_registry_sample, [], [], None)
+    run = runner._Runner(testsuites_sample, fixture_registry_sample, [], None)
     
     assert sorted(run.get_fixtures_to_be_executed_for_testsuite(testsuites_sample[0])) == ["fixt_for_testsuite1"]
     assert sorted(run.get_fixtures_to_be_executed_for_testsuite(testsuites_sample[1])) == ["fixt_for_testsuite1"]
 
 def test_get_fixtures_to_be_executed_for_test(fixture_registry_sample, testsuites_sample):
-    run = runner._Runner(testsuites_sample, fixture_registry_sample, [], [], None)
+    run = runner._Runner(testsuites_sample, fixture_registry_sample, [], None)
     
     assert sorted(run.get_fixtures_to_be_executed_for_test(testsuites_sample[0].get_tests()[0])) == []
     assert sorted(run.get_fixtures_to_be_executed_for_test(testsuites_sample[0].get_tests()[1])) == ["fixt_for_test3"]

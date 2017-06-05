@@ -14,16 +14,12 @@ from lemoncheesecake.exceptions import AbortTest, AbortTestSuite, AbortAllTests,
     UserError, serialize_current_exception
 
 class _Runner:
-    def __init__(self, testsuites, fixture_registry, workers, reporting_backends, report_dir):
+    def __init__(self, testsuites, fixture_registry, reporting_backends, report_dir):
         self.testsuites = testsuites
         self.fixture_registry = fixture_registry
-        self.workers = workers
         self.reporting_backends = reporting_backends
         self.report_dir = report_dir
 
-    def get_workers_with_hook(self, hook_name):
-        return list(filter(lambda b: b.has_hook(hook_name), self.workers.values()))
-    
     def get_fixtures_with_dependencies_for_scope(self, direct_fixtures, scope):
         fixtures = []
         for fixture in direct_fixtures:
@@ -184,12 +180,6 @@ class _Runner:
 
     def run_testsuite(self, suite):
         ###
-        # Set workers into testsuite
-        ###
-        for worker_name, worker in self.workers.items():
-            suite.set_worker(worker_name, worker)
-    
-        ###
         # Begin suite
         ###
         self.session.begin_suite(suite)
@@ -251,7 +241,7 @@ class _Runner:
         
     def run_session(self):
         # initialize runtime & global test variables
-        initialize_runtime(self.workers, self.reporting_backends, self.report_dir)
+        initialize_runtime(self.reporting_backends, self.report_dir)
         self.session = get_runtime()
         self.session.initialize_reporting_sessions()
         self.abort_all_tests = False
@@ -262,13 +252,9 @@ class _Runner:
         
         self.session.begin_tests()
         
-        # setup test session (workers and fixtures)
+        # setup test session
         setup_teardown_funcs = []
         teardown_funcs = []
-        setup_teardown_funcs.extend([[
-            worker.setup_test_session if worker.has_hook("setup_test_session") else None,
-            worker.teardown_test_session if worker.has_hook("teardown_test_session") else None
-        ] for worker in self.workers.values()])
         setup_teardown_funcs.extend([
             self.get_fixture_as_funcs(f) for f in self.get_fixtures_to_be_executed_for_session()
         ])
@@ -328,14 +314,13 @@ class _Runner:
         if errors:
             raise FixtureError("\n".join(errors))
 
-def run_testsuites(testsuites, fixture_registry, workers, reporting_backends, report_dir):
+def run_testsuites(testsuites, fixture_registry, reporting_backends, report_dir):
     """
     Run testsuites.
     
     - testsuites: a list of already loaded testsuites (see lemoncheesecake.loader.load_testsuites)
-    - workers: a dict where keys are worker names and values worker instances
     - reporting_backends: instance of reporting backends that will be used to report test results
     - report_dir: an existing directory where report files will be stored 
     """
-    runner = _Runner(testsuites, fixture_registry, workers, reporting_backends, report_dir)
+    runner = _Runner(testsuites, fixture_registry, reporting_backends, report_dir)
     runner.run()

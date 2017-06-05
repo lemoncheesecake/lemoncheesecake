@@ -47,7 +47,6 @@ def {name}():
 
 def build_test_project(params={}, extra_imports=[], static_content=""):
     return """
-from lemoncheesecake import worker
 from lemoncheesecake.reporting import backends
 from lemoncheesecake.fixtures import load_fixtures_from_file, load_fixtures_from_files, load_fixtures_from_directory
 from lemoncheesecake.testsuite.loader import *
@@ -189,7 +188,7 @@ def get_reporting_session():
 def reporting_session():
     return get_reporting_session()
 
-def run_testsuites(suites, filter=None, fixtures=None, worker=None, backends=None, tmpdir=None):
+def run_testsuites(suites, filter=None, fixtures=None, backends=None, tmpdir=None):
     global _reporting_session
     
     if fixtures == None:
@@ -199,10 +198,6 @@ def run_testsuites(suites, filter=None, fixtures=None, worker=None, backends=Non
             fixture_registry = fixtures
         else:
             fixture_registry = build_fixture_registry(*fixtures)
-    
-    workers = {}
-    if worker:
-        workers["testworker"] = worker
     
     if not backends:
         backends = []
@@ -218,14 +213,14 @@ def run_testsuites(suites, filter=None, fixtures=None, worker=None, backends=Non
         try:
             report_dir = os.path.join(tmpdir.strpath, "report")
             os.mkdir(report_dir)
-            runner.run_testsuites(suites, fixture_registry, workers, backends, report_dir)
+            runner.run_testsuites(suites, fixture_registry, backends, report_dir)
         finally:
             _reporting_session = None
     else:
         report_dir = os.path.join(tempfile.mkdtemp(), "report")
         os.mkdir(report_dir)
         try:
-            runner.run_testsuites(suites, fixture_registry, workers, backends, report_dir)
+            runner.run_testsuites(suites, fixture_registry, backends, report_dir)
         finally:
             shutil.rmtree(report_dir)
             # reset _reporting_session (either it has been set or not) at the end of each test run
@@ -233,16 +228,16 @@ def run_testsuites(suites, filter=None, fixtures=None, worker=None, backends=Non
     
     dump_report(get_runtime().report)
 
-def run_testsuite_classes(suite_classes, filter=None, fixtures=None, worker=None, backends=None, tmpdir=None):
+def run_testsuite_classes(suite_classes, filter=None, fixtures=None, backends=None, tmpdir=None):
     suites = load_testsuites_from_classes(suite_classes)
-    run_testsuites(suites, filter=filter, fixtures=fixtures, worker=worker, backends=backends, tmpdir=tmpdir)
+    run_testsuites(suites, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir)
 
-def run_testsuite(suite, filter=None, fixtures=None, worker=None, backends=[], tmpdir=None):
-    run_testsuites([suite], filter=filter, fixtures=fixtures, worker=worker, backends=backends, tmpdir=tmpdir)
+def run_testsuite(suite, filter=None, fixtures=None, backends=[], tmpdir=None):
+    run_testsuites([suite], filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir)
 
-def run_testsuite_class(suite_class, filter=None, fixtures=None, worker=None, backends=[], tmpdir=None):
+def run_testsuite_class(suite_class, filter=None, fixtures=None, backends=[], tmpdir=None):
     suite = load_testsuite_from_class(suite_class)
-    run_testsuite(suite, filter=filter, fixtures=fixtures, worker=worker, backends=backends, tmpdir=tmpdir)
+    run_testsuite(suite, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir)
 
 def run_func_in_test(callback):
     @lcc.testsuite("My Suite")

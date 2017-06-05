@@ -15,7 +15,6 @@ import pytest
 from lemoncheesecake.exceptions import *
 import lemoncheesecake.api as lcc
 from lemoncheesecake.runtime import get_runtime
-from lemoncheesecake.worker import Worker
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 from lemoncheesecake.reporting.backends.json_ import serialize_report_into_json
 
@@ -631,14 +630,14 @@ def test_setup_test_session_success():
     @lcc.testsuite("MySuite")
     class MySuite:
         @lcc.test("Some test")
-        def sometest(self):
+        def sometest(self, fixt):
             pass
     
-    class MyWorker(Worker):
-        def setup_test_session(self):
-            lcc.log_info("some log")
+    @lcc.fixture(scope="session")
+    def fixt():
+        lcc.log_info("some log")
     
-    run_testsuite_class(MySuite, worker=MyWorker())
+    run_testsuite_class(MySuite, fixtures=[fixt])
     
     report = get_runtime().report
 
@@ -656,14 +655,14 @@ def test_setup_test_session_failure():
     @lcc.testsuite("MySuite")
     class MySuite:
         @lcc.test("Some test")
-        def sometest(self):
+        def sometest(self, fixt):
             pass
     
-    class MyWorker(Worker):
-        def setup_test_session(self):
-            lcc.log_error("something bad happened")
+    @lcc.fixture(scope="session")
+    def fixt():
+        lcc.log_error("something bad happened")
     
-    run_testsuite_class(MySuite, worker=MyWorker())
+    run_testsuite_class(MySuite, fixtures=[fixt])
     
     report = get_runtime().report
     
@@ -683,14 +682,14 @@ def test_setup_test_session_without_content():
     @lcc.testsuite("MySuite")
     class MySuite:
         @lcc.test("Some test")
-        def sometest(self):
+        def sometest(self, fixt):
             pass
     
-    class MyWorker(Worker):
-        def setup_test_session(self):
-            marker.append("setup")
+    @lcc.fixture(scope="session")
+    def fixt():
+        marker.append("setup")
      
-    run_testsuite_class(MySuite, worker=MyWorker())
+    run_testsuite_class(MySuite, fixtures=[fixt])
 
     report = get_runtime().report
     
@@ -701,14 +700,15 @@ def test_teardown_test_session_success():
     @lcc.testsuite("MySuite")
     class MySuite:
         @lcc.test("Some test")
-        def sometest(self):
+        def sometest(self, fixt):
             pass
     
-    class MyWorker(Worker):
-        def teardown_test_session(self):
-            lcc.log_info("some log")
+    @lcc.fixture(scope="session")
+    def fixt():
+        yield
+        lcc.log_info("some log")
     
-    run_testsuite_class(MySuite, worker=MyWorker())
+    run_testsuite_class(MySuite, fixtures=[fixt])
     
     report = get_runtime().report
  
@@ -726,14 +726,15 @@ def test_teardown_test_session_failure():
     @lcc.testsuite("MySuite")
     class MySuite:
         @lcc.test("Some test")
-        def sometest(self):
+        def sometest(self, fixt):
             pass
     
-    class MyWorker(Worker):
-        def teardown_test_session(self):
-            lcc.check_that("val", 1, lcc.equal_to(2))
+    @lcc.fixture(scope="session")
+    def fixt():
+        yield
+        lcc.check_that("val", 1, lcc.equal_to(2))
     
-    run_testsuite_class(MySuite, worker=MyWorker())
+    run_testsuite_class(MySuite, fixtures=[fixt])
          
     report = get_runtime().report
      
@@ -753,14 +754,15 @@ def test_teardown_test_session_without_content():
     @lcc.testsuite("MySuite")
     class MySuite:
         @lcc.test("Some test")
-        def sometest(self):
+        def sometest(self, fixt):
             pass
     
-    class MyWorker(Worker):
-        def teardown_test_session(self):
-            marker.append("teardown")
+    @lcc.fixture(scope="session")
+    def fixt():
+        yield
+        marker.append("teardown")
 
-    run_testsuite_class(MySuite, worker=MyWorker())
+    run_testsuite_class(MySuite, fixtures=[fixt])
 
     report = get_runtime().report
     

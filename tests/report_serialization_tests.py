@@ -12,17 +12,16 @@ import sys
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.runtime import get_runtime
-from lemoncheesecake.worker import Worker
 from lemoncheesecake.reporting.backend import SAVE_AT_EACH_EVENT, SAVE_AT_EACH_FAILED_TEST, \
     SAVE_AT_EACH_TEST, SAVE_AT_EACH_TESTSUITE, SAVE_AT_END_OF_TESTS
 
 from helpers import run_testsuite_class, run_testsuite_classes, assert_report, dump_report
 
-def do_test_serialization(suites, backend, tmpdir, worker=None):
+def do_test_serialization(suites, backend, tmpdir, fixtures=[]):
     if type(suites) in (list, tuple):
-        run_testsuite_classes(suites, worker=worker, backends=[backend])
+        run_testsuite_classes(suites, fixtures=fixtures, backends=[backend])
     else:
-        run_testsuite_class(suites, worker=worker, backends=[backend])
+        run_testsuite_class(suites, fixtures=fixtures, backends=[backend])
     
     report = get_runtime().report
     
@@ -293,72 +292,73 @@ def test_setup_and_teardown_suite(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_setup_test_session_success(backend, tmpdir):
+    @lcc.fixture(scope="session")
+    def fixt():
+        lcc.log_info("some log")
+
     @lcc.testsuite("MySuite")
     class MySuite:
         @lcc.test("Some test")
-        def sometest(self):
+        def sometest(self, fixt):
             pass
 
-    class MyWorker(Worker):
-        def setup_test_session(self):
-            lcc.log_info("some log")
-
-    do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
+    do_test_serialization(MySuite, backend, tmpdir, fixtures=[fixt])
 
 def test_setup_test_session_failure(backend, tmpdir):
+    @lcc.fixture(scope="session")
+    def fixt():
+        lcc.log_error("some error")
+
     @lcc.testsuite("MySuite")
     class MySuite:
         @lcc.test("Some test")
-        def sometest(self):
+        def sometest(self, fixt):
             pass
 
-    class MyWorker(Worker):
-        def setup_test_session(self):
-            lcc.log_error("something bad happened")
-
-    do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
+    do_test_serialization(MySuite, backend, tmpdir, fixtures=[fixt])
 
 def test_teardown_test_session_success(backend, tmpdir):
+    @lcc.fixture(scope="session")
+    def fixt():
+        yield
+        lcc.log_info("some info")
+
     @lcc.testsuite("MySuite")
     class MySuite:
         @lcc.test("Some test")
-        def sometest(self):
+        def sometest(self, fixt):
             pass
 
-    class MyWorker(Worker):
-        def teardown_test_session(self):
-            lcc.log_info("some log")
-
-    do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
+    do_test_serialization(MySuite, backend, tmpdir, fixtures=[fixt])
 
 def test_teardown_test_session_failure(backend, tmpdir):
+    @lcc.fixture(scope="session")
+    def fixt():
+        yield
+        lcc.log_error("some error")
+
     @lcc.testsuite("MySuite")
     class MySuite:
         @lcc.test("Some test")
-        def sometest(self):
+        def sometest(self, fixt):
             pass
 
-    class MyWorker(Worker):
-        def teardown_test_session(self):
-            lcc.log_error("something bad happened")
-    
-    do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
+    do_test_serialization(MySuite, backend, tmpdir, fixtures=[fixt])
 
 def test_setup_and_teardown_test_session(backend, tmpdir):
+    @lcc.fixture(scope="session")
+    def fixt():
+        lcc.log_info("some info")
+        yield
+        lcc.log_info("some other info")
+    
     @lcc.testsuite("MySuite")
     class MySuite:
         @lcc.test("Some test")
-        def sometest(self):
+        def sometest(self, fixt):
             pass
 
-    class MyWorker(Worker):
-        def setup_test_session(self):
-            lcc.log_info("some log")
-            
-        def teardown_test_session(self):
-            lcc.log_info("some other log")
-
-    do_test_serialization(MySuite, backend, tmpdir, worker=MyWorker())
+    do_test_serialization(MySuite, backend, tmpdir, fixtures=[fixt])
 
 # TODO: see below, the behavior of each save mode is not tested in fact, but
 # at least we want to make sure that each of this mode is not failing
