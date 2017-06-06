@@ -86,12 +86,12 @@ def _param_error(param_name, error_msg):
     raise ProjectError("Error with parameter '%s' of the project file: %s" % (param_name, error_msg))
 
 class Project:
-    def __init__(self, project_file=None):
-        self._project_file = project_file or find_project_file()
+    def __init__(self, project_file):
+        self._project_file = project_file
         self._project_dir = os.path.dirname(self._project_file)
 
         try:
-            self._settings = import_module(project_file)
+            self._settings = import_module(self._project_file)
         except UserError as e:
             raise e # propagate UserError
         except Exception:
