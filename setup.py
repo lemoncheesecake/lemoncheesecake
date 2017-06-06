@@ -15,7 +15,7 @@ setup(
     author = "Nicolas Delon",
     author_email = "nicolas dot delon at gmail dot com",
     license="Apache License (Version 2.0)",
-    url = "https://bitbucket.org/ndelon/lemoncheesecake",
+    url = "https://github.com/lemoncheesecake",
     classifiers = [
         "Development Status :: 4 - Beta",
         "Environment :: Console",
