@@ -71,6 +71,7 @@ def build_testsuite_from_module(module_content):
     fh.write("TESTSUITE = {'description': 'My Suite'}\n\n")
     fh.write(module_content)
     fh.close()
+    os.close(fd)
     suite = load_testsuite_from_file(filename)
     os.unlink(filename)
     return suite
