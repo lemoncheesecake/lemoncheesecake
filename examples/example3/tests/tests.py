@@ -12,7 +12,7 @@ def test():
     check_that("dict", {"fooo": "bar"}, has_entry("foo", equal_to("bar")))
     check_that("dict", {"foo": "baz"}, has_entry("foo", equal_to("bar")))
  
-    check_that_entry("foo", {"foo": 3}, greater_than(2))
+    check_that_entry("foo", greater_than(2), in_={"foo": 3})
  
     check_that("val", "foo", is_integer())
      
@@ -26,7 +26,7 @@ def test():
 
     check_that("value", 1, is_integer(greater_than(0)))
     
-    check_that("value", 1, is_integer(is_not(equal_to(0))))
+    check_that("value", 1, is_integer(not_(equal_to(0))))
     
     check_that("list", [3, 1, 2], has_values([1, 2 ,3, 4]))
 
