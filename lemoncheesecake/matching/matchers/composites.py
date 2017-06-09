@@ -16,7 +16,7 @@ class AllOf(Matcher):
         self.matchers = matchers
     
     def description(self, conjugate=False):
-        return " and ".join([matcher.description() for matcher in self.matchers])
+        return " and ".join([matcher.description(conjugate) for matcher in self.matchers])
     
     def matches(self, actual):
         results = []
@@ -37,7 +37,7 @@ class AnyOf(Matcher):
         self.matchers = matchers
     
     def description(self, conjugate=False):
-        return " or ".join([matcher.description() for matcher in self.matchers])
+        return " or ".join([matcher.description(conjugate) for matcher in self.matchers])
     
     def matches(self, actual):
         results = []
