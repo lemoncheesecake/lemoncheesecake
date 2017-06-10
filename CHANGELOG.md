@@ -1,3 +1,11 @@
+# 0.8.9 (2017-06-10)
+
+- rename `lcc show` command into `lcc tree`
+- remove lemoncheesecake.worker feature (same functionality can be achieved using `setup_suite` method and fixtures)
+- README.md: various improvements
+- fix various Python warnings
+- first release on PyPI
+
 # 0.8.8 (2017-06-01)
 
 - **HTML report**: fix handling of tests being executed at the time of html report rendering (again, regression was introduced in 0.8.7)
