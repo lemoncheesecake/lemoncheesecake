@@ -8,6 +8,11 @@ One of the key features of lemoncheesecake is its reporting capabilities, provid
 
 lemoncheesecake is compatible with Python 2.7, 3.3-3.6.
 
+lemoncheesecake can be installed through pip:
+```
+$ pip install lemoncheesecake
+```
+
 # How does it look ?
 
 Like this. Here is a testsuite that tests a GitHub API end-point:
