@@ -13,21 +13,21 @@ IS_PYTHON2 = sys.version_info < (3,)
 
 def humanize_duration(duration):
     ret = ""
-    
+
     if duration / 3600 >= 1:
         ret += ("%02dh" if ret else "%dh") % (duration / 3600)
         duration %= 3600
-    
+
     if duration / 60 >= 1:
         ret += ("%02dm" if ret else "%dm") % (duration / 60)
         duration %= 60
-    
+
     if duration >= 1:
         ret += ("%02ds" if ret else "%ds") % duration
-    
+
     if not ret:
         ret = "0s"
-    
+
     return ret
 
 def object_has_method(obj, method_name):
@@ -38,7 +38,7 @@ def object_has_method(obj, method_name):
 
 def get_callable_args(cb):
     spec = inspect.getfullargspec(cb) if IS_PYTHON3 else inspect.getargspec(cb)
-    args_start = 1 if inspect.ismethod(cb) else 0    
+    args_start = 1 if inspect.ismethod(cb) else 0
     return spec.args[args_start:]
 
 def get_resource_path(relpath):

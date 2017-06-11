@@ -26,18 +26,18 @@ PROJECT_SETTINGS_FILE = "project.py"
 def _find_file_going_up(filename, dirname):
     if os.path.exists(os.path.join(dirname, filename)):
         return os.path.join(dirname, filename)
-    
+
     parent_dirname = os.path.dirname(dirname)
     if parent_dirname == dirname:
         return None # root directory has been reached
-    
+
     return _find_file_going_up(filename, parent_dirname)
 
 def find_project_file():
     filename = os.environ.get("LCC_PROJECT_FILE")
     if filename != None:
         return filename if os.path.exists(filename) else None
-    
+
     filename = _find_file_going_up(PROJECT_SETTINGS_FILE, os.getcwd())
     return filename # filename can be None
 
@@ -106,22 +106,22 @@ class Project:
         def _(name, *args, **kwargs):
             self._raw_params[name] = self._get_param(name, *args, **kwargs)
         _("CLI_EXTRA_ARGS", _check_func(args_nb=1), required=False)
-        _("REPORT_DIR_CREATION", 
-            _check_func(args_nb=1), required=False, 
+        _("REPORT_DIR_CREATION",
+            _check_func(args_nb=1), required=False,
             default=lambda top_dir: report_dir_with_archiving(top_dir, archive_dirname_datetime)
         )
         _("TESTSUITES", _check_class_instance(TestSuite), is_list=True)
         _("FIXTURES", _check_class_instance(Fixture), is_list=True, required=False, default=[])
-        _("REPORTING_BACKENDS", 
+        _("REPORTING_BACKENDS",
             _check_class_instance(ReportingBackend), is_list=True, required=False, default=DEFAULT_REPORTING_BACKENDS
         )
-        _("REPORTING_BACKENDS_ACTIVE", 
+        _("REPORTING_BACKENDS_ACTIVE",
             _check_type(str), is_list=True, required=False, default=None
         )
         _("METADATA_POLICY", _check_class_instance(MetadataPolicy), required=False, default=MetadataPolicy())
         _("RUN_HOOK_BEFORE_TESTS", _check_func(args_nb=1), required=False)
         _("RUN_HOOK_AFTER_TESTS", _check_func(args_nb=1), required=False)
-        
+
         ###
         # Cross checks between parameters
         ###
@@ -141,19 +141,19 @@ class Project:
                     ))
         else:
             self._raw_params["REPORTING_BACKENDS_ACTIVE"] = [
-                backend for backend, is_available in existing_backends.items() if is_available  
+                backend for backend, is_available in existing_backends.items() if is_available
             ]
-    
+
     def get_project_dir(self):
         return self._project_dir
-        
+
     def _get_param(self, name, checker, is_list=False, is_dict=False, required=True, default=None):
         if not hasattr(self._settings, name):
             if required:
                 _param_error(name, "required parameter is missing")
             else:
                 return default
-            
+
         value = getattr(self._settings, name)
 
         if is_list:
@@ -171,26 +171,26 @@ class Project:
                 error = checker(name, v)
                 if error:
                     _param_error(name, error)
-        
+
         else:
             error = checker(name, value)
             if error:
                 _param_error(name, error)
 
         return value
-    
+
     def get_cli_extra_args_callback(self):
         return self._raw_params["CLI_EXTRA_ARGS"]
-    
+
     def add_cli_extra_args(self, cli_args_parser):
         callback = self.get_cli_extra_args_callback()
         if callback:
             group = cli_args_parser.add_argument_group("Project custom options")
             callback(group)
-    
+
     def get_report_dir_creation_callback(self):
         return self._raw_params["REPORT_DIR_CREATION"]
-    
+
     def get_testsuites(self, check_metadata_policy=True):
         suites = self._raw_params["TESTSUITES"]
         policy = self.get_metadata_policy()
@@ -200,7 +200,7 @@ class Project:
 
     def get_fixtures(self):
         return self._raw_params["FIXTURES"]
-    
+
     def _get_reporting_backends(self):
         return self._raw_params["REPORTING_BACKENDS"]
 
@@ -212,16 +212,16 @@ class Project:
         return list(filter(
             lambda b: b.get_capabilities() & capabilities == capabilities, backends
         ))
-    
+
     def get_active_reporting_backend_names(self):
         return self._raw_params["REPORTING_BACKENDS_ACTIVE"]
 
     def is_reporting_backend_active(self, backend_name):
         return backend_name in self.get_active_reporting_backend_names()
-    
+
     def get_metadata_policy(self):
         return self._raw_params["METADATA_POLICY"]
-    
+
     def get_before_test_run_hook(self):
         return self._raw_params["RUN_HOOK_BEFORE_TESTS"]
 

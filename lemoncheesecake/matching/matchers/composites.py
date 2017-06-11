@@ -14,10 +14,10 @@ __all__ = (
 class AllOf(Matcher):
     def __init__(self, matchers):
         self.matchers = matchers
-    
+
     def description(self, conjugate=False):
         return " and ".join([matcher.description(conjugate) for matcher in self.matchers])
-    
+
     def matches(self, actual):
         results = []
         for matcher in self.matchers:
@@ -25,7 +25,7 @@ class AllOf(Matcher):
             if result.is_failure():
                 return result
             results.append(result)
-        
+
         return match_success(merge_match_result_descriptions(results))
 
 def all_of(*matchers):
@@ -35,10 +35,10 @@ def all_of(*matchers):
 class AnyOf(Matcher):
     def __init__(self, matchers):
         self.matchers = matchers
-    
+
     def description(self, conjugate=False):
         return " or ".join([matcher.description(conjugate) for matcher in self.matchers])
-    
+
     def matches(self, actual):
         results = []
         for matcher in self.matchers:
@@ -46,7 +46,7 @@ class AnyOf(Matcher):
             if match.is_success():
                 return match
             results.append(match)
-        
+
         return match_failure(merge_match_result_descriptions(results))
 
 def any_of(*matchers):
@@ -56,10 +56,10 @@ def any_of(*matchers):
 class Anything(Matcher):
     def __init__(self, wording="anything"):
         self.wording = wording
-    
+
     def description(self, conjugate=False):
         return "%s %s" % (to_be(conjugate), self.wording)
-    
+
     def matches(self, actual):
         return match_success(got_value(actual))
 
@@ -84,10 +84,10 @@ def is_(matcher):
 class Not(Matcher):
     def __init__(self, matcher):
         self.matcher = matcher
-    
+
     def description(self, conjugate=False):
         return "not %s" % self.matcher.description(conjugate)
-    
+
     def matches(self, actual):
         result = self.matcher.matches(actual)
         return match_result(not result.outcome, result.description)

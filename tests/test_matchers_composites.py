@@ -49,7 +49,7 @@ def test_something():
     result = something().matches("foo")
     assert result.is_success()
     assert "foo" in result.description
-    
+
 def test_existing():
     result = existing().matches("foo")
     assert result.is_success()

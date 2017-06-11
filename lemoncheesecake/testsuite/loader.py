@@ -67,14 +67,14 @@ def load_testsuite_from_class(klass):
     suite.properties.update(md.properties)
     suite.links.extend(md.links)
     suite.rank = md.rank
-    
+
     for hook_name in TESTSUITE_HOOKS:
         if hasattr(inst, hook_name):
             suite.add_hook(hook_name, getattr(inst, hook_name))
 
     for test_method in get_test_methods_from_class(inst):
         suite.add_test(load_test_from_method(test_method))
-    
+
     for sub_suite_klass in get_sub_suites_from_class(inst):
         suite.add_sub_testsuite(load_testsuite_from_class(sub_suite_klass))
 
@@ -84,17 +84,17 @@ def load_testsuites_from_classes(klasses):
     return [load_testsuite_from_class(klass) for klass in klasses]
 
 def load_testsuite_from_module(mod):
-    # TODO: find a better way to workaround circular import 
+    # TODO: find a better way to workaround circular import
     from lemoncheesecake.testsuite.definition import get_metadata_next_rank
-    
+
     suite_info = getattr(mod, "TESTSUITE")
     suite_name = inspect.getmodulename(inspect.getfile(mod))
-    
+
     try:
         suite_description = suite_info["description"]
     except KeyError:
         raise InvalidMetadataError("Missing description in '%s' testsuite information" % mod.__file__)
-    
+
     suite = TestSuite(None, suite_name, suite_description)
     suite.tags.extend(suite_info.get("tags", []))
     suite.properties.update(suite_info.get("properties", []))
@@ -119,7 +119,7 @@ def load_testsuite_from_module(mod):
 
 def load_testsuite_from_file(filename):
     """Get testsuite from Python module.
-    
+
     A valid module is either:
     - a module containing a dict name 'TESTSUITE' with keys:
       - description (mandatory)
@@ -128,7 +128,7 @@ def load_testsuite_from_file(filename):
       - links (optional)
       - rank (optional)
     - a module that contains a testsuite class with the same name as the module name
-    
+
     Raise a ImportTestSuiteError if the testsuite class cannot be imported.
     """
     try:
@@ -137,7 +137,7 @@ def load_testsuite_from_file(filename):
         raise ImportTestSuiteError(
             "Cannot import file '%s': %s" % (filename, serialize_current_exception(show_stacktrace=True))
         )
-    
+
     if hasattr(mod, "TESTSUITE"):
         suite = load_testsuite_from_module(mod)
     else:
@@ -162,14 +162,14 @@ def load_testsuites_from_files(patterns, excluding=[]):
 
 def load_testsuites_from_directory(dir, recursive=True):
     """Find testsuite classes in modules found in dir.
-    
+
     The function expect that:
     - each module (.py file) contains a class that inherits TestSuite
-    - the class name must have the same name as the module name (if the module is foo.py 
+    - the class name must have the same name as the module name (if the module is foo.py
       the class must be named foo)
     If the recursive argument is set to True, sub testsuites will be searched in a directory named
     from the suite module: if the suite module is "foo.py" then the sub suites directory must be "foo".
-    
+
     Raise ImportTestSuiteError if one or more testsuite cannot be imported.
     """
     if not osp.exists(dir):

@@ -55,5 +55,5 @@ def import_module(filename):
             fh.close()
     finally:
         del sys.path[0]
-    
+
     return mod

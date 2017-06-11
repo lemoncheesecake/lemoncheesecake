@@ -11,7 +11,7 @@ def test_fixture_decorator():
     @lcc.fixture()
     def myfixture():
         pass
-    
+
     assert myfixture._lccfixtureinfo
     assert myfixture._lccfixtureinfo.scope == "test"
 
@@ -19,9 +19,9 @@ def test_load_from_func():
     @lcc.fixture()
     def myfixture():
         pass
-    
+
     fixtures = load_fixtures_from_func(myfixture)
-    
+
     assert len(fixtures) == 1
     assert fixtures[0].name == "myfixture"
     assert fixtures[0].scope == "test"
@@ -32,9 +32,9 @@ def test_load_from_func_with_multiple_fixture_names():
     @lcc.fixture(names=["foo", "bar"])
     def myfixture():
         pass
-    
+
     fixtures = load_fixtures_from_func(myfixture)
-    
+
     assert len(fixtures) == 2
     assert fixtures[0].name == "foo"
     assert fixtures[0].scope == "test"
@@ -49,9 +49,9 @@ def test_load_from_func_with_parameters():
     @lcc.fixture()
     def myfixture(foo, bar):
         pass
-    
+
     fixtures = load_fixtures_from_func(myfixture)
-    
+
     assert len(fixtures) == 1
     assert fixtures[0].name == "myfixture"
     assert fixtures[0].scope == "test"
@@ -62,7 +62,7 @@ def test_execute_fixture():
     @lcc.fixture()
     def myfixture():
         return 42
-    
+
     fixture = load_fixtures_from_func(myfixture)[0]
     fixture.execute()
     assert fixture.get_result() == 42
@@ -80,8 +80,8 @@ def test_execute_fixture_builtin_lambda():
 def test_execute_fixture_with_yield():
     @lcc.fixture()
     def myfixture():
-        yield 42    
-    
+        yield 42
+
     fixture = load_fixtures_from_func(myfixture)[0]
     fixture.execute()
     assert fixture.get_result() == 42
@@ -90,7 +90,7 @@ def test_teardown_fixture():
     @lcc.fixture()
     def myfixture():
         return 42
-    
+
     fixture = load_fixtures_from_func(myfixture)[0]
     fixture.execute()
     fixture.get_result()
@@ -102,7 +102,7 @@ def test_teardown_fixture_with_yield():
     def myfixture():
         yield 42
         flag.append(True)
-    
+
     fixture = load_fixtures_from_func(myfixture)[0]
     fixture.execute()
     assert fixture.get_result() == 42
@@ -114,7 +114,7 @@ def test_execute_fixture_with_parameters():
     @lcc.fixture()
     def myfixture(val):
         return val * 2
-    
+
     fixture = load_fixtures_from_func(myfixture)[0]
     fixture.execute({"val": 3})
     assert fixture.get_result() == 6
@@ -123,7 +123,7 @@ def test_get_fixture_result_multiple_times():
     @lcc.fixture()
     def myfixture():
         return 42
-    
+
     fixture = load_fixtures_from_func(myfixture)[0]
     fixture.execute()
     assert fixture.get_result() == 42
@@ -134,14 +134,14 @@ def test_reset_fixture():
     @lcc.fixture()
     def myfixture(val):
         return val * 2
-    
+
     fixture = load_fixtures_from_func(myfixture)[0]
-    
+
     fixture.execute({"val": 3})
     assert fixture.get_result() == 6
     fixture.teardown()
     fixture.reset()
-    
+
     fixture.execute({"val": 4})
     assert fixture.get_result() == 8
 
@@ -220,7 +220,7 @@ def test_registry_fixture_name():
     @lcc.fixture()
     def foo(fixture_name):
         pass
-    
+
     registry = FixtureRegistry()
     registry.add_fixtures(load_fixtures_from_func(foo))
     registry.check_dependencies()
@@ -238,7 +238,7 @@ def test_registry_get_fixture_with_param_dependency():
     @lcc.fixture()
     def bar():
         return 21
-    
+
     @lcc.fixture()
     def foo(bar):
         return bar * 2
@@ -260,7 +260,7 @@ def test_registry_get_fixture_with_params_dependency():
     @lcc.fixture()
     def bar(baz):
         return baz * 2
-    
+
     @lcc.fixture()
     def foo(bar, baz):
         return bar * baz
@@ -276,7 +276,7 @@ def test_registry_compatible_scope():
     @lcc.fixture(scope="session")
     def bar():
         return 21
-    
+
     @lcc.fixture(scope="test")
     def foo(bar):
         return bar * 2
@@ -290,7 +290,7 @@ def test_registry_incompatible_scope():
     @lcc.fixture(scope="test")
     def bar():
         return 21
-    
+
     @lcc.fixture(scope="session")
     def foo(bar):
         return bar * 2
@@ -306,7 +306,7 @@ def test_registry_forbidden_fixture_name():
     @lcc.fixture(scope="test")
     def fixture_name():
         return 0
-    
+
     registry = FixtureRegistry()
     registry.add_fixtures(load_fixtures_from_func(fixture_name))
     with pytest.raises(exceptions.FixtureError) as excinfo:
@@ -327,7 +327,7 @@ def test_registry_execute_fixture_with_dependency():
     @lcc.fixture()
     def bar():
         return 21
-    
+
     @lcc.fixture()
     def foo(bar):
         return bar * 2
@@ -342,19 +342,19 @@ def build_registry(*executed_fixtures):
     @lcc.fixture(scope="session_prerun")
     def fix0():
         pass
-    
+
     @lcc.fixture(scope="session")
     def fix1():
         pass
-    
+
     @lcc.fixture(scope="testsuite")
     def fix2():
         pass
-    
+
     @lcc.fixture(scope="test")
     def fix3():
         pass
-    
+
     @lcc.fixture(names=["fix4", "fix5"])
     def fix_():
         pass
@@ -362,15 +362,15 @@ def build_registry(*executed_fixtures):
     registry = FixtureRegistry()
     for func in fix0, fix1, fix2, fix3, fix_:
         registry.add_fixtures(load_fixtures_from_func(func))
-    
+
     for fixture_name in executed_fixtures:
         registry.execute_fixture(fixture_name)
-    
+
     return registry
 
 def test_filter_fixtures_all():
     assert sorted(build_registry().filter_fixtures()) == ["fix0", "fix1", "fix2", "fix3", "fix4", "fix5"]
-    
+
 def test_filter_fixtures_on_scope():
     assert sorted(build_registry().filter_fixtures(scope="testsuite")) == ["fix2"]
 
@@ -395,7 +395,7 @@ def test_check_fixtures_in_testsuites_ok():
             @lcc.test("test")
             def sometest(self, fix1):
                 pass
-    
+
     suite = load_testsuite_from_class(MySuite)
     registry = build_registry()
     registry.check_fixtures_in_testsuites([suite])
@@ -408,7 +408,7 @@ def test_check_fixtures_in_testsuites_unknown_fixture_in_test():
             @lcc.test("test")
             def sometest(self, unknown_fix):
                 pass
-    
+
     suite = load_testsuite_from_class(MySuite)
     registry = build_registry()
     with pytest.raises(exceptions.FixtureError):
@@ -419,11 +419,11 @@ def test_check_fixtures_in_testsuites_unknown_fixture_in_setup_suite():
     class MySuite:
         def setup_suite(self, unknown_fix):
             pass
-        
+
         @lcc.test("test")
         def sometest(self):
             pass
-    
+
     suite = load_testsuite_from_class(MySuite)
     registry = build_registry()
     with pytest.raises(exceptions.FixtureError):
@@ -434,11 +434,11 @@ def test_check_fixtures_in_testsuites_incompatible_fixture_in_setup_suite():
     class MySuite:
         def setup_suite(self, fix3):
             pass
-        
+
         @lcc.test("test")
         def sometest(self):
             pass
-    
+
     suite = load_testsuite_from_class(MySuite)
     registry = build_registry()
     with pytest.raises(exceptions.FixtureError):

@@ -32,11 +32,11 @@ class mysuite:
     @lcc.test("My Test 1")
     def mytest1(self, foo, bar, baz):
         pass
-    
+
     @lcc.test("My Test 2")
     def mytest2(self, foo, baz):
         pass
-    
+
 """
 
 EMPTY_TEST_MODULE = """import lemoncheesecake.api as lcc
@@ -64,7 +64,7 @@ def notest_project(tmpdir):
 
 def test_fixtures(project, cmdout):
     assert main(["fixtures"]) == 0
-    
+
     cmdout.assert_lines_match(".+qux.+ 1 .+ 0 .+")
     cmdout.assert_lines_match(".+foo.+ 1 .+ 2 .+")
     cmdout.assert_lines_match(".+bar.+foo.+ 1 .+ 1 .+")
@@ -72,7 +72,7 @@ def test_fixtures(project, cmdout):
 
 def test_fixtures_empty_project(notest_project, cmdout):
     assert main(["fixtures"]) == 0
-    
+
     cmdout.assert_lines_match(".*session_prerun.*:.*none.*")
     cmdout.assert_lines_match(".*session.*:.*none.*")
     cmdout.assert_lines_match(".*testsuite.*:.*none.*")

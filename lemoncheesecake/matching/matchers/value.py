@@ -19,7 +19,7 @@ __all__ = (
 class EqualTo(MatchExpected):
     def description(self, conjugate=False):
         return "%s equal to %s" % (to_be(conjugate), serialize_value(self.expected))
-    
+
     def matches(self, actual):
         from lemoncheesecake.matching import DISPLAY_DETAILS_WHEN_EQUAL
 
@@ -37,12 +37,12 @@ def _comparator(comparison_description, comparison_func):
         class _Comparator(MatchExpected):
             def description(self, conjugate=False):
                 return "%s %s %s" % (to_be(conjugate), comparison_description, serialize_value(self.expected))
-             
+
             def matches(self, actual):
                 return match_result(comparison_func(actual, self.expected), got_value(actual))
-         
+
         return _Comparator(expected)
-     
+
     wrapper.__doc__ = """Test if value is %s expected""" % comparison_description
     return wrapper
 
@@ -58,10 +58,10 @@ class IsBetween(Matcher):
     def __init__(self, min, max):
         self.min = min
         self.max = max
-    
+
     def description(self, conjugate=False):
         return "%s between %s and %s" % (to_be(conjugate), self.min, self.max)
-    
+
     def matches(self, actual):
         return match_result(actual >= self.min and actual <= self.max, got_value(actual))
 
@@ -80,10 +80,10 @@ def is_not_none():
 class HasLength(Matcher):
     def __init__(self, matcher):
         self.matcher = matcher
-    
+
     def description(self, conjugate=False):
         return "%s a length that %s" % (to_have(conjugate), self.matcher.description(conjugate=True))
-    
+
     def matches(self, actual):
         return self.matcher.matches(len(actual))
 

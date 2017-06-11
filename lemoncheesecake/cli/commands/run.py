@@ -28,10 +28,10 @@ def build_fixture_registry(project, cli_args):
 class RunCommand(Command):
     def get_name(self):
         return "run"
-    
+
     def get_description(self):
         return "Run the tests"
-    
+
     def add_cli_args(self, cli_parser):
         project_file = find_project_file()
         project = None
@@ -39,9 +39,9 @@ class RunCommand(Command):
         if project_file:
             project = Project(project_file)
             default_reporting_backend_names = project.get_active_reporting_backend_names()
-            
+
         add_filter_args_to_cli_parser(cli_parser)
-        
+
         group = cli_parser.add_argument_group("Reporting")
         group.add_argument("--report-dir", "-r", required=False, help="Directory where report data will be stored")
         group.add_argument("--reporting", nargs="+", default=default_reporting_backend_names,
@@ -76,17 +76,17 @@ class RunCommand(Command):
             fixture_registry.check_fixtures_in_testsuites(testsuites)
         except FixtureError as e:
             return "Cannot run tests: %s" % e
-        
-        reporting_backends = { 
+
+        reporting_backends = {
             backend.name: backend for backend in
                 project.get_reporting_backends(capabilities=reporting.CAPABILITY_REPORTING_SESSION, active_only=False)
         }
         default_report_dir_creation_callback = project.get_report_dir_creation_callback()
         before_run_hook = project.get_before_test_run_hook()
         after_run_hook = project.get_after_test_run_hook()
-        
+
         testsuites = filter_testsuites_from_cli_args(testsuites, cli_args)
-        
+
         # Set reporting backends
         selected_reporting_backends = set()
         for backend_name in cli_args.reporting + cli_args.enable_reporting:
@@ -99,7 +99,7 @@ class RunCommand(Command):
                 selected_reporting_backends.discard(reporting_backends[backend_name])
             except KeyError:
                 return "Unknown reporting backend '%s'" % backend_name
-        
+
         # Create report dir
         if cli_args.report_dir:
             report_dir = cli_args.report_dir
@@ -116,8 +116,8 @@ class RunCommand(Command):
             except Exception:
                 return "Got an unexpected exception while creating report directory:%s" % \
                     serialize_current_exception(show_stacktrace=True)
-    
-        # Handle before run hook 
+
+        # Handle before run hook
         if before_run_hook:
             try:
                 before_run_hook(report_dir)
@@ -126,16 +126,16 @@ class RunCommand(Command):
             except Exception:
                 return "Got an unexpected exception while running the before-run hook:%s" % \
                     serialize_current_exception(show_stacktrace=True)
-        
-        # Run tests 
+
+        # Run tests
         try:
             run_testsuites(
                 testsuites, fixture_registry, selected_reporting_backends, report_dir
             )
         except LemonCheesecakeException as e:
             return str(e)
-        
-        # Handle after run hook 
+
+        # Handle after run hook
         if after_run_hook:
             try:
                 after_run_hook(report_dir)
@@ -145,5 +145,5 @@ class RunCommand(Command):
                 return "Got an unexpected exception while running the after-run hook:%s" % (
                     serialize_current_exception(show_stacktrace=True)
                 )
-        
+
         return 0

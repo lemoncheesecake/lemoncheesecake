@@ -16,7 +16,7 @@ def match_values(values, patterns):
         return True
 
     values = [value or "" for value in values] # convert None to ""
-    
+
     for pattern in patterns:
         if pattern[0] in NEGATIVE_FILTER_CHARS:
             if not fnmatch.filter(values, pattern[1:]):
@@ -29,7 +29,7 @@ def match_values(values, patterns):
 def match_keyvalues(keyvalues, patterns):
     if not patterns:
         return True
-    
+
     for key, value in patterns:
         if key in keyvalues:
             if value[0] in NEGATIVE_FILTER_CHARS:
@@ -42,7 +42,7 @@ def match_keyvalues(keyvalues, patterns):
 
 def match_values_lists(lsts, patterns):
     return match_values(
-        reduce(lambda x, y: list(x) + list(y), lsts, []), # make a flat list 
+        reduce(lambda x, y: list(x) + list(y), lsts, []), # make a flat list
         patterns
     )
 
@@ -53,10 +53,10 @@ class Filter:
         self.tags = [ ]
         self.properties = []
         self.links = [ ]
-    
+
     def is_empty(self):
         return not any([self.paths, self.descriptions, self.tags, self.properties, self.links])
-    
+
     def match_test(self, test, suite):
         funcs = [
             lambda: match_values(test.get_inherited_paths(), self.paths),

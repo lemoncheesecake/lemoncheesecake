@@ -19,13 +19,13 @@ else:
     @pytest.fixture(scope="function")
     def backend():
         return XmlBackend()
-    
+
     def test_load_report_non_xml(tmpdir):
         file = tmpdir.join("report.xml")
         file.write("foobar")
         with pytest.raises(InvalidReportFile):
             load_report_from_file(file.strpath)
-    
+
     def test_load_report_bad_xml(tmpdir):
         file = tmpdir.join("report.xml")
         file.write("<value>foobar</value>")

@@ -79,7 +79,7 @@ def test_load_suites_with_same_name():
             @lcc.test("foo")
             def foo(self):
                 pass
-    
+
     @lcc.testsuite("My Suite 2")
     class MySuite2:
         @lcc.testsuite("My Sub Suite 1")
@@ -87,9 +87,9 @@ def test_load_suites_with_same_name():
             @lcc.test("bar")
             def bar(self):
                 pass
-    
+
     suites = load_testsuites_from_classes([MySuite1, MySuite2])
-    
+
     assert suites[0].get_suite_name() == "MySuite1"
     assert suites[0].get_sub_testsuites()[0].get_suite_name() == "MySubSuite"
     assert suites[1].get_suite_name() == "MySuite2"
@@ -111,9 +111,9 @@ def test_load_tests_with_same_name():
             @lcc.test("foo")
             def foo(self):
                 pass
-    
+
     suites = load_testsuites_from_classes([MySuite1, MySuite2])
-    
+
     assert suites[0].get_suite_name() == "MySuite1"
     assert suites[0].get_sub_testsuites()[0].get_suite_name() == "MySubSuite1"
     assert suites[0].get_sub_testsuites()[0].get_tests()[0].name == "foo"
@@ -128,17 +128,17 @@ def test_metadata_policy():
         @lcc.test("Some test")
         def sometest(self):
             pass
-        
+
     @lcc.testsuite("My Suite 1")
     @lcc.prop("foo", 3)
     class MySuite2:
         @lcc.test("Some test")
         def sometest(self):
             pass
-    
+
     suite1 = load_testsuites_from_classes([MySuite1])
     suite2 = load_testsuites_from_classes([MySuite2])
-    
+
     policy = MetadataPolicy()
     policy.add_property_rule("foo", (1, 2))
     with pytest.raises(InvalidMetadataError):
@@ -150,7 +150,7 @@ def test_load_test_from_function():
     @lcc.test("mytest")
     def func():
         return 1
-    
+
     test = load_test_from_function(func)
     assert test.name == "func"
     assert test.description == "mytest"
@@ -162,7 +162,7 @@ def test_load_test_from_method():
         @lcc.test("mytest")
         def meth(self):
             return 1
-    
+
     suite = Suite()
     test = load_test_from_method(suite.meth)
     assert test.name == "meth"
@@ -174,13 +174,13 @@ def test_load_testsuite_from_class_with_hooks(tmpdir):
     class Suite:
         def setup_suite(self):
             return 1
-        
+
         def teardown_suite(self):
             return 2
-        
+
         def setup_test(self, test_name):
             return 3
-        
+
         def teardown_test(self, test_name):
             return 4
 
@@ -279,7 +279,7 @@ def test_load_testsuite_from_module_with_hooks(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
         """import lemoncheesecake.api as lcc
- 
+
 TESTSUITE = {
     "description": "My Suite"
 }
@@ -318,7 +318,7 @@ TESTSUITE = {
 def mytest1():
     pass
 """)
-    
+
     tmpdir.mkdir("mysuite").join("subsuite.py").write(
         """import lemoncheesecake.api as lcc
 
@@ -341,6 +341,6 @@ def mytest2():
 def test_load_testsuite_from_module_missing_testsuite_definition(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write("")
-    
+
     with pytest.raises(ImportTestSuiteError):
         load_testsuite_from_file(file.strpath)

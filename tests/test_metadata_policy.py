@@ -19,15 +19,15 @@ def test_property_value_validation():
         @lcc.test("Some test")
         def sometest(self):
             pass
-    
+
     suite = load_testsuite_from_class(MySuite)
-    
+
     # passing case
     policy = MetadataPolicy()
     policy.add_property_rule("foo", (1, 2), on_test=True, on_suite=True)
     policy.check_test_compliance(suite.get_test("sometest"))
     policy.check_suite_compliance(suite)
-    
+
     # non-passing case
     policy = MetadataPolicy()
     policy.add_property_rule("foo", (3, 4), on_test=True, on_suite=True)
@@ -44,15 +44,15 @@ def test_required_property():
         @lcc.test("Some test")
         def sometest(self):
             pass
-    
+
     suite = load_testsuite_from_class(MySuite)
-    
+
     # passing case
     policy = MetadataPolicy()
     policy.add_property_rule("foo", on_test=True, on_suite=True, required=True)
     policy.check_test_compliance(suite.get_test("sometest"))
     policy.check_suite_compliance(suite)
-    
+
     # non-passing case
     policy = MetadataPolicy()
     policy.add_property_rule("bar", on_test=True, on_suite=True, required=True)
@@ -71,9 +71,9 @@ def test_allowed_properties_and_tags():
         @lcc.test("Some test")
         def sometest(self):
             pass
-    
+
     suite = load_testsuite_from_class(MySuite)
-    
+
     # passing case
     policy = MetadataPolicy()
     policy.add_property_rule("foo", on_test=True, on_suite=True)
@@ -82,14 +82,14 @@ def test_allowed_properties_and_tags():
     policy.disallow_unknown_tags()
     policy.check_test_compliance(suite.get_test("sometest"))
     policy.check_suite_compliance(suite)
-    
+
     # non-passing case
     policy = MetadataPolicy()
     policy.add_property_rule("bar", on_test=True, on_suite=True)
     policy.add_tag_rule(["tag3"], on_test=True, on_suite=True)
     policy.disallow_unknown_properties()
     policy.disallow_unknown_tags()
-    
+
     with pytest.raises(InvalidMetadataError):
         policy.check_test_compliance(suite.get_test("sometest"))
     with pytest.raises(InvalidMetadataError):
@@ -103,27 +103,27 @@ def test_different_test_and_suite_property_configurations():
         @lcc.test("Some test")
         def sometest(self):
             pass
-    
+
     suite = load_testsuite_from_class(MySuite)
-    
+
     # passing case
     policy = MetadataPolicy()
     policy.add_property_rule("foo", on_suite=True)
     policy.add_property_rule("bar", on_test=True)
     policy.check_test_compliance(suite.get_test("sometest"))
     policy.check_suite_compliance(suite)
-    
+
     # non-passing case
     policy = MetadataPolicy()
     policy.add_property_rule("foo", on_test=True)
     policy.add_property_rule("bar", on_suite=True)
-    
+
     with pytest.raises(InvalidMetadataError):
         policy.check_test_compliance(suite.get_test("sometest"))
     with pytest.raises(InvalidMetadataError):
         policy.check_suite_compliance(suite)
-    
-def test_different_test_and_suite_tag_configurations():    
+
+def test_different_test_and_suite_tag_configurations():
     @lcc.tags("tag1")
     @lcc.testsuite("MySuite")
     class MySuite:
@@ -131,21 +131,21 @@ def test_different_test_and_suite_tag_configurations():
         @lcc.test("Some test")
         def sometest(self):
             pass
-    
+
     suite = load_testsuite_from_class(MySuite)
-    
+
     # passing case
     policy = MetadataPolicy()
     policy.add_tag_rule("tag1", on_suite=True)
     policy.add_tag_rule("tag2", on_test=True)
     policy.check_test_compliance(suite.get_test("sometest"))
     policy.check_suite_compliance(suite)
-    
+
     # non-passing case
     policy = MetadataPolicy()
     policy.add_tag_rule("tag1", on_test=True)
     policy.add_tag_rule("tag2", on_suite=True)
-    
+
     with pytest.raises(InvalidMetadataError):
         policy.check_test_compliance(suite.get_test("sometest"))
     with pytest.raises(InvalidMetadataError):
@@ -159,24 +159,24 @@ def test_disallow_unknown_property():
         @lcc.test("Some test")
         def sometest(self):
             pass
-    
+
     suite = load_testsuite_from_class(MySuite)
-    
+
     # passing case
     policy = MetadataPolicy()
     policy.check_test_compliance(suite.get_test("sometest"))
     policy.check_suite_compliance(suite)
-    
+
     # non-passing case
     policy = MetadataPolicy()
     policy.disallow_unknown_properties()
-    
+
     with pytest.raises(InvalidMetadataError):
         policy.check_test_compliance(suite.get_test("sometest"))
     with pytest.raises(InvalidMetadataError):
         policy.check_suite_compliance(suite)
-    
-def test_disallow_unknown_tag():    
+
+def test_disallow_unknown_tag():
     @lcc.tags("tag1")
     @lcc.testsuite("MySuite")
     class MySuite:
@@ -184,18 +184,18 @@ def test_disallow_unknown_tag():
         @lcc.test("Some test")
         def sometest(self):
             pass
-    
+
     suite = load_testsuite_from_class(MySuite)
-    
+
     # passing case
     policy = MetadataPolicy()
     policy.check_test_compliance(suite.get_test("sometest"))
     policy.check_suite_compliance(suite)
-    
+
     # non-passing case
     policy = MetadataPolicy()
     policy.disallow_unknown_tags()
-    
+
     with pytest.raises(InvalidMetadataError):
         policy.check_test_compliance(suite.get_test("sometest"))
     with pytest.raises(InvalidMetadataError):

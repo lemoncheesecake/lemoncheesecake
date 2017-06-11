@@ -17,10 +17,10 @@ from lemoncheesecake.exceptions import ProjectError, ProgrammingError
 class StatsCommand(Command):
     def get_name(self):
         return "stats"
-    
+
     def get_description(self):
         return "Display statistics about the project's tests"
-    
+
     def add_cli_args(self, cli_parser):
         group = cli_parser.add_argument_group("Display")
         self.add_color_cli_args(group)
@@ -28,7 +28,7 @@ class StatsCommand(Command):
 
     def run_cmd(self, cli_args):
         self.process_color_cli_args(cli_args)
-        
+
         project_file = find_project_file()
         if not project_file:
             return "Cannot find project file"
@@ -37,9 +37,9 @@ class StatsCommand(Command):
             suites = project.get_testsuites()
         except (ProjectError, ProgrammingError) as e:
             return str(e)
-        
+
         suites = filter_testsuites_from_cli_args(suites, cli_args)
-        
+
         class Stats:
             def __init__(self):
                 self.tests_nb = 0
@@ -49,7 +49,7 @@ class StatsCommand(Command):
                 self.properties = {}
                 self.links = {}
         stats = Stats()
-        
+
         def handle_test(test, suite):
             stats.tests_nb += 1
             for tag in test.get_inherited_tags():
@@ -62,17 +62,17 @@ class StatsCommand(Command):
                 stats.properties[prop][value] += 1
             for link in test.get_inherited_links():
                 stats.links[link] = stats.links.get(link, 0) + 1
-        
+
         def percent_of_tests(val):
             return "%2d%%" % (float(val) / stats.tests_nb * 100)
-        
+
         def handle_suite(suite):
             stats.testsuites_nb += 1
             if suite.has_selected_tests(deep=False):
                 stats.non_empty_testsuites_nb += 1
-        
+
         walk_testsuites(suites, test_func=handle_test, testsuite_func=handle_suite)
-        
+
         # Show tags
         lines = []
         for tag in sorted(stats.tags.keys(), key=lambda k: stats.tags[k], reverse=True):
@@ -109,12 +109,12 @@ class StatsCommand(Command):
         print_table(self.bold("Links"), ["Name", "URL", "Tests", "In %"], lines)
 
         summary = "Total: %s in %s" % (
-            self.bold("%d tests" % stats.tests_nb), 
+            self.bold("%d tests" % stats.tests_nb),
             self.bold("%d testsuites" % stats.non_empty_testsuites_nb)
         )
         if stats.testsuites_nb > stats.non_empty_testsuites_nb:
             summary += " (+ %d empty suites)" % (stats.testsuites_nb - stats.non_empty_testsuites_nb)
         print(summary)
         print()
-        
+
         return 0

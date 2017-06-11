@@ -50,22 +50,22 @@ class _Runtime:
         self.current_testsuite = None
         # for test / testsuite hook / before/after all tests outcome
         self.has_pending_failure = False
-    
+
     def initialize_reporting_sessions(self):
         for backend in self.reporting_backends:
             session = backend.create_reporting_session(self.report_dir, self.report)
             self.reporting_sessions.append(session)
-            
+
     def for_each_reporting_sessions(self, callback):
         for session in self.reporting_sessions:
             callback(session)
-    
+
     def _start_hook(self, ts):
         self.has_pending_failure = False
         hook_data = HookData()
         hook_data.start_time = ts
         return hook_data
-    
+
     def _end_hook(self, hook_data, ts):
         if hook_data:
             hook_data.end_time = ts
@@ -79,27 +79,27 @@ class _Runtime:
         # remove previous step from report data if it was empty
         if self.current_step_data_list and len(self.current_step_data_list[-1].entries) == 0:
             del self.current_step_data_list[-1]
-        
+
     def begin_tests(self):
         self.report.start_time = time.time()
         self.for_each_reporting_sessions(lambda b: b.begin_tests())
-    
+
     def end_tests(self):
         self.report.end_time = time.time()
         self.report.report_generation_time = self.report.end_time
         self.for_each_reporting_sessions(lambda b: b.end_tests())
-    
+
     def begin_test_session_setup(self):
         self.report.test_session_setup = self._start_hook(time.time())
         self.current_step_data_list = self.report.test_session_setup.steps
         self.default_step_description = "Setup test session"
-    
+
         self.for_each_reporting_sessions(lambda b: b.begin_test_session_setup())
-    
+
     def end_test_session_setup(self):
         if self.report.test_session_setup.is_empty():
             self.report.test_session_setup = None
-        else: 
+        else:
             now = time.time()
             self._end_hook(self.report.test_session_setup, now)
             self.end_current_step(now)
@@ -109,9 +109,9 @@ class _Runtime:
         self.report.test_session_teardown = self._start_hook(time.time())
         self.current_step_data_list = self.report.test_session_teardown.steps
         self.default_step_description = "Teardown test session"
-        
+
         self.for_each_reporting_sessions(lambda b: b.begin_test_session_teardown())
-    
+
     def end_test_session_teardown(self):
         if self.report.test_session_teardown.is_empty():
             self.report.test_session_teardown = None
@@ -132,16 +132,16 @@ class _Runtime:
         else:
             self.report.testsuites.append(suite_data)
         self.current_testsuite_data = suite_data
-        
+
         self.for_each_reporting_sessions(lambda b: b.begin_suite(testsuite))
-    
+
     def begin_suite_setup(self):
         self.current_testsuite_data.suite_setup = self._start_hook(time.time())
         self.current_step_data_list = self.current_testsuite_data.suite_setup.steps
         self.default_step_description = "Setup suite"
 
         self.for_each_reporting_sessions(lambda b: b.begin_suite_setup(self.current_testsuite))
-    
+
     def end_suite_setup(self):
         if self.current_testsuite_data.suite_setup.is_empty():
             self.current_testsuite_data.suite_setup = None
@@ -150,12 +150,12 @@ class _Runtime:
             self._end_hook(self.current_testsuite_data.suite_setup, now)
             self.end_current_step(now)
         self.for_each_reporting_sessions(lambda b: b.end_suite_setup(self.current_testsuite))
-        
+
     def begin_suite_teardown(self):
         self.current_testsuite_data.suite_teardown = self._start_hook(time.time())
         self.current_step_data_list = self.current_testsuite_data.suite_teardown.steps
         self.default_step_description = "Teardown suite"
-            
+
         self.for_each_reporting_sessions(lambda b: b.begin_suite_teardown(self.current_testsuite))
 
     def end_suite_teardown(self):
@@ -166,12 +166,12 @@ class _Runtime:
             self.end_current_step(now)
             self._end_hook(self.current_testsuite_data.suite_teardown, now)
         self.for_each_reporting_sessions(lambda b: b.end_suite_teardown(self.current_testsuite))
-    
+
     def end_suite(self):
         self.for_each_reporting_sessions(lambda b: b.end_suite(self.current_testsuite))
         self.current_testsuite_data = self.current_testsuite_data.parent
         self.current_testsuite = self.current_testsuite.parent_suite
-        
+
     def begin_test(self, test):
         now = time.time()
         self.has_pending_failure = False
@@ -185,34 +185,34 @@ class _Runtime:
         self.for_each_reporting_sessions(lambda b: b.begin_test(test))
         self.current_step_data_list = self.current_test_data.steps
         self.default_step_description = test.description
-    
+
     def begin_test_setup(self):
         self.set_step("Setup test")
-    
+
     def end_test_setup(self):
         self.set_step(self.current_test.description)
-    
+
     def begin_test_teardown(self):
         self.set_step("Teardown test")
-    
+
     def end_test_teardown(self):
         pass
-    
+
     def end_test(self):
         now = time.time()
         self.current_test_data.status = "failed" if self.has_pending_failure else "passed"
         self.current_test_data.end_time = now
         self.end_current_step(now)
-        
+
         self.for_each_reporting_sessions(lambda b: b.end_test(self.current_test, self.current_test_data.status))
 
         self.current_test = None
         self.current_test_data = None
         self.current_step_data_list = None
-    
+
     def _bypass_test(self, test, status, status_details):
         now = time.time()
-        
+
         test_data = TestData(test.name, test.description)
         test_data.tags.extend(test.tags)
         test_data.properties.update(test.properties)
@@ -223,93 +223,93 @@ class _Runtime:
         self.current_testsuite_data.tests.append(test_data)
 
         self.for_each_reporting_sessions(lambda b: b.bypass_test(test, status, status_details))
-    
+
     def skip_test(self, test, reason):
         self._bypass_test(test, "skipped", reason)
-    
+
     def create_step_if_needed(self, ts=None):
         if not self.current_step_data_list:
             self._set_step(self.default_step_description, ts or time.time())
 
     def _set_step(self, description, ts):
         self.end_current_step(ts)
-        
+
         self.current_step_data = StepData(description)
         self.current_step_data.start_time = ts
 
         self.current_step_data_list.append(self.current_step_data)
 
         self.for_each_reporting_sessions(lambda b: b.set_step(description))
-        
+
     def set_step(self, description, force_lock=False):
         if self.step_lock and not force_lock:
             return
-        
+
         self._set_step(description, time.time())
-        
+
     def log(self, level, content):
         now = time.time()
         self.create_step_if_needed(now)
         self.current_step_data.entries.append(LogData(level, content, now))
         self.for_each_reporting_sessions(lambda b: b.log(level, content))
-    
+
     def log_debug(self, content):
         self.log(LOG_LEVEL_DEBUG, content)
-    
+
     def log_info(self, content):
         self.log(LOG_LEVEL_INFO, content)
-    
+
     def log_warn(self, content):
         self.log(LOG_LEVEL_WARN, content)
-    
+
     def log_error(self, content):
         self.has_pending_failure = True
         self.log(LOG_LEVEL_ERROR, content)
-    
+
     def check(self, description, outcome, details=None):
         self.create_step_if_needed()
         self.current_step_data.entries.append(CheckData(description, outcome, details))
-        
+
         if outcome == False:
             self.has_pending_failure = True
-        
+
         self.for_each_reporting_sessions(lambda b: b.check(description, outcome, details))
-        
+
         return outcome
-    
+
     def prepare_attachment(self, filename, description=None):
         self.create_step_if_needed()
-        
+
         if not description:
             description = filename
-        
+
         attachment_filename = "%04d_%s" % (self.attachment_count + 1, filename)
         self.attachment_count += 1
         if not os.path.exists(self.attachments_dir):
             os.mkdir(self.attachments_dir)
         self.current_step_data.entries.append(AttachmentData(description, "%s/%s" % (ATTACHEMENT_DIR, attachment_filename)))
-        
+
         return os.path.join(self.attachments_dir, attachment_filename)
         # TODO: add hook for attachment
-    
+
     def save_attachment_file(self, filename, description=None):
         target_filename = self.prepare_attachment(os.path.basename(filename), description)
         shutil.copy(filename, target_filename)
-    
+
     def save_attachment_content(self, content, filename, description=None, binary_mode=False):
         target_filename = self.prepare_attachment(filename, description)
-        
+
         fh = open(target_filename, "wb")
         fh.write(content if binary_mode else content.encode("utf-8"))
         fh.close()
-    
+
     def log_url(self, url, description=None):
         self.create_step_if_needed()
-        
+
         if not description:
             description = url
-        
-        self.current_step_data.entries.append(UrlData(description, url))        
+
+        self.current_step_data.entries.append(UrlData(description, url))
         # TODO: add hook for URL
 
 def log_debug(content):

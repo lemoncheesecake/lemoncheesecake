@@ -32,12 +32,12 @@ class Check:
     comparator_label = None
     value_type = None
     doc_func_args = "name, actual, expected"
-    
+
     def __init__(self, name, assertion=False, value_type=None):
         self.name = name
         self.assertion = assertion
         self.value_type = value_type
-    
+
     def handle_check_outcome(self, outcome):
         if self.assertion:
             if outcome:
@@ -46,11 +46,11 @@ class Check:
                 raise AbortTest("previous assertion was not fulfilled")
         else:
             return outcome
-    
+
     def __call__(self, name, actual, expected):
         outcome = self.compare(name, actual, expected)
         return self.handle_check_outcome(outcome)
-    
+
     def compare(self, name, actual, expected):
         description = self.format_description(name, expected)
         if self.value_type and expected != None:
@@ -61,11 +61,11 @@ class Check:
         if not outcome or self.always_display_details:
             details = self.format_details(actual)
         return check(description, outcome, details)
-    
+
     def format_actual_value(self, value):
         return "%s" % str(value)
     format_expected_value = format_actual_value
-    
+
     def format_description(self, name, expected):
         description = u"{prefix} {name} {comparator} {expected}".format(
             prefix=self.description_prefix, name=name,
@@ -74,24 +74,24 @@ class Check:
         if self.value_type and expected != None:
             description += " (%s)" % self.value_type.__name__
         return description
-    
+
     def format_details(self, actual):
         details = "Got %s" % self.format_actual_value(actual)
         if self.value_type and actual != None:
             details += " (%s)" % type(actual).__name__
         return details
-    
+
     def build_doc_func_args(self):
         return self.doc_func_args
-    
+
     def build_doc_func_ret(self):
         return self.doc_func_ret
-    
+
     def build_doc_func_description(self):
         return "{prefix} actual {comparator} expected".format(
             prefix=self.description_prefix, comparator=self.comparator_label
         )
-    
+
     def build_doc(self, func_name):
         doc = "%s(%s)" % (func_name, self.build_doc_func_args())
         if not self.assertion:
@@ -112,11 +112,11 @@ def do_register_checker(name, checker_inst, assertion_inst):
             return obj(*args, **kwargs)
         func.__doc__ = obj.build_doc(func_name)
         return func
-    
+
     def register_checker_object(name, inst):
         CHECKER_OBJECTS[name] = inst
         setattr(sys.modules[__name__], name, make_func(inst, name))
-        
+
     register_checker_object("check_%s" % name, checker_inst)
     register_checker_object("assert_%s" % name, assertion_inst)
 
@@ -124,7 +124,7 @@ def register_checker(name, checker_class, value_type=None, is_base_checker=True)
     if is_base_checker:
         global BASE_CHECKER_NAMES
         BASE_CHECKER_NAMES.append(name)
-    
+
     checker_inst = checker_class(name, value_type=value_type)
     assertion_inst = checker_class(name, assertion=True, value_type=value_type)
     do_register_checker(name, checker_inst, assertion_inst)
@@ -149,7 +149,7 @@ def get_assertion_object(name):
     return CHECKER_OBJECTS["assert_%s" % name]
 
 ################################################################################
-# Equality / non-equality checkers 
+# Equality / non-equality checkers
 ################################################################################
 
 @checker("eq")
@@ -164,7 +164,7 @@ class CheckNotEq(Check):
     always_display_details = True
 
 ################################################################################
-# Greater than and Greater than or equal checkers 
+# Greater than and Greater than or equal checkers
 ################################################################################
 
 @checker("gt")
@@ -180,7 +180,7 @@ class CheckGteq(Check):
     always_display_details = True
 
 ################################################################################
-# Lower than and Lower than or equal checkers 
+# Lower than and Lower than or equal checkers
 ################################################################################
 
 @checker("lt")
@@ -196,7 +196,7 @@ class CheckLteq(Check):
     always_display_details = True
 
 ################################################################################
-# str checkers 
+# str checkers
 ################################################################################
 
 @checker("str_eq")
@@ -246,7 +246,7 @@ generate_comparator_checkers_for_type(float)
 register_checker("bool_eq", CheckEq, value_type=bool)
 
 ################################################################################
-# list checkers 
+# list checkers
 ################################################################################
 
 @checker("list_eq")
@@ -267,10 +267,10 @@ class CheckListLen(Check):
 class CheckListContains(Check):
     comparator_label = "contains elements"
     always_display_details = True
-    
+
     def compare(self, name, actual, expected):
         description = self.format_description(name, expected)
-        
+
         missing = list(expected)
         for elem in expected:
             if elem in actual:
@@ -288,19 +288,19 @@ class CheckChoice(Check):
     comparator = staticmethod(lambda a, e: a in e)
 
 ################################################################################
-# dict checkers 
+# dict checkers
 ################################################################################
 
 def register_dict_checkers(dict_checker_name_fmt, dict_checker):
     def wrapper(value_checker):
         class dict_value_checker(dict_checker):
             doc_func_args = "key, d, expected"
-            
+
             def build_doc_func_description(self):
                 return "{prefix} key[d] {comparator} expected".format(
                     prefix=self.description_prefix, comparator=value_checker.comparator_label
                 )
-            
+
             def __call__(self, *args, **kwargs):
                 kwargs["value_checker"] = value_checker
                 return dict_checker.__call__(self, *args, **kwargs)
@@ -313,12 +313,12 @@ def register_dict_checkers(dict_checker_name_fmt, dict_checker):
 @checker("dict_has_key", is_base_checker=False)
 class CheckDictHasKey(Check):
     doc_func_args = "key, d"
-    
+
     def build_doc_func_description(self):
         return "{prefix} d has entry key".format(
             prefix=self.description_prefix
         )
-    
+
     def __call__(self, expected_key, actual, key_label=None, show_actual=False):
         if not key_label:
             key_label = "'%s'" % expected_key
@@ -331,12 +331,12 @@ class CheckDictHasKey(Check):
 @checker("dict_has_not_key", is_base_checker=False)
 class CheckDictHasNotKey(Check):
     doc_func_args = "key, d"
-    
+
     def build_doc_func_description(self):
         return "{prefix} d does not have entry key".format(
             prefix=self.description_prefix
         )
-    
+
     def __call__(self, expected_key, actual, key_label=None, show_actual=False):
         if not key_label:
             key_label = "'%s'" % expected_key
@@ -350,10 +350,10 @@ def register_dict_has_key_typed(type_name, types, base_class, default_show_actua
     class _CheckDictHasKeyTyped(base_class):
         always_display_details = True
         doc_func_args = "key, d"
-        
+
         def build_doc_func_description(self):
             return "Check that key[d] has key of type %s" % type_name
-        
+
         def __call__(self, expected_key, actual, key_label=None, show_actual=default_show_actual):
             if not key_label:
                 key_label = "'%s'" % expected_key
@@ -366,9 +366,9 @@ def register_dict_has_key_typed(type_name, types, base_class, default_show_actua
             else:
                 ret = check(description, False, "There is no key %s" % key_label)
             return self.handle_check_outcome(ret)
-    
+
     do_register_checker(
-        "dict_has_%s" % type_name, 
+        "dict_has_%s" % type_name,
         _CheckDictHasKeyTyped(type_name, value_type=types[0]),
         _CheckDictHasKeyTyped(type_name, value_type=types[0], assertion=True)
     )
@@ -386,10 +386,10 @@ register_dict_has_key_typed("dict", [dict], Check, default_show_actual=False)
 @checker("dict_value", is_base_checker=False)
 class CheckDictValue(Check):
     doc_func_args = "key, d, expected, value_checker"
-    
+
     def build_doc_func_description(self):
         return "Check key[d] against expected using value_checker"
-    
+
     def __call__(self, expected_key, actual, expected_value, value_checker, key_label=None):
         if not key_label:
             key_label = "'%s'" % expected_key

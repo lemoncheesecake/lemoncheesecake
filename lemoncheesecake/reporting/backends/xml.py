@@ -55,7 +55,7 @@ def _xml_node(name, *args):
             else:
                 node.attrib[name] = value if type(value) is unicode else unicode(value, "utf-8")
         i += 2
-    return node 
+    return node
 
 def _xml_child(parent_node, name, *args):
     node = _xml_node(name, *args)
@@ -110,7 +110,7 @@ def _serialize_test_data(test):
         link_node = _xml_child(test_node, "link", "name", link[1])
         link_node.text = link[0]
     _serialize_steps(test.steps, test_node)
-    
+
     return test_node
 
 def _serialize_hook_data(data, node):
@@ -130,25 +130,25 @@ def _serialize_testsuite_data(suite):
     for link in suite.links:
         link_node = _xml_child(suite_node, "link", "name", link[1])
         link_node.text = link[0]
-    
+
     # before suite
     if suite.suite_setup:
         _serialize_hook_data(suite.suite_setup, _xml_child(suite_node, "suite-setup"))
-    
+
     # tests
     for test in suite.tests:
         test_node = _serialize_test_data(test)
         suite_node.append(test_node)
-    
+
     # sub suites
     for sub_suite in suite.sub_testsuites:
         sub_suite_node = _serialize_testsuite_data(sub_suite)
         suite_node.append(sub_suite_node)
-    
+
     # after suite
     if suite.suite_teardown:
         _serialize_hook_data(suite.suite_teardown, _xml_child(suite_node, "suite-teardown"))
-    
+
     return suite_node
 
 def serialize_report_as_tree(report):
@@ -158,7 +158,7 @@ def serialize_report_as_tree(report):
     _add_time_attr(xml, "start-time", report.start_time)
     _add_time_attr(xml, "end-time", report.end_time)
     _add_time_attr(xml, "generation-time", report.report_generation_time)
-    
+
     for name, value in report.info:
         info_node = _xml_child(xml, "info", "name", name)
         info_node.text = value
@@ -175,13 +175,13 @@ def serialize_report_as_tree(report):
 
     if report.test_session_teardown:
         _serialize_hook_data(report.test_session_teardown, _xml_child(xml, "test-session-teardown"))
-    
+
     return xml
 
 def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
     report = serialize_report_as_tree(report)
     _xml_indent(report, indent_level=indent_level)
-    
+
     if IS_PYTHON3:
         return ET.tostring(report, pretty_print=True, encoding="unicode")
     return ET.tostring(report, pretty_print=True, xml_declaration=True, encoding="utf-8")
@@ -245,21 +245,21 @@ def _unserialize_testsuite_data(xml, parent=None):
     suite.tags = [ node.text for node in xml.xpath("tag") ]
     suite.properties = { node.attrib["name"]: node.text for node in xml.xpath("property") }
     suite.links = [ (link.text, link.attrib["name"]) for link in xml.xpath("link") ]
-    
+
     suite_setup = xml.xpath("suite-setup")
     suite_setup = suite_setup[0] if len(suite_setup) > 0 else None
     if suite_setup != None:
         suite.suite_setup = _unserialize_hook_data(suite_setup)
-        
+
     suite.tests = [ _unserialize_test_data(t) for t in xml.xpath("test") ]
-    
+
     suite_teardown = xml.xpath("suite-teardown")
     suite_teardown = suite_teardown[0] if len(suite_teardown) > 0 else None
     if suite_teardown != None:
         suite.suite_teardown = _unserialize_hook_data(suite_teardown)
-    
+
     suite.sub_testsuites = [ _unserialize_testsuite_data(s, suite) for s in xml.xpath("suite") ]
-    
+
     return suite
 
 def _unserialize_keyvalue_list(nodes):
@@ -279,18 +279,18 @@ def load_report_from_file(filename):
         root = xml.getroot().xpath("/lemoncheesecake-report")[0]
     except IndexError:
         raise InvalidReportFile("Cannot lemoncheesecake-report element in XML")
-    
+
     report.start_time = _unserialize_datetime(root.attrib["start-time"]) if "start-time" in root.attrib else None
     report.end_time = _unserialize_datetime(root.attrib["end-time"]) if "end-time" in root.attrib else None
     report.report_generation_time = _unserialize_datetime(root.attrib["generation-time"]) if "generation-time" in root.attrib else None
     report.info = _unserialize_keyvalue_list(root.xpath("info"))
     report.stats = _unserialize_keyvalue_list(root.xpath("stat"))
-    
+
     test_session_setup = xml.xpath("test-session-setup")
     test_session_setup = test_session_setup[0] if len(test_session_setup) else None
     if test_session_setup != None:
         report.test_session_setup = _unserialize_hook_data(test_session_setup)
-        
+
     for xml_suite in root.xpath("suite"):
         report.testsuites.append(_unserialize_testsuite_data(xml_suite))
 
@@ -298,24 +298,24 @@ def load_report_from_file(filename):
     test_session_teardown = test_session_teardown[0] if len(test_session_teardown) else None
     if test_session_teardown != None:
         report.test_session_teardown = _unserialize_hook_data(test_session_teardown)
-    
+
     return report
 
 class XmlBackend(FileReportBackend):
     name = "xml"
-    
+
     def __init__(self, save_mode=SAVE_AT_EACH_FAILED_TEST):
         FileReportBackend.__init__(self, save_mode)
         self.indent_level = DEFAULT_INDENT_LEVEL
-    
+
     def get_report_filename(self):
         return "report.xml"
-    
+
     def is_available(self):
         return LXML_IS_AVAILABLE
-    
+
     def save_report(self, filename, report):
         save_report_into_file(report, filename, self.indent_level)
-    
+
     def load_report(self, filename):
         return load_report_from_file(filename)

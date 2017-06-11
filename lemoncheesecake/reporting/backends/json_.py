@@ -88,7 +88,7 @@ def _serialize_testsuite_data(suite):
         json_suite["suite_setup"] = _serialize_hook_data(suite.suite_setup)
     if suite.suite_teardown:
         json_suite["suite_teardown"] = _serialize_hook_data(suite.suite_teardown)
-    
+
     return json_suite
 
 def serialize_report_into_json(report):
@@ -100,15 +100,15 @@ def serialize_report_into_json(report):
         "info", [ [ n, v ] for n, v in report.info ],
         "stats", [ [ n, v ] for n, v in report.serialize_stats() ]
     )
-    
+
     if report.test_session_setup:
         serialized["test_session_setup"] = _serialize_hook_data(report.test_session_setup)
-    
+
     serialized["suites"] = [ _serialize_testsuite_data(s) for s in report.testsuites ]
-    
+
     if report.test_session_teardown:
         serialized["test_session_teardown"] = _serialize_hook_data(report.test_session_teardown)
-    
+
     return serialized
 
 def save_report_into_file(data, filename, javascript_compatibility=True, pretty_formatting=False):
@@ -172,12 +172,12 @@ def _unserialize_testsuite_data(js, parent=None):
         suite.suite_setup = _unserialize_hook_data(js["suite_setup"])
 
     suite.tests = [ _unserialize_test_data(t) for t in js["tests"] ]
-    
+
     if "suite_teardown" in js:
         suite.suite_teardown = _unserialize_hook_data(js["suite_teardown"])
-    
+
     suite.sub_testsuites = [ _unserialize_testsuite_data(s, suite) for s in js["sub_suites"] ]
-    
+
     return suite
 
 def load_report_from_file(filename):
@@ -186,47 +186,47 @@ def load_report_from_file(filename):
     content = file.read()
     file.close()
     content = re.sub("^" + JS_PREFIX, "", content)
-    
+
     try:
         js = json.loads(content)
     except ValueError as e:
         raise InvalidReportFile(str(e))
-    
+
     if "lemoncheesecake_report_version" not in js:
         raise InvalidReportFile("Cannot find 'lemoncheesecake_report_version' in JSON")
-    
+
     report.info = js["info"]
     report.stats = js["stats"]
     report.start_time = _unserialize_time(js["start_time"])
     report.end_time = _unserialize_time(js["end_time"])
     report.report_generation_time = _unserialize_time(js["generation_time"])
-    
+
     if "test_session_setup" in js:
         report.test_session_setup = _unserialize_hook_data(js["test_session_setup"])
-    
+
     report.testsuites = [ _unserialize_testsuite_data(s) for s in js["suites"] ]
-    
+
     if "test_session_teardown" in js:
         report.test_session_teardown = _unserialize_hook_data(js["test_session_teardown"])
-    
+
     return report
 
 class JsonBackend(FileReportBackend):
     name = "json"
-    
+
     def __init__(self, save_mode=SAVE_AT_EACH_FAILED_TEST, javascript_compatibility=True, pretty_formatting=False):
         FileReportBackend.__init__(self, save_mode)
         self.javascript_compatibility = javascript_compatibility
         self.pretty_formatting = pretty_formatting
-    
+
     def get_report_filename(self):
         return "report.json"
-    
+
     def save_report(self, filename, report):
         save_report_into_file(
             report, filename,
             javascript_compatibility=self.javascript_compatibility, pretty_formatting=self.pretty_formatting
         )
-    
+
     def load_report(self, filename):
         return load_report_from_file(filename)

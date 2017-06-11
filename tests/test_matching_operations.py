@@ -106,9 +106,9 @@ def test_this_dict(reporting_session):
     def func():
         with lcc.this_dict({"foo": "bar"}):
             lcc.check_that_entry("foo", lcc.equal_to("bar"))
-    
+
     run_func_in_test(func)
-    
+
     description, outcome, details = reporting_session.get_last_check()
 
     assert "foo" in description and "bar" in description
@@ -121,9 +121,9 @@ def test_this_dict_multiple(reporting_session):
             lcc.check_that_entry("foo", lcc.equal_to("bar"))
         with lcc.this_dict({"foo": "baz"}):
             lcc.check_that_entry("foo", lcc.equal_to("baz"))
-    
+
     run_func_in_test(func)
-    
+
     assert reporting_session.check_success_nb == 2
 
 def test_this_dict_imbricated(reporting_session):
@@ -134,18 +134,18 @@ def test_this_dict_imbricated(reporting_session):
                 lcc.check_that_entry("foo", lcc.equal_to("baz"))
         with lcc.this_dict({"foo": "foo"}):
             lcc.check_that_entry("foo", lcc.equal_to("foo"))
-    
+
     run_func_in_test(func)
-    
+
     assert reporting_session.check_success_nb == 3
 
 def test_this_dict_using_base_key(reporting_session):
     def func():
         with lcc.this_dict({"foo": {"bar": "baz"}}).using_base_key("foo"):
             lcc.check_that_entry("bar", lcc.equal_to("baz"))
-    
+
     run_func_in_test(func)
-    
+
     description, outcome, details = reporting_session.get_last_check()
 
     assert "foo" in description and "bar" in description
@@ -156,9 +156,9 @@ def test_this_dict_using_base_key_as_list(reporting_session):
     def func():
         with lcc.this_dict({"foo": {"bar": "baz"}}).using_base_key(["foo"]):
             lcc.check_that_entry("bar", lcc.equal_to("baz"))
-    
+
     run_func_in_test(func)
-    
+
     description, outcome, details = reporting_session.get_last_check()
 
     assert "foo" in description and "bar" in description

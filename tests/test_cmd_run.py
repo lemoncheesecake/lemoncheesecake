@@ -12,11 +12,11 @@ class mysuite:
     @lcc.test("My Test 1")
     def mytest1(self):
         lcc.log_error("failure")
-    
+
     @lcc.test("My Test 2")
     def mytest2(self):
         pass
-    
+
 """
 
 FIXTURE_MODULE = """import lemoncheesecake.api as lcc
@@ -53,7 +53,7 @@ def project_with_fixtures(tmpdir):
 
 def test_run(project, cmdout):
     assert main(["run"]) == 0
-    
+
     cmdout.assert_lines_match(".+= mysuite =.+")
     cmdout.assert_lines_match(".+KO.+mytest1.+")
     cmdout.assert_lines_match(".+OK.+mytest2.+")
@@ -63,7 +63,7 @@ def test_run(project, cmdout):
 
 def test_run_with_filter(project, cmdout):
     assert main(["run", "mysuite.mytest1"]) == 0
-    
+
     cmdout.assert_lines_match(".+= mysuite =.+")
     cmdout.assert_lines_match(".+KO.+mytest1.+")
     cmdout.assert_lines_match(".+Tests: 1")
@@ -72,10 +72,9 @@ def test_run_with_filter(project, cmdout):
 
 def test_project_with_fixtures(project_with_fixtures, cmdout):
     assert main(["run", "mysuite.mytest1"]) == 0
-    
+
     cmdout.assert_lines_match(".+= mysuite =.+")
     cmdout.assert_lines_match(".+OK.+mytest1.+")
     cmdout.assert_lines_match(".+Tests: 1")
     cmdout.assert_lines_match(".+Successes: 1")
     cmdout.assert_lines_match(".+Failures: 0")
-    

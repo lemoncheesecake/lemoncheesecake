@@ -19,7 +19,7 @@ def foo(bar):
 
 def baz():
     pass
-""" 
+"""
 
     file = tmpdir.join("myfixtures.py")
     file.write(module_content)
@@ -27,7 +27,7 @@ def baz():
 
 def test_load_fixture_from_file(dir_with_fixtures):
     fixtures = load_fixtures_from_file(os.path.join(dir_with_fixtures, "myfixtures.py"))
-    
+
     assert len(fixtures) == 2
     assert fixtures[0].name == "bar"
     assert fixtures[0].scope == "test"
@@ -36,10 +36,10 @@ def test_load_fixture_from_file(dir_with_fixtures):
 
 def test_load_fixture_from_files(dir_with_fixtures):
     fixtures = load_fixtures_from_files(os.path.join(dir_with_fixtures, "*.py"))
-    
+
     assert len(fixtures) == 2
 
 def test_load_fixture_from_dir(dir_with_fixtures):
     fixtures = load_fixtures_from_directory(dir_with_fixtures)
-    
+
     assert len(fixtures) == 2

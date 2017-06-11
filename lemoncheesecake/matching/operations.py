@@ -31,21 +31,21 @@ class DictContext:
 
 class ThisDict():
     _contexts = []
-    
+
     def __init__(self, actual):
         self.context = DictContext(actual, [])
-    
+
     def using_base_key(self, base_key):
         self.context.base_key = base_key if type(base_key) in (list, tuple) else [base_key]
         return self
-    
+
     def __enter__(self):
         self._contexts.append(self.context)
         return self.context.actual
-    
+
     def __exit__(self, type_, value, traceback):
         self._contexts.pop()
-    
+
     @staticmethod
     def get_current_context():
         try:
@@ -81,8 +81,8 @@ def _entry_operation(operation):
 
 def log_match_result(hint, matcher, result, quiet=False):
     """Add a check log to the report.
-    
-    If quiet is set to True, the check details won't appear in the check log. 
+
+    If quiet is set to True, the check details won't appear in the check log.
     """
     description = "Expect %s %s" % (hint, matcher.description())
     return get_runtime().check(
@@ -91,10 +91,10 @@ def log_match_result(hint, matcher, result, quiet=False):
 
 def check_that(hint, actual, matcher, quiet=False):
     """Check that actual matches given matcher.
-    
+
     A check log is added to the report.
-    
-    If quiet is set to True, the check details won't appear in the check log. 
+
+    If quiet is set to True, the check details won't appear in the check log.
     """
     result = matcher.matches(actual)
     log_match_result(hint, matcher, result, quiet=quiet)
@@ -104,10 +104,10 @@ check_that_entry = _entry_operation(check_that)
 
 def require_that(hint, actual, matcher, quiet=False):
     """Require that actual matches given matcher.
-    
+
     A check log is added to the report. An AbortTest exception is raised if the check does not succeed.
-    
-    If quiet is set to True, the check details won't appear in the check log. 
+
+    If quiet is set to True, the check details won't appear in the check log.
     """
     result = matcher.matches(actual)
     log_match_result(hint, matcher, result, quiet=quiet)
@@ -118,10 +118,10 @@ require_that_entry = _entry_operation(require_that)
 
 def assert_that(hint, actual, matcher, quiet=False):
     """Assert that actual matches given matcher.
-    
+
     If assertion fail, a check log is added to the report and an AbortTest exception is raised.
-    
-    If quiet is set to True, the check details won't appear in the check log. 
+
+    If quiet is set to True, the check details won't appear in the check log.
     """
     result = matcher.matches(actual)
     if result.is_failure():

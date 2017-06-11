@@ -12,7 +12,7 @@ __all__ = ("has_item", "has_values", "has_only_values", "is_in")
 class HasItem(MatchExpected):
     def description(self, conjugate=False):
         return "%s an item whose value %s" % (to_have(conjugate), self.expected.description(conjugate=True))
-    
+
     def matches(self, actual):
         for item in actual:
             result = self.expected.matches(item)
@@ -31,13 +31,13 @@ def HasItems(MatchExpected):
 class HasValues(MatchExpected):
     def description(self, conjugate=False):
         return "%s values %s" % (to_have(conjugate), serialize_values(self.expected))
-    
+
     def matches(self, actual):
         missing = []
         for expected in self.expected:
             if expected not in actual:
                 missing.append(expected)
-        
+
         if missing:
             return match_failure("Missing values: %s" % serialize_values(missing))
         else:
@@ -50,7 +50,7 @@ def has_values(values):
 class HasOnlyValues(MatchExpected):
     def description(self, conjugate=False):
         return "%s only values %s" % (to_have(conjugate), serialize_values(self.expected))
-    
+
     def matches(self, actual):
         expected = list(self.expected)
         extra = []
@@ -59,7 +59,7 @@ class HasOnlyValues(MatchExpected):
                 expected.remove(value)
             else:
                 extra.append(value)
-        
+
         if len(expected) == 0 and len(extra) == 0:
             return match_success(got_value(actual))
         else:
@@ -77,7 +77,7 @@ def has_only_values(values):
 class IsIn(MatchExpected):
     def description(self, conjugate=False):
         return "%s in %s" % (to_be(conjugate), serialize_values(self.expected))
-    
+
     def matches(self, actual):
         return match_result(actual in self.expected, got_value(actual))
 

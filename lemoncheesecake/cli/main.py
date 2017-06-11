@@ -19,14 +19,14 @@ def main(args=None):
             command.add_cli_args(cli_cmd_parser)
         except LemonCheesecakeException as e:
             return str(e)
-    
+
     cli_args = cli_parser.parse_args(args)
-    
+
     try:
         command = commands[cli_args.command]
     except KeyError:
         return "Unknown command '%s'" % cli_args.command
-    
+
     try:
         return command.run_cmd(cli_args)
     except UserError as e:

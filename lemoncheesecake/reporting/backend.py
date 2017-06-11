@@ -29,62 +29,62 @@ SAVE_AT_EACH_EVENT = 5
 class ReportingSession:
     def begin_tests(self):
         pass
-    
+
     def end_tests(self):
         pass
-    
+
     def begin_test_session_setup(self):
         pass
-    
+
     def end_test_session_setup(self):
         pass
-    
+
     def begin_test_session_teardown(self):
         pass
-    
+
     def end_test_session_teardown(self):
         pass
-    
+
     def begin_suite(self, testsuite):
         pass
-    
+
     def begin_suite_setup(self, testsuite):
         pass
-    
+
     def end_suite_setup(self, testsuite):
         pass
-        
+
     def begin_suite_teardown(self, testsuite):
         pass
-    
+
     def end_suite_teardown(self, testsuite):
         pass
-    
+
     def end_suite(self, testsuite):
         pass
-    
+
     def begin_test(self, test):
         pass
-    
+
     def end_test(self, test, status):
         pass
-    
+
     def bypass_test(self, test, status, status_details):
         pass
-    
+
     def set_step(self, description):
         pass
-    
+
     def log(self, level, content):
         pass
-    
+
     def check(self, description, outcome, details=None):
         pass
 
 class ReportingBackend:
     def is_available(self):
         return True
-    
+
     def get_capabilities(self):
         capabilities = 0
         if object_has_method(self, "create_reporting_session"):
@@ -94,13 +94,13 @@ class ReportingBackend:
         if object_has_method(self, "load_report"):
             capabilities |= CAPABILITY_LOAD_REPORT
         return capabilities
-    
+
 #     def create_reporting_session(self, dir, report):
 #         method_not_implemented("create_reporting_session", self)
-#       
+#
 #     def save_report(self, filename, report):
 #         method_not_implemented("serialize_report", self)
-#       
+#
 #     def load_report(self, filename):
 #         method_not_implemented("unserialize_report", self)
 
@@ -110,25 +110,25 @@ class FileReportSession(ReportingSession):
         self.report = report
         self.save_func = save_func
         self.save_mode = save_mode
-    
+
     def save(self):
         self.save_func(self.report_filename, self.report)
-    
+
     def _handle_code_end(self, is_failure):
         if (self.save_mode == SAVE_AT_EACH_TEST) or (self.save_mode == SAVE_AT_EACH_FAILED_TEST and is_failure):
             self.save()
             return
-            
+
     def end_test_session_setup(self):
         self._handle_code_end(
             self.report.test_session_setup.has_failure() if self.report.test_session_setup else False
         )
-    
+
     def end_test_session_teardown(self):
         self._handle_code_end(
             self.report.test_session_teardown.has_failure() if self.report.test_session_teardown else False
         )
-    
+
     def end_suite_setup(self, testsuite):
         suite_data = self.report.get_suite(testsuite.name)
         self._handle_code_end(
@@ -140,32 +140,32 @@ class FileReportSession(ReportingSession):
         self._handle_code_end(
             suite_data.suite_teardown.has_failure() if suite_data.suite_teardown else False
         )
-    
+
     def end_test(self, test, status):
         self._handle_code_end(test)
-    
+
     def end_suite(self, testsuite):
         if self.save_mode == SAVE_AT_EACH_TESTSUITE:
             self.save()
-    
+
     def log(self, level, content):
         if self.save_mode == SAVE_AT_EACH_EVENT:
             self.save()
-    
+
     def check(self, description, outcome, details=None):
         if self.save_mode == SAVE_AT_EACH_EVENT:
             self.save()
-    
+
     def end_tests(self):
         self.save()
 
 class FileReportBackend(ReportingBackend):
     def __init__(self, save_mode=SAVE_AT_EACH_FAILED_TEST):
         self.save_mode = save_mode
-    
+
     def get_report_filename(self):
         method_not_implemented("get_report_filename", self)
-    
+
     def create_reporting_session(self, report_dir, report):
         return FileReportSession(
             os.path.join(report_dir, self.get_report_filename()), report, self.save_report, self.save_mode

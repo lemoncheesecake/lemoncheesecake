@@ -30,7 +30,7 @@ def project(tmpdir):
 
 def test_tree_default_options(project, cmdout):
     assert main(["tree"]) == 0
-    
+
     cmdout.assert_substrs_in_line(0, ["mysuite", "suite_prop", "suite_prop_value", "suite_tag", "#1234"])
     cmdout.assert_substrs_in_line(1, ["mysuite.mytest", "test_prop", "test_prop_value", "test_tag", "#1235"])
 

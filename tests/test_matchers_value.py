@@ -8,7 +8,7 @@ def test_equal_to_success():
 def test_equal_to_success_with_details():
     from lemoncheesecake import matching
     matching.DISPLAY_DETAILS_WHEN_EQUAL = False
-    
+
     try:
         result = equal_to(1).matches(1)
         assert result.is_success()

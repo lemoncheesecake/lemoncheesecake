@@ -34,14 +34,14 @@ class IsValueOfType(Matcher):
         self.types = types
         self.type_name = type_name
         self.value_matcher = value_matcher
-    
+
     def description(self, conjugate=False):
         ret = "%s %s" % (to_be(conjugate), self.type_name)
         if self.value_matcher:
             ret += " that %s" % self.value_matcher.description(conjugate=True)
-        
+
         return ret
-    
+
     def matches(self, actual):
         if type(actual) in self.types:
             if self.value_matcher:

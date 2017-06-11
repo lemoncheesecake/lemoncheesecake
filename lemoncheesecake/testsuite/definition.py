@@ -15,7 +15,7 @@ __all__ = "add_test_in_testsuite", "add_tests_in_testsuite", "get_metadata", \
 
 class Metadata:
     _next_rank = 1
-    
+
     def __init__(self):
         self.is_test = False
         self.is_testsuite = False
@@ -35,10 +35,10 @@ def add_test_in_testsuite(test, suite, before_test=None, after_test=None):
     # pre-checks
     if before_test and after_test:
         raise ProgrammingError("before_test and after_test are mutually exclusive")
-    
+
     if hasattr(suite, test.name):
         raise ProgrammingError("Object %s has already an attribute named '%s'" % (suite, test.name))
-    
+
     # build test func metadata
     md = test.callback._lccmetadata = Metadata()
     md.is_test = True
@@ -47,7 +47,7 @@ def add_test_in_testsuite(test, suite, before_test=None, after_test=None):
     md.tags.extend(test.tags)
     md.properties.update(test.properties)
     md.links.extend(test.links)
-    
+
     # set test func rank
     if before_test or after_test:
         ref_test_name = before_test if before_test else after_test
@@ -56,7 +56,7 @@ def add_test_in_testsuite(test, suite, before_test=None, after_test=None):
             ref_test_obj = next(t for t in test_methods if t._lccmetadata.name == ref_test_name)
         except StopIteration:
             raise ProgrammingError("There is no base test named '%s' in class %s" % (ref_test_name, suite))
-        
+
         if before_test:
             md.rank = ref_test_obj._lccmetadata.rank
             for test_method in filter(lambda t: t._lccmetadata.rank >= md.rank , test_methods):
@@ -67,14 +67,14 @@ def add_test_in_testsuite(test, suite, before_test=None, after_test=None):
                 test_method._lccmetadata.rank -= 1
     else:
         md.rank = get_metadata_next_rank()
-    
-    # set test func and suite test method 
+
+    # set test func and suite test method
     setattr(suite, test.name, test.callback.__get__(suite))
 
 def add_tests_in_testsuite(tests, suite, before_test=None, after_test=None):
     if before_test and after_test:
         raise ProgrammingError("before_test and after_test are mutually exclusive")
-     
+
     if after_test:
         previous_test = after_test
         for test in tests:
@@ -87,7 +87,7 @@ def add_tests_in_testsuite(tests, suite, before_test=None, after_test=None):
 _objects_with_metadata = []
 def get_metadata(obj):
     global _objects_with_metadata
-    
+
     if hasattr(obj, "_lccmetadata"):
         if obj not in _objects_with_metadata: # metadata comes from the superclass
             obj._lccmetadata = copy.deepcopy(obj._lccmetadata)

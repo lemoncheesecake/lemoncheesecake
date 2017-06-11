@@ -13,10 +13,10 @@ class MatchResult:
     def __init__(self, outcome, description):
         self.outcome = outcome
         self.description = description
-    
+
     def is_success(self):
         return self.outcome == True
-    
+
     def is_failure(self):
         return self.outcome == False
 
@@ -32,7 +32,7 @@ def match_result(outcome, description=None):
 class Matcher:
     def description(self, conjugate=False):
         method_not_implemented("description", self)
-    
+
     def matches(self, actual):
         method_not_implemented("match", self)
 
