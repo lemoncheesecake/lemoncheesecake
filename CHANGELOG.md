@@ -1,3 +1,7 @@
+# 0.8.10 (2017-06-13)
+
+- Rename JSON report data file from 'report.json' into 'report.js' in order to avoid Chrome security policy issue when the report is served by a web server
+
 # 0.8.9 (2017-06-10)
 
 - rename `lcc show` command into `lcc tree`
