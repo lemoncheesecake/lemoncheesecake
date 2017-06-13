@@ -52,7 +52,7 @@ else:
 
     def test_load_reports_from_dir(tmpdir, sample_report):
         save_xml(sample_report, tmpdir.join("report.xml").strpath)
-        save_json(sample_report, tmpdir.join("report.json").strpath)
+        save_json(sample_report, tmpdir.join("report.js").strpath)
         tmpdir.join("report.txt").write("foobar")
         reports = load_reports_from_dir(tmpdir.strpath)
         assert_report(reports[0][0], sample_report)

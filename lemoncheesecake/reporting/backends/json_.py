@@ -220,7 +220,7 @@ class JsonBackend(FileReportBackend):
         self.pretty_formatting = pretty_formatting
 
     def get_report_filename(self):
-        return "report.json"
+        return "report.js"
 
     def save_report(self, filename, report):
         save_report_into_file(

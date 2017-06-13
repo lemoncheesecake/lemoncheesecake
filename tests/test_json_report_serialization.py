@@ -16,7 +16,7 @@ def backend():
     return JsonBackend()
 
 def test_load_report_non_json(tmpdir):
-    file = tmpdir.join("report.json")
+    file = tmpdir.join("report.js")
     file.write("foobar")
     with pytest.raises(InvalidReportFile):
         load_report_from_file(file.strpath)
