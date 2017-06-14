@@ -1,3 +1,8 @@
+# 0.8.11 (2017-06-15)
+
+- **HTML report**: fix offline mode regression (.html file not loading the correct .js file) introduced in 0.8.10
+- **HTML report**: make links associated to tests and testsuites opened in new tab
+
 # 0.8.10 (2017-06-13)
 
 - Rename JSON report data file from 'report.json' into 'report.js' in order to avoid Chrome security policy issue when the report is served by a web server
