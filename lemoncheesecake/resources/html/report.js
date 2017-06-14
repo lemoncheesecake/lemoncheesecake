@@ -131,7 +131,7 @@ Test.prototype = {
 		/* build links column */
 		var $links = $.map(this.data.links, function (link) {
 			var label = link.name ? link.name : link.url;
-			return "<a href='" + escapeHtml(link.url) + "' title='" + escapeHtml(label) + "'>" + escapeHtml(label) + "</a>";
+			return "<a href='" + escapeHtml(link.url) + "' title='" + escapeHtml(label) + "' target='_blank'>" + escapeHtml(label) + "</a>";
 		}).join(", ");
 		cols.push($("<td>").append($links));
 
@@ -238,7 +238,7 @@ TestSuite.prototype = {
 				$panel_heading.append($("<span style='font-size: 75%'>links: " +
 					$.map(this.data.links, function (link) {
 						var label = link.name ? link.name : link.url;
-						return "<a href='" + escapeHtml(link.url) + "' title='" + escapeHtml(label) + "'>" + escapeHtml(label) + "</a>";
+						return "<a href='" + escapeHtml(link.url) + "' title='" + escapeHtml(label) + "' target='_blank'>" + escapeHtml(label) + "</a>";
 				}).join(", ")));
 			}
 			var $panel = $("<div class='panel panel-default ' style='margin-left:" + (0 * this.parents.length) + "px'>")
