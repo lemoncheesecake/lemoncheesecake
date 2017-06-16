@@ -328,10 +328,10 @@ def assert_hook_data(actual, expected):
 def assert_testsuite_data(actual, expected):
     assert actual.name == expected.name
     assert actual.description == expected.description
-    if expected.parent == None:
-        assert actual.parent == None
+    if expected.parent_suite == None:
+        assert actual.parent_suite == None
     else:
-        assert actual.parent.name == expected.parent.name
+        assert actual.parent_suite.name == expected.parent_suite.name
     assert actual.tags == expected.tags
     assert actual.properties == expected.properties
     assert actual.links == expected.links

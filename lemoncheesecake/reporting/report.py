@@ -83,6 +83,7 @@ class TestData:
     def __init__(self, name, description):
         self.name = name
         self.description = description
+        self.parent_suite = None
         self.tags = [ ]
         self.properties = {}
         self.links = [ ]
@@ -109,10 +110,10 @@ class HookData:
         return len(self.steps) == 0
 
 class TestSuiteData:
-    def __init__(self, name, description, parent=None):
+    def __init__(self, name, description):
         self.name = name
         self.description = description
-        self.parent = parent
+        self.parent_suite = None
         self.tags = [ ]
         self.properties = {}
         self.links = [ ]
@@ -120,6 +121,14 @@ class TestSuiteData:
         self.tests = [ ]
         self.sub_testsuites = [ ]
         self.suite_teardown = None
+    
+    def add_test(self, test):
+        test.parent_suite = self
+        self.tests.append(test)
+    
+    def add_suite(self, suite):
+        suite.parent_suite = self
+        self.sub_testsuites.append(suite)
 
     def get_test(self, test_name):
         for test in self.tests:
@@ -215,6 +224,9 @@ class Report:
 
     def add_info(self, name, value):
         self.info.append([name, value])
+    
+    def add_suite(self, suite):
+        self.testsuites.append(suite)
 
     def get_test(self, test_name):
         for suite in self.testsuites:
