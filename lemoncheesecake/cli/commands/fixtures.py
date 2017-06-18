@@ -8,7 +8,7 @@ from __future__ import print_function
 
 from lemoncheesecake.cli.display import print_table
 from lemoncheesecake.cli.command import Command
-from lemoncheesecake.testsuite import walk_tests
+from lemoncheesecake.testtree import walk_tests
 from lemoncheesecake.project import find_project_file, Project
 from lemoncheesecake.exceptions import ProjectError, ProgrammingError
 

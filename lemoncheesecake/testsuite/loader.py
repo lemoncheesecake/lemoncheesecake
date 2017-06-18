@@ -76,7 +76,7 @@ def load_testsuite_from_class(klass):
         suite.add_test(load_test_from_method(test_method))
 
     for sub_suite_klass in get_sub_suites_from_class(inst):
-        suite.add_sub_testsuite(load_testsuite_from_class(sub_suite_klass))
+        suite.add_suite(load_testsuite_from_class(sub_suite_klass))
 
     return suite
 
@@ -113,7 +113,7 @@ def load_testsuite_from_module(mod):
         sub_suites.append(load_testsuite_from_class(klass))
     sub_suites.sort(key=lambda suite: suite.rank)
     for sub_suite in sub_suites:
-        suite.add_sub_testsuite(sub_suite)
+        suite.add_suite(sub_suite)
 
     return suite
 
@@ -181,7 +181,7 @@ def load_testsuites_from_directory(dir, recursive=True):
             subsuites_dir = strip_py_ext(filename)
             if osp.isdir(subsuites_dir):
                 for sub_suite in load_testsuites_from_directory(subsuites_dir, recursive=True):
-                    suite.add_sub_testsuite(sub_suite)
+                    suite.add_suite(sub_suite)
         suites.append(suite)
     suites.sort(key=lambda suite: suite.rank)
     return suites

@@ -136,12 +136,12 @@ def _serialize_testsuite_data(suite):
         _serialize_hook_data(suite.suite_setup, _xml_child(suite_node, "suite-setup"))
 
     # tests
-    for test in suite.tests:
+    for test in suite.get_tests():
         test_node = _serialize_test_data(test)
         suite_node.append(test_node)
 
     # sub suites
-    for sub_suite in suite.sub_testsuites:
+    for sub_suite in suite.get_suites():
         sub_suite_node = _serialize_testsuite_data(sub_suite)
         suite_node.append(sub_suite_node)
 

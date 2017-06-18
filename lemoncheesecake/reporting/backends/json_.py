@@ -81,8 +81,8 @@ def _serialize_hook_data(hook_data):
 def _serialize_testsuite_data(suite):
     json_suite = _serialize_common_data(suite)
     json_suite.update(_dict(
-        "tests", [ _serialize_test_data(t) for t in suite.tests ],
-        "sub_suites", [ _serialize_testsuite_data(s) for s in suite.sub_testsuites ]
+        "tests", [ _serialize_test_data(t) for t in suite.get_tests() ],
+        "sub_suites", [ _serialize_testsuite_data(s) for s in suite.get_suites() ]
     ))
     if suite.suite_setup:
         json_suite["suite_setup"] = _serialize_hook_data(suite.suite_setup)

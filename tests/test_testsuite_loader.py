@@ -50,7 +50,7 @@ def test_load_testsuites_from_directory_with_subdir(tmpdir):
     file.write(build_test_module("childsuite"))
     klasses = load_testsuites_from_directory(tmpdir.strpath)
     assert klasses[0].name == "parentsuite"
-    assert len(klasses[0].get_sub_testsuites()) == 1
+    assert len(klasses[0].get_suites()) == 1
 
 def test_load_testsuites_from_files(tmpdir):
     for name in "testsuite1", "testsuite2", "mysuite":
@@ -90,10 +90,10 @@ def test_load_suites_with_same_name():
 
     suites = load_testsuites_from_classes([MySuite1, MySuite2])
 
-    assert suites[0].get_suite_name() == "MySuite1"
-    assert suites[0].get_sub_testsuites()[0].get_suite_name() == "MySubSuite"
-    assert suites[1].get_suite_name() == "MySuite2"
-    assert suites[1].get_sub_testsuites()[0].get_suite_name() == "MySubSuite"
+    assert suites[0].name == "MySuite1"
+    assert suites[0].get_suites()[0].name == "MySubSuite"
+    assert suites[1].name == "MySuite2"
+    assert suites[1].get_suites()[0].name == "MySubSuite"
 
 def test_load_tests_with_same_name():
     @lcc.testsuite("My Suite 1")
@@ -114,12 +114,12 @@ def test_load_tests_with_same_name():
 
     suites = load_testsuites_from_classes([MySuite1, MySuite2])
 
-    assert suites[0].get_suite_name() == "MySuite1"
-    assert suites[0].get_sub_testsuites()[0].get_suite_name() == "MySubSuite1"
-    assert suites[0].get_sub_testsuites()[0].get_tests()[0].name == "foo"
-    assert suites[1].get_suite_name() == "MySuite2"
-    assert suites[1].get_sub_testsuites()[0].get_suite_name() == "MySubSuite2"
-    assert suites[1].get_sub_testsuites()[0].get_tests()[0].name == "foo"
+    assert suites[0].name == "MySuite1"
+    assert suites[0].get_suites()[0].name == "MySubSuite1"
+    assert suites[0].get_suites()[0].get_tests()[0].name == "foo"
+    assert suites[1].name == "MySuite2"
+    assert suites[1].get_suites()[0].name == "MySubSuite2"
+    assert suites[1].get_suites()[0].get_tests()[0].name == "foo"
 
 def test_metadata_policy():
     @lcc.testsuite("My Suite 1")
@@ -271,7 +271,7 @@ class subsuite:
         pass
 """)
     suite = load_testsuite_from_file(file.strpath)
-    sub_suite = suite.get_sub_testsuites()[0]
+    sub_suite = suite.get_suites()[0]
     assert sub_suite.name == "subsuite"
     assert sub_suite.description == "Sub Suite"
 
@@ -333,7 +333,7 @@ def mytest2():
 )
     suites = load_testsuites_from_directory(tmpdir.strpath)
     suite = suites[0]
-    sub_suite = suite.get_sub_testsuites()[0]
+    sub_suite = suite.get_suites()[0]
     assert sub_suite.name == "subsuite"
     assert sub_suite.description == "Sub Suite"
     assert sub_suite.parent_suite == suite

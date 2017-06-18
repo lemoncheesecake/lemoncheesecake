@@ -190,22 +190,22 @@ class FixtureRegistry:
     def check_fixtures_in_test(self, test, suite):
         for fixture in test.get_params():
             if fixture not in self._fixtures:
-                raise FixtureError("Unknown fixture '%s' used in test '%s'" % (fixture, test.get_path_str()))
+                raise FixtureError("Unknown fixture '%s' used in test '%s'" % (fixture, test.get_path_as_str()))
 
     def check_fixtures_in_testsuite(self, suite):
         if suite.has_hook("setup_suite"):
             for fixture in suite.get_hook_params("setup_suite"):
                 if fixture not in self._fixtures:
-                    raise FixtureError("Unknown fixture '%s' used in setup_suite of suite '%s'" % (fixture, suite.get_path_str()))
+                    raise FixtureError("Unknown fixture '%s' used in setup_suite of suite '%s'" % (fixture, suite.get_path_as_str()))
                 if self._fixtures[fixture].get_scope_level() < SCOPE_LEVELS["testsuite"]:
                     raise FixtureError("In suite '%s' setup_suite uses fixture '%s' which has an incompatible scope" % (
-                        suite.get_path_str(), fixture
+                        suite.get_path_as_str(), fixture
                     ))
 
         for test in suite.get_tests():
             self.check_fixtures_in_test(test, suite)
 
-        for sub_suite in suite.get_sub_testsuites():
+        for sub_suite in suite.get_suites():
             self.check_fixtures_in_testsuite(sub_suite)
 
     def check_fixtures_in_testsuites(self, suites):

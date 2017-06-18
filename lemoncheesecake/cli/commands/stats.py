@@ -10,7 +10,8 @@ from functools import reduce
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.display import print_table
 from lemoncheesecake.cli.utils import filter_testsuites_from_cli_args
-from lemoncheesecake.testsuite import add_filter_args_to_cli_parser, walk_testsuites
+from lemoncheesecake.testsuite import add_filter_args_to_cli_parser
+from lemoncheesecake.testtree import walk_testsuites
 from lemoncheesecake.project import find_project_file, Project
 from lemoncheesecake.exceptions import ProjectError, ProgrammingError
 
