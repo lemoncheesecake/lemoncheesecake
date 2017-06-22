@@ -37,7 +37,7 @@ def ends_with(s):
     return EndsWith(s)
 
 class ContainsString(MatchExpected):
-    def description(self, conjugate):
+    def description(self, conjugate=False):
         return '%s with "%s"' % ("contains" if conjugate else "to contain", self.expected)
 
     def matches(self, actual):
