@@ -1,117 +1,78 @@
+from helpers import assert_match_success, assert_match_failure, run_func_in_test, reporting_session
+
 from lemoncheesecake.matching.matchers import *
+from lemoncheesecake.matching import check_that
 
 def test_equal_to_success():
-    result = equal_to(1).matches(1)
-    assert result.is_success()
-    assert "1" in result.description
+    assert_match_success(equal_to(1), 1, "1")
 
-def test_equal_to_success_with_details():
+def test_equal_to_success_with_details(reporting_session):
     from lemoncheesecake import matching
     matching.DISPLAY_DETAILS_WHEN_EQUAL = False
 
     try:
-        result = equal_to(1).matches(1)
-        assert result.is_success()
-        assert result.description == None
+        run_func_in_test(lambda: check_that("value", 1, equal_to(1)))
+        assert reporting_session.last_check_outcome == True
+        assert reporting_session.last_check_details == None
     finally:
         matching.DISPLAY_DETAILS_WHEN_EQUAL = True
 
 def test_equal_to_failure():
-    result = equal_to(1).matches(2)
-    assert result.is_failure()
-    assert "2" in result.description
+    assert_match_failure(equal_to(1), 2, "2")
 
 def test_not_equal_to_success():
-    result = not_equal_to(1).matches(2)
-    assert result.is_success()
-    assert "2" in result.description
+    assert_match_success(not_equal_to(1), 2, "2")
 
 def test_not_equal_to_failure():
-    result = not_equal_to(1).matches(1)
-    assert result.is_failure()
-    assert "1" in result.description
+    assert_match_failure(not_equal_to(1), 1, "1")
 
 def test_greater_than_success():
-    result = greater_than(1).matches(2)
-    assert result.is_success()
-    assert "2" in result.description
+    assert_match_success(greater_than(1), 2, "2")
 
 def test_greater_than_failure():
-    result = greater_than(1).matches(1)
-    assert result.is_failure()
-    assert "1" in result.description
+    assert_match_failure(greater_than(1), 1, "1")
 
 def test_greater_than_or_equal_to_success():
-    result = greater_than_or_equal_to(1).matches(1)
-    assert result.is_success()
-    assert "1" in result.description
+    assert_match_success(greater_than_or_equal_to(1), 1, "1")
 
 def test_greater_than_or_equal_to_failure():
-    result = greater_than_or_equal_to(1).matches(0)
-    assert result.is_failure()
-    assert "0" in result.description
+    assert_match_failure(greater_than_or_equal_to(1), 0, "0")
 
 def test_less_than_success():
-    result = less_than(1).matches(0)
-    assert result.is_success()
-    assert "0" in result.description
+    assert_match_success(less_than(1), 0, "0")
 
 def test_less_than_failure():
-    result = less_than(1).matches(1)
-    assert result.is_failure()
-    assert "1" in result.description
+    assert_match_failure(less_than(1), 1, "1")
 
 def test_less_than_or_equal_to_success():
-    result = less_than_or_equal_to(1).matches(1)
-    assert result.is_success()
-    assert "1" in result.description
+    assert_match_success(less_than_or_equal_to(1), 1, "1")
 
 def test_less_than_or_equal_to_failure():
-    result = less_than_or_equal_to(1).matches(2)
-    assert result.is_failure()
-    assert "2" in result.description
+    assert_match_failure(less_than_or_equal_to(1), 2, "2")
 
 def test_is_between_success():
-    result = is_between(1, 3).matches(2)
-    assert result.is_success()
-    assert "2" in result.description
+    assert_match_success(is_between(1, 3), 2, "2")
 
 def test_is_between_failure():
-    result = is_between(1, 3).matches(4)
-    assert result.is_failure()
-    assert "4" in result.description
+    assert_match_failure(is_between(1, 3), 4, "4")
 
 def test_is_none_success():
-    result = is_none().matches(None)
-    assert result.is_success()
-    assert "null" in result.description
+    assert_match_success(is_none(), None, "null")
 
 def test_is_none_failure():
-    result = is_none().matches("foo")
-    assert result.is_failure()
-    assert "foo" in result.description
+    assert_match_failure(is_none(), "foo", "foo")
 
 def test_is_not_none_success():
-    result = is_not_none().matches("foo")
-    assert result.is_success()
-    assert "foo" in result.description
+    assert_match_success(is_not_none(), "foo", "foo")
 
 def test_is_not_none_failure():
-    result = is_not_none().matches(None)
-    assert result.is_failure()
-    assert "null" in result.description
+    assert_match_failure(is_not_none(), None, "null")
 
 def test_has_length_success():
-    result = has_length(3).matches("foo")
-    assert result.is_success()
-    assert "3" in result.description
+    assert_match_success(has_length(3), "foo", "3")
 
 def test_has_length_with_matcher_success():
-    result = has_length(greater_than(2)).matches("foo")
-    assert result.is_success()
-    assert "3" in result.description
+    assert_match_success(has_length(greater_than(2)), "foo", "3")
 
 def test_has_length_failure():
-    result = has_length(3).matches("foobar")
-    assert result.is_failure()
-    assert "6" in result.description
+    assert_match_failure(has_length(3), "foobar", "6")

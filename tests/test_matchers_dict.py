@@ -1,33 +1,23 @@
 # -*- coding: utf-8 -*-
 
+from helpers import assert_match_success, assert_match_failure
+
 from lemoncheesecake.matching.matchers import *
 
 def test_has_entry_success():
-    result = has_entry("foo").matches({"foo": "bar"})
-    assert result.is_success()
-    assert "bar" in result.description
+    assert_match_success(has_entry("foo"), {"foo": "bar"}, "bar")
 
 def test_has_entry_with_matcher_success():
-    result = has_entry("foo", equal_to("bar")).matches({"foo": "bar"})
-    assert result.is_success()
-    assert "bar" in result.description
+    assert_match_success(has_entry("foo", equal_to("bar")), {"foo": "bar"}, "bar")
 
 def test_has_entry_failure():
-    result = has_entry("foo").matches({})
-    assert result.is_failure()
-    assert "No entry" in result.description
+    assert_match_failure(has_entry("foo"), {}, "No entry")
 
 def test_has_entry_with_matcher_failure():
-    result = has_entry("foo", equal_to("bar")).matches({"foo": "baz"})
-    assert result.is_failure()
-    assert "baz" in result.description
+    assert_match_failure(has_entry("foo", equal_to("bar")), {"foo": "baz"}, "baz")
 
 def test_has_entry_using_list_success():
-    result = has_entry(["foo", "bar"]).matches({"foo": {"bar": "baz"}})
-    assert result.is_success()
-    assert "baz" in result.description
+    assert_match_success(has_entry(["foo", "bar"]), {"foo": {"bar": "baz"}}, "baz")
 
 def test_has_entry_using_list_failure():
-    result = has_entry(["foo", "bar"]).matches({"foo": "baz"})
-    assert result.is_failure()
-    assert "No entry" in result.description
+    assert_match_failure(has_entry(["foo", "bar"]), {"foo": "baz"}, "No entry")

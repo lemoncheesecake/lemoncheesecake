@@ -2,49 +2,33 @@
 
 import re
 
+from helpers import assert_match_success, assert_match_failure
+
 from lemoncheesecake.matching.matchers import *
 
 def test_starts_with_success():
-    result = starts_with("foo").matches("foobar")
-    assert result.is_success()
-    assert "foobar" in result.description
+    assert_match_success(starts_with("foo"), "foobar", "foo")
 
 def test_starts_with_failure():
-    result = starts_with("foo").matches("bar")
-    assert result.is_failure()
-    assert "bar" in result.description
+    assert_match_failure(starts_with("foo"), "bar", "bar")
 
 def test_ends_with_success():
-    result = ends_with("bar").matches("foobar")
-    assert result.is_success()
-    assert "foobar" in result.description
+    assert_match_success(ends_with("bar"), "foobar", "foobar")
 
 def test_ends_with_failure():
-    result = ends_with("foo").matches("bar")
-    assert result.is_failure()
-    assert "bar" in result.description
+    assert_match_failure(ends_with("foo"), "bar", "bar")
 
 def test_contains_string_with_success():
-    result = contains_string("ob").matches("foobar")
-    assert result.is_success()
-    assert "foobar" in result.description
+    assert_match_success(contains_string("ob"), "foobar", "foobar")
 
 def test_contains_string_with_failure():
-    result = contains_string("ob").matches("baz")
-    assert result.is_failure()
-    assert "baz" in result.description
+    assert_match_failure(contains_string("ob"), "baz", "baz")
 
 def test_match_pattern_success():
-    result = match_pattern("^f").matches("foo")
-    assert result.is_success()
-    assert "foo" in result.description
+    assert_match_success(match_pattern("^f"), "foo", "foo")
 
 def test_match_pattern_with_pattern_success():
-    result = match_pattern(re.compile("^foo", re.IGNORECASE)).matches("FOOBAR")
-    assert result.is_success()
-    assert "FOOBAR" in result.description
+    assert_match_success(match_pattern(re.compile("^foo", re.IGNORECASE)), "FOOBAR", "FOOBAR")
 
 def test_match_pattern_failure():
-    result = match_pattern("^f").matches("bar")
-    assert result.is_failure()
-    assert "bar" in result.description
+    assert_match_failure(match_pattern("^f"), "bar", "bar")
