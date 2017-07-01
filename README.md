@@ -557,7 +557,7 @@ In addition to the main sub command `run`, the `lcc` command provides other sub 
 
 - Show the tests hierarchy with metadata:
   ```
-  $ lcc tree
+  $ lcc show
   * suite_1:
       - suite_1.test_1 (slow, priority:low)
       - suite_1.test_2 (priority:low)
