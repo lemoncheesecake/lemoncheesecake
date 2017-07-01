@@ -34,7 +34,6 @@ class mysuite:
         lcc.check_that("val", fixt, lcc.equal_to(42))
 """
 
-
 @pytest.fixture()
 def project(tmpdir):
     generate_project(tmpdir.strpath, "mysuite", TEST_MODULE)
@@ -44,6 +43,10 @@ def project(tmpdir):
     os.chdir(old_cwd)
 
 @pytest.fixture()
+def failing_project(project):
+    return project
+
+@pytest.fixture()
 def project_with_fixtures(tmpdir):
     generate_project(tmpdir.strpath, "mysuite", TEST_MODULE_USING_FIXTURES, FIXTURE_MODULE)
     old_cwd = os.getcwd()
@@ -51,30 +54,40 @@ def project_with_fixtures(tmpdir):
     yield
     os.chdir(old_cwd)
 
+@pytest.fixture()
+def successful_project(project_with_fixtures):
+    return project_with_fixtures
+
+def assert_run_output(cmdout, suite_name, successful_tests=[], failed_tests=[], skipped_tests=[]):
+    cmdout.assert_lines_match("= %s =" % suite_name)
+    for test in successful_tests:
+        cmdout.assert_lines_match("OK.+%s" % test)
+    for test in failed_tests + skipped_tests:
+        cmdout.assert_lines_match("KO.+%s" % test)
+    cmdout.assert_lines_match("Tests: %d" % (len(successful_tests + failed_tests + skipped_tests)))
+    cmdout.assert_lines_match("Successes: %d" % len(successful_tests))
+    cmdout.assert_lines_match("Failures: %d" % len(failed_tests))
+    if len(skipped_tests) > 0:
+        cmdout.assert_lines_match("Skipped: %d" % len(skipped_tests))
+
 def test_run(project, cmdout):
     assert main(["run"]) == 0
-
-    cmdout.assert_lines_match(".+= mysuite =.+")
-    cmdout.assert_lines_match(".+KO.+mytest1.+")
-    cmdout.assert_lines_match(".+OK.+mytest2.+")
-    cmdout.assert_lines_match(".+Tests: 2")
-    cmdout.assert_lines_match(".+Successes: 1")
-    cmdout.assert_lines_match(".+Failures: 1")
+    assert_run_output(cmdout, "mysuite", successful_tests=["mytest2"], failed_tests=["mytest1"])
 
 def test_run_with_filter(project, cmdout):
     assert main(["run", "mysuite.mytest1"]) == 0
-
-    cmdout.assert_lines_match(".+= mysuite =.+")
-    cmdout.assert_lines_match(".+KO.+mytest1.+")
-    cmdout.assert_lines_match(".+Tests: 1")
-    cmdout.assert_lines_match(".+Successes: 0")
-    cmdout.assert_lines_match(".+Failures: 1")
+    assert_run_output(cmdout, "mysuite", failed_tests=["mytest1"])
 
 def test_project_with_fixtures(project_with_fixtures, cmdout):
     assert main(["run", "mysuite.mytest1"]) == 0
+    assert_run_output(cmdout, "mysuite", successful_tests=["mytest1"])
 
-    cmdout.assert_lines_match(".+= mysuite =.+")
-    cmdout.assert_lines_match(".+OK.+mytest1.+")
-    cmdout.assert_lines_match(".+Tests: 1")
-    cmdout.assert_lines_match(".+Successes: 1")
-    cmdout.assert_lines_match(".+Failures: 0")
+def test_stop_on_failure(project, cmdout):
+    assert main(["run", "--stop-on-failure"]) == 0
+    assert_run_output(cmdout, "mysuite", failed_tests=["mytest1"], skipped_tests=["mytest2"])
+
+def test_exit_error_on_failure_successful_testsuite(successful_project):
+    assert main(["run", "--exit-error-on-failure"]) == 0
+
+def test_exit_error_on_failure_failing_testsuite(failing_project):
+    assert main(["run", "--exit-error-on-failure"]) == 1

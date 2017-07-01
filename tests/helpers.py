@@ -189,7 +189,7 @@ def get_reporting_session():
 def reporting_session():
     return get_reporting_session()
 
-def run_testsuites(suites, filter=None, fixtures=None, backends=None, tmpdir=None):
+def run_testsuites(suites, filter=None, fixtures=None, backends=None, tmpdir=None, stop_on_failure=False):
     global _reporting_session
 
     if fixtures == None:
@@ -214,14 +214,14 @@ def run_testsuites(suites, filter=None, fixtures=None, backends=None, tmpdir=Non
         try:
             report_dir = os.path.join(tmpdir.strpath, "report")
             os.mkdir(report_dir)
-            runner.run_testsuites(suites, fixture_registry, backends, report_dir)
+            runner.run_testsuites(suites, fixture_registry, backends, report_dir, stop_on_failure=stop_on_failure)
         finally:
             _reporting_session = None
     else:
         report_dir = os.path.join(tempfile.mkdtemp(), "report")
         os.mkdir(report_dir)
         try:
-            runner.run_testsuites(suites, fixture_registry, backends, report_dir)
+            runner.run_testsuites(suites, fixture_registry, backends, report_dir, stop_on_failure=stop_on_failure)
         finally:
             shutil.rmtree(report_dir)
             # reset _reporting_session (either it has been set or not) at the end of each test run
@@ -229,16 +229,16 @@ def run_testsuites(suites, filter=None, fixtures=None, backends=None, tmpdir=Non
 
     dump_report(get_runtime().report)
 
-def run_testsuite_classes(suite_classes, filter=None, fixtures=None, backends=None, tmpdir=None):
+def run_testsuite_classes(suite_classes, filter=None, fixtures=None, backends=None, tmpdir=None, stop_on_failure=False):
     suites = load_testsuites_from_classes(suite_classes)
-    run_testsuites(suites, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir)
+    run_testsuites(suites, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
 
-def run_testsuite(suite, filter=None, fixtures=None, backends=[], tmpdir=None):
-    run_testsuites([suite], filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir)
+def run_testsuite(suite, filter=None, fixtures=None, backends=[], tmpdir=None, stop_on_failure=False):
+    run_testsuites([suite], filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
 
-def run_testsuite_class(suite_class, filter=None, fixtures=None, backends=[], tmpdir=None):
+def run_testsuite_class(suite_class, filter=None, fixtures=None, backends=[], tmpdir=None, stop_on_failure=False):
     suite = load_testsuite_from_class(suite_class)
-    run_testsuite(suite, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir)
+    run_testsuite(suite, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
 
 def run_func_in_test(callback):
     @lcc.testsuite("My Suite")

@@ -14,11 +14,12 @@ from lemoncheesecake.exceptions import AbortTest, AbortTestSuite, AbortAllTests,
     UserError, serialize_current_exception
 
 class _Runner:
-    def __init__(self, testsuites, fixture_registry, reporting_backends, report_dir):
+    def __init__(self, testsuites, fixture_registry, reporting_backends, report_dir, stop_on_failure=False):
         self.testsuites = testsuites
         self.fixture_registry = fixture_registry
         self.reporting_backends = reporting_backends
         self.report_dir = report_dir
+        self.stop_on_failure = stop_on_failure
 
     def get_fixtures_with_dependencies_for_scope(self, direct_fixtures, scope):
         fixtures = []
@@ -157,6 +158,9 @@ class _Runner:
                 test_setup_error = True
         else:
             teardown_funcs = [p[1] for p in setup_teardown_funcs if p[1] != None]
+        
+        if self.stop_on_failure and test_setup_error:
+            self.abort_all_tests = True
 
         ###
         # Run test:
@@ -175,6 +179,9 @@ class _Runner:
             self.session.begin_test_teardown()
             self.run_teardown_funcs(teardown_funcs)
             self.session.end_test_teardown()
+
+        if self.stop_on_failure and self.session.current_test_data.has_failure():
+            self.abort_all_tests = True
 
         self.session.end_test()
 
@@ -207,6 +214,9 @@ class _Runner:
                     self.abort_testsuite = suite
             else:
                 teardown_funcs = [p[1] for p in setup_teardown_funcs if p[1] != None]
+            
+            if self.stop_on_failure and self.abort_testsuite:
+                self.abort_all_tests = True
 
         ###
         # Run tests
@@ -220,9 +230,10 @@ class _Runner:
         if len(list(filter(lambda f: f != None, teardown_funcs))) > 0:
             self.session.begin_suite_teardown()
             self.run_teardown_funcs(teardown_funcs)
+            if self.stop_on_failure and self.session.current_testsuite_data.suite_teardown.has_failure():
+                self.abort_all_tests = True
             self.session.end_suite_teardown()
-
-
+        
         # reset the abort suite flag
         if self.abort_testsuite:
             self.abort_testsuite = None
@@ -313,8 +324,10 @@ class _Runner:
 
         if errors:
             raise FixtureError("\n".join(errors))
+        
+        return self.session.is_successful()
 
-def run_testsuites(testsuites, fixture_registry, reporting_backends, report_dir):
+def run_testsuites(testsuites, fixture_registry, reporting_backends, report_dir, stop_on_failure=False):
     """
     Run testsuites.
 
@@ -322,5 +335,5 @@ def run_testsuites(testsuites, fixture_registry, reporting_backends, report_dir)
     - reporting_backends: instance of reporting backends that will be used to report test results
     - report_dir: an existing directory where report files will be stored
     """
-    runner = _Runner(testsuites, fixture_registry, reporting_backends, report_dir)
-    runner.run()
+    runner = _Runner(testsuites, fixture_registry, reporting_backends, report_dir, stop_on_failure)
+    return runner.run() # TODO: return a Report instance instead

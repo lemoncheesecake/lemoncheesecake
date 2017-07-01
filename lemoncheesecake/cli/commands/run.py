@@ -43,6 +43,12 @@ class RunCommand(Command):
         add_filter_args_to_cli_parser(cli_parser)
 
         group = cli_parser.add_argument_group("Reporting")
+        group.add_argument("--exit-error-on-failure", action="store_true",
+            help="Exit with non-zero code if there is at least one non-passed test"
+        )
+        group.add_argument("--stop-on-failure", action="store_true",
+            help="Stop tests execution on the first non-passed test"
+        )
         group.add_argument("--report-dir", "-r", required=False, help="Directory where report data will be stored")
         group.add_argument("--reporting", nargs="+", default=default_reporting_backend_names,
             help="The list of reporting backends to use"
@@ -129,8 +135,9 @@ class RunCommand(Command):
 
         # Run tests
         try:
-            run_testsuites(
-                testsuites, fixture_registry, selected_reporting_backends, report_dir
+            is_successful = run_testsuites(
+                testsuites, fixture_registry, selected_reporting_backends, report_dir,
+                stop_on_failure=cli_args.stop_on_failure
             )
         except LemonCheesecakeException as e:
             return str(e)
@@ -146,4 +153,7 @@ class RunCommand(Command):
                     serialize_current_exception(show_stacktrace=True)
                 )
 
-        return 0
+        if cli_args.exit_error_on_failure:
+            return 0 if is_successful else 1
+        else:
+            return 0

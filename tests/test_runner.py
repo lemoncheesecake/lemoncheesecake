@@ -21,7 +21,7 @@ from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 from lemoncheesecake.fixtures import FixtureRegistry
 from lemoncheesecake.testsuite import add_test_in_testsuite
 
-from helpers import reporting_session, run_testsuite_class, build_fixture_registry, run_testsuite, build_testsuite_from_module
+from helpers import reporting_session, run_testsuite_class, run_testsuite_classes, build_fixture_registry, run_testsuite, build_testsuite_from_module
 
 # TODO: make launcher unit tests more independent from the reporting layer ?
 
@@ -998,3 +998,61 @@ def test_fixture_name_multiple_names():
     run_testsuite_class(suite, fixtures=[fixt])
 
     assert sorted(fixts) == ["fixt1", "fixt2"]
+
+def test_stop_on_failure_test(reporting_session):
+    @lcc.testsuite("Suite")
+    class suite:
+        @lcc.test("Test 1")
+        def test1(self):
+            1 / 0
+        
+        @lcc.test("Test 2")
+        def test2(self):
+            pass
+
+    run_testsuite_class(suite, stop_on_failure=True)
+    
+    assert reporting_session.get_test_status("test1") == "failed"
+    assert reporting_session.get_test_status("test2") == "skipped"
+
+def test_stop_on_failure_suite_setup(reporting_session):
+    @lcc.testsuite("Suite 1")
+    class suite1:
+        def setup_suite(self):
+            1 / 0
+        
+        @lcc.test("Test 1")
+        def test1(self):
+            pass
+    
+    @lcc.testsuite("Suite 2")
+    class suite2:
+        @lcc.test("Test 2")
+        def test2(self):
+            pass
+
+    run_testsuite_classes([suite1, suite2], stop_on_failure=True)
+    
+    assert reporting_session.get_test_status("test1") == "skipped"
+    assert reporting_session.get_test_status("test2") == "skipped"
+
+def test_stop_on_failure_suite_teardown(reporting_session):
+    @lcc.testsuite("Suite 1")
+    class suite1:
+        @lcc.test("Test 1")
+        def test1(self):
+            pass
+
+        def teardown_suite(self):
+            1 / 0
+        
+    @lcc.testsuite("Suite 2")
+    class suite2:
+        @lcc.test("Test 2")
+        def test2(self):
+            pass
+
+    run_testsuite_classes([suite1, suite2], stop_on_failure=True)
+    
+    assert reporting_session.get_test_status("test1") == "passed"
+    assert reporting_session.get_test_status("test2") == "skipped"

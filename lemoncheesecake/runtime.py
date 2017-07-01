@@ -50,6 +50,8 @@ class _Runtime:
         self.current_testsuite = None
         # for test / testsuite hook / before/after all tests outcome
         self.has_pending_failure = False
+        # global status
+        self._is_success = True
 
     def initialize_reporting_sessions(self):
         for backend in self.reporting_backends:
@@ -225,6 +227,7 @@ class _Runtime:
         self.for_each_reporting_sessions(lambda b: b.bypass_test(test, status, status_details))
 
     def skip_test(self, test, reason):
+        self._is_success = False
         self._bypass_test(test, "skipped", reason)
 
     def create_step_if_needed(self, ts=None):
@@ -263,6 +266,7 @@ class _Runtime:
         self.log(LOG_LEVEL_WARN, content)
 
     def log_error(self, content):
+        self._is_success = False
         self.has_pending_failure = True
         self.log(LOG_LEVEL_ERROR, content)
 
@@ -271,6 +275,7 @@ class _Runtime:
         self.current_step_data.entries.append(CheckData(description, outcome, details))
 
         if outcome == False:
+            self._is_success = False
             self.has_pending_failure = True
 
         self.for_each_reporting_sessions(lambda b: b.check(description, outcome, details))
@@ -311,6 +316,9 @@ class _Runtime:
 
         self.current_step_data.entries.append(UrlData(description, url))
         # TODO: add hook for URL
+    
+    def is_successful(self):
+        return self._is_success
 
 def log_debug(content):
     """
