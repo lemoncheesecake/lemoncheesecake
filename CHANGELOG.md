@@ -1,3 +1,9 @@
+# 0.8.12 (2017-07-02)
+
+- **lcc run**: add new CLI options --exit-error-on-failure and --stop-on-failure
+- rename `lcc tree` command back into `lcc show`
+- Fix `contains_string` matcher
+
 # 0.8.11 (2017-06-15)
 
 - **HTML report**: fix offline mode regression (.html file not loading the correct .js file) introduced in 0.8.10
