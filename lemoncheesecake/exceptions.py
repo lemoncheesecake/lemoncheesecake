@@ -55,7 +55,7 @@ class AbortTest(LemonCheesecakeException):
         LemonCheesecakeException.__init__(self, reason)
 
 class AbortTestSuite(LemonCheesecakeException):
-    message_prefix = "The testsuite has been aborted"
+    message_prefix = "The suite has been aborted"
 
     def __init__(self, reason):
         LemonCheesecakeException.__init__(self, reason)

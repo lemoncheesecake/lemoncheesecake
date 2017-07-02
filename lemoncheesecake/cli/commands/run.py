@@ -7,11 +7,11 @@ Created on Dec 31, 2016
 import os
 
 from lemoncheesecake.cli.command import Command
-from lemoncheesecake.cli.utils import filter_testsuites_from_cli_args
+from lemoncheesecake.cli.utils import filter_suites_from_cli_args
 from lemoncheesecake.project import find_project_file, Project
 from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture, load_fixtures_from_func
-from lemoncheesecake.runner import run_testsuites
-from lemoncheesecake.testsuite.filter import add_filter_args_to_cli_parser
+from lemoncheesecake.runner import run_suites
+from lemoncheesecake.suite.filter import add_filter_args_to_cli_parser
 from lemoncheesecake import reporting
 from lemoncheesecake.exceptions import ProjectError, FixtureError, InvalidMetadataError,\
     ProgrammingError, LemonCheesecakeException, UserError, serialize_current_exception
@@ -70,16 +70,16 @@ class RunCommand(Command):
             return "Cannot find project file"
         try:
             project = Project(project_file)
-            testsuites = project.get_testsuites()
+            suites = project.get_suites()
         except (ProjectError, ProgrammingError) as e:
             return str(e)
         except InvalidMetadataError as e:
-            return "Invalid test/testsuite metadata has been found: %s" % e
+            return "Invalid test/suite metadata has been found: %s" % e
 
         # Build fixture registry
         try:
             fixture_registry = build_fixture_registry(project, cli_args)
-            fixture_registry.check_fixtures_in_testsuites(testsuites)
+            fixture_registry.check_fixtures_in_suites(suites)
         except FixtureError as e:
             return "Cannot run tests: %s" % e
 
@@ -91,7 +91,7 @@ class RunCommand(Command):
         before_run_hook = project.get_before_test_run_hook()
         after_run_hook = project.get_after_test_run_hook()
 
-        testsuites = filter_testsuites_from_cli_args(testsuites, cli_args)
+        suites = filter_suites_from_cli_args(suites, cli_args)
 
         # Set reporting backends
         selected_reporting_backends = set()
@@ -135,8 +135,8 @@ class RunCommand(Command):
 
         # Run tests
         try:
-            is_successful = run_testsuites(
-                testsuites, fixture_registry, selected_reporting_backends, report_dir,
+            is_successful = run_suites(
+                suites, fixture_registry, selected_reporting_backends, report_dir,
                 stop_on_failure=cli_args.stop_on_failure
             )
         except LemonCheesecakeException as e:

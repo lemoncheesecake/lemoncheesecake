@@ -15,7 +15,7 @@ def qux():
 def foo(qux):
     pass
 
-@lcc.fixture(scope="testsuite")
+@lcc.fixture(scope="suite")
 def bar(foo):
     pass
 
@@ -27,7 +27,7 @@ def baz(bar):
 
 TEST_MODULE = """import lemoncheesecake.api as lcc
 
-@lcc.testsuite("My Suite")
+@lcc.suite("My Suite")
 class mysuite:
     @lcc.test("My Test 1")
     def mytest1(self, foo, bar, baz):
@@ -41,7 +41,7 @@ class mysuite:
 
 EMPTY_TEST_MODULE = """import lemoncheesecake.api as lcc
 
-@lcc.testsuite("My Suite")
+@lcc.suite("My Suite")
 class mysuite:
     pass
 """
@@ -75,5 +75,5 @@ def test_fixtures_empty_project(notest_project, cmdout):
 
     cmdout.assert_lines_match(".*session_prerun.*:.*none.*")
     cmdout.assert_lines_match(".*session.*:.*none.*")
-    cmdout.assert_lines_match(".*testsuite.*:.*none.*")
+    cmdout.assert_lines_match(".*suite.*:.*none.*")
     cmdout.assert_lines_match(".*test.*:.*none.*")

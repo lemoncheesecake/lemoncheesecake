@@ -7,7 +7,7 @@ from lemoncheesecake.cli import main
 
 TEST_MODULE = """import lemoncheesecake.api as lcc
 
-@lcc.testsuite("My Suite")
+@lcc.suite("My Suite")
 @lcc.prop("suite_prop", "suite_prop_value")
 @lcc.tags("suite_tag")
 @lcc.link("http://bug.tra.cker/1234", "#1234")
@@ -30,7 +30,7 @@ class mysuite:
 
 EMPTY_TEST_MODULE = """import lemoncheesecake.api as lcc
 
-@lcc.testsuite("My Suite")
+@lcc.suite("My Suite")
 class mysuite:
     pass
 """
@@ -69,7 +69,7 @@ def test_stats(project, cmdout):
     cmdout.assert_lines_match(".+-.+http://bug.tra.cker/1235.+ 1 .+ 50%")
 
     # totals:
-    cmdout.assert_lines_match(".+2.+tests.+1.+testsuites.*")
+    cmdout.assert_lines_match(".+2.+tests.+1.+suites.*")
 
 def test_stats_empty_project(empty_project, cmdout):
     assert "No test is defined" in main(["stats"])
@@ -89,4 +89,4 @@ def test_stats_with_filter(project, cmdout):
     cmdout.assert_lines_match(".+#1234.+http://bug.tra.cker/1234.+ 1 .+ 100%")
 
     # totals:
-    cmdout.assert_lines_match(".+1.+tests.+1.+testsuites.*")
+    cmdout.assert_lines_match(".+1.+tests.+1.+suites.*")

@@ -15,13 +15,13 @@ from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.reporting.backend import SAVE_AT_EACH_EVENT, SAVE_AT_EACH_FAILED_TEST, \
     SAVE_AT_EACH_TEST, SAVE_AT_EACH_TESTSUITE, SAVE_AT_END_OF_TESTS
 
-from helpers import run_testsuite_class, run_testsuite_classes, assert_report, dump_report
+from helpers import run_suite_class, run_suite_classes, assert_report, dump_report
 
 def do_test_serialization(suites, backend, tmpdir, fixtures=[]):
     if type(suites) in (list, tuple):
-        run_testsuite_classes(suites, fixtures=fixtures, backends=[backend])
+        run_suite_classes(suites, fixtures=fixtures, backends=[backend])
     else:
-        run_testsuite_class(suites, fixtures=fixtures, backends=[backend])
+        run_suite_class(suites, fixtures=fixtures, backends=[backend])
 
     report = get_runtime().report
 
@@ -34,7 +34,7 @@ def do_test_serialization(suites, backend, tmpdir, fixtures=[]):
     assert_report(unserialized_report, report)
 
 def test_simple_test(backend, tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
@@ -43,7 +43,7 @@ def test_simple_test(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_test_with_all_metadata(backend, tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.link("http://foo.bar", "foobar")
         @lcc.prop("foo", "bar")
@@ -54,11 +54,11 @@ def test_test_with_all_metadata(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir)
 
-def test_testsuite_with_all_metadata(backend, tmpdir):
+def test_suite_with_all_metadata(backend, tmpdir):
     @lcc.link("http://foo.bar", "foobar")
     @lcc.prop("foo", "bar")
     @lcc.tags("foo", "bar")
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
@@ -70,7 +70,7 @@ def test_unicode(backend, tmpdir):
     @lcc.link("http://foo.bar", u"éééààà")
     @lcc.prop(u"ééé", u"ààà")
     @lcc.tags(u"ééé", u"ààà")
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.link("http://foo.bar", u"éééààà")
         @lcc.prop(u"ééé", u"ààà")
@@ -85,8 +85,8 @@ def test_unicode(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir)
 
-def test_multiple_testsuites_and_tests(backend, tmpdir):
-    @lcc.testsuite("MySuite1")
+def test_multiple_suites_and_tests(backend, tmpdir):
+    @lcc.suite("MySuite1")
     class MySuite1:
         @lcc.tags("foo")
         @lcc.test("Some test 1")
@@ -103,7 +103,7 @@ def test_multiple_testsuites_and_tests(backend, tmpdir):
         def test_1_3(self):
             lcc.check_that("foo", 3, lcc.equal_to(2))
 
-    @lcc.testsuite("MySuite2")
+    @lcc.suite("MySuite2")
     class MySuite2:
         @lcc.prop("foo", "bar")
         @lcc.test("Some test 1")
@@ -120,7 +120,7 @@ def test_multiple_testsuites_and_tests(backend, tmpdir):
             lcc.check_that("foo", 2, lcc.equal_to(2))
 
         # suite3 is a sub suite of suite3
-        @lcc.testsuite("MySuite3")
+        @lcc.suite("MySuite3")
         class MySuite3:
             @lcc.prop("foo", "bar")
             @lcc.test("Some test 1")
@@ -139,7 +139,7 @@ def test_multiple_testsuites_and_tests(backend, tmpdir):
     do_test_serialization((MySuite1, MySuite2), backend, tmpdir)
 
 def test_check_success(backend, tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
@@ -148,7 +148,7 @@ def test_check_success(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_check_failure(backend, tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
@@ -157,7 +157,7 @@ def test_check_failure(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_require_success(backend, tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
@@ -166,7 +166,7 @@ def test_require_success(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_require_failure(backend, tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
@@ -175,7 +175,7 @@ def test_require_failure(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_assert_failure(backend, tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
@@ -184,7 +184,7 @@ def test_assert_failure(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_all_types_of_logs(backend, tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
@@ -199,7 +199,7 @@ def test_all_types_of_logs(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_multiple_steps(backend, tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
@@ -211,7 +211,7 @@ def test_multiple_steps(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_attachment(backend, tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
@@ -220,7 +220,7 @@ def test_attachment(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_log_url(backend, tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
@@ -229,7 +229,7 @@ def test_log_url(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_setup_suite_success(backend, tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         def setup_suite(self):
             lcc.log_info("some log")
@@ -241,7 +241,7 @@ def test_setup_suite_success(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_setup_suite_failure(backend, tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         def setup_suite(self):
             lcc.log_error("something bad happened")
@@ -253,7 +253,7 @@ def test_setup_suite_failure(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_teardown_suite_success(backend, tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
@@ -265,7 +265,7 @@ def test_teardown_suite_success(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_teardown_suite_failure(backend, tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
@@ -277,7 +277,7 @@ def test_teardown_suite_failure(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 def test_setup_and_teardown_suite(backend, tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
@@ -296,7 +296,7 @@ def test_setup_test_session_success(backend, tmpdir):
     def fixt():
         lcc.log_info("some log")
 
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self, fixt):
@@ -309,7 +309,7 @@ def test_setup_test_session_failure(backend, tmpdir):
     def fixt():
         lcc.log_error("some error")
 
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self, fixt):
@@ -323,7 +323,7 @@ def test_teardown_test_session_success(backend, tmpdir):
         yield
         lcc.log_info("some info")
 
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self, fixt):
@@ -337,7 +337,7 @@ def test_teardown_test_session_failure(backend, tmpdir):
         yield
         lcc.log_error("some error")
 
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self, fixt):
@@ -352,7 +352,7 @@ def test_setup_and_teardown_test_session(backend, tmpdir):
         yield
         lcc.log_info("some other info")
 
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self, fixt):
@@ -379,6 +379,6 @@ def test_save_at_each_test(backend, tmpdir):
     backend.save_mode = SAVE_AT_EACH_TEST
     test_simple_test(backend, tmpdir)
 
-def test_save_at_each_testsuite(backend, tmpdir):
+def test_save_at_each_suite(backend, tmpdir):
     backend.save_mode = SAVE_AT_EACH_TESTSUITE
     test_simple_test(backend, tmpdir)

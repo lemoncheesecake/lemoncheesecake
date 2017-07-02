@@ -7,23 +7,23 @@ from lemoncheesecake.reporting import backends
 
 from helpers import build_test_project, build_test_module, build_fixture_module
 
-def set_project_testsuites_param(params, testsuite_name, project_dir):
-    testsuite_file = project_dir.join("%s.py" % testsuite_name)
-    testsuite_file.write(build_test_module(testsuite_name))
-    params["TESTSUITES"] = "[ load_testsuite_from_file('%s.py') ]" % (
-        project_dir.join(testsuite_name).strpath
+def set_project_suites_param(params, suite_name, project_dir):
+    suite_file = project_dir.join("%s.py" % suite_name)
+    suite_file.write(build_test_module(suite_name))
+    params["TESTSUITES"] = "[ load_suite_from_file('%s.py') ]" % (
+        project_dir.join(suite_name).strpath
     )
 
 def test_project_minimal_parameters(tmpdir):
     params = {}
-    set_project_testsuites_param(params, "mysuite", tmpdir)
+    set_project_suites_param(params, "mysuite", tmpdir)
     project_file = tmpdir.join("project.py")
     project_file.write(build_test_project(params))
     project = Project(project_file.strpath)
 
     assert project.get_project_dir() == tmpdir.strpath
 
-    classes = project.get_testsuites()
+    classes = project.get_suites()
     assert classes[0].name == "mysuite"
 
     assert project.get_report_dir_creation_callback() != None
@@ -39,7 +39,7 @@ def test_project_minimal_parameters(tmpdir):
 
 def test_project_with_available_reporting_backends(tmpdir):
     params = {}
-    set_project_testsuites_param(params, "mysuite", tmpdir)
+    set_project_suites_param(params, "mysuite", tmpdir)
     params["REPORTING_BACKENDS"] = "[ backends.ConsoleBackend() ]"
     project_file = tmpdir.join("project.py")
     project_file.write(build_test_project(params))
@@ -50,7 +50,7 @@ def test_project_with_available_reporting_backends(tmpdir):
 
 def test_project_with_active_reporting_backends(tmpdir):
     params = {}
-    set_project_testsuites_param(params, "mysuite", tmpdir)
+    set_project_suites_param(params, "mysuite", tmpdir)
     params["REPORTING_BACKENDS_ACTIVE"] = "[ 'console', 'json' ]"
     project_file = tmpdir.join("project.py")
     project_file.write(build_test_project(params))
@@ -63,7 +63,7 @@ def test_project_with_active_reporting_backends(tmpdir):
 
 def test_project_with_fixtures(tmpdir):
     params = {}
-    set_project_testsuites_param(params, "mysuite", tmpdir)
+    set_project_suites_param(params, "mysuite", tmpdir)
     tmpdir.join("myfixtures.py").write(build_fixture_module("myfixture"))
     params["FIXTURES"] = "load_fixtures_from_file('%s')" % tmpdir.join("myfixtures.py").strpath
     project_file = tmpdir.join("project.py")
@@ -77,7 +77,7 @@ def test_project_with_fixtures(tmpdir):
 
 def test_project_with_metadata_policy(tmpdir):
     params = {}
-    set_project_testsuites_param(params, "mysuite", tmpdir)
+    set_project_suites_param(params, "mysuite", tmpdir)
     policy_code = """
 metadata_policy = validators.MetadataPolicy()
 metadata_policy.disallow_unknown_tags()
@@ -92,7 +92,7 @@ metadata_policy.disallow_unknown_tags()
 
 def test_project_with_report_dir_creation(tmpdir):
     params = {}
-    set_project_testsuites_param(params, "mysuite", tmpdir)
+    set_project_suites_param(params, "mysuite", tmpdir)
     cli_args_code = """
 def custom_report_dir(top_dir):
     pass
@@ -107,7 +107,7 @@ def custom_report_dir(top_dir):
 
 def test_project_with_cli_extra_args(tmpdir):
     params = {}
-    set_project_testsuites_param(params, "mysuite", tmpdir)
+    set_project_suites_param(params, "mysuite", tmpdir)
     cli_args_code = """
 def add_cli_args(cli_parser):
     cli_parser.add_argument("foobar")
@@ -126,7 +126,7 @@ def add_cli_args(cli_parser):
 def test_project_creation(tmpdir):
     create_project(tmpdir.strpath)
     project = load_project(tmpdir.strpath)
-    assert len(project.get_testsuites()) == 0
+    assert len(project.get_suites()) == 0
     assert len(project.get_fixtures()) == 0
     assert project.get_cli_extra_args_callback() != None
     assert project.get_metadata_policy() != None

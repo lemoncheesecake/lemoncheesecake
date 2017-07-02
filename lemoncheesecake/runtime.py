@@ -41,14 +41,14 @@ class _Runtime:
         self.step_lock = False
         self.default_step_description = None
         # pointers to report data parts
-        self.current_testsuite_data = None
+        self.current_suite_data = None
         self.current_test_data = None
         self.current_step_data_list = None
         self.current_step_data = None
-        # pointers to running test/testsuite
+        # pointers to running test/suite
         self.current_test = None
-        self.current_testsuite = None
-        # for test / testsuite hook / before/after all tests outcome
+        self.current_suite = None
+        # for test / suite hook / before/after all tests outcome
         self.has_pending_failure = False
         # global status
         self._is_success = True
@@ -123,56 +123,56 @@ class _Runtime:
             self.end_current_step(now)
         self.for_each_reporting_sessions(lambda b: b.end_test_session_teardown())
 
-    def begin_suite(self, testsuite):
-        self.current_testsuite = testsuite
-        suite_data = TestSuiteData(testsuite.name, testsuite.description)
-        suite_data.tags.extend(testsuite.tags)
-        suite_data.properties.update(testsuite.properties)
-        suite_data.links.extend(testsuite.links)
-        if self.current_testsuite_data:
-            self.current_testsuite_data.add_suite(suite_data)
+    def begin_suite(self, suite):
+        self.current_suite = suite
+        suite_data = TestSuiteData(suite.name, suite.description)
+        suite_data.tags.extend(suite.tags)
+        suite_data.properties.update(suite.properties)
+        suite_data.links.extend(suite.links)
+        if self.current_suite_data:
+            self.current_suite_data.add_suite(suite_data)
         else:
             self.report.add_suite(suite_data)
-        self.current_testsuite_data = suite_data
+        self.current_suite_data = suite_data
 
-        self.for_each_reporting_sessions(lambda b: b.begin_suite(testsuite))
+        self.for_each_reporting_sessions(lambda b: b.begin_suite(suite))
 
     def begin_suite_setup(self):
-        self.current_testsuite_data.suite_setup = self._start_hook(time.time())
-        self.current_step_data_list = self.current_testsuite_data.suite_setup.steps
+        self.current_suite_data.suite_setup = self._start_hook(time.time())
+        self.current_step_data_list = self.current_suite_data.suite_setup.steps
         self.default_step_description = "Setup suite"
 
-        self.for_each_reporting_sessions(lambda b: b.begin_suite_setup(self.current_testsuite))
+        self.for_each_reporting_sessions(lambda b: b.begin_suite_setup(self.current_suite))
 
     def end_suite_setup(self):
-        if self.current_testsuite_data.suite_setup.is_empty():
-            self.current_testsuite_data.suite_setup = None
+        if self.current_suite_data.suite_setup.is_empty():
+            self.current_suite_data.suite_setup = None
         else:
             now = time.time()
-            self._end_hook(self.current_testsuite_data.suite_setup, now)
+            self._end_hook(self.current_suite_data.suite_setup, now)
             self.end_current_step(now)
-        self.for_each_reporting_sessions(lambda b: b.end_suite_setup(self.current_testsuite))
+        self.for_each_reporting_sessions(lambda b: b.end_suite_setup(self.current_suite))
 
     def begin_suite_teardown(self):
-        self.current_testsuite_data.suite_teardown = self._start_hook(time.time())
-        self.current_step_data_list = self.current_testsuite_data.suite_teardown.steps
+        self.current_suite_data.suite_teardown = self._start_hook(time.time())
+        self.current_step_data_list = self.current_suite_data.suite_teardown.steps
         self.default_step_description = "Teardown suite"
 
-        self.for_each_reporting_sessions(lambda b: b.begin_suite_teardown(self.current_testsuite))
+        self.for_each_reporting_sessions(lambda b: b.begin_suite_teardown(self.current_suite))
 
     def end_suite_teardown(self):
-        if self.current_testsuite_data.suite_teardown.is_empty():
-            self.current_testsuite_data.suite_teardown = None
+        if self.current_suite_data.suite_teardown.is_empty():
+            self.current_suite_data.suite_teardown = None
         else:
             now = time.time()
             self.end_current_step(now)
-            self._end_hook(self.current_testsuite_data.suite_teardown, now)
-        self.for_each_reporting_sessions(lambda b: b.end_suite_teardown(self.current_testsuite))
+            self._end_hook(self.current_suite_data.suite_teardown, now)
+        self.for_each_reporting_sessions(lambda b: b.end_suite_teardown(self.current_suite))
 
     def end_suite(self):
-        self.for_each_reporting_sessions(lambda b: b.end_suite(self.current_testsuite))
-        self.current_testsuite_data = self.current_testsuite_data.parent_suite
-        self.current_testsuite = self.current_testsuite.parent_suite
+        self.for_each_reporting_sessions(lambda b: b.end_suite(self.current_suite))
+        self.current_suite_data = self.current_suite_data.parent_suite
+        self.current_suite = self.current_suite.parent_suite
 
     def begin_test(self, test):
         now = time.time()
@@ -183,7 +183,7 @@ class _Runtime:
         self.current_test_data.properties.update(test.properties)
         self.current_test_data.links.extend(test.links)
         self.current_test_data.start_time = now
-        self.current_testsuite_data.add_test(self.current_test_data)
+        self.current_suite_data.add_test(self.current_test_data)
         self.for_each_reporting_sessions(lambda b: b.begin_test(test))
         self.current_step_data_list = self.current_test_data.steps
         self.default_step_description = test.description
@@ -222,7 +222,7 @@ class _Runtime:
         test_data.end_time = test_data.start_time = now
         test_data.status = status
         test_data.status_details = status_details
-        self.current_testsuite_data.add_test(test_data)
+        self.current_suite_data.add_test(test_data)
 
         self.for_each_reporting_sessions(lambda b: b.bypass_test(test, status, status_details))
 

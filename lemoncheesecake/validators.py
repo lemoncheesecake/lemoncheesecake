@@ -31,7 +31,7 @@ class MetadataPolicy:
         - the property name
         - an optional list of accepted values
         - is the property available for tests
-        - is the property available for testsuites
+        - is the property available for suites
         - if the property is required
         If neither on_test or on_suite argument are set, then the property is only available for tests.
         """
@@ -45,7 +45,7 @@ class MetadataPolicy:
 
     def disallow_unknown_properties(self):
         """
-        Disallow unknown properties for tests and testsuites.
+        Disallow unknown properties for tests and suites.
         """
         self._disallow_unknown_properties = True
 
@@ -54,7 +54,7 @@ class MetadataPolicy:
         Declare a tag constraint with:
         - the tag name
         - is the tag available for tests
-        - is the tag available for testsuites
+        - is the tag available for suites
         If neither on_test or on_suite argument are set, then the tag is only available for tests.
         """
         tag_names = tag_name if type(tag_name) in (list, tuple) else [tag_name]
@@ -67,7 +67,7 @@ class MetadataPolicy:
 
     def disallow_unknown_tags(self):
         """
-        Disallow unknown tags for tests and testsuites.
+        Disallow unknown tags for tests and suites.
         """
         self._disallow_unknown_tags = True
 
@@ -152,7 +152,7 @@ class MetadataPolicy:
         Raise InvalidMetadataError if not compliant.
         """
         self._check_compliance(
-            suite, "testsuite",
+            suite, "suite",
             {prop_name: p for prop_name, p in self._properties.items() if p["on_suite"]},
             [prop_name for prop_name, p in self._properties.items() if not p["on_suite"]],
             {tag_name: t for tag_name, t in self._tags.items() if t["on_suite"]},

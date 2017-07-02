@@ -68,32 +68,32 @@ class ConsoleReportingSession(ReportingSession):
     def begin_tests(self):
         self.previous_obj = None
 
-    def begin_suite(self, testsuite):
-        self.current_suite = testsuite
+    def begin_suite(self, suite):
+        self.current_suite = suite
         self.current_test_idx = 1
 
-        if not testsuite.has_selected_tests(deep=False):
+        if not suite.has_selected_tests(deep=False):
             return
 
         if self.previous_obj:
             sys.stdout.write("\n")
 
-        label = testsuite.get_path_as_str()
+        label = suite.get_path_as_str()
         label_len = len(label)
         max_width = min((self.terminal_width, 80))
-        # -2 corresponds to the two space characters at the left and right of testsuite path + another character to avoid
-        # an extra line after the testsuite line on Windows terminal having width <= 80
+        # -2 corresponds to the two space characters at the left and right of suite path + another character to avoid
+        # an extra line after the suite line on Windows terminal having width <= 80
         padding_total = max_width - 3 - label_len if label_len <= (max_width - 3) else 0
         padding_left = padding_total // 2
         padding_right = padding_total // 2 + padding_total % 2
         sys.stdout.write("=" * padding_left + " " + colored(label, attrs=["bold"]) + " " + "=" * padding_right + "\n")
-        self.previous_obj = testsuite
+        self.previous_obj = suite
 
-    def begin_suite_setup(self, testsuite):
+    def begin_suite_setup(self, suite):
         self.step_prefix = " => setup suite: "
         self.lp.print_line(self.step_prefix + "...")
 
-    def begin_suite_teardown(self, testsuite):
+    def begin_suite_teardown(self, suite):
         self.step_prefix = " => teardown suite: "
         self.lp.print_line(self.step_prefix + "...")
 
@@ -105,7 +105,7 @@ class ConsoleReportingSession(ReportingSession):
         self.step_prefix = " => teardown test session: "
         self.lp.print_line(self.step_prefix + "...")
 
-    def end_suite_setup(self, testsuite):
+    def end_suite_setup(self, suite):
         self.lp.erase_line()
         self.custom_step_prefix = None
 

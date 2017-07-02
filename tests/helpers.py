@@ -16,20 +16,20 @@ import re
 import pytest
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.testsuite.loader import load_testsuites_from_classes, load_testsuite_from_file
+from lemoncheesecake.suite.loader import load_suites_from_classes, load_suite_from_file
 from lemoncheesecake import runner
-from lemoncheesecake.testsuite import Filter, load_testsuite_from_class
+from lemoncheesecake.suite import Filter, load_suite_from_class
 from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 from lemoncheesecake.fixtures import FixtureRegistry, load_fixtures_from_func
 from lemoncheesecake.project import create_project
 
-def build_test_module(name="mytestsuite"):
+def build_test_module(name="mysuite"):
     return """
 import lemoncheesecake.api as lcc
 
-@lcc.testsuite("Test Suite")
+@lcc.suite("Test Suite")
 class {name}:
     @lcc.test("This is a test")
     def test_{name}(self):
@@ -49,7 +49,7 @@ def build_test_project(params={}, extra_imports=[], static_content=""):
     return """
 from lemoncheesecake.reporting import backends
 from lemoncheesecake.fixtures import load_fixtures_from_file, load_fixtures_from_files, load_fixtures_from_directory
-from lemoncheesecake.testsuite.loader import *
+from lemoncheesecake.suite.loader import *
 
 from lemoncheesecake import validators
 
@@ -64,7 +64,7 @@ from lemoncheesecake import validators
     STATIC_CONTENT=static_content
 )
 
-def build_testsuite_from_module(module_content):
+def build_suite_from_module(module_content):
     fd, filename = tempfile.mkstemp(suffix=".py")
     fh = open(filename, "w")
     fh.write("import lemoncheesecake.api as lcc\n\n")
@@ -72,7 +72,7 @@ def build_testsuite_from_module(module_content):
     fh.write(module_content)
     fh.close()
     os.close(fd)
-    suite = load_testsuite_from_file(filename)
+    suite = load_suite_from_file(filename)
     os.unlink(filename)
     return suite
 
@@ -189,7 +189,7 @@ def get_reporting_session():
 def reporting_session():
     return get_reporting_session()
 
-def run_testsuites(suites, filter=None, fixtures=None, backends=None, tmpdir=None, stop_on_failure=False):
+def run_suites(suites, filter=None, fixtures=None, backends=None, tmpdir=None, stop_on_failure=False):
     global _reporting_session
 
     if fixtures == None:
@@ -214,14 +214,14 @@ def run_testsuites(suites, filter=None, fixtures=None, backends=None, tmpdir=Non
         try:
             report_dir = os.path.join(tmpdir.strpath, "report")
             os.mkdir(report_dir)
-            runner.run_testsuites(suites, fixture_registry, backends, report_dir, stop_on_failure=stop_on_failure)
+            runner.run_suites(suites, fixture_registry, backends, report_dir, stop_on_failure=stop_on_failure)
         finally:
             _reporting_session = None
     else:
         report_dir = os.path.join(tempfile.mkdtemp(), "report")
         os.mkdir(report_dir)
         try:
-            runner.run_testsuites(suites, fixture_registry, backends, report_dir, stop_on_failure=stop_on_failure)
+            runner.run_suites(suites, fixture_registry, backends, report_dir, stop_on_failure=stop_on_failure)
         finally:
             shutil.rmtree(report_dir)
             # reset _reporting_session (either it has been set or not) at the end of each test run
@@ -229,25 +229,25 @@ def run_testsuites(suites, filter=None, fixtures=None, backends=None, tmpdir=Non
 
     dump_report(get_runtime().report)
 
-def run_testsuite_classes(suite_classes, filter=None, fixtures=None, backends=None, tmpdir=None, stop_on_failure=False):
-    suites = load_testsuites_from_classes(suite_classes)
-    run_testsuites(suites, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+def run_suite_classes(suite_classes, filter=None, fixtures=None, backends=None, tmpdir=None, stop_on_failure=False):
+    suites = load_suites_from_classes(suite_classes)
+    run_suites(suites, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
 
-def run_testsuite(suite, filter=None, fixtures=None, backends=[], tmpdir=None, stop_on_failure=False):
-    run_testsuites([suite], filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+def run_suite(suite, filter=None, fixtures=None, backends=[], tmpdir=None, stop_on_failure=False):
+    run_suites([suite], filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
 
-def run_testsuite_class(suite_class, filter=None, fixtures=None, backends=[], tmpdir=None, stop_on_failure=False):
-    suite = load_testsuite_from_class(suite_class)
-    run_testsuite(suite, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+def run_suite_class(suite_class, filter=None, fixtures=None, backends=[], tmpdir=None, stop_on_failure=False):
+    suite = load_suite_from_class(suite_class)
+    run_suite(suite, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
 
 def run_func_in_test(callback):
-    @lcc.testsuite("My Suite")
+    @lcc.suite("My Suite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             callback()
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
 def dump_report(report):
     try:
@@ -325,7 +325,7 @@ def assert_hook_data(actual, expected):
         for actual_step, expected_step in zip(actual.steps, expected.steps):
             assert_step_data(actual_step, expected_step)
 
-def assert_testsuite_data(actual, expected):
+def assert_suite_data(actual, expected):
     assert actual.name == expected.name
     assert actual.description == expected.description
     if expected.parent_suite == None:
@@ -344,7 +344,7 @@ def assert_testsuite_data(actual, expected):
 
     assert len(actual.get_suites()) == len(expected.get_suites())
     for actual_subsuite, expected_subsuite in zip(actual.get_suites(), expected.get_suites()):
-        assert_testsuite_data(actual_subsuite, expected_subsuite)
+        assert_suite_data(actual_subsuite, expected_subsuite)
 
     assert_hook_data(actual.suite_teardown, expected.suite_teardown)
 
@@ -353,12 +353,12 @@ def assert_report(actual, expected):
     assert round(actual.start_time, 3) == round(expected.start_time, 3)
     assert round(actual.end_time, 3) == round(expected.end_time, 3)
     assert round(actual.report_generation_time, 3) == round(expected.report_generation_time, 3)
-    assert len(actual.testsuites) == len(expected.testsuites)
+    assert len(actual.suites) == len(expected.suites)
 
     assert_hook_data(actual.test_session_setup, expected.test_session_setup)
 
-    for actual_testsuite, expected_testsuite in zip(actual.testsuites, expected.testsuites):
-        assert_testsuite_data(actual_testsuite, expected_testsuite)
+    for actual_suite, expected_suite in zip(actual.suites, expected.suites):
+        assert_suite_data(actual_suite, expected_suite)
 
     assert_hook_data(actual.test_session_teardown, expected.test_session_teardown)
 
@@ -376,44 +376,44 @@ def assert_test_data_from_test(test_data, test):
 
     assert_steps_data(test_data.steps)
 
-def assert_testsuite_data_from_testsuite(testsuite_data, testsuite):
-    assert testsuite_data.name == testsuite.name
-    assert testsuite_data.description == testsuite.description
-    assert testsuite_data.tags == testsuite.tags
-    assert testsuite_data.properties == testsuite.properties
-    assert testsuite_data.links == testsuite.links
+def assert_suite_data_from_suite(suite_data, suite):
+    assert suite_data.name == suite.name
+    assert suite_data.description == suite.description
+    assert suite_data.tags == suite.tags
+    assert suite_data.properties == suite.properties
+    assert suite_data.links == suite.links
 
-    if testsuite.has_hook("setup_suite"):
-        assert testsuite_data.suite_setup != None
-        assert testsuite_data.suite_setup.start_time != None
-        assert testsuite_data.suite_setup.end_time != None
-        assert_steps_data(testsuite_data.suite_setup.steps)
+    if suite.has_hook("setup_suite"):
+        assert suite_data.suite_setup != None
+        assert suite_data.suite_setup.start_time != None
+        assert suite_data.suite_setup.end_time != None
+        assert_steps_data(suite_data.suite_setup.steps)
 
-    assert len(testsuite_data.get_tests()) == len(testsuite.get_tests())
-    for test_data, test in zip(testsuite_data.get_tests(), testsuite.get_tests()):
+    assert len(suite_data.get_tests()) == len(suite.get_tests())
+    for test_data, test in zip(suite_data.get_tests(), suite.get_tests()):
         assert_test_data_from_test(test_data, test)
 
-    assert len(testsuite_data.get_suites()) == len(testsuite.get_suites())
-    for sub_testsuite_data, sub_testsuite in zip(testsuite_data.get_suites(), testsuite.get_suites()):
-        assert_testsuite_data_from_testsuite(sub_testsuite_data, sub_testsuite)
+    assert len(suite_data.get_suites()) == len(suite.get_suites())
+    for sub_suite_data, sub_suite in zip(suite_data.get_suites(), suite.get_suites()):
+        assert_suite_data_from_suite(sub_suite_data, sub_suite)
 
-    if testsuite.has_hook("teardown_suite"):
-        assert testsuite_data.suite_teardown != None
-        assert testsuite_data.suite_teardown.start_time != None
-        assert testsuite_data.suite_teardown.end_time != None
-        assert_steps_data(testsuite_data.suite_teardown.steps)
+    if suite.has_hook("teardown_suite"):
+        assert suite_data.suite_teardown != None
+        assert suite_data.suite_teardown.start_time != None
+        assert suite_data.suite_teardown.end_time != None
+        assert_steps_data(suite_data.suite_teardown.steps)
 
-def assert_report_from_testsuites(report, suite_classes):
+def assert_report_from_suites(report, suite_classes):
     assert report.start_time != None
     assert report.end_time != None
     assert report.report_generation_time != None
-    assert len(report.testsuites) == len(suite_classes)
-    for testsuite_data, testsuite_class in zip(report.testsuites, suite_classes):
-        testsuite = load_testsuite_from_class(testsuite_class)
-        assert_testsuite_data_from_testsuite(testsuite_data, testsuite)
+    assert len(report.suites) == len(suite_classes)
+    for suite_data, suite_class in zip(report.suites, suite_classes):
+        suite = load_suite_from_class(suite_class)
+        assert_suite_data_from_suite(suite_data, suite)
 
-def assert_report_from_testsuite(report, suite_class):
-    assert_report_from_testsuites(report, [suite_class])
+def assert_report_from_suite(report, suite_class):
+    assert_report_from_suites(report, [suite_class])
 
 def assert_report_stats(report,
                         expected_test_successes=0, expected_test_failures=0, expected_test_skippeds=0,

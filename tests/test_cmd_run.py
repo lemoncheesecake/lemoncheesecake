@@ -7,7 +7,7 @@ from lemoncheesecake.cli import main
 
 TEST_MODULE = """import lemoncheesecake.api as lcc
 
-@lcc.testsuite("My Suite")
+@lcc.suite("My Suite")
 class mysuite:
     @lcc.test("My Test 1")
     def mytest1(self):
@@ -27,7 +27,7 @@ def fixt():
 
 TEST_MODULE_USING_FIXTURES = """import lemoncheesecake.api as lcc
 
-@lcc.testsuite("My Suite")
+@lcc.suite("My Suite")
 class mysuite:
     @lcc.test("My Test 1")
     def mytest1(self, fixt):
@@ -86,8 +86,8 @@ def test_stop_on_failure(project, cmdout):
     assert main(["run", "--stop-on-failure"]) == 0
     assert_run_output(cmdout, "mysuite", failed_tests=["mytest1"], skipped_tests=["mytest2"])
 
-def test_exit_error_on_failure_successful_testsuite(successful_project):
+def test_exit_error_on_failure_successful_suite(successful_project):
     assert main(["run", "--exit-error-on-failure"]) == 0
 
-def test_exit_error_on_failure_failing_testsuite(failing_project):
+def test_exit_error_on_failure_failing_suite(failing_project):
     assert main(["run", "--exit-error-on-failure"]) == 1

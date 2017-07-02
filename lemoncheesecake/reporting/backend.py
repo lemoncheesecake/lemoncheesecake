@@ -45,22 +45,22 @@ class ReportingSession:
     def end_test_session_teardown(self):
         pass
 
-    def begin_suite(self, testsuite):
+    def begin_suite(self, suite):
         pass
 
-    def begin_suite_setup(self, testsuite):
+    def begin_suite_setup(self, suite):
         pass
 
-    def end_suite_setup(self, testsuite):
+    def end_suite_setup(self, suite):
         pass
 
-    def begin_suite_teardown(self, testsuite):
+    def begin_suite_teardown(self, suite):
         pass
 
-    def end_suite_teardown(self, testsuite):
+    def end_suite_teardown(self, suite):
         pass
 
-    def end_suite(self, testsuite):
+    def end_suite(self, suite):
         pass
 
     def begin_test(self, test):
@@ -129,14 +129,14 @@ class FileReportSession(ReportingSession):
             self.report.test_session_teardown.has_failure() if self.report.test_session_teardown else False
         )
 
-    def end_suite_setup(self, testsuite):
-        suite_data = self.report.get_suite(testsuite.name)
+    def end_suite_setup(self, suite):
+        suite_data = self.report.get_suite(suite.name)
         self._handle_code_end(
             suite_data.suite_setup.has_failure() if suite_data.suite_setup else False
         )
 
-    def end_suite_teardown(self, testsuite):
-        suite_data = self.report.get_suite(testsuite.name)
+    def end_suite_teardown(self, suite):
+        suite_data = self.report.get_suite(suite.name)
         self._handle_code_end(
             suite_data.suite_teardown.has_failure() if suite_data.suite_teardown else False
         )
@@ -144,7 +144,7 @@ class FileReportSession(ReportingSession):
     def end_test(self, test, status):
         self._handle_code_end(test)
 
-    def end_suite(self, testsuite):
+    def end_suite(self, suite):
         if self.save_mode == SAVE_AT_EACH_TESTSUITE:
             self.save()
 

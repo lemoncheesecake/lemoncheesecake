@@ -7,7 +7,7 @@ from lemoncheesecake.cli import main
 
 TEST_MODULE = """import lemoncheesecake.api as lcc
 
-@lcc.testsuite("My Suite")
+@lcc.suite("My Suite")
 @lcc.prop("suite_prop", "suite_prop_value")
 @lcc.tags("suite_tag")
 @lcc.link("http://bug.tra.cker/1234", "#1234")

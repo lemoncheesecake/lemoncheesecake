@@ -10,7 +10,7 @@ import shutil
 import imp
 import inspect
 
-from lemoncheesecake.testsuite import TestSuite
+from lemoncheesecake.suite import TestSuite
 from lemoncheesecake.fixtures import Fixture
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.reporting import ReportingBackend, get_available_backends
@@ -191,7 +191,7 @@ class Project:
     def get_report_dir_creation_callback(self):
         return self._raw_params["REPORT_DIR_CREATION"]
 
-    def get_testsuites(self, check_metadata_policy=True):
+    def get_suites(self, check_metadata_policy=True):
         suites = self._raw_params["TESTSUITES"]
         policy = self.get_metadata_policy()
         if check_metadata_policy and policy:

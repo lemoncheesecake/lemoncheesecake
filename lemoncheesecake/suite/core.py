@@ -13,7 +13,7 @@ from lemoncheesecake.testtree import BaseTest, BaseTestSuite
 TESTSUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
 
 __all__ = (
-    "Test", "TestSuite", "filter_testsuites"
+    "Test", "TestSuite", "filter_suites"
 )
 
 class Test(BaseTest):
@@ -165,7 +165,7 @@ class TestSuite(BaseTestSuite):
     def is_test_selected(self, test):
         return test.name in self._selected_test_names
 
-def filter_testsuites(suites, filtr):
+def filter_suites(suites, filtr):
     filtered = []
     for suite in suites:
         suite.apply_filter(filtr)

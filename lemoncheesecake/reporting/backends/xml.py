@@ -119,7 +119,7 @@ def _serialize_hook_data(data, node):
     _add_time_attr(node, "end-time", data.end_time)
     _serialize_steps(data.steps, node)
 
-def _serialize_testsuite_data(suite):
+def _serialize_suite_data(suite):
     suite_node = _xml_node("suite", "name", suite.name, "description", suite.description)
     for tag in suite.tags:
         tag_node = _xml_child(suite_node, "tag")
@@ -142,7 +142,7 @@ def _serialize_testsuite_data(suite):
 
     # sub suites
     for sub_suite in suite.get_suites():
-        sub_suite_node = _serialize_testsuite_data(sub_suite)
+        sub_suite_node = _serialize_suite_data(sub_suite)
         suite_node.append(sub_suite_node)
 
     # after suite
@@ -169,8 +169,8 @@ def serialize_report_as_tree(report):
     if report.test_session_setup:
         _serialize_hook_data(report.test_session_setup, _xml_child(xml, "test-session-setup"))
 
-    for suite in report.testsuites:
-        suite_node = _serialize_testsuite_data(suite)
+    for suite in report.suites:
+        suite_node = _serialize_suite_data(suite)
         xml.append(suite_node)
 
     if report.test_session_teardown:
@@ -240,7 +240,7 @@ def _unserialize_hook_data(xml):
     data.steps = [ _unserialize_step_data(s) for s in xml.xpath("step") ]
     return data
 
-def _unserialize_testsuite_data(xml):
+def _unserialize_suite_data(xml):
     suite = TestSuiteData(xml.attrib["name"], xml.attrib["description"])
     suite.tags = [ node.text for node in xml.xpath("tag") ]
     suite.properties = { node.attrib["name"]: node.text for node in xml.xpath("property") }
@@ -261,7 +261,7 @@ def _unserialize_testsuite_data(xml):
         suite.suite_teardown = _unserialize_hook_data(suite_teardown)
 
     for xml_suite in xml.xpath("suite"):
-        sub_suite = _unserialize_testsuite_data(xml_suite)
+        sub_suite = _unserialize_suite_data(xml_suite)
         suite.add_suite(sub_suite)
 
     return suite
@@ -296,7 +296,7 @@ def load_report_from_file(filename):
         report.test_session_setup = _unserialize_hook_data(test_session_setup)
 
     for xml_suite in root.xpath("suite"):
-        suite = _unserialize_testsuite_data(xml_suite)
+        suite = _unserialize_suite_data(xml_suite)
         report.add_suite(suite)
 
     test_session_teardown = xml.xpath("test-session-teardown")

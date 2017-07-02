@@ -46,7 +46,7 @@ class FixturesCommand(Command):
             return "Cannot find project file"
         try:
             project = Project(project_file)
-            suites = project.get_testsuites()
+            suites = project.get_suites()
             fixtures = project.get_fixtures()
         except (ProjectError, ProgrammingError) as e:
             return str(e)
@@ -69,7 +69,7 @@ class FixturesCommand(Command):
             for param in fixt.params:
                 used_by_fixtures[param] = used_by_fixtures.get(param, 0) + 1
 
-        for scope in "session_prerun", "session", "testsuite", "test":
+        for scope in "session_prerun", "session", "suite", "test":
             self.show_fixtures(scope, fixtures_by_scope.get(scope, []), used_by_tests, used_by_fixtures, cli_args.verbose)
             print()
 
