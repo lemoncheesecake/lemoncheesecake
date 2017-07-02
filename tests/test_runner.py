@@ -626,10 +626,10 @@ def test_run_with_fixture_with_logs():
 
     report = get_runtime().report
 
-    assert len(report.testsuites[0].tests[0].steps) == 3
-    assert report.testsuites[0].tests[0].steps[0].description == "Setup test"
-    assert report.testsuites[0].tests[0].steps[1].description == "Doing some test"
-    assert report.testsuites[0].tests[0].steps[2].description == "Teardown test"
+    assert len(report.get_suites()[0].get_tests()[0].steps) == 3
+    assert report.get_suites()[0].get_tests()[0].steps[0].description == "Setup test"
+    assert report.get_suites()[0].get_tests()[0].steps[1].description == "Doing some test"
+    assert report.get_suites()[0].get_tests()[0].steps[2].description == "Teardown test"
 
 def test_run_with_fixtures_using_yield_and_dependencies():
     marker = []
@@ -684,10 +684,10 @@ def test_run_with_fixtures_using_yield_and_dependencies():
     # check that each fixture and fixture teardown is properly executed in the right scope
     assert report.test_session_setup.steps[0].entries[0].message == "session_fixture_setup"
     assert report.test_session_teardown.steps[0].entries[0].message == "session_fixture_teardown"
-    assert report.testsuites[0].suite_setup.steps[0].entries[0].message == "suite_fixture_setup"
-    assert report.testsuites[0].suite_teardown.steps[0].entries[0].message == "suite_fixture_teardown"
-    assert report.testsuites[0].tests[0].steps[0].entries[0].message == "test_fixture_setup"
-    assert report.testsuites[0].tests[0].steps[1].entries[0].message == "test_fixture_teardown"
+    assert report.get_suites()[0].suite_setup.steps[0].entries[0].message == "suite_fixture_setup"
+    assert report.get_suites()[0].suite_teardown.steps[0].entries[0].message == "suite_fixture_teardown"
+    assert report.get_suites()[0].get_tests()[0].steps[0].entries[0].message == "test_fixture_setup"
+    assert report.get_suites()[0].get_tests()[0].steps[1].entries[0].message == "test_fixture_teardown"
 
 def test_run_with_fixtures_dependencies_in_test_session_prerun_scope(reporting_session):
     # in this test, fixture dependency is set on fixture alphabetical inverse

@@ -81,8 +81,8 @@ def _serialize_hook_data(hook_data):
 def _serialize_testsuite_data(suite):
     json_suite = _serialize_common_data(suite)
     json_suite.update(_dict(
-        "tests", [ _serialize_test_data(t) for t in suite.tests ],
-        "sub_suites", [ _serialize_testsuite_data(s) for s in suite.sub_testsuites ]
+        "tests", [ _serialize_test_data(t) for t in suite.get_tests() ],
+        "sub_suites", [ _serialize_testsuite_data(s) for s in suite.get_suites() ]
     ))
     if suite.suite_setup:
         json_suite["suite_setup"] = _serialize_hook_data(suite.suite_setup)
@@ -162,8 +162,8 @@ def _unserialize_hook_data(js):
 
     return data
 
-def _unserialize_testsuite_data(js, parent=None):
-    suite = TestSuiteData(js["name"], js["description"], parent)
+def _unserialize_testsuite_data(js):
+    suite = TestSuiteData(js["name"], js["description"])
     suite.tags = js["tags"]
     suite.properties = js["properties"]
     suite.links = [ (link["url"], link["name"]) for link in js["links"] ]
@@ -171,12 +171,16 @@ def _unserialize_testsuite_data(js, parent=None):
     if "suite_setup" in js:
         suite.suite_setup = _unserialize_hook_data(js["suite_setup"])
 
-    suite.tests = [ _unserialize_test_data(t) for t in js["tests"] ]
+    for js_test in js["tests"]:
+        test = _unserialize_test_data(js_test)
+        suite.add_test(test)
 
     if "suite_teardown" in js:
         suite.suite_teardown = _unserialize_hook_data(js["suite_teardown"])
 
-    suite.sub_testsuites = [ _unserialize_testsuite_data(s, suite) for s in js["sub_suites"] ]
+    for js_suite in js["sub_suites"]:
+        sub_suite = _unserialize_testsuite_data(js_suite)
+        suite.add_suite(sub_suite)
 
     return suite
 
@@ -204,7 +208,9 @@ def load_report_from_file(filename):
     if "test_session_setup" in js:
         report.test_session_setup = _unserialize_hook_data(js["test_session_setup"])
 
-    report.testsuites = [ _unserialize_testsuite_data(s) for s in js["suites"] ]
+    for js_suite in js["suites"]:
+        suite = _unserialize_testsuite_data(js_suite)
+        report.add_suite(suite)
 
     if "test_session_teardown" in js:
         report.test_session_teardown = _unserialize_hook_data(js["test_session_teardown"])

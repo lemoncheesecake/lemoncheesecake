@@ -10,6 +10,7 @@ from decimal import Decimal
 
 from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 from lemoncheesecake.utils import humanize_duration
+from lemoncheesecake.testtree import BaseTest, BaseTestSuite
 
 __all__ = (
     "LogData", "CheckData", "AttachmentData", "UrlData", "StepData", "TestData",
@@ -79,13 +80,9 @@ class StepData:
     def has_failure(self):
         return len(list(filter(lambda entry: entry.has_failure(), self.entries))) > 0
 
-class TestData:
+class TestData(BaseTest):
     def __init__(self, name, description):
-        self.name = name
-        self.description = description
-        self.tags = [ ]
-        self.properties = {}
-        self.links = [ ]
+        BaseTest.__init__(self, name, description)
         self.status = None
         self.status_details = None
         self.steps = [ ]
@@ -108,25 +105,18 @@ class HookData:
     def is_empty(self):
         return len(self.steps) == 0
 
-class TestSuiteData:
-    def __init__(self, name, description, parent=None):
-        self.name = name
-        self.description = description
-        self.parent = parent
-        self.tags = [ ]
-        self.properties = {}
-        self.links = [ ]
+class TestSuiteData(BaseTestSuite):
+    def __init__(self, name, description):
+        BaseTestSuite.__init__(self, name, description)
         self.suite_setup = None
-        self.tests = [ ]
-        self.sub_testsuites = [ ]
         self.suite_teardown = None
-
+    
     def get_test(self, test_name):
-        for test in self.tests:
+        for test in self.get_tests():
             if test.name == test_name:
                 return test
 
-        for suite in self.sub_testsuites:
+        for suite in self.get_suites():
             test = suite.get_test(test_name)
             if test:
                 return test
@@ -137,7 +127,7 @@ class TestSuiteData:
         if self.name == suite_name:
             return self
 
-        for sub_suite in self.sub_testsuites:
+        for sub_suite in self.get_suites():
             suite = sub_suite.get_suite(suite_name)
             if suite:
                 return suite
@@ -194,13 +184,13 @@ class ReportStats:
                 self.errors += 1
             self._walk_steps(suite.suite_teardown.steps)
 
-        for test in suite.tests:
+        for test in suite.get_tests():
             self.tests += 1
             if test.status != None:
                 self.test_statuses[test.status] += 1
             self._walk_steps(test.steps)
 
-        for sub_suite in suite.sub_testsuites:
+        for sub_suite in suite.get_suites():
             self._walk_testsuite(sub_suite)
 
 class Report:
@@ -215,9 +205,15 @@ class Report:
 
     def add_info(self, name, value):
         self.info.append([name, value])
+    
+    def add_suite(self, suite):
+        self.testsuites.append(suite)
+    
+    def get_suites(self):
+        return self.testsuites
 
     def get_test(self, test_name):
-        for suite in self.testsuites:
+        for suite in self.get_suites():
             test = suite.get_test(test_name)
             if test:
                 return test

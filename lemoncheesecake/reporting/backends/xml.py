@@ -136,12 +136,12 @@ def _serialize_testsuite_data(suite):
         _serialize_hook_data(suite.suite_setup, _xml_child(suite_node, "suite-setup"))
 
     # tests
-    for test in suite.tests:
+    for test in suite.get_tests():
         test_node = _serialize_test_data(test)
         suite_node.append(test_node)
 
     # sub suites
-    for sub_suite in suite.sub_testsuites:
+    for sub_suite in suite.get_suites():
         sub_suite_node = _serialize_testsuite_data(sub_suite)
         suite_node.append(sub_suite_node)
 
@@ -240,8 +240,8 @@ def _unserialize_hook_data(xml):
     data.steps = [ _unserialize_step_data(s) for s in xml.xpath("step") ]
     return data
 
-def _unserialize_testsuite_data(xml, parent=None):
-    suite = TestSuiteData(xml.attrib["name"], xml.attrib["description"], parent)
+def _unserialize_testsuite_data(xml):
+    suite = TestSuiteData(xml.attrib["name"], xml.attrib["description"])
     suite.tags = [ node.text for node in xml.xpath("tag") ]
     suite.properties = { node.attrib["name"]: node.text for node in xml.xpath("property") }
     suite.links = [ (link.text, link.attrib["name"]) for link in xml.xpath("link") ]
@@ -251,14 +251,18 @@ def _unserialize_testsuite_data(xml, parent=None):
     if suite_setup != None:
         suite.suite_setup = _unserialize_hook_data(suite_setup)
 
-    suite.tests = [ _unserialize_test_data(t) for t in xml.xpath("test") ]
+    for xml_test in xml.xpath("test"):
+        test = _unserialize_test_data(xml_test)
+        suite.add_test(test)
 
     suite_teardown = xml.xpath("suite-teardown")
     suite_teardown = suite_teardown[0] if len(suite_teardown) > 0 else None
     if suite_teardown != None:
         suite.suite_teardown = _unserialize_hook_data(suite_teardown)
 
-    suite.sub_testsuites = [ _unserialize_testsuite_data(s, suite) for s in xml.xpath("suite") ]
+    for xml_suite in xml.xpath("suite"):
+        sub_suite = _unserialize_testsuite_data(xml_suite)
+        suite.add_suite(sub_suite)
 
     return suite
 
@@ -292,7 +296,8 @@ def load_report_from_file(filename):
         report.test_session_setup = _unserialize_hook_data(test_session_setup)
 
     for xml_suite in root.xpath("suite"):
-        report.testsuites.append(_unserialize_testsuite_data(xml_suite))
+        suite = _unserialize_testsuite_data(xml_suite)
+        report.add_suite(suite)
 
     test_session_teardown = xml.xpath("test-session-teardown")
     test_session_teardown = test_session_teardown[0] if len(test_session_teardown) else None

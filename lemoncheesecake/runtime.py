@@ -125,14 +125,14 @@ class _Runtime:
 
     def begin_suite(self, testsuite):
         self.current_testsuite = testsuite
-        suite_data = TestSuiteData(testsuite.name, testsuite.description, self.current_testsuite_data)
+        suite_data = TestSuiteData(testsuite.name, testsuite.description)
         suite_data.tags.extend(testsuite.tags)
         suite_data.properties.update(testsuite.properties)
         suite_data.links.extend(testsuite.links)
         if self.current_testsuite_data:
-            self.current_testsuite_data.sub_testsuites.append(suite_data)
+            self.current_testsuite_data.add_suite(suite_data)
         else:
-            self.report.testsuites.append(suite_data)
+            self.report.add_suite(suite_data)
         self.current_testsuite_data = suite_data
 
         self.for_each_reporting_sessions(lambda b: b.begin_suite(testsuite))
@@ -171,7 +171,7 @@ class _Runtime:
 
     def end_suite(self):
         self.for_each_reporting_sessions(lambda b: b.end_suite(self.current_testsuite))
-        self.current_testsuite_data = self.current_testsuite_data.parent
+        self.current_testsuite_data = self.current_testsuite_data.parent_suite
         self.current_testsuite = self.current_testsuite.parent_suite
 
     def begin_test(self, test):
@@ -183,7 +183,7 @@ class _Runtime:
         self.current_test_data.properties.update(test.properties)
         self.current_test_data.links.extend(test.links)
         self.current_test_data.start_time = now
-        self.current_testsuite_data.tests.append(self.current_test_data)
+        self.current_testsuite_data.add_test(self.current_test_data)
         self.for_each_reporting_sessions(lambda b: b.begin_test(test))
         self.current_step_data_list = self.current_test_data.steps
         self.default_step_description = test.description
@@ -222,7 +222,7 @@ class _Runtime:
         test_data.end_time = test_data.start_time = now
         test_data.status = status
         test_data.status_details = status_details
-        self.current_testsuite_data.tests.append(test_data)
+        self.current_testsuite_data.add_test(test_data)
 
         self.for_each_reporting_sessions(lambda b: b.bypass_test(test, status, status_details))
 

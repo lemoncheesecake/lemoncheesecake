@@ -241,7 +241,7 @@ class _Runner:
         ###
         # Run sub testsuites
         ###
-        for sub_suite in suite.get_sub_testsuites(filtered=True):
+        for sub_suite in suite.get_suites(filtered=True):
             self.run_testsuite(sub_suite)
 
         ###

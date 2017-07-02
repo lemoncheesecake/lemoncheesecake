@@ -328,22 +328,22 @@ def assert_hook_data(actual, expected):
 def assert_testsuite_data(actual, expected):
     assert actual.name == expected.name
     assert actual.description == expected.description
-    if expected.parent == None:
-        assert actual.parent == None
+    if expected.parent_suite == None:
+        assert actual.parent_suite == None
     else:
-        assert actual.parent.name == expected.parent.name
+        assert actual.parent_suite.name == expected.parent_suite.name
     assert actual.tags == expected.tags
     assert actual.properties == expected.properties
     assert actual.links == expected.links
 
     assert_hook_data(actual.suite_setup, expected.suite_setup)
 
-    assert len(actual.tests) == len(expected.tests)
-    for actual_test, expected_test in zip(actual.tests, expected.tests):
+    assert len(actual.get_tests()) == len(expected.get_tests())
+    for actual_test, expected_test in zip(actual.get_tests(), expected.get_tests()):
         assert_test_data(actual_test, expected_test)
 
-    assert len(actual.sub_testsuites) == len(expected.sub_testsuites)
-    for actual_subsuite, expected_subsuite in zip(actual.sub_testsuites, expected.sub_testsuites):
+    assert len(actual.get_suites()) == len(expected.get_suites())
+    for actual_subsuite, expected_subsuite in zip(actual.get_suites(), expected.get_suites()):
         assert_testsuite_data(actual_subsuite, expected_subsuite)
 
     assert_hook_data(actual.suite_teardown, expected.suite_teardown)
@@ -389,12 +389,12 @@ def assert_testsuite_data_from_testsuite(testsuite_data, testsuite):
         assert testsuite_data.suite_setup.end_time != None
         assert_steps_data(testsuite_data.suite_setup.steps)
 
-    assert len(testsuite_data.tests) == len(testsuite.get_tests())
-    for test_data, test in zip(testsuite_data.tests, testsuite.get_tests()):
+    assert len(testsuite_data.get_tests()) == len(testsuite.get_tests())
+    for test_data, test in zip(testsuite_data.get_tests(), testsuite.get_tests()):
         assert_test_data_from_test(test_data, test)
 
-    assert len(testsuite_data.sub_testsuites) == len(testsuite.get_sub_testsuites())
-    for sub_testsuite_data, sub_testsuite in zip(testsuite_data.sub_testsuites, testsuite.get_sub_testsuites()):
+    assert len(testsuite_data.get_suites()) == len(testsuite.get_suites())
+    for sub_testsuite_data, sub_testsuite in zip(testsuite_data.get_suites(), testsuite.get_suites()):
         assert_testsuite_data_from_testsuite(sub_testsuite_data, sub_testsuite)
 
     if testsuite.has_hook("teardown_suite"):

@@ -44,15 +44,15 @@ class ShowCommand(Command):
             return test.description
         if self.short:
             return test.name
-        return test.get_path_str()
-    
+        return test.get_path_as_str()
+
     def get_suite_label(self, suite):
         if self.show_description:
             return suite.description
         if self.short:
             return suite.name
-        return suite.get_path_str()
-    
+        return suite.get_path_as_str()
+
     def show_test(self, test, suite):
         md = self.serialize_metadata(test) if self.show_metadata else ""
         if self.flat_mode:
@@ -73,8 +73,8 @@ class ShowCommand(Command):
 
         for test in suite.get_tests():
             self.show_test(test, suite)
-        
-        for sub_suite in suite.get_sub_testsuites():
+
+        for sub_suite in suite.get_suites():
             self.show_testsuite(sub_suite)
     
     def show_testsuites(self, suites):
