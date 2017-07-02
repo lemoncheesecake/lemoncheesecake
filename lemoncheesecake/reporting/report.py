@@ -10,11 +10,11 @@ from decimal import Decimal
 
 from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 from lemoncheesecake.utils import humanize_duration
-from lemoncheesecake.testtree import BaseTest, BaseTestSuite
+from lemoncheesecake.testtree import BaseTest, BaseSuite
 
 __all__ = (
     "LogData", "CheckData", "AttachmentData", "UrlData", "StepData", "TestData",
-    "TestSuiteData", "HookData", "Report"
+    "SuiteData", "HookData", "Report"
 )
 
 TEST_STATUSES = "passed", "failed", "skipped"
@@ -105,9 +105,9 @@ class HookData:
     def is_empty(self):
         return len(self.steps) == 0
 
-class TestSuiteData(BaseTestSuite):
+class SuiteData(BaseSuite):
     def __init__(self, name, description):
-        BaseTestSuite.__init__(self, name, description)
+        BaseSuite.__init__(self, name, description)
         self.suite_setup = None
         self.suite_teardown = None
     
@@ -155,8 +155,8 @@ class ReportStats:
                 self.errors += 1
             self._walk_steps(report.test_session_teardown.steps)
 
-        for suite in report.testsuites:
-            self._walk_testsuite(suite)
+        for suite in report.suites:
+            self._walk_suite(suite)
 
     def _walk_steps(self, steps):
         for step in steps:
@@ -173,7 +173,7 @@ class ReportStats:
                     elif entry.level == LOG_LEVEL_ERROR:
                         self.error_logs += 1
 
-    def _walk_testsuite(self, suite):
+    def _walk_suite(self, suite):
         if suite.suite_setup:
             if suite.suite_setup.has_failure():
                 self.errors += 1
@@ -191,14 +191,14 @@ class ReportStats:
             self._walk_steps(test.steps)
 
         for sub_suite in suite.get_suites():
-            self._walk_testsuite(sub_suite)
+            self._walk_suite(sub_suite)
 
 class Report:
     def __init__(self):
         self.info = [ ]
         self.test_session_setup = None
         self.test_session_teardown = None
-        self.testsuites = [ ]
+        self.suites = [ ]
         self.start_time = None
         self.end_time = None
         self.report_generation_time = None
@@ -207,10 +207,10 @@ class Report:
         self.info.append([name, value])
     
     def add_suite(self, suite):
-        self.testsuites.append(suite)
+        self.suites.append(suite)
     
     def get_suites(self):
-        return self.testsuites
+        return self.suites
 
     def get_test(self, test_name):
         for suite in self.get_suites():
@@ -221,7 +221,7 @@ class Report:
         return None
 
     def get_suite(self, suite_name):
-        for suite in self.testsuites:
+        for suite in self.suites:
             if suite.name == suite_name:
                 return suite
             sub_suite = suite.get_suite(suite_name)

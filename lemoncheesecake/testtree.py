@@ -59,7 +59,7 @@ class BaseTreeNode:
 class BaseTest(BaseTreeNode):
     pass
 
-class BaseTestSuite(BaseTreeNode):
+class BaseSuite(BaseTreeNode):
     def __init__(self, name, description):
         BaseTreeNode.__init__(self, name, description)
         self._tests = []
@@ -79,17 +79,17 @@ class BaseTestSuite(BaseTreeNode):
     def get_suites(self):
         return self._suites
     
-def walk_testsuites(testsuites, testsuite_func=None, test_func=None):
+def walk_suites(suites, suite_func=None, test_func=None):
     def do_walk(suite):
-        if testsuite_func:
-            testsuite_func(suite)
+        if suite_func:
+            suite_func(suite)
         if test_func:
             for test in suite.get_tests():
                 test_func(test, suite)
         for sub_suite in suite.get_suites():
             do_walk(sub_suite)
-    for suite in testsuites:
+    for suite in suites:
         do_walk(suite)
 
-def walk_tests(testsuites, func):
-    walk_testsuites(testsuites, test_func=func)
+def walk_tests(suites, func):
+    walk_suites(suites, test_func=func)

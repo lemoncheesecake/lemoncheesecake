@@ -1,7 +1,7 @@
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import *
 
-TESTSUITE = {"description": "My test"}
+SUITE = {"description": "My test"}
 
 @lcc.test("test")
 def test():

@@ -21,7 +21,7 @@ __all__ = (
 FORBIDDEN_FIXTURE_NAMES = ("fixture_name", )
 SCOPE_LEVELS = {
     "test": 1,
-    "testsuite": 2,
+    "suite": 2,
     "session": 3,
     "session_prerun": 4
 }
@@ -32,7 +32,7 @@ class FixtureInfo:
         self.scope = scope
 
 def fixture(names=None, scope="test"):
-    if scope not in ("test", "testsuite", "session", "session_prerun"):
+    if scope not in ("test", "suite", "session", "session_prerun"):
         raise ProgrammingError("Invalid fixture scope '%s'" % scope)
 
     def wrapper(func):
@@ -48,7 +48,7 @@ class BaseFixture:
     def get_scope_level(self):
         return {
             "test": 1,
-            "testsuite": 2,
+            "suite": 2,
             "session": 3,
             "session_prerun": 4
         }[self.scope]
@@ -192,12 +192,12 @@ class FixtureRegistry:
             if fixture not in self._fixtures:
                 raise FixtureError("Unknown fixture '%s' used in test '%s'" % (fixture, test.get_path_as_str()))
 
-    def check_fixtures_in_testsuite(self, suite):
+    def check_fixtures_in_suite(self, suite):
         if suite.has_hook("setup_suite"):
             for fixture in suite.get_hook_params("setup_suite"):
                 if fixture not in self._fixtures:
                     raise FixtureError("Unknown fixture '%s' used in setup_suite of suite '%s'" % (fixture, suite.get_path_as_str()))
-                if self._fixtures[fixture].get_scope_level() < SCOPE_LEVELS["testsuite"]:
+                if self._fixtures[fixture].get_scope_level() < SCOPE_LEVELS["suite"]:
                     raise FixtureError("In suite '%s' setup_suite uses fixture '%s' which has an incompatible scope" % (
                         suite.get_path_as_str(), fixture
                     ))
@@ -206,11 +206,11 @@ class FixtureRegistry:
             self.check_fixtures_in_test(test, suite)
 
         for sub_suite in suite.get_suites():
-            self.check_fixtures_in_testsuite(sub_suite)
+            self.check_fixtures_in_suite(sub_suite)
 
-    def check_fixtures_in_testsuites(self, suites):
+    def check_fixtures_in_suites(self, suites):
         for suite in suites:
-            self.check_fixtures_in_testsuite(suite)
+            self.check_fixtures_in_suite(suite)
 
     def get_fixture_scope(self, name):
         return self._fixtures[name].scope
@@ -273,7 +273,7 @@ def load_fixtures_from_files(patterns, excluding=[]):
       of files to import; the wildcard '*' character can be used
     - exclude: an optional list (a simple string can also be used instead of a single element list)
       of elements to exclude from the expanded list of files to import
-    Example: load_testsuites_from_files("test_*.py")
+    Example: load_suites_from_files("test_*.py")
     """
     fixtures = []
     for file in get_matching_files(patterns, excluding):

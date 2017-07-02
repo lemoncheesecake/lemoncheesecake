@@ -75,7 +75,7 @@ def add_filter_args_to_cli_parser(cli_parser):
         return splitted
 
     group = cli_parser.add_argument_group("Filtering")
-    group.add_argument("path", nargs="*", default=[], help="Filter on test/testsuite path (wildcard character '*' can be used)")
+    group.add_argument("path", nargs="*", default=[], help="Filter on test/suite path (wildcard character '*' can be used)")
     group.add_argument("--desc", nargs="+", action="append", default=[], help="Filter on descriptions")
     group.add_argument("--tag", "-a", nargs="+", action="append", default=[], help="Filter on tags")
     group.add_argument("--property", "-m", nargs="+", type=property_value, action="append", default=[], help="Filter on properties")

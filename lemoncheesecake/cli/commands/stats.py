@@ -9,9 +9,9 @@ from functools import reduce
 
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.display import print_table
-from lemoncheesecake.cli.utils import filter_testsuites_from_cli_args
-from lemoncheesecake.testsuite import add_filter_args_to_cli_parser
-from lemoncheesecake.testtree import walk_testsuites
+from lemoncheesecake.cli.utils import filter_suites_from_cli_args
+from lemoncheesecake.suite import add_filter_args_to_cli_parser
+from lemoncheesecake.testtree import walk_suites
 from lemoncheesecake.project import find_project_file, Project
 from lemoncheesecake.exceptions import ProjectError, ProgrammingError
 
@@ -35,17 +35,17 @@ class StatsCommand(Command):
             return "Cannot find project file"
         try:
             project = Project(project_file)
-            suites = project.get_testsuites()
+            suites = project.get_suites()
         except (ProjectError, ProgrammingError) as e:
             return str(e)
 
-        suites = filter_testsuites_from_cli_args(suites, cli_args)
+        suites = filter_suites_from_cli_args(suites, cli_args)
 
         class Stats:
             def __init__(self):
                 self.tests_nb = 0
-                self.testsuites_nb = 0
-                self.non_empty_testsuites_nb = 0
+                self.suites_nb = 0
+                self.non_empty_suites_nb = 0
                 self.tags = {}
                 self.properties = {}
                 self.links = {}
@@ -68,11 +68,11 @@ class StatsCommand(Command):
             return "%2d%%" % (float(val) / stats.tests_nb * 100)
 
         def handle_suite(suite):
-            stats.testsuites_nb += 1
+            stats.suites_nb += 1
             if suite.has_selected_tests(deep=False):
-                stats.non_empty_testsuites_nb += 1
+                stats.non_empty_suites_nb += 1
 
-        walk_testsuites(suites, test_func=handle_test, testsuite_func=handle_suite)
+        walk_suites(suites, test_func=handle_test, suite_func=handle_suite)
 
         # Show tags
         lines = []
@@ -111,10 +111,10 @@ class StatsCommand(Command):
 
         summary = "Total: %s in %s" % (
             self.bold("%d tests" % stats.tests_nb),
-            self.bold("%d testsuites" % stats.non_empty_testsuites_nb)
+            self.bold("%d suites" % stats.non_empty_suites_nb)
         )
-        if stats.testsuites_nb > stats.non_empty_testsuites_nb:
-            summary += " (+ %d empty suites)" % (stats.testsuites_nb - stats.non_empty_testsuites_nb)
+        if stats.suites_nb > stats.non_empty_suites_nb:
+            summary += " (+ %d empty suites)" % (stats.suites_nb - stats.non_empty_suites_nb)
         print(summary)
         print()
 

@@ -33,7 +33,7 @@ class MethodNotImplemented(ProgrammingError):
 def method_not_implemented(method_name, obj):
     raise MethodNotImplemented(obj, method_name)
 
-class ImportTestSuiteError(LemonCheesecakeException):
+class ImportSuiteError(LemonCheesecakeException):
     pass
 
 class ImportFixtureError(LemonCheesecakeException):
@@ -54,8 +54,8 @@ class AbortTest(LemonCheesecakeException):
     def __init__(self, reason):
         LemonCheesecakeException.__init__(self, reason)
 
-class AbortTestSuite(LemonCheesecakeException):
-    message_prefix = "The testsuite has been aborted"
+class AbortSuite(LemonCheesecakeException):
+    message_prefix = "The suite has been aborted"
 
     def __init__(self, reason):
         LemonCheesecakeException.__init__(self, reason)

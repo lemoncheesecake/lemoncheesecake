@@ -4,7 +4,7 @@ import pytest
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.fixtures import load_fixtures_from_func, FixtureRegistry, BuiltinFixture
-from lemoncheesecake.testsuite import load_testsuite_from_class
+from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake import exceptions
 
 def test_fixture_decorator():
@@ -347,7 +347,7 @@ def build_registry(*executed_fixtures):
     def fix1():
         pass
 
-    @lcc.fixture(scope="testsuite")
+    @lcc.fixture(scope="suite")
     def fix2():
         pass
 
@@ -372,7 +372,7 @@ def test_filter_fixtures_all():
     assert sorted(build_registry().filter_fixtures()) == ["fix0", "fix1", "fix2", "fix3", "fix4", "fix5"]
 
 def test_filter_fixtures_on_scope():
-    assert sorted(build_registry().filter_fixtures(scope="testsuite")) == ["fix2"]
+    assert sorted(build_registry().filter_fixtures(scope="suite")) == ["fix2"]
 
 def test_filter_fixtures_on_executed():
     registry = build_registry("fix3", "fix4")
@@ -387,35 +387,35 @@ def test_filter_fixtures_on_all_criteria():
     fixtures = registry.filter_fixtures(base_names=["fix5"], is_executed=True, scope="test")
     assert sorted(fixtures) == ["fix5"]
 
-def test_check_fixtures_in_testsuites_ok():
-    @lcc.testsuite("MySuite")
+def test_check_fixtures_in_suites_ok():
+    @lcc.suite("MySuite")
     class MySuite:
-        @lcc.testsuite("MySubSuite")
+        @lcc.suite("MySubSuite")
         class MySubSuite:
             @lcc.test("test")
             def sometest(self, fix1):
                 pass
 
-    suite = load_testsuite_from_class(MySuite)
+    suite = load_suite_from_class(MySuite)
     registry = build_registry()
-    registry.check_fixtures_in_testsuites([suite])
+    registry.check_fixtures_in_suites([suite])
 
-def test_check_fixtures_in_testsuites_unknown_fixture_in_test():
-    @lcc.testsuite("MySuite")
+def test_check_fixtures_in_suites_unknown_fixture_in_test():
+    @lcc.suite("MySuite")
     class MySuite:
-        @lcc.testsuite("MySubSuite")
+        @lcc.suite("MySubSuite")
         class MySubSuite:
             @lcc.test("test")
             def sometest(self, unknown_fix):
                 pass
 
-    suite = load_testsuite_from_class(MySuite)
+    suite = load_suite_from_class(MySuite)
     registry = build_registry()
     with pytest.raises(exceptions.FixtureError):
-        registry.check_fixtures_in_testsuites([suite])
+        registry.check_fixtures_in_suites([suite])
 
-def test_check_fixtures_in_testsuites_unknown_fixture_in_setup_suite():
-    @lcc.testsuite("MySuite")
+def test_check_fixtures_in_suites_unknown_fixture_in_setup_suite():
+    @lcc.suite("MySuite")
     class MySuite:
         def setup_suite(self, unknown_fix):
             pass
@@ -424,13 +424,13 @@ def test_check_fixtures_in_testsuites_unknown_fixture_in_setup_suite():
         def sometest(self):
             pass
 
-    suite = load_testsuite_from_class(MySuite)
+    suite = load_suite_from_class(MySuite)
     registry = build_registry()
     with pytest.raises(exceptions.FixtureError):
-        registry.check_fixtures_in_testsuites([suite])
+        registry.check_fixtures_in_suites([suite])
 
-def test_check_fixtures_in_testsuites_incompatible_fixture_in_setup_suite():
-    @lcc.testsuite("MySuite")
+def test_check_fixtures_in_suites_incompatible_fixture_in_setup_suite():
+    @lcc.suite("MySuite")
     class MySuite:
         def setup_suite(self, fix3):
             pass
@@ -439,7 +439,7 @@ def test_check_fixtures_in_testsuites_incompatible_fixture_in_setup_suite():
         def sometest(self):
             pass
 
-    suite = load_testsuite_from_class(MySuite)
+    suite = load_suite_from_class(MySuite)
     registry = build_registry()
     with pytest.raises(exceptions.FixtureError):
-        registry.check_fixtures_in_testsuites([suite])
+        registry.check_fixtures_in_suites([suite])

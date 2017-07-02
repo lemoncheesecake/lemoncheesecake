@@ -1,6 +1,6 @@
 import lemoncheesecake.api as lcc
 
-@lcc.testsuite("Suite 2")
+@lcc.suite("Suite 2")
 class suite_2:
     @lcc.test("Test 1")
     @lcc.prop("priority", "low")

@@ -11,7 +11,7 @@ from collections import OrderedDict
 
 from lemoncheesecake.reporting.backend import FileReportBackend, SAVE_AT_EACH_FAILED_TEST
 from lemoncheesecake.reporting.report import (
-    LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, TestSuiteData,
+    LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, SuiteData,
     Report, format_timestamp, parse_timestamp
 )
 from lemoncheesecake.exceptions import InvalidReportFile
@@ -78,11 +78,11 @@ def _serialize_hook_data(hook_data):
         "outcome", hook_data.outcome
     )
 
-def _serialize_testsuite_data(suite):
+def _serialize_suite_data(suite):
     json_suite = _serialize_common_data(suite)
     json_suite.update(_dict(
         "tests", [ _serialize_test_data(t) for t in suite.get_tests() ],
-        "sub_suites", [ _serialize_testsuite_data(s) for s in suite.get_suites() ]
+        "sub_suites", [ _serialize_suite_data(s) for s in suite.get_suites() ]
     ))
     if suite.suite_setup:
         json_suite["suite_setup"] = _serialize_hook_data(suite.suite_setup)
@@ -104,7 +104,7 @@ def serialize_report_into_json(report):
     if report.test_session_setup:
         serialized["test_session_setup"] = _serialize_hook_data(report.test_session_setup)
 
-    serialized["suites"] = [ _serialize_testsuite_data(s) for s in report.testsuites ]
+    serialized["suites"] = [ _serialize_suite_data(s) for s in report.suites ]
 
     if report.test_session_teardown:
         serialized["test_session_teardown"] = _serialize_hook_data(report.test_session_teardown)
@@ -162,8 +162,8 @@ def _unserialize_hook_data(js):
 
     return data
 
-def _unserialize_testsuite_data(js):
-    suite = TestSuiteData(js["name"], js["description"])
+def _unserialize_suite_data(js):
+    suite = SuiteData(js["name"], js["description"])
     suite.tags = js["tags"]
     suite.properties = js["properties"]
     suite.links = [ (link["url"], link["name"]) for link in js["links"] ]
@@ -179,7 +179,7 @@ def _unserialize_testsuite_data(js):
         suite.suite_teardown = _unserialize_hook_data(js["suite_teardown"])
 
     for js_suite in js["sub_suites"]:
-        sub_suite = _unserialize_testsuite_data(js_suite)
+        sub_suite = _unserialize_suite_data(js_suite)
         suite.add_suite(sub_suite)
 
     return suite
@@ -209,7 +209,7 @@ def load_report_from_file(filename):
         report.test_session_setup = _unserialize_hook_data(js["test_session_setup"])
 
     for js_suite in js["suites"]:
-        suite = _unserialize_testsuite_data(js_suite)
+        suite = _unserialize_suite_data(js_suite)
         report.add_suite(suite)
 
     if "test_session_teardown" in js:

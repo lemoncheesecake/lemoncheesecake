@@ -7,8 +7,8 @@ Created on Feb 14, 2017
 from __future__ import print_function
 
 from lemoncheesecake.cli.command import Command
-from lemoncheesecake.cli.utils import filter_testsuites_from_cli_args
-from lemoncheesecake.testsuite.filter import add_filter_args_to_cli_parser
+from lemoncheesecake.cli.utils import filter_suites_from_cli_args
+from lemoncheesecake.suite.filter import add_filter_args_to_cli_parser
 from lemoncheesecake.project import find_project_file, Project
 from lemoncheesecake.exceptions import ProjectError, ProgrammingError
 
@@ -23,10 +23,10 @@ class ShowCommand(Command):
         add_filter_args_to_cli_parser(cli_parser)
 
         group = cli_parser.add_argument_group("Display")
-        group.add_argument("--no-metadata", "-i", action="store_true", help="Hide testsuite and test metadata")
-        group.add_argument("--short", "-s", action="store_true", help="Display testsuite and test names instead of path")
-        group.add_argument("--desc-mode", "-d", action="store_true", help="Display testsuite and test descriptions instead of path")
-        group.add_argument("--flat-mode", "-f", action="store_true", help="Enable flat mode: display all test and testsuite as path without indentation nor prefix")
+        group.add_argument("--no-metadata", "-i", action="store_true", help="Hide suite and test metadata")
+        group.add_argument("--short", "-s", action="store_true", help="Display suite and test names instead of path")
+        group.add_argument("--desc-mode", "-d", action="store_true", help="Display suite and test descriptions instead of path")
+        group.add_argument("--flat-mode", "-f", action="store_true", help="Enable flat mode: display all test and suite as path without indentation nor prefix")
         self.add_color_cli_args(group)
 
     def get_padding(self, depth):
@@ -62,7 +62,7 @@ class ShowCommand(Command):
             test_label = self.get_test_label(test, suite)
             print("%s- %s%s" % (padding, test_label, " (%s)" % md if md else ""))
         
-    def show_testsuite(self, suite):
+    def show_suite(self, suite):
         md = self.serialize_metadata(suite) if self.show_metadata else ""
         if self.flat_mode:
             print("%s%s" % (self.bold(self.get_suite_label(suite)), " (%s)" % md if md else ""))
@@ -75,11 +75,11 @@ class ShowCommand(Command):
             self.show_test(test, suite)
 
         for sub_suite in suite.get_suites():
-            self.show_testsuite(sub_suite)
+            self.show_suite(sub_suite)
     
-    def show_testsuites(self, suites):
+    def show_suites(self, suites):
         for suite in suites:
-            self.show_testsuite(suite)
+            self.show_suite(suite)
 
     def run_cmd(self, cli_args):
         self.process_color_cli_args(cli_args)
@@ -95,12 +95,12 @@ class ShowCommand(Command):
             return "Cannot find project file"
         try:
             project = Project(project_file)
-            suites = project.get_testsuites()
+            suites = project.get_suites()
         except (ProjectError, ProgrammingError) as e:
             return str(e)
         
-        suites = filter_testsuites_from_cli_args(suites, cli_args)
+        suites = filter_suites_from_cli_args(suites, cli_args)
         
-        self.show_testsuites(suites)
+        self.show_suites(suites)
         
         return 0

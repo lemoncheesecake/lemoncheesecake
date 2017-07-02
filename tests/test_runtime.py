@@ -18,7 +18,7 @@ from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 from lemoncheesecake.reporting.backends.json_ import serialize_report_into_json
 
-from helpers import run_testsuite_class, run_testsuite_classes, assert_report_from_testsuite, assert_report_from_testsuites, assert_report_stats, \
+from helpers import run_suite_class, run_suite_classes, assert_report_from_suite, assert_report_from_suites, assert_report_stats, \
     dump_report
 
 def assert_test_success(report, test_name):
@@ -31,23 +31,23 @@ def assert_test_skipped(report, test_name):
     assert report.get_test(test_name).status == "skipped"
 
 def test_simple_test():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             lcc.check_that("foo", 1, lcc.equal_to(1))
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
 
     assert_test_success(report, "sometest")
 
 def test_test_with_all_metadata():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.link("http://foo.bar", "foobar")
         @lcc.prop("foo", "bar")
@@ -56,36 +56,36 @@ def test_test_with_all_metadata():
         def sometest(self):
             lcc.check_that("foo", 1, lcc.equal_to(1))
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
 
     assert_test_success(report, "sometest")
 
-def test_testsuite_with_all_metadata():
+def test_suite_with_all_metadata():
     @lcc.link("http://foo.bar", "foobar")
     @lcc.prop("foo", "bar")
     @lcc.tags("foo", "bar")
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             lcc.check_that("foo", 1, lcc.equal_to(1))
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
 
     assert_test_success(report, "sometest")
 
-def test_multiple_testsuites_and_tests():
-    @lcc.testsuite("MySuite1")
+def test_multiple_suites_and_tests():
+    @lcc.suite("MySuite1")
     class MySuite1:
         @lcc.tags("foo")
         @lcc.test("Some test 1")
@@ -102,7 +102,7 @@ def test_multiple_testsuites_and_tests():
         def test_1_3(self):
             lcc.check_that("foo", 3, lcc.equal_to(2))
 
-    @lcc.testsuite("MySuite2")
+    @lcc.suite("MySuite2")
     class MySuite2:
         @lcc.prop("foo", "bar")
         @lcc.test("Some test 1")
@@ -119,7 +119,7 @@ def test_multiple_testsuites_and_tests():
             lcc.check_that("foo", 2, lcc.equal_to(2))
 
         # suite3 is a sub suite of suite3
-        @lcc.testsuite("MySuite3")
+        @lcc.suite("MySuite3")
         class MySuite3:
             @lcc.prop("foo", "bar")
             @lcc.test("Some test 1")
@@ -135,11 +135,11 @@ def test_multiple_testsuites_and_tests():
             def test_3_3(self):
                 lcc.check_that("foo", 1, lcc.equal_to(1))
 
-    run_testsuite_classes([MySuite1, MySuite2])
+    run_suite_classes([MySuite1, MySuite2])
 
     report = get_runtime().report
 
-    assert_report_from_testsuites(report, [MySuite1, MySuite2])
+    assert_report_from_suites(report, [MySuite1, MySuite2])
     assert_report_stats(
         report,
         expected_test_successes=6, expected_test_failures=3,
@@ -159,17 +159,17 @@ def test_multiple_testsuites_and_tests():
     assert_test_success(report, "test_3_3")
 
 def test_check_success():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
             lcc.check_that("somevalue", "foo", lcc.equal_to("foo"))
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
 
     test = report.get_test("test_1")
@@ -181,17 +181,17 @@ def test_check_success():
     assert "foo" in step.entries[0].details
 
 def test_check_failure():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
             lcc.check_that("somevalue", "foo", lcc.equal_to("bar"))
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_failures=1, expected_check_failures=1)
 
     test = report.get_test("test_1")
@@ -203,17 +203,17 @@ def test_check_failure():
     assert "foo" in step.entries[0].details
 
 def test_require_success():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
             lcc.require_that("somevalue", "foo", lcc.equal_to("foo"))
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
 
     test = report.get_test("test_1")
@@ -225,17 +225,17 @@ def test_require_success():
     assert "foo" in step.entries[0].details
 
 def test_require_failure():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
             lcc.require_that("somevalue", "foo", lcc.equal_to("bar"))
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_failures=1, expected_check_failures=1, expected_error_logs=1)
 
     test = report.get_test("test_1")
@@ -247,7 +247,7 @@ def test_require_failure():
     assert "foo" in step.entries[0].details
 
 def test_all_types_of_logs():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
@@ -259,11 +259,11 @@ def test_all_types_of_logs():
         def test_2(self):
             lcc.log_error("some error message")
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report,
         expected_test_successes=1, expected_test_failures=1,
         expected_error_logs=1, expected_warning_logs=1
@@ -285,7 +285,7 @@ def test_all_types_of_logs():
     assert step.entries[0].level == "error"
 
 def test_multiple_steps():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
@@ -294,11 +294,11 @@ def test_multiple_steps():
             lcc.set_step("step 2")
             lcc.log_info("do something else")
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1)
 
     test = report.get_test("sometest")
@@ -311,17 +311,17 @@ def test_multiple_steps():
     assert test.steps[1].entries[0].message == "do something else"
 
 def test_default_step():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             lcc.log_info("do something")
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1)
 
     test = report.get_test("sometest")
@@ -331,7 +331,7 @@ def test_default_step():
     assert test.steps[0].entries[0].message == "do something"
 
 def test_step_after_test_setup():
-    @lcc.testsuite("mysuite")
+    @lcc.suite("mysuite")
     class MySuite:
         def setup_test(self, test_name):
             lcc.log_info("in test setup")
@@ -340,11 +340,11 @@ def test_step_after_test_setup():
         def sometest(self):
             lcc.log_info("do something")
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1)
 
     test = report.get_test("sometest")
@@ -357,7 +357,7 @@ def test_step_after_test_setup():
     assert test.steps[1].entries[0].message == "do something"
 
 def test_prepare_attachment(tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
@@ -365,11 +365,11 @@ def test_prepare_attachment(tmpdir):
             with open(filename, "w") as fh:
                 fh.write("some content")
 
-    run_testsuite_class(MySuite, tmpdir=tmpdir)
+    run_suite_class(MySuite, tmpdir=tmpdir)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1)
 
     test = report.get_test("sometest")
@@ -380,7 +380,7 @@ def test_prepare_attachment(tmpdir):
         assert fh.read() == "some content"
 
 def test_save_attachment_file(tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
@@ -390,11 +390,11 @@ def test_save_attachment_file(tmpdir):
                 fh.write("some other content")
             lcc.save_attachment_file(filename, "some other file")
 
-    run_testsuite_class(MySuite, tmpdir=tmpdir)
+    run_suite_class(MySuite, tmpdir=tmpdir)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1)
 
     test = report.get_test("sometest")
@@ -405,17 +405,17 @@ def test_save_attachment_file(tmpdir):
         assert fh.read() == "some other content"
 
 def _test_save_attachment_content(tmpdir, file_name, file_content, encoding=None):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             lcc.save_attachment_content(file_content, file_name, binary_mode=not encoding)
 
-    run_testsuite_class(MySuite, tmpdir=tmpdir)
+    run_suite_class(MySuite, tmpdir=tmpdir)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1)
 
     test = report.get_test("sometest")
@@ -441,17 +441,17 @@ def test_save_attachment_binary(tmpdir):
     _test_save_attachment_content(tmpdir, "foobar.png", content)
 
 def test_log_url():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             lcc.log_url("http://example.com", "example")
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1)
 
     test = report.get_test("sometest")
@@ -460,7 +460,7 @@ def test_log_url():
     assert test.steps[0].entries[0].url == "http://example.com"
 
 def test_unicode(tmpdir):
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("some test")
         def sometest(self):
@@ -469,11 +469,11 @@ def test_unicode(tmpdir):
             lcc.log_info(u"éééààà")
             lcc.save_attachment_content("A" * 1024, u"somefileààà", u"éééààà")
 
-    run_testsuite_class(MySuite, tmpdir=tmpdir)
+    run_suite_class(MySuite, tmpdir=tmpdir)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
 
     test = report.get_test("sometest")
@@ -489,7 +489,7 @@ def test_unicode(tmpdir):
         assert fh.read() == "A" * 1024
 
 def test_setup_suite_success():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         def setup_suite(self):
             lcc.log_info("some log")
@@ -498,11 +498,11 @@ def test_setup_suite_success():
         def sometest(self):
             pass
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1)
 
     suite = report.get_suite("MySuite")
@@ -514,7 +514,7 @@ def test_setup_suite_success():
     assert_test_success(report, "sometest")
 
 def test_setup_suite_failure():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         def setup_suite(self):
             lcc.log_error("something bad happened")
@@ -523,11 +523,11 @@ def test_setup_suite_failure():
         def sometest(self):
             pass
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_skippeds=1, expected_errors=1, expected_error_logs=1)
 
     suite = report.get_suite("MySuite")
@@ -541,7 +541,7 @@ def test_setup_suite_failure():
 def test_setup_suite_without_content():
     marker = []
 
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         def setup_suite(self):
             marker.append("setup")
@@ -550,15 +550,15 @@ def test_setup_suite_without_content():
         def sometest(self):
             pass
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert report.testsuites[0].suite_setup == None
+    assert report.suites[0].suite_setup == None
     assert marker == ["setup"]
 
 def test_teardown_suite_success():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
@@ -567,11 +567,11 @@ def test_teardown_suite_success():
         def teardown_suite(self):
             lcc.log_info("some log")
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1)
 
     suite = report.get_suite("MySuite")
@@ -583,7 +583,7 @@ def test_teardown_suite_success():
     assert_test_success(report, "sometest")
 
 def test_teardown_suite_failure():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
@@ -592,11 +592,11 @@ def test_teardown_suite_failure():
         def teardown_suite(self):
             lcc.check_that("val", 1, lcc.equal_to(2))
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1, expected_errors=1, expected_check_failures=1)
 
     suite = report.get_suite("MySuite")
@@ -610,7 +610,7 @@ def test_teardown_suite_failure():
 def test_teardown_suite_without_content():
     marker = []
 
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
@@ -619,15 +619,15 @@ def test_teardown_suite_without_content():
         def teardown_suite(self):
             marker.append("teardown")
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
-    assert report.testsuites[0].suite_teardown == None
+    assert report.suites[0].suite_teardown == None
     assert marker == ["teardown"]
 
 def test_setup_test_session_success():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self, fixt):
@@ -637,11 +637,11 @@ def test_setup_test_session_success():
     def fixt():
         lcc.log_info("some log")
 
-    run_testsuite_class(MySuite, fixtures=[fixt])
+    run_suite_class(MySuite, fixtures=[fixt])
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1)
 
     assert report.test_session_setup.outcome == True
@@ -652,7 +652,7 @@ def test_setup_test_session_success():
     assert_test_success(report, "sometest")
 
 def test_setup_test_session_failure():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self, fixt):
@@ -662,11 +662,11 @@ def test_setup_test_session_failure():
     def fixt():
         lcc.log_error("something bad happened")
 
-    run_testsuite_class(MySuite, fixtures=[fixt])
+    run_suite_class(MySuite, fixtures=[fixt])
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_skippeds=1, expected_errors=1, expected_error_logs=1)
 
     assert report.test_session_setup.outcome == False
@@ -679,7 +679,7 @@ def test_setup_test_session_failure():
 def test_setup_test_session_without_content():
     marker = []
 
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self, fixt):
@@ -689,7 +689,7 @@ def test_setup_test_session_without_content():
     def fixt():
         marker.append("setup")
 
-    run_testsuite_class(MySuite, fixtures=[fixt])
+    run_suite_class(MySuite, fixtures=[fixt])
 
     report = get_runtime().report
 
@@ -697,7 +697,7 @@ def test_setup_test_session_without_content():
     assert marker == ["setup"]
 
 def test_teardown_test_session_success():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self, fixt):
@@ -708,11 +708,11 @@ def test_teardown_test_session_success():
         yield
         lcc.log_info("some log")
 
-    run_testsuite_class(MySuite, fixtures=[fixt])
+    run_suite_class(MySuite, fixtures=[fixt])
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1)
 
     assert report.test_session_teardown.outcome == True
@@ -723,7 +723,7 @@ def test_teardown_test_session_success():
     assert_test_success(report, "sometest")
 
 def test_teardown_test_session_failure():
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self, fixt):
@@ -734,11 +734,11 @@ def test_teardown_test_session_failure():
         yield
         lcc.check_that("val", 1, lcc.equal_to(2))
 
-    run_testsuite_class(MySuite, fixtures=[fixt])
+    run_suite_class(MySuite, fixtures=[fixt])
 
     report = get_runtime().report
 
-    assert_report_from_testsuite(report, MySuite)
+    assert_report_from_suite(report, MySuite)
     assert_report_stats(report, expected_test_successes=1, expected_errors=1, expected_check_failures=1)
 
     assert report.test_session_teardown.outcome == False
@@ -751,7 +751,7 @@ def test_teardown_test_session_failure():
 def test_teardown_test_session_without_content():
     marker = []
 
-    @lcc.testsuite("MySuite")
+    @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self, fixt):
@@ -762,7 +762,7 @@ def test_teardown_test_session_without_content():
         yield
         marker.append("teardown")
 
-    run_testsuite_class(MySuite, fixtures=[fixt])
+    run_suite_class(MySuite, fixtures=[fixt])
 
     report = get_runtime().report
 
@@ -770,13 +770,13 @@ def test_teardown_test_session_without_content():
     assert marker == ["teardown"]
 
 def test_add_report_info():
-    @lcc.testsuite("Some suite")
+    @lcc.suite("Some suite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             lcc.add_report_info("some info", "some data")
 
-    run_testsuite_class(MySuite)
+    run_suite_class(MySuite)
 
     report = get_runtime().report
 
