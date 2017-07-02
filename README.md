@@ -2,7 +2,7 @@
 
 lemoncheesecake is a functional/QA testing framework for Python. It provides functionalities such as test launcher, tests organization (using hierarchical test suites, tags, properties, links), fixtures, matchers, structured reporting data (JSON, XML) and HTML report.
 
-Tests are organized within testsuites that themselves can contain sub testsuites allowing the building of a complex tests hierarchy. Every tests and testsuites must have a name and a description. Tags, properties (key/value pairs), links can be associated to both tests and testsuites. These metadata are then available in reports and can be used for test filtering in the lemoncheesecake CLI tool `lcc`.
+Tests are organized within suites that themselves can contain sub suites allowing the building of a complex tests hierarchy. Every tests and suites must have a name and a description. Tags, properties (key/value pairs), links can be associated to both tests and suites. These metadata are then available in reports and can be used for test filtering in the lemoncheesecake CLI tool `lcc`.
 
 One of the key features of lemoncheesecake is its reporting capabilities, providing the user with various formats (XML, JSON, HTML) and the possibility to create his own reporting backend.
 
@@ -15,7 +15,7 @@ $ pip install lemoncheesecake
 
 # How does it look ?
 
-Like this. Here is a testsuite that tests a GitHub API end-point:
+Like this. Here is a suite that tests a GitHub API end-point:
 
 ```python
 import json
@@ -26,7 +26,7 @@ from lemoncheesecake.matching import *
 
 URL  = "https://api.github.com/orgs/lemoncheesecake"
 
-@lcc.testsuite("Github tests")
+@lcc.suite("Github tests")
 class github:
     @lcc.test("Test Organization end-point")
     def organization(self):
@@ -57,7 +57,7 @@ class github:
 
 And here are the corresponding test results:
 
-![alt text](https://github.com/lemoncheesecake/lemoncheesecake/blob/master/misc/github-testsuite.png?raw=true "test result")
+![alt text](https://github.com/lemoncheesecake/lemoncheesecake/blob/master/misc/github-suite.png?raw=true "test result")
 
 # Getting started
 
@@ -70,20 +70,20 @@ The command:
 $ lcc bootstrap myproject
 ```
 
-creates a new project directory "myproject" containing one file "project.py" (it contains your project settings) and a "tests" directory where you can add your testsuites.
+creates a new project directory "myproject" containing one file "project.py" (it contains your project settings) and a "tests" directory where you can add your suites.
 
-## Writing a testsuite
+## Writing a suite
 
-A testsuite can be represented either:
+A suite can be represented either:
 
 - as a module, each test is a function decorated with `@lcc.test`:
   ```python
-  # tests/my_first_testsuite.py:
+  # tests/my_first_suite.py:
   import lemoncheesecake.api as lcc
   from lemoncheesecake.matching import *
 
-  TESTSUITE = {
-      "description": "My first testsuite"
+  SUITE = {
+      "description": "My first suite"
   }
 
   @lcc.test("My first test")
@@ -92,19 +92,19 @@ A testsuite can be represented either:
   ```
 - as a class (in this case the class name must match the module name), each test is a method decorated with `@lcc.test`:
   ```python
-  # tests/my_first_testsuite.py:
+  # tests/my_first_suite.py:
   import lemoncheesecake.api as lcc
   from lemoncheesecake.matching import *
 
-  @lcc.testsuite("My first testsuite")
-  class my_first_testsuite:
+  @lcc.suite("My first suite")
+  class my_first_suite:
       @lcc.test("My first test")
       def my_first_test():
           check_that("value", "foo", equal_to("foo"))
   ```
 
 The two examples above declare:
-- a testsuite whose name is `my_first_testsuite` (the module/class name) and description is `My first testsuite`
+- a suite whose name is `my_first_suite` (the module/class name) and description is `My first suite`
 - a test whose name is `my_first_test` (the function/method name) and description is `My first test`
 
 About imports:
@@ -117,7 +117,7 @@ About imports:
   lcc.check_that("value", 1, lcc.is_integer(lcc.greater_than(0)))
   ```
 
-Using the default `project.py` file, testsuites will be loaded from the `testsuites` sub directory.
+Using the default `project.py` file, suites will be loaded from the `suites` sub directory.
 
 ## Running the tests
 
@@ -136,7 +136,7 @@ optional arguments:
   -h, --help            show this help message and exit
 
 Filtering:
-  path                  Filter on test/testsuite path (wildcard character '*'
+  path                  Filter on test/suite path (wildcard character '*'
                         can be used)
   --desc DESC [DESC ...]
                         Filter on descriptions
@@ -163,7 +163,7 @@ Reporting:
 Tests are run like this:
 ```
 $ lcc run
-============================= my_first_testsuite ==============================
+============================= my_first_suite ==============================
  OK  1 # some_test                
 
 Statistics :
@@ -335,7 +335,7 @@ def api(user_auth):
 # tests/my_suite.py:
 import lemoncheesecake.api as lcc
 
-TESTSUITE = {
+SUITE = {
     "description": "My Suite"
 }
 
@@ -348,7 +348,7 @@ def some_test(self, api):
 Four fixture scopes are available (higher to lower scope):
 - `session_prerun`: fixtures with this scope will be called before the test session is started, meaning that the fixture cannot use any of the `log_*`, `check_*`, etc... functions. If a fixture with this scope raises an exception, it will prevent the tests to be executed. This behavior can be used in conjunction with the `UserError` exception and the `cli_args` fixture to handle bad CLI arguments
 - `session`: fixtures with this scope are initialized at the global level
-- `testsuite`: fixtures with this scope are initialized at the test suite level; if a testsuite "A" uses a `testsuite` scoped fixture (through a test for example), and a sub testsuite "B" uses the same fixture, then the fixture is initialized two times: one time for "A" and the other time for "B"
+- `suite`: fixtures with this scope are initialized at the test suite level; if a suite "A" uses a `suite` scoped fixture (through a test for example), and a sub suite "B" uses the same fixture, then the fixture is initialized two times: one time for "A" and the other time for "B"
 - `test`: fixtures with this scope are initialized at the test level
 
 Please note that:
@@ -375,13 +375,13 @@ Lemoncheesecake provides several special builtin fixtures:
 
 Using the default `project.py` file, fixtures will be loaded from the `fixtures` sub directory.
 
-# Testsuites hierarchy
+# Suites hierarchy
 
-Sub testsuites can be declared in a testsuite in a lot of different ways:
+Sub suites can be declared in a suite in a lot of different ways:
 
-- as classes in a testsuite module:
+- as classes in a suite module:
   ```python
-  TESTSUITE = {
+  SUITE = {
     "description": "Parent suite"
   }
 
@@ -389,13 +389,13 @@ Sub testsuites can be declared in a testsuite in a lot of different ways:
   def test_a():
       pass
 
-  @lcc.testsuite("Child suite 1")
+  @lcc.suite("Child suite 1")
   class child_suite_1:
       @lcc.test("Test B")
       def test_b(self):
           pass
 
-  @lcc.testsuite("Child suite 2")
+  @lcc.suite("Child suite 2")
   class child_suite_2:
       @lcc.test("Test C")
       def test_c(self):
@@ -403,13 +403,13 @@ Sub testsuites can be declared in a testsuite in a lot of different ways:
   ```
 - as nested class:
   ```python
-  @lcc.testsuite("Parent suite")
+  @lcc.suite("Parent suite")
   class parent_suite:
-      @lcc.testsuite("Child suite")
+      @lcc.suite("Child suite")
       class child_suite:
           pass
   ```
-- as module in a sub directory whose name matches the parent testsuite module:
+- as module in a sub directory whose name matches the parent suite module:
   ```shell
   $ tree
   .
@@ -420,14 +420,14 @@ Sub testsuites can be declared in a testsuite in a lot of different ways:
   1 directory, 2 files
   ```
 
-# Testsuite setup and teardown methods
+# Suite setup and teardown methods
 
-Testsuites provide several methods that give the user the possibility to execute code at particular steps of the testsuite execution:
+Suites provide several methods that give the user the possibility to execute code at particular steps of the suite execution:
 
-- `setup_suite` is called before executing the tests of the testsuite; if something wrong happens (a call to `log_error` or a raised exception) then the whole testsuite execution is aborted
+- `setup_suite` is called before executing the tests of the suite; if something wrong happens (a call to `log_error` or a raised exception) then the whole suite execution is aborted
 - `setup_test` takes the test name as argument and is called before each test; if something wrong happen then the test execution is aborted
 - `teardown_test` is called after each test (it takes the test name as argument); if something wrong happens the executed test will be mark as failed
-- `teardown_suite` is called after executing the tests of the testsuite
+- `teardown_suite` is called after executing the tests of the suite
 
 Note that:
 
@@ -436,7 +436,7 @@ Note that:
 
 # Metadata
 
-Various metadata can be associated to both tests and testsuites:
+Various metadata can be associated to both tests and suites:
 
 - tags (takes one or more tag name as argument):
   ```python
@@ -480,10 +480,10 @@ Various metadata can be associated to both tests and testsuites:
       [...]
   ```
 
-Metadata can also be associated to a testsuite module using the TESTSUITE dictionnary:
+Metadata can also be associated to a suite module using the SUITE dictionnary:
 
 ```python
-TESTSUITE = {
+SUITE = {
     "description": "My Suite",
     "tags": "slow"
 }
@@ -521,7 +521,7 @@ def target_url(cli_args):
 
 ## Metadata Policy
 
-The project settings provides a metadata policy that can be used to add constraints to tests and testsuites concerning the usage of metadata.
+The project settings provides a metadata policy that can be used to add constraints to tests and suites concerning the usage of metadata.
 
 The following example requires that every tests provide a property "priority" whose value is among "low", "medium" and "high":
 
@@ -536,7 +536,7 @@ METADATA_POLICY = mp
 [...]
 ```
 
-In this other example set, the metadata policy makes two tags available ("todo" and "known_defect") for both tests and testsuites while forbidding the usage of any other tag:
+In this other example set, the metadata policy makes two tags available ("todo" and "known_defect") for both tests and suites while forbidding the usage of any other tag:
 
 ```python
  # project.py:
@@ -600,7 +600,7 @@ In addition to the main sub command `run`, the `lcc` command provides other sub 
   +---------+--------------+------------------+---------------+
 
 
-  Fixture with scope testsuite:
+  Fixture with scope suite:
   +---------+--------------+------------------+---------------+
   | Fixture | Dependencies | Used by fixtures | Used by tests |
   +---------+--------------+------------------+---------------+
@@ -647,7 +647,7 @@ In addition to the main sub command `run`, the `lcc` command provides other sub 
   | #1235 | http://example.com/1235 | 1     |  5%  |
   +-------+-------------------------+-------+------+
 
-  Total: 18 tests in 2 testsuites
+  Total: 18 tests in 2 suites
   ```
 
 Also see the `--help` of these sub commands.
