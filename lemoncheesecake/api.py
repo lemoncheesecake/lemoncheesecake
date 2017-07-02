@@ -10,7 +10,7 @@ from lemoncheesecake.runtime import *
 from lemoncheesecake.checkers import *
 from lemoncheesecake.matching import *
 from lemoncheesecake.fixtures import fixture
-from lemoncheesecake.exceptions import AbortTest, AbortTestSuite, AbortAllTests, UserError
+from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, UserError
 
 # for pydoc
 __all__ = dir()

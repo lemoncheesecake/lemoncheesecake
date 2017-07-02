@@ -10,11 +10,11 @@ from decimal import Decimal
 
 from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 from lemoncheesecake.utils import humanize_duration
-from lemoncheesecake.testtree import BaseTest, BaseTestSuite
+from lemoncheesecake.testtree import BaseTest, BaseSuite
 
 __all__ = (
     "LogData", "CheckData", "AttachmentData", "UrlData", "StepData", "TestData",
-    "TestSuiteData", "HookData", "Report"
+    "SuiteData", "HookData", "Report"
 )
 
 TEST_STATUSES = "passed", "failed", "skipped"
@@ -105,9 +105,9 @@ class HookData:
     def is_empty(self):
         return len(self.steps) == 0
 
-class TestSuiteData(BaseTestSuite):
+class SuiteData(BaseSuite):
     def __init__(self, name, description):
-        BaseTestSuite.__init__(self, name, description)
+        BaseSuite.__init__(self, name, description)
         self.suite_setup = None
         self.suite_teardown = None
     

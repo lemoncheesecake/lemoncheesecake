@@ -11,7 +11,7 @@ from collections import OrderedDict
 
 from lemoncheesecake.reporting.backend import FileReportBackend, SAVE_AT_EACH_FAILED_TEST
 from lemoncheesecake.reporting.report import (
-    LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, TestSuiteData,
+    LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, SuiteData,
     Report, format_timestamp, parse_timestamp
 )
 from lemoncheesecake.exceptions import InvalidReportFile
@@ -163,7 +163,7 @@ def _unserialize_hook_data(js):
     return data
 
 def _unserialize_suite_data(js):
-    suite = TestSuiteData(js["name"], js["description"])
+    suite = SuiteData(js["name"], js["description"])
     suite.tags = js["tags"]
     suite.properties = js["properties"]
     suite.links = [ (link["url"], link["name"]) for link in js["links"] ]

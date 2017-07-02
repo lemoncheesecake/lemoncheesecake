@@ -10,7 +10,7 @@ import shutil
 import imp
 import inspect
 
-from lemoncheesecake.suite import TestSuite
+from lemoncheesecake.suite import Suite
 from lemoncheesecake.fixtures import Fixture
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.reporting import ReportingBackend, get_available_backends
@@ -110,7 +110,7 @@ class Project:
             _check_func(args_nb=1), required=False,
             default=lambda top_dir: report_dir_with_archiving(top_dir, archive_dirname_datetime)
         )
-        _("TESTSUITES", _check_class_instance(TestSuite), is_list=True)
+        _("TESTSUITES", _check_class_instance(Suite), is_list=True)
         _("FIXTURES", _check_class_instance(Fixture), is_list=True, required=False, default=[])
         _("REPORTING_BACKENDS",
             _check_class_instance(ReportingBackend), is_list=True, required=False, default=DEFAULT_REPORTING_BACKENDS

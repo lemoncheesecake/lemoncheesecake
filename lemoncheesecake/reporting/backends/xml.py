@@ -16,7 +16,7 @@ except ImportError:
 
 from lemoncheesecake.reporting.backend import FileReportBackend, SAVE_AT_EACH_FAILED_TEST
 from lemoncheesecake.reporting.report import (
-    LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, TestSuiteData,
+    LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, SuiteData,
     Report, format_timestamp, parse_timestamp
 )
 from lemoncheesecake.utils import IS_PYTHON3
@@ -241,7 +241,7 @@ def _unserialize_hook_data(xml):
     return data
 
 def _unserialize_suite_data(xml):
-    suite = TestSuiteData(xml.attrib["name"], xml.attrib["description"])
+    suite = SuiteData(xml.attrib["name"], xml.attrib["description"])
     suite.tags = [ node.text for node in xml.xpath("tag") ]
     suite.properties = { node.attrib["name"]: node.text for node in xml.xpath("property") }
     suite.links = [ (link.text, link.attrib["name"]) for link in xml.xpath("link") ]

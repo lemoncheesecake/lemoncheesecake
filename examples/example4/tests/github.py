@@ -6,7 +6,7 @@ from lemoncheesecake.matching import *
 
 URL  = "https://api.github.com/orgs/lemoncheesecake"
 
-@lcc.testsuite("Github tests")
+@lcc.suite("Github tests")
 class github:
     @lcc.test("Test Organization end-point")
     def organization(self):

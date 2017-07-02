@@ -10,7 +10,7 @@ import traceback
 
 from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.utils import IS_PYTHON3, get_distincts_in_list
-from lemoncheesecake.exceptions import AbortTest, AbortTestSuite, AbortAllTests, FixtureError, \
+from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
     UserError, serialize_current_exception
 
 class _Runner:
@@ -99,7 +99,7 @@ class _Runner:
     def handle_exception(self, excp, suite=None):
         if isinstance(excp, AbortTest):
             self.session.log_error(str(excp))
-        elif isinstance(excp, AbortTestSuite):
+        elif isinstance(excp, AbortSuite):
             self.session.log_error(str(excp))
             self.abort_suite = suite
         elif isinstance(excp, AbortAllTests):

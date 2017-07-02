@@ -1,6 +1,6 @@
 import lemoncheesecake.api as lcc
 
-@lcc.testsuite("AA")
+@lcc.suite("AA")
 @lcc.link("http://bugtracker.net/tickets/1234")
 class AA:
     def setup_suite(self):
@@ -15,7 +15,7 @@ class AA:
     def test_of_A(self):
         raise lcc.AbortTest("this test cannot be executed")
 
-    @lcc.testsuite("AAA")
+    @lcc.suite("AAA")
     class AAA:
         @lcc.test("Test of AAA")
         def test_of_B(self):

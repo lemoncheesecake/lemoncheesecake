@@ -101,7 +101,7 @@ def test_exception_abortsuite(reporting_session):
         class MyFirstSuite:
             @lcc.test("Some test")
             def sometest(self):
-                raise lcc.AbortTestSuite("test error")
+                raise lcc.AbortSuite("test error")
 
             @lcc.test("Some other test")
             def someothertest(self):

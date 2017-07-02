@@ -125,7 +125,7 @@ class _Runtime:
 
     def begin_suite(self, suite):
         self.current_suite = suite
-        suite_data = TestSuiteData(suite.name, suite.description)
+        suite_data = SuiteData(suite.name, suite.description)
         suite_data.tags.extend(suite.tags)
         suite_data.properties.update(suite.properties)
         suite_data.links.extend(suite.links)

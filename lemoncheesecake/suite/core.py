@@ -8,12 +8,12 @@ import inspect
 
 from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError, InternalError
 from lemoncheesecake.utils import get_distincts_in_list, get_callable_args
-from lemoncheesecake.testtree import BaseTest, BaseTestSuite
+from lemoncheesecake.testtree import BaseTest, BaseSuite
 
 TESTSUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
 
 __all__ = (
-    "Test", "TestSuite", "filter_suites"
+    "Test", "Suite", "filter_suites"
 )
 
 class Test(BaseTest):
@@ -28,9 +28,9 @@ def _assert_valid_hook_name(hook_name):
     if hook_name not in TESTSUITE_HOOKS:
         raise InternalError("Invalid hook name '%s'" % hook_name)
 
-class TestSuite(BaseTestSuite):
+class Suite(BaseSuite):
     def __init__(self, obj, name, description):
-        BaseTestSuite.__init__(self, name, description)
+        BaseSuite.__init__(self, name, description)
         self.obj = obj
         self.rank = 0
         self._hooks = {}
@@ -93,12 +93,12 @@ class TestSuite(BaseTestSuite):
 
     def add_test(self, test):
         self.assert_test_is_unique_in_suite(test)
-        BaseTestSuite.add_test(self, test)
+        BaseSuite.add_test(self, test)
         self._selected_test_names.append(test.name)
 
     def add_suite(self, suite):
         self.assert_sub_suite_is_unique_in_suite(suite)
-        BaseTestSuite.add_suite(self, suite)
+        BaseSuite.add_suite(self, suite)
 
     def get_test(self, test_name):
         for test in self._tests:
@@ -107,14 +107,14 @@ class TestSuite(BaseTestSuite):
         raise ProgrammingError("unknown test '%s'" % test_name)
 
     def get_tests(self, filtered=True):
-        tests = BaseTestSuite.get_tests(self)
+        tests = BaseSuite.get_tests(self)
         if filtered:
             return list(filter(self.is_test_selected, tests))
         else:
             return tests
 
     def get_suites(self, filtered=True):
-        suites = BaseTestSuite.get_suites(self)
+        suites = BaseSuite.get_suites(self)
         if filtered:
             return list(filter(lambda suite: suite.has_selected_tests(deep=True), suites))
         else:

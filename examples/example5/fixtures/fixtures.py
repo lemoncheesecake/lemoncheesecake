@@ -12,15 +12,15 @@ def fixt_2(fixt_1):
 def fixt_3():
     pass
 
-@lcc.fixture(scope="testsuite")
+@lcc.fixture(scope="suite")
 def fixt_4(fixt_3):
     pass
 
-@lcc.fixture(scope="testsuite")
+@lcc.fixture(scope="suite")
 def fixt_5():
     pass
 
-@lcc.fixture(scope="testsuite")
+@lcc.fixture(scope="suite")
 def fixt_6(fixt_3):
     pass
 

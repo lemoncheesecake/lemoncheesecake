@@ -2,7 +2,7 @@ import lemoncheesecake.api as lcc
 import re
 import time
 
-@lcc.testsuite("A")
+@lcc.suite("A")
 @lcc.tags("my_tag")
 @lcc.prop("key1", "value1")
 @lcc.prop("key2", "value2")
@@ -15,7 +15,7 @@ class A:
             def dummy(suite):
                 lcc.log_info("do test dyn %d" % i)
             tests.append(lcc.Test("test_%d" % i, "This is my dynamic test %d" % i, dummy))
-        lcc.add_tests_in_testsuite(tests, self, after_test="this_is_a_test")
+        lcc.add_tests_in_suite(tests, self, after_test="this_is_a_test")
     
     @lcc.tags("my_tag1")
     @lcc.test("My test description")
@@ -67,14 +67,14 @@ class A:
     @lcc.test("Third test")
     def third_test(self):
         lcc.log_error("something goes wrong")
-        #raise AbortTestSuite()
+        #raise AbortSuite()
     
     @lcc.test("Fourth test")
     def fourth_test(self):
         lcc.check_gteq("value", 4, 2)
         lcc.check_str_contains("string", "foobar", "foo")
     
-    @lcc.testsuite("HTML Escaping")
+    @lcc.suite("HTML Escaping")
     @lcc.tags("<h1>My Tag</h1>")    
     @lcc.prop("<h1>Prop name</h1>", "<h1>Prop value</h1>")
     @lcc.link("http://bugtracker.net/tickets/1234", "<h1>link name</h1>")    
@@ -91,17 +91,17 @@ class A:
             lcc.log_info("<h1>some log</h1>")
             lcc.save_attachment_content("content", "filename", "<h1>attachment</h1>")
     
-    @lcc.testsuite("A very loong testsuite")
-    class a_very_lllllllllllllllllllllllooooooooooooooooooooooooooooooooonnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnggggggggggggggggggggggg_testsuite_name:
-        @lcc.test("A test within a testsuite with a long name")
-        def the_test_within_the_testsuite_with_long_name(self):
+    @lcc.suite("A very loong suite")
+    class a_very_lllllllllllllllllllllllooooooooooooooooooooooooooooooooonnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnggggggggggggggggggggggg_suite_name:
+        @lcc.test("A test within a suite with a long name")
+        def the_test_within_the_suite_with_long_name(self):
             lcc.set_step("lllllllllllllllllllllllllllllllooooooooooooooooooooooonnnnnnnnnnngggggggggggggggg step")
             time.sleep(3)
     
-    @lcc.testsuite("a_testsuite_without_direct_tests")
-    class a_testsuite_without_direct_tests:
-        @lcc.testsuite("a_testsuite_with_parent_without_direct_tests")
-        class a_testsuite_with_parent_without_direct_tests:
+    @lcc.suite("a_suite_without_direct_tests")
+    class a_suite_without_direct_tests:
+        @lcc.suite("a_suite_with_parent_without_direct_tests")
+        class a_suite_with_parent_without_direct_tests:
             @lcc.test("Yet Another Test")
             def yet_another_test(self):
                 lcc.check_str_not_eq("string", "foo", "foo")

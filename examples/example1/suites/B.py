@@ -4,7 +4,7 @@ TESTSUITE = {
     "description": "B"
 }
 
-@lcc.testsuite("BB1")
+@lcc.suite("BB1")
 class BB1:
     @lcc.test("Test of BB1")
     def c_test_1(self):
@@ -12,7 +12,7 @@ class BB1:
         time.sleep(1)
         lcc.assert_eq("value", 32, 54)
 
-@lcc.testsuite("BB2")
+@lcc.suite("BB2")
 class BB2:
     @lcc.test("Test of BB2")
     def d_test_1(self):

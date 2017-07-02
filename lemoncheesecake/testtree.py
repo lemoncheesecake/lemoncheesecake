@@ -59,7 +59,7 @@ class BaseTreeNode:
 class BaseTest(BaseTreeNode):
     pass
 
-class BaseTestSuite(BaseTreeNode):
+class BaseSuite(BaseTreeNode):
     def __init__(self, name, description):
         BaseTreeNode.__init__(self, name, description)
         self._tests = []

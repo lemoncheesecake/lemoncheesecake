@@ -19,15 +19,15 @@ def fixt3(fixt1, fixt2):
     """
     return fixt1 * fixt2
 
-@lcc.fixture(scope="testsuite")
+@lcc.fixture(scope="suite")
 def fixt4():
     return 4
 
-@lcc.fixture(scope="testsuite")
+@lcc.fixture(scope="suite")
 def fixt5(fixt4):
     return fixt4 + 1
 
-@lcc.fixture(scope="testsuite")
+@lcc.fixture(scope="suite")
 def fixt6(fixt5, fixt1):
     return fixt5 * fixt1
 

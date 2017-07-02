@@ -8,8 +8,8 @@ import os.path as osp
 import inspect
 
 from lemoncheesecake.importer import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
-from lemoncheesecake.exceptions import UserError, ProgrammingError, ImportTestSuiteError, InvalidMetadataError, serialize_current_exception
-from lemoncheesecake.suite.core import Test, TestSuite, TESTSUITE_HOOKS
+from lemoncheesecake.exceptions import UserError, ProgrammingError, ImportSuiteError, InvalidMetadataError, serialize_current_exception
+from lemoncheesecake.suite.core import Test, Suite, TESTSUITE_HOOKS
 
 __all__ = "load_suite_from_file", "load_suites_from_files", "load_suites_from_directory", \
     "load_suite_from_class", "load_suites_from_classes"
@@ -62,7 +62,7 @@ def load_suite_from_class(klass):
         raise ProgrammingError("Got an unexpected error while instanciating suite class '%s':%s" % (
             klass.__name__, serialize_current_exception()
         ))
-    suite = TestSuite(inst, md.name, md.description)
+    suite = Suite(inst, md.name, md.description)
     suite.tags.extend(md.tags)
     suite.properties.update(md.properties)
     suite.links.extend(md.links)
@@ -95,7 +95,7 @@ def load_suite_from_module(mod):
     except KeyError:
         raise InvalidMetadataError("Missing description in '%s' suite information" % mod.__file__)
 
-    suite = TestSuite(None, suite_name, suite_description)
+    suite = Suite(None, suite_name, suite_description)
     suite.tags.extend(suite_info.get("tags", []))
     suite.properties.update(suite_info.get("properties", []))
     suite.links.extend(suite_info.get("links", []))
@@ -129,12 +129,12 @@ def load_suite_from_file(filename):
       - rank (optional)
     - a module that contains a suite class with the same name as the module name
 
-    Raise a ImportTestSuiteError if the suite class cannot be imported.
+    Raise a ImportSuiteError if the suite class cannot be imported.
     """
     try:
         mod = import_module(filename)
     except ImportError:
-        raise ImportTestSuiteError(
+        raise ImportSuiteError(
             "Cannot import file '%s': %s" % (filename, serialize_current_exception(show_stacktrace=True))
         )
 
@@ -145,7 +145,7 @@ def load_suite_from_file(filename):
         try:
             klass = getattr(mod, mod_name)
         except AttributeError:
-            raise ImportTestSuiteError("Cannot find class '%s' in '%s'" % (mod_name, mod.__file__))
+            raise ImportSuiteError("Cannot find class '%s' in '%s'" % (mod_name, mod.__file__))
         suite = load_suite_from_class(klass)
     return suite
 
@@ -164,16 +164,16 @@ def load_suites_from_directory(dir, recursive=True):
     """Find suite classes in modules found in dir.
 
     The function expect that:
-    - each module (.py file) contains a class that inherits TestSuite
+    - each module (.py file) contains a class that inherits Suite
     - the class name must have the same name as the module name (if the module is foo.py
       the class must be named foo)
     If the recursive argument is set to True, sub suites will be searched in a directory named
     from the suite module: if the suite module is "foo.py" then the sub suites directory must be "foo".
 
-    Raise ImportTestSuiteError if one or more suite cannot be imported.
+    Raise ImportSuiteError if one or more suite cannot be imported.
     """
     if not osp.exists(dir):
-        raise ImportTestSuiteError("Directory '%s' does not exist" % dir)
+        raise ImportSuiteError("Directory '%s' does not exist" % dir)
     suites = [ ]
     for filename in get_py_files_from_dir(dir):
         suite = load_suite_from_file(filename)
