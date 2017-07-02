@@ -40,5 +40,5 @@ def add_cli_args(cli_parser):
     cli_parser.add_argument("--host", default="www.omdbapi.com", help="omdb API host")
 CLI_EXTRA_ARGS = add_cli_args
 
-TESTSUITES = load_suites_from_directory(osp.join(project_dir, "tests"))
+SUITES = load_suites_from_directory(osp.join(project_dir, "tests"))
 FIXTURES = load_fixtures_from_func(omdb)

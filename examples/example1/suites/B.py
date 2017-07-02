@@ -1,6 +1,6 @@
 import lemoncheesecake.api as lcc
 
-TESTSUITE = {
+SUITE = {
     "description": "B"
 }
 

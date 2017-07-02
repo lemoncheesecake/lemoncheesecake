@@ -21,7 +21,7 @@ CAPABILITY_SAVE_REPORT = 0x2
 CAPABILITY_LOAD_REPORT = 0x4
 
 SAVE_AT_END_OF_TESTS = 1
-SAVE_AT_EACH_TESTSUITE = 2
+SAVE_AT_EACH_SUITE = 2
 SAVE_AT_EACH_TEST = 3
 SAVE_AT_EACH_FAILED_TEST = 4
 SAVE_AT_EACH_EVENT = 5
@@ -145,7 +145,7 @@ class FileReportSession(ReportingSession):
         self._handle_code_end(test)
 
     def end_suite(self, suite):
-        if self.save_mode == SAVE_AT_EACH_TESTSUITE:
+        if self.save_mode == SAVE_AT_EACH_SUITE:
             self.save()
 
     def log(self, level, content):

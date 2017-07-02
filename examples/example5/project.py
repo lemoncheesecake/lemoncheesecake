@@ -14,7 +14,7 @@ project_dir = os.path.dirname(__file__)
 ###
 # Test suites and fixtures
 ###
-TESTSUITES = load_suites_from_directory(os.path.join(project_dir, "tests"))
+SUITES = load_suites_from_directory(os.path.join(project_dir, "tests"))
 FIXTURES = load_fixtures_from_directory(os.path.join(project_dir, "fixtures"))
 def add_cli_args(cli_parser):
     pass

@@ -10,7 +10,7 @@ from helpers import build_test_project, build_test_module, build_fixture_module
 def set_project_suites_param(params, suite_name, project_dir):
     suite_file = project_dir.join("%s.py" % suite_name)
     suite_file.write(build_test_module(suite_name))
-    params["TESTSUITES"] = "[ load_suite_from_file('%s.py') ]" % (
+    params["SUITES"] = "[ load_suite_from_file('%s.py') ]" % (
         project_dir.join(suite_name).strpath
     )
 

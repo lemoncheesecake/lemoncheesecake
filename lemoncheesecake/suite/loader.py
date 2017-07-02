@@ -9,7 +9,7 @@ import inspect
 
 from lemoncheesecake.importer import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
 from lemoncheesecake.exceptions import UserError, ProgrammingError, ImportSuiteError, InvalidMetadataError, serialize_current_exception
-from lemoncheesecake.suite.core import Test, Suite, TESTSUITE_HOOKS
+from lemoncheesecake.suite.core import Test, Suite, SUITE_HOOKS
 
 __all__ = "load_suite_from_file", "load_suites_from_files", "load_suites_from_directory", \
     "load_suite_from_class", "load_suites_from_classes"
@@ -68,7 +68,7 @@ def load_suite_from_class(klass):
     suite.links.extend(md.links)
     suite.rank = md.rank
 
-    for hook_name in TESTSUITE_HOOKS:
+    for hook_name in SUITE_HOOKS:
         if hasattr(inst, hook_name):
             suite.add_hook(hook_name, getattr(inst, hook_name))
 
@@ -87,7 +87,7 @@ def load_suite_from_module(mod):
     # TODO: find a better way to workaround circular import
     from lemoncheesecake.suite.definition import get_metadata_next_rank
 
-    suite_info = getattr(mod, "TESTSUITE")
+    suite_info = getattr(mod, "SUITE")
     suite_name = inspect.getmodulename(inspect.getfile(mod))
 
     try:
@@ -101,7 +101,7 @@ def load_suite_from_module(mod):
     suite.links.extend(suite_info.get("links", []))
     suite.rank = suite_info.get("rank", get_metadata_next_rank())
 
-    for hook_name in TESTSUITE_HOOKS:
+    for hook_name in SUITE_HOOKS:
         if hasattr(mod, hook_name):
             suite.add_hook(hook_name, getattr(mod, hook_name))
 
@@ -121,7 +121,7 @@ def load_suite_from_file(filename):
     """Get suite from Python module.
 
     A valid module is either:
-    - a module containing a dict name 'TESTSUITE' with keys:
+    - a module containing a dict name 'SUITE' with keys:
       - description (mandatory)
       - tags (optional)
       - properties (optional)
@@ -138,7 +138,7 @@ def load_suite_from_file(filename):
             "Cannot import file '%s': %s" % (filename, serialize_current_exception(show_stacktrace=True))
         )
 
-    if hasattr(mod, "TESTSUITE"):
+    if hasattr(mod, "SUITE"):
         suite = load_suite_from_module(mod)
     else:
         mod_name = strip_py_ext(osp.basename(filename))

@@ -110,7 +110,7 @@ class Project:
             _check_func(args_nb=1), required=False,
             default=lambda top_dir: report_dir_with_archiving(top_dir, archive_dirname_datetime)
         )
-        _("TESTSUITES", _check_class_instance(Suite), is_list=True)
+        _("SUITES", _check_class_instance(Suite), is_list=True)
         _("FIXTURES", _check_class_instance(Fixture), is_list=True, required=False, default=[])
         _("REPORTING_BACKENDS",
             _check_class_instance(ReportingBackend), is_list=True, required=False, default=DEFAULT_REPORTING_BACKENDS
@@ -192,7 +192,7 @@ class Project:
         return self._raw_params["REPORT_DIR_CREATION"]
 
     def get_suites(self, check_metadata_policy=True):
-        suites = self._raw_params["TESTSUITES"]
+        suites = self._raw_params["SUITES"]
         policy = self.get_metadata_policy()
         if check_metadata_policy and policy:
             policy.check_suites_compliance(suites)

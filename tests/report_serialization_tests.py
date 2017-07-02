@@ -13,7 +13,7 @@ import sys
 import lemoncheesecake.api as lcc
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.reporting.backend import SAVE_AT_EACH_EVENT, SAVE_AT_EACH_FAILED_TEST, \
-    SAVE_AT_EACH_TEST, SAVE_AT_EACH_TESTSUITE, SAVE_AT_END_OF_TESTS
+    SAVE_AT_EACH_TEST, SAVE_AT_EACH_SUITE, SAVE_AT_END_OF_TESTS
 
 from helpers import run_suite_class, run_suite_classes, assert_report, dump_report
 
@@ -380,5 +380,5 @@ def test_save_at_each_test(backend, tmpdir):
     test_simple_test(backend, tmpdir)
 
 def test_save_at_each_suite(backend, tmpdir):
-    backend.save_mode = SAVE_AT_EACH_TESTSUITE
+    backend.save_mode = SAVE_AT_EACH_SUITE
     test_simple_test(backend, tmpdir)

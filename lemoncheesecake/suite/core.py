@@ -10,7 +10,7 @@ from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError, I
 from lemoncheesecake.utils import get_distincts_in_list, get_callable_args
 from lemoncheesecake.testtree import BaseTest, BaseSuite
 
-TESTSUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
+SUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
 
 __all__ = (
     "Test", "Suite", "filter_suites"
@@ -25,7 +25,7 @@ class Test(BaseTest):
         return get_callable_args(self.callback)
 
 def _assert_valid_hook_name(hook_name):
-    if hook_name not in TESTSUITE_HOOKS:
+    if hook_name not in SUITE_HOOKS:
         raise InternalError("Invalid hook name '%s'" % hook_name)
 
 class Suite(BaseSuite):

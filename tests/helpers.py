@@ -68,7 +68,7 @@ def build_suite_from_module(module_content):
     fd, filename = tempfile.mkstemp(suffix=".py")
     fh = open(filename, "w")
     fh.write("import lemoncheesecake.api as lcc\n\n")
-    fh.write("TESTSUITE = {'description': 'My Suite'}\n\n")
+    fh.write("SUITE = {'description': 'My Suite'}\n\n")
     fh.write(module_content)
     fh.close()
     os.close(fd)
