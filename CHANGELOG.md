@@ -1,3 +1,8 @@
+# 0.9.0 (2017-07-09)
+
+- **reporting**: add JUnit reporting backend
+- **API**: all methods/functions/classes/modules with the "testsuite" form (whatever the case is) have been renamed into "suite" in order to make the testsuite/suite naming more coherent (both forms were previously used)
+
 # 0.8.12 (2017-07-02)
 
 - **lcc run**: add new CLI options --exit-error-on-failure and --stop-on-failure
