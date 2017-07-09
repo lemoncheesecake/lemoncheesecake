@@ -40,7 +40,8 @@ setup(
     include_package_data = True,
     install_requires = ["colorama", "termcolor", "terminaltables"],
     extras_require = {
-        "xml": "lxml"
+        "xml": "lxml",
+        "junit": "lxml"
     },
     entry_points={
         "console_scripts": [

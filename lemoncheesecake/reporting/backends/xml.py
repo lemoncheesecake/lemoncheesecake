@@ -4,9 +4,6 @@ Created on Mar 27, 2016
 @author: nicolas
 '''
 
-import sys
-import os.path
-
 try:
     from lxml import etree as ET
     from lxml.builder import E
@@ -29,7 +26,7 @@ OUTCOME_SUCCESS = "success"
 DEFAULT_INDENT_LEVEL = 4
 
 # borrowed from http://stackoverflow.com/a/1239193
-def _xml_indent(elem, level=0, indent_level=DEFAULT_INDENT_LEVEL):
+def indent_xml(elem, level=0, indent_level=DEFAULT_INDENT_LEVEL):
     i = "\n" + level * (" " * indent_level)
     if len(elem):
         if not elem.text or not elem.text.strip():
@@ -37,28 +34,31 @@ def _xml_indent(elem, level=0, indent_level=DEFAULT_INDENT_LEVEL):
         if not elem.tail or not elem.tail.strip():
             elem.tail = i
         for elem in elem:
-            _xml_indent(elem, level+1, indent_level)
+            indent_xml(elem, level+1, indent_level)
         if not elem.tail or not elem.tail.strip():
             elem.tail = i
     else:
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
 
-def _xml_node(name, *args):
+def set_node_attr(node, attr_name, attr_value):
+    if IS_PYTHON3:
+        node.attrib[attr_name] = attr_value
+    else:
+        node.attrib[attr_name] = attr_value if type(attr_value) is unicode else unicode(attr_value, "utf-8")
+
+def make_xml_node(name, *args):
     node = E(name)
     i = 0
     while i < len(args):
-        name, value = args[i], args[i+1]
-        if value is not None:
-            if IS_PYTHON3:
-                node.attrib[name] = value
-            else:
-                node.attrib[name] = value if type(value) is unicode else unicode(value, "utf-8")
+        attr_name, attr_value = args[i], args[i+1]
+        if attr_value is not None:
+            set_node_attr(node, attr_name, attr_value)
         i += 2
     return node
 
-def _xml_child(parent_node, name, *args):
-    node = _xml_node(name, *args)
+def make_xml_child(parent_node, name, *args):
+    node = make_xml_node(name, *args)
     parent_node.append(node)
     return node
 
@@ -76,38 +76,38 @@ def _serialize_outcome(outcome):
 
 def _serialize_steps(steps, parent_node):
     for step in steps:
-        step_node = _xml_child(parent_node, "step", "description", step.description)
+        step_node = make_xml_child(parent_node, "step", "description", step.description)
         _add_time_attr(step_node, "start-time", step.start_time)
         _add_time_attr(step_node, "end-time", step.end_time)
         for entry in step.entries:
             if isinstance(entry, LogData):
-                log_node = _xml_child(step_node, "log", "level", entry.level)
+                log_node = make_xml_child(step_node, "log", "level", entry.level)
                 _add_time_attr(log_node, "time", entry.time)
                 log_node.text = entry.message
             elif isinstance(entry, AttachmentData):
-                attachment_node = _xml_child(step_node, "attachment", "description", entry.description)
+                attachment_node = make_xml_child(step_node, "attachment", "description", entry.description)
                 attachment_node.text = entry.filename
             elif isinstance(entry, UrlData):
-                url_node = _xml_child(step_node, "url", "description", entry.description)
+                url_node = make_xml_child(step_node, "url", "description", entry.description)
                 url_node.text = entry.url
             else: # TestCheck
-                check_node = _xml_child(step_node, "check", "description", entry.description,
+                check_node = make_xml_child(step_node, "check", "description", entry.description,
                                         "outcome", _serialize_outcome(entry.outcome))
                 check_node.text = entry.details
 
 def _serialize_test_data(test):
-    test_node = _xml_node("test", "name", test.name, "description", test.description,
+    test_node = make_xml_node("test", "name", test.name, "description", test.description,
                           "status", test.status, "status-details", test.status_details)
     _add_time_attr(test_node, "start-time", test.start_time)
     _add_time_attr(test_node, "end-time", test.end_time)
     for tag in test.tags:
-        tag_node = _xml_child(test_node, "tag")
+        tag_node = make_xml_child(test_node, "tag")
         tag_node.text = tag
     for name, value in test.properties.items():
-        property_node = _xml_child(test_node, "property", "name", name)
+        property_node = make_xml_child(test_node, "property", "name", name)
         property_node.text = value
     for link in test.links:
-        link_node = _xml_child(test_node, "link", "name", link[1])
+        link_node = make_xml_child(test_node, "link", "name", link[1])
         link_node.text = link[0]
     _serialize_steps(test.steps, test_node)
 
@@ -120,20 +120,20 @@ def _serialize_hook_data(data, node):
     _serialize_steps(data.steps, node)
 
 def _serialize_suite_data(suite):
-    suite_node = _xml_node("suite", "name", suite.name, "description", suite.description)
+    suite_node = make_xml_node("suite", "name", suite.name, "description", suite.description)
     for tag in suite.tags:
-        tag_node = _xml_child(suite_node, "tag")
+        tag_node = make_xml_child(suite_node, "tag")
         tag_node.text = tag
     for name, value in suite.properties.items():
-        property_node = _xml_child(suite_node, "property", "name", name)
+        property_node = make_xml_child(suite_node, "property", "name", name)
         property_node.text = value
     for link in suite.links:
-        link_node = _xml_child(suite_node, "link", "name", link[1])
+        link_node = make_xml_child(suite_node, "link", "name", link[1])
         link_node.text = link[0]
 
     # before suite
     if suite.suite_setup:
-        _serialize_hook_data(suite.suite_setup, _xml_child(suite_node, "suite-setup"))
+        _serialize_hook_data(suite.suite_setup, make_xml_child(suite_node, "suite-setup"))
 
     # tests
     for test in suite.get_tests():
@@ -147,40 +147,40 @@ def _serialize_suite_data(suite):
 
     # after suite
     if suite.suite_teardown:
-        _serialize_hook_data(suite.suite_teardown, _xml_child(suite_node, "suite-teardown"))
+        _serialize_hook_data(suite.suite_teardown, make_xml_child(suite_node, "suite-teardown"))
 
     return suite_node
 
 def serialize_report_as_tree(report):
     xml = E("lemoncheesecake-report")
-    version_node = _xml_child(xml, "lemoncheesecake-report-version")
+    version_node = make_xml_child(xml, "lemoncheesecake-report-version")
     version_node.text = str("1.0")
     _add_time_attr(xml, "start-time", report.start_time)
     _add_time_attr(xml, "end-time", report.end_time)
     _add_time_attr(xml, "generation-time", report.report_generation_time)
 
     for name, value in report.info:
-        info_node = _xml_child(xml, "info", "name", name)
+        info_node = make_xml_child(xml, "info", "name", name)
         info_node.text = value
     for name, value in report.serialize_stats():
-        stat_node = _xml_child(xml, "stat", "name", name)
+        stat_node = make_xml_child(xml, "stat", "name", name)
         stat_node.text = value
 
     if report.test_session_setup:
-        _serialize_hook_data(report.test_session_setup, _xml_child(xml, "test-session-setup"))
+        _serialize_hook_data(report.test_session_setup, make_xml_child(xml, "test-session-setup"))
 
     for suite in report.suites:
         suite_node = _serialize_suite_data(suite)
         xml.append(suite_node)
 
     if report.test_session_teardown:
-        _serialize_hook_data(report.test_session_teardown, _xml_child(xml, "test-session-teardown"))
+        _serialize_hook_data(report.test_session_teardown, make_xml_child(xml, "test-session-teardown"))
 
     return xml
 
 def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
     report = serialize_report_as_tree(report)
-    _xml_indent(report, indent_level=indent_level)
+    indent_xml(report, indent_level=indent_level)
 
     if IS_PYTHON3:
         return ET.tostring(report, pretty_print=True, encoding="unicode")

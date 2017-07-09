@@ -172,9 +172,9 @@ class FileReportBackend(ReportingBackend):
         )
 
 def get_available_backends():
-    from lemoncheesecake.reporting.backends import ConsoleBackend, XmlBackend, JsonBackend, HtmlBackend
+    from lemoncheesecake.reporting.backends import ConsoleBackend, XmlBackend, JsonBackend, HtmlBackend, JunitBackend
 
-    return list(filter(lambda b: b.is_available(), [ConsoleBackend(), XmlBackend(), JsonBackend(), HtmlBackend()]))
+    return list(filter(lambda b: b.is_available(), [ConsoleBackend(), XmlBackend(), JsonBackend(), HtmlBackend(), JunitBackend()]))
 
 def load_report(filename, backends=None):
     if backends == None:

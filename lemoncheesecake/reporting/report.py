@@ -23,9 +23,15 @@ TEST_STATUSES = "passed", "failed", "skipped"
 # datetime.isoformat(sep=' ', timespec='milliseconds')
 # unfortunately, the timespec argument is only available since Python 3.6
 
-def format_timestamp(ts):
+def format_timestamp(ts, date_time_sep=" ", skip_milliseconds=False):
     ts = round(ts, 3)
-    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts)) + (".%03d" % (Decimal(repr(ts)) % 1 * 1000))
+    result = time.strftime("%Y-%m-%d{sep}%H:%M:%S".format(sep=date_time_sep), time.localtime(ts))
+    if not skip_milliseconds:
+        result += ".%03d" % (Decimal(repr(ts)) % 1 * 1000)
+    return result
+
+def format_timestamp_as_iso_8601(ts):
+    return format_timestamp(ts, date_time_sep="T", skip_milliseconds=True)
 
 def parse_timestamp(s):
     m = re.compile("(.+)\.(\d+)").match(s)
@@ -88,7 +94,7 @@ class TestData(BaseTest):
         self.steps = [ ]
         self.start_time = None
         self.end_time = None
-
+        
     def has_failure(self):
         return len(list(filter(lambda step: step.has_failure(), self.steps))) > 0
 
