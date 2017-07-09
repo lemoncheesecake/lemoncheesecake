@@ -9,7 +9,7 @@ from __future__ import print_function
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import filter_suites_from_cli_args
 from lemoncheesecake.suite.filter import add_filter_args_to_cli_parser
-from lemoncheesecake.project import find_project_file, Project
+from lemoncheesecake.project import find_project_file, load_project_from_file
 from lemoncheesecake.exceptions import ProjectError, ProgrammingError
 
 class ShowCommand(Command):
@@ -94,7 +94,7 @@ class ShowCommand(Command):
         if not project_file:
             return "Cannot find project file"
         try:
-            project = Project(project_file)
+            project = load_project_from_file(project_file)
             suites = project.get_suites()
         except (ProjectError, ProgrammingError) as e:
             return str(e)

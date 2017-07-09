@@ -2,7 +2,7 @@ import re
 import lemoncheesecake.api as lcc
 
 @lcc.suite("My first suite", rank=1)
-class my_first_suite:
+class my_first_testsuite:
 	@lcc.test("Some test")
 	def some_test(self, omdb):
 		data = omdb.get_movie_info("matrix", 1999)
