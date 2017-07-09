@@ -13,7 +13,7 @@ setup(
     version = "0.8.12",
     description = "A framework for functional QA testing",
     author = "Nicolas Delon",
-    author_email = "nicolas dot delon at gmail dot com",
+    author_email = "nicolas.delon@gmail.com",
     license="Apache License (Version 2.0)",
     url = "https://github.com/lemoncheesecake",
     classifiers = [
