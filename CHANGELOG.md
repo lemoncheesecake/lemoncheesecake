@@ -1,3 +1,7 @@
+# 0.9.1 (2017-07-11)
+
+- Fix JUnit bad test serialization (successful checks reported as failures)
+
 # 0.9.0 (2017-07-09)
 
 - **reporting**: add JUnit reporting backend
