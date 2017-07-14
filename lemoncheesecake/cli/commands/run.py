@@ -12,7 +12,7 @@ from lemoncheesecake.project import find_project_file, load_project_from_file
 from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture, load_fixtures_from_func
 from lemoncheesecake.runner import run_suites
 from lemoncheesecake.suite.filter import add_filter_args_to_cli_parser
-from lemoncheesecake import reporting
+from lemoncheesecake.reporting import filter_reporting_backends_by_capabilities, CAPABILITY_REPORTING_SESSION
 from lemoncheesecake.exceptions import ProjectError, FixtureError, InvalidMetadataError,\
     ProgrammingError, LemonCheesecakeException, UserError, serialize_current_exception
 
@@ -40,7 +40,7 @@ class RunCommand(Command):
         default_reporting_backend_names = []
         if project_file:
             project = load_project_from_file(project_file)
-            default_reporting_backend_names = project.get_active_reporting_backend_names()
+            default_reporting_backend_names = [backend.name for backend in project.get_default_reporting_backends_for_test_run()]
 
         add_filter_args_to_cli_parser(cli_parser)
 
@@ -77,6 +77,7 @@ class RunCommand(Command):
             return str(e)
         except InvalidMetadataError as e:
             return "Invalid test/suite metadata has been found: %s" % e
+        suites = filter_suites_from_cli_args(suites, cli_args)
 
         # Build fixture registry
         try:
@@ -85,14 +86,11 @@ class RunCommand(Command):
         except FixtureError as e:
             return "Cannot run tests: %s" % e
 
+        # Set reporting backends
         reporting_backends = {
             backend.name: backend for backend in
-                project.get_reporting_backends(capabilities=reporting.CAPABILITY_REPORTING_SESSION, active_only=False)
+                filter_reporting_backends_by_capabilities(project.get_all_reporting_backends(), CAPABILITY_REPORTING_SESSION)
         }
-
-        suites = filter_suites_from_cli_args(suites, cli_args)
-
-        # Set reporting backends
         selected_reporting_backends = set()
         for backend_name in cli_args.reporting + cli_args.enable_reporting:
             try:

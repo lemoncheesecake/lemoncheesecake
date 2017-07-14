@@ -13,6 +13,7 @@ from lemoncheesecake.utils import object_has_method
 __all__ = (
     "get_available_backends", "ReportingBackend", "ReportingSession",
     "save_report", "load_reports_from_dir", "load_report",
+    "filter_available_reporting_backends", "filter_reporting_backends_by_capabilities",
     "CAPABILITY_REPORTING_SESSION", "CAPABILITY_SAVE_REPORT", "CAPABILITY_LOAD_REPORT"
 )
 
@@ -170,6 +171,12 @@ class FileReportBackend(ReportingBackend):
         return FileReportSession(
             os.path.join(report_dir, self.get_report_filename()), report, self.save_report, self.save_mode
         )
+
+def filter_available_reporting_backends(backends):
+    return list(filter(lambda backend: backend.is_available(), backends))
+
+def filter_reporting_backends_by_capabilities(backends, capabilities):
+    return list(filter(lambda backend: backend.get_capabilities() & capabilities == capabilities, backends))
 
 def get_available_backends():
     from lemoncheesecake.reporting.backends import ConsoleBackend, XmlBackend, JsonBackend, HtmlBackend, JunitBackend

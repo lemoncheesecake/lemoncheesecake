@@ -11,13 +11,13 @@ import shutil
 from lemoncheesecake.suite import load_suites_from_directory
 from lemoncheesecake.fixtures import load_fixtures_from_directory
 from lemoncheesecake.validators import MetadataPolicy
-from lemoncheesecake.reporting import get_available_backends, ConsoleBackend, HtmlBackend, JsonBackend
+from lemoncheesecake.reporting import ConsoleBackend, HtmlBackend, JsonBackend, XmlBackend, JunitBackend,\
+    filter_available_reporting_backends
 from lemoncheesecake.reporting.reportdir import report_dir_with_archiving, archive_dirname_datetime
 from lemoncheesecake.exceptions import ProjectError, UserError, serialize_current_exception
 from lemoncheesecake.utils import get_resource_path
 from lemoncheesecake.importer import import_module
 
-DEFAULT_REPORTING_BACKENDS = get_available_backends()
 PROJECT_CONFIG_FILE = "project.py"
 
 
@@ -97,6 +97,11 @@ class SimpleProjectConfiguration(ProjectConfiguration):
     def __init__(self, suites_dir, fixtures_dir=None):
         self._suites_dir = suites_dir
         self._fixtures_dir = fixtures_dir
+        self.console_backend = ConsoleBackend()
+        self.json_backend = JsonBackend()
+        self.xml_backend = XmlBackend()
+        self.junit_backend = JunitBackend()
+        self.html_backend = HtmlBackend()
     
     def get_suites(self):
         return load_suites_from_directory(self._suites_dir)
@@ -104,11 +109,11 @@ class SimpleProjectConfiguration(ProjectConfiguration):
     def get_fixtures(self):
         return load_fixtures_from_directory(self._fixtures_dir) if self._fixtures_dir else []
     
-    def get_available_reporting_backends(self):
-        return get_available_backends()
+    def get_all_reporting_backends(self):
+        return [self.console_backend, self.json_backend, self.html_backend, self.xml_backend, self.junit_backend]
 
-    def get_active_reporting_backend_names(self):
-        return [ConsoleBackend.name, HtmlBackend.name, JsonBackend.name]
+    def get_default_reporting_backends_for_test_run(self):
+        return [self.console_backend, self.json_backend, self.html_backend]
     
     def create_report_dir(self, top_dir):
         return report_dir_with_archiving(top_dir, archive_dirname_datetime)
@@ -140,20 +145,11 @@ class Project:
     def get_fixtures(self):
         return self._config.get_fixtures()
 
-    def get_reporting_backends(self, capabilities=0, active_only=False):
-        if active_only:
-            backends = filter(lambda b: b.name in self._config.get_active_reporting_backend_names(), self._config.get_available_reporting_backends())
-        else:
-            backends = self._config.get_available_reporting_backends()
-        return list(filter(
-            lambda b: b.get_capabilities() & capabilities == capabilities, backends
-        ))
+    def get_all_reporting_backends(self):
+        return filter_available_reporting_backends(self._config.get_all_reporting_backends())
 
-    def get_active_reporting_backend_names(self):
-        return self._config.get_active_reporting_backend_names()
-
-    def is_reporting_backend_active(self, backend_name):
-        return backend_name in self.get_active_reporting_backend_names()
+    def get_default_reporting_backends_for_test_run(self):
+        return filter_available_reporting_backends(self._config.get_default_reporting_backends_for_test_run())
 
     def run_pre_session_hook(self, report_dir):
         if isinstance(self._config, HasPreRunHook):

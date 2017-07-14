@@ -56,19 +56,19 @@ def test_create_report_dir(tmpdir):
     assert os.path.isdir(report_dir)
 
 
-def test_get_available_reporting_backend(tmpdir):
+def test_get_all_reporting_backends(tmpdir):
     project = make_test_project(tmpdir)
     try:
         import lxml
     except ImportError:
-        assert [p.name for p in project.get_reporting_backends()] == ["console", "json", "html"]
+        assert sorted([p.name for p in project.get_all_reporting_backends()]) == ["console", "html", "json"]
     else:
-        assert [p.name for p in project.get_reporting_backends()] == ["console", "xml", "json", "html", "junit"]
+        assert sorted([p.name for p in project.get_all_reporting_backends()]) == ["console", "html", "json", "junit", "xml"]
 
 
-def test_get_available_reporting_backend_active_only(tmpdir):
+def test_get_default_reporting_backends_for_test_run(tmpdir):
     project = make_test_project(tmpdir)
-    assert [p.name for p in project.get_reporting_backends(active_only=True)] == ["console", "json", "html"]
+    assert [p.name for p in project.get_default_reporting_backends_for_test_run()] == ["console", "json", "html"]
 
 
 def test_with_custom_cli_args(tmpdir):
@@ -170,7 +170,7 @@ def test_project_creation(tmpdir):
     project = load_project(tmpdir.strpath)
     assert len(project.get_suites()) == 0
     assert len(project.get_fixtures()) == 0
-    assert len(project.get_active_reporting_backend_names()) > 0
+    assert len(project.get_default_reporting_backends_for_test_run()) > 0
 
     project.run_pre_session_hook(tmpdir.strpath)
     project.run_post_session_hook(tmpdir.strpath)
