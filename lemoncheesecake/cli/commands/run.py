@@ -8,13 +8,14 @@ import os
 
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import filter_suites_from_cli_args
-from lemoncheesecake.project import find_project_file, Project
+from lemoncheesecake.project import find_project_file, load_project_from_file
 from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture, load_fixtures_from_func
 from lemoncheesecake.runner import run_suites
 from lemoncheesecake.suite.filter import add_filter_args_to_cli_parser
-from lemoncheesecake import reporting
+from lemoncheesecake.reporting import filter_reporting_backends_by_capabilities, CAPABILITY_REPORTING_SESSION
 from lemoncheesecake.exceptions import ProjectError, FixtureError, InvalidMetadataError,\
     ProgrammingError, LemonCheesecakeException, UserError, serialize_current_exception
+
 
 def build_fixture_registry(project, cli_args):
     registry = FixtureRegistry()
@@ -24,6 +25,7 @@ def build_fixture_registry(project, cli_args):
         registry.add_fixture(fixture)
     registry.check_dependencies()
     return registry
+
 
 class RunCommand(Command):
     def get_name(self):
@@ -37,8 +39,8 @@ class RunCommand(Command):
         project = None
         default_reporting_backend_names = []
         if project_file:
-            project = Project(project_file)
-            default_reporting_backend_names = project.get_active_reporting_backend_names()
+            project = load_project_from_file(project_file)
+            default_reporting_backend_names = [backend.name for backend in project.get_default_reporting_backends_for_test_run()]
 
         add_filter_args_to_cli_parser(cli_parser)
 
@@ -61,7 +63,7 @@ class RunCommand(Command):
         )
 
         if project:
-            project.add_cli_extra_args(cli_parser)
+            project.add_custom_args_to_run_cli(cli_parser)
 
     def run_cmd(self, cli_args):
         # Project initialization
@@ -69,12 +71,13 @@ class RunCommand(Command):
         if not project_file:
             return "Cannot find project file"
         try:
-            project = Project(project_file)
+            project = load_project_from_file(project_file)
             suites = project.get_suites()
         except (ProjectError, ProgrammingError) as e:
             return str(e)
         except InvalidMetadataError as e:
             return "Invalid test/suite metadata has been found: %s" % e
+        suites = filter_suites_from_cli_args(suites, cli_args)
 
         # Build fixture registry
         try:
@@ -83,17 +86,11 @@ class RunCommand(Command):
         except FixtureError as e:
             return "Cannot run tests: %s" % e
 
+        # Set reporting backends
         reporting_backends = {
             backend.name: backend for backend in
-                project.get_reporting_backends(capabilities=reporting.CAPABILITY_REPORTING_SESSION, active_only=False)
+                filter_reporting_backends_by_capabilities(project.get_all_reporting_backends(), CAPABILITY_REPORTING_SESSION)
         }
-        default_report_dir_creation_callback = project.get_report_dir_creation_callback()
-        before_run_hook = project.get_before_test_run_hook()
-        after_run_hook = project.get_after_test_run_hook()
-
-        suites = filter_suites_from_cli_args(suites, cli_args)
-
-        # Set reporting backends
         selected_reporting_backends = set()
         for backend_name in cli_args.reporting + cli_args.enable_reporting:
             try:
@@ -114,9 +111,8 @@ class RunCommand(Command):
             except Exception as e:
                 return "Cannot create report directory: %s" % e
         else:
-            project_dir = project.get_project_dir()
             try:
-                report_dir = default_report_dir_creation_callback(project_dir)
+                report_dir = project.create_report_dir()
             except UserError as e:
                 return str(e)
             except Exception:
@@ -124,14 +120,13 @@ class RunCommand(Command):
                     serialize_current_exception(show_stacktrace=True)
 
         # Handle before run hook
-        if before_run_hook:
-            try:
-                before_run_hook(report_dir)
-            except UserError as e:
-                return str(e)
-            except Exception:
-                return "Got an unexpected exception while running the before-run hook:%s" % \
-                    serialize_current_exception(show_stacktrace=True)
+        try:
+            project.run_pre_session_hook(report_dir)
+        except UserError as e:
+            return str(e)
+        except Exception:
+            return "Got an unexpected exception while running the pre-session hook:%s" % \
+                serialize_current_exception(show_stacktrace=True)
 
         # Run tests
         try:
@@ -143,15 +138,14 @@ class RunCommand(Command):
             return str(e)
 
         # Handle after run hook
-        if after_run_hook:
-            try:
-                after_run_hook(report_dir)
-            except UserError as e:
-                return str(e)
-            except Exception:
-                return "Got an unexpected exception while running the after-run hook:%s" % (
-                    serialize_current_exception(show_stacktrace=True)
-                )
+        try:
+            project.run_post_session_hook(report_dir)
+        except UserError as e:
+            return str(e)
+        except Exception:
+            return "Got an unexpected exception while running the post-session hook:%s" % (
+                serialize_current_exception(show_stacktrace=True)
+            )
 
         if cli_args.exit_error_on_failure:
             return 0 if is_successful else 1

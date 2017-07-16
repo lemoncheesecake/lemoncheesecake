@@ -9,7 +9,7 @@ from __future__ import print_function
 from lemoncheesecake.cli.display import print_table
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.testtree import walk_tests
-from lemoncheesecake.project import find_project_file, Project
+from lemoncheesecake.project import find_project_file, load_project_from_file
 from lemoncheesecake.exceptions import ProjectError, ProgrammingError
 
 class FixturesCommand(Command):
@@ -45,7 +45,7 @@ class FixturesCommand(Command):
         if not project_file:
             return "Cannot find project file"
         try:
-            project = Project(project_file)
+            project = load_project_from_file(project_file)
             suites = project.get_suites()
             fixtures = project.get_fixtures()
         except (ProjectError, ProgrammingError) as e:

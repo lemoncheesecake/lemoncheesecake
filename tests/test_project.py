@@ -1,140 +1,180 @@
 import os
 import sys
 import argparse
+import pytest
 
-from lemoncheesecake.project import Project, create_project, load_project, find_project_file
+import lemoncheesecake.api as lcc
+from lemoncheesecake.project import Project, SimpleProjectConfiguration, \
+    HasCustomCliArgs, HasMetadataPolicy, HasPreRunHook, HasPostRunHook, create_project, load_project, find_project_file
+from lemoncheesecake.suite import load_suite_from_class
+from lemoncheesecake.validators import MetadataPolicy
+from lemoncheesecake.exceptions import InvalidMetadataError
 from lemoncheesecake.reporting import backends
 
 from helpers import build_test_project, build_test_module, build_fixture_module
 
-def set_project_suites_param(params, suite_name, project_dir):
-    suite_file = project_dir.join("%s.py" % suite_name)
-    suite_file.write(build_test_module(suite_name))
-    params["SUITES"] = "[ load_suite_from_file('%s.py') ]" % (
-        project_dir.join(suite_name).strpath
+
+def make_test_project(project_dir):
+    return Project(
+        SimpleProjectConfiguration(project_dir.strpath),
+        project_dir.strpath
     )
 
-def test_project_minimal_parameters(tmpdir):
-    params = {}
-    set_project_suites_param(params, "mysuite", tmpdir)
-    project_file = tmpdir.join("project.py")
-    project_file.write(build_test_project(params))
-    project = Project(project_file.strpath)
 
-    assert project.get_project_dir() == tmpdir.strpath
+def test_get_project_dir(tmpdir):
+    file = tmpdir.join("mysuite.py")
+    file.write(build_test_module())
+    project = make_test_project(tmpdir)
+    assert project.get_project_dir() == tmpdir
 
-    classes = project.get_suites()
-    assert classes[0].name == "mysuite"
 
-    assert project.get_report_dir_creation_callback() != None
+def test_get_suites(tmpdir):
+    file = tmpdir.join("mysuite.py")
+    file.write(build_test_module())
+    project = make_test_project(tmpdir)
+    suites = project.get_suites()
+    assert len(suites) == 1 and suites[0].name == "mysuite"
 
+
+def test_get_fixtures_without_fixtures(tmpdir):
+    project = make_test_project(tmpdir)
+    fixtures = project.get_fixtures()
+    assert len(fixtures) == 0
+
+
+def test_get_fixtures_with_fixtures(tmpdir):
+    file = tmpdir.join("myfixtures.py")
+    file.write(build_fixture_module("fixt"))
+    project = Project(SimpleProjectConfiguration(tmpdir.strpath, tmpdir.strpath), tmpdir.strpath)
+    fixtures = project.get_fixtures()
+    assert len(fixtures) == 1 and fixtures[0].name == "fixt"
+
+
+def test_create_report_dir(tmpdir):
+    project = make_test_project(tmpdir)
+    report_dir = project.create_report_dir()
+    assert os.path.isdir(report_dir)
+
+
+def test_get_all_reporting_backends(tmpdir):
+    project = make_test_project(tmpdir)
     try:
         import lxml
     except ImportError:
-        assert [p.name for p in project.get_reporting_backends()] == ["console", "json", "html"]
+        assert sorted([p.name for p in project.get_all_reporting_backends()]) == ["console", "html", "json"]
     else:
-        assert [p.name for p in project.get_reporting_backends()] == ["console", "xml", "json", "html", "junit"]
+        assert sorted([p.name for p in project.get_all_reporting_backends()]) == ["console", "html", "json", "junit", "xml"]
 
-    assert project.get_metadata_policy().has_constraints() == False
 
-def test_project_with_available_reporting_backends(tmpdir):
-    params = {}
-    set_project_suites_param(params, "mysuite", tmpdir)
-    params["REPORTING_BACKENDS"] = "[ backends.ConsoleBackend() ]"
-    project_file = tmpdir.join("project.py")
-    project_file.write(build_test_project(params))
+def test_get_default_reporting_backends_for_test_run(tmpdir):
+    project = make_test_project(tmpdir)
+    assert [p.name for p in project.get_default_reporting_backends_for_test_run()] == ["console", "json", "html"]
 
-    project = Project(project_file.strpath)
 
-    assert [p.name for p in project.get_reporting_backends()] == ["console"]
+def test_with_custom_cli_args(tmpdir):
+    class MyProject(SimpleProjectConfiguration, HasCustomCliArgs):
+        def add_custom_cli_args(self, cli_parser):
+            cli_parser.add_argument("foobar")
 
-def test_project_with_active_reporting_backends(tmpdir):
-    params = {}
-    set_project_suites_param(params, "mysuite", tmpdir)
-    params["REPORTING_BACKENDS_ACTIVE"] = "[ 'console', 'json' ]"
-    project_file = tmpdir.join("project.py")
-    project_file.write(build_test_project(params))
-
-    project = Project(project_file.strpath)
-
-    assert project.get_active_reporting_backend_names() == ["console", "json"]
-    assert project.is_reporting_backend_active("json") == True
-    assert project.is_reporting_backend_active("html") == False
-
-def test_project_with_fixtures(tmpdir):
-    params = {}
-    set_project_suites_param(params, "mysuite", tmpdir)
-    tmpdir.join("myfixtures.py").write(build_fixture_module("myfixture"))
-    params["FIXTURES"] = "load_fixtures_from_file('%s')" % tmpdir.join("myfixtures.py").strpath
-    project_file = tmpdir.join("project.py")
-    project_file.write(build_test_project(params))
-
-    project = Project(project_file.strpath)
-
-    fixtures = project.get_fixtures()
-    assert len(fixtures) == 1
-    assert fixtures[0].name == "myfixture"
-
-def test_project_with_metadata_policy(tmpdir):
-    params = {}
-    set_project_suites_param(params, "mysuite", tmpdir)
-    policy_code = """
-metadata_policy = validators.MetadataPolicy()
-metadata_policy.disallow_unknown_tags()
-"""
-    params["METADATA_POLICY"] = "metadata_policy"
-    project_file = tmpdir.join("project.py")
-    project_file.write(build_test_project(params, static_content=policy_code))
-
-    project = Project(project_file.strpath)
-
-    assert project.get_metadata_policy().has_constraints() == True
-
-def test_project_with_report_dir_creation(tmpdir):
-    params = {}
-    set_project_suites_param(params, "mysuite", tmpdir)
-    cli_args_code = """
-def custom_report_dir(top_dir):
-    pass
-"""
-    params["REPORT_DIR_CREATION"] = "custom_report_dir"
-    project_file = tmpdir.join("project.py")
-    project_file.write(build_test_project(params, static_content=cli_args_code))
-
-    project = Project(project_file.strpath)
-
-    assert project.get_report_dir_creation_callback().__name__ == "custom_report_dir"
-
-def test_project_with_cli_extra_args(tmpdir):
-    params = {}
-    set_project_suites_param(params, "mysuite", tmpdir)
-    cli_args_code = """
-def add_cli_args(cli_parser):
-    cli_parser.add_argument("foobar")
-"""
-    params["CLI_EXTRA_ARGS"] = "add_cli_args"
-    project_file = tmpdir.join("project.py")
-    project_file.write(build_test_project(params, static_content=cli_args_code))
-
-    project = Project(project_file.strpath)
-
+    project = Project(MyProject(tmpdir.strpath), tmpdir.strpath)
     cli_parser = argparse.ArgumentParser()
-    project.add_cli_extra_args(cli_parser)
-
+    project.add_custom_args_to_run_cli(cli_parser)
     assert "foobar" in [a.dest for a in cli_parser._actions]
+
+
+def test_without_custom_cli_args(tmpdir):
+    project = make_test_project(tmpdir)
+    cli_parser = argparse.ArgumentParser()
+    project.add_custom_args_to_run_cli(cli_parser)
+
+
+def test_with_pre_run_hook(tmpdir):
+    marker = []
+
+    class MyProject(SimpleProjectConfiguration, HasPreRunHook):
+        def pre_run(self, report_dir):
+            marker.append(1)
+
+    project = Project(MyProject(tmpdir.strpath), tmpdir.strpath)
+    project.run_pre_session_hook(tmpdir.strpath)
+    assert len(marker) == 1
+
+
+def test_without_pre_run_hook(tmpdir):
+    project = make_test_project(tmpdir)
+    project.run_pre_session_hook(tmpdir.strpath)
+
+
+def test_with_post_run_hook(tmpdir):
+    marker = []
+
+    class MyProject(SimpleProjectConfiguration, HasPostRunHook):
+        def post_run(self, report_dir):
+            marker.append(1)
+
+    project = Project(MyProject(tmpdir.strpath), tmpdir.strpath)
+    project.run_post_session_hook(tmpdir.strpath)
+    assert len(marker) == 1
+
+
+def test_without_post_run_hook(tmpdir):
+    project = make_test_project(tmpdir)
+    project.run_post_session_hook(tmpdir.strpath)
+
+
+def test_get_suites_with_metadatapolicy_check(tmpdir):
+    @lcc.suite("My Suite")
+    class mysuite:
+        @lcc.test("My Test")
+        @lcc.tags("mytag")
+        def test(self):
+            pass
+
+    class MyProject(SimpleProjectConfiguration, HasMetadataPolicy):
+        def get_metadata_policy(self):
+            mp = MetadataPolicy()
+            mp.disallow_unknown_tags()
+            return mp
+
+        def get_suites(self):
+            return [load_suite_from_class(mysuite)]
+
+    project = Project(MyProject(tmpdir.strpath), tmpdir.strpath)
+    with pytest.raises(InvalidMetadataError):
+        project.get_suites(check_metadata_policy=True)
+
+
+def test_get_suites_without_metadatapolicy_check(tmpdir):
+    @lcc.suite("My Suite")
+    class mysuite:
+        @lcc.test("My Test")
+        @lcc.tags("mytag")
+        def test(self):
+            pass
+
+    class MyProject(SimpleProjectConfiguration, HasMetadataPolicy):
+        def get_metadata_policy(self):
+            mp = MetadataPolicy()
+            mp.disallow_unknown_tags()
+            return mp
+
+        def get_suites(self):
+            return [load_suite_from_class(mysuite)]
+
+    project = Project(MyProject(tmpdir.strpath), tmpdir.strpath)
+    project.get_suites(check_metadata_policy=False)
+
 
 def test_project_creation(tmpdir):
     create_project(tmpdir.strpath)
     project = load_project(tmpdir.strpath)
     assert len(project.get_suites()) == 0
     assert len(project.get_fixtures()) == 0
-    assert project.get_cli_extra_args_callback() != None
-    assert project.get_metadata_policy() != None
-    assert len(project._get_reporting_backends()) > 0
-    assert len(project.get_active_reporting_backend_names()) > 0
-    assert project.get_report_dir_creation_callback() != None
-    assert project.get_before_test_run_hook() != None
-    assert project.get_after_test_run_hook() != None
+    assert len(project.get_default_reporting_backends_for_test_run()) > 0
+
+    project.run_pre_session_hook(tmpdir.strpath)
+    project.run_post_session_hook(tmpdir.strpath)
+
 
 def test_find_project_file_not_found(tmpdir):
     old_cwd = os.getcwd()
@@ -145,6 +185,7 @@ def test_find_project_file_not_found(tmpdir):
     finally:
         os.chdir(old_cwd)
 
+
 def test_find_project_file_in_current_dir(tmpdir):
     old_cwd = os.getcwd()
     os.chdir(tmpdir.strpath)
@@ -154,6 +195,7 @@ def test_find_project_file_in_current_dir(tmpdir):
         assert actual == tmpdir.join("project.py").strpath
     finally:
         os.chdir(old_cwd)
+
 
 def test_find_project_file_in_parent_dir(tmpdir):
     old_cwd = os.getcwd()
@@ -166,6 +208,7 @@ def test_find_project_file_in_parent_dir(tmpdir):
     finally:
         os.chdir(old_cwd)
 
+
 def test_find_project_file_env_var_not_found(tmpdir):
     os.environ["LCC_PROJECT_FILE"] = tmpdir.join("project.py").strpath
     try:
@@ -173,6 +216,7 @@ def test_find_project_file_env_var_not_found(tmpdir):
         assert actual == None
     finally:
         del os.environ["LCC_PROJECT_FILE"]
+
 
 def test_find_project_file_env_var_found(tmpdir):
     tmpdir.join("project.py").write("")
