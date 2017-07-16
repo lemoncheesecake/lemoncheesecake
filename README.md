@@ -70,7 +70,7 @@ The command:
 $ lcc bootstrap myproject
 ```
 
-creates a new project directory "myproject" containing one file "project.py" (it contains your project settings) and a "tests" directory where you can add your suites.
+creates a new project directory "myproject" containing one file "project.py" (it contains your project settings) and a "suites" directory where you can add your test suites.
 
 ## Writing a suite
 
@@ -375,9 +375,9 @@ Lemoncheesecake provides several special builtin fixtures:
 
 Using the default `project.py` file, fixtures will be loaded from the `fixtures` sub directory.
 
-# Suites hierarchy
+# Test suites hierarchy
 
-Sub suites can be declared in a suite in a lot of different ways:
+Sub test suites can be declared inside a test suite in a lot of different ways:
 
 - as classes in a suite module:
   ```python
@@ -420,9 +420,9 @@ Sub suites can be declared in a suite in a lot of different ways:
   1 directory, 2 files
   ```
 
-# Suite setup and teardown methods
+# Test suite setup and teardown methods
 
-Suites provide several methods that give the user the possibility to execute code at particular steps of the suite execution:
+Test suites provide several methods that give the user the possibility to execute code at particular steps of the suite execution:
 
 - `setup_suite` is called before executing the tests of the suite; if something wrong happens (a call to `log_error` or a raised exception) then the whole suite execution is aborted
 - `setup_test` takes the test name as argument and is called before each test; if something wrong happen then the test execution is aborted
@@ -495,7 +495,7 @@ Once, the metadata are set, they:
 - can be used to filter the tests to be run (see the `--tag`, `--property` and `--link` of the CLI launcher), in this case a test inherits all these parents metadata
 - will be available in the test report
 
-# Advanced features
+# Advanced project features
 
 ## Custom command line arguments
 
@@ -504,10 +504,22 @@ Custom command line arguments are can be added to `lcc run`:
 ```python
  # project.py:
 
-def add_cli_args(cli_parser):
-    cli_parser.add_argument("--host", required=True, help="Target host")
-    cli_parser.add_argument("--port", type=int, default=443, help="Target port")
-CLI_EXTRA_ARGS = add_cli_args
+import os.path
+
+from lemoncheesecake.project import SimpleProjectConfiguration, HasCustomCliArgs
+
+
+class MyProjectConfiguration(SimpleProjectConfiguration, HasCustomCliArgs):
+    def add_custom_cli_args(self, cli_parser):
+        cli_parser.add_argument("--host", required=True, help="Target host")
+        cli_parser.add_argument("--port", type=int, default=443, help="Target port")
+
+
+project_dir = os.path.dirname(__file__)
+project = MyProjectConfiguration(
+    suites_dir=os.path.join(project_dir, "suites"),
+    fixtures_dir=os.path.join(project_dir, "fixtures"),
+)
 ```
 
 And then accessed through the `cli_args` fixture:
@@ -527,13 +539,27 @@ The following example requires that every tests provide a property "priority" wh
 
 ```python
  # project.py:
-[...]
-mp = validators.MetadataPolicy()
-mp.add_property_rule(
-    "priority", ("low", "medium", "high")), required=True
+ 
+import os.path
+
+from lemoncheesecake.project import SimpleProjectConfiguration, HasMetadataPolicy
+from lemoncheesecake.validators import MetadataPolicy
+
+
+class MyProjectConfiguration(SimpleProjectConfiguration, HasMetadataPolicy):
+    def get_metadata_policy(self):
+        policy = MetadataPolicy()
+        policy.add_property_rule(
+            "priority", ("low", "medium", "high"), required=True
+        )
+        return policy
+
+
+project_dir = os.path.dirname(__file__)
+project = MyProjectConfiguration(
+    suites_dir=os.path.join(project_dir, "suites"),
+    fixtures_dir=os.path.join(project_dir, "fixtures")
 )
-METADATA_POLICY = mp
-[...]
 ```
 
 In this other example set, the metadata policy makes two tags available ("todo" and "known_defect") for both tests and suites while forbidding the usage of any other tag:
@@ -541,12 +567,15 @@ In this other example set, the metadata policy makes two tags available ("todo" 
 ```python
  # project.py:
 [...]
-mp = validators.MetadataPolicy()
-mp.add_tag_rule(
-    ("todo", "known_defect"), on_test=True, on_suite=True
-)
-mp.disallow_unknown_tags()
-METADATA_POLICY = mp
+class MyProjectConfiguration(SimpleProjectConfiguration, HasMetadataPolicy):
+    def get_metadata_policy(self):
+        policy = MetadataPolicy()
+        policy.add_tag_rule(
+            ("todo", "known_defect"), on_test=True, on_suite=True
+        )
+        policy.disallow_unknown_tags()
+        return policy
+[...]
 ```
 
 See `lemoncheesecake.validators.MetadataPolicy` for more information.
