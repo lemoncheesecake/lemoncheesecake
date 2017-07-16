@@ -1,3 +1,7 @@
+# 0.10.0 (2017-07-16)
+
+- **API**: Change key=value parameters of `project.py` files into a ProjectConfiguration class
+
 # 0.9.1 (2017-07-11)
 
 - Fix JUnit bad test serialization (successful checks reported as failures)
