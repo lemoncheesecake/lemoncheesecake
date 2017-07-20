@@ -7,7 +7,6 @@ Created on Nov 1, 2016
 '''
 
 import os.path
-import tempfile
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.runtime import get_runtime
@@ -378,13 +377,12 @@ def test_save_attachment_file(tmpdir):
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
-            dirname = tempfile.mkdtemp()
-            filename = os.path.join(dirname, "somefile.txt")
+            filename = os.path.join(tmpdir.strpath, "somefile.txt")
             with open(filename, "w") as fh:
                 fh.write("some other content")
             lcc.save_attachment_file(filename, "some other file")
 
-    run_suite_class(MySuite, tmpdir=tmpdir)
+    run_suite_class(MySuite, tmpdir=tmpdir.mkdir("report"))
 
     report = get_runtime().report
 

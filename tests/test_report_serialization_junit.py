@@ -20,7 +20,7 @@ def get_junit_xml_from_suite(suite, tmpdir, stop_on_failure=False):
     junit_backend = JunitBackend()
     run_suite_class(suite, backends=[junit_backend], tmpdir=tmpdir, stop_on_failure=stop_on_failure)
     
-    junit_xml_filename = osp.join(tmpdir.strpath, "report", junit_backend.get_report_filename())
+    junit_xml_filename = osp.join(tmpdir.strpath, junit_backend.get_report_filename())
     
     with open(junit_xml_filename, "r") as fh:
         junit_xml_content = fh.read()

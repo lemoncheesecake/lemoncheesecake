@@ -64,6 +64,15 @@ from lemoncheesecake import validators
     STATIC_CONTENT=static_content
 )
 
+
+def _remove_py_file(filename):
+    os.unlink(filename)
+    if osp.exists(filename + "c"):
+        os.unlink(filename + "c")
+    if osp.exists(filename + "o"):
+        os.unlink(filename + "o")
+
+
 def build_suite_from_module(module_content):
     fd, filename = tempfile.mkstemp(suffix=".py")
     fh = open(filename, "w")
@@ -73,7 +82,8 @@ def build_suite_from_module(module_content):
     fh.close()
     os.close(fd)
     suite = load_suite_from_file(filename)
-    os.unlink(filename)
+    _remove_py_file(filename)
+
     return suite
 
 def generate_project(project_dir, module_name, module_content, fixtures_content=None):
@@ -212,14 +222,11 @@ def run_suites(suites, filter=None, fixtures=None, backends=None, tmpdir=None, s
 
     if tmpdir:
         try:
-            report_dir = os.path.join(tmpdir.strpath, "report")
-            os.mkdir(report_dir)
-            runner.run_suites(suites, fixture_registry, backends, report_dir, stop_on_failure=stop_on_failure)
+            runner.run_suites(suites, fixture_registry, backends, tmpdir.strpath, stop_on_failure=stop_on_failure)
         finally:
             _reporting_session = None
     else:
-        report_dir = os.path.join(tempfile.mkdtemp(), "report")
-        os.mkdir(report_dir)
+        report_dir = tempfile.mkdtemp()
         try:
             runner.run_suites(suites, fixture_registry, backends, report_dir, stop_on_failure=stop_on_failure)
         finally:
