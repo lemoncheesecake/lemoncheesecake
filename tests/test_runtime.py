@@ -6,20 +6,14 @@ Created on Nov 1, 2016
 @author: nicolas
 '''
 
-import sys
 import os.path
 import tempfile
 
-import pytest
-
-from lemoncheesecake.exceptions import *
 import lemoncheesecake.api as lcc
 from lemoncheesecake.runtime import get_runtime
-from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
-from lemoncheesecake.reporting.backends.json_ import serialize_report_into_json
 
-from helpers import run_suite_class, run_suite_classes, assert_report_from_suite, assert_report_from_suites, assert_report_stats, \
-    dump_report
+from helpers import run_suite_class, run_suite_classes, assert_report_from_suite, assert_report_from_suites, assert_report_stats
+
 
 def assert_test_success(report, test_name):
     assert report.get_test(test_name).status == "passed"

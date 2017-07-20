@@ -4,21 +4,14 @@ Created on Sep 30, 2016
 @author: nicolas
 '''
 
-import os
-import sys
-import tempfile
-import shutil
-
 import pytest
 
 from lemoncheesecake import runner
-from lemoncheesecake.suite import Filter, load_suites_from_classes
+from lemoncheesecake.suite import load_suites_from_classes
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.exceptions import *
 import lemoncheesecake.api as lcc
-from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 
-from lemoncheesecake.fixtures import FixtureRegistry
 from lemoncheesecake.suite import add_test_in_suite
 
 from helpers import reporting_session, run_suite_class, run_suite_classes, build_fixture_registry, run_suite, build_suite_from_module
