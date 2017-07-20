@@ -181,7 +181,7 @@ function TestSuite(data, parents) {
 	this.data = data;
     this.parents = (parents == null) ? [] : parents;
     this.tests = [ ];
-    this.sub_suites = [ ];
+    this.suites = [ ];
 
     if (data.suite_setup) {
     	test_data = Object();
@@ -207,8 +207,8 @@ function TestSuite(data, parents) {
     	this.tests.push(new Test(data.tests[i], this.parents.concat(this)));
     }
 
-    for (var i = 0; i < data.sub_suites.length; i++) {
-        this.sub_suites.push(new TestSuite(data.sub_suites[i], this.parents.concat(this)));
+    for (var i = 0; i < data.suites.length; i++) {
+        this.suites.push(new TestSuite(data.suites[i], this.parents.concat(this)));
     }
 }
 
@@ -262,8 +262,8 @@ TestSuite.prototype = {
 			$panel.append($table);
 		}
 		
-		for (var i = 0; i < this.sub_suites.length; i++) {
-			panels = panels.concat(this.sub_suites[i].render());
+		for (var i = 0; i < this.suites.length; i++) {
+			panels = panels.concat(this.suites[i].render());
 		}
 		
 		return panels;

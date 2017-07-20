@@ -82,7 +82,7 @@ def _serialize_suite_data(suite):
     json_suite = _serialize_common_data(suite)
     json_suite.update(_dict(
         "tests", [ _serialize_test_data(t) for t in suite.get_tests() ],
-        "sub_suites", [ _serialize_suite_data(s) for s in suite.get_suites() ]
+        "suites", [ _serialize_suite_data(s) for s in suite.get_suites() ]
     ))
     if suite.suite_setup:
         json_suite["suite_setup"] = _serialize_hook_data(suite.suite_setup)
@@ -178,7 +178,7 @@ def _unserialize_suite_data(js):
     if "suite_teardown" in js:
         suite.suite_teardown = _unserialize_hook_data(js["suite_teardown"])
 
-    for js_suite in js["sub_suites"]:
+    for js_suite in js["suites"]:
         sub_suite = _unserialize_suite_data(js_suite)
         suite.add_suite(sub_suite)
 
