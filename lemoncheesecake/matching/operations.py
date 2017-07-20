@@ -4,7 +4,7 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
-from lemoncheesecake.runtime import get_runtime
+from lemoncheesecake.runtime import log_check
 from lemoncheesecake.exceptions import AbortTest, ProgrammingError
 from lemoncheesecake.matching.matchers.dict import HasEntry, wrap_key_matcher
 from lemoncheesecake.matching.matchers.composites import is_
@@ -85,7 +85,7 @@ def log_match_result(hint, matcher, result, quiet=False):
     If quiet is set to True, the check details won't appear in the check log.
     """
     description = "Expect %s %s" % (hint, matcher.description())
-    return get_runtime().check(
+    return log_check(
         description, result.outcome, result.description if not quiet and result.description != None else None
     )
 

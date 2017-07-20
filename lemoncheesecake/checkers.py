@@ -22,7 +22,7 @@ CHECKER_OBJECTS = {}
 BASE_CHECKER_NAMES = [ ]
 
 def check(description, outcome, details=None):
-    return get_runtime().check(description, outcome, details)
+    return get_runtime().log_check(description, outcome, details)
 
 class Check:
     assertion = False

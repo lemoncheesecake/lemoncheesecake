@@ -15,8 +15,8 @@ from lemoncheesecake.consts import ATTACHEMENT_DIR, \
     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
 from lemoncheesecake.reporting import *
 
-__all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "log_url", "set_step", \
-    "prepare_attachment", "save_attachment_file", "save_attachment_content", \
+__all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "log_url", "log_check", \
+    "set_step", "prepare_attachment", "save_attachment_file", "save_attachment_content", \
     "add_report_info"
 
 _runtime = None # singleton
@@ -270,7 +270,7 @@ class _Runtime:
         self.has_pending_failure = True
         self.log(LOG_LEVEL_ERROR, content)
 
-    def check(self, description, outcome, details=None):
+    def log_check(self, description, outcome, details=None):
         self.create_step_if_needed()
         self.current_step_data.entries.append(CheckData(description, outcome, details))
 
@@ -345,6 +345,9 @@ def log_error(content):
     Log an error level message.
     """
     get_runtime().log_error(content)
+
+def log_check(description, outcome, details=None):
+    return get_runtime().log_check(description, outcome, details)
 
 def set_step(description):
     """
