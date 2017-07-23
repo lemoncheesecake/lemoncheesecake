@@ -59,7 +59,7 @@ def load_suite_from_class(klass):
     except UserError as e:
         raise e # propagate UserError
     except Exception:
-        raise ProgrammingError("Got an unexpected error while instanciating suite class '%s':%s" % (
+        raise ProgrammingError("Got an unexpected error while instantiating suite class '%s':%s" % (
             klass.__name__, serialize_current_exception()
         ))
     suite = Suite(inst, md.name, md.description)
