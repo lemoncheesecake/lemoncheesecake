@@ -27,6 +27,10 @@ def test_contains_string_with_failure():
 def test_match_pattern_success():
     assert_match_success(match_pattern("^f"), "foo", "foo")
 
+def test_match_pattern_search_success():
+    # ensure that the `search` method (and not the `match` method) of `re` module is called
+    assert_match_success(match_pattern("oo"), "foo", "foo")
+
 def test_match_pattern_with_pattern_success():
     assert_match_success(match_pattern(re.compile("^foo", re.IGNORECASE)), "FOOBAR", "FOOBAR")
 

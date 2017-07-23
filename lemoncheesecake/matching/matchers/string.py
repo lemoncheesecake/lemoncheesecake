@@ -52,8 +52,8 @@ class MatchPattern(MatchExpected):
         return '%s "%s"' % ("matches pattern" if conjugate else "to match pattern", self.expected.pattern)
 
     def matches(self, actual):
-        return match_result(self.expected.match(actual) != None, got_value(actual))
+        return match_result(self.expected.search(actual) != None, got_value(actual))
 
 def match_pattern(pattern):
-    """Test if string matches given pattern"""
+    """Test if string matches given pattern (using the `search` method of the `re` module)"""
     return MatchPattern(pattern if type(pattern) == _REGEXP_TYPE else re.compile(pattern))
