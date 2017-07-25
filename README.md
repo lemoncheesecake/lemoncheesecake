@@ -495,6 +495,19 @@ Once, the metadata are set, they:
 - can be used to filter the tests to be run (see the `--tag`, `--property` and `--link` of the CLI launcher), in this case a test inherits all these parents metadata
 - will be available in the test report
 
+## Disabling test or suite
+
+A test or an entire suite can be disabled using the `@lcc.disabled()` decorator:
+
+```python
+@lcc.test("Test something")
+@lcc.disabled()
+def test_something(self):
+    [...]
+```
+
+Disabled tests are visible in the report but they are not taken into account while computing the percentage of successful tests.
+
 # Advanced project features
 
 ## Custom command line arguments

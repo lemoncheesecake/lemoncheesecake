@@ -119,6 +119,10 @@ class _Runner:
         ###
         # Checker whether the test must be executed or not
         ###
+        if test.disabled or suite.disabled:
+            self.session.disable_test(test)
+            return
+
         if self.abort_suite:
             self.session.skip_test(test, "Cannot execute this test: the tests of this test suite have been aborted.")
             return

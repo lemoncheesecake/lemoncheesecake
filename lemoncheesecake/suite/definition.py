@@ -11,7 +11,7 @@ from lemoncheesecake.suite.loader import get_test_methods_from_class
 from lemoncheesecake.exceptions import ProgrammingError
 
 __all__ = "add_test_in_suite", "add_tests_in_suite", "get_metadata", \
-    "suite", "test", "tags", "prop", "link"
+    "suite", "test", "tags", "prop", "link", "disabled"
 
 class Metadata:
     _next_rank = 1
@@ -25,6 +25,7 @@ class Metadata:
         self.tags = []
         self.links = []
         self.rank = 0
+        self.disabled = False
 
 def get_metadata_next_rank():
     rank = Metadata._next_rank
@@ -144,5 +145,13 @@ def link(url, name=None):
     def wrapper(obj):
         md = get_metadata(obj)
         md.links.append((url, name))
+        return obj
+    return wrapper
+
+def disabled():
+    """Decorator, disable a test or a suite"""
+    def wrapper(obj):
+        md = get_metadata(obj)
+        md.disabled = True
         return obj
     return wrapper

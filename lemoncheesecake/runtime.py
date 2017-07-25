@@ -230,6 +230,9 @@ class _Runtime:
         self._is_success = False
         self._bypass_test(test, "skipped", reason)
 
+    def disable_test(self, test):
+        self._bypass_test(test, "disabled", "")
+
     def create_step_if_needed(self, ts=None):
         if not self.current_step_data_list:
             self._set_step(self.default_step_description, ts or time.time())

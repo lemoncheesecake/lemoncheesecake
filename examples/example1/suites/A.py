@@ -56,6 +56,7 @@ class A:
     @lcc.link("http://bugtracker.net/tickets/1234")    
     @lcc.link("http://bugtracker.net/tickets/5678")
     @lcc.test("Second test")
+    @lcc.disabled()
     def second_test(self):
         time.sleep(2)
         lcc.log_info("do test 2 !")

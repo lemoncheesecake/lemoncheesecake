@@ -1049,3 +1049,32 @@ def test_stop_on_failure_suite_teardown(reporting_session):
     
     assert reporting_session.get_test_status("test1") == "passed"
     assert reporting_session.get_test_status("test2") == "skipped"
+
+def test_disabled_test(reporting_session):
+    @lcc.suite("Suite")
+    class mysuite:
+        @lcc.test("Test")
+        @lcc.disabled()
+        def mytest(self):
+            pass
+
+    run_suite_class(mysuite)
+
+    assert reporting_session.get_test_status("mytest") == "disabled"
+
+def test_disabled_suite(reporting_session):
+    @lcc.suite("Suite")
+    @lcc.disabled()
+    class mysuite:
+        @lcc.test("Test 1")
+        def test1(self):
+            pass
+
+        @lcc.test("Test 2")
+        def test2(self):
+            pass
+
+    run_suite_class(mysuite)
+
+    assert reporting_session.get_test_status("test1") == "disabled"
+    assert reporting_session.get_test_status("test2") == "disabled"

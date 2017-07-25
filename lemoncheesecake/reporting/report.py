@@ -17,7 +17,7 @@ __all__ = (
     "SuiteData", "HookData", "Report"
 )
 
-TEST_STATUSES = "passed", "failed", "skipped"
+TEST_STATUSES = "passed", "failed", "skipped", "disabled"
 
 # NB: it would be nicer to use:
 # datetime.isoformat(sep=' ', timespec='milliseconds')
@@ -241,14 +241,16 @@ class Report:
 
     def serialize_stats(self):
         stats = self.get_stats()
+        enabled_tests = stats.tests - stats.test_statuses["disabled"]
         return (
             ("Start time", time.asctime(time.localtime(self.start_time))),
             ("End time", time.asctime(time.localtime(self.end_time)) if self.end_time else "n/a"),
             ("Duration", humanize_duration(self.end_time - self.start_time) if self.end_time else "n/a"),
             ("Tests", str(stats.tests)),
             ("Successful tests", str(stats.test_statuses["passed"])),
-            ("Successful tests in %", "%d%%" % (float(stats.test_statuses["passed"]) / stats.tests * 100 if stats.tests else 0)),
+            ("Successful tests in %", "%d%%" % (float(stats.test_statuses["passed"]) / enabled_tests * 100 if enabled_tests else 0)),
             ("Failed tests", str(stats.test_statuses["failed"])),
             ("Skipped tests", str(stats.test_statuses["skipped"])),
+            ("Disabled tests", str(stats.test_statuses["disabled"])),
             ("Errors", str(stats.errors))
         )

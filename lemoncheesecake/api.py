@@ -5,7 +5,7 @@ import lemoncheesecake.api as lcc
 """
 
 from lemoncheesecake.suite import Test, add_test_in_suite, add_tests_in_suite, \
-    get_metadata, suite, test, tags, prop, link
+    get_metadata, suite, test, tags, prop, link, disabled
 from lemoncheesecake.runtime import *
 from lemoncheesecake.checkers import *
 from lemoncheesecake.matching import *

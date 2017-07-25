@@ -29,6 +29,7 @@ def load_test(obj):
     test.tags.extend(md.tags)
     test.properties.update(md.properties)
     test.links.extend(md.links)
+    test.disabled = md.disabled
     return test
 
 def load_test_from_method(method):
@@ -67,6 +68,7 @@ def load_suite_from_class(klass):
     suite.properties.update(md.properties)
     suite.links.extend(md.links)
     suite.rank = md.rank
+    suite.disabled = md.disabled
 
     for hook_name in SUITE_HOOKS:
         if hasattr(inst, hook_name):

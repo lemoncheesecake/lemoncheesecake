@@ -97,6 +97,8 @@ Test.prototype = {
 			status_text_class = "text-danger";
 		} else if (this.data.status == null) {
 			status_text_class = "";
+		} else if (this.data.status == "disabled") {
+            status_text_class = "text-default";
 		} else {
 			status_text_class = "text-warning";
 		}

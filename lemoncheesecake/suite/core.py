@@ -20,6 +20,7 @@ class Test(BaseTest):
     def __init__(self, name, description, callback):
         BaseTest.__init__(self, name, description)
         self.callback = callback
+        self.disabled = False
 
     def get_params(self):
         return get_callable_args(self.callback)
@@ -35,6 +36,7 @@ class Suite(BaseSuite):
         self.rank = 0
         self._hooks = {}
         self._selected_test_names = []
+        self.disabled = False
 
     def add_hook(self, hook_name, func):
         _assert_valid_hook_name(hook_name)
