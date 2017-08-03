@@ -82,10 +82,16 @@ function Test(data, parents, special) {
 	this.parents = (parents != null) ? parents : [];
 	this.special = special;
 	this.is_displayed = false;
+
+	Test.prototype.all_tests[this.get_path()] = this;
 };
 
 Test.prototype = {
 	constructor: Test,
+
+	get_path: function() {
+	    return this.parents.map(function(p) { return p.data.name }).concat(this.data.name).join(".");
+	},
 	
 	render: function() {
 		var cols = [ ];
@@ -111,7 +117,7 @@ Test.prototype = {
 		cols.push($status_col);
 
 		/* build description column */
-		var test_path = this.parents.map(function(p) { return p.data.name }).concat(this.data.name).join(".");
+		var test_path = this.get_path();
 		var $test_col_content = $("<h5>").text(this.data.description).append($("<br/><small>").text(test_path));
 		if (this.special) {
 			$test_col_content.addClass("special")
@@ -149,6 +155,7 @@ Test.prototype = {
 	},
 	
 	current_displayed_test: null,
+	all_tests: {},
 	
 	show: function() {
 		if (Test.prototype.current_displayed_test) {
@@ -356,3 +363,11 @@ Report.prototype = {
 		}
 	}	
 };
+
+window.onload = function() {
+        splitted = document.location.href.split('#');
+        if (splitted.length == 2) {
+            test = Test.prototype.all_tests[splitted[1]];
+            test.show()
+        }
+}
