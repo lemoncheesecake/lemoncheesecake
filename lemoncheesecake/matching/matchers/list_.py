@@ -27,11 +27,6 @@ def has_item(expected):
     return HasItem(is_(expected))
 
 
-def HasItems(MatchExpected):
-    def description():
-        pass
-
-
 class HasValues(MatchExpected):
     def description(self, conjugate=False):
         return "%s values %s" % (to_have(conjugate), serialize_values(self.expected))
