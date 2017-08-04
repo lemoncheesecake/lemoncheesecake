@@ -9,6 +9,7 @@ from lemoncheesecake.matching.matchers.composites import is_
 
 __all__ = ("has_item", "has_values", "has_only_values", "is_in")
 
+
 class HasItem(MatchExpected):
     def description(self, conjugate=False):
         return "%s an item whose value %s" % (to_have(conjugate), self.expected.description(conjugate=True))
@@ -20,13 +21,16 @@ class HasItem(MatchExpected):
                 return result
         return match_failure("No matching item")
 
+
 def has_item(expected):
     "Test if iterable has item matching expected"
     return HasItem(is_(expected))
 
+
 def HasItems(MatchExpected):
     def description():
         pass
+
 
 class HasValues(MatchExpected):
     def description(self, conjugate=False):
@@ -43,9 +47,11 @@ class HasValues(MatchExpected):
         else:
             return match_success(got_value(actual))
 
+
 def has_values(values):
     "Test if iterable contains at least the given values"
     return HasValues(values)
+
 
 class HasOnlyValues(MatchExpected):
     def description(self, conjugate=False):
@@ -70,9 +76,11 @@ class HasOnlyValues(MatchExpected):
                 details.append("Extra values: %s" % serialize_values(extra))
             return match_failure("; ".join(details))
 
+
 def has_only_values(values):
     "Test if iterable only contains the given values"
     return HasOnlyValues(values)
+
 
 class IsIn(MatchExpected):
     def description(self, conjugate=False):
@@ -80,6 +88,7 @@ class IsIn(MatchExpected):
 
     def matches(self, actual):
         return match_result(actual in self.expected, got_value(actual))
+
 
 def is_in(expected):
     return IsIn(expected)

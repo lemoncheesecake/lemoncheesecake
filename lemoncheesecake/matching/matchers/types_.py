@@ -23,11 +23,13 @@ TYPE_NAMES = {
 if IS_PYTHON2:
     TYPE_NAMES[unicode] = "string",
 
+
 def get_value_type_name(value):
     try:
         return TYPE_NAMES[type(value)]
     except KeyError:
         return str(type(value))
+
 
 class IsValueOfType(Matcher):
     def __init__(self, types, type_name, value_matcher):
@@ -51,6 +53,7 @@ class IsValueOfType(Matcher):
         else:
             return match_failure(got("%s (%s)" % (serialize_value(actual), get_value_type_name(actual))))
 
+
 def is_type(types, type_name):
     def wrapper(value_matcher=None):
         return IsValueOfType(
@@ -58,6 +61,7 @@ def is_type(types, type_name):
         )
     wrapper.__doc__ = "Test if value is of type %s" % type_name
     return wrapper
+
 
 is_integer = is_type([int], "an integer")
 is_float = is_type([float], "a float")

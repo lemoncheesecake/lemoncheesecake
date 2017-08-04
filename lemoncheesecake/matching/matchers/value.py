@@ -16,6 +16,7 @@ __all__ = (
     "is_between", "is_none", "is_not_none", "has_length"
 )
 
+
 class EqualTo(MatchExpected):
     def description(self, conjugate=False):
         return "%s equal to %s" % (to_be(conjugate), serialize_value(self.expected))
@@ -28,9 +29,11 @@ class EqualTo(MatchExpected):
         else:
             return match_failure(got_value(actual))
 
+
 def equal_to(expected):
     """Test if value is equal to expected"""
     return EqualTo(expected)
+
 
 def _comparator(comparison_description, comparison_func):
     def wrapper(expected):
@@ -54,6 +57,7 @@ greater_than_or_equal_to = _comparator("greater than or equal to", lambda a, e: 
 less_than = _comparator("less than", lambda a, e: a < e)
 less_than_or_equal_to = _comparator("greater than or equal to", lambda a, e: a <= e)
 
+
 class IsBetween(Matcher):
     def __init__(self, min, max):
         self.min = min
@@ -65,17 +69,21 @@ class IsBetween(Matcher):
     def matches(self, actual):
         return match_result(actual >= self.min and actual <= self.max, got_value(actual))
 
+
 def is_between(min, max):
     """Test if value is between min and max"""
     return IsBetween(min, max)
+
 
 def is_none():
     """Test if value is None"""
     return equal_to(None)
 
+
 def is_not_none():
     """Test if value is not None"""
     return not_equal_to(None)
+
 
 class HasLength(Matcher):
     def __init__(self, matcher):
@@ -86,6 +94,7 @@ class HasLength(Matcher):
 
     def matches(self, actual):
         return self.matcher.matches(len(actual))
+
 
 def has_length(length):
     """Test if value has a length of"""
