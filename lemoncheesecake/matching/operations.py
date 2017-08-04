@@ -6,7 +6,7 @@ Created on Mar 27, 2017
 
 from lemoncheesecake.runtime import log_check
 from lemoncheesecake.exceptions import AbortTest, ProgrammingError
-from lemoncheesecake.matching.matchers.dict import HasEntry, wrap_key_matcher
+from lemoncheesecake.matching.matchers.dict_ import HasEntry, wrap_key_matcher
 from lemoncheesecake.matching.matchers.composites import is_
 
 __all__ = (
