@@ -8,6 +8,27 @@ function escapeHtml(unsafe) {
          .replace(/'/g, "&#039;");
 }
 
+function humanize_duration(duration) {
+    return (duration / 1000) + "s";
+}
+
+function get_duration_between_datetimes(dt1, dt2) {
+    duration = new Date(dt2).getTime() - new Date(dt1).getTime();
+    return humanize_duration(duration);
+}
+
+function get_time_from_datetime(dt) {
+    return dt.split(" ")[1];
+}
+
+function make_time_extra_info(start_datetime, end_datetime) {
+    if (! start_datetime)
+        return $();
+    start_time = get_time_from_datetime(start_datetime);
+    duration = get_duration_between_datetimes(start_datetime, end_datetime);
+    return $("<span class='extra_info'>" + start_time + "	&rarr; " + duration + "</span>");
+}
+
 function Step(step, nb) {
 	this.step = step;
 	this.nb = nb;
@@ -17,11 +38,12 @@ Step.prototype = {
 	constructor: Step,
 	
 	render: function () {
-		this.step_row = $("<tr style='display: none' class='step'>")
-			.append($("<td colspan='4'>")
-				.append($("<h6>")
-						.append($("<strong style='font-size:120%'>")
-							.text(this.nb + ". " + this.step.description))));
+		this.step_row = $("<tr style='display: none' class='step'>").
+			append($("<td colspan='4'>").
+				append($("<h6>").
+						append($("<strong style='font-size:120%'>").text(this.nb + ". " + this.step.description)).
+						append($("<span class='extra_info' style='float: right;'>").append(make_time_extra_info(this.step.start_time, this.step.end_time)))
+				));
 		this.entry_rows = [ ];
 		
 		for (i in this.step.entries) {
@@ -42,8 +64,11 @@ Step.prototype = {
 				} else {
 					log_level_class = "text-info";
 				}
+				log_time = get_time_from_datetime(entry.time);
 				$row.append($("<td class='text-uppercase " + log_level_class + "'>").text(entry.level));
-				$row.append($("<td colspan='3'>").append($("<samp>").text(entry.message)));
+				$row.append($("<td colspan='3'>").
+				    append($("<samp>").text(entry.message)).
+				    append($("<span class='extra_info' style='float: right;'>" + log_time + "</span>")));
 			} else if (entry.type == "attachment") {
 				$row.addClass("step_entry attachment");
 				$row.append($("<td class='text-uppercase text-info'>").text("ATTACHMENT"));
@@ -92,7 +117,7 @@ Test.prototype = {
 	get_path: function() {
 	    return this.parents.map(function(p) { return p.data.name }).concat(this.data.name).join(".");
 	},
-	
+
 	render: function() {
 		var cols = [ ];
 
@@ -118,11 +143,16 @@ Test.prototype = {
 
 		/* build description column */
 		var test_path = this.get_path();
-		var $test_col_content = $("<h5>").text(this.data.description).append($("<br/><small>").text(test_path));
+		var $test_col_content = $("<h5>").text(this.data.description).
+		    append("&nbsp;").
+		    append($("<a href='#" + test_path + "' class='glyphicon glyphicon-link extra_info anchorlink' style='font-size: 90%'>")).
+		    append($("<br/>")).
+		    append($("<small>").text(test_path));
 		if (this.special) {
 			$test_col_content.addClass("special")
 		}
-		cols.push($("<td>").append($test_col_content));
+		cols.push($("<td class='flex-container'>").append($test_col_content).
+		    append(make_time_extra_info(this.data.start_time, this.data.end_time)));
 
 		/* build tags & properties column */
 		var $tags = $("<span>" + 
@@ -223,16 +253,25 @@ function TestSuite(data, parents) {
 
 TestSuite.prototype = {
 	constructor: TestSuite,
-	
+
 	render: function() {
 		var panels = [ ];
 
 		if (this.tests.length > 0) {
 			var description = this.parents.map(function(p) { return p.data.description }).concat(this.data.description).join(" > ");
 			var path = this.parents.map(function(p) { return p.data.name }).concat(this.data.name).join(".");
-			var $panel_heading = $("<div class='panel-heading'>");
+			var $panel_heading = $("<div class='panel-heading flex-container'>");
 
-			$panel_heading.append($("<h4>").text(description).append($("<br/><small>").text(path)));
+            if (this.tests.length > 0) {
+                suite_start_time = this.data.tests[0].start_time;
+                suite_end_time = this.data.tests[this.data.tests.length-1].end_time;
+            } else {
+                suite_start_time = null;
+                suite_end_time = null;
+            }
+			$panel_heading.append($("<span>").
+			    append($("<h4>").text(description).append($("<br/><small>").text(path)))).
+			    append(make_time_extra_info(suite_start_time, suite_end_time));
 			if (this.data.properties.length > 0 || this.data.tags.length > 0) {
 				$panel_heading.append($("<br/>"));
 				$panel_heading.append($("<span style='font-size: 75%'>Properties/Tags: ").text(

@@ -9,7 +9,7 @@ class BB1:
     @lcc.test("Test of BB1")
     def c_test_1(self):
         import time
-        time.sleep(1)
+        time.sleep(0.21)
         lcc.assert_eq("value", 32, 54)
 
 @lcc.suite("BB2")

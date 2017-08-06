@@ -68,6 +68,21 @@ th, td {
     vertical-align: middle ! important;
 }
 
+.extra_info {
+    display: none;
+}
+
+.test:hover .extra_info, .panel-heading:hover .extra_info, .step:hover .extra_info, .log:hover .extra_info {
+    display: inline;
+}
+
+.flex-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .special {
 	font-style: italic;
 }
@@ -78,4 +93,14 @@ pre, samp {
     white-space: pre-wrap;
     word-wrap: break-word;
     word-break: break-all;
+}
+
+.anchorlink {
+    text-decoration: none;
+    opacity: 0.5;
+}
+
+.anchorlink:hover, .anchorlink:focus {
+    text-decoration: none;
+    opacity: 1;
 }
