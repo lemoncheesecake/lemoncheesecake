@@ -1,3 +1,14 @@
+# 0.10.1 (2017-08-06)
+
+- **HTML report**: add various extra information on mouse over for suites, tests, steps and logs
+- **HTML report**: automatically expand test when report is accessed using an anchor
+- **API**: add new suite/test decorator `disabled` to disable a test or a complete suite
+- **API**: rename `check` into `log_check` (keep `check` for backward compatibility)
+- **API**: in `match_pattern` matcher use `search` instead of `match` of `re` module
+- Fix `contains_string` matcher match description message
+- Fix `dict` matcher module name into `dict_` to avoid conflicts with builtin `dict`
+- **JSON report**: rename `sub_suites` into `suites`
+
 # 0.10.0 (2017-07-16)
 
 - **API**: Change key=value parameters of `project.py` files into a ProjectConfiguration class
