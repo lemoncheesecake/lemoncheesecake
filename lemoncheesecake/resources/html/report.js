@@ -67,8 +67,9 @@ Step.prototype = {
 				log_time = get_time_from_datetime(entry.time);
 				$row.append($("<td class='text-uppercase " + log_level_class + "'>").text(entry.level));
 				$row.append($("<td colspan='3'>").
-				    append($("<samp>").text(entry.message)).
-				    append($("<span class='extra_info' style='float: right;'>" + log_time + "</span>")));
+				    append($("<div class='flex-container'>").
+				        append($("<samp>").text(entry.message)).
+				        append($("<span class='extra_info'>" + log_time + "</span>"))));
 			} else if (entry.type == "attachment") {
 				$row.addClass("step_entry attachment");
 				$row.append($("<td class='text-uppercase text-info'>").text("ATTACHMENT"));
