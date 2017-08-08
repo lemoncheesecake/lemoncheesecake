@@ -12,8 +12,16 @@ function humanize_duration(duration) {
     return (duration / 1000) + "s";
 }
 
+function normalize_datetime(dt) {
+    return dt.replace(" ", "T");
+}
+
+function get_timestamp_from_datetime(dt) {
+    return new Date(normalize_datetime(dt)).getTime();
+}
+
 function get_duration_between_datetimes(dt1, dt2) {
-    duration = new Date(dt2).getTime() - new Date(dt1).getTime();
+    duration = get_timestamp_from_datetime(dt2) - get_timestamp_from_datetime(dt1);
     return humanize_duration(duration);
 }
 
