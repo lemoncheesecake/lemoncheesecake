@@ -160,8 +160,12 @@ Test.prototype = {
 		if (this.special) {
 			$test_col_content.addClass("special")
 		}
-		cols.push($("<td class='extra-info-container'>").append($test_col_content).
-		    append(make_time_extra_info(this.data.start_time, this.data.end_time)));
+		cols.push($("<td>").
+		    append($("<div class='extra-info-container'>").
+		        append($test_col_content).
+		        append(make_time_extra_info(this.data.start_time, this.data.end_time))
+		    )
+        );
 
 		/* build tags & properties column */
 		var $tags = $("<span>" + 
