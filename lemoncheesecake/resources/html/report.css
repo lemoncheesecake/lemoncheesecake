@@ -68,19 +68,19 @@ th, td {
     vertical-align: middle ! important;
 }
 
-.extra_info {
-    display: none;
-}
-
-.test:hover .extra_info, .panel-heading:hover .extra_info, .step:hover .extra_info, .log:hover .extra_info {
-    display: inline;
-}
-
-.flex-container {
+.extra-info-container {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+}
+
+.extra-info {
+    display: none;
+}
+
+.extra-info-container:hover .extra-info {
+    display: inline;
 }
 
 .special {

@@ -34,7 +34,7 @@ function make_time_extra_info(start_datetime, end_datetime) {
         return $();
     start_time = get_time_from_datetime(start_datetime);
     duration = get_duration_between_datetimes(start_datetime, end_datetime);
-    return $("<span class='extra_info'>" + start_time + "	&rarr; " + duration + "</span>");
+    return $("<span class='extra-info'>" + start_time + " &rarr; " + duration + "</span>");
 }
 
 function Step(step, nb) {
@@ -48,9 +48,9 @@ Step.prototype = {
 	render: function () {
 		this.step_row = $("<tr style='display: none' class='step'>").
 			append($("<td colspan='4'>").
-				append($("<h6>").
+				append($("<h6 class='extra-info-container'>").
 						append($("<strong style='font-size:120%'>").text(this.nb + ". " + this.step.description)).
-						append($("<span class='extra_info' style='float: right;'>").append(make_time_extra_info(this.step.start_time, this.step.end_time)))
+						append(make_time_extra_info(this.step.start_time, this.step.end_time))
 				));
 		this.entry_rows = [ ];
 		
@@ -75,9 +75,9 @@ Step.prototype = {
 				log_time = get_time_from_datetime(entry.time);
 				$row.append($("<td class='text-uppercase " + log_level_class + "'>").text(entry.level));
 				$row.append($("<td colspan='3'>").
-				    append($("<div class='flex-container'>").
+				    append($("<div class='extra-info-container'>").
 				        append($("<samp>").text(entry.message)).
-				        append($("<span class='extra_info'>" + log_time + "</span>"))));
+				        append($("<span class='extra-info'>" + log_time + "</span>"))));
 			} else if (entry.type == "attachment") {
 				$row.addClass("step_entry attachment");
 				$row.append($("<td class='text-uppercase text-info'>").text("ATTACHMENT"));
@@ -154,13 +154,13 @@ Test.prototype = {
 		var test_path = this.get_path();
 		var $test_col_content = $("<h5>").text(this.data.description).
 		    append("&nbsp;").
-		    append($("<a href='#" + test_path + "' class='glyphicon glyphicon-link extra_info anchorlink' style='font-size: 90%'>")).
+		    append($("<a href='#" + test_path + "' class='glyphicon glyphicon-link extra-info anchorlink' style='font-size: 90%'>")).
 		    append($("<br/>")).
 		    append($("<small>").text(test_path));
 		if (this.special) {
 			$test_col_content.addClass("special")
 		}
-		cols.push($("<td class='flex-container'>").append($test_col_content).
+		cols.push($("<td class='extra-info-container'>").append($test_col_content).
 		    append(make_time_extra_info(this.data.start_time, this.data.end_time)));
 
 		/* build tags & properties column */
@@ -269,7 +269,7 @@ TestSuite.prototype = {
 		if (this.tests.length > 0) {
 			var description = this.parents.map(function(p) { return p.data.description }).concat(this.data.description).join(" > ");
 			var path = this.parents.map(function(p) { return p.data.name }).concat(this.data.name).join(".");
-			var $panel_heading = $("<div class='panel-heading flex-container'>");
+			var $panel_heading = $("<div class='panel-heading extra-info-container'>");
 
             if (this.tests.length > 0) {
                 suite_start_time = this.data.tests[0].start_time;
