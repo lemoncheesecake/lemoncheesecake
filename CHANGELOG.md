@@ -1,3 +1,7 @@
+# 0.10.3 (2017-08-11)
+
+- **HTML report**: fix test suites rendering when metadata are available
+
 # 0.10.2 (2017-08-10)
 
 - **HTML report**: fix various issues on extra info mouse over for IE/Edge
