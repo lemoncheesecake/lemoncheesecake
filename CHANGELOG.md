@@ -1,3 +1,7 @@
+# 0.10.2 (2017-08-10)
+
+- **HTML report**: fix various issues on extra info mouse over for IE/Edge
+
 # 0.10.1 (2017-08-06)
 
 - **HTML report**: add various extra information on mouse over for suites, tests, steps and logs
