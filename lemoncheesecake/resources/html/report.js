@@ -274,6 +274,8 @@ TestSuite.prototype = {
 			var description = this.parents.map(function(p) { return p.data.description }).concat(this.data.description).join(" > ");
 			var path = this.parents.map(function(p) { return p.data.name }).concat(this.data.name).join(".");
 			var $panel_heading = $("<div class='panel-heading extra-info-container'>");
+			var $panel_heading_main = $("<div>");
+			$panel_heading.append($panel_heading_main);
 
             if (this.tests.length > 0) {
                 suite_start_time = this.data.tests[0].start_time;
@@ -282,12 +284,13 @@ TestSuite.prototype = {
                 suite_start_time = null;
                 suite_end_time = null;
             }
-			$panel_heading.append($("<span>").
-			    append($("<h4>").text(description).append($("<br/><small>").text(path)))).
-			    append(make_time_extra_info(suite_start_time, suite_end_time));
+            $panel_heading.append(make_time_extra_info(suite_start_time, suite_end_time));
+
+			$panel_heading_main.append($("<span>").
+			    append($("<h4>").text(description).append($("<br/><small>").text(path))));
 			if (this.data.properties.length > 0 || this.data.tags.length > 0) {
-				$panel_heading.append($("<br/>"));
-				$panel_heading.append($("<span style='font-size: 75%'>Properties/Tags: ").text(
+				$panel_heading_main.append($("<br/>"));
+				$panel_heading_main.append($("<span style='font-size: 75%'>Properties/Tags: ").text(
 					this.data.tags.join(", ") + (this.data.tags.length > 0 ? ", " : "") +
 					$.map(this.data.properties, function(value, key) {
 						return key + ": " + value;
@@ -295,8 +298,8 @@ TestSuite.prototype = {
 				));
 			}
 			if (this.data.links.length > 0) {
-				$panel_heading.append($("<br/>"));
-				$panel_heading.append($("<span style='font-size: 75%'>links: " +
+				$panel_heading_main.append($("<br/>"));
+				$panel_heading_main.append($("<span style='font-size: 75%'>links: " +
 					$.map(this.data.links, function (link) {
 						var label = link.name ? link.name : link.url;
 						return "<a href='" + escapeHtml(link.url) + "' title='" + escapeHtml(label) + "' target='_blank'>" + escapeHtml(label) + "</a>";
