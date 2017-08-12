@@ -19,6 +19,7 @@ __all__ = (
 
 TEST_STATUSES = "passed", "failed", "skipped", "disabled"
 
+
 # NB: it would be nicer to use:
 # datetime.isoformat(sep=' ', timespec='milliseconds')
 # unfortunately, the timespec argument is only available since Python 3.6
@@ -30,8 +31,10 @@ def format_timestamp(ts, date_time_sep=" ", skip_milliseconds=False):
         result += ".%03d" % (Decimal(repr(ts)) % 1 * 1000)
     return result
 
+
 def format_timestamp_as_iso_8601(ts):
     return format_timestamp(ts, date_time_sep="T", skip_milliseconds=True)
+
 
 def parse_timestamp(s):
     m = re.compile("(.+)\.(\d+)").match(s)
@@ -42,6 +45,7 @@ def parse_timestamp(s):
 
     return time.mktime(time.strptime(dt, "%Y-%m-%d %H:%M:%S")) + float(milliseconds) / 1000
 
+
 class LogData:
     def __init__(self, level, message, ts):
         self.level = level
@@ -50,6 +54,7 @@ class LogData:
 
     def has_failure(self):
         return self.level == LOG_LEVEL_ERROR
+
 
 class CheckData:
     def __init__(self, description, outcome, details=None):
@@ -60,6 +65,7 @@ class CheckData:
     def has_failure(self):
         return self.outcome == False
 
+
 class AttachmentData:
     def __init__(self, description, filename):
         self.description = description
@@ -68,6 +74,7 @@ class AttachmentData:
     def has_failure(self):
         return False
 
+
 class UrlData:
     def __init__(self, description, url):
         self.description = description
@@ -75,6 +82,7 @@ class UrlData:
 
     def has_failure(self):
         return False
+
 
 class StepData:
     def __init__(self, description):
@@ -85,6 +93,7 @@ class StepData:
 
     def has_failure(self):
         return len(list(filter(lambda entry: entry.has_failure(), self.entries))) > 0
+
 
 class TestData(BaseTest):
     def __init__(self, name, description):
@@ -98,6 +107,7 @@ class TestData(BaseTest):
     def has_failure(self):
         return len(list(filter(lambda step: step.has_failure(), self.steps))) > 0
 
+
 class HookData:
     def __init__(self):
         self.steps = [ ]
@@ -110,6 +120,7 @@ class HookData:
 
     def is_empty(self):
         return len(self.steps) == 0
+
 
 class SuiteData(BaseSuite):
     def __init__(self, name, description):
@@ -140,8 +151,9 @@ class SuiteData(BaseSuite):
 
         return None
 
-class ReportStats:
-    def __init__(self, report):
+
+class _ReportStats:
+    def __init__(self):
         self.tests = 0
         self.test_statuses = {s: 0 for s in TEST_STATUSES}
         self.errors = 0
@@ -150,19 +162,6 @@ class ReportStats:
         self.check_failures = 0
         self.error_logs = 0
         self.warning_logs = 0
-
-        if report.test_session_setup:
-            if report.test_session_setup.has_failure():
-                self.errors += 1
-            self._walk_steps(report.test_session_setup.steps)
-
-        if report.test_session_teardown:
-            if report.test_session_teardown.has_failure():
-                self.errors += 1
-            self._walk_steps(report.test_session_teardown.steps)
-
-        for suite in report.suites:
-            self._walk_suite(suite)
 
     def _walk_steps(self, steps):
         for step in steps:
@@ -179,16 +178,19 @@ class ReportStats:
                     elif entry.level == LOG_LEVEL_ERROR:
                         self.error_logs += 1
 
-    def _walk_suite(self, suite):
+    def _walk_hook(self, hook):
+        if hook.has_failure():
+            self.errors += 1
+        self._walk_steps(hook.steps)
+    walk_setup_hook = _walk_hook
+    walk_teardown_hook = _walk_hook
+
+    def walk_suite(self, suite):
         if suite.suite_setup:
-            if suite.suite_setup.has_failure():
-                self.errors += 1
-            self._walk_steps(suite.suite_setup.steps)
+            self.walk_setup_hook(suite.suite_setup)
 
         if suite.suite_teardown:
-            if suite.suite_teardown.has_failure():
-                self.errors += 1
-            self._walk_steps(suite.suite_teardown.steps)
+            self.walk_teardown_hook(suite.suite_teardown)
 
         for test in suite.get_tests():
             self.tests += 1
@@ -197,7 +199,33 @@ class ReportStats:
             self._walk_steps(test.steps)
 
         for sub_suite in suite.get_suites():
-            self._walk_suite(sub_suite)
+            self.walk_suite(sub_suite)
+
+    def walk_suites(self, suites):
+        for suite in suites:
+            self.walk_suite(suite)
+
+
+def get_stats_from_report(report):
+    stats = _ReportStats()
+
+    if report.test_session_setup:
+        stats.walk_setup_hook(report.test_session_setup)
+
+    if report.test_session_teardown:
+        stats.walk_teardown_hook(report.test_session_teardown)
+
+    stats.walk_suites(report.suites)
+
+    return stats
+
+
+def get_stats_from_suites(suites):
+    stats = _ReportStats()
+    stats.walk_suites(suites)
+
+    return stats
+
 
 class Report:
     def __init__(self):
@@ -237,7 +265,7 @@ class Report:
         return None
 
     def get_stats(self):
-        return ReportStats(self)
+        return get_stats_from_report(self)
 
     def serialize_stats(self):
         stats = self.get_stats()
