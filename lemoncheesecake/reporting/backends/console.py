@@ -63,6 +63,16 @@ def _make_suite_header_line(suite, terminal_width):
     return "=" * padding_left + " " + colored(suite_name, attrs=["bold"]) + " " + "=" * padding_right
 
 
+def _make_test_result_line(name, num, status):
+    line = " %s %2s # %s" % (
+        colored("OK", "green", attrs=["bold"]) if status == "passed" else colored("KO", "red", attrs=["bold"]),
+        num, name
+    )
+    raw_line = "%s %2s # %s" % ("OK" if status == "passed" else "KO", num, name)
+
+    return line, len(raw_line)
+
+
 class ConsoleReportingSession(ReportingSession):
     def __init__(self, terminal_width, show_test_full_path, report):
         self.terminal_width = terminal_width
@@ -130,13 +140,11 @@ class ConsoleReportingSession(ReportingSession):
         self.previous_obj = test
 
     def end_test(self, test, status):
-        line = " %s %2s # %s" % (
-            colored("OK", "green", attrs=["bold"]) if status == "passed" else colored("KO", "red", attrs=["bold"]),
-            self.current_test_idx, self.get_test_label(test)
-        )
-        raw_line = "%s %2s # %s" % ("OK" if status == "passed" else "KO", self.current_test_idx, self.get_test_label(test))
-        self.lp.print_line(line, force_len=len(raw_line))
+        line, raw_line_len = _make_test_result_line(self.get_test_label(test), self.current_test_idx, status)
+
+        self.lp.print_line(line, force_len=raw_line_len)
         self.lp.new_line()
+
         self.current_test_idx += 1
 
     def bypass_test(self, test, status, status_details):
