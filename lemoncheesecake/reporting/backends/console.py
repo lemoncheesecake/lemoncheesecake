@@ -15,6 +15,7 @@ from lemoncheesecake.reporting.backends import terminalsize
 import colorama
 from termcolor import colored
 
+
 class LinePrinter:
     def __init__(self, terminal_width):
         self.terminal_width = terminal_width
@@ -49,6 +50,19 @@ class LinePrinter:
         sys.stdout.write("\r")
         self.prev_len = 0
 
+
+def _make_suite_header_line(suite, terminal_width):
+    suite_name= suite.get_path_as_str()
+    max_width = min((terminal_width, 80))
+    # -2 corresponds to the two space characters at the left and right of suite path + another character to avoid
+    # an extra line after the suite line on Windows terminal having width <= 80
+    padding_total = max_width - 3 - len(suite_name) if len(suite_name) <= (max_width - 3) else 0
+    padding_left = padding_total // 2
+    padding_right = padding_total // 2 + padding_total % 2
+
+    return "=" * padding_left + " " + colored(suite_name, attrs=["bold"]) + " " + "=" * padding_right
+
+
 class ConsoleReportingSession(ReportingSession):
     def __init__(self, terminal_width, show_test_full_path, report):
         self.terminal_width = terminal_width
@@ -78,15 +92,8 @@ class ConsoleReportingSession(ReportingSession):
         if self.previous_obj:
             sys.stdout.write("\n")
 
-        label = suite.get_path_as_str()
-        label_len = len(label)
-        max_width = min((self.terminal_width, 80))
-        # -2 corresponds to the two space characters at the left and right of suite path + another character to avoid
-        # an extra line after the suite line on Windows terminal having width <= 80
-        padding_total = max_width - 3 - label_len if label_len <= (max_width - 3) else 0
-        padding_left = padding_total // 2
-        padding_right = padding_total // 2 + padding_total % 2
-        sys.stdout.write("=" * padding_left + " " + colored(label, attrs=["bold"]) + " " + "=" * padding_right + "\n")
+        sys.stdout.write(_make_suite_header_line(suite, self.terminal_width) + "\n")
+
         self.previous_obj = suite
 
     def begin_suite_setup(self, suite):
@@ -163,6 +170,7 @@ class ConsoleReportingSession(ReportingSession):
         if stats.test_statuses["skipped"]:
             print(" * Skipped: %d" % (stats.test_statuses["skipped"]))
         print()
+
 
 class ConsoleBackend(ReportingBackend):
     name = "console"
