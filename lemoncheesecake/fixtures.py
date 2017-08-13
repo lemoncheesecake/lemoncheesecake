@@ -30,11 +30,12 @@ class FixtureInfo:
         self.names = names
         self.scope = scope
 
-def fixture(names=None, scope="test"):
-    if scope not in ("test", "suite", "session", "session_prerun"):
-        raise ProgrammingError("Invalid fixture scope '%s'" % scope)
 
+def fixture(names=None, scope="test"):
     def wrapper(func):
+        if scope not in SCOPE_LEVELS.keys():
+            raise ProgrammingError("Invalid fixture scope '%s' in fixture function '%s'" % (scope, func.__name__))
+
         setattr(func, "_lccfixtureinfo", FixtureInfo(names, scope))
         return func
 
