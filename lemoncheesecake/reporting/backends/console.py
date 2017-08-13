@@ -73,6 +73,20 @@ def _make_test_result_line(name, num, status):
     return line, len(raw_line)
 
 
+def _print_summary(stats, duration):
+    print()
+    print(colored("Statistics", attrs=["bold"]), ":")
+    print(" * Duration: %s" % humanize_duration(duration))
+    print(" * Tests: %d" % stats.tests)
+    print(" * Successes: %d (%d%%)" % (
+        stats.test_statuses["passed"], float(stats.test_statuses["passed"]) / stats.tests * 100 if stats.tests else 0)
+          )
+    print(" * Failures: %d" % (stats.test_statuses["failed"]))
+    if stats.test_statuses["skipped"]:
+        print(" * Skipped: %d" % (stats.test_statuses["skipped"]))
+    print()
+
+
 class ConsoleReportingSession(ReportingSession):
     def __init__(self, terminal_width, show_test_full_path, report):
         self.terminal_width = terminal_width
@@ -164,20 +178,7 @@ class ConsoleReportingSession(ReportingSession):
         pass
 
     def end_tests(self):
-        report = self.report
-        stats = report.get_stats()
-
-        print()
-        print(colored("Statistics", attrs=["bold"]), ":")
-        print(" * Duration: %s" % humanize_duration(report.end_time - report.start_time))
-        print(" * Tests: %d" % stats.tests)
-        print(" * Successes: %d (%d%%)" % (
-            stats.test_statuses["passed"], float(stats.test_statuses["passed"]) / stats.tests * 100 if stats.tests else 0)
-        )
-        print(" * Failures: %d" % (stats.test_statuses["failed"]))
-        if stats.test_statuses["skipped"]:
-            print(" * Skipped: %d" % (stats.test_statuses["skipped"]))
-        print()
+        _print_summary(self.report.get_stats(), duration=self.report.end_time - self.report.start_time)
 
 
 class ConsoleBackend(ReportingBackend):
