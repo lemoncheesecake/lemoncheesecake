@@ -5,7 +5,8 @@ import pytest
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.project import Project, SimpleProjectConfiguration, \
-    HasCustomCliArgs, HasMetadataPolicy, HasPreRunHook, HasPostRunHook, create_project, load_project, find_project_file
+    HasCustomCliArgs, HasMetadataPolicy, HasPreRunHook, HasPostRunHook, create_project, load_project_from_dir, \
+    find_project_file
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.exceptions import InvalidMetadataError
@@ -167,7 +168,7 @@ def test_get_suites_without_metadatapolicy_check(tmpdir):
 
 def test_project_creation(tmpdir):
     create_project(tmpdir.strpath)
-    project = load_project(tmpdir.strpath)
+    project = load_project_from_dir(tmpdir.strpath)
     assert len(project.get_suites()) == 0
     assert len(project.get_fixtures()) == 0
     assert len(project.get_default_reporting_backends_for_test_run()) > 0

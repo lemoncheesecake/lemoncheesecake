@@ -8,6 +8,8 @@ import os
 
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.project import create_project
+from lemoncheesecake.exceptions import ProjectError
+
 
 class BootstrapCommand(Command):
     def get_name(self):
@@ -23,11 +25,11 @@ class BootstrapCommand(Command):
         try:
             os.mkdir(cli_args.dir)
         except (IOError, OSError) as e:
-            return "Cannot create project directory '%s': %s" % (cli_args.dir, e)
+            raise ProjectError("Cannot create project directory '%s': %s" % (cli_args.dir, e))
 
         try:
             create_project(cli_args.dir)
         except (IOError, OSError) as e:
-            return "Cannot create project '%s': %s" % (cli_args.dir, e)
+            raise ProjectError("Cannot create project '%s': %s" % (cli_args.dir, e))
 
         return 0

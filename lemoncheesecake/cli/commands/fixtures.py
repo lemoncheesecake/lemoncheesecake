@@ -9,8 +9,9 @@ from __future__ import print_function
 from lemoncheesecake.cli.display import print_table
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.testtree import walk_tests
-from lemoncheesecake.project import find_project_file, load_project_from_file
+from lemoncheesecake.project import load_project
 from lemoncheesecake.exceptions import ProjectError, ProgrammingError
+
 
 class FixturesCommand(Command):
     def get_name(self):
@@ -41,15 +42,9 @@ class FixturesCommand(Command):
     def run_cmd(self, cli_args):
         self.process_color_cli_args(cli_args)
 
-        project_file = find_project_file()
-        if not project_file:
-            return "Cannot find project file"
-        try:
-            project = load_project_from_file(project_file)
-            suites = project.get_suites()
-            fixtures = project.get_fixtures()
-        except (ProjectError, ProgrammingError) as e:
-            return str(e)
+        project = load_project()
+        suites = project.get_suites()
+        fixtures = project.get_fixtures()
 
         fixtures_by_scope = {}
         for fixt in fixtures:

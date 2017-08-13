@@ -12,8 +12,8 @@ from lemoncheesecake.cli.display import print_table
 from lemoncheesecake.cli.utils import filter_suites_from_cli_args
 from lemoncheesecake.suite import add_filter_args_to_cli_parser
 from lemoncheesecake.testtree import walk_suites
-from lemoncheesecake.project import find_project_file, load_project_from_file
-from lemoncheesecake.exceptions import ProjectError, ProgrammingError
+from lemoncheesecake.project import load_project
+
 
 class StatsCommand(Command):
     def get_name(self):
@@ -30,15 +30,8 @@ class StatsCommand(Command):
     def run_cmd(self, cli_args):
         self.process_color_cli_args(cli_args)
 
-        project_file = find_project_file()
-        if not project_file:
-            return "Cannot find project file"
-        try:
-            project = load_project_from_file(project_file)
-            suites = project.get_suites()
-        except (ProjectError, ProgrammingError) as e:
-            return str(e)
-
+        project = load_project()
+        suites = project.get_suites()
         suites = filter_suites_from_cli_args(suites, cli_args)
 
         class Stats:

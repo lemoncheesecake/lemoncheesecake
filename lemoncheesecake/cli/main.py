@@ -6,7 +6,7 @@ Created on Jan 25, 2017
 
 import argparse
 
-from lemoncheesecake.exceptions import LemonCheesecakeException, UserError
+from lemoncheesecake.exceptions import LemonCheesecakeException
 from lemoncheesecake.cli.commands import get_commands
 
 def main(args=None):
@@ -29,5 +29,5 @@ def main(args=None):
 
     try:
         return command.run_cmd(cli_args)
-    except UserError as e:
+    except LemonCheesecakeException as e:
         return str(e)
