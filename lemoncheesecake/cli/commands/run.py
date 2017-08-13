@@ -7,7 +7,7 @@ Created on Dec 31, 2016
 import os
 
 from lemoncheesecake.cli.command import Command
-from lemoncheesecake.cli.utils import filter_suites_from_cli_args
+from lemoncheesecake.cli.utils import get_suites_from_project
 from lemoncheesecake.project import find_project_file, load_project_from_file, load_project
 from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture
 from lemoncheesecake.runner import run_suites
@@ -67,8 +67,7 @@ class RunCommand(Command):
     def run_cmd(self, cli_args):
         # Project initialization
         project = load_project()
-        suites = project.get_suites()
-        suites = filter_suites_from_cli_args(suites, cli_args)
+        suites = get_suites_from_project(project, cli_args)
 
         # Build fixture registry
         fixture_registry = build_fixture_registry(project, cli_args)

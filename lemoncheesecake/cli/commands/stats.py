@@ -9,7 +9,7 @@ from functools import reduce
 
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.display import print_table
-from lemoncheesecake.cli.utils import filter_suites_from_cli_args
+from lemoncheesecake.cli.utils import get_suites_from_project
 from lemoncheesecake.suite import add_filter_args_to_cli_parser
 from lemoncheesecake.testtree import walk_suites
 from lemoncheesecake.project import load_project
@@ -31,8 +31,7 @@ class StatsCommand(Command):
         self.process_color_cli_args(cli_args)
 
         project = load_project()
-        suites = project.get_suites()
-        suites = filter_suites_from_cli_args(suites, cli_args)
+        suites = get_suites_from_project(project, cli_args)
 
         class Stats:
             def __init__(self):

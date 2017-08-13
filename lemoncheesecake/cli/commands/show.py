@@ -7,7 +7,7 @@ Created on Feb 14, 2017
 from __future__ import print_function
 
 from lemoncheesecake.cli.command import Command
-from lemoncheesecake.cli.utils import filter_suites_from_cli_args
+from lemoncheesecake.cli.utils import get_suites_from_project
 from lemoncheesecake.suite.filter import add_filter_args_to_cli_parser
 from lemoncheesecake.project import load_project
 
@@ -91,8 +91,7 @@ class ShowCommand(Command):
         self.indent = 4
 
         project = load_project()
-        suites = project.get_suites()
-        suites = filter_suites_from_cli_args(suites, cli_args)
+        suites = get_suites_from_project(project, cli_args)
         
         self.show_suites(suites)
         
