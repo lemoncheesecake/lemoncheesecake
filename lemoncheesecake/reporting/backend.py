@@ -5,9 +5,9 @@ Created on Mar 29, 2016
 '''
 
 import os
+import os.path as osp
 
-from lemoncheesecake.exceptions import MethodNotImplemented, InvalidReportFile,\
-    ProgrammingError, method_not_implemented
+from lemoncheesecake.exceptions import InvalidReportFile, ProgrammingError, method_not_implemented
 from lemoncheesecake.utils import object_has_method
 
 __all__ = (
@@ -26,6 +26,7 @@ SAVE_AT_EACH_SUITE = 2
 SAVE_AT_EACH_TEST = 3
 SAVE_AT_EACH_FAILED_TEST = 4
 SAVE_AT_EACH_EVENT = 5
+
 
 class ReportingSession:
     def begin_tests(self):
@@ -82,6 +83,7 @@ class ReportingSession:
     def check(self, description, outcome, details=None):
         pass
 
+
 class ReportingBackend:
     def is_available(self):
         return True
@@ -104,6 +106,7 @@ class ReportingBackend:
 #
 #     def load_report(self, filename):
 #         method_not_implemented("unserialize_report", self)
+
 
 class FileReportSession(ReportingSession):
     def __init__(self, report_filename, report, save_func, save_mode):
@@ -160,6 +163,7 @@ class FileReportSession(ReportingSession):
     def end_tests(self):
         self.save()
 
+
 class FileReportBackend(ReportingBackend):
     def __init__(self, save_mode=SAVE_AT_EACH_FAILED_TEST):
         self.save_mode = save_mode
@@ -172,19 +176,23 @@ class FileReportBackend(ReportingBackend):
             os.path.join(report_dir, self.get_report_filename()), report, self.save_report, self.save_mode
         )
 
+
 def filter_available_reporting_backends(backends):
     return list(filter(lambda backend: backend.is_available(), backends))
 
+
 def filter_reporting_backends_by_capabilities(backends, capabilities):
     return list(filter(lambda backend: backend.get_capabilities() & capabilities == capabilities, backends))
+
 
 def get_available_backends():
     from lemoncheesecake.reporting.backends import ConsoleBackend, XmlBackend, JsonBackend, HtmlBackend, JunitBackend
 
     return list(filter(lambda b: b.is_available(), [ConsoleBackend(), XmlBackend(), JsonBackend(), HtmlBackend(), JunitBackend()]))
 
-def load_report(filename, backends=None):
-    if backends == None:
+
+def load_report_from_file(filename, backends=None):
+    if backends is None:
         backends = get_available_backends()
     for backend in backends:
         if backend.get_capabilities() & CAPABILITY_LOAD_REPORT:
@@ -194,16 +202,25 @@ def load_report(filename, backends=None):
                 pass
     raise InvalidReportFile("Cannot find any suitable report backend to unserialize file '%s'" % filename)
 
+
 def load_reports_from_dir(dirname, backends=None):
-    reports = []
     for filename in [os.path.join(dirname, filename) for filename in os.listdir(dirname)]:
         if os.path.isfile(filename):
             try:
-                report, backend = load_report(filename, backends)
-                reports.append((report, backend))
+                yield load_report(filename, backends)
             except InvalidReportFile:
                 pass
-    return reports
+
+
+def load_report(path, backends=None):
+    if osp.isdir(path):
+        try:
+            return next(load_reports_from_dir(path, backends))
+        except StopIteration:
+            raise InvalidReportFile("Cannot find any report in directory '%s'" % path)
+    else:
+        return load_report_from_file(path, backends)
+
 
 def save_report(filename, report, backend):
     if not backend.get_capabilities() & CAPABILITY_SAVE_REPORT:

@@ -8,6 +8,8 @@ from __future__ import print_function
 
 import sys
 
+from lemoncheesecake.testtree import get_flattened_suites
+from lemoncheesecake.reporting.report import get_stats_from_suites
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
 from lemoncheesecake.utils import IS_PYTHON3, humanize_duration
 from lemoncheesecake.reporting.backends import terminalsize
@@ -191,3 +193,33 @@ class ConsoleBackend(ReportingBackend):
 
     def create_reporting_session(self, report_dir, report):
         return ConsoleReportingSession(self.terminal_width, self.show_test_full_path, report)
+
+
+def display_report_suites(suites):
+    ###
+    # Setup terminal
+    ###
+    colorama.init()
+    terminal_width, _ = terminalsize.get_terminal_size()
+
+    ###
+    # Display suite results
+    ###
+    suite_idx = 0
+    for suite in get_flattened_suites(suites):
+        if len(suite.get_tests()) == 0:
+            continue
+        if suite_idx > 0:
+            print()
+        header_line = _make_suite_header_line(suite, terminal_width)
+        print(header_line)
+        for test_idx, test in enumerate(suite.get_tests()):
+            test_result_line, _ = _make_test_result_line(test.name, num=test_idx+1, status=test.status)
+            print(test_result_line)
+        suite_idx += 1
+
+    ###
+    # Display summary
+    ###
+    stats = get_stats_from_suites(suites)
+    _print_summary(stats, stats.duration)

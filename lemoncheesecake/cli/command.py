@@ -8,6 +8,7 @@ import sys
 
 import termcolor
 
+
 class Command:
     def __init__(self):
         self.force_color = False

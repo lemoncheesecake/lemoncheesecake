@@ -9,6 +9,7 @@ import argparse
 from lemoncheesecake.exceptions import LemonCheesecakeException
 from lemoncheesecake.cli.commands import get_commands
 
+
 def main(args=None):
     cli_parser = argparse.ArgumentParser()
     cli_sub_parsers = cli_parser.add_subparsers(dest="command")

@@ -6,6 +6,7 @@ Created on Jun 16, 2017
 
 from lemoncheesecake.utils import get_distincts_in_list
 
+
 class BaseTreeNode:
     def __init__(self, name, description):
         self.parent_suite = None
@@ -56,8 +57,10 @@ class BaseTreeNode:
     def __str__(self):
         return self.get_path_as_str()
 
+
 class BaseTest(BaseTreeNode):
     pass
+
 
 class BaseSuite(BaseTreeNode):
     def __init__(self, name, description):
@@ -78,7 +81,8 @@ class BaseSuite(BaseTreeNode):
 
     def get_suites(self):
         return self._suites
-    
+
+
 def walk_suites(suites, suite_func=None, test_func=None):
     def do_walk(suite):
         if suite_func:
@@ -91,5 +95,12 @@ def walk_suites(suites, suite_func=None, test_func=None):
     for suite in suites:
         do_walk(suite)
 
+
 def walk_tests(suites, func):
     walk_suites(suites, test_func=func)
+
+
+def get_flattened_suites(suites):
+    flattened_suites = []
+    walk_suites(suites, lambda suite: flattened_suites.append(suite))
+    return flattened_suites

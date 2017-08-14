@@ -162,6 +162,7 @@ class _ReportStats:
         self.check_failures = 0
         self.error_logs = 0
         self.warning_logs = 0
+        self.duration = 0
 
     def _walk_steps(self, steps):
         for step in steps:
@@ -179,11 +180,21 @@ class _ReportStats:
                         self.error_logs += 1
 
     def _walk_hook(self, hook):
+        if hook.end_time is not None:
+            self.duration += hook.end_time - hook.start_time
         if hook.has_failure():
             self.errors += 1
         self._walk_steps(hook.steps)
     walk_setup_hook = _walk_hook
     walk_teardown_hook = _walk_hook
+
+    def walk_test(self, test):
+        self.tests += 1
+        if test.end_time is not None:
+            self.duration += test.end_time - test.start_time
+        if test.status is not None:
+            self.test_statuses[test.status] += 1
+        self._walk_steps(test.steps)
 
     def walk_suite(self, suite):
         if suite.suite_setup:
@@ -193,10 +204,7 @@ class _ReportStats:
             self.walk_teardown_hook(suite.suite_teardown)
 
         for test in suite.get_tests():
-            self.tests += 1
-            if test.status != None:
-                self.test_statuses[test.status] += 1
-            self._walk_steps(test.steps)
+            self.walk_test(test)
 
         for sub_suite in suite.get_suites():
             self.walk_suite(sub_suite)
