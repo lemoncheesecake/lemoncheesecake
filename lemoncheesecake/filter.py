@@ -7,9 +7,10 @@ Created on Sep 8, 2016
 import fnmatch
 from functools import reduce
 
-__all__ = ("Filter", "add_filter_args_to_cli_parser", "get_filter_from_cli_args")
+__all__ = ("Filter", "filter_suites", "add_filter_args_to_cli_parser", "get_filter_from_cli_args")
 
 NEGATIVE_FILTER_CHARS = "-^~"
+
 
 def match_values(values, patterns):
     if not patterns:
@@ -26,6 +27,7 @@ def match_values(values, patterns):
                 return True
     return False
 
+
 def match_keyvalues(keyvalues, patterns):
     if not patterns:
         return True
@@ -40,11 +42,13 @@ def match_keyvalues(keyvalues, patterns):
                     return True
     return False
 
+
 def match_values_lists(lsts, patterns):
     return match_values(
         reduce(lambda x, y: list(x) + list(y), lsts, []), # make a flat list
         patterns
     )
+
 
 class Filter:
     def __init__(self):
@@ -67,6 +71,16 @@ class Filter:
         ]
         return all(func() for func in funcs)
 
+
+def filter_suites(suites, filtr):
+    filtered = []
+    for suite in suites:
+        suite.apply_filter(filtr)
+        if suite.has_selected_tests():
+            filtered.append(suite)
+    return filtered
+
+
 def add_filter_args_to_cli_parser(cli_parser):
     def property_value(value):
         splitted = value.split(":")
@@ -80,6 +94,7 @@ def add_filter_args_to_cli_parser(cli_parser):
     group.add_argument("--tag", "-a", nargs="+", action="append", default=[], help="Filter on tags")
     group.add_argument("--property", "-m", nargs="+", type=property_value, action="append", default=[], help="Filter on properties")
     group.add_argument("--link", "-l", nargs="+", action="append", default=[], help="Filter on links (names and URLs)")
+
 
 def get_filter_from_cli_args(cli_args):
     fltr = Filter()

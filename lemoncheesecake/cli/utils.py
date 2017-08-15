@@ -4,7 +4,7 @@ Created on Mar 12, 2017
 @author: nicolas
 '''
 
-from lemoncheesecake.suite import get_filter_from_cli_args, filter_suites
+from lemoncheesecake.filter import get_filter_from_cli_args, filter_suites
 from lemoncheesecake.exceptions import UserError
 
 

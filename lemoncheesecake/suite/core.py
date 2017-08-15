@@ -7,12 +7,11 @@ Created on Sep 8, 2016
 from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError, InternalError
 from lemoncheesecake.utils import get_distincts_in_list, get_callable_args
 from lemoncheesecake.testtree import BaseTest, BaseSuite
-from lemoncheesecake.testtree import filter_suites # export symbol
 
 SUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
 
 __all__ = (
-    "Test", "Suite", "filter_suites"
+    "Test", "Suite"
 )
 
 

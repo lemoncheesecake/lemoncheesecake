@@ -8,12 +8,13 @@ import os
 
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import get_suites_from_project
-from lemoncheesecake.project import find_project_file, load_project_from_file, load_project
+from lemoncheesecake.exceptions import LemonCheesecakeException, ProgrammingError, UserError, \
+    serialize_current_exception
+from lemoncheesecake.filter import add_filter_args_to_cli_parser
 from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture
-from lemoncheesecake.runner import run_suites
-from lemoncheesecake.suite.filter import add_filter_args_to_cli_parser
+from lemoncheesecake.project import find_project_file, load_project_from_file, load_project
 from lemoncheesecake.reporting import filter_reporting_backends_by_capabilities, CAPABILITY_REPORTING_SESSION
-from lemoncheesecake.exceptions import LemonCheesecakeException, ProgrammingError, UserError, serialize_current_exception
+from lemoncheesecake.runner import run_suites
 
 
 def build_fixture_registry(project, cli_args):

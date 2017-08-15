@@ -111,15 +111,6 @@ class BaseSuite(BaseTreeNode):
         return test.name in self._selected_test_names
 
 
-def filter_suites(suites, filtr):
-    filtered = []
-    for suite in suites:
-        suite.apply_filter(filtr)
-        if suite.has_selected_tests():
-            filtered.append(suite)
-    return filtered
-
-
 def walk_suites(suites, suite_func=None, test_func=None):
     def do_walk(suite):
         if suite_func:

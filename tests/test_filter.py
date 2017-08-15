@@ -1,7 +1,7 @@
 import lemoncheesecake.api as lcc
-from lemoncheesecake.suite.filter import Filter
-
 from helpers import run_suite_class, reporting_session
+from lemoncheesecake.filter import Filter
+
 
 def test_filter_full_path_on_test(reporting_session):
     @lcc.suite("mysuite")
