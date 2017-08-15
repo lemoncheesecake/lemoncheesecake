@@ -8,20 +8,24 @@ import os.path as osp
 import inspect
 
 from lemoncheesecake.importer import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
-from lemoncheesecake.exceptions import UserError, ProgrammingError, ImportSuiteError, InvalidMetadataError, serialize_current_exception
+from lemoncheesecake.exceptions import UserError, ProgrammingError, ModuleImportError, InvalidMetadataError, serialize_current_exception
 from lemoncheesecake.suite.core import Test, Suite, SUITE_HOOKS
 
 __all__ = "load_suite_from_file", "load_suites_from_files", "load_suites_from_directory", \
     "load_suite_from_class", "load_suites_from_classes"
 
+
 def is_suite_class(obj):
     return inspect.isclass(obj) and hasattr(obj, "_lccmetadata") and obj._lccmetadata.is_suite
+
 
 def is_test_method(obj):
     return inspect.ismethod(obj) and hasattr(obj, "_lccmetadata") and obj._lccmetadata.is_test
 
+
 def is_test_function(obj):
     return inspect.isfunction(obj) and hasattr(obj, "_lccmetadata") and obj._lccmetadata.is_test
+
 
 def load_test(obj):
     md = obj._lccmetadata
@@ -32,26 +36,34 @@ def load_test(obj):
     test.disabled = md.disabled
     return test
 
+
 def load_test_from_method(method):
     return load_test(method)
+
 
 def load_test_from_function(func):
     return load_test(func)
 
+
 def _list_object_attributes(obj):
     return [getattr(obj, n) for n in dir(obj) if not n.startswith("__")]
+
 
 def get_test_methods_from_class(obj):
     return sorted(filter(is_test_method, _list_object_attributes(obj)), key=lambda m: m._lccmetadata.rank)
 
+
 def get_sub_suites_from_class(obj):
     return sorted(filter(is_suite_class, _list_object_attributes(obj)), key=lambda c: c._lccmetadata.rank)
+
 
 def get_test_functions_from_module(mod):
     return filter(is_test_function, _list_object_attributes(mod))
 
+
 def get_suite_classes_from_module(mod):
     return filter(is_suite_class, _list_object_attributes(mod))
+
 
 def load_suite_from_class(klass):
     md = klass._lccmetadata
@@ -82,8 +94,10 @@ def load_suite_from_class(klass):
 
     return suite
 
+
 def load_suites_from_classes(klasses):
     return [load_suite_from_class(klass) for klass in klasses]
+
 
 def load_suite_from_module(mod):
     # TODO: find a better way to workaround circular import
@@ -119,6 +133,7 @@ def load_suite_from_module(mod):
 
     return suite
 
+
 def load_suite_from_file(filename):
     """Get suite from Python module.
 
@@ -131,14 +146,9 @@ def load_suite_from_file(filename):
       - rank (optional)
     - a module that contains a suite class with the same name as the module name
 
-    Raise a ImportSuiteError if the suite class cannot be imported.
+    Raise a ModuleImportError if the suite class cannot be imported.
     """
-    try:
-        mod = import_module(filename)
-    except ImportError:
-        raise ImportSuiteError(
-            "Cannot import file '%s': %s" % (filename, serialize_current_exception(show_stacktrace=True))
-        )
+    mod = import_module(filename)
 
     if hasattr(mod, "SUITE"):
         suite = load_suite_from_module(mod)
@@ -147,9 +157,10 @@ def load_suite_from_file(filename):
         try:
             klass = getattr(mod, mod_name)
         except AttributeError:
-            raise ImportSuiteError("Cannot find class '%s' in '%s'" % (mod_name, mod.__file__))
+            raise ModuleImportError("Cannot find class '%s' in '%s'" % (mod_name, mod.__file__))
         suite = load_suite_from_class(klass)
     return suite
+
 
 def load_suites_from_files(patterns, excluding=[]):
     """
@@ -162,6 +173,7 @@ def load_suites_from_files(patterns, excluding=[]):
     """
     return [load_suite_from_file(f) for f in get_matching_files(patterns, excluding)]
 
+
 def load_suites_from_directory(dir, recursive=True):
     """Find suite classes in modules found in dir.
 
@@ -172,10 +184,10 @@ def load_suites_from_directory(dir, recursive=True):
     If the recursive argument is set to True, sub suites will be searched in a directory named
     from the suite module: if the suite module is "foo.py" then the sub suites directory must be "foo".
 
-    Raise ImportSuiteError if one or more suite cannot be imported.
+    Raise ModuleImportError if one or more suite cannot be imported.
     """
     if not osp.exists(dir):
-        raise ImportSuiteError("Directory '%s' does not exist" % dir)
+        raise ModuleImportError("Directory '%s' does not exist" % dir)
     suites = [ ]
     for filename in get_py_files_from_dir(dir):
         suite = load_suite_from_file(filename)

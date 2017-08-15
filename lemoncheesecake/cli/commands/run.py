@@ -7,14 +7,14 @@ Created on Dec 31, 2016
 import os
 
 from lemoncheesecake.cli.command import Command
-from lemoncheesecake.cli.utils import filter_suites_from_cli_args
-from lemoncheesecake.project import find_project_file, load_project_from_file
-from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture, load_fixtures_from_func
-from lemoncheesecake.runner import run_suites
-from lemoncheesecake.suite.filter import add_filter_args_to_cli_parser
+from lemoncheesecake.cli.utils import get_suites_from_project
+from lemoncheesecake.exceptions import LemonCheesecakeException, ProgrammingError, UserError, \
+    serialize_current_exception
+from lemoncheesecake.filter import add_filter_args_to_cli_parser
+from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture
+from lemoncheesecake.project import find_project_file, load_project_from_file, load_project
 from lemoncheesecake.reporting import filter_reporting_backends_by_capabilities, CAPABILITY_REPORTING_SESSION
-from lemoncheesecake.exceptions import ProjectError, FixtureError, InvalidMetadataError,\
-    ProgrammingError, LemonCheesecakeException, UserError, serialize_current_exception
+from lemoncheesecake.runner import run_suites
 
 
 def build_fixture_registry(project, cli_args):
@@ -67,24 +67,12 @@ class RunCommand(Command):
 
     def run_cmd(self, cli_args):
         # Project initialization
-        project_file = find_project_file()
-        if not project_file:
-            return "Cannot find project file"
-        try:
-            project = load_project_from_file(project_file)
-            suites = project.get_suites()
-        except (ProjectError, ProgrammingError) as e:
-            return str(e)
-        except InvalidMetadataError as e:
-            return "Invalid test/suite metadata has been found: %s" % e
-        suites = filter_suites_from_cli_args(suites, cli_args)
+        project = load_project()
+        suites = get_suites_from_project(project, cli_args)
 
         # Build fixture registry
-        try:
-            fixture_registry = build_fixture_registry(project, cli_args)
-            fixture_registry.check_fixtures_in_suites(suites)
-        except FixtureError as e:
-            return "Cannot run tests: %s" % e
+        fixture_registry = build_fixture_registry(project, cli_args)
+        fixture_registry.check_fixtures_in_suites(suites)
 
         # Set reporting backends
         reporting_backends = {
@@ -96,12 +84,12 @@ class RunCommand(Command):
             try:
                 selected_reporting_backends.add(reporting_backends[backend_name])
             except KeyError:
-                return "Unknown reporting backend '%s'" % backend_name
+                raise LemonCheesecakeException("Unknown reporting backend '%s'" % backend_name)
         for backend_name in cli_args.disable_reporting:
             try:
                 selected_reporting_backends.discard(reporting_backends[backend_name])
             except KeyError:
-                return "Unknown reporting backend '%s'" % backend_name
+                raise LemonCheesecakeException("Unknown reporting backend '%s'" % backend_name)
 
         # Create report dir
         if cli_args.report_dir:
@@ -109,41 +97,43 @@ class RunCommand(Command):
             try:
                 os.mkdir(report_dir)
             except Exception as e:
-                return "Cannot create report directory: %s" % e
+                return LemonCheesecakeException("Cannot create report directory: %s" % e)
         else:
             try:
                 report_dir = project.create_report_dir()
             except UserError as e:
-                return str(e)
+                raise e
             except Exception:
-                return "Got an unexpected exception while creating report directory:%s" % \
+                raise LemonCheesecakeException(
+                    "Got an unexpected exception while creating report directory:%s" % \
                     serialize_current_exception(show_stacktrace=True)
+                )
 
         # Handle before run hook
         try:
             project.run_pre_session_hook(report_dir)
         except UserError as e:
-            return str(e)
+            raise e
         except Exception:
-            return "Got an unexpected exception while running the pre-session hook:%s" % \
+            raise ProgrammingError(
+                "Got an unexpected exception while running the pre-session hook:%s" % \
                 serialize_current_exception(show_stacktrace=True)
+            )
 
         # Run tests
-        try:
-            is_successful = run_suites(
-                suites, fixture_registry, selected_reporting_backends, report_dir,
-                stop_on_failure=cli_args.stop_on_failure
-            )
-        except LemonCheesecakeException as e:
-            return str(e)
+        is_successful = run_suites(
+            suites, fixture_registry, selected_reporting_backends, report_dir,
+            stop_on_failure=cli_args.stop_on_failure
+        )
 
         # Handle after run hook
         try:
             project.run_post_session_hook(report_dir)
         except UserError as e:
-            return str(e)
+            raise e
         except Exception:
-            return "Got an unexpected exception while running the post-session hook:%s" % (
+            raise ProgrammingError(
+                "Got an unexpected exception while running the post-session hook:%s" % \
                 serialize_current_exception(show_stacktrace=True)
             )
 

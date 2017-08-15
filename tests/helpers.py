@@ -18,7 +18,7 @@ import pytest
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite.loader import load_suites_from_classes, load_suite_from_file
 from lemoncheesecake import runner
-from lemoncheesecake.suite import Filter, load_suite_from_class
+from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
@@ -36,6 +36,7 @@ class {name}:
         pass
 """.format(name=name)
 
+
 def build_fixture_module(name="myfixture"):
     return """
 import lemoncheesecake.api as lcc
@@ -44,6 +45,7 @@ import lemoncheesecake.api as lcc
 def {name}():
     pass
 """.format(name=name)
+
 
 def build_test_project(params={}, extra_imports=[], static_content=""):
     return """
@@ -86,6 +88,7 @@ def build_suite_from_module(module_content):
 
     return suite
 
+
 def generate_project(project_dir, module_name, module_content, fixtures_content=None):
     create_project(project_dir)
     with open(osp.join(project_dir, "suites", "%s.py" % module_name), "w") as fh:
@@ -94,11 +97,13 @@ def generate_project(project_dir, module_name, module_content, fixtures_content=
         with open(osp.join(project_dir, "fixtures", "fixtures.py"), "w") as fh:
             fh.write(fixtures_content)
 
+
 def build_fixture_registry(*funcs):
     registry = FixtureRegistry()
     for func in funcs:
         registry.add_fixtures(load_fixtures_from_func(func))
     return registry
+
 
 class TestReportingSession(reporting.ReportingSession):
     def __init__(self):
@@ -179,6 +184,7 @@ class TestReportingSession(reporting.ReportingSession):
         self.last_check_outcome = outcome
         self.last_check_details = details
 
+
 _reporting_session = None
 
 class TestReportingBackend(reporting.ReportingBackend):
@@ -190,14 +196,17 @@ class TestReportingBackend(reporting.ReportingBackend):
     def create_reporting_session(self, report, report_dir):
         return self.reporting_session
 
+
 def get_reporting_session():
     global _reporting_session
     _reporting_session = TestReportingSession()
     return _reporting_session
 
+
 @pytest.fixture()
 def reporting_session():
     return get_reporting_session()
+
 
 def run_suites(suites, filter=None, fixtures=None, backends=None, tmpdir=None, stop_on_failure=False):
     global _reporting_session
@@ -234,18 +243,25 @@ def run_suites(suites, filter=None, fixtures=None, backends=None, tmpdir=None, s
             # reset _reporting_session (either it has been set or not) at the end of each test run
             _reporting_session = None
 
-    dump_report(get_runtime().report)
+    report = get_runtime().report
+    dump_report(report)
+
+    return report
+
 
 def run_suite_classes(suite_classes, filter=None, fixtures=None, backends=None, tmpdir=None, stop_on_failure=False):
     suites = load_suites_from_classes(suite_classes)
-    run_suites(suites, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+    return run_suites(suites, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+
 
 def run_suite(suite, filter=None, fixtures=None, backends=[], tmpdir=None, stop_on_failure=False):
-    run_suites([suite], filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+    return run_suites([suite], filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+
 
 def run_suite_class(suite_class, filter=None, fixtures=None, backends=[], tmpdir=None, stop_on_failure=False):
     suite = load_suite_from_class(suite_class)
-    run_suite(suite, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+    return run_suite(suite, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+
 
 def run_func_in_test(callback):
     @lcc.suite("My Suite")
@@ -254,7 +270,8 @@ def run_func_in_test(callback):
         def sometest(self):
             callback()
 
-    run_suite_class(MySuite)
+    return run_suite_class(MySuite)
+
 
 def dump_report(report):
     try:
@@ -265,28 +282,34 @@ def dump_report(report):
         xml = serialize_report_as_string(report)
         print(xml, file=sys.stderr)
 
+
 def dummy_test_callback():
     def wrapped(suite):
         pass
     return wrapped
+
 
 def assert_check_data(actual, expected):
     assert actual.description == expected.description
     assert actual.outcome == expected.outcome
     assert actual.details == expected.details
 
+
 def assert_log_data(actual, expected):
     assert actual.level == expected.level
     assert actual.message == expected.message
     assert round(actual.time, 3) == round(expected.time, 3)
 
+
 def assert_attachment_data(actual, expected):
     assert actual.description == expected.description
     assert actual.filename == expected.filename
 
+
 def assert_url_data(actual, expected):
     assert actual.description == expected.description
     assert actual.url == expected.url
+
 
 def assert_step_data(actual, expected):
     assert round(actual.start_time, 3) == round(expected.start_time, 3)
@@ -306,6 +329,7 @@ def assert_step_data(actual, expected):
         else:
             raise Exception("Unknown class '%s'" % actual.__class__.__name__)
 
+
 def assert_test_data(actual, expected):
     assert actual.name == expected.name
     assert actual.description == expected.description
@@ -321,6 +345,7 @@ def assert_test_data(actual, expected):
     for actual_step, expected_step in zip(actual.steps, expected.steps):
         assert_step_data(actual_step, expected_step)
 
+
 def assert_hook_data(actual, expected):
     if expected == None:
         assert actual == None
@@ -331,6 +356,7 @@ def assert_hook_data(actual, expected):
         assert len(actual.steps) == len(expected.steps)
         for actual_step, expected_step in zip(actual.steps, expected.steps):
             assert_step_data(actual_step, expected_step)
+
 
 def assert_suite_data(actual, expected):
     assert actual.name == expected.name
@@ -355,6 +381,7 @@ def assert_suite_data(actual, expected):
 
     assert_hook_data(actual.suite_teardown, expected.suite_teardown)
 
+
 def assert_report(actual, expected):
     assert actual.info == expected.info
     assert round(actual.start_time, 3) == round(expected.start_time, 3)
@@ -369,10 +396,12 @@ def assert_report(actual, expected):
 
     assert_hook_data(actual.test_session_teardown, expected.test_session_teardown)
 
+
 def assert_steps_data(steps):
     for step in steps:
         assert step.start_time
         assert step.end_time >= step.start_time
+
 
 def assert_test_data_from_test(test_data, test):
     assert test_data.name == test.name
@@ -382,6 +411,7 @@ def assert_test_data_from_test(test_data, test):
     assert test_data.links == test.links
 
     assert_steps_data(test_data.steps)
+
 
 def assert_suite_data_from_suite(suite_data, suite):
     assert suite_data.name == suite.name
@@ -410,6 +440,7 @@ def assert_suite_data_from_suite(suite_data, suite):
         assert suite_data.suite_teardown.end_time != None
         assert_steps_data(suite_data.suite_teardown.steps)
 
+
 def assert_report_from_suites(report, suite_classes):
     assert report.start_time != None
     assert report.end_time != None
@@ -419,8 +450,10 @@ def assert_report_from_suites(report, suite_classes):
         suite = load_suite_from_class(suite_class)
         assert_suite_data_from_suite(suite_data, suite)
 
+
 def assert_report_from_suite(report, suite_class):
     assert_report_from_suites(report, [suite_class])
+
 
 def assert_report_stats(report,
                         expected_test_successes=0, expected_test_failures=0, expected_test_skippeds=0,
@@ -438,6 +471,7 @@ def assert_report_stats(report,
     assert stats.check_failures == expected_check_failures
     assert stats.error_logs == expected_error_logs
     assert stats.warning_logs == expected_warning_logs
+
 
 @pytest.fixture()
 def cmdout(capsys):
@@ -500,8 +534,23 @@ def assert_match_result(matcher, actual, result_outcome, result_details):
     for details in result_details_lst:
         assert details in reporting_session.last_check_details
 
+
 def assert_match_success(matcher, actual, result_details):
     assert_match_result(matcher, actual, True, result_details)
 
+
 def assert_match_failure(matcher, actual, result_details):
     assert_match_result(matcher, actual, False, result_details)
+
+
+def assert_run_output(cmdout, suite_name, successful_tests=[], failed_tests=[], skipped_tests=[]):
+    cmdout.assert_lines_match("= %s =" % suite_name)
+    for test in successful_tests:
+        cmdout.assert_lines_match("OK.+%s" % test)
+    for test in failed_tests + skipped_tests:
+        cmdout.assert_lines_match("KO.+%s" % test)
+    cmdout.assert_lines_match("Tests: %d" % (len(successful_tests + failed_tests + skipped_tests)))
+    cmdout.assert_lines_match("Successes: %d" % len(successful_tests))
+    cmdout.assert_lines_match("Failures: %d" % len(failed_tests))
+    if len(skipped_tests) > 0:
+        cmdout.assert_lines_match("Skipped: %d" % len(skipped_tests))

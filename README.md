@@ -662,7 +662,7 @@ In addition to the main sub command `run`, the `lcc` command provides other sub 
   +---------+----------------+------------------+---------------+
 
   ```
-- Show statictics on test hierarchy based on metadata:
+- Show statistics on test hierarchy based on metadata:
   ```
   $ lcc stats
   Tags:
@@ -690,6 +690,37 @@ In addition to the main sub command `run`, the `lcc` command provides other sub 
   +-------+-------------------------+-------+------+
 
   Total: 18 tests in 2 suites
+  ```
+- Show a generated report on the console:
+  ```
+  $ lcc.py report report/
+  =================================== suite_1 ===================================
+   OK  1 # test_1
+   OK  2 # test_2
+   OK  3 # test_3
+   OK  4 # test_4
+   OK  5 # test_5
+   OK  6 # test_6
+   OK  7 # test_7
+   OK  8 # test_8
+   OK  9 # test_9
+  
+  =================================== suite_2 ===================================
+   OK  1 # test_1
+   OK  2 # test_2
+   OK  3 # test_3
+   OK  4 # test_4
+   OK  5 # test_5
+   OK  6 # test_6
+   OK  7 # test_7
+   OK  8 # test_8
+   OK  9 # test_9
+  
+  Statistics :
+   * Duration: 0s
+   * Tests: 18
+   * Successes: 18 (100%)
+   * Failures: 0
   ```
 
 Also see the `--help` of these sub commands.

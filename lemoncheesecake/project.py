@@ -21,26 +21,6 @@ from lemoncheesecake.importer import import_module
 PROJECT_CONFIG_FILE = "project.py"
 
 
-def _find_file_in_parent_directories(filename, dirname):
-    if osp.exists(osp.join(dirname, filename)):
-        return osp.join(dirname, filename)
-
-    parent_dirname = osp.dirname(dirname)
-    if parent_dirname == dirname:
-        return None # root directory has been reached
-
-    return _find_file_in_parent_directories(filename, parent_dirname)
-
-
-def find_project_file():
-    filename = os.environ.get("LCC_PROJECT_FILE")
-    if filename is not None:
-        return filename if osp.exists(filename) else None
-
-    filename = _find_file_in_parent_directories(PROJECT_CONFIG_FILE, os.getcwd())
-    return filename # filename can be None
-
-
 class HasCustomCliArgs:
     """"Mixin class for project configuration with custom CLI args"""
     def add_custom_cli_args(self, cli_parser):
@@ -160,6 +140,26 @@ class Project:
             self._config.post_run(report_dir)
 
 
+def _find_file_in_parent_directories(filename, dirname):
+    if osp.exists(osp.join(dirname, filename)):
+        return osp.join(dirname, filename)
+
+    parent_dirname = osp.dirname(dirname)
+    if parent_dirname == dirname:
+        return None # root directory has been reached
+
+    return _find_file_in_parent_directories(filename, parent_dirname)
+
+
+def find_project_file():
+    filename = os.environ.get("LCC_PROJECT_FILE")
+    if filename is not None:
+        return filename if osp.exists(filename) else None
+
+    filename = _find_file_in_parent_directories(PROJECT_CONFIG_FILE, os.getcwd())
+    return filename # filename can be None
+
+
 def create_project(project_dir):
     shutil.copyfile(get_resource_path(osp.join("project", "template.py")), osp.join(project_dir, PROJECT_CONFIG_FILE))
     os.mkdir(osp.join(project_dir, "suites"))
@@ -192,4 +192,11 @@ def load_project_from_file(project_filename):
 
 def load_project_from_dir(project_dir):
     return load_project_from_file(osp.join(project_dir, PROJECT_CONFIG_FILE))
-load_project = load_project_from_dir # backward compatibility
+
+
+def load_project():
+    project_filename = find_project_file()
+    if project_filename is None:
+        raise ProjectError("Cannot find project file")
+
+    return load_project_from_file(project_filename)

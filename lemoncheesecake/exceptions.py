@@ -7,6 +7,7 @@ Created on Sep 8, 2016
 import sys
 import traceback
 
+
 class LemonCheesecakeException(Exception):
     message_prefix = None
 
@@ -20,33 +21,39 @@ class LemonCheesecakeInternalError(LemonCheesecakeException):
     pass
 InternalError = LemonCheesecakeInternalError
 
+
 class ProgrammingError(LemonCheesecakeException):
     pass
 
+
 class ProjectError(LemonCheesecakeException):
     pass
+
 
 class MethodNotImplemented(ProgrammingError):
     def __init__(self, obj, method_name):
         ProgrammingError.__init__(self, "Class '%s' must implement the method '%s'" % (obj.__class__.__name__, method_name))
 
+
 def method_not_implemented(method_name, obj):
     raise MethodNotImplemented(obj, method_name)
 
-class ImportSuiteError(LemonCheesecakeException):
+
+class ModuleImportError(LemonCheesecakeException):
     pass
 
-class ImportFixtureError(LemonCheesecakeException):
-    pass
 
 class FixtureError(LemonCheesecakeException):
     pass
 
+
 class InvalidMetadataError(ProgrammingError):
     pass
 
+
 class UnknownReportBackendError(LemonCheesecakeException):
     pass
+
 
 class AbortTest(LemonCheesecakeException):
     message_prefix = "The test has been aborted"
@@ -54,11 +61,13 @@ class AbortTest(LemonCheesecakeException):
     def __init__(self, reason):
         LemonCheesecakeException.__init__(self, reason)
 
+
 class AbortSuite(LemonCheesecakeException):
     message_prefix = "The suite has been aborted"
 
     def __init__(self, reason):
         LemonCheesecakeException.__init__(self, reason)
+
 
 class AbortAllTests(LemonCheesecakeException):
     message_prefix = "All tests have been aborted"
@@ -66,11 +75,14 @@ class AbortAllTests(LemonCheesecakeException):
     def __init__(self, reason):
         LemonCheesecakeException.__init__(self, reason)
 
+
 class UserError(LemonCheesecakeException):
     pass
 
+
 class InvalidReportFile(LemonCheesecakeException):
     pass
+
 
 def serialize_current_exception(show_stacktrace=True):
     if show_stacktrace:

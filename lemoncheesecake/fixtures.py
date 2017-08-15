@@ -5,11 +5,9 @@ Created on Jan 7, 2017
 '''
 
 import inspect
-import re
 
 from lemoncheesecake.importer import import_module, get_matching_files, get_py_files_from_dir
-from lemoncheesecake.exceptions import FixtureError, ImportFixtureError, ProgrammingError, \
-    serialize_current_exception
+from lemoncheesecake.exceptions import FixtureError, ProgrammingError
 from lemoncheesecake.utils import get_distincts_in_list, get_callable_args
 
 __all__ = (
@@ -26,20 +24,23 @@ SCOPE_LEVELS = {
     "session_prerun": 4
 }
 
+
 class FixtureInfo:
     def __init__(self, names, scope):
         self.names = names
         self.scope = scope
 
-def fixture(names=None, scope="test"):
-    if scope not in ("test", "suite", "session", "session_prerun"):
-        raise ProgrammingError("Invalid fixture scope '%s'" % scope)
 
+def fixture(names=None, scope="test"):
     def wrapper(func):
+        if scope not in SCOPE_LEVELS.keys():
+            raise ProgrammingError("Invalid fixture scope '%s' in fixture function '%s'" % (scope, func.__name__))
+
         setattr(func, "_lccfixtureinfo", FixtureInfo(names, scope))
         return func
 
     return wrapper
+
 
 class BaseFixture:
     def is_builtin(self):
@@ -61,6 +62,7 @@ class BaseFixture:
 
     def reset(self):
         pass
+
 
 class Fixture(BaseFixture):
     def __init__(self, name, func, scope, params):
@@ -97,6 +99,7 @@ class Fixture(BaseFixture):
             else:
                 raise FixtureError("The fixture yields more than once, only one yield is supported")
 
+
 class BuiltinFixture(BaseFixture):
     def __init__(self, name, value):
         self.name = name
@@ -112,6 +115,7 @@ class BuiltinFixture(BaseFixture):
 
     def get_result(self):
         return self._result
+
 
 class FixtureRegistry:
     def __init__(self):
@@ -243,6 +247,7 @@ class FixtureRegistry:
     def teardown_fixture(self, name):
         self._fixtures[name].teardown()
 
+
 def load_fixtures_from_func(func):
     assert hasattr(func, "_lccfixtureinfo")
     names = func._lccfixtureinfo.names
@@ -252,19 +257,18 @@ def load_fixtures_from_func(func):
     args = get_callable_args(func)
     return [Fixture(name, func, scope, args) for name in names]
 
+
 def load_fixtures_from_file(filename):
-    try:
-        mod = import_module(filename)
-    except ImportError:
-        raise ImportFixtureError(
-            "Cannot import file '%s': %s" % (filename, serialize_current_exception(show_stacktrace=True))
-        )
+    mod = import_module(filename)
+
     fixtures = []
     for sym_name in dir(mod):
         sym = getattr(mod, sym_name)
         if hasattr(sym, "_lccfixtureinfo"):
             fixtures.extend(load_fixtures_from_func(sym))
+
     return fixtures
+
 
 def load_fixtures_from_files(patterns, excluding=[]):
     """
@@ -279,6 +283,7 @@ def load_fixtures_from_files(patterns, excluding=[]):
     for file in get_matching_files(patterns, excluding):
         fixtures.extend(load_fixtures_from_file(file))
     return fixtures
+
 
 def load_fixtures_from_directory(dir):
     fixtures = []

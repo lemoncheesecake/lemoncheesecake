@@ -7,10 +7,10 @@ Created on Feb 14, 2017
 from __future__ import print_function
 
 from lemoncheesecake.cli.command import Command
-from lemoncheesecake.cli.utils import filter_suites_from_cli_args
-from lemoncheesecake.suite.filter import add_filter_args_to_cli_parser
-from lemoncheesecake.project import find_project_file, load_project_from_file
-from lemoncheesecake.exceptions import ProjectError, ProgrammingError
+from lemoncheesecake.cli.utils import get_suites_from_project
+from lemoncheesecake.filter import add_filter_args_to_cli_parser
+from lemoncheesecake.project import load_project
+
 
 class ShowCommand(Command):
     def get_name(self):
@@ -90,16 +90,8 @@ class ShowCommand(Command):
         self.flat_mode = cli_args.flat_mode
         self.indent = 4
 
-        project_file = find_project_file()
-        if not project_file:
-            return "Cannot find project file"
-        try:
-            project = load_project_from_file(project_file)
-            suites = project.get_suites()
-        except (ProjectError, ProgrammingError) as e:
-            return str(e)
-        
-        suites = filter_suites_from_cli_args(suites, cli_args)
+        project = load_project()
+        suites = get_suites_from_project(project, cli_args)
         
         self.show_suites(suites)
         
