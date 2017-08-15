@@ -1,6 +1,7 @@
 import lemoncheesecake.api as lcc
 from helpers import run_suite_class, reporting_session
-from lemoncheesecake.filter import Filter
+from lemoncheesecake.filter import Filter, ReportFilter, filter_suites
+from lemoncheesecake.suite import load_suite_from_class
 
 
 def test_filter_full_path_on_test(reporting_session):
@@ -853,3 +854,69 @@ def test_filter_and_or(reporting_session):
     run_suite_class(mysuite, filter=filter)
 
     assert reporting_session.test_nb == 2
+
+
+def test_project_filter():
+    @lcc.suite("mysuite")
+    class mysuite:
+        @lcc.test("test 1")
+        def test1(self):
+            pass
+
+        @lcc.test("test 2")
+        def test2(self):
+            pass
+
+    report = run_suite_class(mysuite)
+
+    filter = Filter()
+    filter.paths.append("mysuite.test2")
+
+    suites = filter_suites(report.get_suites(), filter)
+
+    assert len(suites[0].get_tests()) == 1
+    assert suites[0].get_tests()[0].name == "test2"
+
+
+def test_project_filter_on_passed():
+    @lcc.suite("mysuite")
+    class mysuite:
+        @lcc.test("test 1")
+        def test1(self):
+            lcc.log_error("fail")
+
+        @lcc.test("test 2")
+        def test2(self):
+            pass
+
+    report = run_suite_class(mysuite)
+
+    filter = ReportFilter()
+    filter.statuses.append("passed")
+
+    suites = filter_suites(report.get_suites(), filter)
+
+    assert len(suites[0].get_tests()) == 1
+    assert suites[0].get_tests()[0].name == "test2"
+
+
+def test_project_filter_on_failed():
+    @lcc.suite("mysuite")
+    class mysuite:
+        @lcc.test("test 1")
+        def test1(self):
+            lcc.log_error("fail")
+
+        @lcc.test("test 2")
+        def test2(self):
+            pass
+
+    report = run_suite_class(mysuite)
+
+    filter = ReportFilter()
+    filter.statuses.append("failed")
+
+    suites = filter_suites(report.get_suites(), filter)
+
+    assert len(suites[0].get_tests()) == 1
+    assert suites[0].get_tests()[0].name == "test1"

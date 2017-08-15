@@ -221,5 +221,8 @@ def display_report_suites(suites):
     ###
     # Display summary
     ###
-    stats = get_stats_from_suites(suites)
-    _print_summary(stats, stats.duration)
+    if suite_idx > 0:
+        stats = get_stats_from_suites(suites)
+        _print_summary(stats, stats.duration)
+    else:
+        print("No test found in report")

@@ -30,3 +30,10 @@ def test_report_from_file(tmpdir, cmdout):
 
     assert main(["report", osp.join(tmpdir.strpath, backend.get_report_filename())]) == 0
     assert_run_output(cmdout, "mysuite", successful_tests=["mytest2"], failed_tests=["mytest1"])
+
+
+def test_report_with_filter(tmpdir, cmdout):
+    run_suite_class(mysuite, tmpdir=tmpdir, backends=[JsonBackend()])
+
+    assert main(["report", tmpdir.strpath, "--passed"]) == 0
+    assert_run_output(cmdout, "mysuite", successful_tests=["mytest2"])

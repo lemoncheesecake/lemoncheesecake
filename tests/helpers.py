@@ -243,21 +243,24 @@ def run_suites(suites, filter=None, fixtures=None, backends=None, tmpdir=None, s
             # reset _reporting_session (either it has been set or not) at the end of each test run
             _reporting_session = None
 
-    dump_report(get_runtime().report)
+    report = get_runtime().report
+    dump_report(report)
+
+    return report
 
 
 def run_suite_classes(suite_classes, filter=None, fixtures=None, backends=None, tmpdir=None, stop_on_failure=False):
     suites = load_suites_from_classes(suite_classes)
-    run_suites(suites, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+    return run_suites(suites, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
 
 
 def run_suite(suite, filter=None, fixtures=None, backends=[], tmpdir=None, stop_on_failure=False):
-    run_suites([suite], filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+    return run_suites([suite], filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
 
 
 def run_suite_class(suite_class, filter=None, fixtures=None, backends=[], tmpdir=None, stop_on_failure=False):
     suite = load_suite_from_class(suite_class)
-    run_suite(suite, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+    return run_suite(suite, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
 
 
 def run_func_in_test(callback):
@@ -267,7 +270,7 @@ def run_func_in_test(callback):
         def sometest(self):
             callback()
 
-    run_suite_class(MySuite)
+    return run_suite_class(MySuite)
 
 
 def dump_report(report):

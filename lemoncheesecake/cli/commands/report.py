@@ -4,7 +4,7 @@ from lemoncheesecake.cli.command import Command
 from lemoncheesecake.reporting import load_report
 from lemoncheesecake.project import find_project_file, load_project_from_file
 from lemoncheesecake.reporting.backends.console import display_report_suites
-from lemoncheesecake.filter import add_filter_args_to_cli_parser, get_filter_from_cli_args, filter_suites
+from lemoncheesecake.filter import add_report_filter_args_to_cli_parser, make_report_filter_from_cli_args, filter_suites
 from lemoncheesecake.exceptions import ProjectError
 
 
@@ -18,7 +18,7 @@ class ReportCommand(Command):
     def add_cli_args(self, cli_parser):
         group = cli_parser.add_argument_group("Show report")
         group.add_argument("report_path", help="Report file name or directory")
-        add_filter_args_to_cli_parser(cli_parser)
+        add_report_filter_args_to_cli_parser(cli_parser)
 
     def run_cmd(self, cli_args):
         project_filename = find_project_file()
@@ -34,7 +34,7 @@ class ReportCommand(Command):
             report_backends = None
 
         report, _ = load_report(cli_args.report_path, report_backends)
-        suites = filter_suites(report.get_suites(), get_filter_from_cli_args(cli_args))
+        suites = filter_suites(report.get_suites(), make_report_filter_from_cli_args(cli_args))
 
         display_report_suites(suites)
 
