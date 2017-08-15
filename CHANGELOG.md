@@ -1,3 +1,9 @@
+# 0.11.0 (2017-08-15)
+
+- **CLI**: a new `lcc report` command has been added to display generated reports on the console
+- **under the hood**: the filtering feature now works with report's suite instances (see `lemoncheesecake.filter`)
+- **under the hood**: simplify exception handling in `lemoncheesecake.cli.command*`
+
 # 0.10.3 (2017-08-11)
 
 - **HTML report**: fix test suites rendering when metadata are available
