@@ -4,17 +4,17 @@ Created on Sep 8, 2016
 @author: nicolas
 '''
 
-import inspect
-
 from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError, InternalError
 from lemoncheesecake.utils import get_distincts_in_list, get_callable_args
 from lemoncheesecake.testtree import BaseTest, BaseSuite
+from lemoncheesecake.testtree import filter_suites # export symbol
 
 SUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
 
 __all__ = (
     "Test", "Suite", "filter_suites"
 )
+
 
 class Test(BaseTest):
     def __init__(self, name, description, callback):
@@ -25,9 +25,11 @@ class Test(BaseTest):
     def get_params(self):
         return get_callable_args(self.callback)
 
+
 def _assert_valid_hook_name(hook_name):
     if hook_name not in SUITE_HOOKS:
         raise InternalError("Invalid hook name '%s'" % hook_name)
+
 
 class Suite(BaseSuite):
     def __init__(self, obj, name, description):
@@ -35,7 +37,6 @@ class Suite(BaseSuite):
         self.obj = obj
         self.rank = 0
         self._hooks = {}
-        self._selected_test_names = []
         self.disabled = False
 
     def add_hook(self, hook_name, func):
@@ -96,7 +97,6 @@ class Suite(BaseSuite):
     def add_test(self, test):
         self.assert_test_is_unique_in_suite(test)
         BaseSuite.add_test(self, test)
-        self._selected_test_names.append(test.name)
 
     def add_suite(self, suite):
         self.assert_sub_suite_is_unique_in_suite(suite)
@@ -107,14 +107,6 @@ class Suite(BaseSuite):
             if test.name == test_name:
                 return test
         raise ProgrammingError("unknown test '%s'" % test_name)
-
-    def get_tests(self):
-        tests = BaseSuite.get_tests(self)
-        return list(filter(self.is_test_selected, tests))
-
-    def get_suites(self):
-        suites = BaseSuite.get_suites(self)
-        return list(filter(lambda suite: suite.has_selected_tests(deep=True), suites))
 
     def get_fixtures(self, recursive=True):
         fixtures = []
@@ -130,41 +122,3 @@ class Suite(BaseSuite):
                 fixtures.extend(sub_suite.get_fixtures())
 
         return get_distincts_in_list(fixtures)
-
-    ###
-    # Filtering methods
-    ###
-
-    def apply_filter(self, filter):
-        self._selected_test_names = [ ]
-
-        for test in self._tests:
-            if filter.match_test(test, self):
-                self._selected_test_names.append(test.name)
-
-        for suite in self._suites:
-            suite.apply_filter(filter)
-
-    def has_selected_tests(self, deep=True):
-        if deep:
-            if self._selected_test_names:
-                return True
-
-            for suite in self.get_suites():
-                if suite.has_selected_tests():
-                    return True
-
-            return False
-        else:
-            return bool(self._selected_test_names)
-
-    def is_test_selected(self, test):
-        return test.name in self._selected_test_names
-
-def filter_suites(suites, filtr):
-    filtered = []
-    for suite in suites:
-        suite.apply_filter(filtr)
-        if suite.has_selected_tests():
-            filtered.append(suite)
-    return filtered

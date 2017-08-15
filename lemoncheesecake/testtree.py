@@ -67,20 +67,57 @@ class BaseSuite(BaseTreeNode):
         BaseTreeNode.__init__(self, name, description)
         self._tests = []
         self._suites = []
-    
+        self._selected_test_names = []
+
     def add_test(self, test):
         test.parent_suite = self
         self._tests.append(test)
-    
+        self._selected_test_names.append(test.name)
+
     def get_tests(self):
-        return self._tests
+        return list(filter(self.is_test_selected, self._tests))
     
     def add_suite(self, suite):
         suite.parent_suite = self
         self._suites.append(suite)
 
     def get_suites(self):
-        return self._suites
+        return list(filter(lambda suite: suite.has_selected_tests(deep=True), self._suites))
+
+    def apply_filter(self, filter):
+        self._selected_test_names = [ ]
+
+        for test in self._tests:
+            if filter.match_test(test, self):
+                self._selected_test_names.append(test.name)
+
+        for suite in self._suites:
+            suite.apply_filter(filter)
+
+    def has_selected_tests(self, deep=True):
+        if deep:
+            if self._selected_test_names:
+                return True
+
+            for suite in self.get_suites():
+                if suite.has_selected_tests():
+                    return True
+
+            return False
+        else:
+            return bool(self._selected_test_names)
+
+    def is_test_selected(self, test):
+        return test.name in self._selected_test_names
+
+
+def filter_suites(suites, filtr):
+    filtered = []
+    for suite in suites:
+        suite.apply_filter(filtr)
+        if suite.has_selected_tests():
+            filtered.append(suite)
+    return filtered
 
 
 def walk_suites(suites, suite_func=None, test_func=None):
