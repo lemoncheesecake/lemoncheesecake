@@ -186,13 +186,16 @@ def _unserialize_suite_data(js):
 
 def load_report_from_file(filename):
     report = Report()
-    file = open(filename, "r")
-    content = file.read()
-    file.close()
-    content = re.sub("^" + JS_PREFIX, "", content)
+    try:
+        with open(filename, "r") as fh:
+            js_content = fh.read()
+    except IOError as e:
+        raise InvalidReportFile("Cannot read file '%s': %s" % (filename, e))
+
+    js_content = re.sub("^" + JS_PREFIX, "", js_content)
 
     try:
-        js = json.loads(content)
+        js = json.loads(js_content)
     except ValueError as e:
         raise InvalidReportFile(str(e))
 
