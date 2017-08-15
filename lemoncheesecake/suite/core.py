@@ -108,31 +108,25 @@ class Suite(BaseSuite):
                 return test
         raise ProgrammingError("unknown test '%s'" % test_name)
 
-    def get_tests(self, filtered=True):
+    def get_tests(self):
         tests = BaseSuite.get_tests(self)
-        if filtered:
-            return list(filter(self.is_test_selected, tests))
-        else:
-            return tests
+        return list(filter(self.is_test_selected, tests))
 
-    def get_suites(self, filtered=True):
+    def get_suites(self):
         suites = BaseSuite.get_suites(self)
-        if filtered:
-            return list(filter(lambda suite: suite.has_selected_tests(deep=True), suites))
-        else:
-            return suites
+        return list(filter(lambda suite: suite.has_selected_tests(deep=True), suites))
 
-    def get_fixtures(self, filtered=True, recursive=True):
+    def get_fixtures(self, recursive=True):
         fixtures = []
 
         suite_setup = self.get_hook("setup_suite")
         if suite_setup:
             fixtures.extend(get_callable_args(suite_setup))
 
-        for test in self.get_tests(filtered):
+        for test in self.get_tests():
             fixtures.extend(test.get_params())
         if recursive:
-            for sub_suite in self.get_suites(filtered):
+            for sub_suite in self.get_suites():
                 fixtures.extend(sub_suite.get_fixtures())
 
         return get_distincts_in_list(fixtures)
