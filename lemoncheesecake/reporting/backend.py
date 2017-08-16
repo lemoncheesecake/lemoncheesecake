@@ -9,6 +9,7 @@ import os.path as osp
 
 from lemoncheesecake.exceptions import InvalidReportFile, ProgrammingError, method_not_implemented
 from lemoncheesecake.utils import object_has_method
+from lemoncheesecake.reporting.report import Report
 
 __all__ = (
     "get_available_backends", "ReportingBackend", "ReportingSession",
@@ -191,13 +192,33 @@ def get_available_backends():
     return list(filter(lambda b: b.is_available(), [ConsoleBackend(), XmlBackend(), JsonBackend(), HtmlBackend(), JunitBackend()]))
 
 
+class BoundReport(Report):
+    def __init__(self):
+        Report.__init__(self)
+        self.backend = None
+        self.path = None
+
+    def bind(self, backend, path):
+        self.backend = backend
+        self.path = path
+        return self
+
+    def is_bound(self):
+        return self.backend is not None and self.path is not None
+
+    def save(self):
+        if not self.is_bound():
+            raise ProgrammingError("Cannot save unbound report")
+        save_report(self.path, self, self.backend)
+
+
 def load_report_from_file(filename, backends=None):
     if backends is None:
         backends = get_available_backends()
     for backend in backends:
         if backend.get_capabilities() & CAPABILITY_LOAD_REPORT:
             try:
-                return backend.load_report(filename), backend
+                return backend.load_report(filename)
             except InvalidReportFile:
                 pass
     raise InvalidReportFile("Cannot find any suitable report backend to unserialize file '%s'" % filename)

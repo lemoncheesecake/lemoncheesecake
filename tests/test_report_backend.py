@@ -12,6 +12,7 @@ from lemoncheesecake.reporting.backends.json_ import \
 
 from helpers import assert_report
 
+
 @pytest.fixture()
 def sample_report():
     report = Report()
@@ -21,23 +22,40 @@ def sample_report():
     report.report_generation_time = ts
     return report
 
+
 def _test_save_report(tmpdir, sample_report, backend, load_func):
     filename = tmpdir.join("report").strpath
     save_report(filename, sample_report, backend)
     report = load_func(filename)
     assert_report(report, sample_report)
 
+
 def test_save_report_json(tmpdir, sample_report):
     _test_save_report(tmpdir, sample_report, JsonBackend(), load_json)
+
 
 def _test_load_report(tmpdir, sample_report, save_func):
     filename = tmpdir.join("report").strpath
     save_func(sample_report, filename)
-    report, backend = load_report(filename)
+    report = load_report(filename)
     assert_report(report, sample_report)
+
 
 def test_load_report_json(tmpdir, sample_report):
     _test_load_report(tmpdir, sample_report, save_json)
+
+
+def test_save_loaded_report(tmpdir, sample_report):
+    filename = tmpdir.join("report").strpath
+    save_json(sample_report, filename)
+
+    loaded_report = load_report(filename)
+    loaded_report.end_time += 1
+    loaded_report.save()
+
+    reloaded_report = load_report(filename)
+    assert reloaded_report.end_time == loaded_report.end_time
+
 
 try:
     import lxml
@@ -54,10 +72,8 @@ else:
         save_xml(sample_report, tmpdir.join("report.xml").strpath)
         save_json(sample_report, tmpdir.join("report.js").strpath)
         tmpdir.join("report.txt").write("foobar")
-        reports = load_reports_from_dir(tmpdir.strpath)
-        report_1, report_backend_1 = next(reports)
-        report_2, report_backend_2 = next(reports)
-        assert_report(report_1, sample_report)
-        assert_report(report_2, sample_report)
-        assert "json" in (report_backend_1.name, report_backend_2.name)
-        assert "xml" in (report_backend_1.name, report_backend_2.name)
+        reports = list(load_reports_from_dir(tmpdir.strpath))
+        assert_report(reports[0], sample_report)
+        assert_report(reports[1], sample_report)
+        assert "json" in [r.backend.name for r in reports]
+        assert "xml" in [r.backend.name for r in reports]

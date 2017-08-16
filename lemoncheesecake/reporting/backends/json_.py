@@ -4,22 +4,23 @@ Created on Mar 27, 2016
 @author: nicolas
 '''
 
-import os
 import re
 import json
 from collections import OrderedDict
 
-from lemoncheesecake.reporting.backend import FileReportBackend, SAVE_AT_EACH_FAILED_TEST
+from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend, SAVE_AT_EACH_FAILED_TEST
 from lemoncheesecake.reporting.report import (
     LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, SuiteData,
-    Report, format_timestamp, parse_timestamp
+    format_timestamp, parse_timestamp
 )
 from lemoncheesecake.exceptions import InvalidReportFile
 
 JS_PREFIX = "var reporting_data = "
 
+
 def _serialize_time(ts):
     return format_timestamp(ts) if ts else None
+
 
 def _dict(*args):
     d = OrderedDict()
@@ -28,6 +29,7 @@ def _dict(*args):
         d[args[i]] = args[i+1]
         i += 2
     return d
+
 
 def _serialize_steps(steps):
     json_steps = []
@@ -51,6 +53,7 @@ def _serialize_steps(steps):
             json_step["entries"].append(entry)
     return json_steps
 
+
 def _serialize_common_data(obj):
     return _dict(
         "name", obj.name, "description", obj.description,
@@ -58,6 +61,7 @@ def _serialize_common_data(obj):
         "properties", obj.properties,
         "links", [ _dict("name", link[1], "url", link[0]) for link in obj.links ]
     )
+
 
 def _serialize_test_data(test):
     serialized = _serialize_common_data(test)
@@ -70,6 +74,7 @@ def _serialize_test_data(test):
     ))
     return serialized
 
+
 def _serialize_hook_data(hook_data):
     return _dict(
         "start_time", _serialize_time(hook_data.start_time),
@@ -77,6 +82,7 @@ def _serialize_hook_data(hook_data):
         "steps", _serialize_steps(hook_data.steps),
         "outcome", hook_data.outcome
     )
+
 
 def _serialize_suite_data(suite):
     json_suite = _serialize_common_data(suite)
@@ -90,6 +96,7 @@ def _serialize_suite_data(suite):
         json_suite["suite_teardown"] = _serialize_hook_data(suite.suite_teardown)
 
     return json_suite
+
 
 def serialize_report_into_json(report):
     serialized = _dict(
@@ -111,6 +118,7 @@ def serialize_report_into_json(report):
 
     return serialized
 
+
 def save_report_into_file(data, filename, javascript_compatibility=True, pretty_formatting=False):
     report = serialize_report_into_json(data)
     file = open(filename, "w")
@@ -122,8 +130,10 @@ def save_report_into_file(data, filename, javascript_compatibility=True, pretty_
         file.write(json.dumps(report))
     file.close()
 
+
 def _unserialize_time(t):
     return parse_timestamp(t)
+
 
 def _unserialize_step_data(js):
     step = StepData(js["description"])
@@ -141,6 +151,7 @@ def _unserialize_step_data(js):
         step.entries.append(entry)
     return step
 
+
 def _unserialize_test_data(js):
     test = TestData(js["name"], js["description"])
     test.status = js["status"]
@@ -153,6 +164,7 @@ def _unserialize_test_data(js):
     test.steps = [ _unserialize_step_data(s) for s in js["steps"] ]
     return test
 
+
 def _unserialize_hook_data(js):
     data = HookData()
     data.outcome = js["outcome"]
@@ -161,6 +173,7 @@ def _unserialize_hook_data(js):
     data.steps = [ _unserialize_step_data(s) for s in js["steps"] ]
 
     return data
+
 
 def _unserialize_suite_data(js):
     suite = SuiteData(js["name"], js["description"])
@@ -184,8 +197,9 @@ def _unserialize_suite_data(js):
 
     return suite
 
+
 def load_report_from_file(filename):
-    report = Report()
+    report = BoundReport()
     try:
         with open(filename, "r") as fh:
             js_content = fh.read()
@@ -220,6 +234,7 @@ def load_report_from_file(filename):
 
     return report
 
+
 class JsonBackend(FileReportBackend):
     name = "json"
 
@@ -238,4 +253,4 @@ class JsonBackend(FileReportBackend):
         )
 
     def load_report(self, filename):
-        return load_report_from_file(filename)
+        return load_report_from_file(filename).bind(self, filename)

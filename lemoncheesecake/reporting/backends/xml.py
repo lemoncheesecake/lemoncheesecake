@@ -11,10 +11,10 @@ try:
 except ImportError:
     LXML_IS_AVAILABLE = False
 
-from lemoncheesecake.reporting.backend import FileReportBackend, SAVE_AT_EACH_FAILED_TEST
+from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend, SAVE_AT_EACH_FAILED_TEST
 from lemoncheesecake.reporting.report import (
     LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, SuiteData,
-    Report, format_timestamp, parse_timestamp
+    format_timestamp, parse_timestamp
 )
 from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.exceptions import ProgrammingError, InvalidReportFile
@@ -24,6 +24,7 @@ OUTCOME_FAILURE = "failure"
 OUTCOME_SUCCESS = "success"
 
 DEFAULT_INDENT_LEVEL = 4
+
 
 # borrowed from http://stackoverflow.com/a/1239193
 def indent_xml(elem, level=0, indent_level=DEFAULT_INDENT_LEVEL):
@@ -41,11 +42,13 @@ def indent_xml(elem, level=0, indent_level=DEFAULT_INDENT_LEVEL):
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
 
+
 def set_node_attr(node, attr_name, attr_value):
     if IS_PYTHON3:
         node.attrib[attr_name] = attr_value
     else:
         node.attrib[attr_name] = attr_value if type(attr_value) is unicode else unicode(attr_value, "utf-8")
+
 
 def make_xml_node(name, *args):
     node = E(name)
@@ -57,15 +60,18 @@ def make_xml_node(name, *args):
         i += 2
     return node
 
+
 def make_xml_child(parent_node, name, *args):
     node = make_xml_node(name, *args)
     parent_node.append(node)
     return node
 
+
 def _add_time_attr(node, name, value):
     if not value:
         return
     node.attrib[name] = format_timestamp(value)
+
 
 def _serialize_outcome(outcome):
     if outcome == True:
@@ -73,6 +79,7 @@ def _serialize_outcome(outcome):
     if outcome == False:
         return OUTCOME_FAILURE
     return OUTCOME_NOT_AVAILABLE
+
 
 def _serialize_steps(steps, parent_node):
     for step in steps:
@@ -95,6 +102,7 @@ def _serialize_steps(steps, parent_node):
                                         "outcome", _serialize_outcome(entry.outcome))
                 check_node.text = entry.details
 
+
 def _serialize_test_data(test):
     test_node = make_xml_node("test", "name", test.name, "description", test.description,
                           "status", test.status, "status-details", test.status_details)
@@ -113,11 +121,13 @@ def _serialize_test_data(test):
 
     return test_node
 
+
 def _serialize_hook_data(data, node):
     node.attrib["outcome"] = _serialize_outcome(data.outcome)
     _add_time_attr(node, "start-time", data.start_time)
     _add_time_attr(node, "end-time", data.end_time)
     _serialize_steps(data.steps, node)
+
 
 def _serialize_suite_data(suite):
     suite_node = make_xml_node("suite", "name", suite.name, "description", suite.description)
@@ -151,6 +161,7 @@ def _serialize_suite_data(suite):
 
     return suite_node
 
+
 def serialize_report_as_tree(report):
     xml = E("lemoncheesecake-report")
     version_node = make_xml_child(xml, "lemoncheesecake-report-version")
@@ -178,6 +189,7 @@ def serialize_report_as_tree(report):
 
     return xml
 
+
 def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
     report = serialize_report_as_tree(report)
     indent_xml(report, indent_level=indent_level)
@@ -186,13 +198,16 @@ def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
         return ET.tostring(report, pretty_print=True, encoding="unicode")
     return ET.tostring(report, pretty_print=True, xml_declaration=True, encoding="utf-8")
 
+
 def save_report_into_file(report, filename, indent_level=DEFAULT_INDENT_LEVEL):
     content = serialize_report_as_string(report, indent_level)
     with open(filename, "w") as fh:
         fh.write(content)
 
+
 def _unserialize_datetime(value):
     return parse_timestamp(value)
+
 
 def _unserialize_outcome(value):
     if value == OUTCOME_SUCCESS:
@@ -202,6 +217,7 @@ def _unserialize_outcome(value):
     if value == OUTCOME_NOT_AVAILABLE:
         return None
     raise ProgrammingError("Unknown value '%s' for outcome" % value)
+
 
 def _unserialize_step_data(xml):
     step = StepData(xml.attrib["description"])
@@ -220,6 +236,7 @@ def _unserialize_step_data(xml):
         step.entries.append(entry)
     return step
 
+
 def _unserialize_test_data(xml):
     test = TestData(xml.attrib["name"], xml.attrib["description"])
     test.status = xml.attrib["status"]
@@ -232,6 +249,7 @@ def _unserialize_test_data(xml):
     test.steps = [ _unserialize_step_data(s) for s in xml.xpath("step") ]
     return test
 
+
 def _unserialize_hook_data(xml):
     data = HookData()
     data.outcome = _unserialize_outcome(xml.attrib["outcome"])
@@ -239,6 +257,7 @@ def _unserialize_hook_data(xml):
     data.end_time = _unserialize_datetime(xml.attrib["end-time"])
     data.steps = [ _unserialize_step_data(s) for s in xml.xpath("step") ]
     return data
+
 
 def _unserialize_suite_data(xml):
     suite = SuiteData(xml.attrib["name"], xml.attrib["description"])
@@ -266,14 +285,16 @@ def _unserialize_suite_data(xml):
 
     return suite
 
+
 def _unserialize_keyvalue_list(nodes):
     ret = [ ]
     for node in nodes:
         ret.append([node.attrib["name"], node.text])
     return ret
 
+
 def load_report_from_file(filename):
-    report = Report()
+    report = BoundReport()
     try:
         with open(filename, "r") as fh:
             xml = ET.parse(fh)
@@ -308,6 +329,7 @@ def load_report_from_file(filename):
 
     return report
 
+
 class XmlBackend(FileReportBackend):
     name = "xml"
 
@@ -325,4 +347,4 @@ class XmlBackend(FileReportBackend):
         save_report_into_file(report, filename, self.indent_level)
 
     def load_report(self, filename):
-        return load_report_from_file(filename)
+        return load_report_from_file(filename).bind(self, filename)

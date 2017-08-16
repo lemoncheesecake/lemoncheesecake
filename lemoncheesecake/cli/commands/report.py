@@ -33,7 +33,7 @@ class ReportCommand(Command):
         else:
             report_backends = None
 
-        report, _ = load_report(cli_args.report_path, report_backends)
+        report = load_report(cli_args.report_path, report_backends)
         suites = filter_suites(report.get_suites(), make_report_filter_from_cli_args(cli_args))
 
         display_report_suites(suites)
