@@ -1,3 +1,10 @@
+# 0.11.1 (2017-08-18)
+
+- **API**: make `load_report` return a `BoundReport` (a subclass of Report that provides a `save` method among others)
+  instead of `report`, `backend` pair
+- **API**: improve `load_report_from_file` exception message when report file can not be read (impacts `lcc report`)
+- **HTML report**: avoid UI shaking on mouse over
+
 # 0.11.0 (2017-08-15)
 
 - **CLI**: a new `lcc report` command has been added to display generated reports on the console
