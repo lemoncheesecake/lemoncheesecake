@@ -76,11 +76,11 @@ th, td {
 }
 
 .extra-info {
-    display: none;
+    visibility: hidden;
 }
 
 .extra-info-container:hover .extra-info {
-    display: inline;
+    visibility: visible;
 }
 
 .special {
