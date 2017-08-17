@@ -228,7 +228,7 @@ def load_reports_from_dir(dirname, backends=None):
     for filename in [os.path.join(dirname, filename) for filename in os.listdir(dirname)]:
         if os.path.isfile(filename):
             try:
-                yield load_report(filename, backends)
+                yield load_report_from_file(filename, backends)
             except InvalidReportFile:
                 pass
 
