@@ -219,6 +219,8 @@ def load_report_from_file(filename, backends=None):
         if backend.get_capabilities() & CAPABILITY_LOAD_REPORT:
             try:
                 return backend.load_report(filename)
+            except IOError as excp:
+                raise InvalidReportFile("Cannot load report from file '%s': %s" % (filename, excp))
             except InvalidReportFile:
                 pass
     raise InvalidReportFile("Cannot find any suitable report backend to unserialize file '%s'" % filename)

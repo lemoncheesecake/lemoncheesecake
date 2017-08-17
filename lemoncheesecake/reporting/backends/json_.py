@@ -204,7 +204,7 @@ def load_report_from_file(filename):
         with open(filename, "r") as fh:
             js_content = fh.read()
     except IOError as e:
-        raise InvalidReportFile("Cannot read file '%s': %s" % (filename, e))
+        raise e # re-raise as-is
 
     js_content = re.sub("^" + JS_PREFIX, "", js_content)
 

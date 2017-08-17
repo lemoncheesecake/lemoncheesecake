@@ -301,7 +301,7 @@ def load_report_from_file(filename):
     except ET.LxmlError as e:
         raise InvalidReportFile(str(e))
     except IOError as e:
-        raise InvalidReportFile("Cannot read file '%s': %s" % (filename, e))
+        raise e # re-raise as-is
     try:
         root = xml.getroot().xpath("/lemoncheesecake-report")[0]
     except IndexError:
