@@ -156,18 +156,18 @@ class TestReportingSession(reporting.ReportingSession):
     def begin_test(self, test):
         self.last_test_outcome = None
 
-    def end_test(self, test, status, status_details=None):
+    def end_test(self, test):
         self.last_test = test.name
-        self._test_statuses[test.name] = status
-        self.last_test_status = status
+        self._test_statuses[test.name] = test.status
+        self.last_test_status = test.status
         self.test_nb += 1
-        if status == "passed":
+        if test.status == "passed":
             self.test_success_nb += 1
         else:
             self.test_failing_nb += 1
 
-    def bypass_test(self, test, status, status_details):
-        self.end_test(test, status, status_details)
+    def bypass_test(self, test):
+        self.end_test(test)
 
     def log(self, level, content):
         if level == "error":

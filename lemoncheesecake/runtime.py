@@ -142,7 +142,7 @@ class _Runtime:
         self.current_step_data_list = self.current_suite_data.suite_setup.steps
         self.default_step_description = "Setup suite"
 
-        self.for_each_reporting_sessions(lambda b: b.begin_suite_setup(self.current_suite))
+        self.for_each_reporting_sessions(lambda b: b.begin_suite_setup(self.current_suite_data))
 
     def end_suite_setup(self):
         if self.current_suite_data.suite_setup.is_empty():
@@ -151,14 +151,14 @@ class _Runtime:
             now = time.time()
             self._end_hook(self.current_suite_data.suite_setup, now)
             self.end_current_step(now)
-        self.for_each_reporting_sessions(lambda b: b.end_suite_setup(self.current_suite))
+        self.for_each_reporting_sessions(lambda b: b.end_suite_setup(self.current_suite_data))
 
     def begin_suite_teardown(self):
         self.current_suite_data.suite_teardown = self._start_hook(time.time())
         self.current_step_data_list = self.current_suite_data.suite_teardown.steps
         self.default_step_description = "Teardown suite"
 
-        self.for_each_reporting_sessions(lambda b: b.begin_suite_teardown(self.current_suite))
+        self.for_each_reporting_sessions(lambda b: b.begin_suite_teardown(self.current_suite_data))
 
     def end_suite_teardown(self):
         if self.current_suite_data.suite_teardown.is_empty():
@@ -167,10 +167,10 @@ class _Runtime:
             now = time.time()
             self.end_current_step(now)
             self._end_hook(self.current_suite_data.suite_teardown, now)
-        self.for_each_reporting_sessions(lambda b: b.end_suite_teardown(self.current_suite))
+        self.for_each_reporting_sessions(lambda b: b.end_suite_teardown(self.current_suite_data))
 
     def end_suite(self):
-        self.for_each_reporting_sessions(lambda b: b.end_suite(self.current_suite))
+        self.for_each_reporting_sessions(lambda b: b.end_suite(self.current_suite_data))
         self.current_suite_data = self.current_suite_data.parent_suite
         self.current_suite = self.current_suite.parent_suite
 
@@ -184,7 +184,7 @@ class _Runtime:
         self.current_test_data.links.extend(test.links)
         self.current_test_data.start_time = now
         self.current_suite_data.add_test(self.current_test_data)
-        self.for_each_reporting_sessions(lambda b: b.begin_test(test))
+        self.for_each_reporting_sessions(lambda b: b.begin_test(self.current_test_data))
         self.current_step_data_list = self.current_test_data.steps
         self.default_step_description = test.description
 
@@ -206,7 +206,7 @@ class _Runtime:
         self.current_test_data.end_time = now
         self.end_current_step(now)
 
-        self.for_each_reporting_sessions(lambda b: b.end_test(self.current_test, self.current_test_data.status))
+        self.for_each_reporting_sessions(lambda b: b.end_test(self.current_test_data))
 
         self.current_test = None
         self.current_test_data = None
@@ -224,7 +224,7 @@ class _Runtime:
         test_data.status_details = status_details
         self.current_suite_data.add_test(test_data)
 
-        self.for_each_reporting_sessions(lambda b: b.bypass_test(test, status, status_details))
+        self.for_each_reporting_sessions(lambda b: b.bypass_test(test_data))
 
     def skip_test(self, test, reason):
         self._is_success = False

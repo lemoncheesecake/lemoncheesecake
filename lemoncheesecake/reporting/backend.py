@@ -69,10 +69,10 @@ class ReportingSession:
     def begin_test(self, test):
         pass
 
-    def end_test(self, test, status):
+    def end_test(self, test):
         pass
 
-    def bypass_test(self, test, status, status_details):
+    def bypass_test(self, test):
         pass
 
     def set_step(self, description):
@@ -135,18 +135,16 @@ class FileReportSession(ReportingSession):
         )
 
     def end_suite_setup(self, suite):
-        suite_data = self.report.get_suite(suite.name)
         self._handle_code_end(
-            suite_data.suite_setup.has_failure() if suite_data.suite_setup else False
+            suite.suite_setup.has_failure() if suite.suite_setup else False
         )
 
     def end_suite_teardown(self, suite):
-        suite_data = self.report.get_suite(suite.name)
         self._handle_code_end(
-            suite_data.suite_teardown.has_failure() if suite_data.suite_teardown else False
+            suite.suite_teardown.has_failure() if suite.suite_teardown else False
         )
 
-    def end_test(self, test, status):
+    def end_test(self, test):
         self._handle_code_end(test)
 
     def end_suite(self, suite):

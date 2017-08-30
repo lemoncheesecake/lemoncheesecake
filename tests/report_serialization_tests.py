@@ -252,6 +252,21 @@ def test_setup_suite_failure(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir)
 
+# reproduce a bug introduced in 3e4d341
+def test_setup_suite_nested(backend, tmpdir):
+    @lcc.suite("MySuite")
+    class MySuite:
+        @lcc.suite("MySubSuite")
+        class MySubSuite:
+            def setup_suite(self):
+                lcc.log_info("some log")
+
+            @lcc.test("Some test")
+            def sometest(self):
+                pass
+
+    do_test_serialization(MySuite, backend, tmpdir)
+
 def test_teardown_suite_success(backend, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:

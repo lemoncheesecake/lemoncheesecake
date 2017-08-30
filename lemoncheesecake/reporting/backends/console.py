@@ -155,15 +155,15 @@ class ConsoleReportingSession(ReportingSession):
         self.lp.print_line(self.step_prefix + "...")
         self.previous_obj = test
 
-    def end_test(self, test, status):
-        line, raw_line_len = _make_test_result_line(self.get_test_label(test), self.current_test_idx, status)
+    def end_test(self, test):
+        line, raw_line_len = _make_test_result_line(self.get_test_label(test), self.current_test_idx, test.status)
 
         self.lp.print_line(line, force_len=raw_line_len)
         self.lp.new_line()
 
         self.current_test_idx += 1
 
-    def bypass_test(self, test, status, status_details):
+    def bypass_test(self, test):
         line = " %s %2s # %s" % (
             colored("KO", "yellow", attrs=["bold"]),
             self.current_test_idx, self.get_test_label(test)
