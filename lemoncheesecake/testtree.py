@@ -5,6 +5,7 @@ Created on Jun 16, 2017
 '''
 
 from lemoncheesecake.utils import get_distincts_in_list
+from lemoncheesecake.exceptions import CannotFindTreeNode
 
 
 class BaseTreeNode:
@@ -74,15 +75,21 @@ class BaseSuite(BaseTreeNode):
         self._tests.append(test)
         self._selected_test_names.append(test.name)
 
-    def get_tests(self):
-        return list(filter(self.is_test_selected, self._tests))
+    def get_tests(self, skip_filter=False):
+        if skip_filter:
+            return self._tests
+        else:
+            return list(filter(self.is_test_selected, self._tests))
     
     def add_suite(self, suite):
         suite.parent_suite = self
         self._suites.append(suite)
 
-    def get_suites(self):
-        return list(filter(lambda suite: suite.has_selected_tests(deep=True), self._suites))
+    def get_suites(self, allow_empty_suite=False):
+        if allow_empty_suite:
+            return self._suites
+        else:
+            return list(filter(lambda suite: suite.has_selected_tests(deep=True), self._suites))
 
     def apply_filter(self, filter):
         self._selected_test_names = [ ]
@@ -132,3 +139,35 @@ def get_flattened_suites(suites):
     flattened_suites = []
     walk_suites(suites, lambda suite: flattened_suites.append(suite))
     return flattened_suites
+
+
+def get_suite_by_name(suites, suite_name):
+    try:
+        return next(s for s in suites if s.name == suite_name)
+    except StopIteration:
+        raise CannotFindTreeNode("Cannot find suite named '%s'" % suite_name)
+
+
+def find_suite(suites, path, sep="."):
+    lookup_suites = suites
+    lookup_suite = None
+    for lookup_suite_name in path.split(sep):
+        lookup_suite = get_suite_by_name(lookup_suites, lookup_suite_name)
+        lookup_suites = lookup_suite.get_suites(allow_empty_suite=True)
+    if lookup_suite is None:
+        raise CannotFindTreeNode("Cannot find suite named '%s'" % path)
+
+    return lookup_suite
+
+
+def get_test_by_name(suite, test_name):
+    try:
+        return next(t for t in suite.get_tests(skip_filter=True) if t.name == test_name)
+    except StopIteration:
+        raise CannotFindTreeNode("Cannot find test named '%s'" % test_name)
+
+
+def find_test(suites, path, sep="."):
+    suite_name = sep.join(path.split(sep)[:-1])
+    lookup_suite = find_suite(suites, suite_name, sep=sep)
+    return get_test_by_name(lookup_suite, path.split(sep)[-1])

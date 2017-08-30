@@ -101,12 +101,6 @@ class Suite(BaseSuite):
         self.assert_sub_suite_is_unique_in_suite(suite)
         BaseSuite.add_suite(self, suite)
 
-    def get_test(self, test_name):
-        for test in self._tests:
-            if test.name == test_name:
-                return test
-        raise ProgrammingError("unknown test '%s'" % test_name)
-
     def get_fixtures(self, recursive=True):
         fixtures = []
 

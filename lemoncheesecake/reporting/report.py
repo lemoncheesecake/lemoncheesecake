@@ -127,29 +127,6 @@ class SuiteData(BaseSuite):
         BaseSuite.__init__(self, name, description)
         self.suite_setup = None
         self.suite_teardown = None
-    
-    def get_test(self, test_name):
-        for test in self.get_tests():
-            if test.name == test_name:
-                return test
-
-        for suite in self.get_suites():
-            test = suite.get_test(test_name)
-            if test:
-                return test
-
-        return None
-
-    def get_suite(self, suite_name):
-        if self.name == suite_name:
-            return self
-
-        for sub_suite in self.get_suites():
-            suite = sub_suite.get_suite(suite_name)
-            if suite:
-                return suite
-
-        return None
 
 
 class _ReportStats:
@@ -253,24 +230,6 @@ class Report:
     
     def get_suites(self):
         return self.suites
-
-    def get_test(self, test_name):
-        for suite in self.get_suites():
-            test = suite.get_test(test_name)
-            if test:
-                return test
-
-        return None
-
-    def get_suite(self, suite_name):
-        for suite in self.suites:
-            if suite.name == suite_name:
-                return suite
-            sub_suite = suite.get_suite(suite_name)
-            if sub_suite:
-                return sub_suite
-
-        return None
 
     def get_stats(self):
         return get_stats_from_report(self)
