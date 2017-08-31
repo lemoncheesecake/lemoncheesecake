@@ -93,13 +93,28 @@ class ReportFilter(Filter):
         return test.status in self.statuses
 
 
+def filter_suite(suite, filtr):
+    filtered_suite = suite.pull_node()
+
+    for test in suite.get_tests():
+        if filtr.match_test(test, suite):
+            filtered_suite.add_test(test.pull_node())
+
+    for filtered_sub_suite in filter_suites(suite.get_suites(), filtr):
+        filtered_suite.add_suite(filtered_sub_suite)
+
+    return filtered_suite
+
+
 def filter_suites(suites, filtr):
-    filtered = []
+    filtered_suites = []
+
     for suite in suites:
-        suite.apply_filter(filtr)
-        if suite.has_selected_tests():
-            filtered.append(suite)
-    return filtered
+        filtered_suite = filter_suite(suite, filtr)
+        if not filtered_suite.is_empty():
+            filtered_suites.append(filtered_suite)
+
+    return filtered_suites
 
 
 def add_filter_args_to_cli_parser(cli_parser):

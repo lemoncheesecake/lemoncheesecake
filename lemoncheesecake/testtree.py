@@ -4,6 +4,8 @@ Created on Jun 16, 2017
 @author: nicolas
 '''
 
+import copy
+
 from lemoncheesecake.utils import get_distincts_in_list
 from lemoncheesecake.exceptions import CannotFindTreeNode
 
@@ -55,6 +57,11 @@ class BaseTreeNode:
             links.extend(node.links)
         return get_distincts_in_list(links)
 
+    def pull_node(self):
+        node = copy.copy(self)
+        node.parent_suite = None
+        return node
+
     def __str__(self):
         return self.get_path_as_str()
 
@@ -68,54 +75,39 @@ class BaseSuite(BaseTreeNode):
         BaseTreeNode.__init__(self, name, description)
         self._tests = []
         self._suites = []
-        self._selected_test_names = []
 
     def add_test(self, test):
         test.parent_suite = self
         self._tests.append(test)
-        self._selected_test_names.append(test.name)
 
-    def get_tests(self, skip_filter=False):
-        if skip_filter:
-            return self._tests
-        else:
-            return list(filter(self.is_test_selected, self._tests))
-    
+    def get_tests(self):
+        return self._tests
+
     def add_suite(self, suite):
         suite.parent_suite = self
         self._suites.append(suite)
 
-    def get_suites(self, allow_empty_suite=False):
-        if allow_empty_suite:
+    def get_suites(self, include_empty_suites=False):
+        if include_empty_suites:
             return self._suites
         else:
-            return list(filter(lambda suite: suite.has_selected_tests(deep=True), self._suites))
+            return list(filter(lambda suite: not suite.is_empty(), self._suites))
 
-    def apply_filter(self, filter):
-        self._selected_test_names = [ ]
-
-        for test in self._tests:
-            if filter.match_test(test, self):
-                self._selected_test_names.append(test.name)
-
-        for suite in self._suites:
-            suite.apply_filter(filter)
-
-    def has_selected_tests(self, deep=True):
-        if deep:
-            if self._selected_test_names:
-                return True
-
-            for suite in self.get_suites():
-                if suite.has_selected_tests():
-                    return True
-
+    def is_empty(self):
+        if len(self.get_tests()) != 0:
             return False
-        else:
-            return bool(self._selected_test_names)
 
-    def is_test_selected(self, test):
-        return test.name in self._selected_test_names
+        for sub_suite in self.get_suites():
+            if not sub_suite.is_empty():
+                return False
+
+        return True
+
+    def pull_node(self):
+        node = BaseTreeNode.pull_node(self)
+        node._tests = []
+        node._suites = []
+        return node
 
 
 def walk_suites(suites, suite_func=None, test_func=None):
@@ -153,7 +145,7 @@ def find_suite(suites, path, sep="."):
     lookup_suite = None
     for lookup_suite_name in path.split(sep):
         lookup_suite = get_suite_by_name(lookup_suites, lookup_suite_name)
-        lookup_suites = lookup_suite.get_suites(allow_empty_suite=True)
+        lookup_suites = lookup_suite.get_suites(include_empty_suites=True)
     if lookup_suite is None:
         raise CannotFindTreeNode("Cannot find suite named '%s'" % path)
 
@@ -162,7 +154,7 @@ def find_suite(suites, path, sep="."):
 
 def get_test_by_name(suite, test_name):
     try:
-        return next(t for t in suite.get_tests(skip_filter=True) if t.name == test_name)
+        return next(t for t in suite.get_tests() if t.name == test_name)
     except StopIteration:
         raise CannotFindTreeNode("Cannot find test named '%s'" % test_name)
 

@@ -61,7 +61,7 @@ class StatsCommand(Command):
 
         def handle_suite(suite):
             stats.suites_nb += 1
-            if suite.has_selected_tests(deep=False):
+            if suite.get_tests():
                 stats.non_empty_suites_nb += 1
 
         walk_suites(suites, test_func=handle_test, suite_func=handle_suite)

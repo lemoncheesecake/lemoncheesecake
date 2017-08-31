@@ -112,7 +112,7 @@ class ConsoleReportingSession(ReportingSession):
         self.current_suite = suite
         self.current_test_idx = 1
 
-        if not suite.has_selected_tests(deep=False):
+        if not suite.get_tests():
             return
 
         if self.previous_obj:

@@ -24,6 +24,7 @@ from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 from lemoncheesecake.fixtures import FixtureRegistry, load_fixtures_from_func
 from lemoncheesecake.project import create_project
+from lemoncheesecake.filter import filter_suites
 
 def build_test_module(name="mysuite"):
     return """
@@ -226,8 +227,7 @@ def run_suites(suites, filter=None, fixtures=None, backends=None, tmpdir=None, s
         backends.append(TestReportingBackend(_reporting_session))
 
     if filter:
-        for suite in suites:
-            suite.apply_filter(filter)
+        suites = filter_suites(suites, filter)
 
     if tmpdir:
         try:
