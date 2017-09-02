@@ -170,6 +170,8 @@ def serialize_report_as_tree(report):
     _add_time_attr(xml, "end-time", report.end_time)
     _add_time_attr(xml, "generation-time", report.report_generation_time)
 
+    title_node = make_xml_child(xml, "title")
+    title_node.text = report.title
     for name, value in report.info:
         info_node = make_xml_child(xml, "info", "name", name)
         info_node.text = value
@@ -310,6 +312,7 @@ def load_report_from_file(filename):
     report.start_time = _unserialize_datetime(root.attrib["start-time"]) if "start-time" in root.attrib else None
     report.end_time = _unserialize_datetime(root.attrib["end-time"]) if "end-time" in root.attrib else None
     report.report_generation_time = _unserialize_datetime(root.attrib["generation-time"]) if "generation-time" in root.attrib else None
+    report.title = root.xpath("title")[0].text
     report.info = _unserialize_keyvalue_list(root.xpath("info"))
     report.stats = _unserialize_keyvalue_list(root.xpath("stat"))
 

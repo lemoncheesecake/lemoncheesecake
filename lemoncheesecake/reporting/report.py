@@ -221,6 +221,7 @@ class Report:
         self.start_time = None
         self.end_time = None
         self.report_generation_time = None
+        self.title = None
 
     def add_info(self, name, value):
         self.info.append([name, value])

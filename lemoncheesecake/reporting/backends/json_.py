@@ -104,6 +104,7 @@ def serialize_report_into_json(report):
         "start_time", _serialize_time(report.start_time),
         "end_time", _serialize_time(report.end_time),
         "generation_time", _serialize_time(report.report_generation_time),
+        "title", report.title,
         "info", [ [ n, v ] for n, v in report.info ],
         "stats", [ [ n, v ] for n, v in report.serialize_stats() ]
     )
@@ -216,6 +217,7 @@ def load_report_from_file(filename):
     if "lemoncheesecake_report_version" not in js:
         raise InvalidReportFile("Cannot find 'lemoncheesecake_report_version' in JSON")
 
+    report.title = js["title"]
     report.info = js["info"]
     report.stats = js["stats"]
     report.start_time = _unserialize_time(js["start_time"])
