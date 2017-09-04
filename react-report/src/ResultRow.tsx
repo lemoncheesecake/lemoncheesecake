@@ -1,0 +1,100 @@
+import * as React from 'react';
+import {render_steps} from './Step';
+
+let all_rows = {};
+
+export function get_result_row_by_id(id: string): ResultRow {
+    return all_rows[id];
+}
+
+function collapseIfExpanded() {
+    for (let row_id in all_rows) {
+        let row = all_rows[row_id];
+        if (row.isExpanded()) {
+            row.collapse()
+            break;
+        }
+    }
+}
+
+interface State {
+    expanded: boolean
+}
+
+interface Props {
+    id: string,
+    status: Status,
+    status_details?: string,
+    steps: Array<StepData>
+}
+
+function get_text_class_from_test_status(status: Status) {
+    if (status == null)
+        return ""
+    
+    if (status == "passed")
+        return "text-success";
+    
+    if (status == "failed")
+        return "text-danger";
+
+    if (status == "disabled")
+        return "text-default";
+
+    return "text-warning";
+}
+
+class ResultRow extends React.Component<Props, State> {
+    constructor() {
+        super();
+        this.state = {
+            expanded: false
+        };
+        this.toggle = this.toggle.bind(this);
+    }
+
+    isExpanded() {
+        return this.state.expanded;
+    }
+
+    expand() {
+        this.setState({expanded: true})
+    }
+
+    collapse() {
+        this.setState({expanded: false})
+    }
+
+    toggle() {
+        if (this.isExpanded()) {
+            this.collapse()
+        } else {
+            collapseIfExpanded();
+            this.expand();
+        }
+    }
+
+    componentDidMount() {
+        all_rows[this.props.id] = this;
+    }
+
+    render() {
+        return (
+            <tbody>
+                <tr id={this.props.id} className="test" key={this.props.id}>
+                    <td className="test_status" title={this.props.status_details}
+                        style={this.props.steps.length > 0 ? {cursor: "pointer"} : undefined}
+                        onClick={this.props.steps.length > 0 ? this.toggle : undefined}>
+                        <span className={get_text_class_from_test_status(this.props.status)} style={{fontSize: "120%"}}>
+                            {this.props.status.toUpperCase()}
+                        </span>
+                    </td>
+                    {this.props.children}
+                </tr>
+                { render_steps(this.props.steps, this.state.expanded) }
+            </tbody>
+        )
+    }
+}
+
+export default ResultRow;
