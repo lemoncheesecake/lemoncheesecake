@@ -1,3 +1,11 @@
+# 0.12.0 (2017-09-05)
+
+- Rewrite the HTML report using React
+- Fix regression introduced in 3e4d341 / 0.11.0: lcc run was crashing while running a suite setup
+- **under the hood**: introduce two new functions `find_test` and `find_suite` to find a given test / suite from
+  its complete path in the test tree
+- **under the hood**: rework filter_suites function by generating new suite instances instead of altering existing onces
+
 # 0.11.1 (2017-08-18)
 
 - **API**: make `load_report` return a `BoundReport` (a subclass of Report that provides a `save` method among others)
