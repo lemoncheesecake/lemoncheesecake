@@ -4,31 +4,59 @@ Created on Jan 24, 2016
 @author: nicolas
 '''
 
-import sys
 import os.path
 import time
 import shutil
 
-from lemoncheesecake.utils import humanize_duration
 from lemoncheesecake.exceptions import LemonCheesecakeInternalError
 from lemoncheesecake.consts import ATTACHEMENT_DIR, \
     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
 from lemoncheesecake.reporting import *
+from lemoncheesecake import events
 
 __all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "log_url", "log_check", \
     "set_step", "prepare_attachment", "save_attachment_file", "save_attachment_content", \
     "add_report_info"
 
-_runtime = None # singleton
+
+_runtime = None  # singleton
+
 
 def initialize_runtime(reporting_backends, report_dir):
     global _runtime
     _runtime = _Runtime(reporting_backends, report_dir)
+    events.subscribe_to_event_types({
+        "on_tests_beginning": _runtime.begin_tests,
+        "on_tests_ending": _runtime.end_tests,
+        
+        "on_test_session_setup_beginning": _runtime.begin_test_session_setup,
+        "on_test_session_setup_ending": _runtime.end_test_session_setup,
+        "on_test_session_teardown_beginning": _runtime.begin_test_session_teardown,
+        "on_test_session_teardown_ending": _runtime.end_test_session_teardown,
+        
+        "on_suite_beginning": _runtime.begin_suite,
+        "on_suite_ending": _runtime.end_suite,
+        "on_suite_setup_beginning": _runtime.begin_suite_setup,
+        "on_suite_setup_ending": _runtime.end_suite_setup,
+        "on_suite_teardown_beginning": _runtime.begin_suite_teardown,
+        "on_suite_teardown_ending": _runtime.end_suite_teardown,
+
+        "on_test_beginning": _runtime.begin_test,
+        "on_test_ending": _runtime.end_test,
+        "on_skipped_test": _runtime.skip_test,
+        "on_disabled_test": _runtime.disable_test,
+        "on_test_setup_beginning": _runtime.begin_test_setup,
+        "on_test_setup_ending": _runtime.end_test_setup,
+        "on_test_teardown_beginning": _runtime.begin_test_teardown,
+        "on_test_teardown_ending": _runtime.end_test_teardown
+    })
+
 
 def get_runtime():
     if not _runtime:
         raise LemonCheesecakeInternalError("Runtime is not initialized")
     return _runtime
+
 
 class _Runtime:
     def __init__(self, reporting_backends, report_dir):
@@ -82,45 +110,43 @@ class _Runtime:
         if self.current_step_data_list and len(self.current_step_data_list[-1].entries) == 0:
             del self.current_step_data_list[-1]
 
-    def begin_tests(self):
-        self.report.start_time = time.time()
+    def begin_tests(self, start_time):
+        self.report.start_time = start_time
         self.for_each_reporting_sessions(lambda b: b.begin_tests())
 
-    def end_tests(self):
-        self.report.end_time = time.time()
+    def end_tests(self, end_time):
+        self.report.end_time = end_time
         self.report.report_generation_time = self.report.end_time
         self.for_each_reporting_sessions(lambda b: b.end_tests())
 
-    def begin_test_session_setup(self):
-        self.report.test_session_setup = self._start_hook(time.time())
+    def begin_test_session_setup(self, time):
+        self.report.test_session_setup = self._start_hook(time)
         self.current_step_data_list = self.report.test_session_setup.steps
         self.default_step_description = "Setup test session"
 
         self.for_each_reporting_sessions(lambda b: b.begin_test_session_setup())
 
-    def end_test_session_setup(self):
+    def end_test_session_setup(self, time):
         if self.report.test_session_setup.is_empty():
             self.report.test_session_setup = None
         else:
-            now = time.time()
-            self._end_hook(self.report.test_session_setup, now)
-            self.end_current_step(now)
+            self._end_hook(self.report.test_session_setup, time)
+            self.end_current_step(time)
         self.for_each_reporting_sessions(lambda b: b.end_test_session_setup())
 
-    def begin_test_session_teardown(self):
-        self.report.test_session_teardown = self._start_hook(time.time())
+    def begin_test_session_teardown(self, time):
+        self.report.test_session_teardown = self._start_hook(time)
         self.current_step_data_list = self.report.test_session_teardown.steps
         self.default_step_description = "Teardown test session"
 
         self.for_each_reporting_sessions(lambda b: b.begin_test_session_teardown())
 
-    def end_test_session_teardown(self):
+    def end_test_session_teardown(self, time):
         if self.report.test_session_teardown.is_empty():
             self.report.test_session_teardown = None
         else:
-            now = time.time()
-            self._end_hook(self.report.test_session_teardown, now)
-            self.end_current_step(now)
+            self._end_hook(self.report.test_session_teardown, time)
+            self.end_current_step(time)
         self.for_each_reporting_sessions(lambda b: b.end_test_session_teardown())
 
     def begin_suite(self, suite):
@@ -137,74 +163,70 @@ class _Runtime:
 
         self.for_each_reporting_sessions(lambda b: b.begin_suite(suite))
 
-    def begin_suite_setup(self):
-        self.current_suite_data.suite_setup = self._start_hook(time.time())
+    def begin_suite_setup(self, suite, time):
+        self.current_suite_data.suite_setup = self._start_hook(time)
         self.current_step_data_list = self.current_suite_data.suite_setup.steps
         self.default_step_description = "Setup suite"
 
         self.for_each_reporting_sessions(lambda b: b.begin_suite_setup(self.current_suite_data))
 
-    def end_suite_setup(self):
+    def end_suite_setup(self, suite, time):
         if self.current_suite_data.suite_setup.is_empty():
             self.current_suite_data.suite_setup = None
         else:
-            now = time.time()
-            self._end_hook(self.current_suite_data.suite_setup, now)
-            self.end_current_step(now)
+            self._end_hook(self.current_suite_data.suite_setup, time)
+            self.end_current_step(time)
         self.for_each_reporting_sessions(lambda b: b.end_suite_setup(self.current_suite_data))
 
-    def begin_suite_teardown(self):
-        self.current_suite_data.suite_teardown = self._start_hook(time.time())
+    def begin_suite_teardown(self, suite, time):
+        self.current_suite_data.suite_teardown = self._start_hook(time)
         self.current_step_data_list = self.current_suite_data.suite_teardown.steps
         self.default_step_description = "Teardown suite"
 
         self.for_each_reporting_sessions(lambda b: b.begin_suite_teardown(self.current_suite_data))
 
-    def end_suite_teardown(self):
+    def end_suite_teardown(self, suite, time):
         if self.current_suite_data.suite_teardown.is_empty():
             self.current_suite_data.suite_teardown = None
         else:
-            now = time.time()
-            self.end_current_step(now)
-            self._end_hook(self.current_suite_data.suite_teardown, now)
+            self.end_current_step(time)
+            self._end_hook(self.current_suite_data.suite_teardown, time)
         self.for_each_reporting_sessions(lambda b: b.end_suite_teardown(self.current_suite_data))
 
-    def end_suite(self):
+    def end_suite(self, suite):
         self.for_each_reporting_sessions(lambda b: b.end_suite(self.current_suite_data))
         self.current_suite_data = self.current_suite_data.parent_suite
         self.current_suite = self.current_suite.parent_suite
 
-    def begin_test(self, test):
-        now = time.time()
+    def begin_test(self, test, start_time):
         self.has_pending_failure = False
         self.current_test = test
         self.current_test_data = TestData(test.name, test.description)
         self.current_test_data.tags.extend(test.tags)
         self.current_test_data.properties.update(test.properties)
         self.current_test_data.links.extend(test.links)
-        self.current_test_data.start_time = now
+        self.current_test_data.start_time = start_time
         self.current_suite_data.add_test(self.current_test_data)
         self.for_each_reporting_sessions(lambda b: b.begin_test(self.current_test_data))
         self.current_step_data_list = self.current_test_data.steps
         self.default_step_description = test.description
 
-    def begin_test_setup(self):
+    def begin_test_setup(self, test):
         self.set_step("Setup test")
 
-    def end_test_setup(self):
+    def end_test_setup(self, test):
         self.set_step(self.current_test.description)
 
-    def begin_test_teardown(self):
+    def begin_test_teardown(self, test):
         self.set_step("Teardown test")
 
-    def end_test_teardown(self):
+    def end_test_teardown(self, test):
         pass
 
-    def end_test(self):
-        now = time.time()
+    def end_test(self, test, end_time):
         self.current_test_data.status = "failed" if self.has_pending_failure else "passed"
-        self.current_test_data.end_time = now
-        self.end_current_step(now)
+        self.current_test_data.end_time = end_time
+        self.end_current_step(end_time)
 
         self.for_each_reporting_sessions(lambda b: b.end_test(self.current_test_data))
 
@@ -212,26 +234,24 @@ class _Runtime:
         self.current_test_data = None
         self.current_step_data_list = None
 
-    def _bypass_test(self, test, status, status_details):
-        now = time.time()
-
+    def _bypass_test(self, test, status, status_details, time):
         test_data = TestData(test.name, test.description)
         test_data.tags.extend(test.tags)
         test_data.properties.update(test.properties)
         test_data.links.extend(test.links)
-        test_data.end_time = test_data.start_time = now
+        test_data.end_time = test_data.start_time = time
         test_data.status = status
         test_data.status_details = status_details
         self.current_suite_data.add_test(test_data)
 
         self.for_each_reporting_sessions(lambda b: b.bypass_test(test_data))
 
-    def skip_test(self, test, reason):
+    def skip_test(self, test, reason, time):
         self._is_success = False
-        self._bypass_test(test, "skipped", reason)
+        self._bypass_test(test, "skipped", reason, time)
 
-    def disable_test(self, test):
-        self._bypass_test(test, "disabled", "")
+    def disable_test(self, test, time):
+        self._bypass_test(test, "disabled", "", time)
 
     def create_step_if_needed(self, ts=None):
         if not self.current_step_data_list:
@@ -323,17 +343,20 @@ class _Runtime:
     def is_successful(self):
         return self._is_success
 
+
 def log_debug(content):
     """
     Log a debug level message.
     """
     get_runtime().log_debug(content)
 
+
 def log_info(content):
     """
     Log a info level message.
     """
     get_runtime().log_info(content)
+
 
 def log_warning(content):
     """
@@ -343,20 +366,24 @@ def log_warning(content):
 
 log_warn = log_warning
 
+
 def log_error(content):
     """
     Log an error level message.
     """
     get_runtime().log_error(content)
 
+
 def log_check(description, outcome, details=None):
     return get_runtime().log_check(description, outcome, details)
+
 
 def set_step(description):
     """
     Set a new step.
     """
     get_runtime().set_step(description)
+
 
 def prepare_attachment(filename, description=None):
     """
@@ -366,6 +393,7 @@ def prepare_attachment(filename, description=None):
     """
     return get_runtime().prepare_attachment(filename, description)
 
+
 def save_attachment_file(filename, description=None):
     """
     Save an attachment using an existing file (identified by filename) and an optional
@@ -373,17 +401,20 @@ def save_attachment_file(filename, description=None):
     """
     get_runtime().save_attachment_file(filename, description)
 
+
 def save_attachment_content(content, filename, description=None, binary_mode=False):
     """
     Save a given content as attachment using pseudo filename and optional description.
     """
     get_runtime().save_attachment_content(content, filename, description, binary_mode)
 
+
 def log_url(url, description=None):
     """
     Log an URL.
     """
     get_runtime().log_url(url, description)
+
 
 def add_report_info(name, value):
     report = get_runtime().report

@@ -1,9 +1,8 @@
 import os
 import pytest
 
-from helpers import generate_project, cmdout
+from helpers import generate_project, cmdout, run_main
 
-from lemoncheesecake.cli import main
 
 TEST_MODULE = """import lemoncheesecake.api as lcc
 
@@ -35,6 +34,7 @@ class mysuite:
     pass
 """
 
+
 @pytest.fixture()
 def project(tmpdir):
     generate_project(tmpdir.strpath, "mysuite", TEST_MODULE)
@@ -42,6 +42,7 @@ def project(tmpdir):
     os.chdir(tmpdir.strpath)
     yield
     os.chdir(old_cwd)
+
 
 @pytest.fixture()
 def empty_project(tmpdir):
@@ -51,8 +52,9 @@ def empty_project(tmpdir):
     yield
     os.chdir(old_cwd)
 
+
 def test_stats(project, cmdout):
-    assert main(["stats"]) == 0
+    assert run_main(["stats"]) == 0
 
     # tags:
     cmdout.assert_lines_match(".+suite_tag.+ 2 .+ 100%")
@@ -71,11 +73,13 @@ def test_stats(project, cmdout):
     # totals:
     cmdout.assert_lines_match(".+2.+tests.+1.+suites.*")
 
+
 def test_stats_empty_project(empty_project, cmdout):
-    assert "No test is defined" in main(["stats"])
+    assert "No test is defined" in run_main(["stats"])
+
 
 def test_stats_with_filter(project, cmdout):
-    assert main(["stats", "mysuite.mytest1"]) == 0
+    assert run_main(["stats", "mysuite.mytest1"]) == 0
 
     # tags:
     cmdout.assert_lines_match(".+suite_tag.+ 1 .+ 100%")

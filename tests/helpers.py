@@ -25,6 +25,9 @@ from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 from lemoncheesecake.fixtures import FixtureRegistry, load_fixtures_from_func
 from lemoncheesecake.project import create_project
 from lemoncheesecake.filter import filter_suites
+from lemoncheesecake import events
+from lemoncheesecake.cli import main
+
 
 def build_test_module(name="mysuite"):
     return """
@@ -229,6 +232,8 @@ def run_suites(suites, filter=None, fixtures=None, backends=None, tmpdir=None, s
     if filter:
         suites = filter_suites(suites, filter)
 
+    events.reset()
+
     if tmpdir:
         try:
             runner.run_suites(suites, fixture_registry, backends, tmpdir.strpath, stop_on_failure=stop_on_failure)
@@ -287,6 +292,11 @@ def dummy_test_callback():
     def wrapped(suite):
         pass
     return wrapped
+
+
+def run_main(args):
+    events.reset()
+    return main(args)
 
 
 def assert_check_data(actual, expected):

@@ -12,6 +12,7 @@ from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.utils import IS_PYTHON3, get_distincts_in_list
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
     UserError, serialize_current_exception
+from lemoncheesecake import events
 
 class _Runner:
     def __init__(self, suites, fixture_registry, reporting_backends, report_dir, stop_on_failure=False):
@@ -120,22 +121,22 @@ class _Runner:
         # Checker whether the test must be executed or not
         ###
         if test.disabled or suite.disabled:
-            self.session.disable_test(test)
+            events.fire("on_disabled_test", test)
             return
 
         if self.abort_suite:
-            self.session.skip_test(test, "Cannot execute this test: the tests of this test suite have been aborted.")
+            events.fire("on_skipped_test", test, "Cannot execute this test: the tests of this test suite have been aborted.")
             return
 
         if self.abort_all_tests:
-            self.session.skip_test(test, "Cannot execute this test: all tests have been aborted.")
+            events.fire("on_skipped_test", test, "Cannot execute this test: all tests have been aborted.")
             return
 
         ###
         # Begin test
         ###
 
-        self.session.begin_test(test)
+        events.fire("on_test_beginning", test)
 
         ###
         # Setup test (setup and fixtures)
@@ -153,11 +154,11 @@ class _Runner:
         ])
 
         if len(list(filter(lambda p: p[0] != None, setup_teardown_funcs))) > 0:
-            self.session.begin_test_setup()
+            events.fire("on_test_setup_beginning", test)
             teardown_funcs = self.run_setup_funcs(
                 setup_teardown_funcs, lambda: self.session.current_test_data.has_failure()
             )
-            self.session.end_test_setup()
+            events.fire("on_test_setup_ending", test)
             if len(teardown_funcs) != len(setup_teardown_funcs):
                 test_setup_error = True
         else:
@@ -180,20 +181,20 @@ class _Runner:
         # Teardown
         ###
         if len(list(filter(lambda f: f != None, teardown_funcs))) > 0:
-            self.session.begin_test_teardown()
+            events.fire("on_test_teardown_beginning", test)
             self.run_teardown_funcs(teardown_funcs)
-            self.session.end_test_teardown()
+            events.fire("on_test_teardown_ending", test)
 
         if self.stop_on_failure and self.session.current_test_data.has_failure():
             self.abort_all_tests = True
 
-        self.session.end_test()
+        events.fire("on_test_ending", test)
 
     def run_suite(self, suite):
         ###
         # Begin suite
         ###
-        self.session.begin_suite(suite)
+        events.fire("on_suite_beginning", suite)
 
         ###
         # Setup suite (suites and fixtures)
@@ -209,11 +210,11 @@ class _Runner:
             ])
 
             if len(list(filter(lambda p: p[0] != None, setup_teardown_funcs))) > 0:
-                self.session.begin_suite_setup()
+                events.fire("on_suite_setup_beginning", suite)
                 teardown_funcs = self.run_setup_funcs(
                     setup_teardown_funcs, lambda: self.session.current_suite_data.suite_setup.has_failure()
                 )
-                self.session.end_suite_setup()
+                events.fire("on_suite_setup_ending", suite)
                 if len(teardown_funcs) != len(setup_teardown_funcs):
                     self.abort_suite = suite
             else:
@@ -232,11 +233,11 @@ class _Runner:
         # Teardown suite
         ###
         if len(list(filter(lambda f: f != None, teardown_funcs))) > 0:
-            self.session.begin_suite_teardown()
+            events.fire("on_suite_teardown_beginning", suite)
             self.run_teardown_funcs(teardown_funcs)
             if self.stop_on_failure and self.session.current_suite_data.suite_teardown.has_failure():
                 self.abort_all_tests = True
-            self.session.end_suite_teardown()
+            events.fire("on_suite_teardown_ending", suite)
         
         # reset the abort suite flag
         if self.abort_suite:
@@ -252,7 +253,7 @@ class _Runner:
         # End of suite
         ###
 
-        self.session.end_suite()
+        events.fire("on_suite_ending", suite)
 
     def run_session(self):
         # initialize runtime & global test variables
@@ -265,7 +266,7 @@ class _Runner:
         # init report information
         self.session.report.add_info("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:]))
 
-        self.session.begin_tests()
+        events.fire("on_tests_beginning")
 
         # setup test session
         setup_teardown_funcs = []
@@ -275,11 +276,11 @@ class _Runner:
         ])
 
         if len(list(filter(lambda p: p[0] != None, setup_teardown_funcs))) > 0:
-            self.session.begin_test_session_setup()
+            events.fire("on_test_session_setup_beginning")
             teardown_funcs = self.run_setup_funcs(
                 setup_teardown_funcs, lambda: self.session.report.test_session_setup.has_failure()
             )
-            self.session.end_test_session_setup()
+            events.fire("on_test_session_setup_ending")
             if len(teardown_funcs) != len(setup_teardown_funcs):
                 self.abort_all_tests = True
         else:
@@ -291,11 +292,11 @@ class _Runner:
 
         # teardown_test_session handling
         if len(list(filter(lambda f: f != None, teardown_funcs))) > 0:
-            self.session.begin_test_session_teardown()
+            events.fire("on_test_session_teardown_beginning")
             self.run_teardown_funcs(teardown_funcs)
-            self.session.end_test_session_teardown()
+            events.fire("on_test_session_teardown_ending")
 
-        self.session.end_tests()
+        events.fire("on_tests_ending")
 
     def run(self):
         executed_fixtures = []
@@ -331,6 +332,7 @@ class _Runner:
         
         return self.session.is_successful()
 
+
 def run_suites(suites, fixture_registry, reporting_backends, report_dir, stop_on_failure=False):
     """
     Run suites.
@@ -340,4 +342,4 @@ def run_suites(suites, fixture_registry, reporting_backends, report_dir, stop_on
     - report_dir: an existing directory where report files will be stored
     """
     runner = _Runner(suites, fixture_registry, reporting_backends, report_dir, stop_on_failure)
-    return runner.run() # TODO: return a Report instance instead
+    return runner.run()  # TODO: return a Report instance instead
