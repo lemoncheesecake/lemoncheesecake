@@ -54,7 +54,7 @@ class LinePrinter:
 
 
 def _make_suite_header_line(suite, terminal_width):
-    suite_name= suite.get_path_as_str()
+    suite_name = suite.get_path_as_str()
     max_width = min((terminal_width, 80))
     # -2 corresponds to the two space characters at the left and right of suite path + another character to avoid
     # an extra line after the suite line on Windows terminal having width <= 80
