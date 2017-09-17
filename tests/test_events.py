@@ -14,7 +14,7 @@ def reset_events():
 def test_subscribe_bad_handler_args():
     events.register_event_type("on_event", [str])
     with pytest.raises(MismatchingEventArguments):
-        events.subscribe("on_event", lambda: 0)
+        events.subscribe_to_event_type("on_event", lambda: 0)
 
 
 def test_fire_without_argument():
@@ -22,7 +22,7 @@ def test_fire_without_argument():
     def handler():
         i_got_called.append(1)
     events.register_event_type("on_event", [])
-    events.subscribe("on_event", handler)
+    events.subscribe_to_event_type("on_event", handler)
     events.fire("on_event")
     assert i_got_called
 
@@ -32,7 +32,7 @@ def test_fire_with_argument():
     def handler(val):
         i_got_called.append(val)
     events.register_event_type("on_event", [int])
-    events.subscribe("on_event", handler)
+    events.subscribe_to_event_type("on_event", handler)
     events.fire("on_event", 42)
     assert i_got_called[0] == 42
 
@@ -43,21 +43,21 @@ def test_fire_with_event_time():
     def handler(event_time):
         i_got_called.append(event_time)
     events.register_event_type("on_event", [])
-    events.subscribe("on_event", handler)
+    events.subscribe_to_event_type("on_event", handler)
     events.fire("on_event")
     assert i_got_called[0] >= now
 
 
 def test_fire_bad_arguments_number():
     events.register_event_type("on_event", [])
-    events.subscribe("on_event", lambda: 0)
+    events.subscribe_to_event_type("on_event", lambda: 0)
     with pytest.raises(MismatchingEventArguments):
         events.fire("on_event", 42)
 
 
 def test_fire_bad_argument_type():
     events.register_event_type("on_event", [str])
-    events.subscribe("on_event", lambda s: 0)
+    events.subscribe_to_event_type("on_event", lambda s: 0)
     with pytest.raises(MismatchingEventArguments):
         events.fire("on_event", 42)
 
@@ -67,8 +67,8 @@ def test_unsubscribe():
     def handler():
         i_got_called.append(1)
     events.register_event_type("on_event", [])
-    events.subscribe("on_event", handler)
-    events.unsubscribe("on_event", handler)
+    events.subscribe_to_event_type("on_event", handler)
+    events.unsubscribe_from_event_type("on_event", handler)
     events.fire("on_event")
     assert len(i_got_called) == 0
 
@@ -78,7 +78,7 @@ def test_reset():
     def handler():
         i_got_called.append(1)
     events.register_event_type("on_event", [])
-    events.subscribe("on_event", handler)
+    events.subscribe_to_event_type("on_event", handler)
     events.reset()
     events.fire("on_event")
     assert len(i_got_called) == 0
