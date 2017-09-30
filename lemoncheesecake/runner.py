@@ -14,6 +14,7 @@ from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, Fix
     UserError, serialize_current_exception
 from lemoncheesecake import events
 
+
 class _Runner:
     def __init__(self, suites, fixture_registry, reporting_backends, report_dir, stop_on_failure=False):
         self.suites = suites
@@ -158,9 +159,9 @@ class _Runner:
             teardown_funcs = self.run_setup_funcs(
                 setup_teardown_funcs, lambda: self.session.current_test_data.has_failure()
             )
-            events.fire("on_test_setup_ending", test)
             if len(teardown_funcs) != len(setup_teardown_funcs):
                 test_setup_error = True
+            events.fire("on_test_setup_ending", test, not test_setup_error)
         else:
             teardown_funcs = [p[1] for p in setup_teardown_funcs if p[1] != None]
         
@@ -183,12 +184,12 @@ class _Runner:
         if len(list(filter(lambda f: f != None, teardown_funcs))) > 0:
             events.fire("on_test_teardown_beginning", test)
             self.run_teardown_funcs(teardown_funcs)
-            events.fire("on_test_teardown_ending", test)
+            events.fire("on_test_teardown_ending", test, not self.session.current_test_data.has_failure())
 
         if self.stop_on_failure and self.session.current_test_data.has_failure():
             self.abort_all_tests = True
 
-        events.fire("on_test_ending", test)
+        events.fire("on_test_ending", test, "failed" if self.session.has_pending_failure else "passed")
 
     def run_suite(self, suite):
         ###
@@ -214,9 +215,9 @@ class _Runner:
                 teardown_funcs = self.run_setup_funcs(
                     setup_teardown_funcs, lambda: self.session.current_suite_data.suite_setup.has_failure()
                 )
-                events.fire("on_suite_setup_ending", suite)
                 if len(teardown_funcs) != len(setup_teardown_funcs):
                     self.abort_suite = suite
+                events.fire("on_suite_setup_ending", suite, self.abort_suite is None)
             else:
                 teardown_funcs = [p[1] for p in setup_teardown_funcs if p[1] != None]
             
@@ -237,7 +238,7 @@ class _Runner:
             self.run_teardown_funcs(teardown_funcs)
             if self.stop_on_failure and self.session.current_suite_data.suite_teardown.has_failure():
                 self.abort_all_tests = True
-            events.fire("on_suite_teardown_ending", suite)
+            events.fire("on_suite_teardown_ending", suite, self.abort_all_tests is False)
         
         # reset the abort suite flag
         if self.abort_suite:
@@ -280,9 +281,9 @@ class _Runner:
             teardown_funcs = self.run_setup_funcs(
                 setup_teardown_funcs, lambda: self.session.report.test_session_setup.has_failure()
             )
-            events.fire("on_test_session_setup_ending")
             if len(teardown_funcs) != len(setup_teardown_funcs):
                 self.abort_all_tests = True
+            events.fire("on_test_session_setup_ending", self.abort_all_tests is False)
         else:
             teardown_funcs = [p[1] for p in setup_teardown_funcs if p[1] != None]
 
@@ -294,7 +295,7 @@ class _Runner:
         if len(list(filter(lambda f: f != None, teardown_funcs))) > 0:
             events.fire("on_test_session_teardown_beginning")
             self.run_teardown_funcs(teardown_funcs)
-            events.fire("on_test_session_teardown_ending")
+            events.fire("on_test_session_teardown_ending", self.session.has_pending_failure)
 
         events.fire("on_tests_ending")
 

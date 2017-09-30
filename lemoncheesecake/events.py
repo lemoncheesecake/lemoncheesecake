@@ -57,7 +57,7 @@ class EventType:
         # check that fire is called with the appropriate argument types
         i = 0
         for handler_arg, event_arg in zip(args, self._event_arg_types):
-            if handler_arg.__class__ != event_arg:
+            if (handler_arg is not None) and (not isinstance(handler_arg, event_arg)):
                 raise MismatchingEventArguments("For event type '%s', expecting type '%s' for argument #%d, got '%s'" % (
                     self._event_type_name, event_arg, i+1, type(handler_arg)
                 ))
@@ -127,9 +127,15 @@ register_event_types(
     # test session setup & teardown events
     "on_tests_beginning", "on_tests_ending",
 
-    # (whole) tests beginning & ending events
-    "on_test_session_setup_beginning", "on_test_session_setup_ending",
-    "on_test_session_teardown_beginning", "on_test_session_teardown_ending"
+    # test session setup & teardown beginning events
+    "on_test_session_setup_beginning", "on_test_session_teardown_beginning"
+)
+
+register_event_types(
+    [bool],
+
+    # test session setup & teardown ending events
+    "on_test_session_setup_ending", "on_test_session_teardown_ending",
 )
 
 
@@ -141,8 +147,14 @@ register_event_types(
     [Suite],
 
     "on_suite_beginning", "on_suite_ending",
-    "on_suite_setup_beginning", "on_suite_setup_ending",
-    "on_suite_teardown_beginning", "on_suite_teardown_ending"
+    "on_suite_setup_beginning",
+    "on_suite_teardown_beginning"
+)
+
+register_event_types(
+    [Suite, bool],
+
+    "on_suite_setup_ending", "on_suite_teardown_ending"
 )
 
 
@@ -153,21 +165,27 @@ register_event_types(
 register_event_types(
     [Test],
 
-    "on_test_beginning", "on_test_ending", "on_disabled_test",
-    "on_test_setup_beginning", "on_test_setup_ending",
-    "on_test_teardown_beginning", "on_test_teardown_ending"
+    "on_test_beginning", "on_disabled_test",
+    "on_test_setup_beginning", "on_test_teardown_beginning",
+)
+
+register_event_types(
+    [Test, bool],
+
+    "on_test_setup_ending", "on_test_teardown_ending"
 )
 
 register_event_type("on_skipped_test", [Test, str])
+register_event_type("on_test_ending", [Test, str])
 
 
 ###
 # Transverse test execution events
 ###
 
-register_event_type("on_step", [str])
-register_event_type("on_log", [str, str])
-register_event_type("on_check", [str, bool, str])
+register_event_type("on_step", [basestring])
+register_event_type("on_log", [str, basestring])
+register_event_type("on_check", [basestring, bool, basestring])
 
 
 ###

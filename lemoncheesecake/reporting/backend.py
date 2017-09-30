@@ -10,6 +10,7 @@ import os.path as osp
 from lemoncheesecake.exceptions import InvalidReportFile, ProgrammingError, method_not_implemented
 from lemoncheesecake.utils import object_has_method
 from lemoncheesecake.reporting.report import Report
+from lemoncheesecake import events
 
 __all__ = (
     "get_available_backends", "ReportingBackend", "ReportingSession",
@@ -39,13 +40,13 @@ class ReportingSession:
     def begin_test_session_setup(self):
         pass
 
-    def end_test_session_setup(self):
+    def end_test_session_setup(self, outcome):
         pass
 
     def begin_test_session_teardown(self):
         pass
 
-    def end_test_session_teardown(self):
+    def end_test_session_teardown(self, outcome):
         pass
 
     def begin_suite(self, suite):
@@ -54,13 +55,13 @@ class ReportingSession:
     def begin_suite_setup(self, suite):
         pass
 
-    def end_suite_setup(self, suite):
+    def end_suite_setup(self, suite, outcome):
         pass
 
     def begin_suite_teardown(self, suite):
         pass
 
-    def end_suite_teardown(self, suite):
+    def end_suite_teardown(self, suite, outcome):
         pass
 
     def end_suite(self, suite):
@@ -69,10 +70,13 @@ class ReportingSession:
     def begin_test(self, test):
         pass
 
-    def end_test(self, test):
+    def end_test(self, test, status):
         pass
 
-    def bypass_test(self, test):
+    def skip_test(self, test, reason):
+        pass
+
+    def disable_test(self, test):
         pass
 
     def set_step(self, description):
@@ -99,6 +103,35 @@ class ReportingBackend:
             capabilities |= CAPABILITY_LOAD_REPORT
         return capabilities
 
+    def register_reporting_session(self, report_dir, report):
+        session = self.create_reporting_session(report_dir, report)
+        events.subscribe_to_event_types({
+            "on_tests_beginning": session.begin_tests,
+            "on_tests_ending": session.end_tests,
+
+            "on_test_session_setup_beginning": session.begin_test_session_setup,
+            "on_test_session_setup_ending": session.end_test_session_setup,
+            "on_test_session_teardown_beginning": session.begin_test_session_teardown,
+            "on_test_session_teardown_ending": session.end_test_session_teardown,
+
+            "on_suite_beginning": session.begin_suite,
+            "on_suite_ending": session.end_suite,
+            "on_suite_setup_beginning": session.begin_suite_setup,
+            "on_suite_setup_ending": session.end_suite_setup,
+            "on_suite_teardown_beginning": session.begin_suite_teardown,
+            "on_suite_teardown_ending": session.end_suite_teardown,
+
+            "on_test_beginning": session.begin_test,
+            "on_test_ending": session.end_test,
+            "on_skipped_test": session.skip_test,
+            "on_disabled_test": session.disable_test,
+
+            "on_step": session.set_step,
+            "on_log": session.log,
+            "on_check": session.check
+        })
+
+
 #     def create_reporting_session(self, dir, report):
 #         method_not_implemented("create_reporting_session", self)
 #
@@ -124,27 +157,23 @@ class FileReportSession(ReportingSession):
             self.save()
             return
 
-    def end_test_session_setup(self):
+    def end_test_session_setup(self, outcome):
         self._handle_code_end(
             self.report.test_session_setup.has_failure() if self.report.test_session_setup else False
         )
 
-    def end_test_session_teardown(self):
+    def end_test_session_teardown(self, outcome):
         self._handle_code_end(
             self.report.test_session_teardown.has_failure() if self.report.test_session_teardown else False
         )
 
-    def end_suite_setup(self, suite):
-        self._handle_code_end(
-            suite.suite_setup.has_failure() if suite.suite_setup else False
-        )
+    def end_suite_setup(self, suite, outcome):
+        self._handle_code_end(outcome is False)
 
-    def end_suite_teardown(self, suite):
-        self._handle_code_end(
-            suite.suite_teardown.has_failure() if suite.suite_teardown else False
-        )
+    def end_suite_teardown(self, suite, outcome):
+        self._handle_code_end(outcome is False)
 
-    def end_test(self, test):
+    def end_test(self, test, status):
         self._handle_code_end(test)
 
     def end_suite(self, suite):

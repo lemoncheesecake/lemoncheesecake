@@ -83,8 +83,7 @@ class _Runtime:
 
     def initialize_reporting_sessions(self):
         for backend in self.reporting_backends:
-            session = backend.create_reporting_session(self.report_dir, self.report)
-            self.reporting_sessions.append(session)
+            backend.register_reporting_session(self.report_dir, self.report)
 
     def for_each_reporting_sessions(self, callback):
         for session in self.reporting_sessions:
@@ -112,42 +111,34 @@ class _Runtime:
 
     def begin_tests(self, start_time):
         self.report.start_time = start_time
-        self.for_each_reporting_sessions(lambda b: b.begin_tests())
 
     def end_tests(self, end_time):
         self.report.end_time = end_time
         self.report.report_generation_time = self.report.end_time
-        self.for_each_reporting_sessions(lambda b: b.end_tests())
 
     def begin_test_session_setup(self, time):
         self.report.test_session_setup = self._start_hook(time)
         self.current_step_data_list = self.report.test_session_setup.steps
         self.default_step_description = "Setup test session"
 
-        self.for_each_reporting_sessions(lambda b: b.begin_test_session_setup())
-
-    def end_test_session_setup(self, time):
+    def end_test_session_setup(self, outcome, time):
         if self.report.test_session_setup.is_empty():
             self.report.test_session_setup = None
         else:
             self._end_hook(self.report.test_session_setup, time)
             self.end_current_step(time)
-        self.for_each_reporting_sessions(lambda b: b.end_test_session_setup())
 
     def begin_test_session_teardown(self, time):
         self.report.test_session_teardown = self._start_hook(time)
         self.current_step_data_list = self.report.test_session_teardown.steps
         self.default_step_description = "Teardown test session"
 
-        self.for_each_reporting_sessions(lambda b: b.begin_test_session_teardown())
-
-    def end_test_session_teardown(self, time):
+    def end_test_session_teardown(self, outcome, time):
         if self.report.test_session_teardown.is_empty():
             self.report.test_session_teardown = None
         else:
             self._end_hook(self.report.test_session_teardown, time)
             self.end_current_step(time)
-        self.for_each_reporting_sessions(lambda b: b.end_test_session_teardown())
 
     def begin_suite(self, suite):
         self.current_suite = suite
@@ -161,40 +152,31 @@ class _Runtime:
             self.report.add_suite(suite_data)
         self.current_suite_data = suite_data
 
-        self.for_each_reporting_sessions(lambda b: b.begin_suite(suite))
-
     def begin_suite_setup(self, suite, time):
         self.current_suite_data.suite_setup = self._start_hook(time)
         self.current_step_data_list = self.current_suite_data.suite_setup.steps
         self.default_step_description = "Setup suite"
 
-        self.for_each_reporting_sessions(lambda b: b.begin_suite_setup(self.current_suite_data))
-
-    def end_suite_setup(self, suite, time):
+    def end_suite_setup(self, suite, outcome, time):
         if self.current_suite_data.suite_setup.is_empty():
             self.current_suite_data.suite_setup = None
         else:
             self._end_hook(self.current_suite_data.suite_setup, time)
             self.end_current_step(time)
-        self.for_each_reporting_sessions(lambda b: b.end_suite_setup(self.current_suite_data))
 
     def begin_suite_teardown(self, suite, time):
         self.current_suite_data.suite_teardown = self._start_hook(time)
         self.current_step_data_list = self.current_suite_data.suite_teardown.steps
         self.default_step_description = "Teardown suite"
 
-        self.for_each_reporting_sessions(lambda b: b.begin_suite_teardown(self.current_suite_data))
-
-    def end_suite_teardown(self, suite, time):
+    def end_suite_teardown(self, suite, outcome, time):
         if self.current_suite_data.suite_teardown.is_empty():
             self.current_suite_data.suite_teardown = None
         else:
             self.end_current_step(time)
             self._end_hook(self.current_suite_data.suite_teardown, time)
-        self.for_each_reporting_sessions(lambda b: b.end_suite_teardown(self.current_suite_data))
 
     def end_suite(self, suite):
-        self.for_each_reporting_sessions(lambda b: b.end_suite(self.current_suite_data))
         self.current_suite_data = self.current_suite_data.parent_suite
         self.current_suite = self.current_suite.parent_suite
 
@@ -207,28 +189,25 @@ class _Runtime:
         self.current_test_data.links.extend(test.links)
         self.current_test_data.start_time = start_time
         self.current_suite_data.add_test(self.current_test_data)
-        self.for_each_reporting_sessions(lambda b: b.begin_test(self.current_test_data))
         self.current_step_data_list = self.current_test_data.steps
         self.default_step_description = test.description
 
     def begin_test_setup(self, test):
         self.set_step("Setup test")
 
-    def end_test_setup(self, test):
+    def end_test_setup(self, test, outcome):
         self.set_step(self.current_test.description)
 
     def begin_test_teardown(self, test):
         self.set_step("Teardown test")
 
-    def end_test_teardown(self, test):
+    def end_test_teardown(self, test, outcome):
         pass
 
-    def end_test(self, test, end_time):
-        self.current_test_data.status = "failed" if self.has_pending_failure else "passed"
+    def end_test(self, test, status, end_time):
+        self.current_test_data.status = status
         self.current_test_data.end_time = end_time
         self.end_current_step(end_time)
-
-        self.for_each_reporting_sessions(lambda b: b.end_test(self.current_test_data))
 
         self.current_test = None
         self.current_test_data = None
@@ -243,8 +222,6 @@ class _Runtime:
         test_data.status = status
         test_data.status_details = status_details
         self.current_suite_data.add_test(test_data)
-
-        self.for_each_reporting_sessions(lambda b: b.bypass_test(test_data))
 
     def skip_test(self, test, reason, time):
         self._is_success = False
@@ -265,7 +242,7 @@ class _Runtime:
 
         self.current_step_data_list.append(self.current_step_data)
 
-        self.for_each_reporting_sessions(lambda b: b.set_step(description))
+        events.fire("on_step", description)
 
     def set_step(self, description, force_lock=False):
         if self.step_lock and not force_lock:
@@ -277,7 +254,7 @@ class _Runtime:
         now = time.time()
         self.create_step_if_needed(now)
         self.current_step_data.entries.append(LogData(level, content, now))
-        self.for_each_reporting_sessions(lambda b: b.log(level, content))
+        events.fire("on_log", level, content)
 
     def log_debug(self, content):
         self.log(LOG_LEVEL_DEBUG, content)
@@ -301,7 +278,7 @@ class _Runtime:
             self._is_success = False
             self.has_pending_failure = True
 
-        self.for_each_reporting_sessions(lambda b: b.check(description, outcome, details))
+        events.fire("on_check", description, outcome, details)
 
         return outcome
 

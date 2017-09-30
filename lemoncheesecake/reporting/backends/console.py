@@ -138,13 +138,13 @@ class ConsoleReportingSession(ReportingSession):
         self.step_prefix = " => teardown test session: "
         self.lp.print_line(self.step_prefix + "...")
 
-    def end_suite_setup(self, suite):
+    def end_suite_setup(self, suite, outcome):
         self.lp.erase_line()
         self.custom_step_prefix = None
 
     end_suite_teardown = end_suite_setup
 
-    def end_test_session_setup(self):
+    def end_test_session_setup(self, outcome):
         self.lp.erase_line()
         self.custom_step_prefix = None
 
@@ -155,15 +155,15 @@ class ConsoleReportingSession(ReportingSession):
         self.lp.print_line(self.step_prefix + "...")
         self.previous_obj = test
 
-    def end_test(self, test):
-        line, raw_line_len = _make_test_result_line(self.get_test_label(test), self.current_test_idx, test.status)
+    def end_test(self, test, status):
+        line, raw_line_len = _make_test_result_line(self.get_test_label(test), self.current_test_idx, status)
 
         self.lp.print_line(line, force_len=raw_line_len)
         self.lp.new_line()
 
         self.current_test_idx += 1
 
-    def bypass_test(self, test):
+    def _bypass_test(self, test):
         line = " %s %2s # %s" % (
             colored("KO", "yellow", attrs=["bold"]),
             self.current_test_idx, self.get_test_label(test)
@@ -172,6 +172,12 @@ class ConsoleReportingSession(ReportingSession):
         self.lp.print_line(line, force_len=len(raw_line))
         self.lp.new_line()
         self.current_test_idx += 1
+
+    def skip_test(self, test, reason):
+        self._bypass_test(test)
+
+    def disable_test(self, test):
+        self._bypass_test(test)
 
     def set_step(self, description):
         self.lp.print_line("%s (%s...)" % (self.step_prefix, description))
