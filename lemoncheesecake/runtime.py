@@ -25,31 +25,7 @@ _runtime = None  # singleton
 def initialize_runtime(reporting_backends, report_dir):
     global _runtime
     _runtime = _Runtime(reporting_backends, report_dir)
-    events.subscribe_to_event_types({
-        "on_tests_beginning": _runtime.begin_tests,
-        "on_tests_ending": _runtime.end_tests,
-        
-        "on_test_session_setup_beginning": _runtime.begin_test_session_setup,
-        "on_test_session_setup_ending": _runtime.end_test_session_setup,
-        "on_test_session_teardown_beginning": _runtime.begin_test_session_teardown,
-        "on_test_session_teardown_ending": _runtime.end_test_session_teardown,
-        
-        "on_suite_beginning": _runtime.begin_suite,
-        "on_suite_ending": _runtime.end_suite,
-        "on_suite_setup_beginning": _runtime.begin_suite_setup,
-        "on_suite_setup_ending": _runtime.end_suite_setup,
-        "on_suite_teardown_beginning": _runtime.begin_suite_teardown,
-        "on_suite_teardown_ending": _runtime.end_suite_teardown,
-
-        "on_test_beginning": _runtime.begin_test,
-        "on_test_ending": _runtime.end_test,
-        "on_skipped_test": _runtime.skip_test,
-        "on_disabled_test": _runtime.disable_test,
-        "on_test_setup_beginning": _runtime.begin_test_setup,
-        "on_test_setup_ending": _runtime.end_test_setup,
-        "on_test_teardown_beginning": _runtime.begin_test_teardown,
-        "on_test_teardown_ending": _runtime.end_test_teardown
-    })
+    events.add_listener(_runtime)
 
 
 def get_runtime():
@@ -109,38 +85,38 @@ class _Runtime:
         if self.current_step_data_list and len(self.current_step_data_list[-1].entries) == 0:
             del self.current_step_data_list[-1]
 
-    def begin_tests(self, start_time):
+    def on_tests_beginning(self, start_time):
         self.report.start_time = start_time
 
-    def end_tests(self, end_time):
+    def on_tests_ending(self, end_time):
         self.report.end_time = end_time
         self.report.report_generation_time = self.report.end_time
 
-    def begin_test_session_setup(self, time):
+    def on_test_session_setup_beginning(self, time):
         self.report.test_session_setup = self._start_hook(time)
         self.current_step_data_list = self.report.test_session_setup.steps
         self.default_step_description = "Setup test session"
 
-    def end_test_session_setup(self, outcome, time):
+    def on_test_session_setup_ending(self, outcome, time):
         if self.report.test_session_setup.is_empty():
             self.report.test_session_setup = None
         else:
             self._end_hook(self.report.test_session_setup, time)
             self.end_current_step(time)
 
-    def begin_test_session_teardown(self, time):
+    def on_test_session_teardown_beginning(self, time):
         self.report.test_session_teardown = self._start_hook(time)
         self.current_step_data_list = self.report.test_session_teardown.steps
         self.default_step_description = "Teardown test session"
 
-    def end_test_session_teardown(self, outcome, time):
+    def on_test_session_teardown_ending(self, outcome, time):
         if self.report.test_session_teardown.is_empty():
             self.report.test_session_teardown = None
         else:
             self._end_hook(self.report.test_session_teardown, time)
             self.end_current_step(time)
 
-    def begin_suite(self, suite):
+    def on_suite_beginning(self, suite):
         self.current_suite = suite
         suite_data = SuiteData(suite.name, suite.description)
         suite_data.tags.extend(suite.tags)
@@ -152,35 +128,35 @@ class _Runtime:
             self.report.add_suite(suite_data)
         self.current_suite_data = suite_data
 
-    def begin_suite_setup(self, suite, time):
+    def on_suite_setup_beginning(self, suite, time):
         self.current_suite_data.suite_setup = self._start_hook(time)
         self.current_step_data_list = self.current_suite_data.suite_setup.steps
         self.default_step_description = "Setup suite"
 
-    def end_suite_setup(self, suite, outcome, time):
+    def on_suite_setup_ending(self, suite, outcome, time):
         if self.current_suite_data.suite_setup.is_empty():
             self.current_suite_data.suite_setup = None
         else:
             self._end_hook(self.current_suite_data.suite_setup, time)
             self.end_current_step(time)
 
-    def begin_suite_teardown(self, suite, time):
+    def on_suite_teardown_beginning(self, suite, time):
         self.current_suite_data.suite_teardown = self._start_hook(time)
         self.current_step_data_list = self.current_suite_data.suite_teardown.steps
         self.default_step_description = "Teardown suite"
 
-    def end_suite_teardown(self, suite, outcome, time):
+    def on_suite_teardown_ending(self, suite, outcome, time):
         if self.current_suite_data.suite_teardown.is_empty():
             self.current_suite_data.suite_teardown = None
         else:
             self.end_current_step(time)
             self._end_hook(self.current_suite_data.suite_teardown, time)
 
-    def end_suite(self, suite):
+    def on_suite_ending(self, suite):
         self.current_suite_data = self.current_suite_data.parent_suite
         self.current_suite = self.current_suite.parent_suite
 
-    def begin_test(self, test, start_time):
+    def on_test_beginning(self, test, start_time):
         self.has_pending_failure = False
         self.current_test = test
         self.current_test_data = TestData(test.name, test.description)
@@ -192,19 +168,19 @@ class _Runtime:
         self.current_step_data_list = self.current_test_data.steps
         self.default_step_description = test.description
 
-    def begin_test_setup(self, test):
+    def on_test_setup_beginning(self, test):
         self.set_step("Setup test")
 
-    def end_test_setup(self, test, outcome):
+    def on_test_setup_ending(self, test, outcome):
         self.set_step(self.current_test.description)
 
-    def begin_test_teardown(self, test):
+    def on_test_teardown_beginning(self, test):
         self.set_step("Teardown test")
 
-    def end_test_teardown(self, test, outcome):
+    def on_test_teardown_ending(self, test, outcome):
         pass
 
-    def end_test(self, test, status, end_time):
+    def on_test_ending(self, test, status, end_time):
         self.current_test_data.status = status
         self.current_test_data.end_time = end_time
         self.end_current_step(end_time)
@@ -223,11 +199,11 @@ class _Runtime:
         test_data.status_details = status_details
         self.current_suite_data.add_test(test_data)
 
-    def skip_test(self, test, reason, time):
+    def on_skipped_test(self, test, reason, time):
         self._is_success = False
         self._bypass_test(test, "skipped", reason, time)
 
-    def disable_test(self, test, time):
+    def on_disabled_test(self, test, time):
         self._bypass_test(test, "disabled", "", time)
 
     def create_step_if_needed(self, ts=None):

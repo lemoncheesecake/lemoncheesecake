@@ -106,6 +106,16 @@ class EventManager:
     def fire(self, event_type_name, *args):
         self._call_event_type(event_type_name, lambda et: et.fire(*args))
 
+    def add_listener(self, listener):
+        for event_type_name in self._event_types.keys():
+            try:
+                sym = getattr(listener, event_type_name)
+            except AttributeError:
+                continue
+            if not callable(sym):
+                continue
+            self.subscribe_to_event_type(event_type_name, sym)
+
 
 eventmgr = EventManager()
 register_event_type = eventmgr.register_event_type
@@ -113,6 +123,7 @@ register_event_types = eventmgr.register_event_types
 subscribe_to_event_type = eventmgr.subscribe_to_event_type
 subscribe_to_event_types = eventmgr.subscribe_to_event_types
 unsubscribe_from_event_type = eventmgr.unsubscribe_from_event_type
+add_listener = eventmgr.add_listener
 reset = eventmgr.reset
 fire = eventmgr.fire
 

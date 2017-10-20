@@ -4,13 +4,12 @@ Created on Mar 19, 2016
 @author: nicolas
 '''
 
-import sys
-import re
 import os
 import os.path as p
 from shutil import copy, copytree
 
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
+
 
 class HtmlBackend(ReportingBackend):
     name = "html"
@@ -24,7 +23,7 @@ class HtmlBackend(ReportingBackend):
                 self.report_dir = report_dir
                 self.offline_mode = offline_mode
 
-            def begin_tests(self):
+            def on_tests_beginning(self, report):
                 html_resource_dir = p.join(p.dirname(__file__), p.pardir, p.pardir, "resources", "html")
                 report_resource_dir = p.join(self.report_dir, ".html")
 

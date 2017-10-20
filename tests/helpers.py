@@ -157,10 +157,10 @@ class TestReportingSession(reporting.ReportingSession):
     def get_successful_test_nb(self):
         return self.test_success_nb
 
-    def begin_test(self, test):
+    def on_test_beginning(self, test):
         self.last_test_outcome = None
 
-    def end_test(self, test, status):
+    def on_test_ending(self, test, status):
         self.last_test = test.name
         self._test_statuses[test.name] = status
         self.last_test_status = status
@@ -170,18 +170,18 @@ class TestReportingSession(reporting.ReportingSession):
         else:
             self.test_failing_nb += 1
 
-    def disable_test(self, test):
-        self.end_test(test, "disabled")
+    def on_disabled_test(self, test):
+        self.on_test_ending(test, "disabled")
 
-    def skip_test(self, test, reason):
-        self.end_test(test, "skipped")
+    def on_skipped_test(self, test, reason):
+        self.on_test_ending(test, "skipped")
 
-    def log(self, level, content):
+    def on_log(self, level, content):
         if level == "error":
             self.error_log_nb += 1
         self.last_log = content
 
-    def check(self, description, outcome, details=None):
+    def on_check(self, description, outcome, details=None):
         self.check_nb += 1
         if outcome:
             self.check_success_nb += 1

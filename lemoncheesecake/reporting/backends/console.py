@@ -105,10 +105,10 @@ class ConsoleReportingSession(ReportingSession):
             return test.get_path_as_str()
         return test.name
 
-    def begin_tests(self):
+    def on_tests_beginning(self):
         self.previous_obj = None
 
-    def begin_suite(self, suite):
+    def on_suite_beginning(self, suite):
         self.current_suite = suite
         self.current_test_idx = 1
 
@@ -122,40 +122,40 @@ class ConsoleReportingSession(ReportingSession):
 
         self.previous_obj = suite
 
-    def begin_suite_setup(self, suite):
+    def on_suite_setup_beginning(self, suite):
         self.step_prefix = " => setup suite: "
         self.lp.print_line(self.step_prefix + "...")
 
-    def begin_suite_teardown(self, suite):
+    def on_suite_teardown_beginning(self, suite):
         self.step_prefix = " => teardown suite: "
         self.lp.print_line(self.step_prefix + "...")
 
-    def begin_test_session_setup(self):
+    def on_test_session_setup_beginning(self):
         self.step_prefix = " => setup test session: "
         self.lp.print_line(self.step_prefix + "...")
 
-    def begin_test_session_teardown(self):
+    def on_test_session_teardown_beginning(self):
         self.step_prefix = " => teardown test session: "
         self.lp.print_line(self.step_prefix + "...")
 
-    def end_suite_setup(self, suite, outcome):
+    def on_suite_setup_ending(self, suite, outcome):
         self.lp.erase_line()
         self.custom_step_prefix = None
 
-    end_suite_teardown = end_suite_setup
+    on_suite_teardown_ending = on_suite_setup_ending
 
-    def end_test_session_setup(self, outcome):
+    def on_test_session_setup_ending(self, outcome):
         self.lp.erase_line()
         self.custom_step_prefix = None
 
-    end_test_session_teardown = end_test_session_setup
+    on_test_session_teardown_ending = on_test_session_setup_ending
 
-    def begin_test(self, test):
+    def on_test_beginning(self, test):
         self.step_prefix = " -- %2s # %s" % (self.current_test_idx, self.get_test_label(test))
         self.lp.print_line(self.step_prefix + "...")
         self.previous_obj = test
 
-    def end_test(self, test, status):
+    def on_test_ending(self, test, status):
         line, raw_line_len = _make_test_result_line(self.get_test_label(test), self.current_test_idx, status)
 
         self.lp.print_line(line, force_len=raw_line_len)
@@ -173,19 +173,19 @@ class ConsoleReportingSession(ReportingSession):
         self.lp.new_line()
         self.current_test_idx += 1
 
-    def skip_test(self, test, reason):
+    def on_skipped_test(self, test, reason):
         self._bypass_test(test)
 
-    def disable_test(self, test):
+    def on_disabled_test(self, test):
         self._bypass_test(test)
 
-    def set_step(self, description):
+    def on_step(self, description):
         self.lp.print_line("%s (%s...)" % (self.step_prefix, description))
 
-    def log(self, content, level):
+    def on_log(self, content, level):
         pass
 
-    def end_tests(self):
+    def on_tests_ending(self):
         _print_summary(self.report.get_stats(), duration=self.report.end_time - self.report.start_time)
 
 
