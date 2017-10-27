@@ -41,7 +41,6 @@ class _Runtime:
         self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
         self.attachment_count = 0
         self.report = Report()
-        self.reporting_sessions = []
         self.step_lock = False
         self.default_step_description = None
         # pointers to report data parts
@@ -60,10 +59,6 @@ class _Runtime:
     def initialize_reporting_sessions(self):
         for backend in self.reporting_backends:
             backend.register_reporting_session(self.report_dir, self.report)
-
-    def for_each_reporting_sessions(self, callback):
-        for session in self.reporting_sessions:
-            callback(session)
 
     def _start_hook(self, ts):
         self.has_pending_failure = False
