@@ -22,9 +22,9 @@ __all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "log_
 _runtime = None  # singleton
 
 
-def initialize_runtime(reporting_backends, report_dir):
+def initialize_runtime(report_dir, report):
     global _runtime
-    _runtime = _Runtime(reporting_backends, report_dir)
+    _runtime = _Runtime(report_dir, report)
     events.add_listener(_runtime)
 
 
@@ -35,12 +35,11 @@ def get_runtime():
 
 
 class _Runtime:
-    def __init__(self, reporting_backends, report_dir):
-        self.reporting_backends = reporting_backends
+    def __init__(self, report_dir, report):
         self.report_dir = report_dir
+        self.report = report
         self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
         self.attachment_count = 0
-        self.report = Report()
         self.step_lock = False
         self.default_step_description = None
         # pointers to report data parts
@@ -55,10 +54,6 @@ class _Runtime:
         self.has_pending_failure = False
         # global status
         self._is_success = True
-
-    def initialize_reporting_sessions(self):
-        for backend in self.reporting_backends:
-            backend.register_reporting_session(self.report_dir, self.report)
 
     def _start_hook(self, ts):
         self.has_pending_failure = False

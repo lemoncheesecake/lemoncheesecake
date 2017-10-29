@@ -8,8 +8,9 @@ import os
 import sys
 import traceback
 
-from lemoncheesecake.runtime import initialize_runtime, get_runtime
 from lemoncheesecake.utils import IS_PYTHON3, get_distincts_in_list
+from lemoncheesecake.runtime import initialize_runtime, get_runtime
+from lemoncheesecake.reporting import Report, initialize_reporting_backends
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
     UserError, serialize_current_exception
 from lemoncheesecake import events
@@ -258,9 +259,10 @@ class _Runner:
 
     def run_session(self):
         # initialize runtime & global test variables
-        initialize_runtime(self.reporting_backends, self.report_dir)
+        report = Report()
+        initialize_runtime(self.report_dir, report)
+        initialize_reporting_backends(self.reporting_backends, self.report_dir, report)
         self.session = get_runtime()
-        self.session.initialize_reporting_sessions()
         self.abort_all_tests = False
         self.abort_suite = None
 
@@ -302,6 +304,7 @@ class _Runner:
     def run(self):
         executed_fixtures = []
 
+        # setup pre_session fixtures
         errors = []
         for fixture in self.get_fixtures_to_be_executed_for_session_prerun():
             try:
@@ -318,6 +321,7 @@ class _Runner:
         if not errors:
             self.run_session()
 
+        # teardown pre_session fixtures
         for fixture in executed_fixtures:
             try:
                 self.fixture_registry.teardown_fixture(fixture)

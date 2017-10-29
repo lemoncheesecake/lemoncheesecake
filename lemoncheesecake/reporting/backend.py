@@ -14,6 +14,7 @@ from lemoncheesecake import events
 
 __all__ = (
     "get_available_backends", "ReportingBackend", "ReportingSession",
+    "initialize_reporting_backends",
     "save_report", "load_reports_from_dir", "load_report",
     "filter_available_reporting_backends", "filter_reporting_backends_by_capabilities",
     "CAPABILITY_REPORTING_SESSION", "CAPABILITY_SAVE_REPORT", "CAPABILITY_LOAD_REPORT"
@@ -103,10 +104,6 @@ class ReportingBackend:
             capabilities |= CAPABILITY_LOAD_REPORT
         return capabilities
 
-    def register_reporting_session(self, report_dir, report):
-        session = self.create_reporting_session(report_dir, report)
-        events.add_listener(session)
-
 #     def create_reporting_session(self, dir, report):
 #         method_not_implemented("create_reporting_session", self)
 #
@@ -115,6 +112,12 @@ class ReportingBackend:
 #
 #     def load_report(self, filename):
 #         method_not_implemented("unserialize_report", self)
+
+
+def initialize_reporting_backends(backends, report_dir, report):
+    for backend in backends:
+        session = backend.create_reporting_session(report_dir, report)
+        events.add_listener(session)
 
 
 class FileReportSession(ReportingSession):
