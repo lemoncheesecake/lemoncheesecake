@@ -193,6 +193,12 @@ register_event_type("on_test_ending", [Test, str])
 ###
 # Transverse test execution events
 ###
+try:
+    basestring
+except NameError:
+    # when using Python 3, just map basestring to str
+    basestring = str
+
 
 register_event_type("on_step", [basestring])
 register_event_type("on_log", [str, basestring])
