@@ -41,7 +41,7 @@ class _Runtime:
         self.attachment_count = 0
         self.step_lock = False
 
-    def set_step(self, description, force_lock=False):
+    def set_step(self, description, force_lock):
         if self.step_lock and not force_lock:
             return
 
@@ -50,31 +50,13 @@ class _Runtime:
     def log(self, level, content):
         events.fire("on_log", level, content)
 
-    def log_debug(self, content):
-        self.log(LOG_LEVEL_DEBUG, content)
-
-    def log_info(self, content):
-        self.log(LOG_LEVEL_INFO, content)
-
-    def log_warn(self, content):
-        self.log(LOG_LEVEL_WARN, content)
-
-    def log_error(self, content):
-        self.log(LOG_LEVEL_ERROR, content)
-
-    def log_check(self, description, outcome, details=None):
+    def log_check(self, description, outcome, details):
         events.fire("on_check", description, outcome, details)
 
-    def log_url(self, url, description=None):
-        if not description:
-            description = url
-
+    def log_url(self, url, description):
         events.fire("on_log_url", url, description)
 
-    def prepare_attachment(self, filename, description=None):
-        if not description:
-            description = filename
-
+    def prepare_attachment(self, filename, description):
         attachment_filename = "%04d_%s" % (self.attachment_count + 1, filename)
         self.attachment_count += 1
         if not os.path.exists(self.attachments_dir):
@@ -84,11 +66,11 @@ class _Runtime:
 
         return os.path.join(self.attachments_dir, attachment_filename)
 
-    def save_attachment_file(self, filename, description=None):
+    def save_attachment_file(self, filename, description):
         target_filename = self.prepare_attachment(os.path.basename(filename), description)
         shutil.copy(filename, target_filename)
 
-    def save_attachment_content(self, content, filename, description=None, binary_mode=False):
+    def save_attachment_content(self, content, filename, description, binary_mode):
         target_filename = self.prepare_attachment(filename, description)
 
         fh = open(target_filename, "wb")
@@ -100,21 +82,21 @@ def log_debug(content):
     """
     Log a debug level message.
     """
-    get_runtime().log_debug(content)
+    get_runtime().log(LOG_LEVEL_DEBUG, content)
 
 
 def log_info(content):
     """
     Log a info level message.
     """
-    get_runtime().log_info(content)
+    get_runtime().log(LOG_LEVEL_INFO, content)
 
 
 def log_warning(content):
     """
     Log a warning level message.
     """
-    get_runtime().log_warn(content)
+    get_runtime().log(LOG_LEVEL_WARN, content)
 
 log_warn = log_warning
 
@@ -123,18 +105,18 @@ def log_error(content):
     """
     Log an error level message.
     """
-    get_runtime().log_error(content)
+    get_runtime().log(LOG_LEVEL_ERROR, content)
 
 
 def log_check(description, outcome, details=None):
     get_runtime().log_check(description, outcome, details)
 
 
-def set_step(description):
+def set_step(description, force_lock=False):
     """
     Set a new step.
     """
-    get_runtime().set_step(description)
+    get_runtime().set_step(description, force_lock)
 
 
 def prepare_attachment(filename, description=None):
@@ -143,7 +125,7 @@ def prepare_attachment(filename, description=None):
     The function returns the real filename on disk that will be used by the caller
     to write the attachment content.
     """
-    return get_runtime().prepare_attachment(filename, description)
+    return get_runtime().prepare_attachment(filename, description or filename)
 
 
 def save_attachment_file(filename, description=None):
@@ -151,21 +133,21 @@ def save_attachment_file(filename, description=None):
     Save an attachment using an existing file (identified by filename) and an optional
     description. The given file will be copied.
     """
-    get_runtime().save_attachment_file(filename, description)
+    get_runtime().save_attachment_file(filename, description or filename)
 
 
 def save_attachment_content(content, filename, description=None, binary_mode=False):
     """
     Save a given content as attachment using pseudo filename and optional description.
     """
-    get_runtime().save_attachment_content(content, filename, description, binary_mode)
+    get_runtime().save_attachment_content(content, filename, description or filename, binary_mode)
 
 
 def log_url(url, description=None):
     """
     Log an URL.
     """
-    get_runtime().log_url(url, description)
+    get_runtime().log_url(url, description or url)
 
 
 def add_report_info(name, value):
