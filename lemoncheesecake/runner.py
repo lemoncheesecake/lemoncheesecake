@@ -9,8 +9,9 @@ import sys
 import traceback
 
 from lemoncheesecake.utils import IS_PYTHON3, get_distincts_in_list
-from lemoncheesecake.runtime import initialize_runtime, get_runtime
-from lemoncheesecake.reporting import Report, initialize_reporting_backends
+from lemoncheesecake.runtime import *
+from lemoncheesecake.runtime import initialize_runtime
+from lemoncheesecake.reporting import Report, initialize_report_writer, initialize_reporting_backends
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
     UserError, serialize_current_exception
 from lemoncheesecake import events
@@ -101,22 +102,22 @@ class _Runner:
 
     def handle_exception(self, excp, suite=None):
         if isinstance(excp, AbortTest):
-            self.session.log_error(str(excp))
+            log_error(str(excp))
         elif isinstance(excp, AbortSuite):
-            self.session.log_error(str(excp))
+            log_error(str(excp))
             self.abort_suite = suite
         elif isinstance(excp, AbortAllTests):
-            self.session.log_error(str(excp))
+            log_error(str(excp))
             self.abort_all_tests = True
         elif isinstance(excp, KeyboardInterrupt):
-            self.session.log_error("All tests have been interrupted manually by the user")
+            log_error("All tests have been interrupted manually by the user")
             self.abort_all_tests = True
         else:
             # FIXME: use exception instead of last implicit stacktrace
             stacktrace = traceback.format_exc()
             if not IS_PYTHON3:
                 stacktrace = stacktrace.decode("utf-8", "replace")
-            self.session.log_error("Caught unexpected exception while running test: " + stacktrace)
+            log_error("Caught unexpected exception while running test: " + stacktrace)
 
     def run_test(self, test, suite):
         ###
@@ -260,9 +261,9 @@ class _Runner:
     def run_session(self):
         # initialize runtime & global test variables
         report = Report()
+        self.session = initialize_report_writer(report)
         initialize_runtime(self.report_dir, report)
         initialize_reporting_backends(self.reporting_backends, self.report_dir, report)
-        self.session = get_runtime()
         self.abort_all_tests = False
         self.abort_suite = None
 

@@ -3,7 +3,7 @@ import time
 from lemoncheesecake.utils import get_callable_args
 from lemoncheesecake.exceptions import NoSuchEventType, MismatchingEventArguments
 from lemoncheesecake.suite import Suite, Test
-from lemoncheesecake.reporting import Report
+from lemoncheesecake.reporting.report import Report
 
 
 class EventType:
@@ -45,8 +45,8 @@ class EventType:
             handler_args.append(event_time)
         handler(*handler_args)
 
-    def fire(self, *args):
-        event_time = time.time()
+    def fire(self, *args, **kwargs):
+        event_time = kwargs.get("event_time") or time.time()
 
         # check that fire is called with the proper number of arguments
         if len(args) != len(self._event_arg_types):
@@ -103,8 +103,8 @@ class EventManager:
     def unsubscribe_from_event_type(self, event_type_name, handler):
         self._call_event_type(event_type_name, lambda et: et.unsubscribe(handler))
 
-    def fire(self, event_type_name, *args):
-        self._call_event_type(event_type_name, lambda et: et.fire(*args))
+    def fire(self, event_type_name, *args, **kwargs):
+        self._call_event_type(event_type_name, lambda et: et.fire(*args, **kwargs))
 
     def add_listener(self, listener):
         for event_type_name in self._event_types.keys():
@@ -197,6 +197,8 @@ register_event_type("on_test_ending", [Test, str])
 register_event_type("on_step", [basestring])
 register_event_type("on_log", [str, basestring])
 register_event_type("on_check", [basestring, bool, basestring])
+register_event_type("on_log_attachment", [basestring, basestring])
+register_event_type("on_log_url", [basestring, basestring])
 
 
 ###
