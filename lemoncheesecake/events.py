@@ -21,8 +21,8 @@ class EventType:
         handler_args_number = len(handler_args) - (1 if self._has_extra_time_arg(handler_args) else 0)
         if handler_args_number != len(self._event_arg_types):
             raise MismatchingEventArguments(
-                "For event type '%s', expecting %d arguments, got %d (not counting possible extra event_time argument)" % (
-                    self._event_type_name, len(self._event_arg_types), handler_args_number
+                "For event type '%s', expecting %d arguments, got %d in handler %s (not counting possible extra event_time argument)" % (
+                    self._event_type_name, len(self._event_arg_types), handler_args_number, handler
             ))
 
         if self._has_extra_time_arg(handler_args):
