@@ -54,10 +54,10 @@ class ReportWriter:
         if self.current_step_data_list and len(self.current_step_data_list[-1].entries) == 0:
             del self.current_step_data_list[-1]
 
-    def on_tests_beginning(self, start_time):
+    def on_tests_beginning(self, report, start_time):
         self.report.start_time = start_time
 
-    def on_tests_ending(self, end_time):
+    def on_tests_ending(self, report, end_time):
         self.report.end_time = end_time
         self.report.report_generation_time = self.report.end_time
 

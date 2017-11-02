@@ -32,10 +32,10 @@ SAVE_AT_EACH_EVENT = 5
 
 
 class ReportingSession:
-    def on_tests_beginning(self):
+    def on_tests_beginning(self, report):
         pass
 
-    def on_tests_ending(self):
+    def on_tests_ending(self, report):
         pass
 
     def on_test_session_setup_beginning(self):
@@ -166,7 +166,7 @@ class FileReportSession(ReportingSession):
         if self.save_mode == SAVE_AT_EACH_EVENT:
             self.save()
 
-    def on_tests_ending(self):
+    def on_tests_ending(self, report):
         self.save()
 
 

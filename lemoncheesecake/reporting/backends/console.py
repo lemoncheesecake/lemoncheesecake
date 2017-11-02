@@ -105,7 +105,7 @@ class ConsoleReportingSession(ReportingSession):
             return test.get_path_as_str()
         return test.name
 
-    def on_tests_beginning(self):
+    def on_tests_beginning(self, report):
         self.previous_obj = None
 
     def on_suite_beginning(self, suite):
@@ -185,7 +185,7 @@ class ConsoleReportingSession(ReportingSession):
     def on_log(self, content, level):
         pass
 
-    def on_tests_ending(self):
+    def on_tests_ending(self, report):
         _print_summary(self.report.get_stats(), duration=self.report.end_time - self.report.start_time)
 
 

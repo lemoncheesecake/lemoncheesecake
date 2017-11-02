@@ -133,10 +133,13 @@ fire = eventmgr.fire
 ###
 
 register_event_types(
-    [],
+    [Report],
 
-    # test session setup & teardown events
     "on_tests_beginning", "on_tests_ending",
+)
+
+register_event_types(
+    [],
 
     # test session setup & teardown beginning events
     "on_test_session_setup_beginning", "on_test_session_teardown_beginning"
@@ -193,26 +196,15 @@ register_event_type("on_test_ending", [Test, str])
 ###
 # Transverse test execution events
 ###
+
 try:
     basestring
 except NameError:
     # when using Python 3, just map basestring to str
     basestring = str
 
-
 register_event_type("on_step", [basestring])
 register_event_type("on_log", [str, basestring])
 register_event_type("on_check", [basestring, bool, basestring])
 register_event_type("on_log_attachment", [basestring, basestring])
 register_event_type("on_log_url", [basestring, basestring])
-
-
-###
-# Reporting events
-###
-
-register_event_types(
-    [Report],
-
-    "on_report_creation", "on_report_ending"
-)

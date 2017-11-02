@@ -261,16 +261,14 @@ class _Runner:
     def run_session(self):
         # initialize runtime & global test variables
         report = Report()
+        report.add_info("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:]))
         self.session = initialize_report_writer(report)
         initialize_runtime(self.report_dir, report)
         initialize_reporting_backends(self.reporting_backends, self.report_dir, report)
         self.abort_all_tests = False
         self.abort_suite = None
 
-        # init report information
-        self.session.report.add_info("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:]))
-
-        events.fire("on_tests_beginning")
+        events.fire("on_tests_beginning", report)
 
         # setup test session
         setup_teardown_funcs = []
@@ -300,7 +298,7 @@ class _Runner:
             self.run_teardown_funcs(teardown_funcs)
             events.fire("on_test_session_teardown_ending", self.session.has_pending_failure)
 
-        events.fire("on_tests_ending")
+        events.fire("on_tests_ending", report)
 
     def run(self):
         executed_fixtures = []
