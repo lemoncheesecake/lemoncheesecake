@@ -72,11 +72,16 @@ class ProjectConfiguration:
         """Create a new report directory within `top_dir` (in case the user does not provide a custom report directory)"""
         raise NotImplementedError()
 
+    def get_report_title(self):
+        """Return the report title"""
+        return None
+
 
 class SimpleProjectConfiguration(ProjectConfiguration):
-    def __init__(self, suites_dir, fixtures_dir=None):
+    def __init__(self, suites_dir, fixtures_dir=None, report_title=None):
         self._suites_dir = suites_dir
         self._fixtures_dir = fixtures_dir
+        self._report_title = report_title
         self.console_backend = ConsoleBackend()
         self.json_backend = JsonBackend()
         self.xml_backend = XmlBackend()
@@ -88,6 +93,9 @@ class SimpleProjectConfiguration(ProjectConfiguration):
     
     def get_fixtures(self):
         return load_fixtures_from_directory(self._fixtures_dir) if self._fixtures_dir else []
+
+    def get_report_title(self):
+        return self._report_title
     
     def get_all_reporting_backends(self):
         return [self.console_backend, self.json_backend, self.html_backend, self.xml_backend, self.junit_backend]
@@ -138,6 +146,11 @@ class Project:
     def run_post_session_hook(self, report_dir):
         if isinstance(self._config, HasPostRunHook):
             self._config.post_run(report_dir)
+
+    def on_tests_beginning(self, report):
+        title = self._config.get_report_title()
+        if title is not None:
+            report.title = self._config.get_report_title()
 
 
 def _find_file_in_parent_directories(filename, dirname):

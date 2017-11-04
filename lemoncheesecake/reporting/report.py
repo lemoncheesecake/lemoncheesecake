@@ -18,6 +18,7 @@ __all__ = (
 )
 
 TEST_STATUSES = "passed", "failed", "skipped", "disabled"
+DEFAULT_REPORT_TITLE = "Test Report"
 
 
 # NB: it would be nicer to use:
@@ -221,7 +222,7 @@ class Report:
         self.start_time = None
         self.end_time = None
         self.report_generation_time = None
-        self.title = None
+        self.title = DEFAULT_REPORT_TITLE
 
     def add_info(self, name, value):
         self.info.append([name, value])
