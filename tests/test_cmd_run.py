@@ -1,9 +1,8 @@
 import os
 import pytest
 
-from helpers import generate_project, assert_run_output, cmdout
+from helpers import generate_project, assert_run_output, cmdout, run_main
 
-from lemoncheesecake.cli import main
 
 TEST_MODULE = """import lemoncheesecake.api as lcc
 
@@ -64,28 +63,28 @@ def successful_project(project_with_fixtures):
 
 
 def test_run(project, cmdout):
-    assert main(["run"]) == 0
+    assert run_main(["run"]) == 0
     assert_run_output(cmdout, "mysuite", successful_tests=["mytest2"], failed_tests=["mytest1"])
 
 
 def test_run_with_filter(project, cmdout):
-    assert main(["run", "mysuite.mytest1"]) == 0
+    assert run_main(["run", "mysuite.mytest1"]) == 0
     assert_run_output(cmdout, "mysuite", failed_tests=["mytest1"])
 
 
 def test_project_with_fixtures(project_with_fixtures, cmdout):
-    assert main(["run", "mysuite.mytest1"]) == 0
+    assert run_main(["run", "mysuite.mytest1"]) == 0
     assert_run_output(cmdout, "mysuite", successful_tests=["mytest1"])
 
 
 def test_stop_on_failure(project, cmdout):
-    assert main(["run", "--stop-on-failure"]) == 0
+    assert run_main(["run", "--stop-on-failure"]) == 0
     assert_run_output(cmdout, "mysuite", failed_tests=["mytest1"], skipped_tests=["mytest2"])
 
 
 def test_exit_error_on_failure_successful_suite(successful_project):
-    assert main(["run", "--exit-error-on-failure"]) == 0
+    assert run_main(["run", "--exit-error-on-failure"]) == 0
 
 
 def test_exit_error_on_failure_failing_suite(failing_project):
-    assert main(["run", "--exit-error-on-failure"]) == 1
+    assert run_main(["run", "--exit-error-on-failure"]) == 1

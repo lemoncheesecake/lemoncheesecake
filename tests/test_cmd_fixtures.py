@@ -1,9 +1,8 @@
 import os
 import pytest
 
-from helpers import generate_project, cmdout
+from helpers import generate_project, cmdout, run_main
 
-from lemoncheesecake.cli import main
 
 FIXTURES_MODULE = """import lemoncheesecake.api as lcc
 
@@ -46,6 +45,7 @@ class mysuite:
     pass
 """
 
+
 @pytest.fixture()
 def project(tmpdir):
     generate_project(tmpdir.strpath, "mysuite", TEST_MODULE, FIXTURES_MODULE)
@@ -53,6 +53,7 @@ def project(tmpdir):
     os.chdir(tmpdir.strpath)
     yield
     os.chdir(old_cwd)
+
 
 @pytest.fixture()
 def notest_project(tmpdir):
@@ -62,16 +63,18 @@ def notest_project(tmpdir):
     yield
     os.chdir(old_cwd)
 
+
 def test_fixtures(project, cmdout):
-    assert main(["fixtures"]) == 0
+    assert run_main(["fixtures"]) == 0
 
     cmdout.assert_lines_match(".+qux.+ 1 .+ 0 .+")
     cmdout.assert_lines_match(".+foo.+ 1 .+ 2 .+")
     cmdout.assert_lines_match(".+bar.+foo.+ 1 .+ 1 .+")
     cmdout.assert_lines_match(".+baz.+bar.+ 0 .+ 2 .+")
 
+
 def test_fixtures_empty_project(notest_project, cmdout):
-    assert main(["fixtures"]) == 0
+    assert run_main(["fixtures"]) == 0
 
     cmdout.assert_lines_match(".*session_prerun.*:.*none.*")
     cmdout.assert_lines_match(".*session.*:.*none.*")

@@ -16,13 +16,13 @@ from lemoncheesecake.exceptions import AbortTest
 from lemoncheesecake.utils import IS_PYTHON3
 
 import sys
-import re
 
 CHECKER_OBJECTS = {}
 BASE_CHECKER_NAMES = [ ]
 
 def check(description, outcome, details=None):
-    return get_runtime().log_check(description, outcome, details)
+    get_runtime().log_check(description, outcome, details)
+    return outcome
 
 class Check:
     assertion = False

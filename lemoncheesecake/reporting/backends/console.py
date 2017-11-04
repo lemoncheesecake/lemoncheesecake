@@ -54,7 +54,7 @@ class LinePrinter:
 
 
 def _make_suite_header_line(suite, terminal_width):
-    suite_name= suite.get_path_as_str()
+    suite_name = suite.get_path_as_str()
     max_width = min((terminal_width, 80))
     # -2 corresponds to the two space characters at the left and right of suite path + another character to avoid
     # an extra line after the suite line on Windows terminal having width <= 80
@@ -105,10 +105,10 @@ class ConsoleReportingSession(ReportingSession):
             return test.get_path_as_str()
         return test.name
 
-    def begin_tests(self):
+    def on_tests_beginning(self, report):
         self.previous_obj = None
 
-    def begin_suite(self, suite):
+    def on_suite_beginning(self, suite):
         self.current_suite = suite
         self.current_test_idx = 1
 
@@ -122,48 +122,48 @@ class ConsoleReportingSession(ReportingSession):
 
         self.previous_obj = suite
 
-    def begin_suite_setup(self, suite):
+    def on_suite_setup_beginning(self, suite):
         self.step_prefix = " => setup suite: "
         self.lp.print_line(self.step_prefix + "...")
 
-    def begin_suite_teardown(self, suite):
+    def on_suite_teardown_beginning(self, suite):
         self.step_prefix = " => teardown suite: "
         self.lp.print_line(self.step_prefix + "...")
 
-    def begin_test_session_setup(self):
+    def on_test_session_setup_beginning(self):
         self.step_prefix = " => setup test session: "
         self.lp.print_line(self.step_prefix + "...")
 
-    def begin_test_session_teardown(self):
+    def on_test_session_teardown_beginning(self):
         self.step_prefix = " => teardown test session: "
         self.lp.print_line(self.step_prefix + "...")
 
-    def end_suite_setup(self, suite):
+    def on_suite_setup_ending(self, suite, outcome):
         self.lp.erase_line()
         self.custom_step_prefix = None
 
-    end_suite_teardown = end_suite_setup
+    on_suite_teardown_ending = on_suite_setup_ending
 
-    def end_test_session_setup(self):
+    def on_test_session_setup_ending(self, outcome):
         self.lp.erase_line()
         self.custom_step_prefix = None
 
-    end_test_session_teardown = end_test_session_setup
+    on_test_session_teardown_ending = on_test_session_setup_ending
 
-    def begin_test(self, test):
+    def on_test_beginning(self, test):
         self.step_prefix = " -- %2s # %s" % (self.current_test_idx, self.get_test_label(test))
         self.lp.print_line(self.step_prefix + "...")
         self.previous_obj = test
 
-    def end_test(self, test):
-        line, raw_line_len = _make_test_result_line(self.get_test_label(test), self.current_test_idx, test.status)
+    def on_test_ending(self, test, status):
+        line, raw_line_len = _make_test_result_line(self.get_test_label(test), self.current_test_idx, status)
 
         self.lp.print_line(line, force_len=raw_line_len)
         self.lp.new_line()
 
         self.current_test_idx += 1
 
-    def bypass_test(self, test):
+    def _bypass_test(self, test):
         line = " %s %2s # %s" % (
             colored("KO", "yellow", attrs=["bold"]),
             self.current_test_idx, self.get_test_label(test)
@@ -173,13 +173,19 @@ class ConsoleReportingSession(ReportingSession):
         self.lp.new_line()
         self.current_test_idx += 1
 
-    def set_step(self, description):
+    def on_skipped_test(self, test, reason):
+        self._bypass_test(test)
+
+    def on_disabled_test(self, test):
+        self._bypass_test(test)
+
+    def on_step(self, description):
         self.lp.print_line("%s (%s...)" % (self.step_prefix, description))
 
-    def log(self, content, level):
+    def on_log(self, content, level):
         pass
 
-    def end_tests(self):
+    def on_tests_ending(self, report):
         _print_summary(self.report.get_stats(), duration=self.report.end_time - self.report.start_time)
 
 

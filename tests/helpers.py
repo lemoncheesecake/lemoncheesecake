@@ -25,6 +25,9 @@ from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 from lemoncheesecake.fixtures import FixtureRegistry, load_fixtures_from_func
 from lemoncheesecake.project import create_project
 from lemoncheesecake.filter import filter_suites
+from lemoncheesecake import events
+from lemoncheesecake.cli import main
+
 
 def build_test_module(name="mysuite"):
     return """
@@ -154,28 +157,31 @@ class TestReportingSession(reporting.ReportingSession):
     def get_successful_test_nb(self):
         return self.test_success_nb
 
-    def begin_test(self, test):
+    def on_test_beginning(self, test):
         self.last_test_outcome = None
 
-    def end_test(self, test):
+    def on_test_ending(self, test, status):
         self.last_test = test.name
-        self._test_statuses[test.name] = test.status
-        self.last_test_status = test.status
+        self._test_statuses[test.name] = status
+        self.last_test_status = status
         self.test_nb += 1
-        if test.status == "passed":
+        if status == "passed":
             self.test_success_nb += 1
         else:
             self.test_failing_nb += 1
 
-    def bypass_test(self, test):
-        self.end_test(test)
+    def on_disabled_test(self, test):
+        self.on_test_ending(test, "disabled")
 
-    def log(self, level, content):
+    def on_skipped_test(self, test, reason):
+        self.on_test_ending(test, "skipped")
+
+    def on_log(self, level, content):
         if level == "error":
             self.error_log_nb += 1
         self.last_log = content
 
-    def check(self, description, outcome, details=None):
+    def on_check(self, description, outcome, details=None):
         self.check_nb += 1
         if outcome:
             self.check_success_nb += 1
@@ -228,6 +234,8 @@ def run_suites(suites, filter=None, fixtures=None, backends=None, tmpdir=None, s
 
     if filter:
         suites = filter_suites(suites, filter)
+
+    events.reset()
 
     if tmpdir:
         try:
@@ -287,6 +295,11 @@ def dummy_test_callback():
     def wrapped(suite):
         pass
     return wrapped
+
+
+def run_main(args):
+    events.reset()
+    return main(args)
 
 
 def assert_check_data(actual, expected):

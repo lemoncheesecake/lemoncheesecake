@@ -5,5 +5,6 @@ Created on Oct 31, 2016
 '''
 
 from .report import *
+from .writer import *
 from .backend import *
 from .backends import *
