@@ -56,10 +56,12 @@ class Report extends React.Component<ReportProps, {}> {
 
         return (
             <div>
-                <h1>Information</h1>
+                <h1>{report.title}</h1>
+
+                <h2>Information</h2>
                 <KeyValueTable rows={report.info}/>
 
-                <h1>Statistics</h1>
+                <h2>Statistics</h2>
                 <KeyValueTable rows={report.stats}/>
 
                 {report.test_session_setup &&
@@ -74,6 +76,10 @@ class Report extends React.Component<ReportProps, {}> {
     }
 
     componentDidMount() {
+        // set window title
+        document.title = this.props.report.title;
+
+        // focus on selected test, if any
         let splitted_url = document.location.href.split('#');
         if (splitted_url.length == 2) {
             const row = get_result_row_by_id(splitted_url[1]);

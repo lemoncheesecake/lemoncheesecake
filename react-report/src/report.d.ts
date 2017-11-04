@@ -75,6 +75,7 @@ declare interface SuiteData extends BaseTestData {
 }
 
 declare interface ReportData {
+    title: string,
     start_time: DateTime,
     end_time: DateTime,
     generation_time: DateTime,
