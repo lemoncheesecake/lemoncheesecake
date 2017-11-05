@@ -1,3 +1,10 @@
+# 0.13.0 (2017-11-05)
+
+- **under the hood**: rework reporting using an events sub-system
+- **API**: add support for title in report
+- **API**: test and suite names can now be set through an optional `name` argument in `test` and `suite` decorators 
+- **lcc report**: display full test path
+
 # 0.12.0 (2017-09-05)
 
 - Rewrite the HTML report using React
