@@ -396,6 +396,7 @@ def assert_suite_data(actual, expected):
 
 
 def assert_report(actual, expected):
+    assert actual.title == expected.title
     assert actual.info == expected.info
     assert round(actual.start_time, 3) == round(expected.start_time, 3)
     assert round(actual.end_time, 3) == round(expected.end_time, 3)

@@ -15,6 +15,7 @@ from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture
 from lemoncheesecake.project import find_project_file, load_project_from_file, load_project
 from lemoncheesecake.reporting import filter_reporting_backends_by_capabilities, CAPABILITY_REPORTING_SESSION
 from lemoncheesecake.runner import run_suites
+from lemoncheesecake import events
 
 
 def build_fixture_registry(project, cli_args):
@@ -69,6 +70,7 @@ class RunCommand(Command):
         # Project initialization
         project = load_project()
         suites = get_suites_from_project(project, cli_args)
+        events.add_listener(project)
 
         # Build fixture registry
         fixture_registry = build_fixture_registry(project, cli_args)

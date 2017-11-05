@@ -8,14 +8,16 @@ Created on Nov 18, 2016
 
 from __future__ import print_function
 
-import sys
+import time
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.reporting.backend import SAVE_AT_EACH_EVENT, SAVE_AT_EACH_FAILED_TEST, \
     SAVE_AT_EACH_TEST, SAVE_AT_EACH_SUITE, SAVE_AT_END_OF_TESTS
+from lemoncheesecake.reporting import Report
 
 from helpers import run_suite_class, run_suite_classes, assert_report, dump_report
+
 
 def do_test_serialization(suites, backend, tmpdir, fixtures=[]):
     if type(suites) in (list, tuple):
@@ -33,6 +35,7 @@ def do_test_serialization(suites, backend, tmpdir, fixtures=[]):
 
     assert_report(unserialized_report, report)
 
+
 def test_simple_test(backend, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
@@ -41,6 +44,7 @@ def test_simple_test(backend, tmpdir):
             lcc.check_that("foo", 1, lcc.equal_to(1))
 
     do_test_serialization(MySuite, backend, tmpdir)
+
 
 def test_test_with_all_metadata(backend, tmpdir):
     @lcc.suite("MySuite")
@@ -54,6 +58,7 @@ def test_test_with_all_metadata(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir)
 
+
 def test_suite_with_all_metadata(backend, tmpdir):
     @lcc.link("http://foo.bar", "foobar")
     @lcc.prop("foo", "bar")
@@ -65,6 +70,7 @@ def test_suite_with_all_metadata(backend, tmpdir):
             lcc.check_that("foo", 1, lcc.equal_to(1))
 
     do_test_serialization(MySuite, backend, tmpdir)
+
 
 def test_unicode(backend, tmpdir):
     @lcc.link("http://foo.bar", u"éééààà")
@@ -84,6 +90,7 @@ def test_unicode(backend, tmpdir):
             lcc.log_url("http://example.com", "example")
 
     do_test_serialization(MySuite, backend, tmpdir)
+
 
 def test_multiple_suites_and_tests(backend, tmpdir):
     @lcc.suite("MySuite1")
@@ -138,6 +145,7 @@ def test_multiple_suites_and_tests(backend, tmpdir):
 
     do_test_serialization((MySuite1, MySuite2), backend, tmpdir)
 
+
 def test_check_success(backend, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
@@ -146,6 +154,7 @@ def test_check_success(backend, tmpdir):
             lcc.check_that("somevalue", "foo", lcc.equal_to("foo"))
 
     do_test_serialization(MySuite, backend, tmpdir)
+
 
 def test_check_failure(backend, tmpdir):
     @lcc.suite("MySuite")
@@ -156,6 +165,7 @@ def test_check_failure(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir)
 
+
 def test_require_success(backend, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
@@ -164,6 +174,7 @@ def test_require_success(backend, tmpdir):
             lcc.require_that("somevalue", "foo", lcc.equal_to("foo"))
 
     do_test_serialization(MySuite, backend, tmpdir)
+
 
 def test_require_failure(backend, tmpdir):
     @lcc.suite("MySuite")
@@ -174,6 +185,7 @@ def test_require_failure(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir)
 
+
 def test_assert_failure(backend, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
@@ -182,6 +194,7 @@ def test_assert_failure(backend, tmpdir):
             lcc.assert_that("somevalue", "foo", lcc.equal_to("bar"))
 
     do_test_serialization(MySuite, backend, tmpdir)
+
 
 def test_all_types_of_logs(backend, tmpdir):
     @lcc.suite("MySuite")
@@ -198,6 +211,7 @@ def test_all_types_of_logs(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir)
 
+
 def test_multiple_steps(backend, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
@@ -210,6 +224,7 @@ def test_multiple_steps(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir)
 
+
 def test_attachment(backend, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
@@ -219,6 +234,7 @@ def test_attachment(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir)
 
+
 def test_log_url(backend, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
@@ -227,6 +243,7 @@ def test_log_url(backend, tmpdir):
             lcc.log_url("http://www.example.com", "example")
 
     do_test_serialization(MySuite, backend, tmpdir)
+
 
 def test_setup_suite_success(backend, tmpdir):
     @lcc.suite("MySuite")
@@ -240,6 +257,7 @@ def test_setup_suite_success(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir)
 
+
 def test_setup_suite_failure(backend, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
@@ -251,6 +269,7 @@ def test_setup_suite_failure(backend, tmpdir):
             pass
 
     do_test_serialization(MySuite, backend, tmpdir)
+
 
 # reproduce a bug introduced in 3e4d341
 def test_setup_suite_nested(backend, tmpdir):
@@ -267,6 +286,7 @@ def test_setup_suite_nested(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir)
 
+
 def test_teardown_suite_success(backend, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
@@ -279,6 +299,7 @@ def test_teardown_suite_success(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir)
 
+
 def test_teardown_suite_failure(backend, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
@@ -290,6 +311,7 @@ def test_teardown_suite_failure(backend, tmpdir):
             lcc.log_error("something bad happened")
 
     do_test_serialization(MySuite, backend, tmpdir)
+
 
 def test_setup_and_teardown_suite(backend, tmpdir):
     @lcc.suite("MySuite")
@@ -306,6 +328,7 @@ def test_setup_and_teardown_suite(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir)
 
+
 def test_setup_test_session_success(backend, tmpdir):
     @lcc.fixture(scope="session")
     def fixt():
@@ -319,6 +342,7 @@ def test_setup_test_session_success(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir, fixtures=[fixt])
 
+
 def test_setup_test_session_failure(backend, tmpdir):
     @lcc.fixture(scope="session")
     def fixt():
@@ -331,6 +355,7 @@ def test_setup_test_session_failure(backend, tmpdir):
             pass
 
     do_test_serialization(MySuite, backend, tmpdir, fixtures=[fixt])
+
 
 def test_teardown_test_session_success(backend, tmpdir):
     @lcc.fixture(scope="session")
@@ -346,6 +371,7 @@ def test_teardown_test_session_success(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir, fixtures=[fixt])
 
+
 def test_teardown_test_session_failure(backend, tmpdir):
     @lcc.fixture(scope="session")
     def fixt():
@@ -359,6 +385,7 @@ def test_teardown_test_session_failure(backend, tmpdir):
             pass
 
     do_test_serialization(MySuite, backend, tmpdir, fixtures=[fixt])
+
 
 def test_setup_and_teardown_test_session(backend, tmpdir):
     @lcc.fixture(scope="session")
@@ -375,6 +402,23 @@ def test_setup_and_teardown_test_session(backend, tmpdir):
 
     do_test_serialization(MySuite, backend, tmpdir, fixtures=[fixt])
 
+
+def test_report_title(backend, tmpdir):
+    report = Report()
+    report.title = "Report Title"
+    report.start_time = time.time()
+    report.end_time = report.start_time
+    report.report_generation_time = report.start_time
+
+    report_filename = tmpdir.join("report").strpath
+    backend.save_report(report_filename, report)
+    unserialized_report = backend.load_report(report_filename)
+
+#    dump_report(unserialized_report)
+
+    assert_report(unserialized_report, report)
+
+
 # TODO: see below, the behavior of each save mode is not tested in fact, but
 # at least we want to make sure that each of this mode is not failing
 
@@ -382,17 +426,21 @@ def test_save_at_end_of_tests(backend, tmpdir):
     backend.save_mode = SAVE_AT_END_OF_TESTS
     test_simple_test(backend, tmpdir)
 
+
 def test_save_at_end_of_each_event(backend, tmpdir):
     backend.save_mode = SAVE_AT_EACH_EVENT
     test_simple_test(backend, tmpdir)
+
 
 def test_save_at_each_failed_test(backend, tmpdir):
     backend.save_mode = SAVE_AT_EACH_FAILED_TEST
     test_simple_test(backend, tmpdir)
 
+
 def test_save_at_each_test(backend, tmpdir):
     backend.save_mode = SAVE_AT_EACH_TEST
     test_simple_test(backend, tmpdir)
+
 
 def test_save_at_each_suite(backend, tmpdir):
     backend.save_mode = SAVE_AT_EACH_SUITE
