@@ -220,7 +220,7 @@ def display_report_suites(suites):
         header_line = _make_suite_header_line(suite, terminal_width)
         print(header_line)
         for test_idx, test in enumerate(suite.get_tests()):
-            test_result_line, _ = _make_test_result_line(test.name, num=test_idx+1, status=test.status)
+            test_result_line, _ = _make_test_result_line(test.get_path_as_str(), num=test_idx+1, status=test.status)
             print(test_result_line)
         suite_idx += 1
 
