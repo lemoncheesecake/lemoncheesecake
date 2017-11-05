@@ -14,6 +14,7 @@ from lemoncheesecake.exceptions import ProgrammingError, InvalidMetadataError
 
 from helpers import dummy_test_callback
 
+
 def test_decorator_test():
     @lcc.suite("My Suite")
     class MySuite:
@@ -24,6 +25,16 @@ def test_decorator_test():
     test = suite.get_tests()[0]
     assert test.name == "mytest"
     assert test.description == "test_desc"
+
+
+def test_decorator_test_with_name():
+    @lcc.test("My Test", name="mytest")
+    def sometest():
+        pass
+
+    metadata = lcc.get_metadata(sometest)
+    assert metadata.name == "mytest"
+
 
 def test_decorator_tags():
     @lcc.suite("My Suite")
@@ -38,6 +49,7 @@ def test_decorator_tags():
     test = suite.get_tests()[0]
     assert test.tags == ["tag1", "tag2"]
 
+
 def test_decorator_prop():
     @lcc.suite("My Suite")
     @lcc.prop("key1", "val1")
@@ -50,6 +62,7 @@ def test_decorator_prop():
     assert suite.properties["key1"] == "val1"
     test = suite.get_tests()[0]
     assert test.properties["key2"] == "val2"
+
 
 def test_decorator_link():
     @lcc.suite("My Suite")
@@ -64,17 +77,29 @@ def test_decorator_link():
     test = suite.get_tests()[0]
     assert test.links[0] == ("http://www.example.com", None)
 
+
 def test_test_decorator_on_invalid_object():
     with pytest.raises(ProgrammingError):
         @lcc.test("test")
         class NotAFunction():
             pass
 
+
+def test_decorator_suite_with_name():
+    @lcc.test("My Suite", name="mysuite")
+    def somesuite():
+        pass
+
+    metadata = lcc.get_metadata(somesuite)
+    assert metadata.name == "mysuite"
+
+
 def test_suite_decorator_on_invalid_object():
     with pytest.raises(ProgrammingError):
         @lcc.suite("suite")
         def NotAClass():
             pass
+
 
 def test_decorator_with_suite_inheritance():
     @lcc.suite("My Suite 1")
@@ -108,6 +133,7 @@ def test_decorator_with_suite_inheritance():
     assert suite2.properties["key1"] == "value1"
     assert suite2.properties["key2"] == "value2"
 
+
 def test_decorator_unicode():
     @lcc.suite(u"My Suite éééààà")
     @lcc.link("http://foo.bar", u"éééààà")
@@ -133,6 +159,7 @@ def test_decorator_unicode():
     assert test.properties[u"ééé"] == u"ààà"
     assert test.tags == [u"ééé", u"ààà"]
 
+
 def test_duplicated_suite_description():
     @lcc.suite("My Suite")
     class MySuite:
@@ -145,6 +172,7 @@ def test_duplicated_suite_description():
 
     with pytest.raises(InvalidMetadataError) as excinfo:
         load_suite_from_class(MySuite)
+
 
 def test_duplicated_test_description():
     @lcc.suite("My Suite")
@@ -160,6 +188,7 @@ def test_duplicated_test_description():
     with pytest.raises(InvalidMetadataError):
         load_suite_from_class(MySuite)
 
+
 def test_duplicated_test_name():
     @lcc.suite("My Suite")
     class MySuite:
@@ -169,6 +198,7 @@ def test_duplicated_test_name():
 
     with pytest.raises(ProgrammingError):
         load_suite_from_class(MySuite)
+
 
 def test_suite_rank():
     @lcc.suite("My Suite")
@@ -200,6 +230,7 @@ def test_suite_rank():
     assert suite.get_suites()[2].name == "B"
     assert suite.get_suites()[3].name == "A"
 
+
 def test_suite_rank_forced():
     @lcc.suite("My Suite")
     class MySuite1:
@@ -230,6 +261,7 @@ def test_suite_rank_forced():
     assert suite.get_suites()[2].name == "B"
     assert suite.get_suites()[3].name == "D"
 
+
 def test_register_test():
     @lcc.suite("My Suite")
     class MySuite:
@@ -238,6 +270,7 @@ def test_register_test():
 
     suite = load_suite_from_class(MySuite)
     assert len(suite.get_tests()) == 1
+
 
 def test_register_test_multiple():
     @lcc.suite("My Suite")
@@ -248,6 +281,7 @@ def test_register_test_multiple():
 
     suite = load_suite_from_class(MySuite)
     assert len(suite.get_tests()) == 3
+
 
 def test_register_test_with_before_and_after():
     @lcc.suite("My Suite")
@@ -269,6 +303,7 @@ def test_register_test_with_before_and_after():
     suite = load_suite_from_class(MySuite)
 
     assert [t.name for t in suite.get_tests()] == ["foo1", "foo2", "bar1", "bar2", "baz1", "baz2"]
+
 
 def test_register_tests_with_before_and_after():
     @lcc.suite("My Suite")
@@ -295,6 +330,7 @@ def test_register_tests_with_before_and_after():
 
     assert [t.name for t in suite.get_tests()] == ["foo1", "foo2", "bar1", "bar2", "baz1", "baz2"]
 
+
 def test_get_fixtures():
     @lcc.suite("My Suite")
     class MySuite:
@@ -319,6 +355,7 @@ def test_get_fixtures():
     suite = load_suite_from_class(MySuite)
 
     assert suite.get_fixtures() == ["foo", "bar", "baz"]
+
 
 def test_get_fixtures_non_recursive():
     @lcc.suite("My Suite")
@@ -345,6 +382,7 @@ def test_get_fixtures_non_recursive():
 
     assert suite.get_fixtures(recursive=False) == ["foo"]
 
+
 def test_get_inherited_tags():
     @lcc.tags("tag1")
     @lcc.suite("MySuite")
@@ -359,6 +397,7 @@ def test_get_inherited_tags():
     suite = load_suite_from_class(MySuite)
 
     assert suite.get_suites()[0].get_tests()[0].get_inherited_tags() == ["tag1", "tag2"]
+
 
 def test_get_inherited_properties():
     @lcc.prop("prop1", "foo")
@@ -377,6 +416,7 @@ def test_get_inherited_properties():
 
     assert suite.get_suites()[0].get_tests()[0].get_inherited_properties() == {"prop1": "baz", "prop2": "bar", "prop3": "foobar"}
 
+
 def test_get_inherited_links():
     @lcc.link("http://www.example.com/1234")
     @lcc.suite("MySuite")
@@ -392,6 +432,7 @@ def test_get_inherited_links():
 
     assert suite.get_suites()[0].get_tests()[0].get_inherited_links() == [("http://www.example.com/1234", None), ("http://www.example.com/1235", "#1235")]
 
+
 def test_get_inherited_paths():
     @lcc.suite("MySuite")
     class MySuite:
@@ -404,6 +445,7 @@ def test_get_inherited_paths():
     suite = load_suite_from_class(MySuite)
 
     assert suite.get_suites()[0].get_tests()[0].get_inherited_paths() == ["MySuite", "MySuite.MySubSuite", "MySuite.MySubSuite.test"]
+
 
 def test_get_inherited_descriptions():
     @lcc.suite("My suite")

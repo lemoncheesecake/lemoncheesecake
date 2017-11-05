@@ -98,7 +98,7 @@ def get_metadata(obj):
         _objects_with_metadata.append(obj)
         return obj._lccmetadata
 
-def suite(description, rank=None):
+def suite(description, name=None, rank=None):
     """Decorator, mark a class as a suite class"""
     def wrapper(klass):
         if not inspect.isclass(klass):
@@ -106,12 +106,12 @@ def suite(description, rank=None):
         md = get_metadata(klass)
         md.is_suite = True
         md.rank = rank if rank != None else get_metadata_next_rank()
-        md.name = klass.__name__
+        md.name = name or klass.__name__
         md.description = description
         return klass
     return wrapper
 
-def test(description):
+def test(description, name=None):
     """Decorator, make a method as a test method"""
     def wrapper(func):
         if not inspect.isfunction(func):
@@ -119,7 +119,7 @@ def test(description):
         md = get_metadata(func)
         md.is_test = True
         md.rank = get_metadata_next_rank()
-        md.name = func.__name__
+        md.name = name or func.__name__
         md.description = description
         return func
     return wrapper
