@@ -1,14 +1,14 @@
-import os.path
-
 import pytest
 
+from lemoncheesecake.utils import IS_PYTHON2
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite.loader import load_suites_from_directory, load_suite_from_file, \
     load_suite_from_class, load_suites_from_files, load_suites_from_classes, load_test_from_function, \
-    load_test_from_method, is_test_function
+    load_test_from_method
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.exceptions import *
 from helpers import build_test_module
+
 
 def test_load_suite_from_file(tmpdir):
     file = tmpdir.join("mysuite.py")
@@ -16,10 +16,12 @@ def test_load_suite_from_file(tmpdir):
     klass = load_suite_from_file(file.strpath)
     assert klass.name == "mysuite"
 
+
 def test_load_suite_from_file_invalid_module(tmpdir):
     file = tmpdir.join("doesnotexist.py")
     with pytest.raises(ModuleImportError):
         load_suite_from_file(file.strpath)
+
 
 def test_load_suite_from_file_invalid_class(tmpdir):
     file = tmpdir.join("anothersuite.py")
@@ -27,9 +29,11 @@ def test_load_suite_from_file_invalid_class(tmpdir):
     with pytest.raises(ModuleImportError):
         load_suite_from_file(file.strpath)
 
+
 def test_load_suites_from_directory_without_modules(tmpdir):
     klasses = load_suites_from_directory(tmpdir.strpath)
     assert len(klasses) == 0
+
 
 def test_load_suites_from_directory_with_modules(tmpdir):
     names = []
@@ -40,6 +44,7 @@ def test_load_suites_from_directory_with_modules(tmpdir):
     klasses = load_suites_from_directory(tmpdir.strpath)
     for name in names:
         assert name in [k.name for k in klasses]
+
 
 def test_load_suites_from_directory_with_subdir(tmpdir):
     file = tmpdir.join("parentsuite.py")
@@ -52,6 +57,7 @@ def test_load_suites_from_directory_with_subdir(tmpdir):
     assert klasses[0].name == "parentsuite"
     assert len(klasses[0].get_suites()) == 1
 
+
 def test_load_suites_from_files(tmpdir):
     for name in "suite1", "suite2", "mysuite":
         tmpdir.join(name + ".py").write(build_test_module(name))
@@ -60,9 +66,11 @@ def test_load_suites_from_files(tmpdir):
     assert "suite1" in [k.name for k in klasses]
     assert "suite2" in [k.name for k in klasses]
 
+
 def test_load_suites_from_files_nomatch(tmpdir):
     klasses = load_suites_from_files(tmpdir.join("*.py").strpath)
     assert len(klasses) == 0
+
 
 def test_load_suites_from_files_exclude(tmpdir):
     for name in "suite1", "suite2", "mysuite":
@@ -70,6 +78,7 @@ def test_load_suites_from_files_exclude(tmpdir):
     klasses = load_suites_from_files(tmpdir.join("*.py").strpath, "*/suite*.py")
     assert len(klasses) == 1
     assert klasses[0].name == "mysuite"
+
 
 def test_load_suites_with_same_name():
     @lcc.suite("My Suite 1")
@@ -94,6 +103,7 @@ def test_load_suites_with_same_name():
     assert suites[0].get_suites()[0].name == "MySubSuite"
     assert suites[1].name == "MySuite2"
     assert suites[1].get_suites()[0].name == "MySubSuite"
+
 
 def test_load_tests_with_same_name():
     @lcc.suite("My Suite 1")
@@ -121,6 +131,7 @@ def test_load_tests_with_same_name():
     assert suites[1].get_suites()[0].name == "MySubSuite2"
     assert suites[1].get_suites()[0].get_tests()[0].name == "foo"
 
+
 def test_metadata_policy():
     @lcc.suite("My Suite 1")
     class MySuite1:
@@ -146,6 +157,67 @@ def test_metadata_policy():
     with pytest.raises(InvalidMetadataError):
         policy.check_suites_compliance(suite2)
 
+
+def test_load_suites_from_classes_with_condition_on_suite_met():
+    @lcc.suite("My Suite")
+    @lcc.conditional(lambda suite_arg: suite_arg.__class__ == MySuite)
+    class MySuite:
+        @lcc.test("My Test")
+        def mytest(self):
+            pass
+
+    suites = load_suites_from_classes([MySuite])
+
+    assert len(suites) == 1
+
+
+def test_load_suites_from_classes_with_condition_on_suite_not_met():
+    @lcc.suite("My Suite")
+    @lcc.conditional(lambda suite_arg: suite_arg.__class__ != MySuite)
+    class MySuite:
+        @lcc.test("My Test")
+        def mytest(self):
+            pass
+
+    suites = load_suites_from_classes([MySuite])
+
+    assert len(suites) == 0
+
+
+def _get_instance_method_function(method):
+    return method.im_func if IS_PYTHON2 else method.__func__
+
+
+def _get_class_method_function(method):
+    return method.im_func if IS_PYTHON2 else method
+
+
+def test_load_suites_from_classes_with_condition_on_test_met():
+    @lcc.suite("My Suite")
+    class MySuite:
+        @lcc.test("My Test")
+        @lcc.conditional(lambda test_arg: _get_instance_method_function(test_arg) == _get_class_method_function(MySuite.mytest))
+        def mytest(self):
+            pass
+
+    suites = load_suites_from_classes([MySuite])
+
+    assert len(suites[0].get_tests()) == 1
+
+
+def test_load_suites_from_classes_with_condition_on_test_not_met():
+    @lcc.suite("My Suite")
+    class MySuite:
+        @lcc.test("My Test")
+        @lcc.conditional(lambda test_arg: _get_instance_method_function(test_arg) != _get_class_method_function(MySuite.mytest))
+        def mytest(self):
+            pass
+
+    suites = load_suites_from_classes([MySuite])
+
+    assert len(suites[0].get_tests()) == 0
+
+
 def test_load_test_from_function():
     @lcc.test("mytest")
     def func():
@@ -155,6 +227,7 @@ def test_load_test_from_function():
     assert test.name == "func"
     assert test.description == "mytest"
     assert test.callback() == 1
+
 
 def test_load_test_from_method():
     @lcc.suite("mysuite")
@@ -168,6 +241,7 @@ def test_load_test_from_method():
     assert test.name == "meth"
     assert test.description == "mytest"
     assert test.callback() == 1
+
 
 def test_load_suite_from_class_with_hooks(tmpdir):
     @lcc.suite("mysuite")
@@ -190,6 +264,7 @@ def test_load_suite_from_class_with_hooks(tmpdir):
     assert suite.get_hook("setup_test")("dummy") == 3
     assert suite.get_hook("teardown_test")("dummy") == 4
 
+
 def test_load_suite_from_module(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
@@ -200,6 +275,7 @@ def test_load_suite_from_module(tmpdir):
     suite = load_suite_from_file(file.strpath)
     assert suite.name == "mysuite"
     assert suite.description == "My Suite"
+
 
 def test_load_suite_from_module_with_all_metadata(tmpdir):
     file = tmpdir.join("mysuite.py")
@@ -218,6 +294,7 @@ def test_load_suite_from_module_with_all_metadata(tmpdir):
     assert suite.properties == {"bar": "baz"}
     assert suite.links == [("http://u.r.l/1234", None), ("http://u.r.l/1235", "#1235")]
 
+
 def test_load_suite_from_module_with_test_function(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
@@ -235,6 +312,81 @@ def mytest():
     test = suite.get_tests()[0]
     assert test.name == "mytest"
     assert test.description == "My Test"
+
+
+def test_load_suite_from_module_with_condition_on_suite_met(tmpdir):
+    file = tmpdir.join("mysuite.py")
+    file.write(
+        """import lemoncheesecake.api as lcc
+import sys
+
+SUITE = {
+    "description": "My Suite",
+    "conditional": lambda mod: mod == sys.modules[__name__]
+}
+
+@lcc.test('My Test')
+def mytest():
+    pass
+""")
+    suites = load_suites_from_files([file.strpath])
+    assert len(suites) == 1
+
+
+def test_load_suite_from_module_with_condition_on_suite_not_met(tmpdir):
+    file = tmpdir.join("mysuite.py")
+    file.write(
+        """import lemoncheesecake.api as lcc
+import sys
+
+SUITE = {
+    "description": "My Suite",
+    "conditional": lambda mod: mod != sys.modules[__name__]
+}
+
+@lcc.test('My Test')
+def mytest():
+    pass
+""")
+    suites = load_suites_from_files([file.strpath])
+    assert len(suites) == 0
+
+
+def test_load_suite_from_module_with_condition_on_test_met(tmpdir):
+    file = tmpdir.join("mysuite.py")
+    file.write(
+        """import lemoncheesecake.api as lcc
+
+SUITE = {
+    "description": "My Suite",
+}
+
+@lcc.test('My Test')
+@lcc.conditional(lambda test_arg: test_arg == mytest)
+def mytest():
+    pass
+""")
+    suites = load_suites_from_files([file.strpath])
+    assert len(suites[0].get_tests()) == 1
+
+
+def test_load_suite_from_module_with_condition_on_test_not_met(tmpdir):
+    file = tmpdir.join("mysuite.py")
+    file.write(
+        """import lemoncheesecake.api as lcc
+
+SUITE = {
+    "description": "My Suite",
+}
+
+@lcc.test('My Test')
+@lcc.conditional(lambda test_arg: test_arg != mytest)
+def mytest():
+    pass
+""")
+    suites = load_suites_from_files([file.strpath])
+    assert len(suites[0].get_tests()) == 0
+
 
 def test_load_suite_from_module_with_test_function_and_fixtures(tmpdir):
     file = tmpdir.join("mysuite.py")
@@ -255,6 +407,7 @@ def mytest(fixt1, fixt2):
     assert test.description == "My Test"
     assert test.get_params() == ["fixt1", "fixt2"]
 
+
 def test_load_suite_from_module_with_sub_suite(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
@@ -274,6 +427,7 @@ class subsuite:
     sub_suite = suite.get_suites()[0]
     assert sub_suite.name == "subsuite"
     assert sub_suite.description == "Sub Suite"
+
 
 def test_load_suite_from_module_with_hooks(tmpdir):
     file = tmpdir.join("mysuite.py")
@@ -306,6 +460,7 @@ def mytest():
     assert suite.get_hook("setup_test")("dummy") == 3
     assert suite.get_hook("teardown_test")("dummy") == 4
 
+
 def test_load_suites_from_directory_with_suite_and_sub_suite(tmpdir):
     tmpdir.join("mysuite.py").write(
         """import lemoncheesecake.api as lcc
@@ -337,6 +492,7 @@ def mytest2():
     assert sub_suite.name == "subsuite"
     assert sub_suite.description == "Sub Suite"
     assert sub_suite.parent_suite == suite
+
 
 def test_load_suite_from_module_missing_suite_definition(tmpdir):
     file = tmpdir.join("mysuite.py")

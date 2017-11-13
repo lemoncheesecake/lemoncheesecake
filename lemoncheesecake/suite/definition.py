@@ -11,7 +11,8 @@ from lemoncheesecake.suite.loader import get_test_methods_from_class
 from lemoncheesecake.exceptions import ProgrammingError
 
 __all__ = "add_test_in_suite", "add_tests_in_suite", "get_metadata", \
-    "suite", "test", "tags", "prop", "link", "disabled"
+    "suite", "test", "tags", "prop", "link", "disabled", "conditional"
+
 
 class Metadata:
     _next_rank = 1
@@ -26,11 +27,14 @@ class Metadata:
         self.links = []
         self.rank = 0
         self.disabled = False
+        self.condition = None
+
 
 def get_metadata_next_rank():
     rank = Metadata._next_rank
     Metadata._next_rank += 1
     return rank
+
 
 def add_test_in_suite(test, suite, before_test=None, after_test=None):
     # pre-checks
@@ -72,6 +76,7 @@ def add_test_in_suite(test, suite, before_test=None, after_test=None):
     # set test func and suite test method
     setattr(suite, test.name, test.callback.__get__(suite))
 
+
 def add_tests_in_suite(tests, suite, before_test=None, after_test=None):
     if before_test and after_test:
         raise ProgrammingError("before_test and after_test are mutually exclusive")
@@ -98,6 +103,7 @@ def get_metadata(obj):
         _objects_with_metadata.append(obj)
         return obj._lccmetadata
 
+
 def suite(description, name=None, rank=None):
     """Decorator, mark a class as a suite class"""
     def wrapper(klass):
@@ -110,6 +116,7 @@ def suite(description, name=None, rank=None):
         md.description = description
         return klass
     return wrapper
+
 
 def test(description, name=None):
     """Decorator, make a method as a test method"""
@@ -124,6 +131,7 @@ def test(description, name=None):
         return func
     return wrapper
 
+
 def tags(*tag_names):
     """Decorator, add tags to a test or a suite"""
     def wrapper(obj):
@@ -131,6 +139,7 @@ def tags(*tag_names):
         md.tags.extend(tag_names)
         return obj
     return wrapper
+
 
 def prop(key, value):
     """Decorator, add a property (key/value) to a test or a suite"""
@@ -140,6 +149,7 @@ def prop(key, value):
         return obj
     return wrapper
 
+
 def link(url, name=None):
     """Decorator, set a link (with an optional friendly name) to a test or a suite"""
     def wrapper(obj):
@@ -148,10 +158,20 @@ def link(url, name=None):
         return obj
     return wrapper
 
+
 def disabled():
     """Decorator, disable a test or a suite"""
     def wrapper(obj):
         md = get_metadata(obj)
         md.disabled = True
+        return obj
+    return wrapper
+
+
+def conditional(condition):
+    """Decorator, the test or suite will only appear if the given condition callback return a true value"""
+    def wrapper(obj):
+        md = get_metadata(obj)
+        md.condition = condition
         return obj
     return wrapper

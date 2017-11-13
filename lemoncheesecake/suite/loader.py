@@ -8,7 +8,8 @@ import os.path as osp
 import inspect
 
 from lemoncheesecake.importer import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
-from lemoncheesecake.exceptions import UserError, ProgrammingError, ModuleImportError, InvalidMetadataError, serialize_current_exception
+from lemoncheesecake.exceptions import UserError, ProgrammingError, ModuleImportError, InvalidMetadataError, \
+    VisibilityConditionNotMet, serialize_current_exception
 from lemoncheesecake.suite.core import Test, Suite, SUITE_HOOKS
 
 __all__ = "load_suite_from_file", "load_suites_from_files", "load_suites_from_directory", \
@@ -27,8 +28,15 @@ def is_test_function(obj):
     return inspect.isfunction(obj) and hasattr(obj, "_lccmetadata") and obj._lccmetadata.is_test
 
 
+def ensure_node_is_visible(obj, metadata):
+    if metadata.condition is not None and not metadata.condition(obj):
+        raise VisibilityConditionNotMet()
+
+
 def load_test(obj):
     md = obj._lccmetadata
+    ensure_node_is_visible(obj, md)
+
     test = Test(md.name, md.description, obj)
     test.tags.extend(md.tags)
     test.properties.update(md.properties)
@@ -43,6 +51,24 @@ def load_test_from_method(method):
 
 def load_test_from_function(func):
     return load_test(func)
+
+
+def load_tests(objs):
+    tests = []
+    for obj in objs:
+        try:
+            tests.append(load_test(obj))
+        except VisibilityConditionNotMet:
+            pass
+    return tests
+
+
+def load_tests_from_methods(methods):
+    return load_tests(methods)
+
+
+def load_tests_from_functions(funcs):
+    return load_tests(funcs)
 
 
 def _list_object_attributes(obj):
@@ -65,17 +91,19 @@ def get_suite_classes_from_module(mod):
     return filter(is_suite_class, _list_object_attributes(mod))
 
 
-def load_suite_from_class(klass):
-    md = klass._lccmetadata
+def load_suite_from_class(class_):
+    md = class_._lccmetadata
     try:
-        inst = klass()
+        suite_obj = class_()
     except UserError as e:
         raise e # propagate UserError
     except Exception:
         raise ProgrammingError("Got an unexpected error while instantiating suite class '%s':%s" % (
-            klass.__name__, serialize_current_exception()
+            class_.__name__, serialize_current_exception()
         ))
-    suite = Suite(inst, md.name, md.description)
+    ensure_node_is_visible(suite_obj, md)
+
+    suite = Suite(suite_obj, md.name, md.description)
     suite.tags.extend(md.tags)
     suite.properties.update(md.properties)
     suite.links.extend(md.links)
@@ -83,20 +111,26 @@ def load_suite_from_class(klass):
     suite.disabled = md.disabled
 
     for hook_name in SUITE_HOOKS:
-        if hasattr(inst, hook_name):
-            suite.add_hook(hook_name, getattr(inst, hook_name))
+        if hasattr(suite_obj, hook_name):
+            suite.add_hook(hook_name, getattr(suite_obj, hook_name))
 
-    for test_method in get_test_methods_from_class(inst):
-        suite.add_test(load_test_from_method(test_method))
+    for test in load_tests_from_methods(get_test_methods_from_class(suite_obj)):
+        suite.add_test(test)
 
-    for sub_suite_klass in get_sub_suites_from_class(inst):
-        suite.add_suite(load_suite_from_class(sub_suite_klass))
+    for sub_suite in load_suites_from_classes(get_sub_suites_from_class(suite_obj)):
+        suite.add_suite(sub_suite)
 
     return suite
 
 
-def load_suites_from_classes(klasses):
-    return [load_suite_from_class(klass) for klass in klasses]
+def load_suites_from_classes(classes):
+    suites = []
+    for class_ in classes:
+        try:
+            suites.append(load_suite_from_class(class_))
+        except VisibilityConditionNotMet:
+            pass
+    return suites
 
 
 def load_suite_from_module(mod):
@@ -104,6 +138,10 @@ def load_suite_from_module(mod):
     from lemoncheesecake.suite.definition import get_metadata_next_rank
 
     suite_info = getattr(mod, "SUITE")
+    suite_condition = suite_info.get("conditional")
+    if suite_condition is not None and not suite_condition(mod):
+        raise VisibilityConditionNotMet()
+
     suite_name = inspect.getmodulename(inspect.getfile(mod))
 
     try:
@@ -121,12 +159,12 @@ def load_suite_from_module(mod):
         if hasattr(mod, hook_name):
             suite.add_hook(hook_name, getattr(mod, hook_name))
 
-    for func in get_test_functions_from_module(mod):
-        suite.add_test(load_test_from_function(func))
+    for test in load_tests_from_functions(get_test_functions_from_module(mod)):
+        suite.add_test(test)
 
     sub_suites = []
-    for klass in get_suite_classes_from_module(mod):
-        sub_suites.append(load_suite_from_class(klass))
+    for sub_suite in load_suites_from_classes(get_suite_classes_from_module(mod)):
+        sub_suites.append(sub_suite)
     sub_suites.sort(key=lambda suite: suite.rank)
     for sub_suite in sub_suites:
         suite.add_suite(sub_suite)
@@ -171,7 +209,13 @@ def load_suites_from_files(patterns, excluding=[]):
       of elements to exclude from the expanded list of files to import
     Example: load_suites_from_files("test_*.py")
     """
-    return [load_suite_from_file(f) for f in get_matching_files(patterns, excluding)]
+    suites = []
+    for filename in get_matching_files(patterns, excluding):
+        try:
+            suites.append(load_suite_from_file(filename))
+        except VisibilityConditionNotMet:
+            pass
+    return suites
 
 
 def load_suites_from_directory(dir, recursive=True):
@@ -188,9 +232,13 @@ def load_suites_from_directory(dir, recursive=True):
     """
     if not osp.exists(dir):
         raise ModuleImportError("Directory '%s' does not exist" % dir)
-    suites = [ ]
+    suites = []
     for filename in get_py_files_from_dir(dir):
-        suite = load_suite_from_file(filename)
+        try:
+            suite = load_suite_from_file(filename)
+        except VisibilityConditionNotMet:
+            continue
+
         if recursive:
             subsuites_dir = strip_py_ext(filename)
             if osp.isdir(subsuites_dir):

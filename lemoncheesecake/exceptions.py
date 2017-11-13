@@ -51,6 +51,10 @@ class InvalidMetadataError(ProgrammingError):
     pass
 
 
+class VisibilityConditionNotMet(LemonCheesecakeException):
+    pass
+
+
 class UnknownReportBackendError(LemonCheesecakeException):
     pass
 

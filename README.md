@@ -495,7 +495,7 @@ Once, the metadata are set, they:
 - can be used to filter the tests to be run (see the `--tag`, `--property` and `--link` of the CLI launcher), in this case a test inherits all these parents metadata
 - will be available in the test report
 
-## Disabling test or suite
+## Disabling a test or a suite
 
 A test or an entire suite can be disabled using the `@lcc.disabled()` decorator:
 
@@ -507,6 +507,25 @@ def test_something(self):
 ```
 
 Disabled tests are visible in the report but they are not taken into account while computing the percentage of successful tests.
+
+## Conditional tests and suites
+
+A test or an entire suite can included or excluded from the test tree using the `@lcc.conditional(condition)` decorator. This decorator can be associated to both tests and suites,
+it takes a callback as argument and this callback takes itself the associated instance to which it is associated. If the callback return a non-true value, then the test/suite won't be
+included in the test tree, meaning it won't be executed, it won't present in the test report nor in the `lcc show` command output.
+
+Usage:
+```python
+@lcc.suite("My Suite")
+class mysuite:
+    some_feature_enabled = True
+
+    @lcc.test("Test something")
+    @lcc.conditional(lambda test: mysuite.some_feature_enabled)
+    def test_something(self):
+        [...]
+```
+
 
 # Advanced project features
 
