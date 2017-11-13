@@ -9,7 +9,7 @@ import inspect
 
 from lemoncheesecake.importer import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
 from lemoncheesecake.exceptions import UserError, ProgrammingError, ModuleImportError, InvalidMetadataError, \
-    VisibilityConditionNotMet, serialize_current_exception
+    InvalidSuiteError, VisibilityConditionNotMet, serialize_current_exception
 from lemoncheesecake.suite.core import Test, Suite, SUITE_HOOKS
 
 __all__ = "load_suite_from_file", "load_suites_from_files", "load_suites_from_directory", \
@@ -92,7 +92,11 @@ def get_suite_classes_from_module(mod):
 
 
 def load_suite_from_class(class_):
-    md = class_._lccmetadata
+    try:
+        md = class_._lccmetadata
+    except AttributeError:
+        raise InvalidSuiteError()
+
     try:
         suite_obj = class_()
     except UserError as e:
@@ -196,6 +200,7 @@ def load_suite_from_file(filename):
             klass = getattr(mod, mod_name)
         except AttributeError:
             raise ModuleImportError("Cannot find class '%s' in '%s'" % (mod_name, mod.__file__))
+
         suite = load_suite_from_class(klass)
     return suite
 
@@ -232,6 +237,7 @@ def load_suites_from_directory(dir, recursive=True):
     """
     if not osp.exists(dir):
         raise ModuleImportError("Directory '%s' does not exist" % dir)
+
     suites = []
     for filename in get_py_files_from_dir(dir):
         try:

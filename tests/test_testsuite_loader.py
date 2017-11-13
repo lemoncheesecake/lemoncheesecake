@@ -500,3 +500,18 @@ def test_load_suite_from_module_missing_suite_definition(tmpdir):
 
     with pytest.raises(ModuleImportError):
         load_suite_from_file(file.strpath)
+
+
+def test_load_suite_from_module_missing_suite_decorator(tmpdir):
+    file = tmpdir.join("mysuite.py")
+    file.write("""
+import lemoncheesecake.api as lcc
+
+class mysuite:
+    @lcc.test("My Test")
+    def mytest(self):
+        pass
+""")
+
+    with pytest.raises(InvalidSuiteError):
+        load_suite_from_file(file.strpath)

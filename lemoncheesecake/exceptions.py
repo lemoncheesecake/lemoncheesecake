@@ -47,6 +47,10 @@ class FixtureError(LemonCheesecakeException):
     pass
 
 
+class InvalidSuiteError(LemonCheesecakeException):
+    pass
+
+
 class InvalidMetadataError(ProgrammingError):
     pass
 
