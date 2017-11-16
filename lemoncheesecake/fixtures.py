@@ -13,7 +13,8 @@ from lemoncheesecake.utils import get_distincts_in_list, get_callable_args
 __all__ = (
     "fixture",
     "load_fixtures_from_func", "load_fixtures_from_file",
-    "load_fixtures_from_files", "load_fixtures_from_directory"
+    "load_fixtures_from_files", "load_fixtures_from_directory",
+    "inject_fixture"
 )
 
 FORBIDDEN_FIXTURE_NAMES = ("fixture_name", )
@@ -190,7 +191,7 @@ class FixtureRegistry:
                         fixture.name, fixture.scope, dependency_fixture.scope, dependency_fixture.name
                     ))
 
-    def check_fixtures_in_test(self, test,):
+    def check_fixtures_in_test(self, test):
         for fixture in test.get_fixtures():
             if fixture not in self._fixtures:
                 raise FixtureError("Unknown fixture '%s' used in test '%s'" % (fixture, test.get_path_as_str()))
@@ -236,7 +237,7 @@ class FixtureRegistry:
     def is_fixture_executed(self, name):
         return self._fixtures[name].is_executed()
 
-    def get_fixture_results_as_params(self, names):
+    def get_fixture_results(self, names):
         results = {}
         for name in names:
             results[name] = self.get_fixture_result(name)

@@ -838,6 +838,61 @@ def test_run_with_fixture_used_in_setup_suite(reporting_session):
     assert reporting_session.get_successful_test_nb() == 1
     assert marker[0] == "setup_suite"
 
+def test_run_with_fixture_injected_in_class(reporting_session):
+    marker = []
+
+    @lcc.fixture(scope="suite")
+    def fixt1():
+        return "MARKER"
+
+    @lcc.suite("MySuiteA")
+    class MySuite:
+        fixt1 = lcc.inject_fixture()
+
+        @lcc.test("sometest")
+        def sometest(self):
+            marker.append(self.fixt1)
+
+    run_suite_class(MySuite, fixtures=[fixt1])
+
+    assert reporting_session.get_successful_test_nb() == 1
+    assert marker[0] == "MARKER"
+
+def test_run_with_fixture_injected_in_class_and_fixture_name_arg(reporting_session):
+    marker = []
+
+    @lcc.fixture(scope="suite")
+    def fixt1():
+        return "MARKER"
+
+    @lcc.suite("MySuiteA")
+    class MySuite:
+        fxt = lcc.inject_fixture("fixt1")
+
+        @lcc.test("sometest")
+        def sometest(self):
+            marker.append(self.fxt)
+
+    run_suite_class(MySuite, fixtures=[fixt1])
+
+    assert reporting_session.get_successful_test_nb() == 1
+    assert marker[0] == "MARKER"
+
+def test_run_with_fixture_injected_in_module(reporting_session):
+    @lcc.fixture(scope="suite")
+    def fixt1():
+        return "MARKER"
+
+    suite = build_suite_from_module("""
+@lcc.test("Some test")
+def sometest(fixt1):
+    assert fixt1 == "MARKER"
+    """)
+
+    run_suite(suite, fixtures=[fixt1])
+
+    assert reporting_session.get_successful_test_nb() == 1
+
 def test_fixture_called_multiple_times(reporting_session):
     marker = [0]
     @lcc.fixture(scope="test")

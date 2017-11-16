@@ -243,7 +243,7 @@ def test_load_test_from_method():
     assert test.callback() == 1
 
 
-def test_load_suite_from_class_with_hooks(tmpdir):
+def test_load_suite_from_class_with_hooks():
     @lcc.suite("mysuite")
     class Suite:
         def setup_suite(self):
@@ -265,6 +265,16 @@ def test_load_suite_from_class_with_hooks(tmpdir):
     assert suite.get_hook("teardown_test")("dummy") == 4
 
 
+def test_load_suite_from_class_with_fixture_dependencies():
+    @lcc.suite("mysuite")
+    class Suite:
+        foo = lcc.inject_fixture()
+
+    suite = load_suite_from_class(Suite)
+    fixture_names = suite.get_fixtures()
+    assert fixture_names == ["foo"]
+
+
 def test_load_suite_from_module(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
@@ -275,6 +285,23 @@ def test_load_suite_from_module(tmpdir):
     suite = load_suite_from_file(file.strpath)
     assert suite.name == "mysuite"
     assert suite.description == "My Suite"
+
+
+def test_load_suite_from_module_with_fixture_dependencies(tmpdir):
+    file = tmpdir.join("mysuite.py")
+    file.write(
+        """import lemoncheesecake.api as lcc
+
+SUITE = {
+    "description": "My Suite"
+}
+
+foo = lcc.inject_fixture()
+""")
+
+    suite = load_suite_from_file(file.strpath)
+    fixture_names = suite.get_fixtures()
+    assert fixture_names == ["foo"]
 
 
 def test_load_suite_from_module_with_all_metadata(tmpdir):
