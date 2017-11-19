@@ -48,7 +48,7 @@ class _Runner:
         return self.get_fixtures_with_dependencies_for_scope(suite.get_fixtures(recursive=False), "suite")
 
     def get_fixtures_to_be_executed_for_test(self, test):
-        return self.get_fixtures_with_dependencies_for_scope(test.get_params(), "test")
+        return self.get_fixtures_with_dependencies_for_scope(test.get_fixtures(), "test")
 
     def run_setup_funcs(self, funcs, failure_checker):
         teardown_funcs = []
@@ -174,7 +174,7 @@ class _Runner:
         # Run test:
         ###
         if not test_setup_error:
-            test_func_params = self.fixture_registry.get_fixture_results_as_params(test.get_params())
+            test_func_params = self.fixture_registry.get_fixture_results_as_params(test.get_fixtures())
             try:
                 test.callback(**test_func_params)
             except (Exception, KeyboardInterrupt) as e:

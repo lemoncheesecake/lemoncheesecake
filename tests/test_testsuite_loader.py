@@ -405,7 +405,7 @@ def mytest(fixt1, fixt2):
     test = suite.get_tests()[0]
     assert test.name == "mytest"
     assert test.description == "My Test"
-    assert test.get_params() == ["fixt1", "fixt2"]
+    assert test.get_fixtures() == ["fixt1", "fixt2"]
 
 
 def test_load_suite_from_module_with_sub_suite(tmpdir):

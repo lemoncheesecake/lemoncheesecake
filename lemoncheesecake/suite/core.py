@@ -21,7 +21,7 @@ class Test(BaseTest):
         self.callback = callback
         self.disabled = False
 
-    def get_params(self):
+    def get_fixtures(self):
         return get_callable_args(self.callback)
 
 
@@ -109,7 +109,7 @@ class Suite(BaseSuite):
             fixtures.extend(get_callable_args(suite_setup))
 
         for test in self.get_tests():
-            fixtures.extend(test.get_params())
+            fixtures.extend(test.get_fixtures())
         if recursive:
             for sub_suite in self.get_suites():
                 fixtures.extend(sub_suite.get_fixtures())
