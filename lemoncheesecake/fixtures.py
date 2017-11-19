@@ -190,24 +190,22 @@ class FixtureRegistry:
                         fixture.name, fixture.scope, dependency_fixture.scope, dependency_fixture.name
                     ))
 
-
-    def check_fixtures_in_test(self, test, suite):
+    def check_fixtures_in_test(self, test,):
         for fixture in test.get_fixtures():
             if fixture not in self._fixtures:
                 raise FixtureError("Unknown fixture '%s' used in test '%s'" % (fixture, test.get_path_as_str()))
 
     def check_fixtures_in_suite(self, suite):
-        if suite.has_hook("setup_suite"):
-            for fixture in suite.get_hook_params("setup_suite"):
-                if fixture not in self._fixtures:
-                    raise FixtureError("Unknown fixture '%s' used in setup_suite of suite '%s'" % (fixture, suite.get_path_as_str()))
-                if self._fixtures[fixture].get_scope_level() < SCOPE_LEVELS["suite"]:
-                    raise FixtureError("In suite '%s' setup_suite uses fixture '%s' which has an incompatible scope" % (
-                        suite.get_path_as_str(), fixture
-                    ))
+        for fixture in suite.get_fixtures():
+            if fixture not in self._fixtures:
+                raise FixtureError("Suite '%s' uses an unknown fixture '%s'" % (suite.get_path_as_str(), fixture))
+            if self._fixtures[fixture].get_scope_level() < SCOPE_LEVELS["suite"]:
+                raise FixtureError("Suite '%s' uses fixture '%s' which has an incompatible scope" % (
+                    suite.get_path_as_str(), fixture
+                ))
 
         for test in suite.get_tests():
-            self.check_fixtures_in_test(test, suite)
+            self.check_fixtures_in_test(test)
 
         for sub_suite in suite.get_suites():
             self.check_fixtures_in_suite(sub_suite)

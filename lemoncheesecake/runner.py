@@ -17,6 +17,24 @@ from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, Fix
 from lemoncheesecake import events
 
 
+def _get_fixtures_used_in_suite(suite):
+    fixtures = suite.get_fixtures()
+
+    for test in suite.get_tests():
+        fixtures.extend(test.get_fixtures())
+
+    return get_distincts_in_list(fixtures)
+
+
+def _get_fixtures_used_in_suite_recursively(suite):
+    fixtures = _get_fixtures_used_in_suite(suite)
+
+    for sub_suite in suite.get_suites():
+        fixtures.extend(_get_fixtures_used_in_suite_recursively(sub_suite))
+
+    return get_distincts_in_list(fixtures)
+
+
 class _Runner:
     def __init__(self, suites, fixture_registry, reporting_backends, report_dir, stop_on_failure=False):
         self.suites = suites
@@ -35,17 +53,17 @@ class _Runner:
     def get_fixtures_to_be_executed_for_session_prerun(self):
         fixtures = []
         for suite in self.suites:
-            fixtures.extend(suite.get_fixtures())
+            fixtures.extend(_get_fixtures_used_in_suite_recursively(suite))
         return self.get_fixtures_with_dependencies_for_scope(get_distincts_in_list(fixtures), "session_prerun")
 
     def get_fixtures_to_be_executed_for_session(self):
         fixtures = []
         for suite in self.suites:
-            fixtures.extend(suite.get_fixtures())
+            fixtures.extend(_get_fixtures_used_in_suite_recursively(suite))
         return self.get_fixtures_with_dependencies_for_scope(get_distincts_in_list(fixtures), "session")
 
     def get_fixtures_to_be_executed_for_suite(self, suite):
-        return self.get_fixtures_with_dependencies_for_scope(suite.get_fixtures(recursive=False), "suite")
+        return self.get_fixtures_with_dependencies_for_scope(_get_fixtures_used_in_suite(suite), "suite")
 
     def get_fixtures_to_be_executed_for_test(self, test):
         return self.get_fixtures_with_dependencies_for_scope(test.get_fixtures(), "test")

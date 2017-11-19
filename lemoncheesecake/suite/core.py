@@ -101,17 +101,11 @@ class Suite(BaseSuite):
         self.assert_sub_suite_is_unique_in_suite(suite)
         BaseSuite.add_suite(self, suite)
 
-    def get_fixtures(self, recursive=True):
+    def get_fixtures(self):
         fixtures = []
 
         suite_setup = self.get_hook("setup_suite")
         if suite_setup:
             fixtures.extend(get_callable_args(suite_setup))
-
-        for test in self.get_tests():
-            fixtures.extend(test.get_fixtures())
-        if recursive:
-            for sub_suite in self.get_suites():
-                fixtures.extend(sub_suite.get_fixtures())
 
         return get_distincts_in_list(fixtures)
