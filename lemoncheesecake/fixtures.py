@@ -13,7 +13,8 @@ from lemoncheesecake.utils import get_distincts_in_list, get_callable_args
 __all__ = (
     "fixture",
     "load_fixtures_from_func", "load_fixtures_from_file",
-    "load_fixtures_from_files", "load_fixtures_from_directory"
+    "load_fixtures_from_files", "load_fixtures_from_directory",
+    "inject_fixture"
 )
 
 FORBIDDEN_FIXTURE_NAMES = ("fixture_name", )
@@ -190,24 +191,22 @@ class FixtureRegistry:
                         fixture.name, fixture.scope, dependency_fixture.scope, dependency_fixture.name
                     ))
 
-
-    def check_fixtures_in_test(self, test, suite):
-        for fixture in test.get_params():
+    def check_fixtures_in_test(self, test):
+        for fixture in test.get_fixtures():
             if fixture not in self._fixtures:
                 raise FixtureError("Unknown fixture '%s' used in test '%s'" % (fixture, test.get_path_as_str()))
 
     def check_fixtures_in_suite(self, suite):
-        if suite.has_hook("setup_suite"):
-            for fixture in suite.get_hook_params("setup_suite"):
-                if fixture not in self._fixtures:
-                    raise FixtureError("Unknown fixture '%s' used in setup_suite of suite '%s'" % (fixture, suite.get_path_as_str()))
-                if self._fixtures[fixture].get_scope_level() < SCOPE_LEVELS["suite"]:
-                    raise FixtureError("In suite '%s' setup_suite uses fixture '%s' which has an incompatible scope" % (
-                        suite.get_path_as_str(), fixture
-                    ))
+        for fixture in suite.get_fixtures():
+            if fixture not in self._fixtures:
+                raise FixtureError("Suite '%s' uses an unknown fixture '%s'" % (suite.get_path_as_str(), fixture))
+            if self._fixtures[fixture].get_scope_level() < SCOPE_LEVELS["suite"]:
+                raise FixtureError("Suite '%s' uses fixture '%s' which has an incompatible scope" % (
+                    suite.get_path_as_str(), fixture
+                ))
 
         for test in suite.get_tests():
-            self.check_fixtures_in_test(test, suite)
+            self.check_fixtures_in_test(test)
 
         for sub_suite in suite.get_suites():
             self.check_fixtures_in_suite(sub_suite)
@@ -238,7 +237,7 @@ class FixtureRegistry:
     def is_fixture_executed(self, name):
         return self._fixtures[name].is_executed()
 
-    def get_fixture_results_as_params(self, names):
+    def get_fixture_results(self, names):
         results = {}
         for name in names:
             results[name] = self.get_fixture_result(name)

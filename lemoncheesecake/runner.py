@@ -17,6 +17,24 @@ from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, Fix
 from lemoncheesecake import events
 
 
+def _get_fixtures_used_in_suite(suite):
+    fixtures = suite.get_fixtures()
+
+    for test in suite.get_tests():
+        fixtures.extend(test.get_fixtures())
+
+    return get_distincts_in_list(fixtures)
+
+
+def _get_fixtures_used_in_suite_recursively(suite):
+    fixtures = _get_fixtures_used_in_suite(suite)
+
+    for sub_suite in suite.get_suites():
+        fixtures.extend(_get_fixtures_used_in_suite_recursively(sub_suite))
+
+    return get_distincts_in_list(fixtures)
+
+
 class _Runner:
     def __init__(self, suites, fixture_registry, reporting_backends, report_dir, stop_on_failure=False):
         self.suites = suites
@@ -35,20 +53,20 @@ class _Runner:
     def get_fixtures_to_be_executed_for_session_prerun(self):
         fixtures = []
         for suite in self.suites:
-            fixtures.extend(suite.get_fixtures())
+            fixtures.extend(_get_fixtures_used_in_suite_recursively(suite))
         return self.get_fixtures_with_dependencies_for_scope(get_distincts_in_list(fixtures), "session_prerun")
 
     def get_fixtures_to_be_executed_for_session(self):
         fixtures = []
         for suite in self.suites:
-            fixtures.extend(suite.get_fixtures())
+            fixtures.extend(_get_fixtures_used_in_suite_recursively(suite))
         return self.get_fixtures_with_dependencies_for_scope(get_distincts_in_list(fixtures), "session")
 
     def get_fixtures_to_be_executed_for_suite(self, suite):
-        return self.get_fixtures_with_dependencies_for_scope(suite.get_fixtures(recursive=False), "suite")
+        return self.get_fixtures_with_dependencies_for_scope(_get_fixtures_used_in_suite(suite), "suite")
 
     def get_fixtures_to_be_executed_for_test(self, test):
-        return self.get_fixtures_with_dependencies_for_scope(test.get_params(), "test")
+        return self.get_fixtures_with_dependencies_for_scope(test.get_fixtures(), "test")
 
     def run_setup_funcs(self, funcs, failure_checker):
         teardown_funcs = []
@@ -93,12 +111,17 @@ class _Runner:
         if setup_suite == None:
             return None
 
-        param_names = suite.get_hook_params("setup_suite")
+        fixtures_names = suite.get_hook_params("setup_suite")
         def func():
-            params = self.fixture_registry.get_fixture_results_as_params(param_names)
-            setup_suite(**params)
+            fixtures = self.fixture_registry.get_fixture_results(fixtures_names)
+            setup_suite(**fixtures)
 
         return func
+
+    def inject_fixtures_into_suite(self, suite):
+        fixture_names = suite.get_injected_fixture_names()
+        fixtures = self.fixture_registry.get_fixture_results(fixture_names)
+        suite.inject_fixtures(fixtures)
 
     def handle_exception(self, excp, suite=None):
         if isinstance(excp, AbortTest):
@@ -174,7 +197,7 @@ class _Runner:
         # Run test:
         ###
         if not test_setup_error:
-            test_func_params = self.fixture_registry.get_fixture_results_as_params(test.get_params())
+            test_func_params = self.fixture_registry.get_fixture_results(test.get_fixtures())
             try:
                 test.callback(**test_func_params)
             except (Exception, KeyboardInterrupt) as e:
@@ -205,9 +228,13 @@ class _Runner:
         teardown_funcs = []
         if not self.abort_all_tests:
             setup_teardown_funcs = []
+            # first, fixtures must be executed
             setup_teardown_funcs.extend([
                 self.get_fixture_as_funcs(f) for f in self.get_fixtures_to_be_executed_for_suite(suite)
             ])
+            # then, fixtures must be injected into suite
+            setup_teardown_funcs.append((lambda: self.inject_fixtures_into_suite(suite), None))
+            # and at the end, the setup_suite hook of the suite will be called
             setup_teardown_funcs.append([
                 self.get_setup_suite_as_func(suite), suite.get_hook("teardown_suite")
             ])

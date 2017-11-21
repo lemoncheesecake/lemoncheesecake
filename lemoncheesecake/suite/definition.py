@@ -8,10 +8,11 @@ import inspect
 import copy
 
 from lemoncheesecake.suite.loader import get_test_methods_from_class
+from lemoncheesecake.suite.core import InjectedFixture
 from lemoncheesecake.exceptions import ProgrammingError
 
 __all__ = "add_test_in_suite", "add_tests_in_suite", "get_metadata", \
-    "suite", "test", "tags", "prop", "link", "disabled", "conditional"
+    "suite", "test", "tags", "prop", "link", "disabled", "conditional", "inject_fixture"
 
 
 class Metadata:
@@ -175,3 +176,7 @@ def conditional(condition):
         md.condition = condition
         return obj
     return wrapper
+
+
+def inject_fixture(fixture_name=None):
+    return InjectedFixture(fixture_name)

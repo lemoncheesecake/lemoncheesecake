@@ -334,53 +334,12 @@ def test_register_tests_with_before_and_after():
 def test_get_fixtures():
     @lcc.suite("My Suite")
     class MySuite:
-        @lcc.test("Test 1")
-        def test_1(self, foo):
+        def setup_suite(self, foo):
             pass
-
-        @lcc.suite("My Sub Suite")
-        class MySubSuite:
-            @lcc.test("Test 2")
-            def test_2(self, bar, baz):
-                pass
-
-            @lcc.test("Test 3")
-            def test_3(self, baz):
-                pass
-
-            @lcc.test("Test 4")
-            def test_4(self):
-                pass
 
     suite = load_suite_from_class(MySuite)
 
-    assert suite.get_fixtures() == ["foo", "bar", "baz"]
-
-
-def test_get_fixtures_non_recursive():
-    @lcc.suite("My Suite")
-    class MySuite:
-        @lcc.test("Test 1")
-        def test_1(self, foo):
-            pass
-
-        @lcc.suite("My Sub Suite")
-        class MySubSuite:
-            @lcc.test("Test 2")
-            def test_2(self, bar, baz):
-                pass
-
-            @lcc.test("Test 3")
-            def test_3(self, baz):
-                pass
-
-            @lcc.test("Test 4")
-            def test_4(self):
-                pass
-
-    suite = load_suite_from_class(MySuite)
-
-    assert suite.get_fixtures(recursive=False) == ["foo"]
+    assert suite.get_fixtures() == ["foo"]
 
 
 def test_get_inherited_tags():

@@ -340,9 +340,32 @@ SUITE = {
 }
 
 @lcc.test("Some test")
-def some_test(self, api):
+def some_test(api):
     resp = api.get("GET", "/some/resource")
     [...]
+```
+
+Fixtures can also be injected into suites through parameters passed to `setup_suite` and class instance / module attributes:
+```python
+# tests/my_suite.py:
+import lemoncheesecake.api as lcc
+
+SUITE = {
+    "description": "My Suite"
+}
+
+def setup_suite(api):
+    [...]
+```
+```python
+# tests/my_suite.py:
+import lemoncheesecake.api as lcc
+
+SUITE = {
+    "description": "My Suite"
+}
+
+api = lcc.inject_fixture()
 ```
 
 Four fixture scopes are available (higher to lower scope):

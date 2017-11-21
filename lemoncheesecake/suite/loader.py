@@ -153,7 +153,7 @@ def load_suite_from_module(mod):
     except KeyError:
         raise InvalidMetadataError("Missing description in '%s' suite information" % mod.__file__)
 
-    suite = Suite(None, suite_name, suite_description)
+    suite = Suite(mod, suite_name, suite_description)
     suite.tags.extend(suite_info.get("tags", []))
     suite.properties.update(suite_info.get("properties", []))
     suite.links.extend(suite_info.get("links", []))

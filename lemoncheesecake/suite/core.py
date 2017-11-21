@@ -21,7 +21,7 @@ class Test(BaseTest):
         self.callback = callback
         self.disabled = False
 
-    def get_params(self):
+    def get_fixtures(self):
         return get_callable_args(self.callback)
 
 
@@ -30,12 +30,29 @@ def _assert_valid_hook_name(hook_name):
         raise InternalError("Invalid hook name '%s'" % hook_name)
 
 
+class InjectedFixture:
+    def __init__(self, fixture_name):
+        self.fixture_name = fixture_name
+
+
+def _load_injected_fixtures(obj):
+    fixtures = {}
+    for attr_name in dir(obj):
+        if attr_name.startswith("__"):
+            continue
+        sym = getattr(obj, attr_name)
+        if isinstance(sym, InjectedFixture):
+            fixtures[sym.fixture_name or attr_name] = attr_name
+    return fixtures
+
+
 class Suite(BaseSuite):
     def __init__(self, obj, name, description):
         BaseSuite.__init__(self, name, description)
         self.obj = obj
         self.rank = 0
         self._hooks = {}
+        self._injected_fixtures = _load_injected_fixtures(obj)
         self.disabled = False
 
     def add_hook(self, hook_name, func):
@@ -54,6 +71,14 @@ class Suite(BaseSuite):
         hook = self.get_hook(hook_name)
         assert hook != None
         return get_callable_args(hook)
+
+    def get_injected_fixture_names(self):
+        return self._injected_fixtures.keys()
+
+    def inject_fixtures(self, fixtures):
+        for fixture_name, fixture_value in fixtures.items():
+            attr_name = self._injected_fixtures[fixture_name]
+            setattr(self.obj, attr_name, fixture_value)
 
     def assert_test_is_unique_in_suite(self, test):
         try:
@@ -101,17 +126,13 @@ class Suite(BaseSuite):
         self.assert_sub_suite_is_unique_in_suite(suite)
         BaseSuite.add_suite(self, suite)
 
-    def get_fixtures(self, recursive=True):
+    def get_fixtures(self):
         fixtures = []
+
+        fixtures.extend(self._injected_fixtures.keys())
 
         suite_setup = self.get_hook("setup_suite")
         if suite_setup:
             fixtures.extend(get_callable_args(suite_setup))
-
-        for test in self.get_tests():
-            fixtures.extend(test.get_params())
-        if recursive:
-            for sub_suite in self.get_suites():
-                fixtures.extend(sub_suite.get_fixtures())
 
         return get_distincts_in_list(fixtures)
