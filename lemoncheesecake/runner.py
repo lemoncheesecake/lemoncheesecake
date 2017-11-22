@@ -290,7 +290,7 @@ class _Runner:
         report = Report()
         report.add_info("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:]))
         self.session = initialize_report_writer(report)
-        initialize_runtime(self.report_dir, report)
+        initialize_runtime(self.report_dir, report, self.fixture_registry)
         initialize_reporting_backends(self.reporting_backends, self.report_dir, report)
         self.abort_all_tests = False
         self.abort_suite = None

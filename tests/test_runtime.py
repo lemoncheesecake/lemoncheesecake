@@ -8,9 +8,12 @@ Created on Nov 1, 2016
 
 import os.path
 
+import pytest
+
 import lemoncheesecake.api as lcc
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.testtree import find_test, find_suite
+from lemoncheesecake.exceptions import ProgrammingError
 
 from helpers import run_suite_class, run_suite_classes, assert_report_from_suite, assert_report_from_suites, assert_report_stats
 
@@ -18,14 +21,18 @@ from helpers import run_suite_class, run_suite_classes, assert_report_from_suite
 def assert_test_status(report, test_path, status):
     assert find_test(report.suites, test_path).status == status
 
+
 def assert_test_success(report, test_name):
     assert_test_status(report, test_name, "passed")
+
 
 def assert_test_failure(report, test_name):
     assert_test_status(report, test_name, "failed")
 
+
 def assert_test_skipped(report, test_name):
     assert_test_status(report, test_name, "skipped")
+
 
 def test_simple_test():
     @lcc.suite("MySuite")
@@ -42,6 +49,7 @@ def test_simple_test():
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
 
     assert_test_success(report, "mysuite.sometest")
+
 
 def test_test_with_all_metadata():
     @lcc.suite("MySuite")
@@ -62,6 +70,7 @@ def test_test_with_all_metadata():
 
     assert_test_success(report, "mysuite.sometest")
 
+
 def test_suite_with_all_metadata():
     @lcc.link("http://foo.bar", "foobar")
     @lcc.prop("foo", "bar")
@@ -80,6 +89,7 @@ def test_suite_with_all_metadata():
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
 
     assert_test_success(report, "mysuite.sometest")
+
 
 def test_multiple_suites_and_tests():
     @lcc.suite("MySuite1")
@@ -155,6 +165,7 @@ def test_multiple_suites_and_tests():
     assert_test_failure(report, "mysuite2.mysuite3.test_3_2")
     assert_test_success(report, "mysuite2.mysuite3.test_3_3")
 
+
 def test_check_success():
     @lcc.suite("MySuite")
     class mysuite:
@@ -176,6 +187,7 @@ def test_check_success():
     assert "foo" in step.entries[0].description
     assert step.entries[0].outcome == True
     assert "foo" in step.entries[0].details
+
 
 def test_check_failure():
     @lcc.suite("MySuite")
@@ -199,6 +211,7 @@ def test_check_failure():
     assert step.entries[0].outcome == False
     assert "foo" in step.entries[0].details
 
+
 def test_require_success():
     @lcc.suite("MySuite")
     class mysuite:
@@ -221,6 +234,7 @@ def test_require_success():
     assert step.entries[0].outcome == True
     assert "foo" in step.entries[0].details
 
+
 def test_require_failure():
     @lcc.suite("MySuite")
     class mysuite:
@@ -242,6 +256,7 @@ def test_require_failure():
     assert "bar" in step.entries[0].description
     assert step.entries[0].outcome == False
     assert "foo" in step.entries[0].details
+
 
 def test_all_types_of_logs():
     @lcc.suite("MySuite")
@@ -281,6 +296,7 @@ def test_all_types_of_logs():
     assert step.entries[0].message == "some error message"
     assert step.entries[0].level == "error"
 
+
 def test_multiple_steps():
     @lcc.suite("MySuite")
     class mysuite:
@@ -307,6 +323,7 @@ def test_multiple_steps():
     assert test.steps[1].entries[0].level == "info"
     assert test.steps[1].entries[0].message == "do something else"
 
+
 def test_default_step():
     @lcc.suite("MySuite")
     class mysuite:
@@ -326,6 +343,7 @@ def test_default_step():
     assert test.steps[0].description == "Some test"
     assert test.steps[0].entries[0].level == "info"
     assert test.steps[0].entries[0].message == "do something"
+
 
 def test_step_after_test_setup():
     @lcc.suite("mysuite")
@@ -353,6 +371,7 @@ def test_step_after_test_setup():
     assert test.steps[1].entries[0].level == "info"
     assert test.steps[1].entries[0].message == "do something"
 
+
 def test_prepare_attachment(tmpdir):
     @lcc.suite("MySuite")
     class mysuite:
@@ -375,6 +394,7 @@ def test_prepare_attachment(tmpdir):
     assert test.status == "passed"
     with open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename)) as fh:
         assert fh.read() == "some content"
+
 
 def test_save_attachment_file(tmpdir):
     @lcc.suite("MySuite")
@@ -400,6 +420,7 @@ def test_save_attachment_file(tmpdir):
     with open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename)) as fh:
         assert fh.read() == "some other content"
 
+
 def _test_save_attachment_content(tmpdir, file_name, file_content, encoding=None):
     @lcc.suite("MySuite")
     class mysuite:
@@ -424,17 +445,21 @@ def _test_save_attachment_content(tmpdir, file_name, file_content, encoding=None
         actual_content = actual_content.decode(encoding)
     assert actual_content == file_content
 
+
 def test_save_attachment_text_ascii(tmpdir):
     _test_save_attachment_content(tmpdir, "foobar.txt", "foobar", encoding="ascii")
 
+
 def test_save_attachment_text_utf8(tmpdir):
     _test_save_attachment_content(tmpdir, "foobar.txt", u"éééçççààà", encoding="utf-8")
+
 
 def test_save_attachment_binary(tmpdir):
     p = os.path
     with open(p.join(p.dirname(__file__), p.pardir, "misc", "report-screenshot.png"), "rb") as fh:
         content = fh.read()
     _test_save_attachment_content(tmpdir, "foobar.png", content)
+
 
 def test_log_url():
     @lcc.suite("MySuite")
@@ -454,6 +479,7 @@ def test_log_url():
 
     assert test.steps[0].entries[0].description == "example"
     assert test.steps[0].entries[0].url == "http://example.com"
+
 
 def test_unicode(tmpdir):
     @lcc.suite("MySuite")
@@ -484,6 +510,7 @@ def test_unicode(tmpdir):
     with open(os.path.join(get_runtime().report_dir, step.entries[2].filename)) as fh:
         assert fh.read() == "A" * 1024
 
+
 def test_setup_suite_success():
     @lcc.suite("MySuite")
     class mysuite:
@@ -508,6 +535,7 @@ def test_setup_suite_success():
     assert suite.suite_setup.steps[0].entries[0].message == "some log"
     assert suite.suite_setup.has_failure() == False
     assert_test_success(report, "mysuite.sometest")
+
 
 def test_setup_suite_failure():
     @lcc.suite("MySuite")
@@ -534,6 +562,7 @@ def test_setup_suite_failure():
     assert suite.suite_setup.has_failure() == True
     assert_test_skipped(report, "mysuite.sometest")
 
+
 def test_setup_suite_without_content():
     marker = []
 
@@ -552,6 +581,7 @@ def test_setup_suite_without_content():
 
     assert report.suites[0].suite_setup == None
     assert marker == ["setup"]
+
 
 def test_teardown_suite_success():
     @lcc.suite("MySuite")
@@ -578,6 +608,7 @@ def test_teardown_suite_success():
     assert suite.suite_teardown.has_failure() == False
     assert_test_success(report, "mysuite.sometest")
 
+
 def test_teardown_suite_failure():
     @lcc.suite("MySuite")
     class mysuite:
@@ -603,6 +634,7 @@ def test_teardown_suite_failure():
     assert suite.suite_teardown.has_failure() == True
     assert_test_success(report, "mysuite.sometest")
 
+
 def test_teardown_suite_without_content():
     marker = []
 
@@ -621,6 +653,7 @@ def test_teardown_suite_without_content():
 
     assert report.suites[0].suite_teardown == None
     assert marker == ["teardown"]
+
 
 def test_setup_test_session_success():
     @lcc.suite("MySuite")
@@ -647,6 +680,7 @@ def test_setup_test_session_success():
     assert report.test_session_setup.has_failure() == False
     assert_test_success(report, "mysuite.sometest")
 
+
 def test_setup_test_session_failure():
     @lcc.suite("MySuite")
     class mysuite:
@@ -672,6 +706,7 @@ def test_setup_test_session_failure():
     assert report.test_session_setup.has_failure() == True
     assert_test_skipped(report, "mysuite.sometest")
 
+
 def test_setup_test_session_without_content():
     marker = []
 
@@ -691,6 +726,7 @@ def test_setup_test_session_without_content():
 
     assert report.test_session_setup == None
     assert marker == ["setup"]
+
 
 def test_teardown_test_session_success():
     @lcc.suite("MySuite")
@@ -718,6 +754,7 @@ def test_teardown_test_session_success():
     assert report.test_session_teardown.has_failure() == False
     assert_test_success(report, "mysuite.sometest")
 
+
 def test_teardown_test_session_failure():
     @lcc.suite("MySuite")
     class mysuite:
@@ -744,6 +781,7 @@ def test_teardown_test_session_failure():
     assert report.test_session_teardown.has_failure() == True
     assert_test_success(report, "mysuite.sometest")
 
+
 def test_teardown_test_session_without_content():
     marker = []
 
@@ -765,6 +803,7 @@ def test_teardown_test_session_without_content():
     assert report.test_session_teardown == None
     assert marker == ["teardown"]
 
+
 def test_add_report_info():
     @lcc.suite("Some suite")
     class mysuite:
@@ -777,3 +816,74 @@ def test_add_report_info():
     report = get_runtime().report
 
     assert report.info[-1] == ["some info", "some data"]
+
+
+def test_get_fixture():
+    @lcc.fixture(scope="session_prerun")
+    def fixt():
+        return 42
+
+    @lcc.suite("mysuite")
+    class mysuite:
+        @lcc.test("mytest")
+        def mytest(self, fixt):
+            assert lcc.get_fixture("fixt") == 42
+
+    run_suite_class(mysuite, fixtures=[fixt])
+
+    report = get_runtime().report
+
+    assert_report_stats(report, expected_test_successes=1)
+
+
+def test_get_fixture_bad_scope():
+    @lcc.fixture(scope="test")
+    def fixt():
+        return 42
+
+    @lcc.suite("mysuite")
+    class mysuite:
+        @lcc.test("mytest")
+        def mytest(self, fixt):
+            with pytest.raises(ProgrammingError):
+                lcc.get_fixture("fixt")
+
+    run_suite_class(mysuite, fixtures=[fixt])
+
+    report = get_runtime().report
+
+    assert_report_stats(report, expected_test_successes=1)
+
+
+def test_get_fixture_unknown():
+    @lcc.suite("mysuite")
+    class mysuite:
+        @lcc.test("mytest")
+        def mytest(self):
+            with pytest.raises(ProgrammingError):
+                lcc.get_fixture("fixt")
+
+    run_suite_class(mysuite)
+
+    report = get_runtime().report
+
+    assert_report_stats(report, expected_test_successes=1)
+
+
+def test_get_fixture_not_executed():
+    @lcc.fixture(scope="session_prerun")
+    def fixt():
+        return 42
+
+    @lcc.suite("mysuite")
+    class mysuite:
+        @lcc.test("mytest")
+        def mytest(self):
+            with pytest.raises(ProgrammingError):
+                lcc.get_fixture("fixt")
+
+    run_suite_class(mysuite, fixtures=[fixt])
+
+    report = get_runtime().report
+
+    assert_report_stats(report, expected_test_successes=1)

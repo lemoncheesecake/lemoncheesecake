@@ -12,18 +12,19 @@ from lemoncheesecake.consts import ATTACHEMENT_DIR, \
     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
 from lemoncheesecake.reporting import *
 from lemoncheesecake import events
+from lemoncheesecake.exceptions import ProgrammingError
 
 __all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "log_url", "log_check", \
     "set_step", "prepare_attachment", "save_attachment_file", "save_attachment_content", \
-    "add_report_info"
+    "add_report_info", "get_fixture"
 
 
 _runtime = None  # singleton
 
 
-def initialize_runtime(report_dir, report):
+def initialize_runtime(report_dir, report, fixture_registry):
     global _runtime
-    _runtime = _Runtime(report_dir, report)
+    _runtime = _Runtime(report_dir, report, fixture_registry)
     events.add_listener(_runtime)
 
 
@@ -34,9 +35,10 @@ def get_runtime():
 
 
 class _Runtime:
-    def __init__(self, report_dir, report):
+    def __init__(self, report_dir, report, fixture_registry):
         self.report_dir = report_dir
         self.report = report
+        self.fixture_registry = fixture_registry
         self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
         self.attachment_count = 0
         self.step_lock = False
@@ -76,6 +78,22 @@ class _Runtime:
         fh = open(target_filename, "wb")
         fh.write(content if binary_mode else content.encode("utf-8"))
         fh.close()
+
+    def get_fixture(self, name):
+        try:
+            scope = self.fixture_registry.get_fixture_scope(name)
+        except KeyError:
+            raise ProgrammingError("Fixture '%s' does not exist" % name)
+
+        if scope != "session_prerun":
+            raise ProgrammingError("Fixture '%s' has scope '%s' while only fixtures with scope 'session_prerun' can be retrieved" % (
+                name, scope
+            ))
+
+        try:
+            return self.fixture_registry.get_fixture_result(name)
+        except AssertionError as excp:
+            raise ProgrammingError(str(excp))
 
 
 def log_debug(content):
@@ -148,6 +166,13 @@ def log_url(url, description=None):
     Log an URL.
     """
     get_runtime().log_url(url, description or url)
+
+
+def get_fixture(name):
+    """
+    Return the corresponding fixture value. Only fixtures whose scope is session_prerun can be retrieved.
+    """
+    return get_runtime().get_fixture(name)
 
 
 def add_report_info(name, value):
