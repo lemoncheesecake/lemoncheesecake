@@ -12,9 +12,11 @@ project_dir = os.path.dirname(__file__)
 # Project
 ###
 class MyProjectConfiguration(SimpleProjectConfiguration):
-    pass
+    def get_report_info(self):
+        return [["foo", "bar"]]
 
-project = SimpleProjectConfiguration(
+
+project = MyProjectConfiguration(
     suites_dir=os.path.join(project_dir, "suites"),
     fixtures_dir=os.path.join(project_dir, "fixtures"),
     report_title="Awesome report"

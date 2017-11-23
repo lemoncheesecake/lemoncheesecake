@@ -76,6 +76,10 @@ class ProjectConfiguration:
         """Return the report title"""
         return None
 
+    def get_report_info(self):
+        """Return a list of key/value tuple to be added to report info"""
+        return []
+
 
 class SimpleProjectConfiguration(ProjectConfiguration):
     def __init__(self, suites_dir, fixtures_dir=None, report_title=None):
@@ -151,6 +155,9 @@ class Project:
         title = self._config.get_report_title()
         if title is not None:
             report.title = self._config.get_report_title()
+
+        for key, value in self._config.get_report_info():
+            report.add_info(key, value)
 
 
 def _find_file_in_parent_directories(filename, dirname):
