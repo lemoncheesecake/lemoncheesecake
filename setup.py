@@ -8,9 +8,12 @@ Created on Aug 20, 2016
 
 from setuptools import setup, find_packages
 
+import lemoncheesecake
+
+
 setup(
     name = "lemoncheesecake",
-    version = "0.13.0",
+    version = lemoncheesecake.__version__,
     description = "A framework for functional QA testing",
     author = "Nicolas Delon",
     author_email = "nicolas.delon@gmail.com",
