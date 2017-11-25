@@ -1,3 +1,13 @@
+# 0.14.0 (2017-11-25)
+
+- **API**: add `lcc.conditional` decorator for tests/suites to allow a test/suite to be included in the test tree
+  depending on a condition callback result
+- **API**: add `lcc.inject_fixture` function that provides fixture injection into a test suite
+- **API**: add `lcc.get_fixture` function that allow the retrieval of an executed, session_prerun-scoped, fixture
+- **API**: in project class, add a get_report_info, that allow the project to set custom information in the report
+- Make version of lemoncheesecake available through API, CLI and generated reports
+- lcc stats: indicate disabled tests
+
 # 0.13.0 (2017-11-05)
 
 - **under the hood**: rework reporting using an events sub-system
