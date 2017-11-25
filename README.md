@@ -345,7 +345,7 @@ def some_test(api):
     [...]
 ```
 
-Fixtures can also be injected into suites through parameters passed to `setup_suite` and class instance / module attributes:
+Fixtures can be injected into suites through parameters passed to `setup_suite` and class instance / module attributes:
 ```python
 # tests/my_suite.py:
 import lemoncheesecake.api as lcc
@@ -367,6 +367,10 @@ SUITE = {
 
 api = lcc.inject_fixture()
 ```
+
+Fixtures with scope `session_prerun` that have been previously executed through a dependency can get be retrieved using
+`lcc.get_fixture(name)`.
+
 
 Four fixture scopes are available (higher to lower scope):
 - `session_prerun`: fixtures with this scope will be called before the test session is started, meaning that the fixture cannot use any of the `log_*`, `check_*`, etc... functions. If a fixture with this scope raises an exception, it will prevent the tests to be executed. This behavior can be used in conjunction with the `UserError` exception and the `cli_args` fixture to handle bad CLI arguments
