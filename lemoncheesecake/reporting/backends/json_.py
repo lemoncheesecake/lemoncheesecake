@@ -8,6 +8,7 @@ import re
 import json
 from collections import OrderedDict
 
+import lemoncheesecake
 from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend, SAVE_AT_EACH_FAILED_TEST
 from lemoncheesecake.reporting.report import (
     LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, SuiteData,
@@ -100,6 +101,7 @@ def _serialize_suite_data(suite):
 
 def serialize_report_into_json(report):
     serialized = _dict(
+        "lemoncheesecake_version", lemoncheesecake.__version__,
         "lemoncheesecake_report_version", 1.0,
         "start_time", _serialize_time(report.start_time),
         "end_time", _serialize_time(report.end_time),
