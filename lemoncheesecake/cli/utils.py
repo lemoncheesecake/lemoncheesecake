@@ -4,8 +4,13 @@ Created on Mar 12, 2017
 @author: nicolas
 '''
 
+from __future__ import print_function
+
+import lemoncheesecake
 from lemoncheesecake.filter import make_filter_from_cli_args, filter_suites
 from lemoncheesecake.exceptions import UserError
+
+LEMONCHEESECAKE_VERSION = "lemoncheesecake version %s" % lemoncheesecake.__version__
 
 
 def filter_suites_from_cli_args(suites, cli_args):
