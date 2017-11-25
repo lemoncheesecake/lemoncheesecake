@@ -36,6 +36,7 @@ class StatsCommand(Command):
         class Stats:
             def __init__(self):
                 self.tests_nb = 0
+                self.disabled_tests_nb = 0
                 self.suites_nb = 0
                 self.non_empty_suites_nb = 0
                 self.tags = {}
@@ -45,6 +46,8 @@ class StatsCommand(Command):
 
         def handle_test(test, suite):
             stats.tests_nb += 1
+            if test.disabled:
+                stats.disabled_tests_nb += 1
             for tag in test.get_inherited_tags():
                 stats.tags[tag] = stats.tags.get(tag, 0) + 1
             for prop, value in test.get_inherited_properties().items():
@@ -101,13 +104,15 @@ class StatsCommand(Command):
             ])
         print_table(self.bold("Links"), ["Name", "URL", "Tests", "In %"], lines)
 
-        summary = "Total: %s in %s" % (
-            self.bold("%d tests" % stats.tests_nb),
-            self.bold("%d suites" % stats.non_empty_suites_nb)
-        )
+        tests_info = self.bold("%d tests" % stats.tests_nb)
+        if stats.disabled_tests_nb > 0:
+            tests_info += " (among which %s disabled tests)" % stats.disabled_tests_nb
+
+        suites_info = self.bold("%d suites" % stats.non_empty_suites_nb)
         if stats.suites_nb > stats.non_empty_suites_nb:
-            summary += " (+ %d empty suites)" % (stats.suites_nb - stats.non_empty_suites_nb)
-        print(summary)
+            suites_info += " (+ %d empty suites)" % (stats.suites_nb - stats.non_empty_suites_nb)
+
+        print("Total: %s in %s" % (tests_info, suites_info))
         print()
 
         return 0
