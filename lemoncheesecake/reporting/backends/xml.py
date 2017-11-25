@@ -11,6 +11,7 @@ try:
 except ImportError:
     LXML_IS_AVAILABLE = False
 
+import lemoncheesecake
 from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend, SAVE_AT_EACH_FAILED_TEST
 from lemoncheesecake.reporting.report import (
     LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, SuiteData,
@@ -164,8 +165,10 @@ def _serialize_suite_data(suite):
 
 def serialize_report_as_tree(report):
     xml = E("lemoncheesecake-report")
-    version_node = make_xml_child(xml, "lemoncheesecake-report-version")
-    version_node.text = str("1.0")
+    report_version_node = make_xml_child(xml, "lemoncheesecake-version")
+    report_version_node.text = lemoncheesecake.__version__
+    report_version_node = make_xml_child(xml, "lemoncheesecake-report-version")
+    report_version_node.text = str("1.0")
     _add_time_attr(xml, "start-time", report.start_time)
     _add_time_attr(xml, "end-time", report.end_time)
     _add_time_attr(xml, "generation-time", report.report_generation_time)
