@@ -202,7 +202,7 @@ class ReportWriter:
             self._is_success = False
             self.has_pending_failure = True
 
-    def on_log_attachment(self, path, description):
+    def on_log_attachment(self, path, filename, description):
         self.create_step_if_needed()
         self.current_step_data.entries.append(AttachmentData(description, path))
 

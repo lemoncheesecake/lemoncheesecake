@@ -68,7 +68,7 @@ class _Runtime:
 
         yield os.path.join(self.attachments_dir, attachment_filename)
 
-        events.fire("on_log_attachment", "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), description)
+        events.fire("on_log_attachment", "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description)
 
     def save_attachment_file(self, filename, description):
         with self.prepare_attachment(os.path.basename(filename), description) as report_attachment_path:
