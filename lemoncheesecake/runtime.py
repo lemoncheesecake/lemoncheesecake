@@ -5,6 +5,7 @@ Created on Jan 24, 2016
 '''
 
 import os.path
+import time
 from contextlib import contextmanager
 import shutil
 
@@ -43,20 +44,32 @@ class _Runtime:
         self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
         self.attachment_count = 0
         self.step_lock = False
+        self.pending_step = None
+        self.pending_step_time = None
 
-    def set_step(self, description, force_lock):
+    def set_step(self, description, force_lock=False):
         if self.step_lock and not force_lock:
             return
 
-        events.fire("on_step", description)
+        self.pending_step = description
+        self.pending_step_time = time.time()
+
+    def _flush_pending_step(self):
+        if self.pending_step:
+            events.fire("on_step", self.pending_step, event_time=self.pending_step_time)
+            self.pending_step = None
+            self.pending_step_time = None
 
     def log(self, level, content):
+        self._flush_pending_step()
         events.fire("on_log", level, content)
 
     def log_check(self, description, outcome, details):
+        self._flush_pending_step()
         events.fire("on_check", description, outcome, details)
 
     def log_url(self, url, description):
+        self._flush_pending_step()
         events.fire("on_log_url", url, description)
 
     @contextmanager
@@ -68,6 +81,7 @@ class _Runtime:
 
         yield os.path.join(self.attachments_dir, attachment_filename)
 
+        self._flush_pending_step()
         events.fire("on_log_attachment", "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description)
 
     def save_attachment_file(self, filename, description):
