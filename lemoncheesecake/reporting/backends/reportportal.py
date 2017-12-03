@@ -57,6 +57,23 @@ class ReportPortalReportingSession(ReportingSession):
     def _end_current_test_item(self, end_time, status):
         self.service.finish_test_item(end_time=make_time(end_time), status=status)
 
+    def _start_test_item(self, item_type, start_time, name, description, wrapped=False):
+        if wrapped:
+            self.service.start_test_item(
+                item_type="SUITE", start_time=make_time(start_time),
+                name=name, description=description
+            )
+        self.service.start_test_item(
+            item_type=item_type, start_time=make_time(start_time),
+            name=name, description=description
+        )
+
+    def _end_test_item(self, end_time, outcome, wrapped=False):
+        status = "passed" if outcome else "failed"
+        if wrapped:
+            self._end_current_test_item(end_time, status=status)
+        self._end_current_test_item(end_time, status=status)
+
     def on_tests_beginning(self, report, start_time):
         if self._has_rp_error():
             return
@@ -79,31 +96,33 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        self.service.start_test_item(
-            item_type="BEFORE_GROUPS", start_time=make_time(start_time),
+        self._start_test_item(
+            item_type="BEFORE_CLASS", start_time=start_time,
             name="session_setup", description="Test Session Setup",
+            wrapped=True
         )
 
     def on_test_session_setup_ending(self, outcome, end_time):
         if self._has_rp_error():
             return
 
-        self._end_current_test_item(end_time, status="passed" if outcome else "failed")
+        self._end_test_item(end_time, outcome, wrapped=True)
 
     def on_test_session_teardown_beginning(self, start_time):
         if self._has_rp_error():
             return
 
-        self.service.start_test_item(
-            item_type="AFTER_GROUPS", start_time=make_time(start_time),
+        self._start_test_item(
+            item_type="AFTER_CLASS", start_time=start_time,
             name="session_teardown", description="Test Session Teardown",
+            wrapped=True
         )
 
     def on_test_session_teardown_ending(self, outcome, end_time):
         if self._has_rp_error():
             return
 
-        self._end_current_test_item(end_time, status="passed" if outcome else "failed")
+        self._end_test_item(end_time, outcome, wrapped=True)
 
     def on_suite_beginning(self, suite, start_time):
         if self._has_rp_error():
@@ -127,31 +146,33 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        self.service.start_test_item(
-            item_type="BEFORE_SUITE", start_time=make_time(start_time),
-            name="suite_setup", description="Suite Setup"
+        self._start_test_item(
+            item_type="BEFORE_CLASS", start_time=start_time,
+            name="suite_setup", description="Suite Setup",
+            wrapped=len(suite.get_suites()) > 0
         )
 
     def on_suite_setup_ending(self, suite, outcome, end_time):
         if self._has_rp_error():
             return
 
-        self._end_current_test_item(end_time, status="passed" if outcome else "failed")
+        self._end_test_item(end_time, outcome=outcome, wrapped=len(suite.get_suites()) > 0)
 
     def on_suite_teardown_beginning(self, suite, start_time):
         if self._has_rp_error():
             return
 
-        self.service.start_test_item(
-            item_type="AFTER_SUITE", start_time=make_time(start_time),
-            name="suite_teardown", description="Suite Teardown"
+        self._start_test_item(
+            item_type="AFTER_CLASS", start_time=start_time,
+            name="suite_teardown", description="Suite Teardown",
+            wrapped=len(suite.get_suites()) > 0
         )
 
     def on_suite_teardown_ending(self, suite, outcome, end_time):
         if self._has_rp_error():
             return
 
-        self._end_current_test_item(end_time, status="passed" if outcome else "failed")
+        self._end_test_item(end_time, outcome=outcome, wrapped=len(suite.get_suites()) > 0)
 
     def on_test_beginning(self, test, start_time):
         if self._has_rp_error():
