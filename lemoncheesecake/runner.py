@@ -181,6 +181,7 @@ class _Runner:
 
         if len(list(filter(lambda p: p[0] != None, setup_teardown_funcs))) > 0:
             events.fire("on_test_setup_beginning", test)
+            set_step("Setup test")
             teardown_funcs = self.run_setup_funcs(
                 setup_teardown_funcs, lambda: self.session.current_test_data.has_failure()
             )
@@ -198,6 +199,7 @@ class _Runner:
         ###
         if not test_setup_error:
             test_func_params = self.fixture_registry.get_fixture_results(test.get_fixtures())
+            set_step(test.description)
             try:
                 test.callback(**test_func_params)
             except (Exception, KeyboardInterrupt) as e:
@@ -208,6 +210,7 @@ class _Runner:
         ###
         if len(list(filter(lambda f: f != None, teardown_funcs))) > 0:
             events.fire("on_test_teardown_beginning", test)
+            set_step("Teardown test")
             self.run_teardown_funcs(teardown_funcs)
             events.fire("on_test_teardown_ending", test, not self.session.current_test_data.has_failure())
 

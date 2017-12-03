@@ -137,18 +137,6 @@ class ReportWriter:
         self.current_step_data_list = self.current_test_data.steps
         self.default_step_description = test.description
 
-    def on_test_setup_beginning(self, test):
-        _set_step("Setup test")
-
-    def on_test_setup_ending(self, test, outcome):
-        _set_step(self.current_test.description)
-
-    def on_test_teardown_beginning(self, test):
-        _set_step("Teardown test")
-
-    def on_test_teardown_ending(self, test, outcome):
-        pass
-
     def on_test_ending(self, test, status, end_time):
         self.current_test_data.status = status
         self.current_test_data.end_time = end_time
