@@ -142,6 +142,26 @@ class _Runner:
                 stacktrace = stacktrace.decode("utf-8", "replace")
             log_error("Caught unexpected exception while running test: " + stacktrace)
 
+    def _begin_test(self, test):
+        events.fire("on_test_beginning", test)
+
+    def _end_test(self, test, outcome):
+        events.fire("on_test_ending", test, "passed" if outcome else "failed")
+
+    def _begin_test_setup(self, test):
+        events.fire("on_test_setup_beginning", test)
+        set_step("Setup test")
+
+    def _end_test_setup(self, test, outcome):
+        events.fire("on_test_setup_ending", test, outcome)
+
+    def _begin_test_teardown(self, test):
+        events.fire("on_test_teardown_beginning", test)
+        set_step("Teardown test")
+
+    def _end_test_teardown(self, test, outcome):
+        events.fire("on_test_teardown_ending", test, outcome)
+
     def run_test(self, test, suite):
         ###
         # Checker whether the test must be executed or not
@@ -162,7 +182,7 @@ class _Runner:
         # Begin test
         ###
 
-        events.fire("on_test_beginning", test)
+        self._begin_test(test)
 
         ###
         # Setup test (setup and fixtures)
@@ -179,15 +199,14 @@ class _Runner:
             self.get_fixture_as_funcs(f) for f in self.get_fixtures_to_be_executed_for_test(test)
         ])
 
-        if len(list(filter(lambda p: p[0] != None, setup_teardown_funcs))) > 0:
-            events.fire("on_test_setup_beginning", test)
-            set_step("Setup test")
+        if len(list(filter(lambda p: p[0] is not None, setup_teardown_funcs))) > 0:
+            self._begin_test_setup(test)
             teardown_funcs = self.run_setup_funcs(
                 setup_teardown_funcs, lambda: self.session.current_test_data.has_failure()
             )
             if len(teardown_funcs) != len(setup_teardown_funcs):
                 test_setup_error = True
-            events.fire("on_test_setup_ending", test, not test_setup_error)
+            self._end_test_setup(test, not test_setup_error)
         else:
             teardown_funcs = [p[1] for p in setup_teardown_funcs if p[1] != None]
         
@@ -208,16 +227,15 @@ class _Runner:
         ###
         # Teardown
         ###
-        if len(list(filter(lambda f: f != None, teardown_funcs))) > 0:
-            events.fire("on_test_teardown_beginning", test)
-            set_step("Teardown test")
+        if len(list(filter(lambda f: f is not None, teardown_funcs))) > 0:
+            self._begin_test_teardown(test)
             self.run_teardown_funcs(teardown_funcs)
-            events.fire("on_test_teardown_ending", test, not self.session.current_test_data.has_failure())
+            self._end_test_teardown(test, not self.session.current_test_data.has_failure())
 
         if self.stop_on_failure and self.session.current_test_data.has_failure():
             self.abort_all_tests = True
 
-        events.fire("on_test_ending", test, "failed" if self.session.has_pending_failure else "passed")
+        self._end_test(test, not self.session.has_pending_failure)
 
     def run_suite(self, suite):
         ###
