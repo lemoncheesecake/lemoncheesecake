@@ -1,10 +1,16 @@
 # Introduction
 
-lemoncheesecake is a functional/QA testing framework for Python. It provides functionalities such as test launcher, tests organization (using hierarchical test suites, tags, properties, links), fixtures, matchers, structured reporting data (JSON, XML, JUnit) and HTML report.
+lemoncheesecake is a functional/QA testing framework for Python. It provides functionalities such as test launcher,
+tests organization (using hierarchical test suites, tags, properties, links), fixtures, matchers, structured reporting
+data (JSON, XML, JUnit) and HTML report.
 
-Tests are organized within suites that themselves can contain sub suites allowing the building of a complex tests hierarchy. Every tests and suites must have a name and a description. Tags, properties (key/value pairs), links can be associated to both tests and suites. These metadata are then available in reports and can be used for test filtering in the lemoncheesecake CLI tool `lcc`.
+Tests are organized within suites that themselves can contain sub suites allowing the building of a complex tests
+hierarchy. Every tests and suites must have a name and a description. Tags, properties (key/value pairs), links can
+be associated to both tests and suites. These metadata are then available in reports and can be used for test filtering
+in the lemoncheesecake CLI tool `lcc`.
 
-One of the key features of lemoncheesecake is its reporting capabilities, providing the user with various formats (XML, JSON, HTML, JUnit) and the possibility to create his own reporting backend.
+One of the key features of lemoncheesecake is its reporting capabilities, providing the user with various formats
+(XML, JSON, HTML, JUnit, ReportPortal, Slack) and the possibility to create his own reporting backend.
 
 lemoncheesecake is compatible with Python 2.7, 3.3-3.6.
 
