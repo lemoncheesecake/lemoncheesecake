@@ -237,11 +237,31 @@ class _Runner:
 
         self._end_test(test, not self.session.has_pending_failure)
 
+    def _begin_suite(self, suite):
+        events.fire("on_suite_beginning", suite)
+
+    def _end_suite(self, suite):
+        events.fire("on_suite_ending", suite)
+
+    def _begin_suite_setup(self, suite):
+        events.fire("on_suite_setup_beginning", suite)
+        set_step("Setup suite")
+
+    def _end_suite_setup(self, suite, outcome):
+        events.fire("on_suite_setup_ending", suite, outcome)
+
+    def _begin_suite_teardown(self, suite):
+        events.fire("on_suite_teardown_beginning", suite)
+        set_step("Teardown suite")
+
+    def _end_suite_teardown(self, suite, outcome):
+        events.fire("on_suite_teardown_ending", suite, outcome)
+
     def run_suite(self, suite):
         ###
         # Begin suite
         ###
-        events.fire("on_suite_beginning", suite)
+        self._begin_suite(suite)
 
         ###
         # Setup suite (suites and fixtures)
@@ -260,16 +280,16 @@ class _Runner:
                 self.get_setup_suite_as_func(suite), suite.get_hook("teardown_suite")
             ])
 
-            if len(list(filter(lambda p: p[0] != None, setup_teardown_funcs))) > 0:
-                events.fire("on_suite_setup_beginning", suite)
+            if len(list(filter(lambda p: p[0] is not None, setup_teardown_funcs))) > 0:
+                self._begin_suite_setup(suite)
                 teardown_funcs = self.run_setup_funcs(
                     setup_teardown_funcs, lambda: self.session.current_suite_data.suite_setup.has_failure()
                 )
                 if len(teardown_funcs) != len(setup_teardown_funcs):
                     self.abort_suite = suite
-                events.fire("on_suite_setup_ending", suite, self.abort_suite is None)
+                self._end_suite_setup(suite, self.abort_suite is None)
             else:
-                teardown_funcs = [p[1] for p in setup_teardown_funcs if p[1] != None]
+                teardown_funcs = [p[1] for p in setup_teardown_funcs if p[1] is not None]
             
             if self.stop_on_failure and self.abort_suite:
                 self.abort_all_tests = True
@@ -283,13 +303,13 @@ class _Runner:
         ###
         # Teardown suite
         ###
-        if len(list(filter(lambda f: f != None, teardown_funcs))) > 0:
-            events.fire("on_suite_teardown_beginning", suite)
+        if len(list(filter(lambda f: f is not None, teardown_funcs))) > 0:
+            self._begin_suite_teardown(suite)
             self.run_teardown_funcs(teardown_funcs)
             if self.stop_on_failure and self.session.current_suite_data.suite_teardown.has_failure():
                 self.abort_all_tests = True
-            events.fire("on_suite_teardown_ending", suite, self.abort_all_tests is False)
-        
+            self._end_suite_teardown(suite, self.abort_all_tests is False)
+
         # reset the abort suite flag
         if self.abort_suite:
             self.abort_suite = None
@@ -304,7 +324,27 @@ class _Runner:
         # End of suite
         ###
 
-        events.fire("on_suite_ending", suite)
+        self._end_suite(suite)
+
+    def _begin_test_session(self, report):
+        events.fire("on_tests_beginning", report)
+
+    def _end_test_session(self, report):
+        events.fire("on_tests_ending", report)
+
+    def _begin_test_session_setup(self):
+        events.fire("on_test_session_setup_beginning")
+        set_step("Setup test session")
+
+    def _end_test_session_setup(self, outcome):
+        events.fire("on_test_session_setup_ending", outcome)
+
+    def _begin_test_session_teardown(self):
+        events.fire("on_test_session_teardown_beginning")
+        set_step("Teardown test session")
+
+    def _end_test_session_teardown(self, outcome):
+        events.fire("on_test_session_teardown_ending", outcome)
 
     def run_session(self):
         # initialize runtime & global test variables
@@ -316,7 +356,7 @@ class _Runner:
         self.abort_all_tests = False
         self.abort_suite = None
 
-        events.fire("on_tests_beginning", report)
+        self._begin_test_session(report)
 
         # setup test session
         setup_teardown_funcs = []
@@ -325,14 +365,14 @@ class _Runner:
             self.get_fixture_as_funcs(f) for f in self.get_fixtures_to_be_executed_for_session()
         ])
 
-        if len(list(filter(lambda p: p[0] != None, setup_teardown_funcs))) > 0:
-            events.fire("on_test_session_setup_beginning")
+        if len(list(filter(lambda p: p[0] is not None, setup_teardown_funcs))) > 0:
+            self._begin_test_session_setup()
             teardown_funcs = self.run_setup_funcs(
                 setup_teardown_funcs, lambda: self.session.report.test_session_setup.has_failure()
             )
             if len(teardown_funcs) != len(setup_teardown_funcs):
                 self.abort_all_tests = True
-            events.fire("on_test_session_setup_ending", self.abort_all_tests is False)
+            self._end_test_session_setup(self.abort_all_tests is False)
         else:
             teardown_funcs = [p[1] for p in setup_teardown_funcs if p[1] != None]
 
@@ -341,12 +381,12 @@ class _Runner:
             self.run_suite(suite)
 
         # teardown_test_session handling
-        if len(list(filter(lambda f: f != None, teardown_funcs))) > 0:
-            events.fire("on_test_session_teardown_beginning")
+        if len(list(filter(lambda f: f is not None, teardown_funcs))) > 0:
+            self._begin_test_session_teardown()
             self.run_teardown_funcs(teardown_funcs)
-            events.fire("on_test_session_teardown_ending", self.session.has_pending_failure)
+            self._end_test_session_teardown(self.session.has_pending_failure)
 
-        events.fire("on_tests_ending", report)
+        self._end_test_session(report)
 
     def run(self):
         executed_fixtures = []
