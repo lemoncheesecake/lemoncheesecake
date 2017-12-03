@@ -36,8 +36,8 @@ class ReportPortalReportingSession(ReportingSession):
         self.launch_description = launch_description
         self.report_dir = report_dir
         self.report = report
-        self._pending_failure = False
         self._rp_exc_info = None
+        self._current_suite_test_statuses = []
 
     def _handle_rp_error(self, exc_info):
         self._rp_exc_info = exc_info
@@ -54,12 +54,8 @@ class ReportPortalReportingSession(ReportingSession):
         )
         traceback.print_exception(*self._rp_exc_info, file=sys.stderr)
 
-    def _end_current_test_item(self, end_time, status=None):
-        if status is None:
-            status = "FAILURE" if self._pending_failure else "PASSED"
-
+    def _end_current_test_item(self, end_time, status):
         self.service.finish_test_item(end_time=make_time(end_time), status=status)
-        self._pending_failure = False
 
     def on_tests_beginning(self, report, start_time):
         if self._has_rp_error():
@@ -92,7 +88,7 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        self._end_current_test_item(end_time)
+        self._end_current_test_item(end_time, status="passed" if outcome else "failed")
 
     def on_test_session_teardown_beginning(self, start_time):
         if self._has_rp_error():
@@ -107,7 +103,7 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        self._end_current_test_item(end_time)
+        self._end_current_test_item(end_time, status="passed" if outcome else "failed")
 
     def on_suite_beginning(self, suite, start_time):
         if self._has_rp_error():
@@ -125,7 +121,7 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        self._end_current_test_item(end_time)
+        self._end_current_test_item(end_time, status="passed")
 
     def on_suite_setup_beginning(self, suite, start_time):
         if self._has_rp_error():
@@ -140,7 +136,7 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        self._end_current_test_item(end_time)
+        self._end_current_test_item(end_time, status="passed" if outcome else "failed")
 
     def on_suite_teardown_beginning(self, suite, start_time):
         if self._has_rp_error():
@@ -155,7 +151,7 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        self._end_current_test_item(end_time)
+        self._end_current_test_item(end_time, status="passed" if outcome else "failed")
 
     def on_test_beginning(self, test, start_time):
         if self._has_rp_error():
@@ -164,8 +160,8 @@ class ReportPortalReportingSession(ReportingSession):
         self.service.start_test_item(
             item_type="TEST", start_time=make_time(start_time),
             name=test.name, description=test.description,
-            tags=test.tags + \
-                 convert_properties_into_tags(test.properties) + \
+            tags=test.tags +
+                 convert_properties_into_tags(test.properties) +
                  convert_links_into_tags(test.links)
         )
 
@@ -173,9 +169,9 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        self._end_current_test_item(end_time)
+        self._end_current_test_item(end_time, status)
 
-    def _bypass_test(self, test, time):
+    def _bypass_test(self, test, status, time):
         if self._has_rp_error():
             return
 
@@ -183,19 +179,17 @@ class ReportPortalReportingSession(ReportingSession):
             item_type="TEST", start_time=make_time(time),
             name=test.name, description=test.description, tags=test.tags,
         )
-        self._end_current_test_item(time)
+        self._end_current_test_item(time, status=status)
 
     def on_skipped_test(self, test, reason, time):
         if self._has_rp_error():
             return
 
-        self._bypass_test(test, time)
+        self._bypass_test(test, "skipped", time)
 
     def on_disabled_test(self, test, time):
-        if self._has_rp_error():
-            return
-
-        self._bypass_test(test, time)
+        # do not log disabled test, moreover it seems that the is not corresponding status in ReportPortal
+        pass
 
     def on_step(self, description, start_time):
         if self._has_rp_error():
