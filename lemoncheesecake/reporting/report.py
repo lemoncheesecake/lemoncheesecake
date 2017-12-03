@@ -142,6 +142,12 @@ class _ReportStats:
         self.warning_logs = 0
         self.duration = 0
 
+    def is_successful(self):
+        return self.test_statuses["failed"] == 0 and self.test_statuses["skipped"] == 0
+
+    def get_enabled_tests(self):
+        return self.tests - self.test_statuses["disabled"]
+
     def _walk_steps(self, steps):
         for step in steps:
             for entry in step.entries:
@@ -238,7 +244,7 @@ class Report:
 
     def serialize_stats(self):
         stats = self.get_stats()
-        enabled_tests = stats.tests - stats.test_statuses["disabled"]
+        enabled_tests = stats.get_enabled_tests()
         return (
             ("Start time", time.asctime(time.localtime(self.start_time))),
             ("End time", time.asctime(time.localtime(self.end_time)) if self.end_time else "n/a"),
