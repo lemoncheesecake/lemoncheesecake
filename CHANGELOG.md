@@ -1,3 +1,9 @@
+# 0.15.0 (2017-12-04)
+
+- **reporting**: add new reporting backend for ReportPortal (http://reportportal.io/)
+- **reporting**: add new reporting backend for Slack
+- **API**: `lcc.prepare_attachment` is now a context manager that returns the attachment file path
+
 # 0.14.0 (2017-11-25)
 
 - **API**: add `lcc.conditional` decorator for tests/suites to allow a test/suite to be included in the test tree
