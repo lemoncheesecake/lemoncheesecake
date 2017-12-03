@@ -5,6 +5,8 @@ Created on Jan 24, 2016
 '''
 
 import os.path
+import time
+from contextlib import contextmanager
 import shutil
 
 from lemoncheesecake.exceptions import LemonCheesecakeInternalError
@@ -42,42 +44,54 @@ class _Runtime:
         self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
         self.attachment_count = 0
         self.step_lock = False
+        self.pending_step = None
+        self.pending_step_time = None
 
-    def set_step(self, description, force_lock):
+    def set_step(self, description, force_lock=False):
         if self.step_lock and not force_lock:
             return
 
-        events.fire("on_step", description)
+        self.pending_step = description
+        self.pending_step_time = time.time()
+
+    def _flush_pending_step(self):
+        if self.pending_step:
+            events.fire("on_step", self.pending_step, event_time=self.pending_step_time)
+            self.pending_step = None
+            self.pending_step_time = None
 
     def log(self, level, content):
+        self._flush_pending_step()
         events.fire("on_log", level, content)
 
     def log_check(self, description, outcome, details):
+        self._flush_pending_step()
         events.fire("on_check", description, outcome, details)
 
     def log_url(self, url, description):
+        self._flush_pending_step()
         events.fire("on_log_url", url, description)
 
+    @contextmanager
     def prepare_attachment(self, filename, description):
         attachment_filename = "%04d_%s" % (self.attachment_count + 1, filename)
         self.attachment_count += 1
         if not os.path.exists(self.attachments_dir):
             os.mkdir(self.attachments_dir)
 
-        events.fire("on_log_attachment", "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), description)
+        yield os.path.join(self.attachments_dir, attachment_filename)
 
-        return os.path.join(self.attachments_dir, attachment_filename)
+        self._flush_pending_step()
+        events.fire("on_log_attachment", "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description)
 
     def save_attachment_file(self, filename, description):
-        target_filename = self.prepare_attachment(os.path.basename(filename), description)
-        shutil.copy(filename, target_filename)
+        with self.prepare_attachment(os.path.basename(filename), description) as report_attachment_path:
+            shutil.copy(filename, report_attachment_path)
 
     def save_attachment_content(self, content, filename, description, binary_mode):
-        target_filename = self.prepare_attachment(filename, description)
-
-        fh = open(target_filename, "wb")
-        fh.write(content if binary_mode else content.encode("utf-8"))
-        fh.close()
+        with self.prepare_attachment(filename, description) as report_attachment_path:
+            with open(report_attachment_path, "wb") as fh:
+                fh.write(content if binary_mode else content.encode("utf-8"))
 
     def get_fixture(self, name):
         try:

@@ -13,14 +13,9 @@ from lemoncheesecake import events
 __all__ = "ReportWriter", "initialize_report_writer"
 
 
-def _set_step(description, step_time=None):
-    events.fire("on_step", description, event_time=step_time)
-
-
 class ReportWriter:
     def __init__(self, report):
         self.report = report
-        self.default_step_description = None
         # pointers to report data parts
         self.current_suite_data = None
         self.current_test_data = None
@@ -64,7 +59,6 @@ class ReportWriter:
     def on_test_session_setup_beginning(self, time):
         self.report.test_session_setup = self._start_hook(time)
         self.current_step_data_list = self.report.test_session_setup.steps
-        self.default_step_description = "Setup test session"
 
     def on_test_session_setup_ending(self, outcome, time):
         if self.report.test_session_setup.is_empty():
@@ -76,7 +70,6 @@ class ReportWriter:
     def on_test_session_teardown_beginning(self, time):
         self.report.test_session_teardown = self._start_hook(time)
         self.current_step_data_list = self.report.test_session_teardown.steps
-        self.default_step_description = "Teardown test session"
 
     def on_test_session_teardown_ending(self, outcome, time):
         if self.report.test_session_teardown.is_empty():
@@ -100,7 +93,6 @@ class ReportWriter:
     def on_suite_setup_beginning(self, suite, time):
         self.current_suite_data.suite_setup = self._start_hook(time)
         self.current_step_data_list = self.current_suite_data.suite_setup.steps
-        self.default_step_description = "Setup suite"
 
     def on_suite_setup_ending(self, suite, outcome, time):
         if self.current_suite_data.suite_setup.is_empty():
@@ -112,7 +104,6 @@ class ReportWriter:
     def on_suite_teardown_beginning(self, suite, time):
         self.current_suite_data.suite_teardown = self._start_hook(time)
         self.current_step_data_list = self.current_suite_data.suite_teardown.steps
-        self.default_step_description = "Teardown suite"
 
     def on_suite_teardown_ending(self, suite, outcome, time):
         if self.current_suite_data.suite_teardown.is_empty():
@@ -135,19 +126,6 @@ class ReportWriter:
         self.current_test_data.start_time = start_time
         self.current_suite_data.add_test(self.current_test_data)
         self.current_step_data_list = self.current_test_data.steps
-        self.default_step_description = test.description
-
-    def on_test_setup_beginning(self, test):
-        _set_step("Setup test")
-
-    def on_test_setup_ending(self, test, outcome):
-        _set_step(self.current_test.description)
-
-    def on_test_teardown_beginning(self, test):
-        _set_step("Teardown test")
-
-    def on_test_teardown_ending(self, test, outcome):
-        pass
 
     def on_test_ending(self, test, status, end_time):
         self.current_test_data.status = status
@@ -175,10 +153,6 @@ class ReportWriter:
     def on_disabled_test(self, test, time):
         self._bypass_test(test, "disabled", "", time)
 
-    def create_step_if_needed(self, step_time=None):
-        if not self.current_step_data_list:
-            _set_step(self.default_step_description, step_time or time.time())
-
     def on_step(self, description, step_time):
         self.end_current_step(step_time)
 
@@ -191,23 +165,19 @@ class ReportWriter:
         if level == LOG_LEVEL_ERROR:
             self._is_success = False
             self.has_pending_failure = True
-        self.create_step_if_needed(log_time)
         self.current_step_data.entries.append(LogData(level, content, log_time))
 
     def on_check(self, description, outcome, details):
-        self.create_step_if_needed()
         self.current_step_data.entries.append(CheckData(description, outcome, details))
 
         if outcome is False:
             self._is_success = False
             self.has_pending_failure = True
 
-    def on_log_attachment(self, path, description):
-        self.create_step_if_needed()
+    def on_log_attachment(self, path, filename, description):
         self.current_step_data.entries.append(AttachmentData(description, path))
 
     def on_log_url(self, url, description):
-        self.create_step_if_needed()
         self.current_step_data.entries.append(UrlData(description, url))
 
     def is_successful(self):

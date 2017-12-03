@@ -377,9 +377,9 @@ def test_prepare_attachment(tmpdir):
     class mysuite:
         @lcc.test("Some test")
         def sometest(self):
-            filename = lcc.prepare_attachment("foobar.txt", "some description")
-            with open(filename, "w") as fh:
-                fh.write("some content")
+            with lcc.prepare_attachment("foobar.txt", "some description") as filename:
+                with open(filename, "w") as fh:
+                    fh.write("some content")
 
     run_suite_class(mysuite, tmpdir=tmpdir)
 

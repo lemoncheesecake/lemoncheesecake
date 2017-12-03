@@ -206,5 +206,5 @@ except NameError:
 register_event_type("on_step", [basestring])
 register_event_type("on_log", [str, basestring])
 register_event_type("on_check", [basestring, bool, basestring])
-register_event_type("on_log_attachment", [basestring, basestring])
+register_event_type("on_log_attachment", [basestring, basestring, basestring])
 register_event_type("on_log_url", [basestring, basestring])

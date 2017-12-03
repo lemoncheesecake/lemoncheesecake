@@ -59,12 +59,20 @@ def test_create_report_dir(tmpdir):
 
 def test_get_all_reporting_backends(tmpdir):
     project = make_test_project(tmpdir)
+
+    expected_reporting_backends = ["console", "html", "json"]
     try:
         import lxml
+        expected_reporting_backends.extend(["xml", "junit"])
     except ImportError:
-        assert sorted([p.name for p in project.get_all_reporting_backends()]) == ["console", "html", "json"]
-    else:
-        assert sorted([p.name for p in project.get_all_reporting_backends()]) == ["console", "html", "json", "junit", "xml"]
+        pass
+    try:
+        import reportportal_client
+        expected_reporting_backends.append("reportportal")
+    except ImportError:
+        pass
+
+    assert sorted([p.name for p in project.get_all_reporting_backends()]) == sorted(expected_reporting_backends)
 
 
 def test_get_default_reporting_backends_for_test_run(tmpdir):

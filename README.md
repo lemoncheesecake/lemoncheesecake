@@ -8,10 +8,42 @@ One of the key features of lemoncheesecake is its reporting capabilities, provid
 
 lemoncheesecake is compatible with Python 2.7, 3.3-3.6.
 
+# Installation
+
 lemoncheesecake can be installed through pip:
 ```
 $ pip install lemoncheesecake
 ```
+
+The following reporting backends are supported:
+- console (available by default)
+- json (available by default)
+- html (available by default)
+- xml (available through the extra `xml`)
+- junit (available through the extra `junit`)
+- reportportal (available through the extra `reportportal`)
+
+Lemoncheesecake can be installed with an extra like this:
+```
+$ pip install lemoncheesecake[xml]
+```
+
+Multiple extras can be specified:
+```
+$ pip install lemoncheesecake[junit,reportportal]
+```
+
+# Configuring reporting backends
+
+Some reporting backends require specific configuration, this is done through environment variable.
+
+## ReportPortal
+
+- `RP_URL`: the URL toward your ReportPortal instance, example: https://reportportal.mycompany.com (mandatory)
+- `RP_AUTH_TOKEN`: the token with UUID form that is used to authenticate on ReportPortal (mandatory)
+- `RP_PROJECT`: the ReportPortal project where the test result will be stored (mandatory)
+- `RP_LAUNCH_NAME`: the ReportPortal launch name (default is "Test Run")
+- `RP_LAUNCH_DESCRIPTION`: the ReportPortal launch description (optional)
 
 # How does it look ?
 

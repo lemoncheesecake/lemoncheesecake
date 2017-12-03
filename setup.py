@@ -44,7 +44,8 @@ setup(
     install_requires = ["colorama", "termcolor", "terminaltables"],
     extras_require = {
         "xml": "lxml",
-        "junit": "lxml"
+        "junit": "lxml",
+        "reportportal": "reportportal-client"
     },
     entry_points={
         "console_scripts": [
