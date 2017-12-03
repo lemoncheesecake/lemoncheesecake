@@ -12,7 +12,7 @@ from lemoncheesecake.suite import load_suites_from_directory
 from lemoncheesecake.fixtures import load_fixtures_from_directory
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.reporting import ConsoleBackend, HtmlBackend, JsonBackend, XmlBackend, JunitBackend, \
-    ReportPortalBackend, filter_available_reporting_backends
+    ReportPortalBackend, SlackReportingBackend, filter_available_reporting_backends
 from lemoncheesecake.reporting.reportdir import report_dir_with_archiving, archive_dirname_datetime
 from lemoncheesecake.exceptions import ProjectError, UserError, serialize_current_exception
 from lemoncheesecake.utils import get_resource_path
@@ -92,6 +92,7 @@ class SimpleProjectConfiguration(ProjectConfiguration):
         self.junit_backend = JunitBackend()
         self.html_backend = HtmlBackend()
         self.reportportal_backend = ReportPortalBackend()
+        self.slack_backend = SlackReportingBackend()
     
     def get_suites(self):
         return load_suites_from_directory(self._suites_dir)
@@ -105,7 +106,8 @@ class SimpleProjectConfiguration(ProjectConfiguration):
     def get_all_reporting_backends(self):
         return [
             self.console_backend, self.json_backend, self.html_backend,
-            self.xml_backend, self.junit_backend, self.reportportal_backend
+            self.xml_backend, self.junit_backend, self.reportportal_backend,
+            self.slack_backend
         ]
 
     def get_default_reporting_backends_for_test_run(self):

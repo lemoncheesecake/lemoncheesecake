@@ -22,6 +22,7 @@ The following reporting backends are supported:
 - xml (available through the extra `xml`)
 - junit (available through the extra `junit`)
 - reportportal (available through the extra `reportportal`)
+- slack ((available through the extra `slack`))
 
 Lemoncheesecake can be installed with an extra like this:
 ```
@@ -39,11 +40,45 @@ Some reporting backends require specific configuration, this is done through env
 
 ## ReportPortal
 
+The ReportPortal (https://reportportal.io) reporting backend does real time reporting, meaning you can see the
+results of your tests during test execution.
+
 - `RP_URL`: the URL toward your ReportPortal instance, example: https://reportportal.mycompany.com (mandatory)
 - `RP_AUTH_TOKEN`: the token with UUID form that is used to authenticate on ReportPortal (mandatory)
 - `RP_PROJECT`: the ReportPortal project where the test result will be stored (mandatory)
 - `RP_LAUNCH_NAME`: the ReportPortal launch name (default is "Test Run")
 - `RP_LAUNCH_DESCRIPTION`: the ReportPortal launch description (optional)
+
+## Slack
+
+The Slack reporting backend sends a notification at the end of the test run to a given channel or user.
+
+- `SLACK_AUTH_TOKEN`: authentication token to connect on Slack (mandatory)
+- `SLACK_CHANNEL`: the channel or the user to send message to (mandatory, syntax: `#channel` or `@user`)
+- `SLACK_MESSAGE_TEMPLATE`: the message template can contain variables using the form {var}, see below
+  for available variables (mandatory)
+- `SLACK_ONLY_NOTIFY_FAILURE`: if this variable is set, then the notification will only be sent on failures
+  (meaning if there is one or more tests with status "failed" or "skipped")
+
+Here are the supported variables for slack message template:
+- `start_time`: the test run start time
+- `end_time`: the test run end time
+- `duration`: the test run duration
+- `total`: the total number of tests (including disabled tests)
+- `enabled`: the total number of tests (excluding disabled tests)
+- `passed`: the number of passed tests
+- `passed_pct`: the number of passed tests in percentage of enabled tests
+- `failed`: the number of failed tests
+- `failed_pct`: the number of failed tests in percentage of enabled tests
+- `skipped`: the number of skipped tests
+- `skipped_pct`: the number of skipped tests in percentage of enabled tests
+- `disabled`: the number of disabled tests
+- `disabled_pct`: the number of disabled tests in percentage of all tests
+
+An example of `SLACK_MESSAGE_TEMPLATE`:
+```
+MyProduct test results: {passed}/{enabled} passed ({passed_pct})
+```
 
 # How does it look ?
 

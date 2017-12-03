@@ -45,7 +45,8 @@ setup(
     extras_require = {
         "xml": "lxml",
         "junit": "lxml",
-        "reportportal": "reportportal-client"
+        "reportportal": "reportportal-client",
+        "slack": "slacker"
     },
     entry_points={
         "console_scripts": [

@@ -71,6 +71,11 @@ def test_get_all_reporting_backends(tmpdir):
         expected_reporting_backends.append("reportportal")
     except ImportError:
         pass
+    try:
+        import slacker
+        expected_reporting_backends.append("slack")
+    except ImportError:
+        pass
 
     assert sorted([p.name for p in project.get_all_reporting_backends()]) == sorted(expected_reporting_backends)
 
