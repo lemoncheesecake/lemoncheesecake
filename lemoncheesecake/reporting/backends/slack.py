@@ -38,9 +38,52 @@ class BaseSlackReportingSession(ReportingSession):
             print("- %s" % error, file=sys.stderr)
 
 
+def percent(val, of):
+    return "%d%%" % ((float(val) / of * 100) if of else 0)
+
+
+def get_message_template_parameters():
+    return {
+        "start_time": lambda report, stats: time.asctime(time.localtime(report.start_time)),
+        "end_time": lambda report, stats: time.asctime(time.localtime(report.end_time)),
+        "duration": lambda report, stats: humanize_duration(report.end_time - report.start_time),
+
+        "total": lambda report, stats: stats.tests,
+        "enabled": lambda report, stats: stats.get_enabled_tests(),
+
+        "passed": lambda report, stats: stats.test_statuses["passed"],
+        "passed_pct": lambda report, stats: percent(stats.test_statuses["passed"], of=stats.get_enabled_tests()),
+
+        "failed": lambda report, stats: stats.test_statuses["failed"],
+        "failed_pct": lambda report, stats: percent(stats.test_statuses["failed"], of=stats.get_enabled_tests()),
+
+        "skipped": lambda report, stats: stats.test_statuses["skipped"],
+        "skipped_pct": lambda report, stats: percent(stats.test_statuses["skipped"], of=stats.get_enabled_tests()),
+
+        "disabled": lambda report, stats: stats.test_statuses["disabled"],
+        "disabled_pct": lambda report, stats: percent(stats.test_statuses["disabled"], of=stats.tests)
+    }
+
+
+def build_message_parameters(report, stats):
+    return {name: func(report, stats) for name, func in get_message_template_parameters().items()}
+
+
+def build_message_empty_parameters():
+    return {name: "" for name in get_message_template_parameters()}
+
+
+def check_message_template_validity(template):
+    try:
+        template.format(**build_message_empty_parameters())
+    except KeyError as excp:
+        raise UserError("Invalid Slack message template, unknown variable: %s" % excp)
+
+
 class EndOfTestsNotifier(BaseSlackReportingSession):
     def __init__(self, auth_token, channel, message_template, only_notify_failure=False):
         BaseSlackReportingSession.__init__(self, auth_token, channel)
+        check_message_template_validity(message_template)
         self.message_template = message_template
         self.only_notify_failure = only_notify_failure
 
@@ -76,8 +119,7 @@ class EndOfTestsNotifier(BaseSlackReportingSession):
         if self.only_notify_failure and stats.is_successful():
             return
 
-        message = self.message_template.format(**self.build_message_parameters(report, stats))
-
+        message = self.message_template.format(**build_message_parameters(report, stats))
         self.send_message(message)
 
         self.show_errors()
