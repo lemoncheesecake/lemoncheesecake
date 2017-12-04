@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import os
+import sys
 import time
 
 try:
@@ -18,14 +19,23 @@ class BaseSlackReportingSession(ReportingSession):
     def __init__(self, auth_token, channel):
         self.slack = slacker.Slacker(auth_token)
         self.channel = channel
+        self.errors = []
 
     def send_message(self, message):
         try:
             self.slack.chat.post_message(self.channel, message)
         except slacker.Error as excp:
-            raise UserError("Error while notifying Slack channel/user '%s', got: %s" % (
+            self.errors.append("Error while notifying Slack channel/user '%s', got: %s" % (
                 self.channel, excp
             ))
+
+    def show_errors(self):
+        if len(self.errors) == 0:
+            return
+
+        print("Slack reporting backend, got the following errors while sending messages:", file=sys.stderr)
+        for error in self.errors:
+            print("- %s" % error, file=sys.stderr)
 
 
 class EndOfTestsNotifier(BaseSlackReportingSession):
@@ -69,6 +79,8 @@ class EndOfTestsNotifier(BaseSlackReportingSession):
         message = self.message_template.format(**self.build_message_parameters(report, stats))
 
         self.send_message(message)
+
+        self.show_errors()
 
 
 def get_env_var(name, optional=False, default=None):
