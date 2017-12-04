@@ -1,3 +1,9 @@
+# 0.15.1 (2017-12-05)
+
+- **Slack**: better error handling when message sending fails
+- **Slack**: check `$SLACK_MESSAGE_TEMPLATE` variables before starting tests
+- Fix swapped session teardown outcome
+
 # 0.15.0 (2017-12-04)
 
 - **reporting**: add new reporting backend for ReportPortal (http://reportportal.io/)
