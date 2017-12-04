@@ -384,7 +384,7 @@ class _Runner:
         if len(list(filter(lambda f: f is not None, teardown_funcs))) > 0:
             self._begin_test_session_teardown()
             self.run_teardown_funcs(teardown_funcs)
-            self._end_test_session_teardown(self.session.has_pending_failure)
+            self._end_test_session_teardown(not self.session.has_pending_failure)
 
         self._end_test_session(report)
 
