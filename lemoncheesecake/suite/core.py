@@ -21,6 +21,14 @@ class Test(BaseTest):
         self.callback = callback
         self.disabled = False
 
+    def is_disabled(self):
+        node = self
+        while node is not None:
+            if node.disabled:
+                return True
+            node = node.parent_suite
+        return False
+
     def get_fixtures(self):
         return get_callable_args(self.callback)
 
