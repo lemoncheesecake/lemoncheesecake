@@ -87,6 +87,8 @@ def _print_summary(stats, duration):
     print(" * Failures: %d" % (stats.test_statuses["failed"]))
     if stats.test_statuses["skipped"]:
         print(" * Skipped: %d" % (stats.test_statuses["skipped"]))
+    if stats.test_statuses["disabled"]:
+        print(" * Disabled: %d" % (stats.test_statuses["disabled"]))
     print()
 
 
