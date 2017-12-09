@@ -46,7 +46,7 @@ class StatsCommand(Command):
 
         def handle_test(test, suite):
             stats.tests_nb += 1
-            if test.disabled:
+            if test.is_disabled():
                 stats.disabled_tests_nb += 1
             for tag in test.get_inherited_tags():
                 stats.tags[tag] = stats.tags.get(tag, 0) + 1
