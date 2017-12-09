@@ -65,11 +65,28 @@ def _make_suite_header_line(suite, terminal_width):
     return "=" * padding_left + " " + colored(suite_name, attrs=["bold"]) + " " + "=" * padding_right
 
 
+def _make_test_status_label(status):
+    if status == "passed":
+        color = "green"
+    elif status == "failed":
+        color = "red"
+    elif status == "disabled":
+        color = "grey"
+    else:
+        color = "yellow"
+
+    if status == "passed":
+        label = "OK"
+    elif status == "disabled":
+        label = "--"
+    else:
+        label = "KO"
+
+    return colored(label, color, attrs=["bold"])
+
+
 def _make_test_result_line(name, num, status):
-    line = " %s %2s # %s" % (
-        colored("OK", "green", attrs=["bold"]) if status == "passed" else colored("KO", "red", attrs=["bold"]),
-        num, name
-    )
+    line = " %s %2s # %s" % (_make_test_status_label(status), num, name)
     raw_line = "%s %2s # %s" % ("OK" if status == "passed" else "KO", num, name)
 
     return line, len(raw_line)
@@ -166,21 +183,18 @@ class ConsoleReportingSession(ReportingSession):
 
         self.current_test_idx += 1
 
-    def _bypass_test(self, test):
-        line = " %s %2s # %s" % (
-            colored("KO", "yellow", attrs=["bold"]),
-            self.current_test_idx, self.get_test_label(test)
-        )
+    def _bypass_test(self, test, status):
+        line = " %s %2s # %s" % (_make_test_status_label(status), self.current_test_idx, self.get_test_label(test))
         raw_line = "%s %2s # %s" % ("KO", self.current_test_idx, self.get_test_label(test))
         self.lp.print_line(line, force_len=len(raw_line))
         self.lp.new_line()
         self.current_test_idx += 1
 
     def on_skipped_test(self, test, reason):
-        self._bypass_test(test)
+        self._bypass_test(test, "skipped")
 
     def on_disabled_test(self, test):
-        self._bypass_test(test)
+        self._bypass_test(test, "disabled")
 
     def on_step(self, description):
         self.lp.print_line("%s (%s...)" % (self.step_prefix, description))
