@@ -16,8 +16,10 @@ from lemoncheesecake.utils import humanize_duration
 
 
 class BaseSlackReportingSession(ReportingSession):
-    def __init__(self, auth_token, channel):
-        self.slack = slacker.Slacker(auth_token)
+    def __init__(self, auth_token, channel, proxy=None):
+        self.slack = slacker.Slacker(
+            auth_token, http_proxy=proxy, https_proxy=proxy
+        )
         self.channel = channel
         self.errors = []
 
@@ -81,8 +83,8 @@ def check_message_template_validity(template):
 
 
 class EndOfTestsNotifier(BaseSlackReportingSession):
-    def __init__(self, auth_token, channel, message_template, only_notify_failure=False):
-        BaseSlackReportingSession.__init__(self, auth_token, channel)
+    def __init__(self, auth_token, channel, message_template, proxy=None, only_notify_failure=False):
+        BaseSlackReportingSession.__init__(self, auth_token, channel, proxy=proxy)
         check_message_template_validity(message_template)
         self.message_template = message_template
         self.only_notify_failure = only_notify_failure
@@ -139,6 +141,10 @@ def get_slack_auth_token():
     return get_env_var("SLACK_AUTH_TOKEN")
 
 
+def get_slack_http_proxy():
+    return get_env_var("SLACK_HTTP_PROXY", optional=True, default=None)
+
+
 def get_slack_channel():
     return get_env_var("SLACK_CHANNEL")
 
@@ -162,5 +168,5 @@ class SlackReportingBackend(ReportingBackend):
     def create_reporting_session(self, report_dir, report):
         return EndOfTestsNotifier(
             get_slack_auth_token(), get_slack_channel(), get_message_template(),
-            get_only_notify_on_failure()
+            proxy=get_slack_http_proxy(), only_notify_failure=get_only_notify_on_failure()
         )

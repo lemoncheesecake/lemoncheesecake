@@ -59,6 +59,7 @@ results of your tests during test execution.
 
 The Slack reporting backend sends a notification at the end of the test run to a given channel or user.
 
+- `SLACK_HTTP_PROXY`: HTTP proxy to use to connect to Slack (optional)
 - `SLACK_AUTH_TOKEN`: authentication token to connect on Slack (mandatory)
 - `SLACK_CHANNEL`: the channel or the user to send message to (mandatory, syntax: `#channel` or `@user`)
 - `SLACK_MESSAGE_TEMPLATE`: the message template can contain variables using the form {var}, see below
