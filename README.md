@@ -609,6 +609,8 @@ def test_something(self):
 
 Disabled tests are visible in the report but they are not taken into account while computing the percentage of successful tests.
 
+If you want to completely hide a test / suite from the test tree and report, use `lcc.hidden()`.
+
 ## Conditional tests and suites
 
 A test or an entire suite can included or excluded from the test tree using the `@lcc.conditional(condition)` decorator. This decorator can be associated to both tests and suites,

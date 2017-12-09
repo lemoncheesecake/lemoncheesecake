@@ -218,6 +218,19 @@ def test_load_suites_from_classes_with_condition_on_test_not_met():
     assert len(suites[0].get_tests()) == 0
 
 
+def test_hidden_test():
+    @lcc.suite("My Suite")
+    class MySuite:
+        @lcc.test("My Test")
+        @lcc.hidden()
+        def mytest(self):
+            pass
+
+    suites = load_suites_from_classes([MySuite])
+
+    assert len(suites[0].get_tests()) == 0
+
+
 def test_load_test_from_function():
     @lcc.test("mytest")
     def func():
