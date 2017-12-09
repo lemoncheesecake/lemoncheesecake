@@ -81,8 +81,9 @@ def _print_summary(stats, duration):
     print(" * Duration: %s" % humanize_duration(duration))
     print(" * Tests: %d" % stats.tests)
     print(" * Successes: %d (%d%%)" % (
-        stats.test_statuses["passed"], float(stats.test_statuses["passed"]) / stats.tests * 100 if stats.tests else 0)
-          )
+        stats.test_statuses["passed"],
+        float(stats.test_statuses["passed"]) / stats.get_enabled_tests() * 100 if stats.get_enabled_tests() else 0)
+    )
     print(" * Failures: %d" % (stats.test_statuses["failed"]))
     if stats.test_statuses["skipped"]:
         print(" * Skipped: %d" % (stats.test_statuses["skipped"]))
