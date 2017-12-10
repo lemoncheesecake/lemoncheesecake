@@ -6,6 +6,8 @@ Created on Feb 14, 2017
 
 from __future__ import print_function
 
+from termcolor import colored
+
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import get_suites_from_project
 from lemoncheesecake.filter import add_filter_args_to_cli_parser
@@ -34,6 +36,7 @@ class ShowCommand(Command):
     
     def serialize_metadata(self, obj):
         return ", ".join(
+            ([colored("DISABLED", attrs=[])] if obj.disabled else []) +
             obj.tags +
             ["%s:%s" % (k, v) for k, v in obj.properties.items()] +
             [link_name or link_url for link_url, link_name in obj.links]

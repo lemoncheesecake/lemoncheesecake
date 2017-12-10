@@ -7,6 +7,8 @@ Created on Sep 8, 2016
 import fnmatch
 from functools import reduce
 
+from lemoncheesecake.exceptions import UserError
+
 __all__ = ("Filter", "ReportFilter", "filter_suites", "add_filter_args_to_cli_parser", "make_filter_from_cli_args")
 
 NEGATIVE_FILTER_CHARS = "-^~"
@@ -54,15 +56,24 @@ class Filter:
     def __init__(self):
         self.paths = []
         self.descriptions = []
-        self.tags = [ ]
+        self.tags = []
         self.properties = []
-        self.links = [ ]
+        self.links = []
+        self.enabled = False
+        self.disabled = False
 
     def is_empty(self):
-        return not any([self.paths, self.descriptions, self.tags, self.properties, self.links])
+        return not any([
+            self.paths, self.descriptions, self.tags, self.properties, self.links, self.enabled, self.disabled
+        ])
+
+    def is_test_disabled(self, test):
+        return test.is_disabled()
 
     def match_test(self, test, suite):
         funcs = [
+            lambda: self.is_test_disabled(test) if self.disabled else True,
+            lambda: not self.is_test_disabled(test) if self.enabled else True,
             lambda: match_values(test.get_inherited_paths(), self.paths),
             lambda: all(match_values(test.get_inherited_descriptions(), descs) for descs in self.descriptions),
             lambda: all(match_values(test.get_inherited_tags(), tags) for tags in self.tags),
@@ -82,6 +93,9 @@ class ReportFilter(Filter):
             return False
 
         return len(self.statuses) == 0
+
+    def is_test_disabled(self, test):
+        return test.status == "disabled"
 
     def match_test(self, test, suite):
         if not Filter.match_test(self, test, suite):
@@ -130,24 +144,31 @@ def add_filter_args_to_cli_parser(cli_parser):
     group.add_argument("--tag", "-a", nargs="+", action="append", default=[], help="Filter on tags")
     group.add_argument("--property", "-m", nargs="+", type=property_value, action="append", default=[], help="Filter on properties")
     group.add_argument("--link", "-l", nargs="+", action="append", default=[], help="Filter on links (names and URLs)")
+    group.add_argument("--disabled", action="store_true", help="Filter on disabled tests")
+    group.add_argument("--enabled", action="store_true", help="Filter on enabled (non-disabled) tests")
 
     return group
 
 
 def add_report_filter_args_to_cli_parser(cli_parser):
     group = add_filter_args_to_cli_parser(cli_parser)
-    group.add_argument("--passed", action="store_true", help="Filter on passed test")
-    group.add_argument("--failed", action="store_true", help="Filter on failed test")
-    group.add_argument("--skipped", action="store_true", help="Filter on skipped test")
-    group.add_argument("--disabled", action="store_true", help="Filter on disabled test")
+    group.add_argument("--passed", action="store_true", help="Filter on passed tests")
+    group.add_argument("--failed", action="store_true", help="Filter on failed tests")
+    group.add_argument("--skipped", action="store_true", help="Filter on skipped tests")
 
 
 def _set_filter_from_cli_args(fltr, cli_args):
+    if cli_args.disabled and cli_args.enabled:
+        raise UserError("--disabled and --enabled arguments are mutually exclusive")
+
     fltr.paths = cli_args.path
     fltr.descriptions = cli_args.desc
     fltr.tags = cli_args.tag
     fltr.properties = cli_args.property
     fltr.links = cli_args.link
+    fltr.disabled = cli_args.disabled
+    fltr.enabled = cli_args.enabled
+
     return fltr
 
 
@@ -167,7 +188,5 @@ def make_report_filter_from_cli_args(cli_args):
         fltr.statuses.append("failed")
     if cli_args.skipped:
         fltr.statuses.append("skipped")
-    if cli_args.disabled:
-        fltr.statuses.append("disabled")
 
     return fltr

@@ -166,7 +166,7 @@ class _Runner:
         ###
         # Checker whether the test must be executed or not
         ###
-        if test.disabled or suite.disabled:
+        if test.is_disabled():
             events.fire("on_disabled_test", test)
             return
 
