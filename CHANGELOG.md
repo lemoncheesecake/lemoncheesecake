@@ -1,3 +1,9 @@
+# 0.15.2 (2017-12-10)
+
+- **CLI tools**: various fixes and improvement with disabled tests handling
+- **Slack**: add a proxy option (`$SLACK_HTTP_PROXY` environment variable)
+- **API**: add a new decorator function `@lcc.hidden()` to hide tests/suites from the test tree
+
 # 0.15.1 (2017-12-05)
 
 - **Slack**: better error handling when message sending fails
