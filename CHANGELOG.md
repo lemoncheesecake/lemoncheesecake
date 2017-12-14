@@ -1,3 +1,7 @@
+# 0.15.3 (2017-12-14)
+
+- **API**: fix disabled test attribute not properly taken into account in add_test_in_suite
+
 # 0.15.2 (2017-12-10)
 
 - **CLI tools**: various fixes and improvement with disabled tests handling
