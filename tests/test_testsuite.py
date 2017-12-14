@@ -283,6 +283,19 @@ def test_register_test_multiple():
     assert len(suite.get_tests()) == 3
 
 
+def test_register_disabled():
+    @lcc.suite("My Suite")
+    class MySuite:
+        def __init__(self):
+            test = lcc.Test("mytest", "My Test", dummy_test_callback())
+            test.disabled = True
+            add_test_in_suite(test, self)
+
+    suite = load_suite_from_class(MySuite)
+    test = suite.get_tests()[0]
+    assert test.is_disabled()
+
+
 def test_register_test_with_before_and_after():
     @lcc.suite("My Suite")
     class MySuite:

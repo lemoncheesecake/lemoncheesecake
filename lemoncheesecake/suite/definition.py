@@ -53,6 +53,7 @@ def add_test_in_suite(test, suite, before_test=None, after_test=None):
     md.tags.extend(test.tags)
     md.properties.update(test.properties)
     md.links.extend(test.links)
+    md.disabled = test.disabled
 
     # set test func rank
     if before_test or after_test:
