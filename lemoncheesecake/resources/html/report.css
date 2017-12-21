@@ -68,6 +68,10 @@ th, td {
     vertical-align: middle ! important;
 }
 
+.check_description, .check_result {
+	white-space: pre;
+}
+
 .extra-info-container {
     display: flex;
     flex-direction: row;
