@@ -12,8 +12,8 @@ class Step extends React.Component<Props, {}> {
         return (
             <tr className="step_entry check" style={{display: this.props.expanded ? "" : "none"}}>
                 <td className={check.outcome ? "text-success" : "text-danger"}>CHECK</td>
-                <td>{check.description}</td>
-                <td colSpan={2}>{check.details}</td>
+                <td className="check_description">{check.description}</td>
+                <td className="check_result" colSpan={2}>{check.details}</td>
             </tr>
         )
     }

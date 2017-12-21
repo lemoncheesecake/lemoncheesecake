@@ -53,6 +53,12 @@ class HasEntry(Matcher):
         self.key_matcher = key_matcher
         self.value_matcher = value_matcher
 
+    def short_description(self, conjugate=False):
+        ret = '%s entry %s' % (to_have(conjugate), self.key_matcher.description())
+        if self.value_matcher:
+            ret += " that " + self.value_matcher.short_description(conjugate=True)
+        return ret
+
     def description(self, conjugate=False):
         ret = '%s entry %s' % (to_have(conjugate), self.key_matcher.description())
         if self.value_matcher:

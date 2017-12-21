@@ -29,6 +29,11 @@ body {
 	padding-top: 20px;
 }
 
+.container-fluid {
+	padding-left: 7%;
+	padding-right: 7%;
+}
+
 .panel-heading {
 	font-size: 13px;
    	line-height: 1.0;
@@ -66,6 +71,10 @@ th, td {
 
 .test td {
     vertical-align: middle ! important;
+}
+
+.check_description, .check_result {
+	white-space: pre;
 }
 
 .extra-info-container {

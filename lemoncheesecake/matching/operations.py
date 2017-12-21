@@ -4,6 +4,7 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
+from lemoncheesecake.utils import is_string
 from lemoncheesecake.runtime import log_check
 from lemoncheesecake.exceptions import AbortTest, ProgrammingError
 from lemoncheesecake.matching.matchers.dict_ import HasEntry, wrap_key_matcher
@@ -17,6 +18,7 @@ __all__ = (
     "this_dict"
 )
 
+
 class _HasEntry(HasEntry):
     def description(self):
         ret = 'entry %s' % self.key_matcher.description()
@@ -24,12 +26,14 @@ class _HasEntry(HasEntry):
             ret += " " + self.value_matcher.description()
         return ret
 
+
 class DictContext:
     def __init__(self, actual, base_key):
         self.actual = actual
         self.base_key = base_key
 
-class ThisDict():
+
+class ThisDict:
     _contexts = []
 
     def __init__(self, actual):
@@ -53,12 +57,14 @@ class ThisDict():
         except IndexError:
             return None
 
+
 def this_dict(actual):
     """
     Set actual to be used as implict dict in *_that_entry functions when used
     within a 'with' statement.
     """
     return ThisDict(actual)
+
 
 def _entry_operation(operation):
     def wrapper(key_matcher, value_matcher=None, in_=None, quiet=False):
@@ -79,15 +85,28 @@ def _entry_operation(operation):
         operation.__name__
     return wrapper
 
+
+def format_result_details(details):
+    if details is None:
+        return None
+
+    if not is_string(details):
+        details = str(details)
+
+    return details[0].upper() + details[1:]
+
+
 def log_match_result(hint, matcher, result, quiet=False):
     """Add a check log to the report.
 
     If quiet is set to True, the check details won't appear in the check log.
     """
     description = "Expect %s %s" % (hint, matcher.description())
+
     return log_check(
-        description, result.outcome, result.description if not quiet and result.description != None else None
+        description, result.outcome, format_result_details(result.description) if not quiet else None
     )
+
 
 def check_that(hint, actual, matcher, quiet=False):
     """Check that actual matches given matcher.
@@ -102,6 +121,7 @@ def check_that(hint, actual, matcher, quiet=False):
 
 check_that_entry = _entry_operation(check_that)
 
+
 def require_that(hint, actual, matcher, quiet=False):
     """Require that actual matches given matcher.
 
@@ -115,6 +135,7 @@ def require_that(hint, actual, matcher, quiet=False):
         raise AbortTest("previous requirement was not fulfilled")
 
 require_that_entry = _entry_operation(require_that)
+
 
 def assert_that(hint, actual, matcher, quiet=False):
     """Assert that actual matches given matcher.

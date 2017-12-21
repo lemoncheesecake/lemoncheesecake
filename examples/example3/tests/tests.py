@@ -1,3 +1,5 @@
+import json
+
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import *
 
@@ -11,23 +13,23 @@ def test():
     check_that("dict", {"foo": "bar"}, has_entry("foo", equal_to("bar")))
     check_that("dict", {"fooo": "bar"}, has_entry("foo", equal_to("bar")))
     check_that("dict", {"foo": "baz"}, has_entry("foo", equal_to("bar")))
- 
+
     check_that_entry("foo", greater_than(2), in_={"foo": 3})
- 
+
     check_that("val", "foo", is_integer())
-     
+
     check_that("float value", 2.5, all_of(is_float(), greater_than(2)))
- 
+
     check_that("float value", 2.5, is_float(greater_than(2)), quiet=True)
 
     check_that("value", "42", match_pattern("^\d+$"))
-    
+
     check_that("list", (1, 2, 3, 4), has_item(3))
 
     check_that("value", 1, is_integer(greater_than(0)))
-    
+
     check_that("value", 1, is_integer(not_(equal_to(0))))
-    
+
     check_that("list", [3, 1, 2], has_values([1, 2 ,3, 4]))
 
     check_that("list", [3, 1, 2], has_only_values([1, 2]))
@@ -35,12 +37,43 @@ def test():
     check_that("list", [3, 1, 2], has_length(equal_to(3)))
 
     check_that("val", 1, is_in([1, 2, 3]))
-    
+
     check_that("val", 2, is_between(1, 3))
-    
-#     check_that_entry(["foo", "bar"], {"foo": {"bar": 2}}, greater_than(1))
+
+    # check_that_entry(["foo", "bar"], {"foo": {"bar": 2}}, greater_than(1))
 
     check_that("dict", {"foo": {"bar": 2}}, has_entry(["foo", "bar"], greater_than(1)))
+
+    d = {
+        "foo": 1,
+        "bar": 2,
+        "baz": {
+            "toto": 21,
+            "titi": 42
+        }
+    }
+
+    lcc.log_info(json.dumps(d, indent=4))
+
+    check_that("dict", d, has_entry("foo", equal_to(1)))
+
+    check_that("dict", d, all_of(
+        has_entry("foo", equal_to(1)),
+        has_entry("bar", is_between(1, 3)),
+        has_entry("baz", all_of(
+            has_entry("toto", is_(21)),
+            has_entry("titi", is_(42))
+        ))
+    ))
+
+    check_that("value", 2, any_of(1, 2, 3))
+
+    lst = [{"foo": 1, "bar": 2}]
+
+    check_that("list", lst, has_item(all_of(
+        has_entry("foo", is_(1)),
+        has_entry("bar", is_(2))
+    )))
 
     # Expect value to be integer and to be greater than 0
     
