@@ -14,12 +14,15 @@ class HasItem(MatchExpected):
     def description(self, conjugate=False):
         return "%s an item whose value %s" % (to_have(conjugate), self.expected.description(conjugate=True))
 
+    def short_description(self, conjugate=False):
+        return "%s an item whose value %s" % (to_have(conjugate), self.expected.short_description(conjugate=True))
+
     def matches(self, actual):
         for item in actual:
             result = self.expected.matches(item)
             if result.is_success():
                 return result
-        return match_failure("No matching item")
+        return match_failure("no matching item")
 
 
 def has_item(expected):

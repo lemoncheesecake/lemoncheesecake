@@ -5,29 +5,69 @@ Created on Mar 28, 2017
 '''
 
 from lemoncheesecake.matching.base import Matcher, match_success, match_failure, match_result, \
-    got_value, to_be, merge_match_result_descriptions
+    got, got_value, to_be, to_meet, merge_match_result_descriptions
 
 __all__ = (
     "all_of", "any_of", "anything", "something", "existing", "is_", "not_"
 )
 
 
+def _make_item(content, prefix="- "):
+    lines = content.split("\n")
+    return "\n".join(
+        ["    " + prefix + lines[0]] +
+        ["      " + line for line in lines[1:]]
+    )
+
+
+def _make_items(items, prefix="- ", relationship="and"):
+    return [
+        _make_item(item, prefix=prefix + relationship + " " if i > 0 else prefix)
+            for i, item in enumerate(items)
+    ]
+
+
+def _serialize_sub_matcher_result(matcher, result):
+    content = "%s => %s" % (matcher.short_description(conjugate=True), "OK" if result.is_success() else "KO")
+    if result.description is not None:
+        content += ", %s" % result.description
+    return content
+
+
 class AllOf(Matcher):
     def __init__(self, matchers):
         self.matchers = matchers
 
+    def short_description(self, conjugate=False):
+        return "%s all of the following conditions:" % to_meet(conjugate)
+
     def description(self, conjugate=False):
-        return " and ".join([matcher.description(conjugate) for matcher in self.matchers])
+        return "\n".join(
+            [self.short_description(conjugate=conjugate)] +
+            [
+                _make_item(matcher.description(conjugate=True), prefix="- and " if i > 0 else "- ")
+                    for i, matcher in enumerate(self.matchers)
+            ]
+        )
 
     def matches(self, actual):
         results = []
+        is_success = True
         for matcher in self.matchers:
             result = matcher.matches(actual)
+            results.append((matcher, result))
             if result.is_failure():
-                return result
-            results.append(result)
+                is_success = False
+                break
 
-        return match_success(merge_match_result_descriptions(results))
+        match_details = "\n".join(
+            [got() + ":"] +
+            _make_items([
+                _serialize_sub_matcher_result(matcher, result) for matcher, result in results
+            ], relationship="and")
+        )
+
+        return match_result(is_success, match_details)
 
 
 def all_of(*matchers):
@@ -39,8 +79,17 @@ class AnyOf(Matcher):
     def __init__(self, matchers):
         self.matchers = matchers
 
+    def short_description(self, conjugate=False):
+        return "%s any of the following conditions:" % to_meet(conjugate)
+
     def description(self, conjugate=False):
-        return " or ".join([matcher.description(conjugate) for matcher in self.matchers])
+        return "\n".join(
+            ["%s any of the following conditions:" % to_meet(conjugate)] +
+            [
+                _make_item(matcher.description(conjugate=True), prefix="- or " if i > 0 else "- ")
+                    for i, matcher in enumerate(self.matchers)
+            ]
+        )
 
     def matches(self, actual):
         results = []

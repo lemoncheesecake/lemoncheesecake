@@ -38,6 +38,9 @@ class Matcher:
     def description(self, conjugate=False):
         method_not_implemented("description", self)
 
+    def short_description(self, conjugate=False):
+        return self.description(conjugate=conjugate)
+
     def matches(self, actual):
         method_not_implemented("match", self)
 
@@ -55,8 +58,11 @@ def serialize_values(values):
     return ", ".join(map(serialize_value, values))
 
 
-def got(value):
-    return "Got %s" % value
+def got(value=None):
+    ret = "got"
+    if value is not None:
+        ret += " " + value
+    return ret
 
 
 def got_value(value):
@@ -73,9 +79,24 @@ def merge_match_result_descriptions(results):
     )
 
 
-def to_be(conjugate=False):
-    return "is" if conjugate else "to be"
+def to_be(conjugate=False, negation=False):
+    negative_form = " not" if negation else ""
+    return "is%s" % negative_form if conjugate else "to%s be" % negative_form
 
 
-def to_have(conjugate=False):
-    return "has" if conjugate else "to have"
+def to_have(conjugate=False, negation=False):
+    negative_form = " not" if negation else ""
+    return "has%s" % negative_form if conjugate else "to%s have" % negative_form
+
+
+def to_meet(conjugate=False, negation=False):
+    if conjugate:
+        if negation:
+            return "does not meet"
+        else:
+            return "meets"
+    else:
+        if negation:
+            return "to not meet"
+        else:
+            return "to meet"
