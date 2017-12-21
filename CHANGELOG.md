@@ -1,3 +1,8 @@
+# 0.15.4 (2017-12-22)
+
+- **matchers**: Add multi-line text rendering of `all_of` and `any_of` matchers description and result details
+- **HTML report**: Use variable size container (tables) instead of fixed size
+
 # 0.15.3 (2017-12-14)
 
 - **API**: fix disabled test attribute not properly taken into account in add_test_in_suite
