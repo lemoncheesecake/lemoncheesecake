@@ -1,3 +1,8 @@
+# 0.15.5 (2017-12-25)
+
+- **HTML report**: fix page layout for report in offline mode
+- **HTML report**: make more room for check result details
+
 # 0.15.4 (2017-12-22)
 
 - **matchers**: Add multi-line text rendering of `all_of` and `any_of` matchers description and result details

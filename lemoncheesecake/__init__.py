@@ -1,3 +1,3 @@
-VERSION_INFO = (0, 15, 4)
+VERSION_INFO = (0, 15, 5)
 
 __version__ = '.'.join(str(c) for c in VERSION_INFO)
