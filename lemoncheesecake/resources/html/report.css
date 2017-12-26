@@ -74,7 +74,7 @@ th, td {
 }
 
 .check_description, .check_result {
-	white-space: pre;
+	white-space: pre-wrap;
 }
 
 .extra-info-container {
