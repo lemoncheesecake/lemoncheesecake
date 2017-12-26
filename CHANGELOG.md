@@ -1,3 +1,7 @@
+# 0.15.6 (2017-12-27)
+
+- **HTML report**: fix line wrap for check description and details
+
 # 0.15.5 (2017-12-25)
 
 - **HTML report**: fix page layout for report in offline mode
