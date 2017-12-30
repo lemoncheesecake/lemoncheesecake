@@ -50,7 +50,7 @@ class StatsCommand(Command):
                 stats.disabled_tests_nb += 1
             for tag in test.hierarchy_tags:
                 stats.tags[tag] = stats.tags.get(tag, 0) + 1
-            for prop, value in test.get_inherited_properties().items():
+            for prop, value in test.hierarchy_properties.items():
                 if prop not in stats.properties:
                     stats.properties[prop] = {}
                 if value not in stats.properties[prop]:

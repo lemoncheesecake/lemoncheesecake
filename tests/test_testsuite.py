@@ -371,7 +371,7 @@ def test_hierarchy_tags():
     assert suite.get_suites()[0].get_tests()[0].hierarchy_tags == ["tag1", "tag2"]
 
 
-def test_get_inherited_properties():
+def test_hierarchy_properties():
     @lcc.prop("prop1", "foo")
     @lcc.prop("prop2", "bar")
     @lcc.suite("MySuite")
@@ -386,7 +386,7 @@ def test_get_inherited_properties():
 
     suite = load_suite_from_class(MySuite)
 
-    assert suite.get_suites()[0].get_tests()[0].get_inherited_properties() == {"prop1": "baz", "prop2": "bar", "prop3": "foobar"}
+    assert suite.get_suites()[0].get_tests()[0].hierarchy_properties == {"prop1": "baz", "prop2": "bar", "prop3": "foobar"}
 
 
 def test_get_inherited_links():

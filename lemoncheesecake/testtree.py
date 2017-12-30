@@ -49,7 +49,8 @@ class BaseTreeNode(object):
             tags.extend(node.tags)
         return get_distincts_in_list(tags)
 
-    def get_inherited_properties(self):
+    @property
+    def hierarchy_properties(self):
         properties = {}
         for node in self.hierarchy:
             properties.update(node.properties)
