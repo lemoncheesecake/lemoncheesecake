@@ -416,7 +416,7 @@ def test_get_inherited_paths():
 
     suite = load_suite_from_class(MySuite)
 
-    assert suite.get_suites()[0].get_tests()[0].get_inherited_paths() == ["MySuite", "MySuite.MySubSuite", "MySuite.MySubSuite.test"]
+    assert list(suite.get_suites()[0].get_tests()[0].get_inherited_paths()) == ["MySuite", "MySuite.MySubSuite", "MySuite.MySubSuite.test"]
 
 
 def test_get_inherited_descriptions():

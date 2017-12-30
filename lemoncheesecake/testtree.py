@@ -35,7 +35,7 @@ class BaseTreeNode(object):
         return ".".join([s.name for s in self.hierarchy])
 
     def get_inherited_paths(self):
-        return list(map(lambda node: node.path, self.hierarchy))
+        return map(lambda node: node.path, self.hierarchy)
 
     def get_inherited_descriptions(self):
         return list(map(lambda node: node.description, self.hierarchy))
