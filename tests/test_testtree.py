@@ -6,6 +6,65 @@ from lemoncheesecake.testtree import find_suite, find_test
 from lemoncheesecake.exceptions import CannotFindTreeNode
 
 
+def test_get_path():
+    @lcc.suite("My suite")
+    class mysuite:
+        @lcc.test("My test")
+        def mytest(self):
+            pass
+
+    suite = load_suite_from_class(mysuite)
+    test = suite.get_tests()[0]
+
+    path = test.get_path()
+    assert next(path).name == "mysuite"
+    assert next(path).name == "mytest"
+
+
+def test_get_path_nested_suite():
+    @lcc.suite("My suite")
+    class mysuite:
+        @lcc.suite("My sub suite")
+        class mysubsuite:
+            @lcc.test("My test")
+            def mytest(self):
+                pass
+
+    suite = load_suite_from_class(mysuite)
+    test = suite.get_suites()[0].get_tests()[0]
+
+    path = test.get_path()
+    assert next(path).name == "mysuite"
+    assert next(path).name == "mysubsuite"
+    assert next(path).name == "mytest"
+
+
+def test_get_depth():
+    @lcc.suite("My suite")
+    class mysuite:
+        @lcc.test("My test")
+        def mytest(self):
+            pass
+
+    suite = load_suite_from_class(mysuite)
+    test = suite.get_tests()[0]
+
+    assert test.get_depth() == 1
+
+
+def test_get_path_as_str():
+    @lcc.suite("My suite")
+    class mysuite:
+        @lcc.test("My test")
+        def mytest(self):
+            pass
+
+    suite = load_suite_from_class(mysuite)
+    test = suite.get_tests()[0]
+
+    assert test.get_path_as_str() == "mysuite.mytest"
+
+
 def test_find_suite_top():
     @lcc.suite("My suite 1")
     class mysuite1:

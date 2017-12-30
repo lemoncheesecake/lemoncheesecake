@@ -20,18 +20,16 @@ class BaseTreeNode:
         self.links = [ ]
 
     def get_path(self):
-        path = [ self ]
-        parent_suite = self.parent_suite
-        while parent_suite != None:
-            path.insert(0, parent_suite)
-            parent_suite = parent_suite.parent_suite
-        return path
-    
+        if self.parent_suite is not None:
+            for node in self.parent_suite.get_path():
+                yield node
+        yield self
+
     def get_path_as_str(self, sep="."):
         return sep.join([s.name for s in self.get_path()])
 
     def get_depth(self):
-        return len(self.get_path()) - 1
+        return len(list(self.get_path())) - 1
 
     def get_inherited_paths(self):
         return list(map(lambda node: node.get_path_as_str(), self.get_path()))
