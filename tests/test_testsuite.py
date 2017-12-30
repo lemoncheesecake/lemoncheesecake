@@ -405,7 +405,7 @@ def test_get_inherited_links():
     assert suite.get_suites()[0].get_tests()[0].get_inherited_links() == [("http://www.example.com/1234", None), ("http://www.example.com/1235", "#1235")]
 
 
-def test_get_inherited_paths():
+def test_hierarchy_paths():
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.suite("MySubSuite")
@@ -416,7 +416,7 @@ def test_get_inherited_paths():
 
     suite = load_suite_from_class(MySuite)
 
-    assert list(suite.get_suites()[0].get_tests()[0].get_inherited_paths()) == ["MySuite", "MySuite.MySubSuite", "MySuite.MySubSuite.test"]
+    assert list(suite.get_suites()[0].get_tests()[0].hierarchy_paths) == ["MySuite", "MySuite.MySubSuite", "MySuite.MySubSuite.test"]
 
 
 def test_get_inherited_descriptions():

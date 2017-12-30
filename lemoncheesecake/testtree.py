@@ -34,7 +34,8 @@ class BaseTreeNode(object):
     def path(self):
         return ".".join([s.name for s in self.hierarchy])
 
-    def get_inherited_paths(self):
+    @property
+    def hierarchy_paths(self):
         return map(lambda node: node.path, self.hierarchy)
 
     def get_inherited_descriptions(self):

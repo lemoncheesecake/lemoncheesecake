@@ -74,7 +74,7 @@ class Filter:
         funcs = [
             lambda: self.is_test_disabled(test) if self.disabled else True,
             lambda: not self.is_test_disabled(test) if self.enabled else True,
-            lambda: match_values(test.get_inherited_paths(), self.paths),
+            lambda: match_values(test.hierarchy_paths, self.paths),
             lambda: all(match_values(test.get_inherited_descriptions(), descs) for descs in self.descriptions),
             lambda: all(match_values(test.get_inherited_tags(), tags) for tags in self.tags),
             lambda: all(match_keyvalues(test.get_inherited_properties(), props) for props in self.properties),
