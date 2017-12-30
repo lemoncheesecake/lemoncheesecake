@@ -42,7 +42,8 @@ class BaseTreeNode(object):
     def hierarchy_descriptions(self):
         return map(lambda node: node.description, self.hierarchy)
 
-    def get_inherited_tags(self):
+    @property
+    def hierarchy_tags(self):
         tags = []
         for node in self.hierarchy:
             tags.extend(node.tags)

@@ -355,7 +355,7 @@ def test_get_fixtures():
     assert suite.get_fixtures() == ["foo"]
 
 
-def test_get_inherited_tags():
+def test_hierarchy_tags():
     @lcc.tags("tag1")
     @lcc.suite("MySuite")
     class MySuite:
@@ -368,7 +368,7 @@ def test_get_inherited_tags():
 
     suite = load_suite_from_class(MySuite)
 
-    assert suite.get_suites()[0].get_tests()[0].get_inherited_tags() == ["tag1", "tag2"]
+    assert suite.get_suites()[0].get_tests()[0].hierarchy_tags == ["tag1", "tag2"]
 
 
 def test_get_inherited_properties():
