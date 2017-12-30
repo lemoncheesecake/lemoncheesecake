@@ -419,7 +419,7 @@ def test_hierarchy_paths():
     assert list(suite.get_suites()[0].get_tests()[0].hierarchy_paths) == ["MySuite", "MySuite.MySubSuite", "MySuite.MySubSuite.test"]
 
 
-def test_get_inherited_descriptions():
+def test_hierarchy_descriptions():
     @lcc.suite("My suite")
     class MySuite:
         @lcc.suite("My sub suite")
@@ -430,4 +430,4 @@ def test_get_inherited_descriptions():
 
     suite = load_suite_from_class(MySuite)
 
-    assert list(suite.get_suites()[0].get_tests()[0].get_inherited_descriptions()) == ["My suite", "My sub suite", "Test"]
+    assert list(suite.get_suites()[0].get_tests()[0].hierarchy_descriptions) == ["My suite", "My sub suite", "Test"]
