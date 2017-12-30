@@ -6,7 +6,7 @@ from lemoncheesecake.testtree import find_suite, find_test
 from lemoncheesecake.exceptions import CannotFindTreeNode
 
 
-def test_get_path():
+def test_hierarchy():
     @lcc.suite("My suite")
     class mysuite:
         @lcc.test("My test")
@@ -16,7 +16,7 @@ def test_get_path():
     suite = load_suite_from_class(mysuite)
     test = suite.get_tests()[0]
 
-    path = test.get_path()
+    path = test.hierarchy
     assert next(path).name == "mysuite"
     assert next(path).name == "mytest"
 
@@ -33,7 +33,7 @@ def test_get_path_nested_suite():
     suite = load_suite_from_class(mysuite)
     test = suite.get_suites()[0].get_tests()[0]
 
-    path = test.get_path()
+    path = test.hierarchy
     assert next(path).name == "mysuite"
     assert next(path).name == "mysubsuite"
     assert next(path).name == "mytest"

@@ -10,49 +10,50 @@ from lemoncheesecake.utils import get_distincts_in_list
 from lemoncheesecake.exceptions import CannotFindTreeNode
 
 
-class BaseTreeNode:
+class BaseTreeNode(object):
     def __init__(self, name, description):
         self.parent_suite = None
         self.name = name
         self.description = description
-        self.tags = [ ]
+        self.tags = []
         self.properties = {}
-        self.links = [ ]
+        self.links = []
 
-    def get_path(self):
+    @property
+    def hierarchy(self):
         if self.parent_suite is not None:
-            for node in self.parent_suite.get_path():
+            for node in self.parent_suite.hierarchy:
                 yield node
         yield self
 
     @property
     def path(self):
-        return ".".join([s.name for s in self.get_path()])
+        return ".".join([s.name for s in self.hierarchy])
 
     def get_depth(self):
-        return len(list(self.get_path())) - 1
+        return len(list(self.hierarchy)) - 1
 
     def get_inherited_paths(self):
-        return list(map(lambda node: node.path, self.get_path()))
+        return list(map(lambda node: node.path, self.hierarchy))
 
     def get_inherited_descriptions(self):
-        return list(map(lambda node: node.description, self.get_path()))
+        return list(map(lambda node: node.description, self.hierarchy))
 
     def get_inherited_tags(self):
         tags = []
-        for node in self.get_path():
+        for node in self.hierarchy:
             tags.extend(node.tags)
         return get_distincts_in_list(tags)
 
     def get_inherited_properties(self):
         properties = {}
-        for node in self.get_path():
+        for node in self.hierarchy:
             properties.update(node.properties)
         return properties
 
     def get_inherited_links(self):
         links = []
-        for node in self.get_path():
+        for node in self.hierarchy:
             links.extend(node.links)
         return get_distincts_in_list(links)
 
