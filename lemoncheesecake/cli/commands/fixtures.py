@@ -10,7 +10,6 @@ from lemoncheesecake.cli.display import print_table
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.testtree import walk_tests
 from lemoncheesecake.project import load_project
-from lemoncheesecake.exceptions import ProjectError, ProgrammingError
 
 
 class FixturesCommand(Command):

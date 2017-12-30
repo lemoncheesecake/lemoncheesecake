@@ -2,7 +2,7 @@ import pytest
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite import load_suites_from_classes, load_suite_from_class
-from lemoncheesecake.testtree import find_suite, find_test, flatten_suites
+from lemoncheesecake.testtree import find_suite, find_test, flatten_suites, flatten_tests
 from lemoncheesecake.exceptions import CannotFindTreeNode
 
 
@@ -143,7 +143,7 @@ def test_hierarchy_descriptions():
     assert list(suite.get_suites()[0].get_tests()[0].hierarchy_descriptions) == ["My suite", "My sub suite", "Test"]
 
 
-def test_flatten_suite():
+def test_flatten_suites():
     @lcc.suite("My suite 1")
     class mysuite1:
         @lcc.test("Test 1")
@@ -163,7 +163,7 @@ def test_flatten_suite():
     assert [s.name for s in flattened_suites] == ["mysuite1", "mysuite2"]
 
 
-def test_flatten_suite_on_nested_suites():
+def test_flatten_suites_on_nested_suites():
     @lcc.suite("My suite 1")
     class mysuite1:
         @lcc.suite("My suite 2")
@@ -185,6 +185,58 @@ def test_flatten_suite_on_nested_suites():
     flattened_suites = flatten_suites(suites)
 
     assert [s.name for s in flattened_suites] == ["mysuite1", "mysuite2", "mysuite3", "mysuite4"]
+
+
+def test_flatten_tests():
+    @lcc.suite("My suite 1")
+    class mysuite1:
+        @lcc.test("Test 1")
+        def test1(self):
+            pass
+
+    @lcc.suite("My suite 2")
+    class mysuite2:
+        @lcc.test("Test 2")
+        def test2(self):
+            pass
+
+    suites = load_suites_from_classes([mysuite1, mysuite2])
+
+    tests = flatten_tests(suites)
+
+    assert [t.name for t in tests] == ["test1", "test2"]
+
+
+def test_flatten_tests_on_nested_suites():
+    @lcc.suite("My suite 1")
+    class mysuite1:
+        @lcc.test("Test 1")
+        def test1(self):
+            pass
+
+        @lcc.suite("My suite 2")
+        class mysuite2:
+            @lcc.test("Test 2")
+            def test2(self):
+                pass
+
+    @lcc.suite("My suite 3")
+    class mysuite3:
+        @lcc.test("Test 3")
+        def test3(self):
+            pass
+
+        @lcc.suite("My suite 4")
+        class mysuite4:
+            @lcc.test("Test 4")
+            def test4(self):
+                pass
+
+    suites = load_suites_from_classes([mysuite1, mysuite3])
+
+    tests = flatten_tests(suites)
+
+    assert [t.name for t in tests] == ["test1", "test2", "test3", "test4"]
 
 
 def test_find_suite_top():

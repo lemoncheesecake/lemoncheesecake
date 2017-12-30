@@ -136,6 +136,12 @@ def flatten_suites(suites):
             yield sub_suite
 
 
+def flatten_tests(suites):
+    for suite in flatten_suites(suites):
+        for test in suite.get_tests():
+            yield test
+
+
 def walk_tests(suites, func):
     walk_suites(suites, test_func=func)
 
