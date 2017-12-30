@@ -2,7 +2,7 @@ import pytest
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite import load_suites_from_classes, load_suite_from_class
-from lemoncheesecake.testtree import find_suite, find_test
+from lemoncheesecake.testtree import find_suite, find_test, flatten_suites
 from lemoncheesecake.exceptions import CannotFindTreeNode
 
 
@@ -21,7 +21,7 @@ def test_hierarchy():
     assert next(path).name == "mytest"
 
 
-def test_get_path_nested_suite():
+def test_get_path_on_nested_suite():
     @lcc.suite("My suite")
     class mysuite:
         @lcc.suite("My sub suite")
@@ -141,6 +141,50 @@ def test_hierarchy_descriptions():
     suite = load_suite_from_class(MySuite)
 
     assert list(suite.get_suites()[0].get_tests()[0].hierarchy_descriptions) == ["My suite", "My sub suite", "Test"]
+
+
+def test_flatten_suite():
+    @lcc.suite("My suite 1")
+    class mysuite1:
+        @lcc.test("Test 1")
+        def test1(self):
+            pass
+
+    @lcc.suite("My suite 2")
+    class mysuite2:
+        @lcc.test("Test 2")
+        def test2(self):
+            pass
+
+    suites = load_suites_from_classes([mysuite1, mysuite2])
+
+    flattened_suites = flatten_suites(suites)
+
+    assert [s.name for s in flattened_suites] == ["mysuite1", "mysuite2"]
+
+
+def test_flatten_suite_on_nested_suites():
+    @lcc.suite("My suite 1")
+    class mysuite1:
+        @lcc.suite("My suite 2")
+        class mysuite2:
+            @lcc.test("Test")
+            def test(self):
+                pass
+
+    @lcc.suite("My suite 3")
+    class mysuite3:
+        @lcc.suite("My suite 4")
+        class mysuite4:
+            @lcc.test("Test")
+            def test(self):
+                pass
+
+    suites = load_suites_from_classes([mysuite1, mysuite3])
+
+    flattened_suites = flatten_suites(suites)
+
+    assert [s.name for s in flattened_suites] == ["mysuite1", "mysuite2", "mysuite3", "mysuite4"]
 
 
 def test_find_suite_top():
