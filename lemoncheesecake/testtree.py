@@ -116,19 +116,6 @@ class BaseSuite(BaseTreeNode):
         return node
 
 
-def walk_suites(suites, suite_func=None, test_func=None):
-    def do_walk(suite):
-        if suite_func:
-            suite_func(suite)
-        if test_func:
-            for test in suite.get_tests():
-                test_func(test, suite)
-        for sub_suite in suite.get_suites():
-            do_walk(sub_suite)
-    for suite in suites:
-        do_walk(suite)
-
-
 def flatten_suites(suites):
     for suite in suites:
         yield suite
@@ -140,16 +127,6 @@ def flatten_tests(suites):
     for suite in flatten_suites(suites):
         for test in suite.get_tests():
             yield test
-
-
-def walk_tests(suites, func):
-    walk_suites(suites, test_func=func)
-
-
-def get_flattened_suites(suites):
-    flattened_suites = []
-    walk_suites(suites, lambda suite: flattened_suites.append(suite))
-    return flattened_suites
 
 
 def get_suite_by_name(suites, suite_name):
