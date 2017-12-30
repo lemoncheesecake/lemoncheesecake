@@ -430,4 +430,4 @@ def test_get_inherited_descriptions():
 
     suite = load_suite_from_class(MySuite)
 
-    assert suite.get_suites()[0].get_tests()[0].get_inherited_descriptions() == ["My suite", "My sub suite", "Test"]
+    assert list(suite.get_suites()[0].get_tests()[0].get_inherited_descriptions()) == ["My suite", "My sub suite", "Test"]
