@@ -65,6 +65,84 @@ def test_path():
     assert test.path == "mysuite.mytest"
 
 
+def test_hierarchy_tags():
+    @lcc.tags("tag1")
+    @lcc.suite("MySuite")
+    class MySuite:
+        @lcc.suite("MySubSuite")
+        class MySubSuite:
+            @lcc.tags("tag2")
+            @lcc.test("Test 2")
+            def test(self):
+                pass
+
+    suite = load_suite_from_class(MySuite)
+
+    assert suite.get_suites()[0].get_tests()[0].hierarchy_tags == ["tag1", "tag2"]
+
+
+def test_hierarchy_properties():
+    @lcc.prop("prop1", "foo")
+    @lcc.prop("prop2", "bar")
+    @lcc.suite("MySuite")
+    class MySuite:
+        @lcc.prop("prop3", "foobar")
+        @lcc.suite("MySubSuite")
+        class MySubSuite:
+            @lcc.prop("prop1", "baz")
+            @lcc.test("Test 2")
+            def test(self):
+                pass
+
+    suite = load_suite_from_class(MySuite)
+
+    assert suite.get_suites()[0].get_tests()[0].hierarchy_properties == {"prop1": "baz", "prop2": "bar", "prop3": "foobar"}
+
+
+def test_hierarchy_links():
+    @lcc.link("http://www.example.com/1234")
+    @lcc.suite("MySuite")
+    class MySuite:
+        @lcc.suite("MySubSuite")
+        class MySubSuite:
+            @lcc.link("http://www.example.com/1235", "#1235")
+            @lcc.test("Test 2")
+            def test(self):
+                pass
+
+    suite = load_suite_from_class(MySuite)
+
+    assert suite.get_suites()[0].get_tests()[0].hierarchy_links == [("http://www.example.com/1234", None), ("http://www.example.com/1235", "#1235")]
+
+
+def test_hierarchy_paths():
+    @lcc.suite("MySuite")
+    class MySuite:
+        @lcc.suite("MySubSuite")
+        class MySubSuite:
+            @lcc.test("Test 2")
+            def test(self):
+                pass
+
+    suite = load_suite_from_class(MySuite)
+
+    assert list(suite.get_suites()[0].get_tests()[0].hierarchy_paths) == ["MySuite", "MySuite.MySubSuite", "MySuite.MySubSuite.test"]
+
+
+def test_hierarchy_descriptions():
+    @lcc.suite("My suite")
+    class MySuite:
+        @lcc.suite("My sub suite")
+        class MySubSuite:
+            @lcc.test("Test")
+            def test(self):
+                pass
+
+    suite = load_suite_from_class(MySuite)
+
+    assert list(suite.get_suites()[0].get_tests()[0].hierarchy_descriptions) == ["My suite", "My sub suite", "Test"]
+
+
 def test_find_suite_top():
     @lcc.suite("My suite 1")
     class mysuite1:
