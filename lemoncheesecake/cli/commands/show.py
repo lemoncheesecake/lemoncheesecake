@@ -47,14 +47,14 @@ class ShowCommand(Command):
             return test.description
         if self.short:
             return test.name
-        return test.get_path_as_str()
+        return test.path
 
     def get_suite_label(self, suite):
         if self.show_description:
             return suite.description
         if self.short:
             return suite.name
-        return suite.get_path_as_str()
+        return suite.path
 
     def show_test(self, test, suite):
         md = self.serialize_metadata(test) if self.show_metadata else ""

@@ -52,7 +52,7 @@ def test_get_depth():
     assert test.get_depth() == 1
 
 
-def test_get_path_as_str():
+def test_path():
     @lcc.suite("My suite")
     class mysuite:
         @lcc.test("My test")
@@ -62,7 +62,7 @@ def test_get_path_as_str():
     suite = load_suite_from_class(mysuite)
     test = suite.get_tests()[0]
 
-    assert test.get_path_as_str() == "mysuite.mytest"
+    assert test.path == "mysuite.mytest"
 
 
 def test_find_suite_top():

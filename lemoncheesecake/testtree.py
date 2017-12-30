@@ -25,14 +25,15 @@ class BaseTreeNode:
                 yield node
         yield self
 
-    def get_path_as_str(self, sep="."):
-        return sep.join([s.name for s in self.get_path()])
+    @property
+    def path(self):
+        return ".".join([s.name for s in self.get_path()])
 
     def get_depth(self):
         return len(list(self.get_path())) - 1
 
     def get_inherited_paths(self):
-        return list(map(lambda node: node.get_path_as_str(), self.get_path()))
+        return list(map(lambda node: node.path, self.get_path()))
 
     def get_inherited_descriptions(self):
         return list(map(lambda node: node.description, self.get_path()))
@@ -61,7 +62,7 @@ class BaseTreeNode:
         return node
 
     def __str__(self):
-        return self.get_path_as_str()
+        return self.path
 
 
 class BaseTest(BaseTreeNode):
