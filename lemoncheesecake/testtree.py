@@ -146,10 +146,10 @@ def get_suite_by_name(suites, suite_name):
         raise CannotFindTreeNode("Cannot find suite named '%s'" % suite_name)
 
 
-def find_suite(suites, path, sep="."):
+def find_suite(suites, path):
     lookup_suites = suites
     lookup_suite = None
-    for lookup_suite_name in path.split(sep):
+    for lookup_suite_name in path.split("."):
         lookup_suite = get_suite_by_name(lookup_suites, lookup_suite_name)
         lookup_suites = lookup_suite.get_suites(include_empty_suites=True)
     if lookup_suite is None:
@@ -165,7 +165,7 @@ def get_test_by_name(suite, test_name):
         raise CannotFindTreeNode("Cannot find test named '%s'" % test_name)
 
 
-def find_test(suites, path, sep="."):
-    suite_name = sep.join(path.split(sep)[:-1])
-    lookup_suite = find_suite(suites, suite_name, sep=sep)
-    return get_test_by_name(lookup_suite, path.split(sep)[-1])
+def find_test(suites, path):
+    suite_name = ".".join(path.split(".")[:-1])
+    lookup_suite = find_suite(suites, suite_name)
+    return get_test_by_name(lookup_suite, path.split(".")[-1])
