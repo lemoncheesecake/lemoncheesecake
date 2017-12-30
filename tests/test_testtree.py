@@ -39,7 +39,7 @@ def test_get_path_nested_suite():
     assert next(path).name == "mytest"
 
 
-def test_get_depth():
+def test_hierarchy_depth():
     @lcc.suite("My suite")
     class mysuite:
         @lcc.test("My test")
@@ -49,7 +49,7 @@ def test_get_depth():
     suite = load_suite_from_class(mysuite)
     test = suite.get_tests()[0]
 
-    assert test.get_depth() == 1
+    assert test.hierarchy_depth == 1
 
 
 def test_path():

@@ -61,7 +61,7 @@ class ShowCommand(Command):
         if self.flat_mode:
             print("%s%s" % (self.get_test_label(test, suite), " (%s)" % md if md else ""))
         else:
-            padding = self.get_padding(suite.get_depth() + 1)
+            padding = self.get_padding(suite.hierarchy_depth + 1)
             test_label = self.get_test_label(test, suite)
             print("%s- %s%s" % (padding, test_label, " (%s)" % md if md else ""))
         
@@ -70,7 +70,7 @@ class ShowCommand(Command):
         if self.flat_mode:
             print("%s%s" % (self.bold(self.get_suite_label(suite)), " (%s)" % md if md else ""))
         else:
-            padding = self.get_padding(suite.get_depth())
+            padding = self.get_padding(suite.hierarchy_depth)
             suite_label = self.get_suite_label(suite)
             print("%s* %s%s:" % (padding, self.bold(suite_label), " (%s)" % md if md else ""))
 

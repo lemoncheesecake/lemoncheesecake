@@ -27,11 +27,12 @@ class BaseTreeNode(object):
         yield self
 
     @property
+    def hierarchy_depth(self):
+        return len(list(self.hierarchy)) - 1
+
+    @property
     def path(self):
         return ".".join([s.name for s in self.hierarchy])
-
-    def get_depth(self):
-        return len(list(self.hierarchy)) - 1
 
     def get_inherited_paths(self):
         return list(map(lambda node: node.path, self.hierarchy))
