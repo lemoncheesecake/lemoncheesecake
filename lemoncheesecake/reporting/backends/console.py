@@ -8,7 +8,7 @@ from __future__ import print_function
 
 import sys
 
-from lemoncheesecake.testtree import get_flattened_suites
+from lemoncheesecake.testtree import flatten_suites
 from lemoncheesecake.reporting.report import get_stats_from_suites
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
 from lemoncheesecake.utils import IS_PYTHON3, humanize_duration
@@ -229,7 +229,7 @@ def display_report_suites(suites):
     # Display suite results
     ###
     suite_idx = 0
-    for suite in get_flattened_suites(suites):
+    for suite in flatten_suites(suites):
         if len(suite.get_tests()) == 0:
             continue
         if suite_idx > 0:
