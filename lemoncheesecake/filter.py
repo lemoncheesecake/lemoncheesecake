@@ -78,7 +78,7 @@ class Filter:
             lambda: all(match_values(test.hierarchy_descriptions, descs) for descs in self.descriptions),
             lambda: all(match_values(test.hierarchy_tags, tags) for tags in self.tags),
             lambda: all(match_keyvalues(test.hierarchy_properties, props) for props in self.properties),
-            lambda: all(match_values_lists(test.get_inherited_links(), links) for links in self.links)
+            lambda: all(match_values_lists(test.hierarchy_links, links) for links in self.links)
         ]
         return all(func() for func in funcs)
 

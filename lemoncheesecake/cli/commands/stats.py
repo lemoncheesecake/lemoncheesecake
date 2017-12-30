@@ -56,7 +56,7 @@ class StatsCommand(Command):
                 if value not in stats.properties[prop]:
                     stats.properties[prop][value] = 0
                 stats.properties[prop][value] += 1
-            for link in test.get_inherited_links():
+            for link in test.hierarchy_links:
                 stats.links[link] = stats.links.get(link, 0) + 1
 
         def percent_of_tests(val):

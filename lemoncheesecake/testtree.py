@@ -56,7 +56,8 @@ class BaseTreeNode(object):
             properties.update(node.properties)
         return properties
 
-    def get_inherited_links(self):
+    @property
+    def hierarchy_links(self):
         links = []
         for node in self.hierarchy:
             links.extend(node.links)
