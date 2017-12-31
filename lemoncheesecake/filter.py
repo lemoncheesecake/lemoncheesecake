@@ -131,7 +131,7 @@ def filter_suites(suites, filtr):
     return filtered_suites
 
 
-def add_filter_args_to_cli_parser(cli_parser):
+def add_filter_args_to_cli_parser(cli_parser, no_positional_argument=False):
     def property_value(value):
         splitted = value.split(":")
         if len(splitted) != 2:
@@ -139,7 +139,10 @@ def add_filter_args_to_cli_parser(cli_parser):
         return splitted
 
     group = cli_parser.add_argument_group("Filtering")
-    group.add_argument("path", nargs="*", default=[], help="Filter on test/suite path (wildcard character '*' can be used)")
+    if no_positional_argument:
+        group.add_argument("--path", "-p", nargs="+", help="Filter on test/suite path (wildcard character '*' can be used)")
+    else:
+        group.add_argument("path", nargs="*", default=[], help="Filter on test/suite path (wildcard character '*' can be used)")
     group.add_argument("--desc", nargs="+", action="append", default=[], help="Filter on descriptions")
     group.add_argument("--tag", "-a", nargs="+", action="append", default=[], help="Filter on tags")
     group.add_argument("--property", "-m", nargs="+", type=property_value, action="append", default=[], help="Filter on properties")
@@ -150,8 +153,8 @@ def add_filter_args_to_cli_parser(cli_parser):
     return group
 
 
-def add_report_filter_args_to_cli_parser(cli_parser):
-    group = add_filter_args_to_cli_parser(cli_parser)
+def add_report_filter_args_to_cli_parser(cli_parser, no_positional_argument=False):
+    group = add_filter_args_to_cli_parser(cli_parser, no_positional_argument=no_positional_argument)
     group.add_argument("--passed", action="store_true", help="Filter on passed tests")
     group.add_argument("--failed", action="store_true", help="Filter on failed tests")
     group.add_argument("--skipped", action="store_true", help="Filter on skipped tests")
