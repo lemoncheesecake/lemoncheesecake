@@ -8,14 +8,14 @@ from __future__ import print_function
 
 import sys
 
-from lemoncheesecake.testtree import flatten_suites
-from lemoncheesecake.reporting.report import get_stats_from_suites
-from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
-from lemoncheesecake.utils import IS_PYTHON3, humanize_duration
-from lemoncheesecake.reporting.backends import terminalsize
-
 import colorama
 from termcolor import colored
+
+from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
+from lemoncheesecake.reporting.backends import terminalsize
+from lemoncheesecake.reporting.report import get_stats_from_suites
+from lemoncheesecake.testtree import flatten_suites
+from lemoncheesecake.utils import IS_PYTHON3, humanize_duration, get_status_color
 
 
 class LinePrinter:
@@ -67,22 +67,13 @@ def _make_suite_header_line(suite, terminal_width):
 
 def _make_test_status_label(status):
     if status == "passed":
-        color = "green"
-    elif status == "failed":
-        color = "red"
-    elif status == "disabled":
-        color = "grey"
-    else:
-        color = "yellow"
-
-    if status == "passed":
         label = "OK"
     elif status == "disabled":
         label = "--"
     else:
         label = "KO"
 
-    return colored(label, color, attrs=["bold"])
+    return colored(label, get_status_color(status), attrs=["bold"])
 
 
 def _make_test_result_line(name, num, status):

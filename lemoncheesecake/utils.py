@@ -32,6 +32,17 @@ def humanize_duration(duration):
     return ret
 
 
+def get_status_color(status):
+    if status == "passed":
+        return "green"
+    elif status == "failed":
+        return "red"
+    elif status == "disabled":
+        return "cyan"
+    else:
+        return "yellow"
+
+
 def object_has_method(obj, method_name):
     try:
         return callable(getattr(obj, method_name))
