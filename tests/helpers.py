@@ -495,10 +495,10 @@ def cmdout(capsys):
             self._stderr_lines = None
 
         def get_lines(self, on_stderr=False):
-            if self._stdout_lines == None or self._stderr_lines == None:
+            if self._stdout_lines is None or self._stderr_lines is None:
                 stdout, stderr = capsys.readouterr()
-                self._stdout_lines = [line for line in stdout.split("\n") if line != ""]
-                self._stderr_lines = [line for line in stderr.split("\n") if line != ""]
+                self._stdout_lines = [line for line in stdout.split("\n")]
+                self._stderr_lines = [line for line in stderr.split("\n")]
             return self._stderr_lines if on_stderr else self._stdout_lines
 
         def assert_substrs_in_line(self, line_nb, substrs, on_stderr=False):
