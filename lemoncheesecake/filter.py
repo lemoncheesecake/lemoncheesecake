@@ -7,9 +7,12 @@ Created on Sep 8, 2016
 import fnmatch
 from functools import reduce
 
+from lemoncheesecake.reporting import load_report
+from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.exceptions import UserError
 
-__all__ = ("Filter", "ReportFilter", "filter_suites", "add_filter_args_to_cli_parser", "make_filter_from_cli_args")
+__all__ = ("RunFilter", "ReportFilter", "filter_suites", "add_filter_args_to_cli_parser",
+           "make_run_filter_from_cli_args")
 
 NEGATIVE_FILTER_CHARS = "-^~"
 
@@ -18,7 +21,7 @@ def match_values(values, patterns):
     if not patterns:
         return True
 
-    values = [value or "" for value in values] # convert None to ""
+    values = [value or "" for value in values]  # convert None to ""
 
     for pattern in patterns:
         if pattern[0] in NEGATIVE_FILTER_CHARS:
@@ -52,7 +55,18 @@ def match_values_lists(lsts, patterns):
     )
 
 
-class Filter:
+class Filter(object):
+    def is_empty(self):
+        raise NotImplemented()
+
+    def is_test_disabled(self, test):
+        raise NotImplemented()
+
+    def match_test(self, test, suite):
+        raise NotImplemented()
+
+
+class BaseFilter(Filter):
     def __init__(self):
         self.paths = []
         self.descriptions = []
@@ -83,13 +97,17 @@ class Filter:
         return all(func() for func in funcs)
 
 
-class ReportFilter(Filter):
+class RunFilter(BaseFilter):
+    pass
+
+
+class ReportFilter(RunFilter):
     def __init__(self):
-        Filter.__init__(self)
+        RunFilter.__init__(self)
         self.statuses = []
 
     def is_empty(self):
-        if not Filter.is_empty(self):
+        if not RunFilter.is_empty(self):
             return False
 
         return len(self.statuses) == 0
@@ -98,13 +116,27 @@ class ReportFilter(Filter):
         return test.status == "disabled"
 
     def match_test(self, test, suite):
-        if not Filter.match_test(self, test, suite):
+        if not RunFilter.match_test(self, test, suite):
             return False
 
         if len(self.statuses) == 0:
             return True
 
         return test.status in self.statuses
+
+
+class OnTestsFilter(Filter):
+    def __init__(self, tests):
+        self.tests = [test.path for test in tests]
+
+    def is_empty(self):
+        return False
+
+    def is_test_disabled(self, test):
+        return test.status == "disabled"
+
+    def match_test(self, test, suite):
+        return test.path in self.tests
 
 
 def filter_suite(suite, filtr):
@@ -148,19 +180,18 @@ def add_filter_args_to_cli_parser(cli_parser, no_positional_argument=False):
     group.add_argument("--property", "-m", nargs="+", type=property_value, action="append", default=[], help="Filter on properties")
     group.add_argument("--link", "-l", nargs="+", action="append", default=[], help="Filter on links (names and URLs)")
     group.add_argument("--disabled", action="store_true", help="Filter on disabled tests")
+    group.add_argument("--passed", action="store_true", help="Filter on passed tests (report-only filter)")
+    group.add_argument("--failed", action="store_true", help="Filter on failed tests (report-only filter)")
+    group.add_argument("--skipped", action="store_true", help="Filter on skipped tests (report-only filter)")
     group.add_argument("--enabled", action="store_true", help="Filter on enabled (non-disabled) tests")
+    group.add_argument("--on-report", required=False, help="When enabled, the filtering is based on the given report")
 
     return group
 
-
-def add_report_filter_args_to_cli_parser(cli_parser, no_positional_argument=False):
-    group = add_filter_args_to_cli_parser(cli_parser, no_positional_argument=no_positional_argument)
-    group.add_argument("--passed", action="store_true", help="Filter on passed tests")
-    group.add_argument("--failed", action="store_true", help="Filter on failed tests")
-    group.add_argument("--skipped", action="store_true", help="Filter on skipped tests")
+add_report_filter_args_to_cli_parser = add_filter_args_to_cli_parser
 
 
-def _set_filter_from_cli_args(fltr, cli_args):
+def _set_base_filter_from_cli_args(fltr, cli_args):
     if cli_args.disabled and cli_args.enabled:
         raise UserError("--disabled and --enabled arguments are mutually exclusive")
 
@@ -172,18 +203,22 @@ def _set_filter_from_cli_args(fltr, cli_args):
     fltr.disabled = cli_args.disabled
     fltr.enabled = cli_args.enabled
 
+
+def _set_run_filter_from_cli_args(filtr, cli_args):
+    if cli_args.passed or cli_args.failed or cli_args.skipped:
+        raise UserError("--passed, --failed and --skipped arguments can only be used on the report-based filter")
+    _set_base_filter_from_cli_args(filtr, cli_args)
+
+
+def _make_run_filter_from_cli_args(cli_args):
+    fltr = RunFilter()
+    _set_run_filter_from_cli_args(fltr, cli_args)
     return fltr
 
 
-def make_filter_from_cli_args(cli_args):
-    fltr = Filter()
-    _set_filter_from_cli_args(fltr, cli_args)
-    return fltr
-
-
-def make_report_filter_from_cli_args(cli_args):
+def _make_report_filter_from_cli_args(cli_args):
     fltr = ReportFilter()
-    _set_filter_from_cli_args(fltr, cli_args)
+    _set_base_filter_from_cli_args(fltr, cli_args)
 
     if cli_args.passed:
         fltr.statuses.append("passed")
@@ -193,3 +228,24 @@ def make_report_filter_from_cli_args(cli_args):
         fltr.statuses.append("skipped")
 
     return fltr
+
+
+def _make_on_report_filter_from_cli_args(cli_args):
+    report = load_report(cli_args.on_report)
+    filtr = _make_report_filter_from_cli_args(cli_args)
+    suites = filter_suites(report.suites, filtr)
+    return OnTestsFilter(flatten_tests(suites))
+
+
+def make_run_filter_from_cli_args(cli_args):
+    if cli_args.on_report is None:
+        return _make_run_filter_from_cli_args(cli_args)
+    else:
+        return _make_on_report_filter_from_cli_args(cli_args)
+
+
+def make_report_filter_from_cli_args(cli_args):
+    if cli_args.on_report is None:
+        return _make_report_filter_from_cli_args(cli_args)
+    else:
+        return _make_on_report_filter_from_cli_args(cli_args)
