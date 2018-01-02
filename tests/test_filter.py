@@ -1,6 +1,9 @@
+import argparse
+
 import lemoncheesecake.api as lcc
 from helpers import run_suite_class, reporting_session
-from lemoncheesecake.filter import RunFilter, ReportFilter, filter_suites
+from lemoncheesecake.filter import RunFilter, ReportFilter, filter_suites, \
+    add_report_filter_cli_args, add_run_filter_cli_args, make_report_filter, make_run_filter
 from lemoncheesecake.suite import load_suite_from_class
 
 
@@ -920,3 +923,23 @@ def test_project_filter_on_failed():
 
     assert len(suites[0].get_tests()) == 1
     assert suites[0].get_tests()[0].name == "test1"
+
+
+# very simple test that at least checks that add_filter_cli_args and make_run_filter
+# works well with each other on the most minimalist test-case (cli without argument)
+def test_run_filter_handling():
+    cli_parser = argparse.ArgumentParser()
+    add_run_filter_cli_args(cli_parser)
+    cli_args = cli_parser.parse_args(args=[])
+    filtr = make_run_filter(cli_args)
+    assert filtr.is_empty()
+
+
+# very simple test that at least checks that add_report_filter_cli_args and make_report_filter
+# works well with each other on the most minimalist test-case (cli without argument)
+def test_report_filter_handling():
+    cli_parser = argparse.ArgumentParser()
+    add_report_filter_cli_args(cli_parser)
+    cli_args = cli_parser.parse_args(args=[])
+    filtr = make_report_filter(cli_args)
+    assert filtr.is_empty()
