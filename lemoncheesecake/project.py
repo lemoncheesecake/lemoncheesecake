@@ -127,7 +127,7 @@ class Project:
 
     def add_custom_args_to_run_cli(self, cli_args_parser):
         if isinstance(self._config, HasCustomCliArgs):
-            cli_group = cli_args_parser.add_argument_group("Project custom options")
+            cli_group = cli_args_parser.add_argument_group("Project custom arguments")
             self._config.add_custom_cli_args(cli_group)
 
     def create_report_dir(self):
