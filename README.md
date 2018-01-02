@@ -892,7 +892,7 @@ Filtering:
 [...]
 ```
 
-The `--on-report` argument is a special switch that tells lcc to use tests from the report instead of the project to 
+The `--on-report` argument is a special switch that tells lcc to use tests from the report rather than from the project to
 build the actual filter. A typical application of this functionality is to re-run failed tests from a previous report:
 ```
 $ lcc run --on-report report/ --failed
