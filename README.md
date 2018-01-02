@@ -715,7 +715,9 @@ class MyProjectConfiguration(SimpleProjectConfiguration, HasMetadataPolicy):
 
 See `lemoncheesecake.validators.MetadataPolicy` for more information.
 
-# CLI commands
+# Using lcc
+
+## lcc commands
 
 In addition to the main sub command `run`, the `lcc` command provides other sub commands that display various information about the test hierarchy:
 
@@ -862,6 +864,41 @@ In addition to the main sub command `run`, the `lcc` command provides other sub 
 
 Also see the `--help` of these sub commands.
 
+## lcc filtering arguments
+
+lcc commands offer various argument to filter tests, example:
+```
+$ lcc run --help
+[...]
+Filtering:
+  path                  Filter on test/suite path (wildcard character '*' can
+                        be used)
+  --desc DESC [DESC ...]
+                        Filter on descriptions
+  --tag TAG [TAG ...], -a TAG [TAG ...]
+                        Filter on tags
+  --property PROPERTY [PROPERTY ...], -m PROPERTY [PROPERTY ...]
+                        Filter on properties
+  --link LINK [LINK ...], -l LINK [LINK ...]
+                        Filter on links (names and URLs)
+  --disabled            Filter on disabled tests
+  --passed              Filter on passed tests (report-only filter)
+  --failed              Filter on failed tests (report-only filter)
+  --skipped             Filter on skipped tests (report-only filter)
+  --enabled             Filter on enabled (non-disabled) tests
+  --on-report ON_REPORT
+                        When enabled, the filtering is based on the given
+                        report
+[...]
+```
+
+The `--on-report` argument is a special switch that tells lcc to use tests from the report instead of the project to 
+build the actual filter. A typical application of this functionality is to re-run failed tests from a previous report:
+```
+$ lcc run --on-report report/ --failed
+```
+
 # Contact
 
-Bugs and improvement ideas are welcomed in tickets. A Google Groups is also available for discussions about lemoncheesecake: https://groups.google.com/forum/#!forum/lemoncheesecake .
+Bugs and improvement ideas are welcomed in tickets. A Google Groups forum is also available for discussions about
+lemoncheesecake: https://groups.google.com/forum/#!forum/lemoncheesecake .
