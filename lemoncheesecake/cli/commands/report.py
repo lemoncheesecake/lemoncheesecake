@@ -4,7 +4,7 @@ from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import auto_detect_reporting_backends
 from lemoncheesecake.reporting import load_report
 from lemoncheesecake.reporting.backends.console import display_report_suites
-from lemoncheesecake.filter import add_report_filter_args_to_cli_parser, make_report_filter_from_cli_args, filter_suites
+from lemoncheesecake.filter import add_report_filter_cli_args, make_report_filter, filter_suites
 
 
 class ReportCommand(Command):
@@ -17,11 +17,11 @@ class ReportCommand(Command):
     def add_cli_args(self, cli_parser):
         group = cli_parser.add_argument_group("Show report")
         group.add_argument("report_path", help="Report file name or directory")
-        add_report_filter_args_to_cli_parser(cli_parser)
+        add_report_filter_cli_args(cli_parser)
 
     def run_cmd(self, cli_args):
         report = load_report(cli_args.report_path, auto_detect_reporting_backends())
-        suites = filter_suites(report.get_suites(), make_report_filter_from_cli_args(cli_args))
+        suites = filter_suites(report.get_suites(), make_report_filter(cli_args))
 
         display_report_suites(suites)
 

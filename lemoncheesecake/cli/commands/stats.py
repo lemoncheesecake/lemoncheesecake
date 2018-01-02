@@ -10,7 +10,7 @@ from functools import reduce
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.display import print_table
 from lemoncheesecake.cli.utils import get_suites_from_project
-from lemoncheesecake.filter import add_filter_args_to_cli_parser
+from lemoncheesecake.filter import add_run_filter_cli_args
 from lemoncheesecake.testtree import flatten_suites
 from lemoncheesecake.project import load_project
 
@@ -61,7 +61,7 @@ class StatsCommand(Command):
     def add_cli_args(self, cli_parser):
         group = cli_parser.add_argument_group("Display")
         self.add_color_cli_args(group)
-        add_filter_args_to_cli_parser(cli_parser)
+        add_run_filter_cli_args(cli_parser)
 
     def run_cmd(self, cli_args):
         self.process_color_cli_args(cli_args)

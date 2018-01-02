@@ -10,7 +10,7 @@ from termcolor import colored
 
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import get_suites_from_project
-from lemoncheesecake.filter import add_filter_args_to_cli_parser
+from lemoncheesecake.filter import add_run_filter_cli_args
 from lemoncheesecake.project import load_project
 
 
@@ -22,7 +22,7 @@ class ShowCommand(Command):
         return "Show the test tree"
     
     def add_cli_args(self, cli_parser):
-        add_filter_args_to_cli_parser(cli_parser)
+        add_run_filter_cli_args(cli_parser)
 
         group = cli_parser.add_argument_group("Display")
         group.add_argument("--no-metadata", "-i", action="store_true", help="Hide suite and test metadata")

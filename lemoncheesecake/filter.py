@@ -11,8 +11,8 @@ from lemoncheesecake.reporting import load_report
 from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.exceptions import UserError
 
-__all__ = ("RunFilter", "ReportFilter", "filter_suites", "add_filter_args_to_cli_parser",
-           "make_run_filter_from_cli_args")
+__all__ = ("RunFilter", "ReportFilter", "filter_suites", "add_run_filter_cli_args",
+           "make_run_filter")
 
 NEGATIVE_FILTER_CHARS = "-^~"
 
@@ -163,7 +163,7 @@ def filter_suites(suites, filtr):
     return filtered_suites
 
 
-def add_filter_args_to_cli_parser(cli_parser, no_positional_argument=False):
+def add_run_filter_cli_args(cli_parser, no_positional_argument=False):
     def property_value(value):
         splitted = value.split(":")
         if len(splitted) != 2:
@@ -188,10 +188,10 @@ def add_filter_args_to_cli_parser(cli_parser, no_positional_argument=False):
 
     return group
 
-add_report_filter_args_to_cli_parser = add_filter_args_to_cli_parser
+add_report_filter_cli_args = add_run_filter_cli_args
 
 
-def _set_base_filter_from_cli_args(fltr, cli_args):
+def _set_base_filter(fltr, cli_args):
     if cli_args.disabled and cli_args.enabled:
         raise UserError("--disabled and --enabled arguments are mutually exclusive")
 
@@ -204,21 +204,21 @@ def _set_base_filter_from_cli_args(fltr, cli_args):
     fltr.enabled = cli_args.enabled
 
 
-def _set_run_filter_from_cli_args(filtr, cli_args):
+def _set_run_filter(filtr, cli_args):
     if cli_args.passed or cli_args.failed or cli_args.skipped:
         raise UserError("--passed, --failed and --skipped arguments can only be used on the report-based filter")
-    _set_base_filter_from_cli_args(filtr, cli_args)
+    _set_base_filter(filtr, cli_args)
 
 
-def _make_run_filter_from_cli_args(cli_args):
+def _make_run_filter(cli_args):
     fltr = RunFilter()
-    _set_run_filter_from_cli_args(fltr, cli_args)
+    _set_run_filter(fltr, cli_args)
     return fltr
 
 
-def _make_report_filter_from_cli_args(cli_args):
+def _make_report_filter(cli_args):
     fltr = ReportFilter()
-    _set_base_filter_from_cli_args(fltr, cli_args)
+    _set_base_filter(fltr, cli_args)
 
     if cli_args.passed:
         fltr.statuses.append("passed")
@@ -230,22 +230,22 @@ def _make_report_filter_from_cli_args(cli_args):
     return fltr
 
 
-def _make_on_report_filter_from_cli_args(cli_args):
+def _make_on_report_filter(cli_args):
     report = load_report(cli_args.on_report)
-    filtr = _make_report_filter_from_cli_args(cli_args)
+    filtr = _make_report_filter(cli_args)
     suites = filter_suites(report.suites, filtr)
     return OnTestsFilter(flatten_tests(suites))
 
 
-def make_run_filter_from_cli_args(cli_args):
+def make_run_filter(cli_args):
     if cli_args.on_report is None:
-        return _make_run_filter_from_cli_args(cli_args)
+        return _make_run_filter(cli_args)
     else:
-        return _make_on_report_filter_from_cli_args(cli_args)
+        return _make_on_report_filter(cli_args)
 
 
-def make_report_filter_from_cli_args(cli_args):
+def make_report_filter(cli_args):
     if cli_args.on_report is None:
-        return _make_report_filter_from_cli_args(cli_args)
+        return _make_report_filter(cli_args)
     else:
-        return _make_on_report_filter_from_cli_args(cli_args)
+        return _make_on_report_filter(cli_args)
