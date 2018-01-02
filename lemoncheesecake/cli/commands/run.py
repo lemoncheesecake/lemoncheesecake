@@ -10,7 +10,7 @@ from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import get_suites_from_project
 from lemoncheesecake.exceptions import LemonCheesecakeException, ProgrammingError, UserError, \
     serialize_current_exception
-from lemoncheesecake.filter import add_filter_args_to_cli_parser
+from lemoncheesecake.filter import add_run_filter_cli_args
 from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture
 from lemoncheesecake.project import find_project_file, load_project_from_file, load_project
 from lemoncheesecake.reporting import filter_reporting_backends_by_capabilities, CAPABILITY_REPORTING_SESSION
@@ -43,7 +43,7 @@ class RunCommand(Command):
             project = load_project_from_file(project_file)
             default_reporting_backend_names = [backend.name for backend in project.get_default_reporting_backends_for_test_run()]
 
-        add_filter_args_to_cli_parser(cli_parser)
+        add_run_filter_cli_args(cli_parser)
 
         group = cli_parser.add_argument_group("Reporting")
         group.add_argument("--exit-error-on-failure", action="store_true",

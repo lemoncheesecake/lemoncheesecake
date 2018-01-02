@@ -9,14 +9,14 @@ from __future__ import print_function
 import lemoncheesecake
 from lemoncheesecake.project import find_project_file, load_project_from_file
 from lemoncheesecake.reporting import get_available_backends
-from lemoncheesecake.filter import make_filter_from_cli_args, filter_suites
+from lemoncheesecake.filter import make_run_filter, filter_suites
 from lemoncheesecake.exceptions import UserError, ProjectError
 
 LEMONCHEESECAKE_VERSION = "lemoncheesecake version %s" % lemoncheesecake.__version__
 
 
 def filter_suites_from_cli_args(suites, cli_args):
-    filtr = make_filter_from_cli_args(cli_args)
+    filtr = make_run_filter(cli_args)
     if filtr.is_empty():
         return suites
 
