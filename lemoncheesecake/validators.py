@@ -82,7 +82,7 @@ class MetadataPolicy:
                         if available_properties else "no property is available"
                     raise InvalidMetadataError(
                         "In %s '%s', the property '%s' is not supported (%s)" % (
-                        obj_type, obj.get_path_as_str(), property_name, help_msg
+                        obj_type, obj.path, property_name, help_msg
                     ))
 
         # check forbidden properties
@@ -90,7 +90,7 @@ class MetadataPolicy:
             if property_name in forbidden_properties:
                 raise InvalidMetadataError(
                     "In %s '%s', the property '%s' is not accepted on a %s" % (
-                        obj_type, obj.get_path_as_str(), property_name, obj_type
+                        obj_type, obj.path, property_name, obj_type
                     )
                 )
 
@@ -99,7 +99,7 @@ class MetadataPolicy:
             if not required_property in obj.properties.keys():
                 raise InvalidMetadataError(
                     "In %s '%s', the mandatory property '%s' is missing" % (
-                    obj_type, obj.get_path_as_str(), required_property
+                    obj_type, obj.path, required_property
                 ))
 
         # check properties allowed values
@@ -109,7 +109,7 @@ class MetadataPolicy:
             if available_properties[name]["values"] and not value in available_properties[name]["values"]:
                 raise InvalidMetadataError(
                     "In %s '%s', value '%s' of property '%s' is not among accepted values: %s" % (
-                    obj_type, obj.get_path_as_str(), value, name, available_properties[name]["values"]
+                    obj_type, obj.path, value, name, available_properties[name]["values"]
                 ))
 
         # check unknown tags
@@ -120,7 +120,7 @@ class MetadataPolicy:
                         if available_tags else "no property is available"
                     raise InvalidMetadataError(
                         "In %s '%s', the tag '%s' is not supported (%s)" % (
-                        obj_type, obj.get_path_as_str(), tag, help_msg
+                        obj_type, obj.path, tag, help_msg
                     ))
 
         # check forbidden tags
@@ -128,7 +128,7 @@ class MetadataPolicy:
             if tag in forbidden_tags:
                 raise InvalidMetadataError(
                     "In %s '%s', the tag '%s' is not accepted on a %s" % (
-                        obj_type, obj.get_path_as_str(), tag, obj_type
+                        obj_type, obj.path, tag, obj_type
                     )
                 )
 

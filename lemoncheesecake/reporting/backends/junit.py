@@ -53,7 +53,7 @@ def _serialize_suite_data(suite):
     if tests:
         junit_testsuite = make_xml_node(
             "testsuite", 
-            "name", suite.get_path_as_str(),
+            "name", suite.path,
             "tests", str(len(tests)),
             "failures", str(len(list(filter(lambda test: test.status == "failed", tests)))),
             "skipped", str(len(list(filter(lambda test: test.status == "skipped", tests)))),

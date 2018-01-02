@@ -8,7 +8,7 @@ from __future__ import print_function
 
 import sys
 
-from lemoncheesecake.testtree import get_flattened_suites
+from lemoncheesecake.testtree import flatten_suites
 from lemoncheesecake.reporting.report import get_stats_from_suites
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
 from lemoncheesecake.utils import IS_PYTHON3, humanize_duration
@@ -54,7 +54,7 @@ class LinePrinter:
 
 
 def _make_suite_header_line(suite, terminal_width):
-    suite_name = suite.get_path_as_str()
+    suite_name = suite.path
     max_width = min((terminal_width, 80))
     # -2 corresponds to the two space characters at the left and right of suite path + another character to avoid
     # an extra line after the suite line on Windows terminal having width <= 80
@@ -122,7 +122,7 @@ class ConsoleReportingSession(ReportingSession):
 
     def get_test_label(self, test):
         if self.show_test_full_path:
-            return test.get_path_as_str()
+            return test.path
         return test.name
 
     def on_tests_beginning(self, report):
@@ -229,7 +229,7 @@ def display_report_suites(suites):
     # Display suite results
     ###
     suite_idx = 0
-    for suite in get_flattened_suites(suites):
+    for suite in flatten_suites(suites):
         if len(suite.get_tests()) == 0:
             continue
         if suite_idx > 0:
@@ -237,7 +237,7 @@ def display_report_suites(suites):
         header_line = _make_suite_header_line(suite, terminal_width)
         print(header_line)
         for test_idx, test in enumerate(suite.get_tests()):
-            test_result_line, _ = _make_test_result_line(test.get_path_as_str(), num=test_idx+1, status=test.status)
+            test_result_line, _ = _make_test_result_line(test.path, num=test_idx+1, status=test.status)
             print(test_result_line)
         suite_idx += 1
 

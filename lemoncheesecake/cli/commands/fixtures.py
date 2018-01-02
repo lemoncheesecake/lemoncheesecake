@@ -8,9 +8,8 @@ from __future__ import print_function
 
 from lemoncheesecake.cli.display import print_table
 from lemoncheesecake.cli.command import Command
-from lemoncheesecake.testtree import walk_tests
+from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.project import load_project
-from lemoncheesecake.exceptions import ProjectError, ProgrammingError
 
 
 class FixturesCommand(Command):
@@ -54,10 +53,9 @@ class FixturesCommand(Command):
                 fixtures_by_scope[fixt.scope] = [fixt]
 
         used_by_tests = {}
-        def get_test_fixtures(test, suite):
+        for test in flatten_tests(suites):
             for fixt_name in test.get_fixtures():
                 used_by_tests[fixt_name] = used_by_tests.get(fixt_name, 0) + 1
-        walk_tests(suites, get_test_fixtures)
 
         used_by_fixtures = {}
         for fixt in fixtures:

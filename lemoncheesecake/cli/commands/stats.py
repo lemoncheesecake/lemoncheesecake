@@ -11,8 +11,44 @@ from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.display import print_table
 from lemoncheesecake.cli.utils import get_suites_from_project
 from lemoncheesecake.filter import add_filter_args_to_cli_parser
-from lemoncheesecake.testtree import walk_suites
+from lemoncheesecake.testtree import flatten_suites
 from lemoncheesecake.project import load_project
+
+
+class Stats:
+    def __init__(self):
+        self.tests_nb = 0
+        self.disabled_tests_nb = 0
+        self.suites_nb = 0
+        self.non_empty_suites_nb = 0
+        self.tags = {}
+        self.properties = {}
+        self.links = {}
+
+
+def compute_stats(suites):
+    stats = Stats()
+
+    for suite in flatten_suites(suites):
+        stats.suites_nb += 1
+        for test in suite.get_tests():
+            stats.tests_nb += 1
+            if test.is_disabled():
+                stats.disabled_tests_nb += 1
+            for tag in test.hierarchy_tags:
+                stats.tags[tag] = stats.tags.get(tag, 0) + 1
+            for prop, value in test.hierarchy_properties.items():
+                if prop not in stats.properties:
+                    stats.properties[prop] = {}
+                if value not in stats.properties[prop]:
+                    stats.properties[prop][value] = 0
+                stats.properties[prop][value] += 1
+            for link in test.hierarchy_links:
+                stats.links[link] = stats.links.get(link, 0) + 1
+        else:
+            stats.non_empty_suites_nb += 1
+
+    return stats
 
 
 class StatsCommand(Command):
@@ -33,41 +69,10 @@ class StatsCommand(Command):
         project = load_project()
         suites = get_suites_from_project(project, cli_args)
 
-        class Stats:
-            def __init__(self):
-                self.tests_nb = 0
-                self.disabled_tests_nb = 0
-                self.suites_nb = 0
-                self.non_empty_suites_nb = 0
-                self.tags = {}
-                self.properties = {}
-                self.links = {}
-        stats = Stats()
-
-        def handle_test(test, suite):
-            stats.tests_nb += 1
-            if test.is_disabled():
-                stats.disabled_tests_nb += 1
-            for tag in test.get_inherited_tags():
-                stats.tags[tag] = stats.tags.get(tag, 0) + 1
-            for prop, value in test.get_inherited_properties().items():
-                if prop not in stats.properties:
-                    stats.properties[prop] = {}
-                if value not in stats.properties[prop]:
-                    stats.properties[prop][value] = 0
-                stats.properties[prop][value] += 1
-            for link in test.get_inherited_links():
-                stats.links[link] = stats.links.get(link, 0) + 1
+        stats = compute_stats(suites)
 
         def percent_of_tests(val):
             return "%2d%%" % (float(val) / stats.tests_nb * 100)
-
-        def handle_suite(suite):
-            stats.suites_nb += 1
-            if suite.get_tests():
-                stats.non_empty_suites_nb += 1
-
-        walk_suites(suites, test_func=handle_test, suite_func=handle_suite)
 
         # Show tags
         lines = []

@@ -10,50 +10,56 @@ from lemoncheesecake.utils import get_distincts_in_list
 from lemoncheesecake.exceptions import CannotFindTreeNode
 
 
-class BaseTreeNode:
+class BaseTreeNode(object):
     def __init__(self, name, description):
         self.parent_suite = None
         self.name = name
         self.description = description
-        self.tags = [ ]
+        self.tags = []
         self.properties = {}
-        self.links = [ ]
+        self.links = []
 
-    def get_path(self):
-        path = [ self ]
-        parent_suite = self.parent_suite
-        while parent_suite != None:
-            path.insert(0, parent_suite)
-            parent_suite = parent_suite.parent_suite
-        return path
-    
-    def get_path_as_str(self, sep="."):
-        return sep.join([s.name for s in self.get_path()])
+    @property
+    def hierarchy(self):
+        if self.parent_suite is not None:
+            for node in self.parent_suite.hierarchy:
+                yield node
+        yield self
 
-    def get_depth(self):
-        return len(self.get_path()) - 1
+    @property
+    def hierarchy_depth(self):
+        return len(list(self.hierarchy)) - 1
 
-    def get_inherited_paths(self):
-        return list(map(lambda node: node.get_path_as_str(), self.get_path()))
+    @property
+    def path(self):
+        return ".".join([s.name for s in self.hierarchy])
 
-    def get_inherited_descriptions(self):
-        return list(map(lambda node: node.description, self.get_path()))
+    @property
+    def hierarchy_paths(self):
+        return map(lambda node: node.path, self.hierarchy)
 
-    def get_inherited_tags(self):
+    @property
+    def hierarchy_descriptions(self):
+        return map(lambda node: node.description, self.hierarchy)
+
+    @property
+    def hierarchy_tags(self):
         tags = []
-        for node in self.get_path():
+        for node in self.hierarchy:
             tags.extend(node.tags)
         return get_distincts_in_list(tags)
 
-    def get_inherited_properties(self):
+    @property
+    def hierarchy_properties(self):
         properties = {}
-        for node in self.get_path():
+        for node in self.hierarchy:
             properties.update(node.properties)
         return properties
 
-    def get_inherited_links(self):
+    @property
+    def hierarchy_links(self):
         links = []
-        for node in self.get_path():
+        for node in self.hierarchy:
             links.extend(node.links)
         return get_distincts_in_list(links)
 
@@ -63,7 +69,7 @@ class BaseTreeNode:
         return node
 
     def __str__(self):
-        return self.get_path_as_str()
+        return self.path
 
 
 class BaseTest(BaseTreeNode):
@@ -110,27 +116,17 @@ class BaseSuite(BaseTreeNode):
         return node
 
 
-def walk_suites(suites, suite_func=None, test_func=None):
-    def do_walk(suite):
-        if suite_func:
-            suite_func(suite)
-        if test_func:
-            for test in suite.get_tests():
-                test_func(test, suite)
-        for sub_suite in suite.get_suites():
-            do_walk(sub_suite)
+def flatten_suites(suites):
     for suite in suites:
-        do_walk(suite)
+        yield suite
+        for sub_suite in flatten_suites(suite.get_suites()):
+            yield sub_suite
 
 
-def walk_tests(suites, func):
-    walk_suites(suites, test_func=func)
-
-
-def get_flattened_suites(suites):
-    flattened_suites = []
-    walk_suites(suites, lambda suite: flattened_suites.append(suite))
-    return flattened_suites
+def flatten_tests(suites):
+    for suite in flatten_suites(suites):
+        for test in suite.get_tests():
+            yield test
 
 
 def get_suite_by_name(suites, suite_name):
@@ -140,10 +136,10 @@ def get_suite_by_name(suites, suite_name):
         raise CannotFindTreeNode("Cannot find suite named '%s'" % suite_name)
 
 
-def find_suite(suites, path, sep="."):
+def find_suite(suites, path):
     lookup_suites = suites
     lookup_suite = None
-    for lookup_suite_name in path.split(sep):
+    for lookup_suite_name in path.split("."):
         lookup_suite = get_suite_by_name(lookup_suites, lookup_suite_name)
         lookup_suites = lookup_suite.get_suites(include_empty_suites=True)
     if lookup_suite is None:
@@ -159,7 +155,7 @@ def get_test_by_name(suite, test_name):
         raise CannotFindTreeNode("Cannot find test named '%s'" % test_name)
 
 
-def find_test(suites, path, sep="."):
-    suite_name = sep.join(path.split(sep)[:-1])
-    lookup_suite = find_suite(suites, suite_name, sep=sep)
-    return get_test_by_name(lookup_suite, path.split(sep)[-1])
+def find_test(suites, path):
+    suite_name = ".".join(path.split(".")[:-1])
+    lookup_suite = find_suite(suites, suite_name)
+    return get_test_by_name(lookup_suite, path.split(".")[-1])
