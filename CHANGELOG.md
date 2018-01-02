@@ -1,3 +1,9 @@
+# 0.16.0 (2018-01-03)
+
+- **CLI**: add `lcc diff` command to compare two reports
+- **CLI**: add `--on-report` argument to base filter on tests in report instead of tests in project
+- **under the hood**: improve lemoncheesecake.testtree API by using generators and properties
+
 # 0.15.6 (2017-12-27)
 
 - **HTML report**: fix line wrap for check description and details
