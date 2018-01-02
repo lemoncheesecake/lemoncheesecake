@@ -715,7 +715,7 @@ class MyProjectConfiguration(SimpleProjectConfiguration, HasMetadataPolicy):
 
 See `lemoncheesecake.validators.MetadataPolicy` for more information.
 
-# Other CLI commands
+# CLI commands
 
 In addition to the main sub command `run`, the `lcc` command provides other sub commands that display various information about the test hierarchy:
 
@@ -742,6 +742,21 @@ In addition to the main sub command `run`, the `lcc` command provides other sub 
       - suite_2.test_7 (priority:medium)
       - suite_2.test_8 (slow, priority:low, #1234)
       - suite_2.test_9 (slow, priority:medium)
+  ```
+- Compare two reports:
+  ```
+  $ lcc diff report-1/ report-2/
+  Added tests (1):
+  - suite_3.test_1 (passed)
+
+  Removed tests (1):
+  - suite_1.test_9 (failed)
+
+  Tests that switched to passed (1):
+  - suite_2.test_3
+
+  Tests that switched to non-passed (1):
+  - suite_2.test_4 (failed)
   ```
 - Show available fixtures:
   ```
