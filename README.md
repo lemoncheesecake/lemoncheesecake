@@ -886,16 +886,16 @@ Filtering:
   --failed              Filter on failed tests (report-only filter)
   --skipped             Filter on skipped tests (report-only filter)
   --enabled             Filter on enabled (non-disabled) tests
-  --on-report ON_REPORT
+  --from-report ON_REPORT
                         When enabled, the filtering is based on the given
                         report
 [...]
 ```
 
-The `--on-report` argument is a special switch that tells lcc to use tests from the report rather than from the project to
+The `--from-report` argument is a special switch that tells lcc to use tests from the report rather than from the project to
 build the actual filter. A typical application of this functionality is to re-run failed tests from a previous report:
 ```
-$ lcc run --on-report report/ --failed
+$ lcc run --failed --from-report report/
 ```
 
 # Contact

@@ -125,7 +125,7 @@ class ReportFilter(RunFilter):
         return test.status in self.statuses
 
 
-class OnTestsFilter(Filter):
+class FromTestsFilter(Filter):
     def __init__(self, tests):
         self.tests = [test.path for test in tests]
 
@@ -184,7 +184,7 @@ def add_run_filter_cli_args(cli_parser, no_positional_argument=False):
     group.add_argument("--failed", action="store_true", help="Filter on failed tests (report-only filter)")
     group.add_argument("--skipped", action="store_true", help="Filter on skipped tests (report-only filter)")
     group.add_argument("--enabled", action="store_true", help="Filter on enabled (non-disabled) tests")
-    group.add_argument("--on-report", required=False, help="When enabled, the filtering is based on the given report")
+    group.add_argument("--from-report", required=False, help="When enabled, the filtering is based on the given report")
 
     return group
 
@@ -230,22 +230,22 @@ def _make_report_filter(cli_args):
     return fltr
 
 
-def _make_on_report_filter(cli_args):
-    report = load_report(cli_args.on_report)
+def _make_from_report_filter(cli_args):
+    report = load_report(cli_args.from_report)
     filtr = _make_report_filter(cli_args)
     suites = filter_suites(report.suites, filtr)
-    return OnTestsFilter(flatten_tests(suites))
+    return FromTestsFilter(flatten_tests(suites))
 
 
 def make_run_filter(cli_args):
-    if cli_args.on_report is None:
+    if cli_args.from_report is None:
         return _make_run_filter(cli_args)
     else:
-        return _make_on_report_filter(cli_args)
+        return _make_from_report_filter(cli_args)
 
 
 def make_report_filter(cli_args):
-    if cli_args.on_report is None:
+    if cli_args.from_report is None:
         return _make_report_filter(cli_args)
     else:
-        return _make_on_report_filter(cli_args)
+        return _make_from_report_filter(cli_args)
