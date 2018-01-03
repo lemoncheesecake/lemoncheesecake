@@ -6,11 +6,11 @@ from lemoncheesecake.reporting.backends.json_ import save_report_into_file
 from lemoncheesecake.cli.commands.diff import compute_diff
 
 
-def check_diff(diff, added=[], removed=[], passed=[], non_passed=[]):
+def check_diff(diff, added=[], removed=[], status_changed=[]):
     assert [t.path for t in diff.added] == added
     assert [t.path for t in diff.removed] == removed
-    assert [t.path for t in diff.passed] == passed
-    assert [t.path for t in diff.non_passed] == non_passed
+    for test_path, old_status, new_status in status_changed:
+        assert test_path in [t.path for t in diff.status_changed[old_status][new_status]]
 
 
 def test_added_test():
@@ -37,7 +37,7 @@ def test_passed_to_failed():
 
     diff = compute_diff([make_suite_data_from_mockup(old_suite)], [make_suite_data_from_mockup(new_suite)])
 
-    check_diff(diff, non_passed=["mysuite.mytest1"])
+    check_diff(diff, status_changed=[["mysuite.mytest1", "passed", "failed"]])
 
 
 def test_failed_to_passed():
@@ -46,7 +46,7 @@ def test_failed_to_passed():
 
     diff = compute_diff([make_suite_data_from_mockup(old_suite)], [make_suite_data_from_mockup(new_suite)])
 
-    check_diff(diff, passed=["mysuite.mytest1"])
+    check_diff(diff, status_changed=[["mysuite.mytest1", "failed", "passed"]])
 
 
 def _split_lines(lines, separator):
@@ -89,10 +89,9 @@ def test_diff_cmd(tmpdir, cmdout):
     splitted = _split_lines(lines, "")
     added = next(splitted)
     removed = next(splitted)
-    passed = next(splitted)
-    non_passed = next(splitted)
+    status_changed = next(splitted)
 
     assert "mysuite.mytest4" in added[1]
     assert "mysuite.mytest3" in removed[1]
-    assert "mysuite.mytest2" in passed[1]
-    assert "mysuite.mytest1" in non_passed[1]
+    assert "mysuite.mytest2" in status_changed[1]
+    assert "mysuite.mytest1" in status_changed[2]

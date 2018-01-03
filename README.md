@@ -754,11 +754,9 @@ In addition to the main sub command `run`, the `lcc` command provides other sub 
   Removed tests (1):
   - suite_1.test_9 (failed)
 
-  Tests that switched to passed (1):
-  - suite_2.test_3
-
-  Tests that switched to non-passed (1):
-  - suite_2.test_4 (failed)
+  Status changed (2):
+  - suite_2.test_3 (failed => passed)
+  - suite_2.test_4 (passed => failed)
   ```
 - Show available fixtures:
   ```

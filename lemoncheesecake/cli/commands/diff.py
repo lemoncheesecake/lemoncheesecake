@@ -7,20 +7,21 @@ from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import auto_detect_reporting_backends
 from lemoncheesecake.reporting import load_report
 from lemoncheesecake.filter import add_report_filter_cli_args, make_report_filter, \
-    filter_suites, ReportFilter
+    filter_suites
 from lemoncheesecake.testtree import flatten_tests, find_test
 from lemoncheesecake.exceptions import CannotFindTreeNode, UserError
+
+ORDERED_STATUSES = "failed", "skipped", "disabled", "passed"
 
 
 class Diff:
     def __init__(self):
         self.added = []
         self.removed = []
-        self.passed = []
-        self.non_passed = []
+        self.status_changed = {}
 
     def is_empty(self):
-        return len(self.added + self.removed + self.passed + self.non_passed) == 0
+        return len(self.added) + len(self.removed) + len(self.status_changed) == 0
 
 
 def compute_diff(old_suites, new_suites):
@@ -37,10 +38,11 @@ def compute_diff(old_suites, new_suites):
 
         # handle status-changed tests
         if new_test.status != old_test.status:
-            if new_test.status == "passed":
-                diff.passed.append(new_test)
-            else:
-                diff.non_passed.append(new_test)
+            if old_test.status not in diff.status_changed:
+                diff.status_changed[old_test.status] = {}
+            if new_test.status not in diff.status_changed[old_test.status]:
+                diff.status_changed[old_test.status][new_test.status] = []
+            diff.status_changed[old_test.status][new_test.status].append(new_test)
 
         del new_tests[new_test.path]
 
@@ -50,17 +52,33 @@ def compute_diff(old_suites, new_suites):
     return diff
 
 
-def display_diff_type(title, tests, hide_status=False):
-    if len(tests) == 0:
+def display_diff_type(title, test_entries):
+    if len(test_entries) == 0:
         return
 
-    print("%s (%d):" % (title, len(tests)))
-    for test in tests:
-        line = "- %s" % test.path
-        if not hide_status:
-            line += " (%s)" % colored(test.status, get_status_color(test.status))
-        print(line)
+    print("%s (%d):" % (colored(title, attrs=["bold"]), len(test_entries)))
+    for test_entry in test_entries:
+        print("- %s" % test_entry)
     print()
+
+
+def render_test_with_status(test):
+    return "%s (%s)" % (test.path, colored(test.status, get_status_color(test.status)))
+
+
+def render_test_with_status_changed(test, old_status):
+    return "%s (%s => %s)" % (
+        test.path,
+        colored(old_status, get_status_color(old_status)),
+        colored(test.status, get_status_color(test.status))
+    )
+
+
+def flatten_test_status_changed(status_changed):
+    for old_status in ORDERED_STATUSES:
+        for new_status in ORDERED_STATUSES:
+            for test in status_changed.get(old_status, {}).get(new_status, []):
+                yield test, old_status
 
 
 def display_diff(diff):
@@ -68,17 +86,17 @@ def display_diff(diff):
         print("There is no difference between the two reports.")
     else:
         display_diff_type(
-            colored("Added tests", attrs=["bold"]), diff.added
+            "Added tests", [render_test_with_status(test) for test in diff.added]
         )
         display_diff_type(
-            colored("Removed tests", "grey", attrs=["bold"]), diff.removed
+            "Removed tests", [render_test_with_status(test) for test in diff.removed]
         )
         display_diff_type(
-            colored("Tests that switched to passed", get_status_color("passed"), attrs=["bold"]), diff.passed,
-            hide_status=True
-        )
-        display_diff_type(
-            colored("Tests that switched to non-passed", get_status_color("failed"), attrs=["bold"]), diff.non_passed
+            "Status changed",
+            [
+                render_test_with_status_changed(test, old_status)
+                    for test, old_status in flatten_test_status_changed(diff.status_changed)
+            ]
         )
 
 
