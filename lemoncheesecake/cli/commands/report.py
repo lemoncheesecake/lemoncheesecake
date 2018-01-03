@@ -17,7 +17,7 @@ class ReportCommand(Command):
     def add_cli_args(self, cli_parser):
         group = cli_parser.add_argument_group("Show report")
         group.add_argument("report_path", help="Report file name or directory")
-        add_report_filter_cli_args(cli_parser)
+        add_report_filter_cli_args(cli_parser, no_positional_argument=True)
 
     def run_cmd(self, cli_args):
         report = load_report(cli_args.report_path, auto_detect_reporting_backends())
