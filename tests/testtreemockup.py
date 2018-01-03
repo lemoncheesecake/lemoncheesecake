@@ -5,25 +5,40 @@ from lemoncheesecake.reporting import Report, SuiteData, TestData
 NOW = time.time()
 
 
+def _make_tree_node_attrs(name, kwargs):
+    return {
+        "description": kwargs.get("description", name.title()),
+        "tags": kwargs.get("tags", []),
+        "properties": kwargs.get("properties", {}),
+        "links": kwargs.get("links", [])
+    }
+
+
 class TreeNodeMockup:
-    def __init__(self, name, description=None):
+    def __init__(self, name, description, tags, properties, links):
         self.name = name
-        self.description = description if description is not None else name.title()
+        self.description = description
+        self.tags = tags[:]
+        self.properties = dict(properties)
+        self.links = links[:]
 
 
 class TestMockup(TreeNodeMockup):
-    def __init__(self, name, description, status):
-        TreeNodeMockup.__init__(self, name, description)
+    def __init__(self, name, description, tags, properties, links, status):
+        TreeNodeMockup.__init__(self, name, description, tags, properties, links)
         self.status = status
 
 
-def tst_mockup(name, description=None, status="passed"):
-    return TestMockup(name, description, status)
+def tst_mockup(name, **kwargs):
+    attrs = _make_tree_node_attrs(name, kwargs)
+    attrs["status"] = kwargs.get("status", "passed")
+
+    return TestMockup(name, **attrs)
 
 
 class SuiteMockup(TreeNodeMockup):
-    def __init__(self, name, description):
-        TreeNodeMockup.__init__(self, name, description)
+    def __init__(self, name, **kwargs):
+        TreeNodeMockup.__init__(self, name, **kwargs)
         self.suites = []
         self.tests = []
 
@@ -36,8 +51,8 @@ class SuiteMockup(TreeNodeMockup):
         return self
 
 
-def suite_mockup(name, description=None):
-    return SuiteMockup(name, description)
+def suite_mockup(name, **kwargs):
+    return SuiteMockup(name, **_make_tree_node_attrs(name, kwargs))
 
 
 class ReportMockup:
