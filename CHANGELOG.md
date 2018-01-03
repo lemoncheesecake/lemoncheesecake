@@ -1,3 +1,9 @@
+# 0.16.1 (2018-01-04)
+
+- **CLI**: rename --on-report CLI argument into --from-report
+- **CLI**: in lcc diff, improve test status changes handling
+- **CLI**: in lcc report, make test path filter argument non-positional
+
 # 0.16.0 (2018-01-03)
 
 - **CLI**: add `lcc diff` command to compare two reports
