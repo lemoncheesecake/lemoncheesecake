@@ -1,3 +1,8 @@
+# 0.16.2 (2018-01-12)
+
+- **reporting**: add a new default reporting directory creation strategy: rotate and remove former report directories
+  when creating a new report
+
 # 0.16.1 (2018-01-04)
 
 - **CLI**: rename --on-report CLI argument into --from-report
