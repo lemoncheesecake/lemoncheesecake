@@ -13,7 +13,7 @@ from lemoncheesecake.fixtures import load_fixtures_from_directory
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.reporting import ConsoleBackend, HtmlBackend, JsonBackend, XmlBackend, JunitBackend, \
     ReportPortalBackend, SlackReportingBackend, filter_available_reporting_backends
-from lemoncheesecake.reporting.reportdir import report_dir_with_archiving, archive_dirname_datetime
+from lemoncheesecake.reporting.reportdir import create_report_dir_with_rotation
 from lemoncheesecake.exceptions import ProjectError, UserError, serialize_current_exception
 from lemoncheesecake.utils import get_resource_path
 from lemoncheesecake.importer import import_module
@@ -114,7 +114,7 @@ class SimpleProjectConfiguration(ProjectConfiguration):
         return [self.console_backend, self.json_backend, self.html_backend]
     
     def create_report_dir(self, top_dir):
-        return report_dir_with_archiving(top_dir, archive_dirname_datetime)
+        return create_report_dir_with_rotation(top_dir)
 
 
 class Project:
