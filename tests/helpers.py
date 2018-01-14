@@ -24,7 +24,6 @@ from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 from lemoncheesecake.fixtures import FixtureRegistry, load_fixtures_from_func
 from lemoncheesecake.project import create_project
-from lemoncheesecake.filter import filter_suites
 from lemoncheesecake import events
 from lemoncheesecake.cli import main
 
@@ -215,7 +214,7 @@ def reporting_session():
     return get_reporting_session()
 
 
-def run_suites(suites, filter=None, fixtures=None, backends=None, tmpdir=None, stop_on_failure=False):
+def run_suites(suites, fixtures=None, backends=None, tmpdir=None, stop_on_failure=False):
     global _reporting_session
 
     if fixtures is None:
@@ -231,9 +230,6 @@ def run_suites(suites, filter=None, fixtures=None, backends=None, tmpdir=None, s
 
     if _reporting_session is not None:
         backends = backends + [TestReportingBackend(_reporting_session)]
-
-    if filter:
-        suites = filter_suites(suites, filter)
 
     events.reset()
 
@@ -257,18 +253,18 @@ def run_suites(suites, filter=None, fixtures=None, backends=None, tmpdir=None, s
     return report
 
 
-def run_suite_classes(suite_classes, filter=None, fixtures=None, backends=None, tmpdir=None, stop_on_failure=False):
+def run_suite_classes(suite_classes, fixtures=None, backends=None, tmpdir=None, stop_on_failure=False):
     suites = load_suites_from_classes(suite_classes)
-    return run_suites(suites, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+    return run_suites(suites, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
 
 
-def run_suite(suite, filter=None, fixtures=None, backends=[], tmpdir=None, stop_on_failure=False):
-    return run_suites([suite], filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+def run_suite(suite, fixtures=None, backends=[], tmpdir=None, stop_on_failure=False):
+    return run_suites([suite], fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
 
 
 def run_suite_class(suite_class, filter=None, fixtures=None, backends=[], tmpdir=None, stop_on_failure=False):
     suite = load_suite_from_class(suite_class)
-    return run_suite(suite, filter=filter, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+    return run_suite(suite, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
 
 
 def run_func_in_test(callback):
