@@ -1,13 +1,31 @@
 import argparse
 
 import lemoncheesecake.api as lcc
-from helpers import run_suite_class, reporting_session
 from lemoncheesecake.filter import RunFilter, ReportFilter, filter_suites, \
     add_report_filter_cli_args, add_run_filter_cli_args, make_report_filter, make_run_filter
-from lemoncheesecake.suite import load_suite_from_class
+from lemoncheesecake.suite import load_suites_from_classes
+from lemoncheesecake.testtree import flatten_tests
+
+from testtreemockup import suite_mockup, tst_mockup, make_suite_data_from_mockup
 
 
-def test_filter_full_path_on_test(reporting_session):
+def _test_filter(suites, filtr, expected_test_paths):
+    filtered_suites = filter_suites(suites, filtr)
+    filtered_tests = flatten_tests(filtered_suites)
+    assert sorted([t.path for t in filtered_tests]) == sorted(expected_test_paths)
+
+
+def _test_run_filter(suite_classes, filtr, expected_test_paths):
+    suites = load_suites_from_classes(suite_classes)
+    _test_filter(suites, filtr, expected_test_paths)
+
+
+def _test_report_filter(suite_mockups, filtr, expected_test_paths):
+    suites = map(make_suite_data_from_mockup, suite_mockups)
+    _test_filter(suites, filtr, expected_test_paths)
+
+
+def test_filter_full_path_on_test():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -20,15 +38,14 @@ def test_filter_full_path_on_test(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.paths.append("mysuite.subsuite.baz")
+    _test_run_filter(
+        [mysuite],
+        RunFilter(paths=["mysuite.subsuite.baz"]),
+        ["mysuite.subsuite.baz"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "baz"
-
-def test_filter_full_path_on_test_negative(reporting_session):
+def test_filter_full_path_on_test_negative():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -41,15 +58,34 @@ def test_filter_full_path_on_test_negative(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.paths.append("-mysuite.subsuite.baz")
+    _test_run_filter(
+        [mysuite],
+        RunFilter(paths=["-mysuite.subsuite.baz"]),
+        ["mysuite.subsuite.test2"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "test2"
+def test_filter_full_path_on_suite():
+    @lcc.suite("mysuite")
+    class mysuite:
+        @lcc.suite("subsuite")
+        class subsuite:
+            @lcc.test("test1")
+            def test1(self):
+                pass
 
-def test_filter_full_path_on_suite(reporting_session):
+            @lcc.test("test2")
+            def test2(self):
+                pass
+
+    _test_run_filter(
+        [mysuite],
+        RunFilter(paths=["mysuite.subsuite"]),
+        ["mysuite.subsuite.test1", "mysuite.subsuite.test2"]
+    )
+
+
+def test_filter_path_on_suite_negative():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -62,14 +98,34 @@ def test_filter_full_path_on_suite(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.paths.append("mysuite.subsuite")
+    _test_run_filter(
+        [mysuite],
+        RunFilter(paths=["-mysuite.subsuite.*"]),
+        []
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 2
+def test_filter_path_complete_on_top_suite():
+    @lcc.suite("mysuite")
+    class mysuite:
+        @lcc.suite("subsuite")
+        class subsuite:
+            @lcc.test("test1")
+            def test1(self):
+                pass
 
-def test_filter_path_on_suite_negative(reporting_session):
+            @lcc.test("test2")
+            def test2(self):
+                pass
+
+    _test_run_filter(
+        [mysuite],
+        RunFilter(paths=["mysuite"]),
+        ["mysuite.subsuite.test1", "mysuite.subsuite.test2"]
+    )
+
+
+def test_filter_path_wildcard_on_test():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -82,14 +138,14 @@ def test_filter_path_on_suite_negative(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.paths.append("-mysuite.subsuite.*")
+    _test_run_filter(
+        [mysuite],
+        RunFilter(paths=["mysuite.subsuite.ba*"]),
+        ["mysuite.subsuite.baz"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 0
-
-def test_filter_path_complete_on_top_suite(reporting_session):
+def test_filter_path_wildcard_on_test_negative():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -102,14 +158,14 @@ def test_filter_path_complete_on_top_suite(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.paths.append("mysuite")
+    _test_run_filter(
+        [mysuite],
+        RunFilter(paths=["-mysuite.subsuite.ba*"]),
+        ["mysuite.subsuite.test2"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 2
-
-def test_filter_path_wildcard_on_test(reporting_session):
+def test_filter_path_wildcard_on_suite():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -122,15 +178,14 @@ def test_filter_path_wildcard_on_test(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.paths.append("mysuite.subsuite.ba*")
+    _test_run_filter(
+        [mysuite],
+        RunFilter(paths=["mysuite.sub*.baz"]),
+        ["mysuite.subsuite.baz"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "baz"
-
-def test_filter_path_wildcard_on_test_negative(reporting_session):
+def test_filter_path_wildcard_on_suite_negative():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -143,57 +198,14 @@ def test_filter_path_wildcard_on_test_negative(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.paths.append("-mysuite.subsuite.ba*")
+    _test_run_filter(
+        [mysuite],
+        RunFilter(paths=["~mysuite.sub*.baz"]),
+        ["mysuite.subsuite.test2"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "test2"
-
-def test_filter_path_wildcard_on_suite(reporting_session):
-    @lcc.suite("mysuite")
-    class mysuite:
-        @lcc.suite("subsuite")
-        class subsuite:
-            @lcc.test("test1")
-            def baz(self):
-                pass
-
-            @lcc.test("test2")
-            def test2(self):
-                pass
-
-    filter = RunFilter()
-    filter.paths.append("mysuite.sub*.baz")
-
-    run_suite_class(mysuite, filter=filter)
-
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "baz"
-
-def test_filter_path_wildcard_on_suite_negative(reporting_session):
-    @lcc.suite("mysuite")
-    class mysuite:
-        @lcc.suite("subsuite")
-        class subsuite:
-            @lcc.test("test1")
-            def baz(self):
-                pass
-
-            @lcc.test("test2")
-            def test2(self):
-                pass
-
-    filter = RunFilter()
-    filter.paths.append("~mysuite.sub*.baz")
-
-    run_suite_class(mysuite, filter=filter)
-
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "test2"
-
-def test_filter_description_on_test(reporting_session):
+def test_filter_description_on_test():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -206,15 +218,14 @@ def test_filter_description_on_test(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.descriptions.append(["desc2"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(descriptions=[["desc2"]]),
+        ["mysuite.subsuite.test2"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "test2"
-
-def test_filter_description_on_test_negative(reporting_session):
+def test_filter_description_on_test_negative():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -227,15 +238,14 @@ def test_filter_description_on_test_negative(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.descriptions.append(["~desc2"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(descriptions=[["~desc2"]]),
+        ["mysuite.subsuite.baz"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "baz"
-
-def test_filter_description_on_suite(reporting_session):
+def test_filter_description_on_suite():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("desc1")
@@ -250,15 +260,14 @@ def test_filter_description_on_suite(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.descriptions.append(["desc2"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(descriptions=[["desc2"]]),
+        ["mysuite.othersuite.test2"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "test2"
-
-def test_filter_description_on_suite_negative(reporting_session):
+def test_filter_description_on_suite_negative():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("desc1")
@@ -275,15 +284,14 @@ def test_filter_description_on_suite_negative(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.descriptions.append(["-desc2"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(descriptions=[["-desc2"]]),
+        ["mysuite.subsuite.baz"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "baz"
-
-def test_filter_tag_on_test(reporting_session):
+def test_filter_tag_on_test():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -297,15 +305,14 @@ def test_filter_tag_on_test(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.tags.append(["tag1"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(tags=[["tag1"]]),
+        ["mysuite.subsuite.test2"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "test2"
-
-def test_filter_tag_on_test_negative(reporting_session):
+def test_filter_tag_on_test_negative():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -319,15 +326,14 @@ def test_filter_tag_on_test_negative(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.tags.append(["-tag1"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(tags=[["-tag1"]]),
+        ["mysuite.subsuite.baz"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "baz"
-
-def test_filter_tag_on_suite(reporting_session):
+def test_filter_tag_on_suite():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.tags("tag1")
@@ -344,15 +350,14 @@ def test_filter_tag_on_suite(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.tags.append(["tag2"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(tags=[["tag2"]]),
+        ["mysuite.subsuite2.test2"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "test2"
-
-def test_filter_tag_on_suite_negative(reporting_session):
+def test_filter_tag_on_suite_negative():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.tags("tag1")
@@ -369,15 +374,14 @@ def test_filter_tag_on_suite_negative(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.tags.append(["~tag2"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(tags=[["~tag2"]]),
+        ["mysuite.subsuite1.baz"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "baz"
-
-def test_filter_property_on_test(reporting_session):
+def test_filter_property_on_test():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -391,15 +395,14 @@ def test_filter_property_on_test(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.properties.append([("myprop", "foo")])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(properties=[[("myprop", "foo")]]),
+        ["mysuite.subsuite.test2"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "test2"
-
-def test_filter_property_on_test_negative(reporting_session):
+def test_filter_property_on_test_negative():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -414,15 +417,14 @@ def test_filter_property_on_test_negative(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.properties.append([("myprop", "-foo")])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(properties=[[("myprop", "-foo")]]),
+        ["mysuite.subsuite.baz"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "baz"
-
-def test_filter_property_on_suite(reporting_session):
+def test_filter_property_on_suite():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.prop("myprop", "foo")
@@ -439,15 +441,14 @@ def test_filter_property_on_suite(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.properties.append([("myprop", "bar")])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(properties=[[("myprop", "bar")]]),
+        ["mysuite.subsuite2.test2"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "test2"
-
-def test_filter_property_on_suite_negative(reporting_session):
+def test_filter_property_on_suite_negative():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.prop("myprop", "foo")
@@ -464,15 +465,14 @@ def test_filter_property_on_suite_negative(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.properties.append([("myprop", "~bar")])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(properties=[[("myprop", "~bar")]]),
+        ["mysuite.subsuite1.baz"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "baz"
-
-def test_filter_link_on_test_without_name(reporting_session):
+def test_filter_link_on_test_without_name():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -486,15 +486,14 @@ def test_filter_link_on_test_without_name(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.links.append(["http://bug.trac.ker/1234"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(links=[["http://bug.trac.ker/1234"]]),
+        ["mysuite.subsuite.test2"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "test2"
-
-def test_filter_link_on_test_negative_with_name(reporting_session):
+def test_filter_link_on_test_negative_with_name():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -508,15 +507,14 @@ def test_filter_link_on_test_negative_with_name(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.links.append(["-#1234"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(links=[["-#1234"]]),
+        ["mysuite.subsuite.baz"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "baz"
-
-def test_filter_link_on_suite(reporting_session):
+def test_filter_link_on_suite():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.link("http://bug.trac.ker/1234", "#1234")
@@ -533,15 +531,14 @@ def test_filter_link_on_suite(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.links.append(["#1235"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(links=[["#1235"]]),
+        ["mysuite.subsuite2.test2"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "test2"
-
-def test_filter_link_on_suite_negative(reporting_session):
+def test_filter_link_on_suite_negative():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.link("http://bug.trac.ker/1234", "#1234")
@@ -558,15 +555,14 @@ def test_filter_link_on_suite_negative(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.links.append(["~#1235"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(links=[["~#1235"]]),
+        ["mysuite.subsuite1.baz"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "baz"
-
-def test_filter_path_on_suite_and_tag_on_test(reporting_session):
+def test_filter_path_on_suite_and_tag_on_test():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -580,16 +576,14 @@ def test_filter_path_on_suite_and_tag_on_test(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.paths.append("mysuite.subsuite")
-    filter.tags.append(["tag1"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(paths=["mysuite.subsuite"], tags=[["tag1"]]),
+        ["mysuite.subsuite.test2"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "test2"
-
-def test_filter_path_on_suite_and_negative_tag_on_test(reporting_session):
+def test_filter_path_on_suite_and_negative_tag_on_test():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -603,16 +597,14 @@ def test_filter_path_on_suite_and_negative_tag_on_test(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.paths.append("mysuite.subsuite")
-    filter.tags.append(["-tag1"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(paths=["mysuite.subsuite"], tags=[["-tag1"]]),
+        ["mysuite.subsuite.baz"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "baz"
-
-def test_filter_description_on_suite_and_link_on_test(reporting_session):
+def test_filter_description_on_suite_and_link_on_test():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -632,16 +624,14 @@ def test_filter_description_on_suite_and_link_on_test(reporting_session):
             def test3(self):
                 pass
 
-    filter = RunFilter()
-    filter.descriptions.append(["Sub suite 2"])
-    filter.links.append(["#1234"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(descriptions=[["Sub suite 2"]], links=[["#1234"]]),
+        ["mysuite.subsuite2.test2"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "test2"
-
-def test_filter_path_and_tag_on_suite(reporting_session):
+def test_filter_path_and_tag_on_suite():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.tags("foo")
@@ -658,16 +648,14 @@ def test_filter_path_and_tag_on_suite(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.paths.append("mysuite.subsuite1")
-    filter.tags.append(["foo"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(paths=["mysuite.subsuite1"], tags=[["foo"]]),
+        ["mysuite.subsuite1.test1"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "test1"
-
-def test_filter_path_and_tag_on_test(reporting_session):
+def test_filter_path_and_tag_on_test():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite1")
@@ -688,16 +676,14 @@ def test_filter_path_and_tag_on_test(reporting_session):
             def test3(self):
                 pass
 
-    filter = RunFilter()
-    filter.paths.append("mysuite.subsuite2.*")
-    filter.tags.append(["foo"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(paths=["mysuite.subsuite2.*"], tags=[["foo"]]),
+        ["mysuite.subsuite2.test2"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "test2"
-
-def test_filter_path_and_negative_tag_on_test(reporting_session):
+def test_filter_path_and_negative_tag_on_test():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite1")
@@ -718,25 +704,24 @@ def test_filter_path_and_negative_tag_on_test(reporting_session):
             def test3(self):
                 pass
 
-    filter = RunFilter()
-    filter.paths.append("mysuite.subsuite2.*")
-    filter.tags.append(["-foo"])
+    _test_run_filter(
+        [mysuite],
+        RunFilter(paths=["mysuite.subsuite2.*"], tags=[["-foo"]]),
+        ["mysuite.subsuite2.test3"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
-
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "test3"
 
 def test_is_empty_true():
     filt = RunFilter()
     assert filt.is_empty() == True
+
 
 def test_is_empty_false():
     def do_test(attr, val):
         filt = RunFilter()
         assert hasattr(filt, attr)
         setattr(filt, attr, val)
-        assert filt.is_empty() == False
+        assert filt.is_empty() is False
 
     do_test("paths", ["foo"])
     do_test("descriptions", [["foo"]])
@@ -744,7 +729,8 @@ def test_is_empty_false():
     do_test("properties", [[("foo", "bar")]])
     do_test("links", ["foo"])
 
-def test_filter_description_and(reporting_session):
+
+def test_filter_description_and():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -757,15 +743,14 @@ def test_filter_description_and(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.descriptions = [["mysuite"], ["test1"]]
+    _test_run_filter(
+        [mysuite],
+        RunFilter(descriptions=[["mysuite"], ["test1"]]),
+        ["mysuite.subsuite.baz"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "baz"
-
-def test_filter_tags_and(reporting_session):
+def test_filter_tags_and():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -780,15 +765,14 @@ def test_filter_tags_and(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.tags = [["foo"], ["bar"]]
+    _test_run_filter(
+        [mysuite],
+        RunFilter(tags=[["foo"], ["bar"]]),
+        ["mysuite.subsuite.baz"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "baz"
-
-def test_filter_properties_and(reporting_session):
+def test_filter_properties_and():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -804,15 +788,14 @@ def test_filter_properties_and(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.properties = [[("foo", "1")], [("bar", "2")]]
+    _test_run_filter(
+        [mysuite],
+        RunFilter(properties=[[("foo", "1")], [("bar", "2")]]),
+        ["mysuite.subsuite.baz"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "baz"
-
-def test_filter_links_and(reporting_session):
+def test_filter_links_and():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -828,15 +811,14 @@ def test_filter_links_and(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.links = [["#1234"], ["*/1235"]]
+    _test_run_filter(
+        [mysuite],
+        RunFilter(links=[["#1234"], ["*/1235"]]),
+        ["mysuite.subsuite.baz"]
+    )
 
-    run_suite_class(mysuite, filter=filter)
 
-    assert reporting_session.test_nb == 1
-    assert reporting_session.last_test == "baz"
-
-def test_filter_and_or(reporting_session):
+def test_filter_and_or():
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.suite("subsuite")
@@ -851,78 +833,45 @@ def test_filter_and_or(reporting_session):
             def test2(self):
                 pass
 
-    filter = RunFilter()
-    filter.tags = [["foo"], ["bar", "baz"]]
-
-    run_suite_class(mysuite, filter=filter)
-
-    assert reporting_session.test_nb == 2
-
-
-def test_project_filter():
-    @lcc.suite("mysuite")
-    class mysuite:
-        @lcc.test("test 1")
-        def test1(self):
-            pass
-
-        @lcc.test("test 2")
-        def test2(self):
-            pass
-
-    report = run_suite_class(mysuite)
-
-    filter = RunFilter()
-    filter.paths.append("mysuite.test2")
-
-    suites = filter_suites(report.get_suites(), filter)
-
-    assert len(suites[0].get_tests()) == 1
-    assert suites[0].get_tests()[0].name == "test2"
+    _test_run_filter(
+        [mysuite],
+        RunFilter(tags=[["foo"], ["bar", "baz"]]),
+        ["mysuite.subsuite.baz", "mysuite.subsuite.test2"]
+    )
 
 
-def test_project_filter_on_passed():
-    @lcc.suite("mysuite")
-    class mysuite:
-        @lcc.test("test 1")
-        def test1(self):
-            lcc.log_error("fail")
+def test_report_filter_on_path():
+    suite = suite_mockup("mysuite").add_test(tst_mockup("mytest1")).add_test(tst_mockup("mytest2"))
 
-        @lcc.test("test 2")
-        def test2(self):
-            pass
+    _test_report_filter(
+        [suite],
+        ReportFilter(paths=["mysuite.mytest2"]),
+        ["mysuite.mytest2"]
+    )
 
-    report = run_suite_class(mysuite)
 
-    filter = ReportFilter()
-    filter.statuses.append("passed")
+def test_report_filter_on_passed():
+    suite = suite_mockup("mysuite").\
+        add_test(tst_mockup("test1", status="failed")).\
+        add_test(tst_mockup("test2", status="passed"))
 
-    suites = filter_suites(report.get_suites(), filter)
-
-    assert len(suites[0].get_tests()) == 1
-    assert suites[0].get_tests()[0].name == "test2"
+    _test_report_filter(
+        [suite],
+        ReportFilter(statuses=["passed"]),
+        ["mysuite.test2"]
+    )
 
 
 def test_project_filter_on_failed():
-    @lcc.suite("mysuite")
-    class mysuite:
-        @lcc.test("test 1")
-        def test1(self):
-            lcc.log_error("fail")
+    suite = suite_mockup("mysuite").\
+        add_test(tst_mockup("test1", status="failed")).\
+        add_test(tst_mockup("test2", status="passed"))
 
-        @lcc.test("test 2")
-        def test2(self):
-            pass
-
-    report = run_suite_class(mysuite)
-
-    filter = ReportFilter()
-    filter.statuses.append("failed")
-
-    suites = filter_suites(report.get_suites(), filter)
-
-    assert len(suites[0].get_tests()) == 1
-    assert suites[0].get_tests()[0].name == "test1"
+    _test_report_filter(
+        [suite],
+        ReportFilter(statuses=["failed"]),
+        ["mysuite.test1"]
+    )
 
 
 # very simple test that at least checks that add_filter_cli_args and make_run_filter
