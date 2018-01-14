@@ -593,9 +593,7 @@ def test_teardown_suite_success():
         def teardown_suite(self):
             lcc.log_info("some log")
 
-    run_suite_class(mysuite)
-
-    report = get_runtime().report
+    report = run_suite_class(mysuite)
 
     assert_report_from_suite(report, mysuite)
     assert_report_stats(report, expected_test_successes=1)
@@ -619,9 +617,7 @@ def test_teardown_suite_failure():
         def teardown_suite(self):
             lcc.check_that("val", 1, lcc.equal_to(2))
 
-    run_suite_class(mysuite)
-
-    report = get_runtime().report
+    report = run_suite_class(mysuite)
 
     assert_report_from_suite(report, mysuite)
     assert_report_stats(report, expected_test_successes=1, expected_errors=1, expected_check_failures=1)
@@ -647,9 +643,7 @@ def test_teardown_suite_without_content():
         def teardown_suite(self):
             marker.append("teardown")
 
-    run_suite_class(mysuite)
-
-    report = get_runtime().report
+    report = run_suite_class(mysuite)
 
     assert report.suites[0].suite_teardown == None
     assert marker == ["teardown"]
@@ -666,9 +660,7 @@ def test_setup_test_session_success():
     def fixt():
         lcc.log_info("some log")
 
-    run_suite_class(mysuite, fixtures=[fixt])
-
-    report = get_runtime().report
+    report = run_suite_class(mysuite, fixtures=[fixt])
 
     assert_report_from_suite(report, mysuite)
     assert_report_stats(report, expected_test_successes=1)
@@ -692,9 +684,7 @@ def test_setup_test_session_failure():
     def fixt():
         lcc.log_error("something bad happened")
 
-    run_suite_class(mysuite, fixtures=[fixt])
-
-    report = get_runtime().report
+    report = run_suite_class(mysuite, fixtures=[fixt])
 
     assert_report_from_suite(report, mysuite)
     assert_report_stats(report, expected_test_skippeds=1, expected_errors=1, expected_error_logs=1)
@@ -720,9 +710,7 @@ def test_setup_test_session_without_content():
     def fixt():
         marker.append("setup")
 
-    run_suite_class(mysuite, fixtures=[fixt])
-
-    report = get_runtime().report
+    report = run_suite_class(mysuite, fixtures=[fixt])
 
     assert report.test_session_setup == None
     assert marker == ["setup"]
@@ -740,9 +728,7 @@ def test_teardown_test_session_success():
         yield
         lcc.log_info("some log")
 
-    run_suite_class(mysuite, fixtures=[fixt])
-
-    report = get_runtime().report
+    report = run_suite_class(mysuite, fixtures=[fixt])
 
     assert_report_from_suite(report, mysuite)
     assert_report_stats(report, expected_test_successes=1)
@@ -767,9 +753,7 @@ def test_teardown_test_session_failure():
         yield
         lcc.check_that("val", 1, lcc.equal_to(2))
 
-    run_suite_class(mysuite, fixtures=[fixt])
-
-    report = get_runtime().report
+    report = run_suite_class(mysuite, fixtures=[fixt])
 
     assert_report_from_suite(report, mysuite)
     assert_report_stats(report, expected_test_successes=1, expected_errors=1, expected_check_failures=1)
@@ -796,9 +780,7 @@ def test_teardown_test_session_without_content():
         yield
         marker.append("teardown")
 
-    run_suite_class(mysuite, fixtures=[fixt])
-
-    report = get_runtime().report
+    report = run_suite_class(mysuite, fixtures=[fixt])
 
     assert report.test_session_teardown == None
     assert marker == ["teardown"]
@@ -811,9 +793,7 @@ def test_add_report_info():
         def sometest(self):
             lcc.add_report_info("some info", "some data")
 
-    run_suite_class(mysuite)
-
-    report = get_runtime().report
+    report = run_suite_class(mysuite)
 
     assert report.info[-1] == ["some info", "some data"]
 
@@ -829,9 +809,7 @@ def test_get_fixture():
         def mytest(self, fixt):
             assert lcc.get_fixture("fixt") == 42
 
-    run_suite_class(mysuite, fixtures=[fixt])
-
-    report = get_runtime().report
+    report = run_suite_class(mysuite, fixtures=[fixt])
 
     assert_report_stats(report, expected_test_successes=1)
 
@@ -848,9 +826,7 @@ def test_get_fixture_bad_scope():
             with pytest.raises(ProgrammingError):
                 lcc.get_fixture("fixt")
 
-    run_suite_class(mysuite, fixtures=[fixt])
-
-    report = get_runtime().report
+    report = run_suite_class(mysuite, fixtures=[fixt])
 
     assert_report_stats(report, expected_test_successes=1)
 
@@ -863,9 +839,7 @@ def test_get_fixture_unknown():
             with pytest.raises(ProgrammingError):
                 lcc.get_fixture("fixt")
 
-    run_suite_class(mysuite)
-
-    report = get_runtime().report
+    report = run_suite_class(mysuite)
 
     assert_report_stats(report, expected_test_successes=1)
 
@@ -882,8 +856,6 @@ def test_get_fixture_not_executed():
             with pytest.raises(ProgrammingError):
                 lcc.get_fixture("fixt")
 
-    run_suite_class(mysuite, fixtures=[fixt])
-
-    report = get_runtime().report
+    report = run_suite_class(mysuite, fixtures=[fixt])
 
     assert_report_stats(report, expected_test_successes=1)
