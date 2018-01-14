@@ -218,7 +218,7 @@ def reporting_session():
 def run_suites(suites, filter=None, fixtures=None, backends=None, tmpdir=None, stop_on_failure=False):
     global _reporting_session
 
-    if fixtures == None:
+    if fixtures is None:
         fixture_registry = FixtureRegistry()
     else:
         if isinstance(fixtures, FixtureRegistry):
@@ -226,11 +226,11 @@ def run_suites(suites, filter=None, fixtures=None, backends=None, tmpdir=None, s
         else:
             fixture_registry = build_fixture_registry(*fixtures)
 
-    if not backends:
+    if backends is None:
         backends = []
 
-    if _reporting_session:
-        backends.append(TestReportingBackend(_reporting_session))
+    if _reporting_session is not None:
+        backends = backends + [TestReportingBackend(_reporting_session)]
 
     if filter:
         suites = filter_suites(suites, filter)
