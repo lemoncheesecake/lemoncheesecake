@@ -67,14 +67,14 @@ class Filter(object):
 
 
 class BaseFilter(Filter):
-    def __init__(self):
-        self.paths = []
-        self.descriptions = []
-        self.tags = []
-        self.properties = []
-        self.links = []
-        self.enabled = False
-        self.disabled = False
+    def __init__(self, paths=(), descriptions=(), tags=(), properties=(), links=(), enabled=False, disabled=False):
+        self.paths = list(paths)
+        self.descriptions = list(descriptions)
+        self.tags = list(tags)
+        self.properties = list(properties)
+        self.links = list(links)
+        self.enabled = enabled
+        self.disabled = disabled
 
     def is_empty(self):
         return not any([
@@ -102,9 +102,9 @@ class RunFilter(BaseFilter):
 
 
 class ReportFilter(RunFilter):
-    def __init__(self):
-        RunFilter.__init__(self)
-        self.statuses = []
+    def __init__(self, statuses=(), **kwargs):
+        RunFilter.__init__(self, **kwargs)
+        self.statuses = list(statuses)
 
     def is_empty(self):
         if not RunFilter.is_empty(self):
