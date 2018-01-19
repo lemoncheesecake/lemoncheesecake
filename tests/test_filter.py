@@ -6,7 +6,7 @@ from lemoncheesecake.filter import RunFilter, ReportFilter, filter_suites, \
 from lemoncheesecake.suite import load_suites_from_classes
 from lemoncheesecake.testtree import flatten_tests
 
-from testtreemockup import suite_mockup, tst_mockup, make_suite_data_from_mockup
+from helpers.testtreemockup import suite_mockup, tst_mockup, make_suite_data_from_mockup
 
 
 def _test_filter(suites, filtr, expected_test_paths):
