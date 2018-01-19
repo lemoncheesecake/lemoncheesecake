@@ -4,13 +4,12 @@ Created on Dec 1, 2016
 @author: nicolas
 '''
 
-import sys
 import re
 from types import FunctionType
 
 import lemoncheesecake.api as lcc
 
-from helpers import reporting_session, run_func_in_test
+from helpers.runner import reporting_session, run_func_in_test
 
 ###
 # check_eq

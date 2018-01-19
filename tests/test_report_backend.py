@@ -10,7 +10,7 @@ from lemoncheesecake.reporting.backends.json_ import \
     save_report_into_file as save_json, \
     load_report_from_file as load_json
 
-from helpers import assert_report
+from helpers.report import assert_report
 
 
 @pytest.fixture()

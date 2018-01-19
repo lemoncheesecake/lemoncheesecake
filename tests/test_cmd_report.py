@@ -1,10 +1,12 @@
 import os.path as osp
 
-from helpers import run_suite_class, assert_run_output, cmdout
+from helpers.runner import run_suite_class
+from helpers.cli import assert_run_output, cmdout
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.cli import main
 from lemoncheesecake.reporting.backends.json_ import JsonBackend
+
 
 @lcc.suite("My suite")
 class mysuite:

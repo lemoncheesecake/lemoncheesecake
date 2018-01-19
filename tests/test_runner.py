@@ -14,7 +14,7 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.suite import add_test_in_suite
 from lemoncheesecake.testtree import flatten_tests
 
-from helpers import run_suite_class, run_suite_classes, build_fixture_registry, run_suite, build_suite_from_module
+from helpers.runner import run_suite_class, run_suite_classes, build_fixture_registry, run_suite, build_suite_from_module
 
 # TODO: make launcher unit tests more independent from the reporting layer ?
 

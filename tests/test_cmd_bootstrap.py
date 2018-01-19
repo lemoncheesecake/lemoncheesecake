@@ -1,6 +1,5 @@
-import os.path as osp
-
-from helpers import cmdout, run_main
+from helpers.cli import cmdout
+from helpers.runner import run_main
 
 from lemoncheesecake.project import load_project_from_dir
 

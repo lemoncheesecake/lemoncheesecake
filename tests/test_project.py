@@ -1,5 +1,4 @@
 import os
-import sys
 import argparse
 import pytest
 
@@ -10,9 +9,8 @@ from lemoncheesecake.project import Project, SimpleProjectConfiguration, \
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.exceptions import InvalidMetadataError
-from lemoncheesecake.reporting import backends
 
-from helpers import build_test_project, build_test_module, build_fixture_module
+from helpers.runner import build_test_module, build_fixture_module
 
 
 def make_test_project(project_dir):

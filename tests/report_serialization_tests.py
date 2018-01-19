@@ -16,7 +16,8 @@ from lemoncheesecake.reporting.backend import SAVE_AT_EACH_EVENT, SAVE_AT_EACH_F
     SAVE_AT_EACH_TEST, SAVE_AT_EACH_SUITE, SAVE_AT_END_OF_TESTS
 from lemoncheesecake.reporting import Report
 
-from helpers import run_suite_class, run_suite_classes, assert_report, dump_report
+from helpers.runner import run_suite_class, run_suite_classes, dump_report
+from helpers.report import assert_report
 
 
 def do_test_serialization(suites, backend, tmpdir, fixtures=[]):

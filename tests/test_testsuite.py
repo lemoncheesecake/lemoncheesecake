@@ -12,7 +12,7 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.suite import load_suite_from_class, add_test_in_suite, add_tests_in_suite
 from lemoncheesecake.exceptions import ProgrammingError, InvalidMetadataError
 
-from helpers import dummy_test_callback
+from helpers.runner import dummy_test_callback
 
 
 def test_decorator_test():

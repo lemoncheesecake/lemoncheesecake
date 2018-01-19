@@ -7,7 +7,8 @@ from lemoncheesecake.suite.loader import load_suites_from_directory, load_suite_
     load_test_from_method
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.exceptions import *
-from helpers import build_test_module
+
+from helpers.runner import build_test_module
 
 
 def test_load_suite_from_file(tmpdir):

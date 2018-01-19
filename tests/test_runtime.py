@@ -15,7 +15,8 @@ from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.testtree import find_test, find_suite
 from lemoncheesecake.exceptions import ProgrammingError
 
-from helpers import run_suite_class, run_suite_classes, assert_report_from_suite, assert_report_from_suites, assert_report_stats
+from helpers.runner import run_suite_class, run_suite_classes
+from helpers.report import assert_report_from_suite, assert_report_from_suites, assert_report_stats
 
 
 def assert_test_status(report, test_path, status):
