@@ -9,7 +9,7 @@ import pytest
 from lemoncheesecake.reporting.backends.json_ import JsonBackend, load_report_from_file
 from lemoncheesecake.exceptions import InvalidReportFile
 
-from report_serialization_tests import *
+from helpers.reporttests import *
 
 @pytest.fixture(scope="function")
 def backend():

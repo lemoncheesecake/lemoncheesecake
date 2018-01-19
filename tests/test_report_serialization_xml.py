@@ -15,7 +15,7 @@ try:
 except ImportError:
     pass
 else:
-    from report_serialization_tests import *
+    from helpers.reporttests import *
 
     @pytest.fixture(scope="function")
     def backend():
