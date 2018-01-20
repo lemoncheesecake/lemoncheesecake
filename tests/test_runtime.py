@@ -17,7 +17,7 @@ from lemoncheesecake.exceptions import ProgrammingError
 
 from helpers.runner import run_suite_class, run_suite_classes
 from helpers.report import assert_report_from_suite, assert_report_from_suites, assert_report_stats, \
-    assert_test_success, assert_test_failure, assert_test_skipped
+    assert_test_passed, assert_test_failed, assert_test_skipped
 
 
 def test_simple_test():
@@ -34,7 +34,7 @@ def test_simple_test():
     assert_report_from_suite(report, mysuite)
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
 
-    assert_test_success(report, "mysuite.sometest")
+    assert_test_passed(report, "mysuite.sometest")
 
 
 def test_test_with_all_metadata():
@@ -54,7 +54,7 @@ def test_test_with_all_metadata():
     assert_report_from_suite(report, mysuite)
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
 
-    assert_test_success(report, "mysuite.sometest")
+    assert_test_passed(report, "mysuite.sometest")
 
 
 def test_suite_with_all_metadata():
@@ -74,7 +74,7 @@ def test_suite_with_all_metadata():
     assert_report_from_suite(report, mysuite)
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
 
-    assert_test_success(report, "mysuite.sometest")
+    assert_test_passed(report, "mysuite.sometest")
 
 
 def test_multiple_suites_and_tests():
@@ -139,17 +139,17 @@ def test_multiple_suites_and_tests():
         expected_check_successes=6, expected_check_failures=1, expected_error_logs=2
     )
 
-    assert_test_success(report, "mysuite1.test_1_1")
-    assert_test_success(report, "mysuite1.test_1_2")
-    assert_test_failure(report, "mysuite1.test_1_3")
+    assert_test_passed(report, "mysuite1.test_1_1")
+    assert_test_passed(report, "mysuite1.test_1_2")
+    assert_test_failed(report, "mysuite1.test_1_3")
 
-    assert_test_failure(report, "mysuite2.test_2_1")
-    assert_test_success(report, "mysuite2.test_2_2")
-    assert_test_success(report, "mysuite2.test_2_3")
+    assert_test_failed(report, "mysuite2.test_2_1")
+    assert_test_passed(report, "mysuite2.test_2_2")
+    assert_test_passed(report, "mysuite2.test_2_3")
 
-    assert_test_success(report, "mysuite2.mysuite3.test_3_1")
-    assert_test_failure(report, "mysuite2.mysuite3.test_3_2")
-    assert_test_success(report, "mysuite2.mysuite3.test_3_3")
+    assert_test_passed(report, "mysuite2.mysuite3.test_3_1")
+    assert_test_failed(report, "mysuite2.mysuite3.test_3_2")
+    assert_test_passed(report, "mysuite2.mysuite3.test_3_3")
 
 
 def test_check_success():
@@ -520,7 +520,7 @@ def test_setup_suite_success():
     assert suite.suite_setup.end_time != None
     assert suite.suite_setup.steps[0].entries[0].message == "some log"
     assert suite.suite_setup.has_failure() == False
-    assert_test_success(report, "mysuite.sometest")
+    assert_test_passed(report, "mysuite.sometest")
 
 
 def test_setup_suite_failure():
@@ -590,7 +590,7 @@ def test_teardown_suite_success():
     assert suite.suite_teardown.end_time != None
     assert suite.suite_teardown.steps[0].entries[0].message == "some log"
     assert suite.suite_teardown.has_failure() == False
-    assert_test_success(report, "mysuite.sometest")
+    assert_test_passed(report, "mysuite.sometest")
 
 
 def test_teardown_suite_failure():
@@ -614,7 +614,7 @@ def test_teardown_suite_failure():
     assert suite.suite_teardown.end_time != None
     assert suite.suite_teardown.steps[0].entries[0].outcome == False
     assert suite.suite_teardown.has_failure() == True
-    assert_test_success(report, "mysuite.sometest")
+    assert_test_passed(report, "mysuite.sometest")
 
 
 def test_teardown_suite_without_content():
@@ -656,7 +656,7 @@ def test_setup_test_session_success():
     assert report.test_session_setup.end_time != None
     assert report.test_session_setup.steps[0].entries[0].message == "some log"
     assert report.test_session_setup.has_failure() == False
-    assert_test_success(report, "mysuite.sometest")
+    assert_test_passed(report, "mysuite.sometest")
 
 
 def test_setup_test_session_failure():
@@ -724,7 +724,7 @@ def test_teardown_test_session_success():
     assert report.test_session_teardown.end_time != None
     assert report.test_session_teardown.steps[0].entries[0].message == "some log"
     assert report.test_session_teardown.has_failure() == False
-    assert_test_success(report, "mysuite.sometest")
+    assert_test_passed(report, "mysuite.sometest")
 
 
 def test_teardown_test_session_failure():
@@ -749,7 +749,7 @@ def test_teardown_test_session_failure():
     assert report.test_session_teardown.end_time != None
     assert report.test_session_teardown.steps[0].entries[0].outcome == False
     assert report.test_session_teardown.has_failure() == True
-    assert_test_success(report, "mysuite.sometest")
+    assert_test_passed(report, "mysuite.sometest")
 
 
 def test_teardown_test_session_without_content():
