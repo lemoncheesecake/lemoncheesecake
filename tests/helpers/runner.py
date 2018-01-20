@@ -101,115 +101,7 @@ def build_fixture_registry(*funcs):
     return registry
 
 
-class TestReportingSession(reporting.ReportingSession):
-    def __init__(self):
-        self._test_statuses = {}
-        self.last_test_status = None
-        self.test_nb = 0
-        self.check_nb = 0
-        self.check_success_nb = 0
-        self.check_failing_nb = 0
-        self.test_failing_nb = 0
-        self.test_success_nb = 0
-        self.last_log = None
-        self.last_test = None
-        self.last_check_description = None
-        self.last_check_outcome = None
-        self.last_check_details = None
-        self.error_log_nb = 0
-        self.backend = None
-
-    def get_last_test(self):
-        return self.last_test
-
-    def get_last_test_status(self):
-        return self.last_test_status
-
-    def get_last_test_outcome(self):
-        return self.get_last_test_status() == "passed"
-
-    def get_last_log(self):
-        return self.last_log
-
-    def get_error_log_nb(self):
-        return self.error_log_nb
-
-    def get_test_status(self, test_name):
-        return self._test_statuses[test_name]
-
-    def get_test_outcome(self, test_name):
-        return self.get_test_status(test_name) == "passed"
-
-    def get_last_check(self):
-        return self.last_check_description, self.last_check_outcome, self.last_check_details
-
-    def get_failing_test_nb(self):
-        return self.test_failing_nb
-
-    def get_successful_test_nb(self):
-        return self.test_success_nb
-
-    def on_test_beginning(self, test):
-        self.last_test_outcome = None
-
-    def on_test_ending(self, test, status):
-        self.last_test = test.name
-        self._test_statuses[test.name] = status
-        self.last_test_status = status
-        self.test_nb += 1
-        if status == "passed":
-            self.test_success_nb += 1
-        else:
-            self.test_failing_nb += 1
-
-    def on_disabled_test(self, test):
-        self.on_test_ending(test, "disabled")
-
-    def on_skipped_test(self, test, reason):
-        self.on_test_ending(test, "skipped")
-
-    def on_log(self, level, content):
-        if level == "error":
-            self.error_log_nb += 1
-        self.last_log = content
-
-    def on_check(self, description, outcome, details=None):
-        self.check_nb += 1
-        if outcome:
-            self.check_success_nb += 1
-        else:
-            self.check_failing_nb += 1
-        self.last_check_description = description
-        self.last_check_outcome = outcome
-        self.last_check_details = details
-
-
-_reporting_session = None
-
-class TestReportingBackend(reporting.ReportingBackend):
-    name = "test_backend"
-
-    def __init__(self, reporting_session):
-        self.reporting_session = reporting_session
-
-    def create_reporting_session(self, report, report_dir):
-        return self.reporting_session
-
-
-def get_reporting_session():
-    global _reporting_session
-    _reporting_session = TestReportingSession()
-    return _reporting_session
-
-
-@pytest.fixture()
-def reporting_session():
-    return get_reporting_session()
-
-
 def run_suites(suites, fixtures=None, backends=None, tmpdir=None, stop_on_failure=False):
-    global _reporting_session
-
     if fixtures is None:
         fixture_registry = FixtureRegistry()
     else:
@@ -221,24 +113,16 @@ def run_suites(suites, fixtures=None, backends=None, tmpdir=None, stop_on_failur
     if backends is None:
         backends = []
 
-    if _reporting_session is not None:
-        backends = backends + [TestReportingBackend(_reporting_session)]
-
     events.reset()
 
     if tmpdir:
-        try:
-            runner.run_suites(suites, fixture_registry, backends, tmpdir.strpath, stop_on_failure=stop_on_failure)
-        finally:
-            _reporting_session = None
+        runner.run_suites(suites, fixture_registry, backends, tmpdir.strpath, stop_on_failure=stop_on_failure)
     else:
         report_dir = tempfile.mkdtemp()
         try:
             runner.run_suites(suites, fixture_registry, backends, report_dir, stop_on_failure=stop_on_failure)
         finally:
             shutil.rmtree(report_dir)
-            # reset _reporting_session (either it has been set or not) at the end of each test run
-            _reporting_session = None
 
     report = get_runtime().report
     dump_report(report)
