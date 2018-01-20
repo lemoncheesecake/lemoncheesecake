@@ -16,23 +16,8 @@ from lemoncheesecake.testtree import find_test, find_suite
 from lemoncheesecake.exceptions import ProgrammingError
 
 from helpers.runner import run_suite_class, run_suite_classes
-from helpers.report import assert_report_from_suite, assert_report_from_suites, assert_report_stats
-
-
-def assert_test_status(report, test_path, status):
-    assert find_test(report.suites, test_path).status == status
-
-
-def assert_test_success(report, test_name):
-    assert_test_status(report, test_name, "passed")
-
-
-def assert_test_failure(report, test_name):
-    assert_test_status(report, test_name, "failed")
-
-
-def assert_test_skipped(report, test_name):
-    assert_test_status(report, test_name, "skipped")
+from helpers.report import assert_report_from_suite, assert_report_from_suites, assert_report_stats, \
+    assert_test_success, assert_test_failure, assert_test_skipped
 
 
 def test_simple_test():

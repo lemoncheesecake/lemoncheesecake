@@ -6,7 +6,7 @@ Created on Sep 30, 2016
 
 
 from lemoncheesecake.suite import load_suite_from_class
-from lemoncheesecake.testtree import flatten_tests
+from lemoncheesecake.testtree import flatten_tests, find_test
 from lemoncheesecake import reporting
 
 
@@ -29,6 +29,22 @@ def check_test_statuses(report, passed=(), failed=(), skipped=(), disabled=()):
 def check_report_errors(report, errors_nb):
     stats = report.get_stats()
     assert stats.errors == errors_nb
+
+
+def assert_test_status(report, test_path, status):
+    assert find_test(report.suites, test_path).status == status
+
+
+def assert_test_success(report, test_name):
+    assert_test_status(report, test_name, "passed")
+
+
+def assert_test_failure(report, test_name):
+    assert_test_status(report, test_name, "failed")
+
+
+def assert_test_skipped(report, test_name):
+    assert_test_status(report, test_name, "skipped")
 
 
 ###
