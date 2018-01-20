@@ -15,7 +15,7 @@ from lemoncheesecake.suite import add_test_in_suite
 from lemoncheesecake.testtree import flatten_tests
 
 from helpers.runner import run_suite_class, run_suite_classes, build_fixture_registry, run_suite, build_suite_from_module
-from helpers.report import check_test_statuses, check_report_errors
+from helpers.report import assert_test_statuses, assert_report_errors
 
 
 def test_test_success():
@@ -25,7 +25,7 @@ def test_test_success():
         def sometest(self):
             pass
 
-    check_test_statuses(run_suite_class(MySuite), passed=["MySuite.sometest"])
+    assert_test_statuses(run_suite_class(MySuite), passed=["MySuite.sometest"])
 
 
 def test_test_failure():
@@ -35,7 +35,7 @@ def test_test_failure():
         def sometest(self):
             lcc.check_that("val", 1, lcc.equal_to(2))
 
-    check_test_statuses(run_suite_class(MySuite), failed=["MySuite.sometest"])
+    assert_test_statuses(run_suite_class(MySuite), failed=["MySuite.sometest"])
 
 
 def test_test_module():
@@ -62,7 +62,7 @@ def test_exception_unexpected():
         def second_test(self):
             pass
 
-    check_test_statuses(run_suite_class(MySuite), failed=["MySuite.first_test"], passed=["MySuite.second_test"])
+    assert_test_statuses(run_suite_class(MySuite), failed=["MySuite.first_test"], passed=["MySuite.second_test"])
 
 
 def test_exception_aborttest():
@@ -76,7 +76,7 @@ def test_exception_aborttest():
         def someothertest(self):
             pass
 
-    check_test_statuses(run_suite_class(MySuite), failed=["MySuite.sometest"], passed=["MySuite.someothertest"])
+    assert_test_statuses(run_suite_class(MySuite), failed=["MySuite.sometest"], passed=["MySuite.someothertest"])
 
 
 def test_exception_abortsuite():
@@ -98,7 +98,7 @@ def test_exception_abortsuite():
             def anothertest(self):
                 pass
 
-    check_test_statuses(
+    assert_test_statuses(
         run_suite_class(MySuite),
         failed=["MySuite.MyFirstSuite.sometest"],
         skipped=["MySuite.MyFirstSuite.someothertest"],
@@ -125,7 +125,7 @@ def test_exception_abortalltests():
             def anothertest(self):
                 pass
 
-    check_test_statuses(
+    assert_test_statuses(
         run_suite_class(MySuite),
         failed=["MySuite.MyFirstSuite.sometest"],
         skipped=["MySuite.MyFirstSuite.someothertest", "MySuite.MySecondSuite.anothertest"]
@@ -141,7 +141,7 @@ def test_generated_test():
             test = lcc.Test("mytest", "My Test", test_func)
             add_test_in_suite(test, self)
 
-    check_test_statuses(run_suite_class(MySuite), passed=["MySuite.mytest"])
+    assert_test_statuses(run_suite_class(MySuite), passed=["MySuite.mytest"])
 
 
 def test_sub_suite_inline():
@@ -153,7 +153,7 @@ def test_sub_suite_inline():
             def sometest(self):
                 pass
 
-    check_test_statuses(run_suite_class(MyParentSuite), passed=["MyParentSuite.MyChildSuite.sometest"])
+    assert_test_statuses(run_suite_class(MyParentSuite), passed=["MyParentSuite.MyChildSuite.sometest"])
 
 
 def test_setup_test():
@@ -241,7 +241,7 @@ def test_setup_test_error():
 
     report = run_suite_class(MySuite)
 
-    check_test_statuses(report, failed=["MySuite.sometest"])
+    assert_test_statuses(report, failed=["MySuite.sometest"])
     assert len(marker) == 0
 
 
@@ -256,7 +256,7 @@ def test_setup_test_error_in_fixture():
         def sometest(self, fix):
             pass
 
-    check_test_statuses(run_suite_class(MySuite, fixtures=[fix]), failed=["MySuite.sometest"])
+    assert_test_statuses(run_suite_class(MySuite, fixtures=[fix]), failed=["MySuite.sometest"])
 
 
 def test_teardown_test_error():
@@ -269,7 +269,7 @@ def test_teardown_test_error():
         def sometest(self):
             pass
 
-    check_test_statuses(run_suite_class(MySuite), failed=["MySuite.sometest"])
+    assert_test_statuses(run_suite_class(MySuite), failed=["MySuite.sometest"])
 
 
 def test_teardown_test_error_in_fixture():
@@ -283,7 +283,7 @@ def test_teardown_test_error_in_fixture():
         def sometest(self, fix):
             pass
 
-    check_test_statuses(run_suite_class(MySuite, fixtures=[fix]), failed=["MySuite.sometest"])
+    assert_test_statuses(run_suite_class(MySuite, fixtures=[fix]), failed=["MySuite.sometest"])
 
 
 def test_setup_suite_error_and_subsuite():
@@ -302,7 +302,7 @@ def test_setup_suite_error_and_subsuite():
             def test(self):
                 pass
 
-    check_test_statuses(run_suite_class(MySuite), skipped=["MySuite.test"], passed=["MySuite.MySubSuite.test"])
+    assert_test_statuses(run_suite_class(MySuite), skipped=["MySuite.test"], passed=["MySuite.MySubSuite.test"])
 
 
 def test_setup_suite_error_because_of_exception():
@@ -322,7 +322,7 @@ def test_setup_suite_error_because_of_exception():
 
     report = run_suite_class(MySuite)
 
-    check_test_statuses(report, skipped=["MySuite.sometest"])
+    assert_test_statuses(report, skipped=["MySuite.sometest"])
     assert not marker
 
 
@@ -343,7 +343,7 @@ def test_setup_suite_error_because_of_error_log():
 
     report = run_suite_class(MySuite)
 
-    check_test_statuses(report, skipped=["MySuite.sometest"])
+    assert_test_statuses(report, skipped=["MySuite.sometest"])
     assert not marker
 
 
@@ -369,7 +369,7 @@ def test_setup_suite_error_because_of_fixture():
 
     report = run_suite_class(MySuite, fixtures=[fix])
 
-    check_test_statuses(report, skipped=["MySuite.sometest", "MySuite.sometest_bis"])
+    assert_test_statuses(report, skipped=["MySuite.sometest", "MySuite.sometest_bis"])
     assert not marker
 
 
@@ -385,8 +385,8 @@ def test_teardown_suite_error_because_of_exception():
 
     report = run_suite_class(MySuite)
 
-    check_test_statuses(report, passed=["MySuite.sometest"])
-    check_report_errors(report, 1)
+    assert_test_statuses(report, passed=["MySuite.sometest"])
+    assert_report_errors(report, 1)
 
 
 def test_teardown_suite_error_because_of_error_log():
@@ -401,8 +401,8 @@ def test_teardown_suite_error_because_of_error_log():
 
     report = run_suite_class(MySuite)
 
-    check_test_statuses(report, passed=["MySuite.sometest"])
-    check_report_errors(report, 1)
+    assert_test_statuses(report, passed=["MySuite.sometest"])
+    assert_report_errors(report, 1)
 
 
 def test_teardown_suite_error_because_of_fixture():
@@ -424,8 +424,8 @@ def test_teardown_suite_error_because_of_fixture():
 
     report = run_suite_class(MySuite, fixtures=[fix])
 
-    check_test_statuses(report, passed=["MySuite.sometest"])
-    check_report_errors(report, 1)
+    assert_test_statuses(report, passed=["MySuite.sometest"])
+    assert_report_errors(report, 1)
     assert len(marker) == 1
 
 
@@ -446,8 +446,8 @@ def test_setup_test_session_error_because_of_exception():
 
     report = run_suite_class(MySuite, fixtures=[fixt])
 
-    check_test_statuses(report, skipped=["MySuite.sometest", "MySuite.sometest_bis"])
-    check_report_errors(report, 1)
+    assert_test_statuses(report, skipped=["MySuite.sometest", "MySuite.sometest_bis"])
+    assert_report_errors(report, 1)
 
 
 def test_setup_test_session_error_and_setup_suite():
@@ -468,8 +468,8 @@ def test_setup_test_session_error_and_setup_suite():
 
     report = run_suite_class(MySuite, fixtures=[fixt])
 
-    check_test_statuses(report, skipped=["MySuite.sometest"])
-    check_report_errors(report, 1)
+    assert_test_statuses(report, skipped=["MySuite.sometest"])
+    assert_report_errors(report, 1)
     assert not marker
 
 
@@ -491,8 +491,8 @@ def test_teardown_test_session_error_because_of_exception():
 
     report = run_suite_class(MySuite, fixtures=[fix])
 
-    check_test_statuses(report, passed=["MySuite.sometest", "MySuite.sometest_bis"])
-    check_report_errors(report, 1)
+    assert_test_statuses(report, passed=["MySuite.sometest", "MySuite.sometest_bis"])
+    assert_report_errors(report, 1)
 
 
 def test_session_prerun_fixture_exception():
@@ -509,7 +509,7 @@ def test_session_prerun_fixture_exception():
     with pytest.raises(LemonCheesecakeException) as excinfo:
         report = run_suite_class(MySuite, fixtures=[fix])
         assert "Got an unexpected" in str(excinfo.value)
-        check_test_statuses(report, skipped=["MySuite.sometest"])
+        assert_test_statuses(report, skipped=["MySuite.sometest"])
 
 
 def test_session_prerun_fixture_user_error():
@@ -526,7 +526,7 @@ def test_session_prerun_fixture_user_error():
     with pytest.raises(LemonCheesecakeException) as excinfo:
         report = run_suite_class(MySuite, fixtures=[fix])
         assert str(excinfo.value) == "some error"
-        check_test_statuses(report, skipped=["MySuite.sometest"])
+        assert_test_statuses(report, skipped=["MySuite.sometest"])
 
 
 def test_session_prerun_fixture_teardown_exception():
@@ -544,7 +544,7 @@ def test_session_prerun_fixture_teardown_exception():
     with pytest.raises(LemonCheesecakeException) as excinfo:
         report = run_suite_class(MySuite, fixtures=[fix])
         assert "Got an unexpected" in str(excinfo.value)
-        check_test_statuses(report, passed=["Mysuite.sometest"])
+        assert_test_statuses(report, passed=["Mysuite.sometest"])
 
 
 def test_session_prerun_fixture_teardown_user_error():
@@ -562,7 +562,7 @@ def test_session_prerun_fixture_teardown_user_error():
     with pytest.raises(LemonCheesecakeException) as excinfo:
         report = run_suite_class(MySuite, fixtures=[fix])
         assert str(excinfo.value) == "some error"
-        check_test_statuses(report, passed=["MySuite.sometest"])
+        assert_test_statuses(report, passed=["MySuite.sometest"])
 
 
 def test_run_with_fixture_using_test_method():
@@ -873,7 +873,7 @@ def test_run_with_fixture_injected_in_class():
 
     report = run_suite_class(MySuite, fixtures=[fixt1])
 
-    check_test_statuses(report, passed=["MySuite.sometest"])
+    assert_test_statuses(report, passed=["MySuite.sometest"])
     assert marker == [1]
 
 
@@ -894,7 +894,7 @@ def test_run_with_fixture_injected_in_class_and_fixture_name_arg():
 
     report = run_suite_class(MySuite, fixtures=[fixt1])
 
-    check_test_statuses(report, passed=["MySuite.sometest"])
+    assert_test_statuses(report, passed=["MySuite.sometest"])
     assert marker == [1]
 
 
@@ -1091,7 +1091,7 @@ def test_stop_on_failure_test():
 
     report = run_suite_class(suite, stop_on_failure=True)
 
-    check_test_statuses(report, failed=["suite.test1"], skipped=["suite.test2"])
+    assert_test_statuses(report, failed=["suite.test1"], skipped=["suite.test2"])
 
 
 def test_stop_on_failure_suite_setup():
@@ -1112,7 +1112,7 @@ def test_stop_on_failure_suite_setup():
 
     report = run_suite_classes([suite1, suite2], stop_on_failure=True)
 
-    check_test_statuses(report, skipped=["suite1.test1", "suite2.test2"])
+    assert_test_statuses(report, skipped=["suite1.test1", "suite2.test2"])
 
 
 def test_stop_on_failure_suite_teardown():
@@ -1133,7 +1133,7 @@ def test_stop_on_failure_suite_teardown():
 
     report = run_suite_classes([suite1, suite2], stop_on_failure=True)
 
-    check_test_statuses(report, passed=["suite1.test1"], skipped=["suite2.test2"])
+    assert_test_statuses(report, passed=["suite1.test1"], skipped=["suite2.test2"])
 
 
 def test_disabled_test():
@@ -1146,7 +1146,7 @@ def test_disabled_test():
 
     report = run_suite_class(mysuite)
 
-    check_test_statuses(report, disabled=["mysuite.mytest"])
+    assert_test_statuses(report, disabled=["mysuite.mytest"])
 
 
 def test_disabled_suite():
@@ -1163,4 +1163,4 @@ def test_disabled_suite():
 
     report = run_suite_class(mysuite)
 
-    check_test_statuses(report, disabled=["mysuite.test1", "mysuite.test2"])
+    assert_test_statuses(report, disabled=["mysuite.test1", "mysuite.test2"])

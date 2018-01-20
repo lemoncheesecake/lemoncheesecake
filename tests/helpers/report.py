@@ -14,19 +14,19 @@ from lemoncheesecake import reporting
 # Assertions helpers for quick report checks
 ###
 
-def _check_test_status(report, status, expected):
+def _assert_test_status(report, status, expected):
     actual = [t.path for t in flatten_tests(report.suites) if t.status == status]
     assert sorted(actual) == sorted(expected)
 
 
-def check_test_statuses(report, passed=(), failed=(), skipped=(), disabled=()):
-    _check_test_status(report, "passed", passed)
-    _check_test_status(report, "failed", failed)
-    _check_test_status(report, "skipped", skipped)
-    _check_test_status(report, "disabled", disabled)
+def assert_test_statuses(report, passed=(), failed=(), skipped=(), disabled=()):
+    _assert_test_status(report, "passed", passed)
+    _assert_test_status(report, "failed", failed)
+    _assert_test_status(report, "skipped", skipped)
+    _assert_test_status(report, "disabled", disabled)
 
 
-def check_report_errors(report, errors_nb):
+def assert_report_errors(report, errors_nb):
     stats = report.get_stats()
     assert stats.errors == errors_nb
 
