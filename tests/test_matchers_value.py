@@ -1,5 +1,6 @@
-from helpers.runner import run_func_in_test, reporting_session
+from helpers.runner import run_func_in_test
 from helpers.matching import assert_match_success, assert_match_failure
+from helpers.report import get_last_logged_check
 
 from lemoncheesecake.matching.matchers import *
 from lemoncheesecake.matching import check_that
@@ -9,14 +10,14 @@ def test_equal_to_success():
     assert_match_success(equal_to(1), 1, "1")
 
 
-def test_equal_to_success_with_details(reporting_session):
+def test_equal_to_success_with_details():
     from lemoncheesecake import matching
     matching.DISPLAY_DETAILS_WHEN_EQUAL = False
 
     try:
-        run_func_in_test(lambda: check_that("value", 1, equal_to(1)))
-        assert reporting_session.last_check_outcome == True
-        assert reporting_session.last_check_details == None
+        check = get_last_logged_check(run_func_in_test(lambda: check_that("value", 1, equal_to(1))))
+        assert check.outcome is True
+        assert check.details is None
     finally:
         matching.DISPLAY_DETAILS_WHEN_EQUAL = True
 
