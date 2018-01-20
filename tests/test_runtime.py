@@ -17,7 +17,7 @@ from lemoncheesecake.exceptions import ProgrammingError
 
 from helpers.runner import run_suite_class, run_suite_classes
 from helpers.report import assert_report_from_suite, assert_report_from_suites, assert_report_stats, \
-    assert_test_passed, assert_test_failed, assert_test_skipped, assert_test_statuses
+    assert_test_passed, assert_test_skipped, assert_test_statuses
 
 
 def test_simple_test():
@@ -191,7 +191,7 @@ def test_check_failure():
     step = test.steps[0]
     assert "somevalue" in step.entries[0].description
     assert "bar" in step.entries[0].description
-    assert step.entries[0].outcome == False
+    assert step.entries[0].outcome is False
     assert "foo" in step.entries[0].details
 
 
@@ -214,7 +214,7 @@ def test_require_success():
     step = test.steps[0]
     assert "somevalue" in step.entries[0].description
     assert "foo" in step.entries[0].description
-    assert step.entries[0].outcome == True
+    assert step.entries[0].outcome is True
     assert "foo" in step.entries[0].details
 
 
@@ -237,7 +237,7 @@ def test_require_failure():
     step = test.steps[0]
     assert "somevalue" in step.entries[0].description
     assert "bar" in step.entries[0].description
-    assert step.entries[0].outcome == False
+    assert step.entries[0].outcome is False
     assert "foo" in step.entries[0].details
 
 
@@ -424,7 +424,7 @@ def _test_save_attachment_content(tmpdir, file_name, file_content, encoding=None
     assert test.status == "passed"
     with open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename), "rb") as fh:
         actual_content = fh.read()
-    if encoding != None:
+    if encoding is not None:
         actual_content = actual_content.decode(encoding)
     assert actual_content == file_content
 
@@ -512,11 +512,11 @@ def test_setup_suite_success():
     assert_report_stats(report, expected_test_successes=1)
 
     suite = find_suite(report.suites, "mysuite")
-    assert suite.suite_setup.outcome == True
-    assert suite.suite_setup.start_time != None
-    assert suite.suite_setup.end_time != None
+    assert suite.suite_setup.outcome is True
+    assert suite.suite_setup.start_time is not None
+    assert suite.suite_setup.end_time is not None
     assert suite.suite_setup.steps[0].entries[0].message == "some log"
-    assert suite.suite_setup.has_failure() == False
+    assert suite.suite_setup.has_failure() is False
     assert_test_passed(report, "mysuite.sometest")
 
 
@@ -538,11 +538,11 @@ def test_setup_suite_failure():
     assert_report_stats(report, expected_test_skippeds=1, expected_errors=1, expected_error_logs=1)
 
     suite = find_suite(report.suites, "mysuite")
-    assert suite.suite_setup.outcome == False
-    assert suite.suite_setup.start_time != None
-    assert suite.suite_setup.end_time != None
+    assert suite.suite_setup.outcome is False
+    assert suite.suite_setup.start_time is not None
+    assert suite.suite_setup.end_time is not None
     assert suite.suite_setup.steps[0].entries[0].message == "something bad happened"
-    assert suite.suite_setup.has_failure() == True
+    assert suite.suite_setup.has_failure() is True
     assert_test_skipped(report, "mysuite.sometest")
 
 
@@ -562,7 +562,7 @@ def test_setup_suite_without_content():
 
     report = get_runtime().report
 
-    assert report.suites[0].suite_setup == None
+    assert report.suites[0].suite_setup is None
     assert marker == ["setup"]
 
 
@@ -582,11 +582,11 @@ def test_teardown_suite_success():
     assert_report_stats(report, expected_test_successes=1)
 
     suite = find_suite(report.suites, "mysuite")
-    assert suite.suite_teardown.outcome == True
-    assert suite.suite_teardown.start_time != None
-    assert suite.suite_teardown.end_time != None
+    assert suite.suite_teardown.outcome is True
+    assert suite.suite_teardown.start_time is not None
+    assert suite.suite_teardown.end_time is not None
     assert suite.suite_teardown.steps[0].entries[0].message == "some log"
-    assert suite.suite_teardown.has_failure() == False
+    assert suite.suite_teardown.has_failure() is False
     assert_test_passed(report, "mysuite.sometest")
 
 
@@ -606,11 +606,11 @@ def test_teardown_suite_failure():
     assert_report_stats(report, expected_test_successes=1, expected_errors=1, expected_check_failures=1)
 
     suite = find_suite(report.suites, "mysuite")
-    assert suite.suite_teardown.outcome == False
-    assert suite.suite_teardown.start_time != None
-    assert suite.suite_teardown.end_time != None
-    assert suite.suite_teardown.steps[0].entries[0].outcome == False
-    assert suite.suite_teardown.has_failure() == True
+    assert suite.suite_teardown.outcome is False
+    assert suite.suite_teardown.start_time is not None
+    assert suite.suite_teardown.end_time is not None
+    assert suite.suite_teardown.steps[0].entries[0].outcome is False
+    assert suite.suite_teardown.has_failure() is True
     assert_test_passed(report, "mysuite.sometest")
 
 
@@ -628,7 +628,7 @@ def test_teardown_suite_without_content():
 
     report = run_suite_class(mysuite)
 
-    assert report.suites[0].suite_teardown == None
+    assert report.suites[0].suite_teardown is None
     assert marker == ["teardown"]
 
 
@@ -648,11 +648,11 @@ def test_setup_test_session_success():
     assert_report_from_suite(report, mysuite)
     assert_report_stats(report, expected_test_successes=1)
 
-    assert report.test_session_setup.outcome == True
-    assert report.test_session_setup.start_time != None
-    assert report.test_session_setup.end_time != None
+    assert report.test_session_setup.outcome is True
+    assert report.test_session_setup.start_time is not None
+    assert report.test_session_setup.end_time is not None
     assert report.test_session_setup.steps[0].entries[0].message == "some log"
-    assert report.test_session_setup.has_failure() == False
+    assert report.test_session_setup.has_failure() is False
     assert_test_passed(report, "mysuite.sometest")
 
 
@@ -672,11 +672,11 @@ def test_setup_test_session_failure():
     assert_report_from_suite(report, mysuite)
     assert_report_stats(report, expected_test_skippeds=1, expected_errors=1, expected_error_logs=1)
 
-    assert report.test_session_setup.outcome == False
-    assert report.test_session_setup.start_time != None
-    assert report.test_session_setup.end_time != None
+    assert report.test_session_setup.outcome is False
+    assert report.test_session_setup.start_time is not None
+    assert report.test_session_setup.end_time is not None
     assert report.test_session_setup.steps[0].entries[0].message == "something bad happened"
-    assert report.test_session_setup.has_failure() == True
+    assert report.test_session_setup.has_failure() is True
     assert_test_skipped(report, "mysuite.sometest")
 
 
@@ -695,7 +695,7 @@ def test_setup_test_session_without_content():
 
     report = run_suite_class(mysuite, fixtures=[fixt])
 
-    assert report.test_session_setup == None
+    assert report.test_session_setup is None
     assert marker == ["setup"]
 
 
@@ -716,11 +716,11 @@ def test_teardown_test_session_success():
     assert_report_from_suite(report, mysuite)
     assert_report_stats(report, expected_test_successes=1)
 
-    assert report.test_session_teardown.outcome == True
-    assert report.test_session_teardown.start_time != None
-    assert report.test_session_teardown.end_time != None
+    assert report.test_session_teardown.outcome is True
+    assert report.test_session_teardown.start_time is not None
+    assert report.test_session_teardown.end_time is not None
     assert report.test_session_teardown.steps[0].entries[0].message == "some log"
-    assert report.test_session_teardown.has_failure() == False
+    assert report.test_session_teardown.has_failure() is False
     assert_test_passed(report, "mysuite.sometest")
 
 
@@ -741,11 +741,11 @@ def test_teardown_test_session_failure():
     assert_report_from_suite(report, mysuite)
     assert_report_stats(report, expected_test_successes=1, expected_errors=1, expected_check_failures=1)
 
-    assert report.test_session_teardown.outcome == False
-    assert report.test_session_teardown.start_time != None
-    assert report.test_session_teardown.end_time != None
-    assert report.test_session_teardown.steps[0].entries[0].outcome == False
-    assert report.test_session_teardown.has_failure() == True
+    assert report.test_session_teardown.outcome is False
+    assert report.test_session_teardown.start_time is not None
+    assert report.test_session_teardown.end_time is not None
+    assert report.test_session_teardown.steps[0].entries[0].outcome is False
+    assert report.test_session_teardown.has_failure() is True
     assert_test_passed(report, "mysuite.sometest")
 
 
@@ -765,7 +765,7 @@ def test_teardown_test_session_without_content():
 
     report = run_suite_class(mysuite, fixtures=[fixt])
 
-    assert report.test_session_teardown == None
+    assert report.test_session_teardown is None
     assert marker == ["teardown"]
 
 
