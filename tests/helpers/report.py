@@ -6,7 +6,7 @@ Created on Sep 30, 2016
 
 
 from lemoncheesecake.suite import load_suite_from_class
-from lemoncheesecake.testtree import flatten_tests, find_test
+from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake import reporting
 
 
@@ -58,13 +58,14 @@ def get_last_logged_check(report):
     return check
 
 
-def assert_test_has_error_log(test):
-    for step in test.steps:
-        for entry in step.entries:
-            if isinstance(entry, reporting.LogData) and entry.level == "error":
-                return
-    else:
-        assert False, "Could not find any ERROR log in test '%s'" % test.path
+def count_logs(report, log_level):
+    count = 0
+    for test in flatten_tests(report.suites):
+        for step in test.steps:
+            for entry in step.entries:
+                if isinstance(entry, reporting.LogData) and entry.level == log_level:
+                    count += 1
+    return count
 
 
 def assert_test_checks(test, expected_successes=0, expected_failures=0):

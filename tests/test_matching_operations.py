@@ -10,7 +10,7 @@ import lemoncheesecake.api as lcc
 
 from helpers.runner import run_func_in_test
 from helpers.report import get_last_logged_check, assert_last_test_status, get_last_test, \
-    assert_test_has_error_log, assert_test_checks
+    count_logs, assert_test_checks
 
 
 def test_check_that_success():
@@ -100,7 +100,7 @@ def test_assert_that_failure():
     assert check.outcome is False
     assert "bar" in check.details
     assert marker == ["before_test"]
-    assert_test_has_error_log(get_last_test(report))
+    assert count_logs(report, "error") == 1
 
 
 def test_assert_that_entry_success():
