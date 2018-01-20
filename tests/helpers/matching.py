@@ -1,16 +1,18 @@
 import lemoncheesecake.api as lcc
 
-from helpers.runner import run_func_in_test, get_reporting_session
+from helpers.runner import run_func_in_test
+from helpers.report import get_last_logged_check
 
 
 def assert_match_result(matcher, actual, result_outcome, result_details):
     result_details_lst = result_details if type(result_details) in (list, tuple) else [result_details]
 
-    reporting_session = get_reporting_session()
-    run_func_in_test(lambda: lcc.check_that("value", actual, matcher))
-    assert reporting_session.last_check_outcome == result_outcome
+    check = get_last_logged_check(
+        run_func_in_test(lambda: lcc.check_that("value", actual, matcher))
+    )
+    assert check.outcome == result_outcome
     for details in result_details_lst:
-        assert details in reporting_session.last_check_details
+        assert details in check.details
 
 
 def assert_match_success(matcher, actual, result_details):
