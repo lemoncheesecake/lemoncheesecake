@@ -6,8 +6,34 @@ Created on Sep 30, 2016
 
 
 from lemoncheesecake.suite import load_suite_from_class
+from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake import reporting
 
+
+###
+# Assertions helpers for quick report checks
+###
+
+def _check_test_status(report, status, expected):
+    actual = [t.path for t in flatten_tests(report.suites) if t.status == status]
+    assert sorted(actual) == sorted(expected)
+
+
+def check_test_statuses(report, passed=(), failed=(), skipped=(), disabled=()):
+    _check_test_status(report, "passed", passed)
+    _check_test_status(report, "failed", failed)
+    _check_test_status(report, "skipped", skipped)
+    _check_test_status(report, "disabled", disabled)
+
+
+def check_report_errors(report, errors_nb):
+    stats = report.get_stats()
+    assert stats.errors == errors_nb
+
+
+###
+# Assertions for the whole report content
+###
 
 def assert_check_data(actual, expected):
     assert actual.description == expected.description
