@@ -17,7 +17,7 @@ from lemoncheesecake.exceptions import ProgrammingError
 
 from helpers.runner import run_suite_class, run_suite_classes
 from helpers.report import assert_report_from_suite, assert_report_from_suites, assert_report_stats, \
-    assert_test_passed, assert_test_failed, assert_test_skipped
+    assert_test_passed, assert_test_failed, assert_test_skipped, assert_test_statuses
 
 
 def test_simple_test():
@@ -139,17 +139,14 @@ def test_multiple_suites_and_tests():
         expected_check_successes=6, expected_check_failures=1, expected_error_logs=2
     )
 
-    assert_test_passed(report, "mysuite1.test_1_1")
-    assert_test_passed(report, "mysuite1.test_1_2")
-    assert_test_failed(report, "mysuite1.test_1_3")
-
-    assert_test_failed(report, "mysuite2.test_2_1")
-    assert_test_passed(report, "mysuite2.test_2_2")
-    assert_test_passed(report, "mysuite2.test_2_3")
-
-    assert_test_passed(report, "mysuite2.mysuite3.test_3_1")
-    assert_test_failed(report, "mysuite2.mysuite3.test_3_2")
-    assert_test_passed(report, "mysuite2.mysuite3.test_3_3")
+    assert_test_statuses(
+        report,
+        passed=(
+            "mysuite1.test_1_1", "mysuite1.test_1_2", "mysuite2.test_2_2",
+            "mysuite2.test_2_3", "mysuite2.mysuite3.test_3_1", "mysuite2.mysuite3.test_3_3"
+        ),
+        failed=("mysuite1.test_1_3", "mysuite2.test_2_1", "mysuite2.mysuite3.test_3_2")
+    )
 
 
 def test_check_success():

@@ -31,20 +31,16 @@ def assert_report_errors(report, errors_nb):
     assert stats.errors == errors_nb
 
 
-def assert_test_status(report, test_path, status):
-    assert find_test(report.suites, test_path).status == status
-
-
 def assert_test_passed(report, test_name):
-    assert_test_status(report, test_name, "passed")
+    assert_test_statuses(report, passed=[test_name])
 
 
 def assert_test_failed(report, test_name):
-    assert_test_status(report, test_name, "failed")
+    assert_test_statuses(report, failed=[test_name])
 
 
 def assert_test_skipped(report, test_name):
-    assert_test_status(report, test_name, "skipped")
+    assert_test_statuses(report, skipped=[test_name])
 
 
 ###
