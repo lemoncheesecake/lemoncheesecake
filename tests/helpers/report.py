@@ -43,6 +43,46 @@ def assert_test_skipped(report, test_name):
     assert_test_statuses(report, skipped=[test_name])
 
 
+def get_last_test(report):
+    return next(reversed(list(flatten_tests(report.suites))))
+
+
+def assert_last_test_status(report, status):
+    test = get_last_test(report)
+    assert test.status == status
+
+
+def get_last_logged_check(report):
+    test = get_last_test(report)
+    check = next(entry for entry in reversed(test.steps[-1].entries) if isinstance(entry, reporting.CheckData))
+    return check
+
+
+def assert_test_has_error_log(test):
+    for step in test.steps:
+        for entry in step.entries:
+            if isinstance(entry, reporting.LogData) and entry.level == "error":
+                return
+    else:
+        assert False, "Could not find any ERROR log in test '%s'" % test.path
+
+
+def assert_test_checks(test, expected_successes=0, expected_failures=0):
+    successes = 0
+    failures = 0
+
+    for step in test.steps:
+        for entry in step.entries:
+            if isinstance(entry, reporting.CheckData):
+                if entry.outcome:
+                    successes += 1
+                else:
+                    failures += 1
+
+    assert successes == expected_successes
+    assert failures == expected_failures
+
+
 ###
 # Assertions for the whole report content
 ###
