@@ -8,7 +8,6 @@ import pytest
 
 from lemoncheesecake import runner
 from lemoncheesecake.suite import load_suites_from_classes
-from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.exceptions import *
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite import add_test_in_suite
@@ -16,7 +15,7 @@ from lemoncheesecake.testtree import flatten_tests
 
 from helpers.runner import run_suite_class, run_suite_classes, build_fixture_registry, run_suite, build_suite_from_module
 from helpers.report import assert_test_statuses, assert_test_passed, assert_test_failed, assert_test_skipped, \
-    assert_report_errors, assert_report_stats
+    assert_report_errors
 
 
 def test_test_success():
@@ -1162,6 +1161,8 @@ def test_disabled_suite():
 
 
 def test_get_fixture():
+    marker = []
+
     @lcc.fixture(scope="session_prerun")
     def fixt():
         return 42
@@ -1170,18 +1171,16 @@ def test_get_fixture():
     class mysuite:
         @lcc.test("mytest")
         def mytest(self, fixt):
-            assert lcc.get_fixture("fixt") == 42
+            marker.append(lcc.get_fixture("fixt"))
 
-    report = run_suite_class(mysuite, fixtures=[fixt])
+    run_suite_class(mysuite, fixtures=[fixt])
 
-    assert_report_stats(report, expected_test_successes=1)
-
-    report = run_suite_class(mysuite, fixtures=[fixt])
-
-    assert_report_stats(report, expected_test_successes=1)
+    assert marker == [42]
 
 
 def test_get_fixture_bad_scope():
+    marker = []
+
     @lcc.fixture(scope="test")
     def fixt():
         return 42
@@ -1190,28 +1189,36 @@ def test_get_fixture_bad_scope():
     class mysuite:
         @lcc.test("mytest")
         def mytest(self, fixt):
-            with pytest.raises(ProgrammingError):
+            try:
                 lcc.get_fixture("fixt")
+            except ProgrammingError:
+                marker.append("exception")
 
-    report = run_suite_class(mysuite, fixtures=[fixt])
+    run_suite_class(mysuite, fixtures=[fixt])
 
-    assert_report_stats(report, expected_test_successes=1)
+    assert marker == ["exception"]
 
 
 def test_get_fixture_unknown():
+    marker = []
+
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.test("mytest")
         def mytest(self):
-            with pytest.raises(ProgrammingError):
+            try:
                 lcc.get_fixture("fixt")
+            except ProgrammingError:
+                marker.append("exception")
 
-    report = run_suite_class(mysuite)
+    run_suite_class(mysuite)
 
-    assert_report_stats(report, expected_test_successes=1)
+    assert marker == ["exception"]
 
 
 def test_get_fixture_not_executed():
+    marker = []
+
     @lcc.fixture(scope="session_prerun")
     def fixt():
         return 42
@@ -1220,5 +1227,11 @@ def test_get_fixture_not_executed():
     class mysuite:
         @lcc.test("mytest")
         def mytest(self):
-            with pytest.raises(ProgrammingError):
+            try:
                 lcc.get_fixture("fixt")
+            except ProgrammingError:
+                marker.append("exception")
+
+    run_suite_class(mysuite)
+
+    assert marker == ["exception"]
