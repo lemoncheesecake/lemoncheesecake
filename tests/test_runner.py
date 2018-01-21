@@ -26,7 +26,7 @@ def test_test_success():
         def sometest(self):
             pass
 
-    assert_test_passed(run_suite_class(MySuite), "MySuite.sometest")
+    assert_test_passed(run_suite_class(MySuite))
 
 
 def test_test_failure():
@@ -36,7 +36,7 @@ def test_test_failure():
         def sometest(self):
             lcc.check_that("val", 1, lcc.equal_to(2))
 
-    assert_test_failed(run_suite_class(MySuite), "MySuite.sometest")
+    assert_test_failed(run_suite_class(MySuite))
 
 
 def test_test_module():
@@ -47,9 +47,7 @@ def sometest():
 """)
 
     report = run_suite(suite)
-
-    test = next(flatten_tests(report.suites))
-    assert test.status == "passed"
+    assert_test_passed(report)
 
 
 def test_exception_unexpected():
@@ -142,7 +140,7 @@ def test_generated_test():
             test = lcc.Test("mytest", "My Test", test_func)
             add_test_in_suite(test, self)
 
-    assert_test_passed(run_suite_class(MySuite), "MySuite.mytest")
+    assert_test_passed(run_suite_class(MySuite))
 
 
 def test_sub_suite_inline():
@@ -154,7 +152,7 @@ def test_sub_suite_inline():
             def sometest(self):
                 pass
 
-    assert_test_passed(run_suite_class(MyParentSuite), "MyParentSuite.MyChildSuite.sometest")
+    assert_test_passed(run_suite_class(MyParentSuite))
 
 
 def test_setup_test():
@@ -242,7 +240,7 @@ def test_setup_test_error():
 
     report = run_suite_class(MySuite)
 
-    assert_test_failed(report, "MySuite.sometest")
+    assert_test_failed(report)
     assert len(marker) == 0
 
 
@@ -257,7 +255,7 @@ def test_setup_test_error_in_fixture():
         def sometest(self, fix):
             pass
 
-    assert_test_failed(run_suite_class(MySuite, fixtures=[fix]), "MySuite.sometest")
+    assert_test_failed(run_suite_class(MySuite, fixtures=[fix]))
 
 
 def test_teardown_test_error():
@@ -270,7 +268,7 @@ def test_teardown_test_error():
         def sometest(self):
             pass
 
-    assert_test_failed(run_suite_class(MySuite), "MySuite.sometest")
+    assert_test_failed(run_suite_class(MySuite))
 
 
 def test_teardown_test_error_in_fixture():
@@ -284,7 +282,7 @@ def test_teardown_test_error_in_fixture():
         def sometest(self, fix):
             pass
 
-    assert_test_failed(run_suite_class(MySuite, fixtures=[fix]), "MySuite.sometest")
+    assert_test_failed(run_suite_class(MySuite, fixtures=[fix]))
 
 
 def test_setup_suite_error_and_subsuite():
@@ -323,7 +321,7 @@ def test_setup_suite_error_because_of_exception():
 
     report = run_suite_class(MySuite)
 
-    assert_test_skipped(report, "MySuite.sometest")
+    assert_test_skipped(report)
     assert not marker
 
 
@@ -344,7 +342,7 @@ def test_setup_suite_error_because_of_error_log():
 
     report = run_suite_class(MySuite)
 
-    assert_test_skipped(report, "MySuite.sometest")
+    assert_test_skipped(report)
     assert not marker
 
 
@@ -386,7 +384,7 @@ def test_teardown_suite_error_because_of_exception():
 
     report = run_suite_class(MySuite)
 
-    assert_test_passed(report, "MySuite.sometest")
+    assert_test_passed(report)
     assert_report_errors(report, 1)
 
 
@@ -402,7 +400,7 @@ def test_teardown_suite_error_because_of_error_log():
 
     report = run_suite_class(MySuite)
 
-    assert_test_passed(report, "MySuite.sometest")
+    assert_test_passed(report)
     assert_report_errors(report, 1)
 
 
@@ -425,7 +423,7 @@ def test_teardown_suite_error_because_of_fixture():
 
     report = run_suite_class(MySuite, fixtures=[fix])
 
-    assert_test_passed(report, "MySuite.sometest")
+    assert_test_passed(report)
     assert_report_errors(report, 1)
     assert len(marker) == 1
 
@@ -469,7 +467,7 @@ def test_setup_test_session_error_and_setup_suite():
 
     report = run_suite_class(MySuite, fixtures=[fixt])
 
-    assert_test_skipped(report, "MySuite.sometest")
+    assert_test_skipped(report)
     assert_report_errors(report, 1)
     assert not marker
 
@@ -510,7 +508,7 @@ def test_session_prerun_fixture_exception():
     with pytest.raises(LemonCheesecakeException) as excinfo:
         report = run_suite_class(MySuite, fixtures=[fix])
         assert "Got an unexpected" in str(excinfo.value)
-        assert_test_skipped(report, "MySuite.sometest")
+        assert_test_skipped(report)
 
 
 def test_session_prerun_fixture_user_error():
@@ -527,7 +525,7 @@ def test_session_prerun_fixture_user_error():
     with pytest.raises(LemonCheesecakeException) as excinfo:
         report = run_suite_class(MySuite, fixtures=[fix])
         assert str(excinfo.value) == "some error"
-        assert_test_skipped(report, "MySuite.sometest")
+        assert_test_skipped(report)
 
 
 def test_session_prerun_fixture_teardown_exception():
@@ -545,7 +543,7 @@ def test_session_prerun_fixture_teardown_exception():
     with pytest.raises(LemonCheesecakeException) as excinfo:
         report = run_suite_class(MySuite, fixtures=[fix])
         assert "Got an unexpected" in str(excinfo.value)
-        assert_test_passed(report, "Mysuite.sometest")
+        assert_test_passed(report)
 
 
 def test_session_prerun_fixture_teardown_user_error():
@@ -563,7 +561,7 @@ def test_session_prerun_fixture_teardown_user_error():
     with pytest.raises(LemonCheesecakeException) as excinfo:
         report = run_suite_class(MySuite, fixtures=[fix])
         assert str(excinfo.value) == "some error"
-        assert_test_passed(report, "MySuite.sometest")
+        assert_test_passed(report)
 
 
 def test_run_with_fixture_using_test_method():
@@ -618,11 +616,9 @@ def test_run_with_fixture_with_logs():
             lcc.log_info("some log")
             marker.append(test_fixture)
 
-    run_suite_class(MySuite, fixtures=[test_fixture])
+    report = run_suite_class(MySuite, fixtures=[test_fixture])
 
     assert marker == [1]
-
-    report = get_runtime().report
 
     steps = report.get_suites()[0].get_tests()[0].steps
 
@@ -874,7 +870,7 @@ def test_run_with_fixture_injected_in_class():
 
     report = run_suite_class(MySuite, fixtures=[fixt1])
 
-    assert_test_passed(report, "MySuite.sometest")
+    assert_test_passed(report)
     assert marker == [1]
 
 
@@ -895,7 +891,7 @@ def test_run_with_fixture_injected_in_class_and_fixture_name_arg():
 
     report = run_suite_class(MySuite, fixtures=[fixt1])
 
-    assert_test_passed(report, "MySuite.sometest")
+    assert_test_passed(report)
     assert marker == [1]
 
 
@@ -911,9 +907,7 @@ def sometest(fixt1):
     """)
 
     report = run_suite(suite, fixtures=[fixt1])
-
-    test = next(flatten_tests(report.suites))
-    assert test.status == "passed"
+    assert_test_passed(report)
 
 
 def test_fixture_called_multiple_times():

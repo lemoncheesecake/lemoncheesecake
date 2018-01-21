@@ -45,7 +45,7 @@ def test_simple_test():
     assert_report_from_suite(report, mysuite)
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
 
-    assert_test_passed(report, "mysuite.sometest")
+    assert_test_passed(report)
 
 
 def test_test_with_all_metadata():
@@ -65,7 +65,7 @@ def test_test_with_all_metadata():
     assert_report_from_suite(report, mysuite)
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
 
-    assert_test_passed(report, "mysuite.sometest")
+    assert_test_passed(report)
 
 
 def test_suite_with_all_metadata():
@@ -85,7 +85,7 @@ def test_suite_with_all_metadata():
     assert_report_from_suite(report, mysuite)
     assert_report_stats(report, expected_test_successes=1, expected_check_successes=1)
 
-    assert_test_passed(report, "mysuite.sometest")
+    assert_test_passed(report)
 
 
 def test_multiple_suites_and_tests():
@@ -528,7 +528,7 @@ def test_setup_suite_success():
     assert setup.end_time is not None
     assert setup.steps[0].entries[0].message == "some log"
     assert setup.has_failure() is False
-    assert_test_passed(report, "mysuite.sometest")
+    assert_test_passed(report)
 
 
 def test_setup_suite_failure():
@@ -554,7 +554,7 @@ def test_setup_suite_failure():
     assert setup.end_time is not None
     assert setup.steps[0].entries[0].message == "something bad happened"
     assert setup.has_failure() is True
-    assert_test_skipped(report, "mysuite.sometest")
+    assert_test_skipped(report)
 
 
 def test_setup_suite_without_content():
@@ -593,7 +593,7 @@ def test_teardown_suite_success():
     assert teardown.end_time is not None
     assert teardown.steps[0].entries[0].message == "some log"
     assert teardown.has_failure() is False
-    assert_test_passed(report, "mysuite.sometest")
+    assert_test_passed(report)
 
 
 def test_teardown_suite_failure():
@@ -617,7 +617,7 @@ def test_teardown_suite_failure():
     assert teardown.end_time is not None
     assert teardown.steps[0].entries[0].outcome is False
     assert teardown.has_failure() is True
-    assert_test_passed(report, "mysuite.sometest")
+    assert_test_passed(report)
 
 
 def test_teardown_suite_without_content():
@@ -660,7 +660,7 @@ def test_setup_test_session_success():
     assert setup.end_time is not None
     assert setup.steps[0].entries[0].message == "some log"
     assert setup.has_failure() is False
-    assert_test_passed(report, "mysuite.sometest")
+    assert_test_passed(report)
 
 
 def test_setup_test_session_failure():
@@ -685,7 +685,7 @@ def test_setup_test_session_failure():
     assert setup.end_time is not None
     assert setup.steps[0].entries[0].message == "something bad happened"
     assert setup.has_failure() is True
-    assert_test_skipped(report, "mysuite.sometest")
+    assert_test_skipped(report)
 
 
 def test_setup_test_session_without_content():
@@ -730,7 +730,7 @@ def test_teardown_test_session_success():
     assert teardown.end_time is not None
     assert teardown.steps[0].entries[0].message == "some log"
     assert teardown.has_failure() is False
-    assert_test_passed(report, "mysuite.sometest")
+    assert_test_passed(report)
 
 
 def test_teardown_test_session_failure():
@@ -756,7 +756,7 @@ def test_teardown_test_session_failure():
     assert teardown.end_time is not None
     assert teardown.steps[0].entries[0].outcome is False
     assert teardown.has_failure() is True
-    assert_test_passed(report, "mysuite.sometest")
+    assert_test_passed(report)
 
 
 def test_teardown_test_session_without_content():

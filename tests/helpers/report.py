@@ -14,16 +14,16 @@ from lemoncheesecake import reporting
 # Assertions helpers for quick report checks
 ###
 
-def _assert_test_status(report, status, expected):
+def _assert_tests_status(report, status, expected):
     actual = [t.path for t in flatten_tests(report.suites) if t.status == status]
     assert sorted(actual) == sorted(expected)
 
 
 def assert_test_statuses(report, passed=(), failed=(), skipped=(), disabled=()):
-    _assert_test_status(report, "passed", passed)
-    _assert_test_status(report, "failed", failed)
-    _assert_test_status(report, "skipped", skipped)
-    _assert_test_status(report, "disabled", disabled)
+    _assert_tests_status(report, "passed", passed)
+    _assert_tests_status(report, "failed", failed)
+    _assert_tests_status(report, "skipped", skipped)
+    _assert_tests_status(report, "disabled", disabled)
 
 
 def assert_report_errors(report, errors_nb):
@@ -31,16 +31,21 @@ def assert_report_errors(report, errors_nb):
     assert stats.errors == errors_nb
 
 
-def assert_test_passed(report, test_name):
-    assert_test_statuses(report, passed=[test_name])
+def _assert_test_status(report, status):
+    test = get_last_test(report)
+    _assert_tests_status(report, status, [test.path])
 
 
-def assert_test_failed(report, test_name):
-    assert_test_statuses(report, failed=[test_name])
+def assert_test_passed(report):
+    _assert_test_status(report, "passed")
 
 
-def assert_test_skipped(report, test_name):
-    assert_test_statuses(report, skipped=[test_name])
+def assert_test_failed(report):
+    _assert_test_status(report, "failed")
+
+
+def assert_test_skipped(report):
+    _assert_test_status(report, "skipped")
 
 
 def get_last_test(report):
