@@ -544,23 +544,18 @@ def test_setup_suite_failure():
 
 
 def test_setup_suite_without_content():
-    marker = []
-
     @lcc.suite("MySuite")
     class mysuite:
         def setup_suite(self):
-            marker.append("setup")
+            pass
 
         @lcc.test("Some test")
         def sometest(self):
             pass
 
-    run_suite_class(mysuite)
-
-    report = get_runtime().report
+    report = run_suite_class(mysuite)
 
     assert report.suites[0].suite_setup is None
-    assert marker == ["setup"]
 
 
 def test_teardown_suite_success():
