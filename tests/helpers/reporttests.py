@@ -11,7 +11,6 @@ from __future__ import print_function
 import time
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.reporting.backend import SAVE_AT_EACH_EVENT, SAVE_AT_EACH_FAILED_TEST, \
     SAVE_AT_EACH_TEST, SAVE_AT_EACH_SUITE, SAVE_AT_END_OF_TESTS
 from lemoncheesecake.reporting import Report
@@ -22,11 +21,9 @@ from helpers.report import assert_report
 
 def do_test_serialization(suites, backend, tmpdir, fixtures=[]):
     if type(suites) in (list, tuple):
-        run_suite_classes(suites, fixtures=fixtures, backends=[backend])
+        report = run_suite_classes(suites, fixtures=fixtures, backends=[backend])
     else:
-        run_suite_class(suites, fixtures=fixtures, backends=[backend])
-
-    report = get_runtime().report
+        report = run_suite_class(suites, fixtures=fixtures, backends=[backend])
 
     report_filename = tmpdir.join("report").strpath
     backend.save_report(report_filename, report)

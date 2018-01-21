@@ -6,8 +6,6 @@ import sys
 import tempfile
 import shutil
 
-import pytest
-
 from lemoncheesecake.suite.loader import load_suites_from_classes, load_suite_from_file
 from lemoncheesecake import runner
 from lemoncheesecake.runtime import get_runtime
@@ -17,7 +15,6 @@ from lemoncheesecake.project import create_project
 from lemoncheesecake import events
 from lemoncheesecake.cli import main
 from lemoncheesecake.suite import load_suite_from_class
-from lemoncheesecake import reporting
 import lemoncheesecake.api as lcc
 
 
