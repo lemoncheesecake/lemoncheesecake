@@ -8,12 +8,9 @@ Created on Nov 1, 2016
 
 import os.path
 
-import pytest
-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.testtree import find_test, find_suite
-from lemoncheesecake.exceptions import ProgrammingError
 
 from helpers.runner import run_suite_class, run_suite_classes
 from helpers.report import assert_report_from_suite, assert_report_from_suites, assert_report_stats, \
@@ -779,66 +776,3 @@ def test_add_report_info():
     report = run_suite_class(mysuite)
 
     assert report.info[-1] == ["some info", "some data"]
-
-
-def test_get_fixture():
-    @lcc.fixture(scope="session_prerun")
-    def fixt():
-        return 42
-
-    @lcc.suite("mysuite")
-    class mysuite:
-        @lcc.test("mytest")
-        def mytest(self, fixt):
-            assert lcc.get_fixture("fixt") == 42
-
-    report = run_suite_class(mysuite, fixtures=[fixt])
-
-    assert_report_stats(report, expected_test_successes=1)
-
-
-def test_get_fixture_bad_scope():
-    @lcc.fixture(scope="test")
-    def fixt():
-        return 42
-
-    @lcc.suite("mysuite")
-    class mysuite:
-        @lcc.test("mytest")
-        def mytest(self, fixt):
-            with pytest.raises(ProgrammingError):
-                lcc.get_fixture("fixt")
-
-    report = run_suite_class(mysuite, fixtures=[fixt])
-
-    assert_report_stats(report, expected_test_successes=1)
-
-
-def test_get_fixture_unknown():
-    @lcc.suite("mysuite")
-    class mysuite:
-        @lcc.test("mytest")
-        def mytest(self):
-            with pytest.raises(ProgrammingError):
-                lcc.get_fixture("fixt")
-
-    report = run_suite_class(mysuite)
-
-    assert_report_stats(report, expected_test_successes=1)
-
-
-def test_get_fixture_not_executed():
-    @lcc.fixture(scope="session_prerun")
-    def fixt():
-        return 42
-
-    @lcc.suite("mysuite")
-    class mysuite:
-        @lcc.test("mytest")
-        def mytest(self):
-            with pytest.raises(ProgrammingError):
-                lcc.get_fixture("fixt")
-
-    report = run_suite_class(mysuite, fixtures=[fixt])
-
-    assert_report_stats(report, expected_test_successes=1)

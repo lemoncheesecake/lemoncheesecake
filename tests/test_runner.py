@@ -16,7 +16,7 @@ from lemoncheesecake.testtree import flatten_tests
 
 from helpers.runner import run_suite_class, run_suite_classes, build_fixture_registry, run_suite, build_suite_from_module
 from helpers.report import assert_test_statuses, assert_test_passed, assert_test_failed, assert_test_skipped, \
-    assert_report_errors
+    assert_report_errors, assert_report_stats
 
 
 def test_test_success():
@@ -1165,3 +1165,66 @@ def test_disabled_suite():
     report = run_suite_class(mysuite)
 
     assert_test_statuses(report, disabled=["mysuite.test1", "mysuite.test2"])
+
+
+def test_get_fixture():
+    @lcc.fixture(scope="session_prerun")
+    def fixt():
+        return 42
+
+    @lcc.suite("mysuite")
+    class mysuite:
+        @lcc.test("mytest")
+        def mytest(self, fixt):
+            assert lcc.get_fixture("fixt") == 42
+
+    report = run_suite_class(mysuite, fixtures=[fixt])
+
+    assert_report_stats(report, expected_test_successes=1)
+
+    report = run_suite_class(mysuite, fixtures=[fixt])
+
+    assert_report_stats(report, expected_test_successes=1)
+
+
+def test_get_fixture_bad_scope():
+    @lcc.fixture(scope="test")
+    def fixt():
+        return 42
+
+    @lcc.suite("mysuite")
+    class mysuite:
+        @lcc.test("mytest")
+        def mytest(self, fixt):
+            with pytest.raises(ProgrammingError):
+                lcc.get_fixture("fixt")
+
+    report = run_suite_class(mysuite, fixtures=[fixt])
+
+    assert_report_stats(report, expected_test_successes=1)
+
+
+def test_get_fixture_unknown():
+    @lcc.suite("mysuite")
+    class mysuite:
+        @lcc.test("mytest")
+        def mytest(self):
+            with pytest.raises(ProgrammingError):
+                lcc.get_fixture("fixt")
+
+    report = run_suite_class(mysuite)
+
+    assert_report_stats(report, expected_test_successes=1)
+
+
+def test_get_fixture_not_executed():
+    @lcc.fixture(scope="session_prerun")
+    def fixt():
+        return 42
+
+    @lcc.suite("mysuite")
+    class mysuite:
+        @lcc.test("mytest")
+        def mytest(self):
+            with pytest.raises(ProgrammingError):
+                lcc.get_fixture("fixt")
