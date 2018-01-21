@@ -151,8 +151,8 @@ def assert_test_data(actual, expected):
 
 
 def assert_hook_data(actual, expected):
-    if expected == None:
-        assert actual == None
+    if expected is None:
+        assert actual is None
     else:
         assert actual.outcome == expected.outcome
         assert round(actual.start_time, 3) == round(expected.start_time, 3)
@@ -165,8 +165,8 @@ def assert_hook_data(actual, expected):
 def assert_suite_data(actual, expected):
     assert actual.name == expected.name
     assert actual.description == expected.description
-    if expected.parent_suite == None:
-        assert actual.parent_suite == None
+    if expected.parent_suite is None:
+        assert actual.parent_suite is None
     else:
         assert actual.parent_suite.name == expected.parent_suite.name
     assert actual.tags == expected.tags
@@ -226,9 +226,9 @@ def assert_suite_data_from_suite(suite_data, suite):
     assert suite_data.links == suite.links
 
     if suite.has_hook("setup_suite"):
-        assert suite_data.suite_setup != None
-        assert suite_data.suite_setup.start_time != None
-        assert suite_data.suite_setup.end_time != None
+        assert suite_data.suite_setup is not None
+        assert suite_data.suite_setup.start_time is not None
+        assert suite_data.suite_setup.end_time is not None
         assert_steps_data(suite_data.suite_setup.steps)
 
     assert len(suite_data.get_tests()) == len(suite.get_tests())
@@ -240,16 +240,16 @@ def assert_suite_data_from_suite(suite_data, suite):
         assert_suite_data_from_suite(sub_suite_data, sub_suite)
 
     if suite.has_hook("teardown_suite"):
-        assert suite_data.suite_teardown != None
-        assert suite_data.suite_teardown.start_time != None
-        assert suite_data.suite_teardown.end_time != None
+        assert suite_data.suite_teardown is not None
+        assert suite_data.suite_teardown.start_time is not None
+        assert suite_data.suite_teardown.end_time is not None
         assert_steps_data(suite_data.suite_teardown.steps)
 
 
 def assert_report_from_suites(report, suite_classes):
-    assert report.start_time != None
-    assert report.end_time != None
-    assert report.report_generation_time != None
+    assert report.start_time is not None
+    assert report.end_time is not None
+    assert report.report_generation_time is not None
     assert len(report.suites) == len(suite_classes)
     for suite_data, suite_class in zip(report.suites, suite_classes):
         suite = load_suite_from_class(suite_class)
