@@ -261,18 +261,18 @@ def assert_report_from_suite(report, suite_class):
 
 
 def assert_report_stats(report,
-                        expected_test_successes=0, expected_test_failures=0, expected_test_skippeds=0,
+                        expected_passed_tests=0, expected_failed_tests=0, expected_skipped_tests=0,
                         expected_errors=0,
-                        expected_check_successes=0, expected_check_failures=0,
+                        expected_succeeded_checks=0, expected_failed_checks=0,
                         expected_error_logs=0, expected_warning_logs=0):
     stats = report.get_stats()
-    assert stats.tests == expected_test_successes + expected_test_failures + expected_test_skippeds
-    assert stats.test_statuses["passed"] == expected_test_successes
-    assert stats.test_statuses["failed"] == expected_test_failures
-    assert stats.test_statuses["skipped"] == expected_test_skippeds
+    assert stats.tests == expected_passed_tests + expected_failed_tests + expected_skipped_tests
+    assert stats.test_statuses["passed"] == expected_passed_tests
+    assert stats.test_statuses["failed"] == expected_failed_tests
+    assert stats.test_statuses["skipped"] == expected_skipped_tests
     assert stats.errors == expected_errors
-    assert stats.checks == expected_check_successes + expected_check_failures
-    assert stats.check_successes == expected_check_successes
-    assert stats.check_failures == expected_check_failures
+    assert stats.checks == expected_succeeded_checks + expected_failed_checks
+    assert stats.check_successes == expected_succeeded_checks
+    assert stats.check_failures == expected_failed_checks
     assert stats.error_logs == expected_error_logs
     assert stats.warning_logs == expected_warning_logs
