@@ -1,0 +1,16 @@
+[
+    {
+        "name": "one_plus_one",
+        "description": "Add one to one",
+        "i": 1,
+        "j": 1,
+        "expected": 2
+    },
+    {
+        "name": "two_plus_two",
+        "description": "Add two to two",
+        "i": 2,
+        "j": 2,
+        "expected": 4
+    }
+]
