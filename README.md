@@ -173,7 +173,7 @@ A suite can be represented either:
   @lcc.suite("My first suite")
   class my_first_suite:
       @lcc.test("My first test")
-      def my_first_test():
+      def my_first_test(self):
           check_that("value", "foo", equal_to("foo"))
   ```
 
