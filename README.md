@@ -59,8 +59,10 @@ results of your tests during test execution.
 
 The Slack reporting backend sends a notification at the end of the test run to a given channel or user.
 
+### Settings
+
 - `SLACK_HTTP_PROXY`: HTTP proxy to use to connect to Slack (optional)
-- `SLACK_AUTH_TOKEN`: authentication token to connect on Slack (mandatory)
+- `SLACK_AUTH_TOKEN`: authentication token to connect on Slack (mandatory, it starts with `xoxb-`)
 - `SLACK_CHANNEL`: the channel or the user to send message to (mandatory, syntax: `#channel` or `@user`)
 - `SLACK_MESSAGE_TEMPLATE`: the message template can contain variables using the form {var}, see below
   for available variables (mandatory)
@@ -86,6 +88,20 @@ An example of `SLACK_MESSAGE_TEMPLATE`:
 ```
 MyProduct test results: {passed}/{enabled} passed ({passed_pct})
 ```
+
+### Getting an API access token
+
+You can obtain a Slack API access token for your workspace by following the steps below:
+- in your Slack Workspace, click the "Apps" section
+- in the Apps page, click "Manage apps..."
+- the App Directory page shows up, in this page, make a search using the keyword "bots" in the top text box "Search App Directory"
+- click "Bots" app > "Add configuration"
+- set Username and click "Add bot integration"
+- you'll get the API access token in "Integration Settings"
+
+NB: please note that there are several ways to get an API token to interact with a Slack Workspace. You could also create 
+a new Slack App but the method described above seems to be the more easy to follow.
+
 
 # How does it look ?
 
