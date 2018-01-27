@@ -133,6 +133,70 @@ def test_load_tests_with_same_name():
     assert suites[1].get_suites()[0].get_tests()[0].name == "foo"
 
 
+def test_load_suite_from_class_tests_order():
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("a")
+        def a(self):
+            pass
+
+        @lcc.test("d")
+        def d(self):
+            pass
+
+        @lcc.test("c")
+        def c(self):
+            pass
+
+        @lcc.test("b")
+        def b(self):
+            pass
+
+    suite = load_suite_from_class(suite)
+    tests = suite.get_tests()
+
+    assert tests[0].name == "a"
+    assert tests[1].name == "d"
+    assert tests[2].name == "c"
+    assert tests[3].name == "b"
+
+
+def test_load_suite_from_class_suites_order():
+    @lcc.suite("suite")
+    class suite:
+        @lcc.suite("a")
+        class a:
+            @lcc.test("test")
+            def test(self):
+                pass
+
+        @lcc.suite("d")
+        class d:
+            @lcc.test("test")
+            def test(self):
+                pass
+
+        @lcc.suite("c")
+        class c:
+            @lcc.test("test")
+            def test(self):
+                pass
+
+        @lcc.suite("b")
+        class b:
+            @lcc.test("test")
+            def test(self):
+                pass
+
+    suite = load_suite_from_class(suite)
+    suites = suite.get_suites()
+
+    assert suites[0].name == "a"
+    assert suites[1].name == "d"
+    assert suites[2].name == "c"
+    assert suites[3].name == "b"
+
+
 def test_metadata_policy():
     @lcc.suite("My Suite 1")
     class MySuite1:
@@ -299,6 +363,96 @@ def test_load_suite_from_module(tmpdir):
     suite = load_suite_from_file(file.strpath)
     assert suite.name == "mysuite"
     assert suite.description == "My Suite"
+
+
+def test_load_suite_from_module_tests_order(tmpdir):
+    file = tmpdir.join("mysuite.py")
+    file.write(
+        """
+import lemoncheesecake.api as lcc
+
+
+SUITE = {
+    "description": "My Suite"
+}
+
+
+@lcc.test("a")
+def a():
+    pass
+
+
+@lcc.test("d")
+def d():
+    pass
+
+
+@lcc.test("c")
+def c():
+    pass
+
+
+@lcc.test("b")
+def b():
+    pass
+""")
+
+    suite = load_suite_from_file(file.strpath)
+    tests = suite.get_tests()
+
+    assert tests[0].name == "a"
+    assert tests[1].name == "d"
+    assert tests[2].name == "c"
+    assert tests[3].name == "b"
+
+
+def test_load_suite_from_module_suites_order(tmpdir):
+    file = tmpdir.join("mysuite.py")
+    file.write(
+        """
+import lemoncheesecake.api as lcc
+
+
+SUITE = {
+    "description": "My Suite"
+}
+
+
+@lcc.suite("a")
+class a:
+    @lcc.test("test")
+    def test(self):
+        pass
+
+
+@lcc.suite("d")
+class d:
+    @lcc.test("test")
+    def test(self):
+        pass
+
+
+@lcc.suite("c")
+class c:
+    @lcc.test("test")
+    def test(self):
+        pass
+
+
+@lcc.suite("b")
+class b:
+    @lcc.test("test")
+    def test(self):
+        pass
+""")
+
+    suite = load_suite_from_file(file.strpath)
+    suites = suite.get_suites()
+
+    assert suites[0].name == "a"
+    assert suites[1].name == "d"
+    assert suites[2].name == "c"
+    assert suites[3].name == "b"
 
 
 def test_load_suite_from_module_with_fixture_dependencies(tmpdir):

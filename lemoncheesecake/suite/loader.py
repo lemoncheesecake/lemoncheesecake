@@ -75,20 +75,24 @@ def _list_object_attributes(obj):
     return [getattr(obj, n) for n in dir(obj) if not n.startswith("__")]
 
 
+def _get_test_symbols(obj, filter_func):
+    return sorted(filter(filter_func, _list_object_attributes(obj)), key=lambda sym: sym._lccmetadata.rank)
+
+
 def get_test_methods_from_class(obj):
-    return sorted(filter(is_test_method, _list_object_attributes(obj)), key=lambda m: m._lccmetadata.rank)
+    return _get_test_symbols(obj, is_test_method)
 
 
 def get_sub_suites_from_class(obj):
-    return sorted(filter(is_suite_class, _list_object_attributes(obj)), key=lambda c: c._lccmetadata.rank)
+    return _get_test_symbols(obj, is_suite_class)
 
 
 def get_test_functions_from_module(mod):
-    return filter(is_test_function, _list_object_attributes(mod))
+    return _get_test_symbols(mod, is_test_function)
 
 
 def get_suite_classes_from_module(mod):
-    return filter(is_suite_class, _list_object_attributes(mod))
+    return _get_test_symbols(mod, is_suite_class)
 
 
 def load_suite_from_class(class_):
@@ -166,11 +170,7 @@ def load_suite_from_module(mod):
     for test in load_tests_from_functions(get_test_functions_from_module(mod)):
         suite.add_test(test)
 
-    sub_suites = []
     for sub_suite in load_suites_from_classes(get_suite_classes_from_module(mod)):
-        sub_suites.append(sub_suite)
-    sub_suites.sort(key=lambda suite: suite.rank)
-    for sub_suite in sub_suites:
         suite.add_suite(sub_suite)
 
     return suite
