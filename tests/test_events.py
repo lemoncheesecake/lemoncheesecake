@@ -5,6 +5,7 @@ import pytest
 from lemoncheesecake.exceptions import MismatchingEventArguments
 from lemoncheesecake import events
 
+
 @pytest.fixture(autouse=True)
 def reset_events():
     yield

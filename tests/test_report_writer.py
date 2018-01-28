@@ -13,8 +13,7 @@ from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.testtree import find_test, find_suite
 
 from helpers.runner import run_suite_class, run_suite_classes
-from helpers.report import assert_report_from_suite, assert_report_from_suites, \
-    assert_test_passed, get_last_test
+from helpers.report import assert_report_from_suite, assert_report_from_suites, get_last_test
 
 
 def _get_suite(report, suite_path=None):

@@ -193,7 +193,7 @@ def test_find_project_file_not_found(tmpdir):
     os.chdir(tmpdir.strpath)
     try:
         actual = find_project_file()
-        assert actual == None
+        assert actual is None
     finally:
         os.chdir(old_cwd)
 
@@ -225,7 +225,7 @@ def test_find_project_file_env_var_not_found(tmpdir):
     os.environ["LCC_PROJECT_FILE"] = tmpdir.join("project.py").strpath
     try:
         actual = find_project_file()
-        assert actual == None
+        assert actual is None
     finally:
         del os.environ["LCC_PROJECT_FILE"]
 

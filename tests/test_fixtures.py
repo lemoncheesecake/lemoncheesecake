@@ -1,5 +1,3 @@
-import sys
-
 import pytest
 
 import lemoncheesecake.api as lcc
@@ -27,7 +25,7 @@ def test_load_from_func():
     assert len(fixtures) == 1
     assert fixtures[0].name == "myfixture"
     assert fixtures[0].scope == "test"
-    assert fixtures[0].is_executed() == False
+    assert fixtures[0].is_executed() is False
     assert len(fixtures[0].params) == 0
 
 
@@ -41,11 +39,11 @@ def test_load_from_func_with_multiple_fixture_names():
     assert len(fixtures) == 2
     assert fixtures[0].name == "foo"
     assert fixtures[0].scope == "test"
-    assert fixtures[0].is_executed() == False
+    assert fixtures[0].is_executed() is False
     assert len(fixtures[0].params) == 0
     assert fixtures[1].name == "bar"
     assert fixtures[1].scope == "test"
-    assert fixtures[1].is_executed() == False
+    assert fixtures[1].is_executed() is False
     assert len(fixtures[1].params) == 0
 
 
@@ -59,7 +57,7 @@ def test_load_from_func_with_parameters():
     assert len(fixtures) == 1
     assert fixtures[0].name == "myfixture"
     assert fixtures[0].scope == "test"
-    assert fixtures[0].is_executed() == False
+    assert fixtures[0].is_executed() is False
     assert fixtures[0].params == ["foo", "bar"]
 
 

@@ -3,6 +3,7 @@ from lemoncheesecake.reporting.report import format_timestamp, parse_timestamp
 from helpers.testtreemockup import tst_mockup, suite_mockup, step_mockup, report_mockup, make_report_from_mockup
 from helpers.report import assert_report_stats
 
+
 def _test_timestamp_round(raw, rounded):
     assert parse_timestamp(format_timestamp(raw)) == rounded
 
@@ -61,3 +62,6 @@ def test_report_stats_skipped():
     report = make_report_from_mockup(mockup)
 
     assert_report_stats(report, expected_skipped_tests=1)
+
+
+# TODO: report_stats lake tests
