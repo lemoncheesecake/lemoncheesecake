@@ -1,3 +1,8 @@
+# 0.16.3 (2018-01-28)
+
+- **API**: fix bad tests order in the case they are declared as functions of a module
+- **under the hood**: huge refactoring of unit tests
+
 # 0.16.2 (2018-01-12)
 
 - **reporting**: add a new default reporting directory creation strategy: rotate and remove former report directories
