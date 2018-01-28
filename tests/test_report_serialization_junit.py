@@ -14,7 +14,8 @@ from lemoncheesecake.matching import *
 
 from lemoncheesecake.reporting.backends.junit import JunitBackend
 
-from helpers import run_suite_class
+from helpers.runner import run_suite_class
+
 
 def get_junit_xml_from_suite(suite, tmpdir, stop_on_failure=False):
     junit_backend = JunitBackend()
@@ -28,17 +29,21 @@ def get_junit_xml_from_suite(suite, tmpdir, stop_on_failure=False):
         print(junit_xml_content, file=sys.stderr)
         return ET.fromstring(junit_xml_content)
 
+
 def assert_duration_format(value):
     assert re.compile("^\d.\d{3}").match(value)
 
+
 def assert_timestamp_format(value):
     assert re.compile("^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$").match(value)
+
 
 def assert_testsuites(junit_xml, tests, failures=0):
     testsuites = junit_xml.xpath("/testsuites")[0]
     assert testsuites.attrib["tests"] == str(tests)
     assert testsuites.attrib["failures"] == str(failures)
     assert_duration_format(testsuites.attrib["time"])
+
 
 def assert_testsuite(junit_xml, name, tests, failures=0, skipped=0):
     testsuite = junit_xml.xpath("/testsuites/testsuite[@name='%s']" % name)[0]
@@ -47,6 +52,7 @@ def assert_testsuite(junit_xml, name, tests, failures=0, skipped=0):
     assert testsuite.attrib["skipped"] == str(skipped)
     assert_timestamp_format(testsuite.attrib["timestamp"])
     assert_duration_format(testsuite.attrib["time"])
+
 
 def assert_testcase(junit_xml, name, steps_with_error=[], steps_with_failed_check=[], skipped=False):
     test = junit_xml.xpath("/testsuites/testsuite/testcase[@name='%s']" % name)[0]

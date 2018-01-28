@@ -1,5 +1,4 @@
 import os
-import sys
 import argparse
 import pytest
 
@@ -10,9 +9,8 @@ from lemoncheesecake.project import Project, SimpleProjectConfiguration, \
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.exceptions import InvalidMetadataError
-from lemoncheesecake.reporting import backends
 
-from helpers import build_test_project, build_test_module, build_fixture_module
+from helpers.runner import build_test_module, build_fixture_module
 
 
 def make_test_project(project_dir):
@@ -195,7 +193,7 @@ def test_find_project_file_not_found(tmpdir):
     os.chdir(tmpdir.strpath)
     try:
         actual = find_project_file()
-        assert actual == None
+        assert actual is None
     finally:
         os.chdir(old_cwd)
 
@@ -227,7 +225,7 @@ def test_find_project_file_env_var_not_found(tmpdir):
     os.environ["LCC_PROJECT_FILE"] = tmpdir.join("project.py").strpath
     try:
         actual = find_project_file()
-        assert actual == None
+        assert actual is None
     finally:
         del os.environ["LCC_PROJECT_FILE"]
 

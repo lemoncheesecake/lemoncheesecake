@@ -9,12 +9,13 @@ import pytest
 from lemoncheesecake.reporting.backends.xml import XmlBackend, load_report_from_file
 from lemoncheesecake.exceptions import InvalidReportFile
 
+
 try:
     import lxml
 except ImportError:
     pass
 else:
-    from report_serialization_tests import *
+    from helpers.reporttests import *
 
     @pytest.fixture(scope="function")
     def backend():

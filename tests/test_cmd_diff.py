@@ -1,5 +1,5 @@
-from helpers import cmdout
-from testtreemockup import report_mockup, suite_mockup, tst_mockup, make_report_from_mockup, make_suite_data_from_mockup
+from helpers.cli import cmdout
+from helpers.testtreemockup import report_mockup, suite_mockup, tst_mockup, make_report_from_mockup, make_suite_data_from_mockup
 
 from lemoncheesecake.cli import main
 from lemoncheesecake.reporting.backends.json_ import save_report_into_file

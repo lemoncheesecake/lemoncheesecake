@@ -1,8 +1,8 @@
 import os
 import pytest
 
-from helpers import generate_project, cmdout, run_main
-
+from helpers.runner import generate_project, run_main
+from helpers.cli import cmdout
 
 FIXTURES_MODULE = """import lemoncheesecake.api as lcc
 

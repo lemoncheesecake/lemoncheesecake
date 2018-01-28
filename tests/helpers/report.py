@@ -1,0 +1,278 @@
+'''
+Created on Sep 30, 2016
+
+@author: nicolas
+'''
+
+
+from lemoncheesecake.suite import load_suite_from_class
+from lemoncheesecake.testtree import flatten_tests
+from lemoncheesecake import reporting
+
+
+###
+# Assertions helpers for quick report checks
+###
+
+def _assert_tests_status(report, status, expected):
+    actual = [t.path for t in flatten_tests(report.suites) if t.status == status]
+    assert sorted(actual) == sorted(expected)
+
+
+def assert_test_statuses(report, passed=(), failed=(), skipped=(), disabled=()):
+    _assert_tests_status(report, "passed", passed)
+    _assert_tests_status(report, "failed", failed)
+    _assert_tests_status(report, "skipped", skipped)
+    _assert_tests_status(report, "disabled", disabled)
+
+
+def assert_report_errors(report, errors_nb):
+    stats = report.get_stats()
+    assert stats.errors == errors_nb
+
+
+def _assert_test_status(report, status):
+    test = get_last_test(report)
+    _assert_tests_status(report, status, [test.path])
+
+
+def assert_test_passed(report):
+    _assert_test_status(report, "passed")
+
+
+def assert_test_failed(report):
+    _assert_test_status(report, "failed")
+
+
+def assert_test_skipped(report):
+    _assert_test_status(report, "skipped")
+
+
+def get_last_test(report):
+    return next(reversed(list(flatten_tests(report.suites))))
+
+
+def assert_last_test_status(report, status):
+    test = get_last_test(report)
+    assert test.status == status
+
+
+def get_last_logged_check(report):
+    test = get_last_test(report)
+    check = next(entry for entry in reversed(test.steps[-1].entries) if isinstance(entry, reporting.CheckData))
+    return check
+
+
+def count_logs(report, log_level):
+    count = 0
+    for test in flatten_tests(report.suites):
+        for step in test.steps:
+            for entry in step.entries:
+                if isinstance(entry, reporting.LogData) and entry.level == log_level:
+                    count += 1
+    return count
+
+
+def assert_test_checks(test, expected_successes=0, expected_failures=0):
+    successes = 0
+    failures = 0
+
+    for step in test.steps:
+        for entry in step.entries:
+            if isinstance(entry, reporting.CheckData):
+                if entry.outcome:
+                    successes += 1
+                else:
+                    failures += 1
+
+    assert successes == expected_successes
+    assert failures == expected_failures
+
+
+###
+# Assertions for the whole report content
+###
+
+def assert_check_data(actual, expected):
+    assert actual.description == expected.description
+    assert actual.outcome == expected.outcome
+    assert actual.details == expected.details
+
+
+def assert_log_data(actual, expected):
+    assert actual.level == expected.level
+    assert actual.message == expected.message
+    assert round(actual.time, 3) == round(expected.time, 3)
+
+
+def assert_attachment_data(actual, expected):
+    assert actual.description == expected.description
+    assert actual.filename == expected.filename
+
+
+def assert_url_data(actual, expected):
+    assert actual.description == expected.description
+    assert actual.url == expected.url
+
+
+def assert_step_data(actual, expected):
+    assert round(actual.start_time, 3) == round(expected.start_time, 3)
+    assert round(actual.end_time, 3) == round(expected.end_time, 3)
+    assert actual.description == expected.description
+    assert len(actual.entries) == len(expected.entries)
+    for actual_entry, expected_entry in zip(actual.entries, expected.entries):
+        assert actual_entry.__class__ == expected_entry.__class__
+        if isinstance(actual_entry, reporting.LogData):
+            assert_log_data(actual_entry, expected_entry)
+        elif isinstance(actual_entry, reporting.CheckData):
+            assert_check_data(actual_entry, expected_entry)
+        elif isinstance(actual_entry, reporting.AttachmentData):
+            assert_attachment_data(actual_entry, expected_entry)
+        elif isinstance(actual_entry, reporting.UrlData):
+            assert_url_data(actual_entry, expected_entry)
+        else:
+            raise Exception("Unknown class '%s'" % actual.__class__.__name__)
+
+
+def assert_test_data(actual, expected):
+    assert actual.name == expected.name
+    assert actual.description == expected.description
+    assert actual.tags == expected.tags
+    assert actual.properties == expected.properties
+    assert actual.links == expected.links
+    assert actual.status == expected.status
+    assert actual.status_details == expected.status_details
+    assert round(actual.start_time, 3) == round(expected.start_time, 3)
+    assert round(actual.end_time, 3) == round(expected.end_time, 3)
+
+    assert len(actual.steps) == len(expected.steps)
+    for actual_step, expected_step in zip(actual.steps, expected.steps):
+        assert_step_data(actual_step, expected_step)
+
+
+def assert_hook_data(actual, expected):
+    if expected is None:
+        assert actual is None
+    else:
+        assert actual.outcome == expected.outcome
+        assert round(actual.start_time, 3) == round(expected.start_time, 3)
+        assert round(actual.end_time, 3) == round(expected.end_time, 3)
+        assert len(actual.steps) == len(expected.steps)
+        for actual_step, expected_step in zip(actual.steps, expected.steps):
+            assert_step_data(actual_step, expected_step)
+
+
+def assert_suite_data(actual, expected):
+    assert actual.name == expected.name
+    assert actual.description == expected.description
+    if expected.parent_suite is None:
+        assert actual.parent_suite is None
+    else:
+        assert actual.parent_suite.name == expected.parent_suite.name
+    assert actual.tags == expected.tags
+    assert actual.properties == expected.properties
+    assert actual.links == expected.links
+
+    assert_hook_data(actual.suite_setup, expected.suite_setup)
+
+    assert len(actual.get_tests()) == len(expected.get_tests())
+    for actual_test, expected_test in zip(actual.get_tests(), expected.get_tests()):
+        assert_test_data(actual_test, expected_test)
+
+    assert len(actual.get_suites()) == len(expected.get_suites())
+    for actual_subsuite, expected_subsuite in zip(actual.get_suites(), expected.get_suites()):
+        assert_suite_data(actual_subsuite, expected_subsuite)
+
+    assert_hook_data(actual.suite_teardown, expected.suite_teardown)
+
+
+def assert_report(actual, expected):
+    assert actual.title == expected.title
+    assert actual.info == expected.info
+    assert round(actual.start_time, 3) == round(expected.start_time, 3)
+    assert round(actual.end_time, 3) == round(expected.end_time, 3)
+    assert round(actual.report_generation_time, 3) == round(expected.report_generation_time, 3)
+    assert len(actual.suites) == len(expected.suites)
+
+    assert_hook_data(actual.test_session_setup, expected.test_session_setup)
+
+    for actual_suite, expected_suite in zip(actual.suites, expected.suites):
+        assert_suite_data(actual_suite, expected_suite)
+
+    assert_hook_data(actual.test_session_teardown, expected.test_session_teardown)
+
+
+def assert_steps_data(steps):
+    for step in steps:
+        assert step.start_time
+        assert step.end_time >= step.start_time
+
+
+def assert_test_data_from_test(test_data, test):
+    assert test_data.name == test.name
+    assert test_data.description == test.description
+    assert test_data.tags == test.tags
+    assert test_data.properties == test.properties
+    assert test_data.links == test.links
+
+    assert_steps_data(test_data.steps)
+
+
+def assert_suite_data_from_suite(suite_data, suite):
+    assert suite_data.name == suite.name
+    assert suite_data.description == suite.description
+    assert suite_data.tags == suite.tags
+    assert suite_data.properties == suite.properties
+    assert suite_data.links == suite.links
+
+    if suite.has_hook("setup_suite"):
+        assert suite_data.suite_setup is not None
+        assert suite_data.suite_setup.start_time is not None
+        assert suite_data.suite_setup.end_time is not None
+        assert_steps_data(suite_data.suite_setup.steps)
+
+    assert len(suite_data.get_tests()) == len(suite.get_tests())
+    for test_data, test in zip(suite_data.get_tests(), suite.get_tests()):
+        assert_test_data_from_test(test_data, test)
+
+    assert len(suite_data.get_suites()) == len(suite.get_suites())
+    for sub_suite_data, sub_suite in zip(suite_data.get_suites(), suite.get_suites()):
+        assert_suite_data_from_suite(sub_suite_data, sub_suite)
+
+    if suite.has_hook("teardown_suite"):
+        assert suite_data.suite_teardown is not None
+        assert suite_data.suite_teardown.start_time is not None
+        assert suite_data.suite_teardown.end_time is not None
+        assert_steps_data(suite_data.suite_teardown.steps)
+
+
+def assert_report_from_suites(report, suite_classes):
+    assert report.start_time is not None
+    assert report.end_time is not None
+    assert report.report_generation_time is not None
+    assert len(report.suites) == len(suite_classes)
+    for suite_data, suite_class in zip(report.suites, suite_classes):
+        suite = load_suite_from_class(suite_class)
+        assert_suite_data_from_suite(suite_data, suite)
+
+
+def assert_report_from_suite(report, suite_class):
+    assert_report_from_suites(report, [suite_class])
+
+
+def assert_report_stats(report,
+                        expected_passed_tests=0, expected_failed_tests=0, expected_skipped_tests=0,
+                        expected_errors=0,
+                        expected_succeeded_checks=0, expected_failed_checks=0,
+                        expected_error_logs=0, expected_warning_logs=0):
+    stats = report.get_stats()
+    assert stats.tests == expected_passed_tests + expected_failed_tests + expected_skipped_tests
+    assert stats.test_statuses["passed"] == expected_passed_tests
+    assert stats.test_statuses["failed"] == expected_failed_tests
+    assert stats.test_statuses["skipped"] == expected_skipped_tests
+    assert stats.errors == expected_errors
+    assert stats.checks == expected_succeeded_checks + expected_failed_checks
+    assert stats.check_successes == expected_succeeded_checks
+    assert stats.check_failures == expected_failed_checks
+    assert stats.error_logs == expected_error_logs
+    assert stats.warning_logs == expected_warning_logs

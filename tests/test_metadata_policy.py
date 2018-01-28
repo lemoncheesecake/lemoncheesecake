@@ -11,6 +11,7 @@ from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.exceptions import InvalidMetadataError
 
+
 def test_property_value_validation():
     @lcc.prop("foo", 1)
     @lcc.suite("MySuite")
@@ -36,6 +37,7 @@ def test_property_value_validation():
     with pytest.raises(InvalidMetadataError):
         policy.check_suite_compliance(suite)
 
+
 def test_required_property():
     @lcc.prop("foo", 1)
     @lcc.suite("MySuite")
@@ -60,6 +62,7 @@ def test_required_property():
         policy.check_test_compliance(suite.get_tests()[0])
     with pytest.raises(InvalidMetadataError):
         policy.check_suite_compliance(suite)
+
 
 def test_allowed_properties_and_tags():
     @lcc.prop("foo", 1)
@@ -95,6 +98,7 @@ def test_allowed_properties_and_tags():
     with pytest.raises(InvalidMetadataError):
         policy.check_suite_compliance(suite)
 
+
 def test_different_test_and_suite_property_configurations():
     @lcc.prop("foo", 1)
     @lcc.suite("MySuite")
@@ -122,6 +126,7 @@ def test_different_test_and_suite_property_configurations():
         policy.check_test_compliance(suite.get_tests()[0])
     with pytest.raises(InvalidMetadataError):
         policy.check_suite_compliance(suite)
+
 
 def test_different_test_and_suite_tag_configurations():
     @lcc.tags("tag1")
@@ -151,6 +156,7 @@ def test_different_test_and_suite_tag_configurations():
     with pytest.raises(InvalidMetadataError):
         policy.check_suite_compliance(suite)
 
+
 def test_disallow_unknown_property():
     @lcc.prop("foo", 1)
     @lcc.suite("MySuite")
@@ -175,6 +181,7 @@ def test_disallow_unknown_property():
         policy.check_test_compliance(suite.get_tests()[0])
     with pytest.raises(InvalidMetadataError):
         policy.check_suite_compliance(suite)
+
 
 def test_disallow_unknown_tag():
     @lcc.tags("tag1")

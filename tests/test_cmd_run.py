@@ -1,7 +1,8 @@
 import os
 import pytest
 
-from helpers import generate_project, assert_run_output, cmdout, run_main
+from helpers.runner import generate_project, run_main
+from helpers.cli import assert_run_output, cmdout
 
 
 TEST_MODULE = """import lemoncheesecake.api as lcc
