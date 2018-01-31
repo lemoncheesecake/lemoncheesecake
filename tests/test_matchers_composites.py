@@ -45,3 +45,7 @@ def test_something():
 
 def test_existing():
     assert_match_success(existing(), "foo", "foo")
+
+
+def test_present():
+    assert_match_success(present(), "foo", "foo")
