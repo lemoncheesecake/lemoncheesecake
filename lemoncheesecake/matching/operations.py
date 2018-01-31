@@ -80,7 +80,7 @@ def _entry_operation(operation):
             wrap_key_matcher(key_matcher, base_key=base_key),
             value_matcher if value_matcher != None else is_(value_matcher)
         )
-        return operation("", actual, matcher, quiet=quiet)
+        return operation(None, actual, matcher, quiet=quiet)
     wrapper.__doc__ = "Helper function for %s, takes the actual dict using in_ parameter or using 'with this_dict(...)' statement" % \
         operation.__name__
     return wrapper
@@ -101,7 +101,10 @@ def log_match_result(hint, matcher, result, quiet=False):
 
     If quiet is set to True, the check details won't appear in the check log.
     """
-    description = "Expect %s %s" % (hint, matcher.description())
+    if hint is not None:
+        description = "Expect %s %s" % (hint, matcher.description())
+    else:
+        description = "Expect %s" % matcher.description()
 
     return log_check(
         description, result.outcome, format_result_details(result.description) if not quiet else None
