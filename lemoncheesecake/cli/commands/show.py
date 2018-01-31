@@ -72,7 +72,7 @@ class ShowCommand(Command):
         else:
             padding = self.get_padding(suite.hierarchy_depth)
             suite_label = self.get_suite_label(suite)
-            print("%s* %s%s:" % (padding, self.bold(suite_label), " (%s)" % md if md else ""))
+            print("%s* %s%s" % (padding, self.bold(suite_label), " (%s)" % md if md else ""))
 
         for test in suite.get_tests():
             self.show_test(test, suite)
