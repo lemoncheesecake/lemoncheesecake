@@ -45,21 +45,22 @@ class RunCommand(Command):
 
         add_run_filter_cli_args(cli_parser)
 
-        group = cli_parser.add_argument_group("Reporting")
-        group.add_argument("--exit-error-on-failure", action="store_true",
+        test_execution_group = cli_parser.add_argument_group("Test execution")
+        test_execution_group.add_argument("--exit-error-on-failure", action="store_true",
             help="Exit with non-zero code if there is at least one non-passed test"
         )
-        group.add_argument("--stop-on-failure", action="store_true",
+        test_execution_group.add_argument("--stop-on-failure", action="store_true",
             help="Stop tests execution on the first non-passed test"
         )
-        group.add_argument("--report-dir", "-r", required=False, help="Directory where report data will be stored")
-        group.add_argument("--reporting", nargs="+", default=default_reporting_backend_names,
+        reporting_group = cli_parser.add_argument_group("Reporting")
+        reporting_group.add_argument("--report-dir", "-r", required=False, help="Directory where report data will be stored")
+        reporting_group.add_argument("--reporting", nargs="+", default=default_reporting_backend_names,
             help="The list of reporting backends to use"
         )
-        group.add_argument("--enable-reporting", nargs="+", default=[],
+        reporting_group.add_argument("--enable-reporting", nargs="+", default=[],
             help="The list of reporting backends to add (to base backends)"
         )
-        group.add_argument("--disable-reporting", nargs="+", default=[],
+        reporting_group.add_argument("--disable-reporting", nargs="+", default=[],
             help="The list of reporting backends to remove (from base backends)"
         )
 
