@@ -13,12 +13,20 @@ def test_is_dict_failure():
     assert_match_failure(is_dict(), "foo", "foo")
 
 
+def test_is_dict_with_argument_success():
+    assert_match_success(is_dict(has_entry("foo")), {"foo": 1}, "1")
+
+
 def test_is_float_success():
     assert_match_success(is_float(), 1.2, "1.2")
 
 
 def test_is_float_failure():
     assert_match_failure(is_float(), 1, "1")
+
+
+def test_is_float_with_arg_success():
+    assert_match_success(is_float(1.2), 1.2, "1.2")
 
 
 def test_is_integer_success():
@@ -29,12 +37,20 @@ def test_is_integer_failure():
     assert_match_failure(is_integer(), 1.2, "1.2")
 
 
+def test_is_integer_with_arg_success():
+    assert_match_success(is_integer(1), 1, "1")
+
+
 def test_is_bool_success():
     assert_match_success(is_bool(), True, "true")
 
 
 def test_is_bool_failure():
     assert_match_failure(is_bool(), 1, "1")
+
+
+def test_is_bool_with_arg_success():
+    assert_match_success(is_bool(True), True, "true")
 
 
 def test_is_list_success():
@@ -49,6 +65,10 @@ def test_is_list_failure():
     assert_match_failure(is_list(), "foo", "foo")
 
 
+def test_is_list_with_arg_success():
+    assert_match_success(is_list(has_length(2)), [21, 42], "2")
+
+
 def test_is_str_success():
     assert_match_success(is_str(), "foo", "foo")
 
@@ -59,3 +79,7 @@ def test_is_str_with_unicode_success():
 
 def test_is_str_failure():
     assert_match_failure(is_str(), 1, "1")
+
+
+def test_is_str_with_arg_success():
+    assert_match_success(is_str("foo"), "foo", "foo")
