@@ -57,7 +57,7 @@ class IsValueOfType(Matcher):
 def is_type(types, type_name):
     def wrapper(value_matcher=None):
         return IsValueOfType(
-            types, type_name, is_(value_matcher) if value_matcher != None else None
+            types, type_name, is_(value_matcher) if value_matcher is not None else None
         )
     wrapper.__doc__ = "Test if value is of type %s" % type_name
     return wrapper

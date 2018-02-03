@@ -287,6 +287,8 @@ The following stock matchers are available:
   - `is_none()`: check if actual `== None`
   - `is_not_none()`: check if actual `!= None`
   - `has_length(expected)`: check if value has expected length (expected can be a value or a Matcher object)
+  - `is_true()`: check if value is a boolean true
+  - `is_false()`: check if value is a boolean false
 - Character strings:
   - `starts_with(expected)`: check if actual string starts with expected
   - `ends_with(expected)`: check if actual string ends with expected
@@ -297,6 +299,7 @@ The following stock matchers are available:
   - `is_str(expected)`: check if actual is of type `str` (or `unicode` if Python 2.7)
   - `is_dict(expected)`: check if actual is of type `dict`
   - `is_list(expected)`: check if actual is of type `list` or `tuple`
+  - `is_bool(expected)`: check if actual is of type `bool`
 - Iterable:
   - `has_item(expected)`: check is actual iterable has an element that matches expected (expected can be a value or a Matcher)
   - `has_values(expected)`: check is actual iterable contains **at least** the expected values

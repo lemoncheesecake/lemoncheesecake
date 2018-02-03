@@ -100,3 +100,27 @@ def test_has_length_with_matcher_success():
 
 def test_has_length_failure():
     assert_match_failure(has_length(3), "foobar", "6")
+
+
+def test_is_true_success():
+    assert_match_success(is_true(), True, "true")
+
+
+def test_is_true_failure_wrong_value():
+    assert_match_failure(is_true(), False, "false")
+
+
+def test_is_true_failure_wrong_type():
+    assert_match_failure(is_true(), 1, "1")
+
+
+def test_is_false_success():
+    assert_match_success(is_false(), False, "false")
+
+
+def test_is_false_failure_wrong_value():
+    assert_match_failure(is_false(), True, "true")
+
+
+def test_is_false_failure_wrong_type():
+    assert_match_failure(is_false(), 0, "0")

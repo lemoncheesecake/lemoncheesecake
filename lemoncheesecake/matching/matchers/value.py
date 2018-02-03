@@ -9,11 +9,13 @@ from lemoncheesecake.matching.base import (
     got_value, serialize_value, to_be, to_have
 )
 from lemoncheesecake.matching.matchers.composites import is_
+from lemoncheesecake.matching.matchers.types_ import is_bool
 
 __all__ = (
     "equal_to", "not_equal_to", "greater_than", "greater_than_or_equal_to",
     "less_than", "less_than_or_equal_to",
-    "is_between", "is_none", "is_not_none", "has_length"
+    "is_between", "is_none", "is_not_none", "has_length",
+    "is_true", "is_false"
 )
 
 
@@ -100,3 +102,13 @@ class HasLength(Matcher):
 def has_length(length):
     """Test if value has a length of"""
     return HasLength(is_(length))
+
+
+def is_true():
+    """Test if value is true (boolean type)"""
+    return is_bool(True)
+
+
+def is_false():
+    """Test if value is false (boolean type)"""
+    return is_bool(False)
