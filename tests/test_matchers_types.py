@@ -10,7 +10,7 @@ def test_is_dict_success():
 
 
 def test_is_dict_failure():
-    assert_match_failure(is_dict(1), "foo", "foo")
+    assert_match_failure(is_dict(), "foo", "foo")
 
 
 def test_is_float_success():
