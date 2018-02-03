@@ -49,6 +49,7 @@ def _comparator(comparison_description, comparison_func):
     wrapper.__doc__ = """Test if value is %s expected""" % comparison_description
     return wrapper
 
+
 not_equal_to = _comparator("not equal to", lambda a, e: a != e)
 
 greater_than = _comparator("greater than", lambda a, e: a > e)
@@ -67,7 +68,7 @@ class IsBetween(Matcher):
         return "%s between %s and %s" % (to_be(conjugate), self.min, self.max)
 
     def matches(self, actual):
-        return match_result(actual >= self.min and actual <= self.max, got_value(actual))
+        return match_result(self.min <= actual <= self.max, got_value(actual))
 
 
 def is_between(min, max):
