@@ -66,24 +66,27 @@ def this_dict(actual):
     return ThisDict(actual)
 
 
-def _entry_operation(operation):
-    def wrapper(key_matcher, value_matcher=None, in_=None, quiet=False):
-        actual = in_
-        base_key = []
-        if not actual:
-            context = ThisDict.get_current_context()
-            if not context:
-                raise ProgrammingError("Actual dict must be set either using in_ argument or using 'with this_dict(...)' statement")
-            actual = context.actual
-            base_key = context.base_key
-        matcher = _HasEntry(
-            wrap_key_matcher(key_matcher, base_key=base_key),
-            value_matcher if value_matcher != None else is_(value_matcher)
-        )
-        return operation(None, actual, matcher, quiet=quiet)
-    wrapper.__doc__ = "Helper function for %s, takes the actual dict using in_ parameter or using 'with this_dict(...)' statement" % \
-        operation.__name__
-    return wrapper
+def _get_actual_for_dict_operation(in_):
+    if in_ is not None:
+        return in_
+    else:
+        context = ThisDict.get_current_context()
+        if not context:
+            raise ProgrammingError(
+                "Actual dict must be set either using in_ argument or using 'with this_dict(...)' statement"
+            )
+        return context.actual
+
+
+def _get_matcher_for_dict_operation(key_matcher, value_matcher, base_key):
+    if base_key is None:
+        context = ThisDict.get_current_context()
+        base_key = context.base_key if context is not None else []
+
+    return _HasEntry(
+        wrap_key_matcher(key_matcher, base_key=base_key),
+        value_matcher if value_matcher is not None else is_(value_matcher)
+    )
 
 
 def format_result_details(details):
@@ -122,7 +125,17 @@ def check_that(hint, actual, matcher, quiet=False):
     log_match_result(hint, matcher, result, quiet=quiet)
     return result.outcome
 
-check_that_entry = _entry_operation(check_that)
+
+def check_that_entry(key_matcher, value_matcher=None, in_=None, base_key=None, quiet=False):
+    """
+    Helper function for check_that, takes the actual dict using in_ parameter or using 'with this_dict(...)' statement
+    """
+    return check_that(
+        None,
+        _get_actual_for_dict_operation(in_),
+        _get_matcher_for_dict_operation(key_matcher, value_matcher, base_key),
+        quiet=quiet
+    )
 
 
 def require_that(hint, actual, matcher, quiet=False):
@@ -137,7 +150,17 @@ def require_that(hint, actual, matcher, quiet=False):
     if result.is_failure():
         raise AbortTest("previous requirement was not fulfilled")
 
-require_that_entry = _entry_operation(require_that)
+
+def require_that_entry(key_matcher, value_matcher=None, in_=None, base_key=None, quiet=False):
+    """
+    Helper function for require_that, takes the actual dict using in_ parameter or using 'with this_dict(...)' statement
+    """
+    return require_that(
+        None,
+        _get_actual_for_dict_operation(in_),
+        _get_matcher_for_dict_operation(key_matcher, value_matcher, base_key),
+        quiet=quiet
+    )
 
 
 def assert_that(hint, actual, matcher, quiet=False):
@@ -152,4 +175,14 @@ def assert_that(hint, actual, matcher, quiet=False):
         log_match_result(hint, matcher, result, quiet=quiet)
         raise AbortTest("assertion error")
 
-assert_that_entry = _entry_operation(assert_that)
+
+def assert_that_entry(key_matcher, value_matcher=None, in_=None, base_key=None, quiet=False):
+    """
+    Helper function for assert_that, takes the actual dict using in_ parameter or using 'with this_dict(...)' statement
+    """
+    return assert_that(
+        None,
+        _get_actual_for_dict_operation(in_),
+        _get_matcher_for_dict_operation(key_matcher, value_matcher, base_key),
+        quiet=quiet
+    )
