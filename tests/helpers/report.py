@@ -63,6 +63,16 @@ def get_last_logged_check(report):
     return check
 
 
+def get_last_test_checks(report):
+    test = get_last_test(report)
+    checks = []
+    for step in test.steps:
+        for entry in step.entries:
+            if isinstance(entry, reporting.CheckData):
+                checks.append(entry)
+    return checks
+
+
 def count_logs(report, log_level):
     count = 0
     for test in flatten_tests(report.suites):

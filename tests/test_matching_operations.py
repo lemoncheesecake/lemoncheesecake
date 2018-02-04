@@ -43,6 +43,74 @@ def test_check_that_entry():
     assert "bar" in check.details
 
 
+def test_check_that_in():
+    checks = get_last_test_checks(
+        run_func_in_test(
+            lambda: check_that_in(
+                {"foo": 1, "bar": 2},
+                "foo", equal_to(1),
+                "bar", equal_to(2)
+            )
+        )
+    )
+
+    assert "foo" in checks[0].description and "1" in checks[0].description
+    assert checks[0].outcome is True
+    assert "1" in checks[0].details
+
+    assert "bar" in checks[1].description and "2" in checks[1].description
+    assert checks[1].outcome is True
+    assert "2" in checks[1].details
+
+
+def test_check_that_in_with_base_key():
+    check = get_last_logged_check(
+        run_func_in_test(
+            lambda: check_that_in(
+                {"foo": {"bar": "baz"}},
+                "bar", equal_to("baz"),
+                base_key=["foo"]
+            )
+        )
+    )
+
+    assert "foo" in check.description and "bar" in check.description
+    assert check.outcome is True
+    assert "baz" in check.details
+
+
+def test_require_that_in():
+    checks = get_last_test_checks(
+        run_func_in_test(
+            lambda: require_that_in(
+                {"foo": 2, "bar": 2},
+                "foo", equal_to(1),
+                "bar", equal_to(2)
+            )
+        )
+    )
+
+    assert len(checks) == 1
+
+    assert "foo" in checks[0].description and "1" in checks[0].description
+    assert checks[0].outcome is False
+    assert "2" in checks[0].details
+
+
+def test_assert_that_in():
+    checks = get_last_test_checks(
+        run_func_in_test(
+            lambda: assert_that_in(
+                {"foo": 1, "bar": 2},
+                "foo", equal_to(1),
+                "bar", equal_to(2)
+            )
+        )
+    )
+
+    assert len(checks) == 0
+
+
 def test_require_that_success():
     marker = []
     def test():

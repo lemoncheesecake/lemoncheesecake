@@ -338,12 +338,26 @@ check_that_entry("foo", equal_to(1), in_=data)
 check_that_entry("bar", equal_to(2), in_=data)
 ```
 
-And made even shorter (while still nicely readable) like this:
+`check_that_entry` can also be used with the context manager `this_dict`:
 ```python
 with this_dict({"foo": 1, "bar": 2}):
     check_that_entry("foo", equal_to(1))
     check_that_entry("bar", equal_to(2))
 ```
+
+`check_that_in` can conveniently be used instead of `this_dict` + `check_that_entry` when the context manager block
+only contains `check_that_entry` function calls:
+```python
+check_that_in(
+    {"foo": 1, "bar": 2},
+    "foo", equal_to(1),
+    "bar", equal_to(2)
+)
+```
+
+The same dict helper counter parts are available for `require_that` and `assert_that`:
+- `require_that_entry` and `require_that_in`
+- `assert_that_entry` and `assert_that_in`
 
 If one match fails in a test, this test will be marked as failed.
 

@@ -12,9 +12,9 @@ from lemoncheesecake.matching.matchers.composites import is_
 
 __all__ = (
     "log_match_result",
-    "check_that", "check_that_entry",
-    "require_that", "require_that_entry",
-    "assert_that", "assert_that_entry",
+    "check_that", "check_that_entry", "check_that_in",
+    "require_that", "require_that_entry", "require_that_in",
+    "assert_that", "assert_that_entry", "assert_that_in",
     "this_dict"
 )
 
@@ -136,6 +136,32 @@ def check_that_entry(key_matcher, value_matcher=None, in_=None, base_key=None, q
         _get_matcher_for_dict_operation(key_matcher, value_matcher, base_key),
         quiet=quiet
     )
+
+
+def _do_that_in(func, actual, *args, **kwargs):
+    if len(args) % 2 != 0:
+        raise TypeError("function expects an even number of *args")
+
+    base_key = kwargs.get("base_key", [])
+    quiet = kwargs.get("quiet", False)
+
+    i = 0
+    while i < len(args):
+        key, value_matcher = args[i], args[i+1]
+        func(key, value_matcher, in_=actual, base_key=base_key, quiet=quiet)
+        i += 2
+
+
+def check_that_in(actual, *args, **kwargs):
+    _do_that_in(check_that_entry, actual, *args, **kwargs)
+
+
+def require_that_in(actual, *args, **kwargs):
+    _do_that_in(require_that_entry, actual, *args, **kwargs)
+
+
+def assert_that_in(actual, *args, **kwargs):
+    _do_that_in(assert_that_entry, actual, *args, **kwargs)
 
 
 def require_that(hint, actual, matcher, quiet=False):
