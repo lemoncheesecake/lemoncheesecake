@@ -183,7 +183,14 @@ def find_project_file():
         return filename if osp.exists(filename) else None
 
     filename = _find_file_in_parent_directories(PROJECT_CONFIG_FILE, os.getcwd())
-    return filename # filename can be None
+    return filename  # filename can be None
+
+
+def find_project_dir():
+    project_filename = find_project_file()
+    if project_filename is None:
+        return None
+    return osp.dirname(project_filename)
 
 
 def create_project(project_dir):

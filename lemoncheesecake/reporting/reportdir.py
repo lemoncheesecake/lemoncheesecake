@@ -11,6 +11,8 @@ import glob
 import re
 import shutil
 
+DEFAULT_REPORT_DIR_NAME = "report"
+
 
 def archive_dirname_datetime(ts, archives_dir):
     return time.strftime("report-%Y%m%d-%H%M%S", time.localtime(ts))
@@ -21,7 +23,7 @@ def report_dir_with_archiving(top_dir, archive_dirname_callback):
     archives_dir = os.path.join(top_dir, "reports")
 
     if platform.system() == "Windows":
-        report_dir = os.path.join(top_dir, "report")
+        report_dir = os.path.join(top_dir, DEFAULT_REPORT_DIR_NAME)
         if os.path.exists(report_dir):
             if not os.path.exists(archives_dir):
                 os.mkdir(archives_dir)
@@ -39,7 +41,7 @@ def report_dir_with_archiving(top_dir, archive_dirname_callback):
         report_dir = os.path.join(archives_dir, report_dirname)
         os.mkdir(report_dir)
 
-        symlink_path = os.path.join(os.path.dirname(report_dir), "..", "report")
+        symlink_path = os.path.join(os.path.dirname(report_dir), "..", DEFAULT_REPORT_DIR_NAME)
         if os.path.lexists(symlink_path):
             os.unlink(symlink_path)
         os.symlink(report_dir, symlink_path)
@@ -87,7 +89,7 @@ def _rotate_directories(directories):
 
 
 def create_report_dir_with_rotation(top_dir, archiving_limit=20):
-    report_dir = os.path.join(top_dir, "report")
+    report_dir = os.path.join(top_dir, DEFAULT_REPORT_DIR_NAME)
     if os.path.exists(report_dir):
         archiving_dir = os.path.join(top_dir, "reports")
         if not os.path.exists(archiving_dir):
