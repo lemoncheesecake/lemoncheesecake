@@ -22,13 +22,13 @@ $ pip install lemoncheesecake
 ```
 
 The following reporting backends are supported:
-- console (available by default)
-- json (available by default)
-- html (available by default)
-- xml (available through the extra `xml`)
-- junit (available through the extra `junit`)
-- reportportal (available through the extra `reportportal`)
-- slack ((available through the extra `slack`))
+- console: available by default
+- json: available by default
+- html: available by default
+- xml: available through the extra `xml`
+- junit: available through the extra `junit`
+- reportportal: available through the extra `reportportal`
+- slack: available through the extra `slack`
 
 Lemoncheesecake can be installed with an extra like this:
 ```
