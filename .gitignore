@@ -7,6 +7,7 @@
 .cache
 examples/*/report
 examples/*/reports
-TODO
 dist/
 lemoncheesecake.egg-info/
+doc/_build
+

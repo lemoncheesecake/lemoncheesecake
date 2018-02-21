@@ -172,19 +172,43 @@ def add_run_filter_cli_args(cli_parser, no_positional_argument=False):
 
     group = cli_parser.add_argument_group("Filtering")
     if no_positional_argument:
-        group.add_argument("--path", "-p", nargs="+", help="Filter on test/suite path (wildcard character '*' can be used)")
+        group.add_argument(
+            "--path", "-p", nargs="+", help="Filter on test/suite path (wildcard character '*' can be used)"
+        )
     else:
-        group.add_argument("path", nargs="*", default=[], help="Filter on test/suite path (wildcard character '*' can be used)")
-    group.add_argument("--desc", nargs="+", action="append", default=[], help="Filter on descriptions")
-    group.add_argument("--tag", "-a", nargs="+", action="append", default=[], help="Filter on tags")
-    group.add_argument("--property", "-m", nargs="+", type=property_value, action="append", default=[], help="Filter on properties")
-    group.add_argument("--link", "-l", nargs="+", action="append", default=[], help="Filter on links (names and URLs)")
-    group.add_argument("--disabled", action="store_true", help="Filter on disabled tests")
-    group.add_argument("--passed", action="store_true", help="Filter on passed tests (report-only filter)")
-    group.add_argument("--failed", action="store_true", help="Filter on failed tests (report-only filter)")
-    group.add_argument("--skipped", action="store_true", help="Filter on skipped tests (report-only filter)")
-    group.add_argument("--enabled", action="store_true", help="Filter on enabled (non-disabled) tests")
-    group.add_argument("--from-report", required=False, help="When enabled, the filtering is based on the given report")
+        group.add_argument(
+            "path", nargs="*", default=[], help="Filter on test/suite path (wildcard character '*' can be used)"
+        )
+    group.add_argument(
+        "--desc", nargs="+", action="append", default=[], help="Filter on descriptions"
+    )
+    group.add_argument(
+        "--tag", "-a", nargs="+", action="append", default=[], help="Filter on tags"
+    )
+    group.add_argument(
+        "--property", "-m", nargs="+", type=property_value, action="append", default=[], help="Filter on properties"
+    )
+    group.add_argument(
+        "--link", "-l", nargs="+", action="append", default=[], help="Filter on links (names and URLs)"
+    )
+    group.add_argument(
+        "--disabled", action="store_true", help="Filter on disabled tests"
+    )
+    group.add_argument(
+        "--passed", action="store_true", help="Filter on passed tests (only available with --from-report)"
+    )
+    group.add_argument(
+        "--failed", action="store_true", help="Filter on failed tests (only available with --from-report)"
+    )
+    group.add_argument(
+        "--skipped", action="store_true", help="Filter on skipped tests (only available with --from-report)"
+    )
+    group.add_argument(
+        "--enabled", action="store_true", help="Filter on enabled (non-disabled) tests"
+    )
+    group.add_argument(
+        "--from-report", required=False, help="When enabled, the filtering is based on the given report"
+    )
 
     return group
 
