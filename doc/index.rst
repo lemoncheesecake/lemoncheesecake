@@ -66,7 +66,7 @@ See :ref:`Getting Started <getting started>` to create your first test project.
 
 In short, lemoncheesecake provides:
 
-- a way to organize complex test hierachies using suites, tests, and nested suites
+- a way to organize complex test hierarchies using suites, tests, and nested suites
 
 - all tests and suites have a name, a description and also metadata: tags, properties (key=value associations) and links;
   all these information can be used for filtering
