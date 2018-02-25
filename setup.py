@@ -12,14 +12,14 @@ import lemoncheesecake
 
 
 setup(
-    name = "lemoncheesecake",
-    version = lemoncheesecake.__version__,
-    description = "A framework for functional QA testing",
-    author = "Nicolas Delon",
-    author_email = "nicolas.delon@gmail.com",
+    name="lemoncheesecake",
+    version=lemoncheesecake.__version__,
+    description="A framework for functional QA testing",
+    author="Nicolas Delon",
+    author_email="nicolas.delon@gmail.com",
     license="Apache License (Version 2.0)",
-    url = "https://github.com/lemoncheesecake",
-    classifiers = [
+    url="https://github.com/lemoncheesecake",
+    classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Console",
         "Intended Audience :: Developers",
@@ -37,12 +37,12 @@ setup(
         "Topic :: Software Development :: Quality Assurance",
         "Topic :: Software Development :: Testing",
     ],
-    keywords = "QA tests functional",
+    keywords="QA tests functional",
 
-    packages = find_packages(),
-    include_package_data = True,
-    install_requires = ["colorama", "termcolor", "terminaltables"],
-    extras_require = {
+    packages=find_packages(),
+    include_package_data=True,
+    install_requires=["colorama", "termcolor", "terminaltables"],
+    extras_require={
         "xml": "lxml",
         "junit": "lxml",
         "reportportal": "reportportal-client",
