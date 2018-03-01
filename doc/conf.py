@@ -99,7 +99,7 @@ html_theme = 'alabaster'
 #
 html_theme_options = {
     "page_width": "1150px",
-    "sidebar_width": "250px",
+    "sidebar_width": "300px",
 }
 
 html_show_sourcelink = False
