@@ -1,6 +1,6 @@
 import time
 
-from lemoncheesecake.reporting import Report, SuiteData, TestData, StepData, LogData, CheckData
+from lemoncheesecake.reporting import Report, HookData, SuiteData, TestData, StepData, LogData, CheckData
 
 NOW = time.time()
 
@@ -42,6 +42,13 @@ def step_mockup(description="step"):
     return StepMockup(description)
 
 
+def make_step_data_from_mockup(mockup):
+    data = StepData(mockup.description)
+    for entry in mockup.entries:
+        data.entries.append(entry)
+    return data
+
+
 class TreeNodeMockup:
     def __init__(self, name, description, tags, properties, links):
         self.name = name
@@ -52,8 +59,10 @@ class TreeNodeMockup:
 
 
 class TestMockup(TreeNodeMockup):
-    def __init__(self, name, description, tags, properties, links, status):
+    def __init__(self, name, description, tags, properties, links, status, start_time, end_time):
         TreeNodeMockup.__init__(self, name, description, tags, properties, links)
+        self.start_time = start_time
+        self.end_time = end_time
         self.status = status
         self.steps = []
 
@@ -74,15 +83,54 @@ def tst_mockup(name=None, **kwargs):
 
     attrs = _make_tree_node_attrs(name, kwargs)
     attrs["status"] = kwargs.get("status", "passed")
+    attrs["start_time"] = kwargs.get("start_time", None)
+    attrs["end_time"] = kwargs.get("end_time", None)
 
     return TestMockup(name, **attrs)
+
+
+class HookMockup(object):
+    def __init__(self, start_time, end_time):
+        self.start_time = start_time
+        self.end_time = end_time
+        self.steps = []
+
+    def add_step(self, step):
+        self.steps.append(step)
+        return self
+
+
+def hook_mockup(start_time=None, end_time=None):
+    return HookMockup(start_time, end_time)
+
+
+def make_hook_data_from_mockup(mockup):
+    if mockup is None:
+        return None
+
+    data = HookData()
+    data.start_time = mockup.start_time if mockup.start_time is not None else NOW
+    data.end_time = mockup.end_time if mockup.end_time is not None else NOW
+    for step_mockup in mockup.steps:
+        data.steps.append(make_step_data_from_mockup(step_mockup))
+    return data
 
 
 class SuiteMockup(TreeNodeMockup):
     def __init__(self, name, **kwargs):
         TreeNodeMockup.__init__(self, name, **kwargs)
+        self.setup = None
+        self.teardown = None
         self.suites = []
         self.tests = []
+
+    def add_setup(self, setup):
+        self.setup = setup
+        return self
+
+    def add_teardown(self, teardown):
+        self.teardown = teardown
+        return self
 
     def add_test(self, test):
         self.tests.append(test)
@@ -122,8 +170,8 @@ def report_mockup():
 def make_test_data_from_mockup(mockup):
     data = TestData(mockup.name, mockup.description)
     data.status = mockup.status
-    data.start_time = NOW
-    data.end_time = NOW
+    data.start_time = mockup.start_time if mockup.start_time is not None else NOW
+    data.end_time = mockup.end_time if mockup.end_time is not None else NOW
     for step_mockup in mockup.steps:
         step = StepData(step_mockup.description)
         data.steps.append(step)
@@ -134,6 +182,8 @@ def make_test_data_from_mockup(mockup):
 
 def make_suite_data_from_mockup(mockup):
     data = SuiteData(mockup.name, mockup.description)
+    data.suite_setup = make_hook_data_from_mockup(mockup.setup)
+    data.suite_teardown = make_hook_data_from_mockup(mockup.teardown)
     for test_mockup in mockup.tests:
         data.add_test(make_test_data_from_mockup(test_mockup))
     for sub_suite_mockup in mockup.suites:

@@ -47,6 +47,13 @@ def parse_timestamp(s):
     return time.mktime(time.strptime(dt, "%Y-%m-%d %H:%M:%S")) + float(milliseconds) / 1000
 
 
+def _get_duration(start_time, end_time):
+    if start_time is not None and end_time is not None:
+        return end_time - start_time
+    else:
+        return None
+
+
 class LogData:
     def __init__(self, level, message, ts):
         self.level = level
@@ -64,7 +71,7 @@ class CheckData:
         self.details = details
 
     def has_failure(self):
-        return self.outcome == False
+        return self.outcome is False
 
 
 class AttachmentData:
@@ -88,12 +95,16 @@ class UrlData:
 class StepData:
     def __init__(self, description):
         self.description = description
-        self.entries = [ ]
+        self.entries = []
         self.start_time = None
         self.end_time = None
 
     def has_failure(self):
         return len(list(filter(lambda entry: entry.has_failure(), self.entries))) > 0
+
+    @property
+    def duration(self):
+        return _get_duration(self.start_time, self.end_time)
 
 
 class TestData(BaseTest):
@@ -101,17 +112,21 @@ class TestData(BaseTest):
         BaseTest.__init__(self, name, description)
         self.status = None
         self.status_details = None
-        self.steps = [ ]
+        self.steps = []
         self.start_time = None
         self.end_time = None
         
     def has_failure(self):
         return len(list(filter(lambda step: step.has_failure(), self.steps))) > 0
 
+    @property
+    def duration(self):
+        return _get_duration(self.start_time, self.end_time)
+
 
 class HookData:
     def __init__(self):
-        self.steps = [ ]
+        self.steps = []
         self.start_time = None
         self.end_time = None
         self.outcome = None
@@ -122,12 +137,36 @@ class HookData:
     def is_empty(self):
         return len(self.steps) == 0
 
+    @property
+    def duration(self):
+        return _get_duration(self.start_time, self.end_time)
+
 
 class SuiteData(BaseSuite):
     def __init__(self, name, description):
         BaseSuite.__init__(self, name, description)
         self.suite_setup = None
         self.suite_teardown = None
+
+    @property
+    def start_time(self):
+        if self.suite_setup:
+            start_elem = self.suite_setup
+        else:
+            start_elem = self.get_tests()[0]
+        return start_elem.start_time
+
+    @property
+    def end_time(self):
+        if self.suite_teardown:
+            end_elem = self.suite_teardown
+        else:
+            end_elem = self.get_tests()[-1]
+        return end_elem.end_time
+
+    @property
+    def duration(self):
+        return _get_duration(self.start_time, self.end_time)
 
 
 class _ReportStats:
