@@ -15,9 +15,11 @@ def _make_tree_node_attrs(name, kwargs):
 
 
 class StepMockup:
-    def __init__(self, description):
+    def __init__(self, description, start_time, end_time):
         self.description = description
         self._entries = []
+        self.start_time = start_time
+        self.end_time = end_time
 
     @property
     def entries(self):
@@ -38,12 +40,14 @@ class StepMockup:
         return self._add_log("error", message)
 
 
-def step_mockup(description="step"):
-    return StepMockup(description)
+def step_mockup(description="step", start_time=None, end_time=None):
+    return StepMockup(description, start_time, end_time)
 
 
 def make_step_data_from_mockup(mockup):
     data = StepData(mockup.description)
+    data.start_time = mockup.start_time
+    data.end_time = mockup.end_time
     for entry in mockup.entries:
         data.entries.append(entry)
     return data
@@ -173,10 +177,7 @@ def make_test_data_from_mockup(mockup):
     data.start_time = mockup.start_time if mockup.start_time is not None else NOW
     data.end_time = mockup.end_time if mockup.end_time is not None else NOW
     for step_mockup in mockup.steps:
-        step = StepData(step_mockup.description)
-        data.steps.append(step)
-        for entry in step_mockup.entries:
-            step.entries.append(entry)
+        data.steps.append(make_step_data_from_mockup(step_mockup))
     return data
 
 

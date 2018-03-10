@@ -10,7 +10,7 @@ from decimal import Decimal
 
 from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 from lemoncheesecake.utils import humanize_duration
-from lemoncheesecake.testtree import BaseTest, BaseSuite
+from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_suites, flatten_tests
 
 __all__ = (
     "LogData", "CheckData", "AttachmentData", "UrlData", "StepData", "TestData",
@@ -151,18 +151,20 @@ class SuiteData(BaseSuite):
     @property
     def start_time(self):
         if self.suite_setup:
-            start_elem = self.suite_setup
+            return self.suite_setup.start_time
+        elif len(self.get_tests()) > 0:
+            return self.get_tests()[0].start_time
         else:
-            start_elem = self.get_tests()[0]
-        return start_elem.start_time
+            return None
 
     @property
     def end_time(self):
         if self.suite_teardown:
-            end_elem = self.suite_teardown
+            return self.suite_teardown.end_time
+        elif len(self.get_tests()) > 0:
+            return self.get_tests()[-1].end_time
         else:
-            end_elem = self.get_tests()[-1]
-        return end_elem.end_time
+            return None
 
     @property
     def duration(self):
@@ -269,6 +271,10 @@ class Report:
         self.report_generation_time = None
         self.title = DEFAULT_REPORT_TITLE
 
+    @property
+    def duration(self):
+        return _get_duration(self.start_time, self.end_time)
+
     def add_info(self, name, value):
         self.info.append([name, value])
     
@@ -296,3 +302,9 @@ class Report:
             ("Disabled tests", str(stats.test_statuses["disabled"])),
             ("Errors", str(stats.errors))
         )
+
+
+def flatten_steps(suites):
+    for test in flatten_tests(suites):
+        for step in test.steps:
+            yield step
