@@ -12,7 +12,7 @@ IS_PYTHON3 = sys.version_info > (3,)
 IS_PYTHON2 = sys.version_info < (3,)
 
 
-def humanize_duration(duration):
+def humanize_duration(duration, show_milliseconds=False):
     ret = ""
 
     if duration / 3600 >= 1:
@@ -23,11 +23,14 @@ def humanize_duration(duration):
         ret += ("%02dm" if ret else "%dm") % (duration / 60)
         duration %= 60
 
-    if duration >= 1:
-        ret += ("%02ds" if ret else "%ds") % duration
-
-    if not ret:
-        ret = "0s"
+    if show_milliseconds:
+        if duration >= 0:
+            ret += ("%06.03fs" if ret else "%.03fs") % duration
+    else:
+        if duration >= 1:
+            ret += ("%02ds" if ret else "%ds") % duration
+        if ret == "":
+            ret = "%.03fs" % duration
 
     return ret
 

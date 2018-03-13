@@ -10,7 +10,7 @@ from decimal import Decimal
 
 from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 from lemoncheesecake.utils import humanize_duration
-from lemoncheesecake.testtree import BaseTest, BaseSuite
+from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_suites, flatten_tests
 
 __all__ = (
     "LogData", "CheckData", "AttachmentData", "UrlData", "StepData", "TestData",
@@ -47,6 +47,13 @@ def parse_timestamp(s):
     return time.mktime(time.strptime(dt, "%Y-%m-%d %H:%M:%S")) + float(milliseconds) / 1000
 
 
+def _get_duration(start_time, end_time):
+    if start_time is not None and end_time is not None:
+        return end_time - start_time
+    else:
+        return None
+
+
 class LogData:
     def __init__(self, level, message, ts):
         self.level = level
@@ -64,7 +71,7 @@ class CheckData:
         self.details = details
 
     def has_failure(self):
-        return self.outcome == False
+        return self.outcome is False
 
 
 class AttachmentData:
@@ -88,12 +95,16 @@ class UrlData:
 class StepData:
     def __init__(self, description):
         self.description = description
-        self.entries = [ ]
+        self.entries = []
         self.start_time = None
         self.end_time = None
 
     def has_failure(self):
         return len(list(filter(lambda entry: entry.has_failure(), self.entries))) > 0
+
+    @property
+    def duration(self):
+        return _get_duration(self.start_time, self.end_time)
 
 
 class TestData(BaseTest):
@@ -101,17 +112,21 @@ class TestData(BaseTest):
         BaseTest.__init__(self, name, description)
         self.status = None
         self.status_details = None
-        self.steps = [ ]
+        self.steps = []
         self.start_time = None
         self.end_time = None
         
     def has_failure(self):
         return len(list(filter(lambda step: step.has_failure(), self.steps))) > 0
 
+    @property
+    def duration(self):
+        return _get_duration(self.start_time, self.end_time)
+
 
 class HookData:
     def __init__(self):
-        self.steps = [ ]
+        self.steps = []
         self.start_time = None
         self.end_time = None
         self.outcome = None
@@ -122,12 +137,38 @@ class HookData:
     def is_empty(self):
         return len(self.steps) == 0
 
+    @property
+    def duration(self):
+        return _get_duration(self.start_time, self.end_time)
+
 
 class SuiteData(BaseSuite):
     def __init__(self, name, description):
         BaseSuite.__init__(self, name, description)
         self.suite_setup = None
         self.suite_teardown = None
+
+    @property
+    def start_time(self):
+        if self.suite_setup:
+            return self.suite_setup.start_time
+        elif len(self.get_tests()) > 0:
+            return self.get_tests()[0].start_time
+        else:
+            return None
+
+    @property
+    def end_time(self):
+        if self.suite_teardown:
+            return self.suite_teardown.end_time
+        elif len(self.get_tests()) > 0:
+            return self.get_tests()[-1].end_time
+        else:
+            return None
+
+    @property
+    def duration(self):
+        return _get_duration(self.start_time, self.end_time)
 
 
 class _ReportStats:
@@ -230,6 +271,10 @@ class Report:
         self.report_generation_time = None
         self.title = DEFAULT_REPORT_TITLE
 
+    @property
+    def duration(self):
+        return _get_duration(self.start_time, self.end_time)
+
     def add_info(self, name, value):
         self.info.append([name, value])
     
@@ -257,3 +302,9 @@ class Report:
             ("Disabled tests", str(stats.test_statuses["disabled"])),
             ("Errors", str(stats.errors))
         )
+
+
+def flatten_steps(suites):
+    for test in flatten_tests(suites):
+        for step in test.steps:
+            yield step

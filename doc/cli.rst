@@ -158,6 +158,45 @@ project and report:
        * Successes: 18 (100%)
        * Failures: 0
 
+- Show top suites ordered by their duration:
+
+  .. code-block:: none
+
+      $ lcc top-suites report/
+      Suites, ordered by duration:
+      +---------+----------+------+
+      | Suite   | Duration | In % |
+      +---------+----------+------+
+      | suite_2 | 2.000s   | 66%  |
+      | suite_1 | 1.000s   | 33%  |
+      +---------+----------+------+
+
+- Show top tests ordered by their duration:
+
+  .. code-block:: none
+
+      $ lcc top-tests report/
+      Tests, ordered by duration:
+      +--------------+----------+------+
+      | Suite        | Duration | In % |
+      +--------------+----------+------+
+      | suite_2.test | 2.000s   | 66%  |
+      | suite_1.test | 1.000s   | 33%  |
+      +--------------+----------+------+
+
+- Show top steps aggregated and ordered by their duration:
+
+  .. code-block:: none
+
+      $ lcc top-steps report/
+      Steps, aggregated and ordered by duration:
+      +--------------------+------+--------+--------+--------+--------+------+
+      | Step               | Occ. | Min.   | Max    | Avg.   | Total  | In % |
+      +--------------------+------+--------+--------+--------+--------+------+
+      | Do something       | 2    | 1.000s | 2.000s | 1.500s | 3.000s | 75%  |
+      | Do something else  | 1    | 1.000s | 1.000s | 1.000s | 1.000s | 25%  |
+      +--------------------+------+--------+--------+--------+--------+------+
+
 Also see the ``--help`` of these sub commands.
 
 .. _cli_filters:

@@ -6,6 +6,7 @@ from .stats import StatsCommand
 from .report import ReportCommand
 from .diff import DiffCommand
 from .version import VersionCommand
+from .top import TopTests, TopSuites, TopSteps
 
 
 def get_commands():
@@ -13,5 +14,6 @@ def get_commands():
         RunCommand(), BootstrapCommand(),
         ShowCommand(), FixturesCommand(), StatsCommand(),
         ReportCommand(), DiffCommand(),
+        TopTests(), TopSuites(), TopSteps(),
         VersionCommand()
     ]
