@@ -1,3 +1,8 @@
+# 0.16.6 (2018-03-14)
+
+- **CLI**: add three commands: `lcc top-suites`, `lcc top-tests` and `lcc top-steps` to show suites, tests and steps
+  (respectively) ordered by their duration
+
 # 0.16.5 (2018-02-04)
 
 - **API**: add `{check,require,assert}_that_in` functions to make match operations on dict easier
