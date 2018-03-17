@@ -93,6 +93,10 @@ def get_suite_classes_from_module(mod):
     return _get_test_symbols(mod, is_suite_class)
 
 
+def get_generated_tests(obj):
+    return getattr(obj, "_lccgeneratedtests", [])
+
+
 def load_suite_from_class(class_):
     try:
         md = class_._lccmetadata
@@ -121,6 +125,9 @@ def load_suite_from_class(class_):
             suite.add_hook(hook_name, getattr(suite_obj, hook_name))
 
     for test in load_tests_from_methods(get_test_methods_from_class(suite_obj)):
+        suite.add_test(test)
+
+    for test in get_generated_tests(suite_obj):
         suite.add_test(test)
 
     for sub_suite in load_suites_from_classes(get_sub_suites_from_class(suite_obj)):
@@ -166,6 +173,9 @@ def load_suite_from_module(mod):
             suite.add_hook(hook_name, getattr(mod, hook_name))
 
     for test in load_tests_from_functions(get_test_functions_from_module(mod)):
+        suite.add_test(test)
+
+    for test in get_generated_tests(suite):
         suite.add_test(test)
 
     for sub_suite in load_suites_from_classes(get_suite_classes_from_module(mod)):

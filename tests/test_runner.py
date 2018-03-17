@@ -10,7 +10,7 @@ from lemoncheesecake import runner
 from lemoncheesecake.suite import load_suites_from_classes
 from lemoncheesecake.exceptions import *
 import lemoncheesecake.api as lcc
-from lemoncheesecake.suite import add_test_in_suite
+from lemoncheesecake.suite import add_test_into_suite
 from lemoncheesecake.testtree import flatten_tests
 
 from helpers.runner import run_suite_class, run_suite_classes, build_fixture_registry, run_suite, build_suite_from_module
@@ -134,10 +134,10 @@ def test_generated_test():
     @lcc.suite("MySuite")
     class MySuite:
         def __init__(self):
-            def test_func(suite):
+            def test_func():
                 lcc.log_info("somelog")
             test = lcc.Test("mytest", "My Test", test_func)
-            add_test_in_suite(test, self)
+            add_test_into_suite(test, self)
 
     assert_test_passed(run_suite_class(MySuite))
 

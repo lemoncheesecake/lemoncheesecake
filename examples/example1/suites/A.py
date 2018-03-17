@@ -10,13 +10,11 @@ class A:
     description = "A Suite"
     
     def __init__(self):
-        tests = []
         for i in range(4):
-            def dummy(suite):
+            def dummy():
                 lcc.log_info("do test dyn %d" % i)
-            tests.append(lcc.Test("test_%d" % i, "This is my dynamic test %d" % i, dummy))
-        lcc.add_tests_in_suite(tests, self, after_test="this_is_a_test")
-    
+            lcc.add_test_into_suite(lcc.Test("test_%d" % i, "This is my dynamic test %d" % i, dummy), self)
+
     @lcc.tags("my_tag1")
     @lcc.test("My test description")
     def this_is_a_test(self, fixt1, fixt9):

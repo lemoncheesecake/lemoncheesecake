@@ -9,7 +9,7 @@ Created on Sep 30, 2016
 import pytest
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.suite import load_suite_from_class, add_test_in_suite, add_tests_in_suite
+from lemoncheesecake.suite import load_suite_from_class, add_test_into_suite
 from lemoncheesecake.exceptions import ProgrammingError, InvalidMetadataError
 
 from helpers.runner import dummy_test_callback
@@ -193,8 +193,8 @@ def test_duplicated_test_name():
     @lcc.suite("My Suite")
     class MySuite:
         def __init__(self):
-            add_test_in_suite(lcc.Test("mytest", "First test", dummy_test_callback()), self)
-            add_test_in_suite(lcc.Test("mytest", "Second test", dummy_test_callback()), self)
+            add_test_into_suite(lcc.Test("mytest", "First test", dummy_test_callback()), self)
+            add_test_into_suite(lcc.Test("mytest", "Second test", dummy_test_callback()), self)
 
     with pytest.raises(ProgrammingError):
         load_suite_from_class(MySuite)
@@ -266,7 +266,7 @@ def test_register_test():
     @lcc.suite("My Suite")
     class MySuite:
         def __init__(self):
-            add_test_in_suite(lcc.Test("mytest", "My Test", dummy_test_callback()), self)
+            add_test_into_suite(lcc.Test("mytest", "My Test", dummy_test_callback()), self)
 
     suite = load_suite_from_class(MySuite)
     assert len(suite.get_tests()) == 1
@@ -277,7 +277,7 @@ def test_register_test_multiple():
     class MySuite:
         def __init__(self):
             for i in 1, 2, 3:
-                add_test_in_suite(lcc.Test("mytest_%d" % i, "My Test %d" % i, dummy_test_callback()), self)
+                add_test_into_suite(lcc.Test("mytest_%d" % i, "My Test %d" % i, dummy_test_callback()), self)
 
     suite = load_suite_from_class(MySuite)
     assert len(suite.get_tests()) == 3
@@ -289,59 +289,11 @@ def test_register_disabled():
         def __init__(self):
             test = lcc.Test("mytest", "My Test", dummy_test_callback())
             test.disabled = True
-            add_test_in_suite(test, self)
+            add_test_into_suite(test, self)
 
     suite = load_suite_from_class(MySuite)
     test = suite.get_tests()[0]
     assert test.is_disabled()
-
-
-def test_register_test_with_before_and_after():
-    @lcc.suite("My Suite")
-    class MySuite:
-        def __init__(self):
-            add_test_in_suite(lcc.Test("foo1", "Foo 1", dummy_test_callback()), self, before_test="bar1")
-            add_test_in_suite(lcc.Test("foo2", "Foo 2", dummy_test_callback()), self, before_test="bar1")
-            add_test_in_suite(lcc.Test("baz1", "Baz 1", dummy_test_callback()), self, after_test="bar2")
-            add_test_in_suite(lcc.Test("baz2", "Baz 2", dummy_test_callback()), self, after_test="baz1")
-
-        @lcc.test("Bar 1")
-        def bar1(self):
-            pass
-
-        @lcc.test("Bar 2")
-        def bar2(self):
-            pass
-
-    suite = load_suite_from_class(MySuite)
-
-    assert [t.name for t in suite.get_tests()] == ["foo1", "foo2", "bar1", "bar2", "baz1", "baz2"]
-
-
-def test_register_tests_with_before_and_after():
-    @lcc.suite("My Suite")
-    class MySuite:
-        def __init__(self):
-            add_tests_in_suite(
-                [lcc.Test("foo1", "Foo 1", dummy_test_callback()), lcc.Test("foo2", "Foo 2", dummy_test_callback())],
-                self, before_test="bar1"
-            )
-            add_tests_in_suite(
-                [lcc.Test("baz1", "Baz 1", dummy_test_callback()), lcc.Test("baz2", "Baz 2", dummy_test_callback())],
-                self, after_test="bar2"
-            )
-
-        @lcc.test("Bar 1")
-        def bar1(self):
-            pass
-
-        @lcc.test("Bar 2")
-        def bar2(self):
-            pass
-
-    suite = load_suite_from_class(MySuite)
-
-    assert [t.name for t in suite.get_tests()] == ["foo1", "foo2", "bar1", "bar2", "baz1", "baz2"]
 
 
 def test_get_fixtures():
