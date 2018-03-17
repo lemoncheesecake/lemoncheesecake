@@ -54,13 +54,11 @@ def load_test_from_function(func):
 
 
 def load_tests(objs):
-    tests = []
     for obj in objs:
         try:
-            tests.append(load_test(obj))
+            yield load_test(obj)
         except VisibilityConditionNotMet:
             pass
-    return tests
 
 
 def load_tests_from_methods(methods):
