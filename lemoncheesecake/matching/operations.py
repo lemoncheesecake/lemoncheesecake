@@ -7,6 +7,7 @@ Created on Mar 27, 2017
 from lemoncheesecake.utils import is_string
 from lemoncheesecake.runtime import log_check
 from lemoncheesecake.exceptions import AbortTest, ProgrammingError
+from lemoncheesecake.matching.base import Matcher
 from lemoncheesecake.matching.matchers.dict_ import HasEntry, wrap_key_matcher
 from lemoncheesecake.matching.matchers.composites import is_
 
@@ -60,10 +61,14 @@ class ThisDict:
 
 def this_dict(actual):
     """
-    Set actual to be used as implict dict in *_that_entry functions when used
+    Set actual to be used as implicit dict in *_that_entry functions when used
     within a 'with' statement.
     """
     return ThisDict(actual)
+
+
+def _is_matcher(obj):
+    return isinstance(obj, Matcher)
 
 
 def _get_actual_for_dict_operation(in_):
@@ -121,6 +126,8 @@ def check_that(hint, actual, matcher, quiet=False):
 
     If quiet is set to True, the check details won't appear in the check log.
     """
+    assert _is_matcher(matcher)
+
     result = matcher.matches(actual)
     log_match_result(hint, matcher, result, quiet=quiet)
     return result.outcome
@@ -130,6 +137,8 @@ def check_that_entry(key_matcher, value_matcher=None, in_=None, base_key=None, q
     """
     Helper function for check_that, takes the actual dict using in_ parameter or using 'with this_dict(...)' statement
     """
+    assert value_matcher is None or _is_matcher(value_matcher)
+
     return check_that(
         None,
         _get_actual_for_dict_operation(in_),
@@ -171,6 +180,8 @@ def require_that(hint, actual, matcher, quiet=False):
 
     If quiet is set to True, the check details won't appear in the check log.
     """
+    assert _is_matcher(matcher)
+
     result = matcher.matches(actual)
     log_match_result(hint, matcher, result, quiet=quiet)
     if result.is_failure():
@@ -181,6 +192,8 @@ def require_that_entry(key_matcher, value_matcher=None, in_=None, base_key=None,
     """
     Helper function for require_that, takes the actual dict using in_ parameter or using 'with this_dict(...)' statement
     """
+    assert value_matcher is None or _is_matcher(value_matcher)
+
     return require_that(
         None,
         _get_actual_for_dict_operation(in_),
@@ -196,6 +209,8 @@ def assert_that(hint, actual, matcher, quiet=False):
 
     If quiet is set to True, the check details won't appear in the check log.
     """
+    assert _is_matcher(matcher)
+
     result = matcher.matches(actual)
     if result.is_failure():
         log_match_result(hint, matcher, result, quiet=quiet)
@@ -206,6 +221,8 @@ def assert_that_entry(key_matcher, value_matcher=None, in_=None, base_key=None, 
     """
     Helper function for assert_that, takes the actual dict using in_ parameter or using 'with this_dict(...)' statement
     """
+    assert value_matcher is None or _is_matcher(value_matcher)
+
     return assert_that(
         None,
         _get_actual_for_dict_operation(in_),
