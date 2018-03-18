@@ -157,13 +157,13 @@ class Project:
         if isinstance(self._config, HasPostRunHook):
             self._config.post_run(report_dir)
 
-    def on_tests_beginning(self, report):
+    def on_test_session_start(self, event):
         title = self._config.get_report_title()
         if title is not None:
-            report.title = self._config.get_report_title()
+            event.report.title = self._config.get_report_title()
 
         for key, value in self._config.get_report_info():
-            report.add_info(key, value)
+            event.report.add_info(key, value)
 
 
 def _find_file_in_parent_directories(filename, dirname):

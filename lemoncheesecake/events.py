@@ -1,35 +1,29 @@
 import time
+import re
+import inspect
 
-from lemoncheesecake.utils import get_callable_args
-from lemoncheesecake.exceptions import NoSuchEventType, MismatchingEventArguments
-from lemoncheesecake.suite import Suite, Test
-from lemoncheesecake.reporting.report import Report
+from lemoncheesecake.utils import camel_case_to_snake_case
+
+
+def _get_event_name_from_class_name(class_name):
+    return re.sub("_event$", "", camel_case_to_snake_case(class_name))
+
+
+class Event(object):
+    def __init__(self):
+        self.time = time.time()
+
+    @classmethod
+    def get_name(cls):
+        return _get_event_name_from_class_name(cls.__name__)
 
 
 class EventType:
-    def __init__(self, event_type_name, event_arg_types):
-        self._event_type_name = event_type_name
-        self._event_arg_types = event_arg_types
+    def __init__(self, event_class):
+        self._event_class = event_class
         self._handlers = []
 
-    def _has_extra_time_arg(self, args):
-        return (len(args) == len(self._event_arg_types) + 1) and args[-1].endswith("time")
-
     def subscribe(self, handler):
-        handler_args = get_callable_args(handler)
-
-        handler_args_number = len(handler_args) - (1 if self._has_extra_time_arg(handler_args) else 0)
-        if handler_args_number != len(self._event_arg_types):
-            raise MismatchingEventArguments(
-                "For event type '%s', expecting %d arguments, got %d in handler %s (not counting possible extra event_time argument)" % (
-                    self._event_type_name, len(self._event_arg_types), handler_args_number, handler
-            ))
-
-        if self._has_extra_time_arg(handler_args):
-            assert len(handler_args) == len(self._event_arg_types) + 1
-        else:
-            assert len(handler_args) == len(self._event_arg_types)
-
         self._handlers.append(handler)
 
     def unsubscribe(self, handler):
@@ -38,118 +32,104 @@ class EventType:
     def reset(self):
         self._handlers = []
 
-    def _handle_event(self, handler, args, event_time):
-        handler_expected_args = get_callable_args(handler)
-        handler_args = list(args)
-        if self._has_extra_time_arg(handler_expected_args):
-            handler_args.append(event_time)
-        handler(*handler_args)
-
-    def fire(self, *args, **kwargs):
-        event_time = kwargs.get("event_time") or time.time()
-
-        # check that fire is called with the proper number of arguments
-        if len(args) != len(self._event_arg_types):
-            raise MismatchingEventArguments("For event type '%s', expecting %d arguments, got %d" % (
-                self._event_type_name, len(self._event_arg_types), len(args)
-            ))
-
-        # check that fire is called with the appropriate argument types
-        i = 0
-        for handler_arg, event_arg in zip(args, self._event_arg_types):
-            if (handler_arg is not None) and (not isinstance(handler_arg, event_arg)):
-                raise MismatchingEventArguments("For event type '%s', expecting type '%s' for argument #%d, got '%s'" % (
-                    self._event_type_name, event_arg, i+1, type(handler_arg)
-                ))
-            i += 1
-
-        # call handlers
+    def fire(self, event):
         for handler in self._handlers:
-            self._handle_event(handler, args, event_time)
+            handler(event)
+
+
+def _get_event_name(val):
+    return val.get_name() if inspect.isclass(val) and issubclass(val, Event) else val
 
 
 class EventManager:
     def __init__(self):
         self._event_types = {}
 
-    def register_event_type(self, event_type_name, event_args):
-        self._event_types[event_type_name] = EventType(event_type_name, event_args)
-    
-    def register_event_types(self, event_args, *event_type_names):
-        for event_type_name in event_type_names:
-            self.register_event_type(event_type_name, event_args)
+    def register_events(self, *event_classes):
+        for event_class in event_classes:
+            self._event_types[event_class.get_name()] = EventType(event_class)
 
-    def reset(self, event_type_name=None):
-        if event_type_name is None:
-            for et in self._event_types.values():
-                et.reset()
+    def reset(self, event_name=None):
+        if event_name is None:
+            for event_type in self._event_types.values():
+                event_type.reset()
         else:
-            self._call_event_type(event_type_name, lambda et: et.reset())
+            self._event_types[event_name].reset()
 
-    def _call_event_type(self, event_type_name, callback):
-        try:
-            event_type = self._event_types[event_type_name]
-        except KeyError:
-            raise NoSuchEventType(event_type_name)
-        callback(event_type)
+    def subscribe_to_event(self, event, handler):
+        self._event_types[_get_event_name(event)].subscribe(handler)
 
-    def subscribe_to_event_type(self, event_type_name, handler):
-        self._call_event_type(event_type_name, lambda et: et.subscribe(handler))
-
-    def subscribe_to_event_types(self, event_types):
-        for event_type_name, handler in event_types.items():
-            self.subscribe_to_event_type(event_type_name, handler)
-
-    def unsubscribe_from_event_type(self, event_type_name, handler):
-        self._call_event_type(event_type_name, lambda et: et.unsubscribe(handler))
-
-    def fire(self, event_type_name, *args, **kwargs):
-        self._call_event_type(event_type_name, lambda et: et.fire(*args, **kwargs))
+    def subscribe_to_events(self, event_handler_pairs):
+        for event, handler in event_handler_pairs.items():
+            self.subscribe_to_event(event, handler)
 
     def add_listener(self, listener):
-        for event_type_name in self._event_types.keys():
-            try:
-                sym = getattr(listener, event_type_name)
-            except AttributeError:
-                continue
-            if not callable(sym):
-                continue
-            self.subscribe_to_event_type(event_type_name, sym)
+        for event_name in self._event_types:
+            handler_name = "on_%s" % event_name
+            handler = getattr(listener, handler_name, None)
+            if handler and callable(handler):
+                self.subscribe_to_event(event_name, handler)
+
+    def unsubscribe_from_event(self, event, handler):
+        self._event_types[_get_event_name(event)].unsubscribe(handler)
+
+    def fire(self, event):
+        self._event_types[event.__class__.get_name()].fire(event)
 
 
 eventmgr = EventManager()
-register_event_type = eventmgr.register_event_type
-register_event_types = eventmgr.register_event_types
-subscribe_to_event_type = eventmgr.subscribe_to_event_type
-subscribe_to_event_types = eventmgr.subscribe_to_event_types
-unsubscribe_from_event_type = eventmgr.unsubscribe_from_event_type
+register_event = eventmgr.register_events
+register_events = eventmgr.register_events
+subscribe_to_event = eventmgr.subscribe_to_event
+subscribe_to_events = eventmgr.subscribe_to_events
+unsubscribe_from_event = eventmgr.unsubscribe_from_event
 add_listener = eventmgr.add_listener
 reset = eventmgr.reset
 fire = eventmgr.fire
 
 
 ###
-# Global events
+# Events related to the test session
 ###
 
-register_event_types(
-    [Report],
+class _ReportEvent(Event):
+    def __init__(self, report):
+        super(_ReportEvent, self).__init__()
+        self.report = report
 
-    "on_tests_beginning", "on_tests_ending",
-)
 
-register_event_types(
-    [],
+class TestSessionStartEvent(_ReportEvent):
+    pass
 
-    # test session setup & teardown beginning events
-    "on_test_session_setup_beginning", "on_test_session_teardown_beginning"
-)
 
-register_event_types(
-    [bool],
+class TestSessionEndEvent(_ReportEvent):
+    pass
 
-    # test session setup & teardown ending events
-    "on_test_session_setup_ending", "on_test_session_teardown_ending",
+
+class TestSessionSetupStartEvent(Event):
+    pass
+
+
+class TestSessionSetupEndEvent(Event):
+    def __init__(self, outcome):
+        super(TestSessionSetupEndEvent, self).__init__()
+        self.setup_outcome = outcome
+
+
+class TestSessionTeardownStartEvent(Event):
+    pass
+
+
+class TestSessionTeardownEndEvent(Event):
+    def __init__(self, outcome):
+        super(TestSessionTeardownEndEvent, self).__init__()
+        self.teardown_outcome = outcome
+
+
+register_events(
+    TestSessionStartEvent, TestSessionEndEvent,
+    TestSessionSetupStartEvent, TestSessionSetupEndEvent,
+    TestSessionTeardownStartEvent, TestSessionTeardownEndEvent
 )
 
 
@@ -157,18 +137,44 @@ register_event_types(
 # Suite events
 ###
 
-register_event_types(
-    [Suite],
+class _SuiteEvent(Event):
+    def __init__(self, suite):
+        super(_SuiteEvent, self).__init__()
+        self.suite = suite
 
-    "on_suite_beginning", "on_suite_ending",
-    "on_suite_setup_beginning",
-    "on_suite_teardown_beginning"
-)
 
-register_event_types(
-    [Suite, bool],
+class SuiteStartEvent(_SuiteEvent):
+    pass
 
-    "on_suite_setup_ending", "on_suite_teardown_ending"
+
+class SuiteEndEvent(_SuiteEvent):
+    pass
+
+
+class SuiteSetupStartEvent(_SuiteEvent):
+    pass
+
+
+class SuiteSetupEndEvent(_SuiteEvent):
+    def __init__(self, suite, outcome):
+        super(SuiteSetupEndEvent, self).__init__(suite)
+        self.setup_outcome = outcome
+
+
+class SuiteTeardownStartEvent(_SuiteEvent):
+    pass
+
+
+class SuiteTeardownEndEvent(_SuiteEvent):
+    def __init__(self, suite, outcome):
+        super(SuiteTeardownEndEvent, self).__init__(suite)
+        self.teardown_outcome = outcome
+
+
+register_events(
+    SuiteStartEvent, SuiteEndEvent,
+    SuiteSetupStartEvent, SuiteSetupEndEvent,
+    SuiteTeardownStartEvent, SuiteTeardownEndEvent
 )
 
 
@@ -176,35 +182,101 @@ register_event_types(
 # Test events
 ###
 
-register_event_types(
-    [Test],
+class _TestEvent(Event):
+    def __init__(self, test):
+        super(_TestEvent, self).__init__()
+        self.test = test
 
-    "on_test_beginning", "on_disabled_test",
-    "on_test_setup_beginning", "on_test_teardown_beginning",
+
+class TestStartEvent(_TestEvent):
+    pass
+
+
+class TestEndEvent(_TestEvent):
+    def __init__(self, test, status):
+        super(TestEndEvent, self).__init__(test)
+        self.test_status = status
+
+
+class TestSkippedEvent(_TestEvent):
+    def __init__(self, test, reason):
+        super(TestSkippedEvent, self).__init__(test)
+        self.skipped_reason = reason
+
+
+class TestDisabledEvent(_TestEvent):
+    def __init__(self, test, reason):
+        super(TestDisabledEvent, self).__init__(test)
+        self.disabled_reason = reason
+
+
+class TestSetupStartEvent(_TestEvent):
+    pass
+
+
+class TestSetupEndEvent(_TestEvent):
+    def __init__(self, test, outcome):
+        super(TestSetupEndEvent, self).__init__(test)
+        self.setup_outcome = outcome
+
+
+class TestTeardownStartEvent(_TestEvent):
+    pass
+
+
+class TestTeardownEndEvent(_TestEvent):
+    def __init__(self, test, outcome):
+        super(TestTeardownEndEvent, self).__init__(test)
+        self.teardown_outcome = outcome
+
+
+register_events(
+    TestStartEvent, TestEndEvent, TestSkippedEvent, TestDisabledEvent,
+    TestSetupStartEvent, TestSetupEndEvent,
+    TestTeardownStartEvent, TestTeardownEndEvent
 )
-
-register_event_types(
-    [Test, bool],
-
-    "on_test_setup_ending", "on_test_teardown_ending"
-)
-
-register_event_type("on_skipped_test", [Test, str])
-register_event_type("on_test_ending", [Test, str])
 
 
 ###
 # Transverse test execution events
 ###
 
-try:
-    basestring
-except NameError:
-    # when using Python 3, just map basestring to str
-    basestring = str
+class StepEvent(Event):
+    def __init__(self, description):
+        super(StepEvent, self).__init__()
+        self.step_description = description
 
-register_event_type("on_step", [basestring])
-register_event_type("on_log", [str, basestring])
-register_event_type("on_check", [basestring, bool, basestring])
-register_event_type("on_log_attachment", [basestring, basestring, basestring])
-register_event_type("on_log_url", [basestring, basestring])
+
+class LogEvent(Event):
+    def __init__(self, level, message):
+        super(LogEvent, self).__init__()
+        self.log_level = level
+        self.log_message = message
+
+
+class CheckEvent(Event):
+    def __init__(self, description, outcome, details=None):
+        super(CheckEvent, self).__init__()
+        self.check_description = description
+        self.check_outcome = outcome
+        self.check_details = details
+
+
+class LogAttachmentEvent(Event):
+    def __init__(self, path, filename, description):
+        super(LogAttachmentEvent, self).__init__()
+        self.attachment_path = path
+        self.attachment_filename = filename
+        self.attachment_description = description
+
+
+class LogUrlEvent(Event):
+    def __init__(self, url, description):
+        super(LogUrlEvent, self).__init__()
+        self.url = url
+        self.url_description = description
+
+
+register_events(
+    StepEvent, LogEvent, CheckEvent, LogAttachmentEvent, LogUrlEvent
+)

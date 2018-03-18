@@ -182,7 +182,7 @@ def _unserialize_suite_data(js):
     suite = SuiteData(js["name"], js["description"])
     suite.tags = js["tags"]
     suite.properties = js["properties"]
-    suite.links = [ (link["url"], link["name"]) for link in js["links"] ]
+    suite.links = [(link["url"], link["name"]) for link in js["links"]]
 
     if "suite_setup" in js:
         suite.suite_setup = _unserialize_hook_data(js["suite_setup"])

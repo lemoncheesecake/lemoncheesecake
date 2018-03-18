@@ -32,62 +32,7 @@ SAVE_AT_EACH_EVENT = 5
 
 
 class ReportingSession:
-    def on_tests_beginning(self, report):
-        pass
-
-    def on_tests_ending(self, report):
-        pass
-
-    def on_test_session_setup_beginning(self):
-        pass
-
-    def on_test_session_setup_ending(self, outcome):
-        pass
-
-    def on_test_session_teardown_beginning(self):
-        pass
-
-    def on_test_session_teardown_ending(self, outcome):
-        pass
-
-    def on_suite_beginning(self, suite):
-        pass
-
-    def on_suite_setup_beginning(self, suite):
-        pass
-
-    def on_suite_setup_ending(self, suite, outcome):
-        pass
-
-    def on_suite_teardown_beginning(self, suite):
-        pass
-
-    def on_suite_teardown_ending(self, suite, outcome):
-        pass
-
-    def on_suite_ending(self, suite):
-        pass
-
-    def on_test_beginning(self, test):
-        pass
-
-    def on_test_ending(self, test, status):
-        pass
-
-    def on_skipped_test(self, test, reason):
-        pass
-
-    def on_disabled_test(self, test):
-        pass
-
-    def on_step(self, description):
-        pass
-
-    def on_log(self, level, content):
-        pass
-
-    def on_check(self, description, outcome, details=None):
-        pass
+    pass
 
 
 class ReportingBackend:
@@ -135,38 +80,38 @@ class FileReportSession(ReportingSession):
             self.save()
             return
 
-    def on_test_session_setup_ending(self, outcome):
+    def on_test_session_setup_end(self, event):
         self._handle_code_end(
             self.report.test_session_setup.has_failure() if self.report.test_session_setup else False
         )
 
-    def on_test_session_teardown_ending(self, outcome):
+    def on_test_session_teardown_end(self, event):
         self._handle_code_end(
             self.report.test_session_teardown.has_failure() if self.report.test_session_teardown else False
         )
 
-    def on_suite_setup_ending(self, suite, outcome):
-        self._handle_code_end(outcome is False)
+    def on_suite_setup_end(self, event):
+        self._handle_code_end(event.setup_outcome is False)
 
-    def on_suite_teardown_ending(self, suite, outcome):
-        self._handle_code_end(outcome is False)
+    def on_suite_teardown_end(self, event):
+        self._handle_code_end(event.teardown_outcome is False)
 
-    def on_test_ending(self, test, status):
-        self._handle_code_end(test)
+    def on_test_end(self, event):
+        self._handle_code_end(event.test)
 
-    def on_suite_ending(self, suite):
+    def on_suite_end(self, event):
         if self.save_mode == SAVE_AT_EACH_SUITE:
             self.save()
 
-    def on_log(self, level, content):
+    def on_log(self, event):
         if self.save_mode == SAVE_AT_EACH_EVENT:
             self.save()
 
-    def on_check(self, description, outcome, details=None):
+    def on_check(self, event):
         if self.save_mode == SAVE_AT_EACH_EVENT:
             self.save()
 
-    def on_tests_ending(self, report):
+    def on_test_session_end(self, event):
         self.save()
 
 

@@ -143,39 +143,39 @@ class _Runner:
             log_error("Caught unexpected exception while running test: " + stacktrace)
 
     def _begin_test(self, test):
-        events.fire("on_test_beginning", test)
+        events.fire(events.TestStartEvent(test))
 
     def _end_test(self, test, outcome):
-        events.fire("on_test_ending", test, "passed" if outcome else "failed")
+        events.fire(events.TestEndEvent(test, "passed" if outcome else "failed"))
 
     def _begin_test_setup(self, test):
-        events.fire("on_test_setup_beginning", test)
+        events.fire(events.TestSetupStartEvent(test))
         set_step("Setup test")
 
     def _end_test_setup(self, test, outcome):
-        events.fire("on_test_setup_ending", test, outcome)
+        events.fire(events.TestSetupEndEvent(test, outcome))
 
     def _begin_test_teardown(self, test):
-        events.fire("on_test_teardown_beginning", test)
+        events.fire(events.TestTeardownStartEvent(test))
         set_step("Teardown test")
 
     def _end_test_teardown(self, test, outcome):
-        events.fire("on_test_teardown_ending", test, outcome)
+        events.fire(events.TestTeardownEndEvent(test, outcome))
 
     def run_test(self, test, suite):
         ###
         # Checker whether the test must be executed or not
         ###
         if test.is_disabled():
-            events.fire("on_disabled_test", test)
+            events.fire(events.TestDisabledEvent(test, ""))
             return
 
         if self.abort_suite:
-            events.fire("on_skipped_test", test, "Cannot execute this test: the tests of this test suite have been aborted.")
+            events.fire(events.TestSkippedEvent(test, "Cannot execute this test: the tests of this test suite have been aborted."))
             return
 
         if self.abort_all_tests:
-            events.fire("on_skipped_test", test, "Cannot execute this test: all tests have been aborted.")
+            events.fire(events.TestSkippedEvent(test, "Cannot execute this test: all tests have been aborted."))
             return
 
         ###
@@ -238,24 +238,24 @@ class _Runner:
         self._end_test(test, not self.session.has_pending_failure)
 
     def _begin_suite(self, suite):
-        events.fire("on_suite_beginning", suite)
+        events.fire(events.SuiteStartEvent(suite))
 
     def _end_suite(self, suite):
-        events.fire("on_suite_ending", suite)
+        events.fire(events.SuiteEndEvent(suite))
 
     def _begin_suite_setup(self, suite):
-        events.fire("on_suite_setup_beginning", suite)
+        events.fire(events.SuiteSetupStartEvent(suite))
         set_step("Setup suite")
 
     def _end_suite_setup(self, suite, outcome):
-        events.fire("on_suite_setup_ending", suite, outcome)
+        events.fire(events.SuiteSetupEndEvent(suite, outcome))
 
     def _begin_suite_teardown(self, suite):
-        events.fire("on_suite_teardown_beginning", suite)
+        events.fire(events.SuiteTeardownStartEvent(suite))
         set_step("Teardown suite")
 
     def _end_suite_teardown(self, suite, outcome):
-        events.fire("on_suite_teardown_ending", suite, outcome)
+        events.fire(events.SuiteTeardownEndEvent(suite, outcome))
 
     def run_suite(self, suite):
         ###
@@ -327,24 +327,24 @@ class _Runner:
         self._end_suite(suite)
 
     def _begin_test_session(self, report):
-        events.fire("on_tests_beginning", report)
+        events.fire(events.TestSessionStartEvent(report))
 
     def _end_test_session(self, report):
-        events.fire("on_tests_ending", report)
+        events.fire(events.TestSessionEndEvent(report))
 
     def _begin_test_session_setup(self):
-        events.fire("on_test_session_setup_beginning")
+        events.fire(events.TestSessionSetupStartEvent())
         set_step("Setup test session")
 
     def _end_test_session_setup(self, outcome):
-        events.fire("on_test_session_setup_ending", outcome)
+        events.fire(events.TestSessionSetupEndEvent(outcome))
 
     def _begin_test_session_teardown(self):
-        events.fire("on_test_session_teardown_beginning")
+        events.fire(events.TestSessionTeardownStartEvent())
         set_step("Teardown test session")
 
     def _end_test_session_teardown(self, outcome):
-        events.fire("on_test_session_teardown_ending", outcome)
+        events.fire(events.TestSessionTeardownEndEvent(outcome))
 
     def run_session(self):
         # initialize runtime & global test variables

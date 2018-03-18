@@ -116,12 +116,12 @@ class EndOfTestsNotifier(BaseSlackReportingSession):
             "disabled_pct": percent(stats.test_statuses["disabled"], of=stats.tests)
         }
 
-    def on_tests_ending(self, report):
-        stats = report.get_stats()
+    def on_test_session_end(self, event):
+        stats = event.report.get_stats()
         if self.only_notify_failure and stats.is_successful():
             return
 
-        message = self.message_template.format(**build_message_parameters(report, stats))
+        message = self.message_template.format(**build_message_parameters(event.report, stats))
         self.send_message(message)
 
         self.show_errors()

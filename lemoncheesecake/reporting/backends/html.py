@@ -23,7 +23,7 @@ class HtmlBackend(ReportingBackend):
                 self.report_dir = report_dir
                 self.offline_mode = offline_mode
 
-            def on_tests_beginning(self, report):
+            def on_test_session_start(self, event):
                 html_resource_dir = p.join(p.dirname(__file__), p.pardir, p.pardir, "resources", "html")
                 report_resource_dir = p.join(self.report_dir, ".html")
 

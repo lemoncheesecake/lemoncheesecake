@@ -74,123 +74,125 @@ class ReportPortalReportingSession(ReportingSession):
             self._end_current_test_item(end_time, status=status)
         self._end_current_test_item(end_time, status=status)
 
-    def on_tests_beginning(self, report, start_time):
+    def on_test_session_start(self, event):
         if self._has_rp_error():
             return
 
         self.service.start_launch(
-            name=self.launch_name, description=self.launch_description, start_time=make_time(start_time)
+            name=self.launch_name, description=self.launch_description, start_time=make_time(event.time)
         )
 
-    def on_tests_ending(self, report, end_time):
+    def on_test_session_end(self, event):
         if self._has_rp_error():
             self._show_rp_error()
         else:
-            self.service.finish_launch(end_time=make_time(end_time))
+            self.service.finish_launch(end_time=make_time(event.time))
             self.service.terminate()
 
             if self._has_rp_error():
                 self._show_rp_error()
 
-    def on_test_session_setup_beginning(self, start_time):
+    def on_test_session_setup_start(self, event):
         if self._has_rp_error():
             return
 
         self._start_test_item(
-            item_type="BEFORE_CLASS", start_time=start_time,
+            item_type="BEFORE_CLASS", start_time=event.time,
             name="session_setup", description="Test Session Setup",
             wrapped=True
         )
 
-    def on_test_session_setup_ending(self, outcome, end_time):
+    def on_test_session_setup_end(self, event):
         if self._has_rp_error():
             return
 
-        self._end_test_item(end_time, outcome, wrapped=True)
+        self._end_test_item(event.time, event.setup_outcome, wrapped=True)
 
-    def on_test_session_teardown_beginning(self, start_time):
+    def on_test_session_teardown_start(self, event):
         if self._has_rp_error():
             return
 
         self._start_test_item(
-            item_type="AFTER_CLASS", start_time=start_time,
+            item_type="AFTER_CLASS", start_time=event.time,
             name="session_teardown", description="Test Session Teardown",
             wrapped=True
         )
 
-    def on_test_session_teardown_ending(self, outcome, end_time):
+    def on_test_session_teardown_end(self, event):
         if self._has_rp_error():
             return
 
-        self._end_test_item(end_time, outcome, wrapped=True)
+        self._end_test_item(event.time, event.teardown_outcome, wrapped=True)
 
-    def on_suite_beginning(self, suite, start_time):
+    def on_suite_start(self, event):
         if self._has_rp_error():
             return
 
+        suite = event.suite
         self.service.start_test_item(
-            item_type="SUITE", start_time=make_time(start_time),
+            item_type="SUITE", start_time=make_time(event.time),
             name=suite.name, description=suite.description,
             tags=suite.tags +
                 convert_properties_into_tags(suite.properties) +
                 convert_links_into_tags(suite.links),
         )
 
-    def on_suite_ending(self, suite, end_time):
+    def on_suite_end(self, event):
         if self._has_rp_error():
             return
 
-        self._end_current_test_item(end_time, status="passed")
+        self._end_current_test_item(event.time, status="passed")
 
-    def on_suite_setup_beginning(self, suite, start_time):
+    def on_suite_setup_start(self, event):
         if self._has_rp_error():
             return
 
         self._start_test_item(
-            item_type="BEFORE_CLASS", start_time=start_time,
+            item_type="BEFORE_CLASS", start_time=event.time,
             name="suite_setup", description="Suite Setup",
-            wrapped=len(suite.get_suites()) > 0
+            wrapped=len(event.suite.get_suites()) > 0
         )
 
-    def on_suite_setup_ending(self, suite, outcome, end_time):
+    def on_suite_setup_end(self, event):
         if self._has_rp_error():
             return
 
-        self._end_test_item(end_time, outcome=outcome, wrapped=len(suite.get_suites()) > 0)
+        self._end_test_item(event.time, outcome=event.time, wrapped=len(event.suite.get_suites()) > 0)
 
-    def on_suite_teardown_beginning(self, suite, start_time):
+    def on_suite_teardown_start(self, event):
         if self._has_rp_error():
             return
 
         self._start_test_item(
-            item_type="AFTER_CLASS", start_time=start_time,
+            item_type="AFTER_CLASS", start_time=event.time,
             name="suite_teardown", description="Suite Teardown",
-            wrapped=len(suite.get_suites()) > 0
+            wrapped=len(event.suite.get_suites()) > 0
         )
 
-    def on_suite_teardown_ending(self, suite, outcome, end_time):
+    def on_suite_teardown_end(self, event):
         if self._has_rp_error():
             return
 
-        self._end_test_item(end_time, outcome=outcome, wrapped=len(suite.get_suites()) > 0)
+        self._end_test_item(event.time, outcome=event.teardown_outcome, wrapped=len(event.suite.get_suites()) > 0)
 
-    def on_test_beginning(self, test, start_time):
+    def on_test_start(self, event):
         if self._has_rp_error():
             return
 
+        test = event.test
         self.service.start_test_item(
-            item_type="TEST", start_time=make_time(start_time),
+            item_type="TEST", start_time=make_time(event.time),
             name=test.name, description=test.description,
             tags=test.tags +
                  convert_properties_into_tags(test.properties) +
                  convert_links_into_tags(test.links)
         )
 
-    def on_test_ending(self, test, status, end_time):
+    def on_test_end(self, event):
         if self._has_rp_error():
             return
 
-        self._end_current_test_item(end_time, status)
+        self._end_current_test_item(event.time, event.test_status)
 
     def _bypass_test(self, test, status, time):
         if self._has_rp_error():
@@ -202,58 +204,58 @@ class ReportPortalReportingSession(ReportingSession):
         )
         self._end_current_test_item(time, status=status)
 
-    def on_skipped_test(self, test, reason, time):
+    def on_test_skipped(self, event):
         if self._has_rp_error():
             return
 
-        self._bypass_test(test, "skipped", time)
+        self._bypass_test(event.test, "skipped", event.time)
 
-    def on_disabled_test(self, test, time):
+    def on_disabled_test(self, event):
         # do not log disabled test, moreover it seems that the is not corresponding status in ReportPortal
         pass
 
-    def on_step(self, description, start_time):
+    def on_step(self, event):
         if self._has_rp_error():
             return
 
-        self.service.log(make_time(start_time), "--- STEP: %s ---" % description, "INFO")
+        self.service.log(make_time(event.time), "--- STEP: %s ---" % event.step_description, "INFO")
 
-    def on_log(self, level, content, log_time):
+    def on_log(self, event):
         if self._has_rp_error():
             return
 
-        self.service.log(make_time(log_time), content, level)
+        self.service.log(make_time(event.time), event.log_message, event.log_level)
 
-    def on_check(self, description, outcome, details, check_time):
+    def on_check(self, event):
         if self._has_rp_error():
             return
 
-        message = "%s => %s" % (description, "OK" if outcome else "NOT OK")
-        if details is not None:
-            message += "\nDetails: %s" % details
-        self.service.log(make_time(check_time), message, "INFO" if outcome else "ERROR")
+        message = "%s => %s" % (event.check_description, "OK" if event.check_outcome else "NOT OK")
+        if event.check_details is not None:
+            message += "\nDetails: %s" % event.check_details
+        self.service.log(make_time(event.time), message, "INFO" if event.check_outcome else "ERROR")
 
-    def on_log_attachment(self, path, filename, description, log_time):
+    def on_log_attachment(self, event):
         if self._has_rp_error():
             return
 
-        abspath = os.path.join(self.report_dir, path)
+        abspath = os.path.join(self.report_dir, event.attachment_path)
         with open(abspath, "rb") as fh:
-            self.service.log(make_time(log_time), description, "INFO", attachment={
-                "name": filename,
+            self.service.log(make_time(event.time), event.attachment_description, "INFO", attachment={
+                "name": event.attachment_filename,
                 "data": fh.read(),
                 "mime": mimetypes.guess_type(abspath)[0] or "application/octet-stream"
             })
 
-    def on_log_url(self, url, description, log_time):
+    def on_log_url(self, event):
         if self._has_rp_error():
             return
 
-        if description and description != url:
-            message = "%s: %s" % (description, url)
+        if event.url_description and event.url_description != event.url:
+            message = "%s: %s" % (event.url_description, event.url)
         else:
-            message = url
-        self.service.log(make_time(log_time), message, "INFO")
+            message = event.url
+        self.service.log(make_time(event.time), message, "INFO")
 
 
 class ReportPortalBackend(ReportingBackend):

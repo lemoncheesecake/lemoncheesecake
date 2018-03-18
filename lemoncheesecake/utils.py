@@ -6,6 +6,7 @@ Created on Mar 18, 2016
 
 import os
 import sys
+import re
 import inspect
 
 IS_PYTHON3 = sys.version_info > (3,)
@@ -83,3 +84,9 @@ def is_string(s):
         return type(s) in (str, unicode)
     else:
         return type(s) is str
+
+
+# borrowed from https://stackoverflow.com/a/1176023
+def camel_case_to_snake_case(name):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()

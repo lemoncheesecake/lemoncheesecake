@@ -49,36 +49,37 @@ class ReportWriter:
         if self.current_step_data_list and len(self.current_step_data_list[-1].entries) == 0:
             del self.current_step_data_list[-1]
 
-    def on_tests_beginning(self, report, start_time):
-        self.report.start_time = start_time
+    def on_test_session_start(self, event):
+        self.report.start_time = event.time
 
-    def on_tests_ending(self, report, end_time):
-        self.report.end_time = end_time
+    def on_test_session_end(self, event):
+        self.report.end_time = event.time
         self.report.report_generation_time = self.report.end_time
 
-    def on_test_session_setup_beginning(self, time):
-        self.report.test_session_setup = self._start_hook(time)
+    def on_test_session_setup_start(self, event):
+        self.report.test_session_setup = self._start_hook(event.time)
         self.current_step_data_list = self.report.test_session_setup.steps
 
-    def on_test_session_setup_ending(self, outcome, time):
+    def on_test_session_setup_end(self, event):
         if self.report.test_session_setup.is_empty():
             self.report.test_session_setup = None
         else:
-            self._end_hook(self.report.test_session_setup, time)
-            self.end_current_step(time)
+            self._end_hook(self.report.test_session_setup, event.time)
+            self.end_current_step(event.time)
 
-    def on_test_session_teardown_beginning(self, time):
-        self.report.test_session_teardown = self._start_hook(time)
+    def on_test_session_teardown_start(self, event):
+        self.report.test_session_teardown = self._start_hook(event.time)
         self.current_step_data_list = self.report.test_session_teardown.steps
 
-    def on_test_session_teardown_ending(self, outcome, time):
+    def on_test_session_teardown_end(self, event):
         if self.report.test_session_teardown.is_empty():
             self.report.test_session_teardown = None
         else:
-            self._end_hook(self.report.test_session_teardown, time)
-            self.end_current_step(time)
+            self._end_hook(self.report.test_session_teardown, event.time)
+            self.end_current_step(event.time)
 
-    def on_suite_beginning(self, suite):
+    def on_suite_start(self, event):
+        suite = event.suite
         self.current_suite = suite
         suite_data = SuiteData(suite.name, suite.description)
         suite_data.tags.extend(suite.tags)
@@ -90,47 +91,48 @@ class ReportWriter:
             self.report.add_suite(suite_data)
         self.current_suite_data = suite_data
 
-    def on_suite_setup_beginning(self, suite, time):
-        self.current_suite_data.suite_setup = self._start_hook(time)
+    def on_suite_setup_start(self, event):
+        self.current_suite_data.suite_setup = self._start_hook(event.time)
         self.current_step_data_list = self.current_suite_data.suite_setup.steps
 
-    def on_suite_setup_ending(self, suite, outcome, time):
+    def on_suite_setup_end(self, event):
         if self.current_suite_data.suite_setup.is_empty():
             self.current_suite_data.suite_setup = None
         else:
-            self._end_hook(self.current_suite_data.suite_setup, time)
-            self.end_current_step(time)
+            self._end_hook(self.current_suite_data.suite_setup, event.time)
+            self.end_current_step(event.time)
 
-    def on_suite_teardown_beginning(self, suite, time):
-        self.current_suite_data.suite_teardown = self._start_hook(time)
+    def on_suite_teardown_start(self, event):
+        self.current_suite_data.suite_teardown = self._start_hook(event.time)
         self.current_step_data_list = self.current_suite_data.suite_teardown.steps
 
-    def on_suite_teardown_ending(self, suite, outcome, time):
+    def on_suite_teardown_end(self, event):
         if self.current_suite_data.suite_teardown.is_empty():
             self.current_suite_data.suite_teardown = None
         else:
-            self.end_current_step(time)
-            self._end_hook(self.current_suite_data.suite_teardown, time)
+            self.end_current_step(event.time)
+            self._end_hook(self.current_suite_data.suite_teardown, event.time)
 
-    def on_suite_ending(self, suite):
+    def on_suite_end(self, event):
         self.current_suite_data = self.current_suite_data.parent_suite
         self.current_suite = self.current_suite.parent_suite
 
-    def on_test_beginning(self, test, start_time):
+    def on_test_start(self, event):
+        test = event.test
         self.has_pending_failure = False
         self.current_test = test
         self.current_test_data = TestData(test.name, test.description)
         self.current_test_data.tags.extend(test.tags)
         self.current_test_data.properties.update(test.properties)
         self.current_test_data.links.extend(test.links)
-        self.current_test_data.start_time = start_time
+        self.current_test_data.start_time = event.time
         self.current_suite_data.add_test(self.current_test_data)
         self.current_step_data_list = self.current_test_data.steps
 
-    def on_test_ending(self, test, status, end_time):
-        self.current_test_data.status = status
-        self.current_test_data.end_time = end_time
-        self.end_current_step(end_time)
+    def on_test_end(self, event):
+        self.current_test_data.status = event.test_status
+        self.current_test_data.end_time = event.time
+        self.end_current_step(event.time)
 
         self.current_test = None
         self.current_test_data = None
@@ -146,39 +148,41 @@ class ReportWriter:
         test_data.status_details = status_details
         self.current_suite_data.add_test(test_data)
 
-    def on_skipped_test(self, test, reason, time):
+    def on_test_skipped(self, event):
         self._is_success = False
-        self._bypass_test(test, "skipped", reason, time)
+        self._bypass_test(event.test, "skipped", event.skipped_reason, event.time)
 
-    def on_disabled_test(self, test, time):
-        self._bypass_test(test, "disabled", "", time)
+    def on_test_disabled(self, event):
+        self._bypass_test(event.test, "disabled", "", event.time)
 
-    def on_step(self, description, step_time):
-        self.end_current_step(step_time)
+    def on_step(self, event):
+        self.end_current_step(event.time)
 
-        self.current_step_data = StepData(description)
-        self.current_step_data.start_time = step_time
+        self.current_step_data = StepData(event.step_description)
+        self.current_step_data.start_time = event.time
 
         self.current_step_data_list.append(self.current_step_data)
 
-    def on_log(self, level, content, log_time):
-        if level == LOG_LEVEL_ERROR:
+    def on_log(self, event):
+        if event.log_level == LOG_LEVEL_ERROR:
             self._is_success = False
             self.has_pending_failure = True
-        self.current_step_data.entries.append(LogData(level, content, log_time))
+        self.current_step_data.entries.append(LogData(event.log_level, event.log_message, event.time))
 
-    def on_check(self, description, outcome, details):
-        self.current_step_data.entries.append(CheckData(description, outcome, details))
+    def on_check(self, event):
+        self.current_step_data.entries.append(
+            CheckData(event.check_description, event.check_outcome, event.check_details)
+        )
 
-        if outcome is False:
+        if event.check_outcome is False:
             self._is_success = False
             self.has_pending_failure = True
 
-    def on_log_attachment(self, path, filename, description):
-        self.current_step_data.entries.append(AttachmentData(description, path))
+    def on_log_attachment(self, event):
+        self.current_step_data.entries.append(AttachmentData(event.attachment_description, event.attachment_path))
 
-    def on_log_url(self, url, description):
-        self.current_step_data.entries.append(UrlData(description, url))
+    def on_log_url(self, event):
+        self.current_step_data.entries.append(UrlData(event.url_description, event.url))
 
     def is_successful(self):
         return self._is_success

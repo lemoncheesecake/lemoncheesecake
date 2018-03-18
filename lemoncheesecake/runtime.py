@@ -56,21 +56,21 @@ class _Runtime:
 
     def _flush_pending_step(self):
         if self.pending_step:
-            events.fire("on_step", self.pending_step, event_time=self.pending_step_time)
+            events.fire(events.StepEvent(self.pending_step))
             self.pending_step = None
             self.pending_step_time = None
 
     def log(self, level, content):
         self._flush_pending_step()
-        events.fire("on_log", level, content)
+        events.fire(events.LogEvent(level, content))
 
     def log_check(self, description, outcome, details):
         self._flush_pending_step()
-        events.fire("on_check", description, outcome, details)
+        events.fire(events.CheckEvent(description, outcome, details))
 
     def log_url(self, url, description):
         self._flush_pending_step()
-        events.fire("on_log_url", url, description)
+        events.fire(events.LogUrlEvent(url, description))
 
     @contextmanager
     def prepare_attachment(self, filename, description):
@@ -82,7 +82,7 @@ class _Runtime:
         yield os.path.join(self.attachments_dir, attachment_filename)
 
         self._flush_pending_step()
-        events.fire("on_log_attachment", "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description)
+        events.fire(events.LogAttachmentEvent("%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description))
 
     def save_attachment_file(self, filename, description):
         with self.prepare_attachment(os.path.basename(filename), description) as report_attachment_path:

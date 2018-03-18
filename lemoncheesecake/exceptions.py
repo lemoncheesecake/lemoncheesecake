@@ -96,14 +96,6 @@ class CannotFindTreeNode(LemonCheesecakeException):
     pass
 
 
-class NoSuchEventType(LemonCheesecakeException):
-    pass
-
-
-class MismatchingEventArguments(LemonCheesecakeException):
-    pass
-
-
 def serialize_current_exception(show_stacktrace=True):
     if show_stacktrace:
         return "\n" + "<" * 72 + "\n" + traceback.format_exc() + ">" * 72
