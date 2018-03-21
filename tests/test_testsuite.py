@@ -9,7 +9,7 @@ Created on Sep 30, 2016
 import pytest
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.suite import load_suite_from_class, add_test_into_suite
+from lemoncheesecake.suite import load_suite_from_class, add_test_into_suite, add_test_in_suite, add_tests_in_suite
 from lemoncheesecake.exceptions import ProgrammingError, InvalidMetadataError
 
 from helpers.runner import dummy_test_callback
@@ -262,7 +262,7 @@ def test_suite_rank_forced():
     assert suite.get_suites()[3].name == "D"
 
 
-def test_register_test():
+def test_add_test_into_suite():
     @lcc.suite("My Suite")
     class MySuite:
         def __init__(self):
@@ -272,7 +272,39 @@ def test_register_test():
     assert len(suite.get_tests()) == 1
 
 
-def test_register_test_multiple():
+def test_add_test_in_suite():
+    @lcc.suite("My Suite")
+    class MySuite:
+        def __init__(self):
+            add_test_in_suite(lcc.Test("test1", "My Test 1", dummy_test_callback()), self)
+            add_test_in_suite(lcc.Test("test2", "My Test 2", dummy_test_callback()), self, before_test="test")
+            add_test_in_suite(lcc.Test("test3", "My Test 3", dummy_test_callback()), self, after_test="test")
+
+        @lcc.test("test")
+        def test(self):
+            pass
+
+    suite = load_suite_from_class(MySuite)
+    assert len(suite.get_tests()) == 4
+
+
+def test_add_tests_in_suite():
+    @lcc.suite("My Suite")
+    class MySuite:
+        def __init__(self):
+            add_tests_in_suite([lcc.Test("test1", "My Test 1", dummy_test_callback())], self)
+            add_tests_in_suite([lcc.Test("test2", "My Test 2", dummy_test_callback())], self, before_test="test")
+            add_tests_in_suite([lcc.Test("test3", "My Test 3", dummy_test_callback())], self, after_test="test")
+
+        @lcc.test("test")
+        def test(self):
+            pass
+
+    suite = load_suite_from_class(MySuite)
+    assert len(suite.get_tests()) == 4
+
+
+def test_add_test_into_suite_multiple():
     @lcc.suite("My Suite")
     class MySuite:
         def __init__(self):
@@ -283,7 +315,7 @@ def test_register_test_multiple():
     assert len(suite.get_tests()) == 3
 
 
-def test_register_disabled():
+def test_add_test_into_suite_disabled():
     @lcc.suite("My Suite")
     class MySuite:
         def __init__(self):

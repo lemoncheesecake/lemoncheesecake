@@ -7,11 +7,10 @@ Created on Sep 8, 2016
 import inspect
 import copy
 
-from lemoncheesecake.suite.loader import get_test_methods_from_class
 from lemoncheesecake.suite.core import InjectedFixture
 from lemoncheesecake.exceptions import ProgrammingError
 
-__all__ = "add_test_into_suite", "get_metadata", \
+__all__ = "add_test_into_suite", "add_test_in_suite", "add_tests_in_suite", "get_metadata", \
     "suite", "test", "tags", "prop", "link", "disabled", "conditional", "hidden", "inject_fixture"
 
 
@@ -41,6 +40,23 @@ def add_test_into_suite(test, suite):
     if not hasattr(suite, "_lccgeneratedtests"):
         suite._lccgeneratedtests = []
     suite._lccgeneratedtests.append(test)
+
+
+def add_test_in_suite(test, suite, before_test=None, after_test=None):
+    """
+    backward-compatibility function: use add_test_into_suite instead
+    before_test and after_test arguments are simply ignored
+    """
+    add_test_into_suite(test, suite)
+
+
+def add_tests_in_suite(tests, suite, before_test=None, after_test=None):
+    """
+    backward-compatibility function: loop over tests and use add_test_into_suite instead
+    before_test and after_test arguments are simply ignored
+    """
+    for test in tests:
+        add_test_into_suite(test, suite)
 
 
 _objects_with_metadata = []
