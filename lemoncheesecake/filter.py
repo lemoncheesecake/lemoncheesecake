@@ -8,6 +8,7 @@ import fnmatch
 from functools import reduce
 
 from lemoncheesecake.reporting import load_report
+from lemoncheesecake.reporting.reportdir import DEFAULT_REPORT_DIR_NAME
 from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.exceptions import UserError
 
@@ -195,13 +196,13 @@ def add_run_filter_cli_args(cli_parser, no_positional_argument=False):
         "--disabled", action="store_true", help="Filter on disabled tests"
     )
     group.add_argument(
-        "--passed", action="store_true", help="Filter on passed tests (only available with --from-report)"
+        "--passed", action="store_true", help="Filter on passed tests (implies/triggers --from-report)"
     )
     group.add_argument(
-        "--failed", action="store_true", help="Filter on failed tests (only available with --from-report)"
+        "--failed", action="store_true", help="Filter on failed tests (implies/triggers --from-report)"
     )
     group.add_argument(
-        "--skipped", action="store_true", help="Filter on skipped tests (only available with --from-report)"
+        "--skipped", action="store_true", help="Filter on skipped tests (implies/triggers --from-report)"
     )
     group.add_argument(
         "--enabled", action="store_true", help="Filter on enabled (non-disabled) tests"
@@ -255,21 +256,21 @@ def _make_report_filter(cli_args):
 
 
 def _make_from_report_filter(cli_args):
-    report = load_report(cli_args.from_report)
+    report = load_report(cli_args.from_report or DEFAULT_REPORT_DIR_NAME)
     filtr = _make_report_filter(cli_args)
     suites = filter_suites(report.suites, filtr)
     return FromTestsFilter(flatten_tests(suites))
 
 
 def make_run_filter(cli_args):
-    if cli_args.from_report is None:
-        return _make_run_filter(cli_args)
-    else:
+    if any([cli_args.from_report, cli_args.passed, cli_args.failed, cli_args.skipped]):
         return _make_from_report_filter(cli_args)
+    else:
+        return _make_run_filter(cli_args)
 
 
 def make_report_filter(cli_args):
-    if cli_args.from_report is None:
-        return _make_report_filter(cli_args)
-    else:
+    if cli_args.from_report:
         return _make_from_report_filter(cli_args)
+    else:
+        return _make_report_filter(cli_args)
