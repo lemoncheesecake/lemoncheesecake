@@ -91,13 +91,16 @@ class FileReportSession(ReportingSession):
         )
 
     def on_suite_setup_end(self, event):
-        self._handle_code_end(event.setup_outcome is False)
+        suite_data = self.report.get_suite(event.suite)
+        self._handle_code_end(suite_data.suite_setup and suite_data.suite_setup.has_failure())
 
     def on_suite_teardown_end(self, event):
-        self._handle_code_end(event.teardown_outcome is False)
+        suite_data = self.report.get_suite(event.suite)
+        self._handle_code_end(suite_data.suite_teardown and suite_data.suite_teardown.has_failure())
 
     def on_test_end(self, event):
-        self._handle_code_end(event.test)
+        test_data = self.report.get_test(event.test)
+        self._handle_code_end(test_data.status == "failed")
 
     def on_suite_end(self, event):
         if self.save_mode == SAVE_AT_EACH_SUITE:

@@ -10,6 +10,38 @@ from lemoncheesecake.utils import get_distincts_in_list
 from lemoncheesecake.exceptions import CannotFindTreeNode
 
 
+class TreeLocation(object):
+    TEST_SESSION_SETUP = 0
+    TEST_SESSION_TEARDOWN = 1
+    SUITE_SETUP = 2
+    SUITE_TEARDOWN = 3
+    TEST = 4
+
+    def __init__(self, node_type, node_hierarchy=None):
+        self.node_type = node_type
+        self.node_hierarchy = node_hierarchy
+    
+    @classmethod
+    def in_test_session_setup(cls):
+        return cls(cls.TEST_SESSION_SETUP)
+    
+    @classmethod
+    def in_test_session_teardown(cls):
+        return cls(cls.TEST_SESSION_TEARDOWN)
+    
+    @classmethod
+    def in_suite_setup(cls, suite):
+        return cls(cls.SUITE_SETUP, suite)
+    
+    @classmethod
+    def in_suite_teardown(cls, suite):
+        return cls(cls.SUITE_TEARDOWN, suite)
+
+    @classmethod
+    def in_test(cls, test):
+        return cls(cls.TEST, test)
+
+
 class BaseTreeNode(object):
     def __init__(self, name, description):
         self.parent_suite = None
@@ -129,6 +161,13 @@ def flatten_tests(suites):
             yield test
 
 
+def _normalize_node_hierarchy(value):
+    if isinstance(value, BaseTreeNode):
+        return [p.name for p in value.hierarchy]
+    else:
+        return value.split(".")
+
+
 def get_suite_by_name(suites, suite_name):
     try:
         return next(s for s in suites if s.name == suite_name)
@@ -136,16 +175,20 @@ def get_suite_by_name(suites, suite_name):
         raise CannotFindTreeNode("Cannot find suite named '%s'" % suite_name)
 
 
-def find_suite(suites, path):
+def _find_suite(suites, hierarchy):
     lookup_suites = suites
     lookup_suite = None
-    for lookup_suite_name in path.split("."):
+    for lookup_suite_name in hierarchy:
         lookup_suite = get_suite_by_name(lookup_suites, lookup_suite_name)
         lookup_suites = lookup_suite.get_suites(include_empty_suites=True)
     if lookup_suite is None:
-        raise CannotFindTreeNode("Cannot find suite named '%s'" % path)
+        raise CannotFindTreeNode("Cannot find suite named %s" % hierarchy)
 
     return lookup_suite
+
+
+def find_suite(suites, hierarchy):
+    return _find_suite(suites, _normalize_node_hierarchy(hierarchy))
 
 
 def get_test_by_name(suite, test_name):
@@ -155,7 +198,10 @@ def get_test_by_name(suite, test_name):
         raise CannotFindTreeNode("Cannot find test named '%s'" % test_name)
 
 
-def find_test(suites, path):
-    suite_name = ".".join(path.split(".")[:-1])
-    lookup_suite = find_suite(suites, suite_name)
-    return get_test_by_name(lookup_suite, path.split(".")[-1])
+def _find_test(suites, hierarchy):
+    lookup_suite = _find_suite(suites, hierarchy[:-1])
+    return get_test_by_name(lookup_suite, hierarchy[-1])
+
+
+def find_test(suites, hierarchy):
+    return _find_test(suites, _normalize_node_hierarchy(hierarchy))

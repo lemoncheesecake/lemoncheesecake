@@ -106,7 +106,11 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        self._end_test_item(event.time, event.setup_outcome, wrapped=True)
+        self._end_test_item(
+            event.time,
+            False if self.report.test_session_setup and self.report.test_session_setup.has_failure() else True,
+            wrapped=True
+        )
 
     def on_test_session_teardown_start(self, event):
         if self._has_rp_error():
@@ -192,7 +196,8 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        self._end_current_test_item(event.time, event.test_status)
+        test_data = self.report.get_test(event.test)
+        self._end_current_test_item(event.time, test_data.status)
 
     def _bypass_test(self, test, status, time):
         if self._has_rp_error():

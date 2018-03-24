@@ -10,7 +10,7 @@ from decimal import Decimal
 
 from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 from lemoncheesecake.utils import humanize_duration
-from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_suites, flatten_tests
+from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, find_test, find_suite, TreeLocation
 
 __all__ = (
     "LogData", "CheckData", "AttachmentData", "UrlData", "StepData", "TestData",
@@ -19,7 +19,6 @@ __all__ = (
 
 TEST_STATUSES = "passed", "failed", "skipped", "disabled"
 DEFAULT_REPORT_TITLE = "Test Report"
-
 
 # NB: it would be nicer to use:
 # datetime.isoformat(sep=' ', timespec='milliseconds')
@@ -262,7 +261,7 @@ def get_stats_from_suites(suites):
 
 class Report:
     def __init__(self):
-        self.info = [ ]
+        self.info = []
         self.test_session_setup = None
         self.test_session_teardown = None
         self.suites = [ ]
@@ -284,8 +283,30 @@ class Report:
     def get_suites(self):
         return self.suites
 
+    def get_suite(self, hierarchy):
+        return find_suite(self.suites, hierarchy)
+
+    def get_test(self, hierarchy):
+        return find_test(self.suites, hierarchy)
+
     def get_stats(self):
         return get_stats_from_report(self)
+
+    def get(self, location):
+        if location.node_type == TreeLocation.TEST_SESSION_SETUP:
+            return self.test_session_setup
+        elif location.node_type == TreeLocation.TEST_SESSION_TEARDOWN:
+            return self.test_session_teardown
+        elif location.node_type == TreeLocation.SUITE_SETUP:
+            suite = self.get_suite(location.node_hierarchy)
+            return suite.suite_setup
+        elif location.node_type == TreeLocation.SUITE_TEARDOWN:
+            suite = self.get_suite(location.node_hierarchy)
+            return suite.suite_teardown
+        elif location.node_type == TreeLocation.TEST:
+            return self.get_test(location.node_hierarchy)
+        else:
+            raise Exception("Unknown location type %s" % location.node_type)
 
     def serialize_stats(self):
         stats = self.get_stats()

@@ -9,6 +9,7 @@ from helpers.report import assert_report_stats
 
 NOW = time.time()
 
+
 def _test_timestamp_round(raw, rounded):
     assert parse_timestamp(format_timestamp(raw)) == rounded
 
@@ -120,6 +121,5 @@ def test_suite_duration_with_teardown():
             add_teardown(hook_mockup(start_time=NOW+2, end_time=NOW+3))
     )
     assert suite.duration == 2
-
 
 # TODO: report_stats lake tests

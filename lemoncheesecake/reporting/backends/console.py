@@ -168,8 +168,10 @@ class ConsoleReportingSession(ReportingSession):
         self.previous_obj = event.test
 
     def on_test_end(self, event):
+        test_data = self.report.get_test(event.test)
+
         line, raw_line_len = _make_test_result_line(
-            self.get_test_label(event.test), self.current_test_idx, event.test_status
+            self.get_test_label(event.test), self.current_test_idx, test_data.status
         )
 
         self.lp.print_line(line, force_len=raw_line_len)
@@ -192,9 +194,6 @@ class ConsoleReportingSession(ReportingSession):
 
     def on_step(self, event):
         self.lp.print_line("%s (%s...)" % (self.step_prefix, event.step_description))
-
-    def on_log(self, event):
-        pass
 
     def on_test_session_end(self, event):
         _print_summary(self.report.get_stats(), duration=self.report.end_time - self.report.start_time)

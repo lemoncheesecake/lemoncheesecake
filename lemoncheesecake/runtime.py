@@ -46,6 +46,7 @@ class _Runtime:
         self.step_lock = False
         self.pending_step = None
         self.pending_step_time = None
+        self.location = None
 
     def set_step(self, description, force_lock=False):
         if self.step_lock and not force_lock:
@@ -56,21 +57,21 @@ class _Runtime:
 
     def _flush_pending_step(self):
         if self.pending_step:
-            events.fire(events.StepEvent(self.pending_step))
+            events.fire(events.StepEvent(self.location, self.pending_step))
             self.pending_step = None
             self.pending_step_time = None
 
     def log(self, level, content):
         self._flush_pending_step()
-        events.fire(events.LogEvent(level, content))
+        events.fire(events.LogEvent(self.location, level, content))
 
     def log_check(self, description, outcome, details):
         self._flush_pending_step()
-        events.fire(events.CheckEvent(description, outcome, details))
+        events.fire(events.CheckEvent(self.location, description, outcome, details))
 
     def log_url(self, url, description):
         self._flush_pending_step()
-        events.fire(events.LogUrlEvent(url, description))
+        events.fire(events.LogUrlEvent(self.location, url, description))
 
     @contextmanager
     def prepare_attachment(self, filename, description):
@@ -82,7 +83,9 @@ class _Runtime:
         yield os.path.join(self.attachments_dir, attachment_filename)
 
         self._flush_pending_step()
-        events.fire(events.LogAttachmentEvent("%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description))
+        events.fire(events.LogAttachmentEvent(
+            self.location, "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description
+        ))
 
     def save_attachment_file(self, filename, description):
         with self.prepare_attachment(os.path.basename(filename), description) as report_attachment_path:
@@ -192,3 +195,8 @@ def get_fixture(name):
 def add_report_info(name, value):
     report = get_runtime().report
     report.add_info(name, value)
+
+
+def set_runtime_location(location):
+    runtime = get_runtime()
+    runtime.location = location

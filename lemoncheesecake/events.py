@@ -88,6 +88,11 @@ reset = eventmgr.reset
 fire = eventmgr.fire
 
 
+def event(class_):
+    register_event(class_)
+    return class_
+
+
 ###
 # Events related to the test session
 ###
@@ -98,39 +103,34 @@ class _ReportEvent(Event):
         self.report = report
 
 
+@event
 class TestSessionStartEvent(_ReportEvent):
     pass
 
 
+@event
 class TestSessionEndEvent(_ReportEvent):
     pass
 
 
+@event
 class TestSessionSetupStartEvent(Event):
     pass
 
 
+@event
 class TestSessionSetupEndEvent(Event):
-    def __init__(self, outcome):
-        super(TestSessionSetupEndEvent, self).__init__()
-        self.setup_outcome = outcome
+    pass
 
 
+@event
 class TestSessionTeardownStartEvent(Event):
     pass
 
 
+@event
 class TestSessionTeardownEndEvent(Event):
-    def __init__(self, outcome):
-        super(TestSessionTeardownEndEvent, self).__init__()
-        self.teardown_outcome = outcome
-
-
-register_events(
-    TestSessionStartEvent, TestSessionEndEvent,
-    TestSessionSetupStartEvent, TestSessionSetupEndEvent,
-    TestSessionTeardownStartEvent, TestSessionTeardownEndEvent
-)
+    pass
 
 
 ###
@@ -143,39 +143,34 @@ class _SuiteEvent(Event):
         self.suite = suite
 
 
+@event
 class SuiteStartEvent(_SuiteEvent):
     pass
 
 
+@event
 class SuiteEndEvent(_SuiteEvent):
     pass
 
 
+@event
 class SuiteSetupStartEvent(_SuiteEvent):
     pass
 
 
+@event
 class SuiteSetupEndEvent(_SuiteEvent):
-    def __init__(self, suite, outcome):
-        super(SuiteSetupEndEvent, self).__init__(suite)
-        self.setup_outcome = outcome
+    pass
 
 
+@event
 class SuiteTeardownStartEvent(_SuiteEvent):
     pass
 
 
+@event
 class SuiteTeardownEndEvent(_SuiteEvent):
-    def __init__(self, suite, outcome):
-        super(SuiteTeardownEndEvent, self).__init__(suite)
-        self.teardown_outcome = outcome
-
-
-register_events(
-    SuiteStartEvent, SuiteEndEvent,
-    SuiteSetupStartEvent, SuiteSetupEndEvent,
-    SuiteTeardownStartEvent, SuiteTeardownEndEvent
-)
+    pass
 
 
 ###
@@ -188,95 +183,100 @@ class _TestEvent(Event):
         self.test = test
 
 
+@event
 class TestStartEvent(_TestEvent):
     pass
 
 
+@event
 class TestEndEvent(_TestEvent):
-    def __init__(self, test, status):
-        super(TestEndEvent, self).__init__(test)
-        self.test_status = status
+    pass
 
 
+@event
 class TestSkippedEvent(_TestEvent):
     def __init__(self, test, reason):
         super(TestSkippedEvent, self).__init__(test)
         self.skipped_reason = reason
 
 
+@event
 class TestDisabledEvent(_TestEvent):
     def __init__(self, test, reason):
         super(TestDisabledEvent, self).__init__(test)
         self.disabled_reason = reason
 
 
+@event
 class TestSetupStartEvent(_TestEvent):
     pass
 
 
+@event
 class TestSetupEndEvent(_TestEvent):
     def __init__(self, test, outcome):
         super(TestSetupEndEvent, self).__init__(test)
         self.setup_outcome = outcome
 
 
+@event
 class TestTeardownStartEvent(_TestEvent):
     pass
 
 
+@event
 class TestTeardownEndEvent(_TestEvent):
     def __init__(self, test, outcome):
         super(TestTeardownEndEvent, self).__init__(test)
         self.teardown_outcome = outcome
 
 
-register_events(
-    TestStartEvent, TestEndEvent, TestSkippedEvent, TestDisabledEvent,
-    TestSetupStartEvent, TestSetupEndEvent,
-    TestTeardownStartEvent, TestTeardownEndEvent
-)
-
-
 ###
 # Transverse test execution events
 ###
 
-class StepEvent(Event):
-    def __init__(self, description):
-        super(StepEvent, self).__init__()
+class RuntimeEvent(Event):
+    def __init__(self, location):
+        super(RuntimeEvent, self).__init__()
+        self.location = location
+
+
+@event
+class StepEvent(RuntimeEvent):
+    def __init__(self, location, description):
+        super(StepEvent, self).__init__(location)
         self.step_description = description
 
 
-class LogEvent(Event):
-    def __init__(self, level, message):
-        super(LogEvent, self).__init__()
+@event
+class LogEvent(RuntimeEvent):
+    def __init__(self, location, level, message):
+        super(LogEvent, self).__init__(location)
         self.log_level = level
         self.log_message = message
 
 
-class CheckEvent(Event):
-    def __init__(self, description, outcome, details=None):
-        super(CheckEvent, self).__init__()
+@event
+class CheckEvent(RuntimeEvent):
+    def __init__(self, location, description, outcome, details=None):
+        super(CheckEvent, self).__init__(location)
         self.check_description = description
         self.check_outcome = outcome
         self.check_details = details
 
 
-class LogAttachmentEvent(Event):
-    def __init__(self, path, filename, description):
-        super(LogAttachmentEvent, self).__init__()
+@event
+class LogAttachmentEvent(RuntimeEvent):
+    def __init__(self, location, path, filename, description):
+        super(LogAttachmentEvent, self).__init__(location)
         self.attachment_path = path
         self.attachment_filename = filename
         self.attachment_description = description
 
 
-class LogUrlEvent(Event):
-    def __init__(self, url, description):
-        super(LogUrlEvent, self).__init__()
+@event
+class LogUrlEvent(RuntimeEvent):
+    def __init__(self, location, url, description):
+        super(LogUrlEvent, self).__init__(location)
         self.url = url
         self.url_description = description
-
-
-register_events(
-    StepEvent, LogEvent, CheckEvent, LogAttachmentEvent, LogUrlEvent
-)
