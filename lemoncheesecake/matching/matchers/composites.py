@@ -5,7 +5,7 @@ Created on Mar 28, 2017
 '''
 
 from lemoncheesecake.matching.base import Matcher, match_success, match_failure, match_result, \
-    got, got_value, to_be, to_meet, merge_match_result_descriptions
+    got, got_value, to_be, merge_match_result_descriptions
 
 __all__ = (
     "all_of", "any_of", "anything", "something", "existing", "present", "is_", "not_"
@@ -39,13 +39,13 @@ class AllOf(Matcher):
         self.matchers = matchers
 
     def short_description(self, conjugate=False):
-        return "%s all of the following conditions:" % to_meet(conjugate)
+        return ":"
 
     def description(self, conjugate=False):
         return "\n".join(
-            [self.short_description(conjugate=conjugate)] +
+            [":"] +
             [
-                _make_item(matcher.description(conjugate=True), prefix="- and " if i > 0 else "- ")
+                _make_item(matcher.description(conjugate=conjugate), prefix="- and " if i > 0 else "- ")
                     for i, matcher in enumerate(self.matchers)
             ]
         )
@@ -80,13 +80,13 @@ class AnyOf(Matcher):
         self.matchers = matchers
 
     def short_description(self, conjugate=False):
-        return "%s any of the following conditions:" % to_meet(conjugate)
+        return ":"
 
     def description(self, conjugate=False):
         return "\n".join(
-            ["%s any of the following conditions:" % to_meet(conjugate)] +
+            [":"] +
             [
-                _make_item(matcher.description(conjugate=True), prefix="- or " if i > 0 else "- ")
+                _make_item(matcher.description(conjugate=conjugate), prefix="- or " if i > 0 else "- ")
                     for i, matcher in enumerate(self.matchers)
             ]
         )
