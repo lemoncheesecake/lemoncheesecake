@@ -13,7 +13,7 @@ __all__ = (
 )
 
 
-class EntryMatcher:
+class EntryMatcher(object):
     def description(self):
         method_not_implemented("description", self)
 
@@ -35,17 +35,17 @@ class KeyPathMatcher(EntryMatcher):
         for key in self.path:
             try:
                 d = d[key]
-            except TypeError: # if d is not accessible though key, it will raise TypeError
+            except TypeError:  # if d is not accessible though key, it will raise TypeError
                 raise KeyError()
         return d
 
 
-def wrap_key_matcher(key_matcher, base_key=[]):
+def wrap_key_matcher(key_matcher, base_key=()):
     if isinstance(key_matcher, EntryMatcher):
         return key_matcher
     if type(key_matcher) not in (list, tuple):
-        key_matcher = [key_matcher]
-    return KeyPathMatcher(base_key + key_matcher)
+        key_matcher = (key_matcher,)
+    return KeyPathMatcher(tuple(base_key) + tuple(key_matcher))
 
 
 class HasEntry(Matcher):
@@ -83,4 +83,7 @@ def has_entry(key_matcher, value_matcher=None):
     Key entry can a standard dict key or a list of key where each element represent a
     level of depth of the dict (when dict are imbricated)
     """
-    return HasEntry(wrap_key_matcher(key_matcher), is_(value_matcher) if value_matcher != None else None)
+    return HasEntry(
+        wrap_key_matcher(key_matcher),
+        is_(value_matcher) if value_matcher is not None else None
+    )

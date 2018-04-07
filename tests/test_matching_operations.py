@@ -79,6 +79,38 @@ def test_check_that_in_with_base_key():
     assert "baz" in check.details
 
 
+def test_check_that_in_with_list_and_base_key():
+    check = get_last_logged_check(
+        run_func_in_test(
+            lambda: check_that_in(
+                {"foo": {"bar": "baz"}},
+                ["bar"], equal_to("baz"),
+                base_key=["foo"]
+            )
+        )
+    )
+
+    assert "foo" in check.description and "bar" in check.description
+    assert check.outcome is True
+    assert "baz" in check.details
+
+
+def test_check_that_in_with_tuple_and_base_key():
+    check = get_last_logged_check(
+        run_func_in_test(
+            lambda: check_that_in(
+                {"foo": {"bar": "baz"}},
+                ("bar", ), equal_to("baz"),
+                base_key=["foo"]
+            )
+        )
+    )
+
+    assert "foo" in check.description and "bar" in check.description
+    assert check.outcome is True
+    assert "baz" in check.details
+
+
 def test_require_that_in():
     checks = get_last_test_checks(
         run_func_in_test(
