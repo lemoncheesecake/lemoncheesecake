@@ -17,7 +17,7 @@ from lemoncheesecake import events
 from lemoncheesecake.exceptions import ProgrammingError
 
 __all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "log_url", "log_check", \
-    "set_step", "prepare_attachment", "save_attachment_file", "save_attachment_content", \
+    "set_step", "end_step", "prepare_attachment", "save_attachment_file", "save_attachment_content", \
     "add_report_info", "get_fixture"
 
 
@@ -46,11 +46,14 @@ class _Runtime:
         self.step_lock = False
         self.location = None
 
-    def set_step(self, description, force_lock=False):
+    def set_step(self, description, force_lock=False, detached=False):
         if self.step_lock and not force_lock:
             return
 
-        events.fire(events.StepEvent(self.location, description))
+        events.fire(events.StepEvent(self.location, description, detached=detached))
+
+    def end_step(self, step):
+        events.fire(events.StepEndEvent(self.location, step))
 
     def log(self, level, content, step=None):
         events.fire(events.LogEvent(self.location, step, level, content))
@@ -100,11 +103,18 @@ class _Runtime:
             raise ProgrammingError(str(excp))
 
 
-def set_step(description, force_lock=False):
+def set_step(description, force_lock=False, detached=False):
     """
     Set a new step.
     """
-    get_runtime().set_step(description, force_lock)
+    get_runtime().set_step(description, force_lock=force_lock, detached=detached)
+
+
+def end_step(step):
+    """
+    End a detached step.
+    """
+    get_runtime().end_step(step)
 
 
 def log_debug(content, step=None):

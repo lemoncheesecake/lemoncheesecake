@@ -243,9 +243,17 @@ class RuntimeEvent(Event):
 
 @event
 class StepEvent(RuntimeEvent):
-    def __init__(self, location, description):
+    def __init__(self, location, description, detached=False):
         super(StepEvent, self).__init__(location)
         self.step_description = description
+        self.detached = detached
+
+
+@event
+class StepEndEvent(RuntimeEvent):
+    def __init__(self, location, step):
+        super(StepEndEvent, self).__init__(location)
+        self.step = step
 
 
 class SteppedEvent(RuntimeEvent):

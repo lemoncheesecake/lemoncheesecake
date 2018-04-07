@@ -92,8 +92,9 @@ class UrlData:
 
 
 class StepData:
-    def __init__(self, description):
+    def __init__(self, description, detached=False):
         self.description = description
+        self._detached = detached  # this attribute is runtime only is not intended to be serialized
         self.entries = []
         self.start_time = None
         self.end_time = None
