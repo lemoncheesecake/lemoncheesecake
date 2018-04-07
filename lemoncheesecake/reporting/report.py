@@ -264,7 +264,7 @@ class Report:
         self.info = []
         self.test_session_setup = None
         self.test_session_teardown = None
-        self.suites = [ ]
+        self.suites = []
         self.start_time = None
         self.end_time = None
         self.report_generation_time = None

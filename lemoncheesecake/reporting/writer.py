@@ -56,6 +56,12 @@ class ReportWriter:
             except StopIteration:
                 raise ProgrammingError("Cannot find step %s" % step)
 
+    @staticmethod
+    def _finalize_steps(steps):
+        for step in steps[:]:
+            if not step.entries:
+                steps.remove(step)
+
     def on_test_session_start(self, event):
         self.report.start_time = event.time
 
@@ -67,6 +73,8 @@ class ReportWriter:
         self.report.test_session_setup = self._start_hook(event.time)
 
     def on_test_session_setup_end(self, event):
+        self._finalize_steps(self.report.test_session_setup.steps)
+
         if self.report.test_session_setup.is_empty():
             self.report.test_session_setup = None
         else:
@@ -77,6 +85,8 @@ class ReportWriter:
         self.report.test_session_teardown = self._start_hook(event.time)
 
     def on_test_session_teardown_end(self, event):
+        self._finalize_steps(self.report.test_session_teardown.steps)
+
         if self.report.test_session_teardown.is_empty():
             self.report.test_session_teardown = None
         else:
@@ -101,6 +111,7 @@ class ReportWriter:
 
     def on_suite_setup_end(self, event):
         suite_data = self._get_suite_data(event.suite)
+        self._finalize_steps(suite_data.suite_setup.steps)
 
         if suite_data.suite_setup.is_empty():
             suite_data.suite_setup = None
@@ -115,6 +126,7 @@ class ReportWriter:
 
     def on_suite_teardown_end(self, event):
         suite_data = self._get_suite_data(event.suite)
+        self._finalize_steps(suite_data.suite_teardown.steps)
 
         if suite_data.suite_teardown.is_empty():
             suite_data.suite_teardown = None
@@ -136,6 +148,7 @@ class ReportWriter:
 
     def on_test_end(self, event):
         test_data = self._get_test_data(event.test)
+        self._finalize_steps(test_data.steps)
 
         test_data.status = "failed" if test_data.has_failure() else "passed"
         test_data.end_time = event.time

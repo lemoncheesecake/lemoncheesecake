@@ -44,33 +44,21 @@ class _Runtime:
         self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
         self.attachment_count = 0
         self.step_lock = False
-        self.pending_step = None
-        self.pending_step_time = None
         self.location = None
 
     def set_step(self, description, force_lock=False):
         if self.step_lock and not force_lock:
             return
 
-        self.pending_step = description
-        self.pending_step_time = time.time()
-
-    def _flush_pending_step(self):
-        if self.pending_step:
-            events.fire(events.StepEvent(self.location, self.pending_step))
-            self.pending_step = None
-            self.pending_step_time = None
+        events.fire(events.StepEvent(self.location, description))
 
     def log(self, level, content, step=None):
-        self._flush_pending_step()
         events.fire(events.LogEvent(self.location, step, level, content))
 
     def log_check(self, description, outcome, details, step=None):
-        self._flush_pending_step()
         events.fire(events.CheckEvent(self.location, step, description, outcome, details))
 
     def log_url(self, url, description, step=None):
-        self._flush_pending_step()
         events.fire(events.LogUrlEvent(self.location, step, url, description))
 
     @contextmanager
@@ -82,7 +70,6 @@ class _Runtime:
 
         yield os.path.join(self.attachments_dir, attachment_filename)
 
-        self._flush_pending_step()
         events.fire(events.LogAttachmentEvent(
             self.location, step, "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description
         ))
