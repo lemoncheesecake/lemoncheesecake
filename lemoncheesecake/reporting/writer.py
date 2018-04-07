@@ -6,6 +6,7 @@ Created on Jan 24, 2016
 
 from lemoncheesecake.reporting.report import *
 from lemoncheesecake import events
+from lemoncheesecake.exceptions import ProgrammingError
 
 __all__ = "ReportWriter", "initialize_report_writer"
 
@@ -20,9 +21,10 @@ class ReportWriter:
     def _get_suite_data(self, suite):
         return self.report.get_suite(suite)
 
-    def _add_step_entry(self, entry, location):
-        report_node_data = self.report.get(location)
-        report_node_data.steps[-1].entries.append(entry)
+    def _add_step_entry(self, entry, event):
+        report_node_data = self.report.get(event.location)
+        step = self._lookup_step(report_node_data.steps, event.step)
+        step.entries.append(entry)
 
     @staticmethod
     def _start_hook(ts):
@@ -43,6 +45,16 @@ class ReportWriter:
                 steps[-1].end_time = ts
             else:
                 del steps[-1]
+
+    @staticmethod
+    def _lookup_step(steps, step):
+        if step is None:
+            return steps[-1]
+        else:
+            try:
+                return next(s for s in reversed(steps) if s.description == step)
+            except StopIteration:
+                raise ProgrammingError("Cannot find step %s" % step)
 
     def on_test_session_start(self, event):
         self.report.start_time = event.time
@@ -157,22 +169,22 @@ class ReportWriter:
 
     def on_log(self, event):
         self._add_step_entry(
-            LogData(event.log_level, event.log_message, event.time), event.location
+            LogData(event.log_level, event.log_message, event.time), event
         )
 
     def on_check(self, event):
         self._add_step_entry(
-            CheckData(event.check_description, event.check_outcome, event.check_details), event.location
+            CheckData(event.check_description, event.check_outcome, event.check_details), event
         )
 
     def on_log_attachment(self, event):
         self._add_step_entry(
-            AttachmentData(event.attachment_description, event.attachment_path), event.location
+            AttachmentData(event.attachment_description, event.attachment_path), event
         )
 
     def on_log_url(self, event):
         self._add_step_entry(
-            UrlData(event.url_description, event.url), event.location
+            UrlData(event.url_description, event.url), event
         )
 
 

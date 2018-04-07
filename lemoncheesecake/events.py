@@ -248,35 +248,41 @@ class StepEvent(RuntimeEvent):
         self.step_description = description
 
 
+class SteppedEvent(RuntimeEvent):
+    def __init__(self, location, step):
+        super(SteppedEvent, self).__init__(location)
+        self.step = step
+
+
 @event
-class LogEvent(RuntimeEvent):
-    def __init__(self, location, level, message):
-        super(LogEvent, self).__init__(location)
+class LogEvent(SteppedEvent):
+    def __init__(self, location, step, level, message):
+        super(LogEvent, self).__init__(location, step)
         self.log_level = level
         self.log_message = message
 
 
 @event
-class CheckEvent(RuntimeEvent):
-    def __init__(self, location, description, outcome, details=None):
-        super(CheckEvent, self).__init__(location)
+class CheckEvent(SteppedEvent):
+    def __init__(self, location, step, description, outcome, details=None):
+        super(CheckEvent, self).__init__(location, step)
         self.check_description = description
         self.check_outcome = outcome
         self.check_details = details
 
 
 @event
-class LogAttachmentEvent(RuntimeEvent):
-    def __init__(self, location, path, filename, description):
-        super(LogAttachmentEvent, self).__init__(location)
+class LogAttachmentEvent(SteppedEvent):
+    def __init__(self, location, step, path, filename, description):
+        super(LogAttachmentEvent, self).__init__(location, step)
         self.attachment_path = path
         self.attachment_filename = filename
         self.attachment_description = description
 
 
 @event
-class LogUrlEvent(RuntimeEvent):
-    def __init__(self, location, url, description):
-        super(LogUrlEvent, self).__init__(location)
+class LogUrlEvent(SteppedEvent):
+    def __init__(self, location, step, url, description):
+        super(LogUrlEvent, self).__init__(location, step)
         self.url = url
         self.url_description = description
