@@ -7,6 +7,8 @@ Created on Nov 1, 2016
 '''
 
 import os.path
+import threading
+import time
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.runtime import get_runtime
@@ -274,6 +276,36 @@ def test_concurrent_steps():
     assert test.steps[1].description == "step 2"
     assert test.steps[1].entries[0].level == "info"
     assert test.steps[1].entries[0].message == "do something else"
+
+
+def test_multiple_steps_on_different_threads():
+    def thread_func(i):
+        lcc.set_step(str(i), detached=True)
+        time.sleep(0.001)
+        lcc.log_info(str(i))
+        lcc.end_step(str(i))
+
+    @lcc.suite("MySuite")
+    class mysuite:
+        @lcc.test("Some test")
+        def sometest(self):
+            threads = [threading.Thread(target=thread_func, args=(i,)) for i in range(3)]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+
+    report = run_suite_class(mysuite)
+
+    test = get_last_test(report)
+    remainings = list(range(3))
+
+    for step in test.steps:
+        remainings.remove(int(step.description))
+        assert len(step.entries) == 1
+        assert step.entries[0].message == step.description
+
+    assert len(remainings) == 0
 
 
 def test_end_step_on_detached_step():

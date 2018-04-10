@@ -5,9 +5,9 @@ Created on Jan 24, 2016
 '''
 
 import os.path
-import time
 from contextlib import contextmanager
 import shutil
+import threading
 
 from lemoncheesecake.exceptions import LemonCheesecakeInternalError
 from lemoncheesecake.consts import ATTACHEMENT_DIR, \
@@ -45,24 +45,29 @@ class _Runtime:
         self.attachment_count = 0
         self.step_lock = False
         self.location = None
+        self._local = threading.local()
 
     def set_step(self, description, force_lock=False, detached=False):
         if self.step_lock and not force_lock:
             return
 
+        self._local.step = description
         events.fire(events.StepEvent(self.location, description, detached=detached))
 
     def end_step(self, step):
         events.fire(events.StepEndEvent(self.location, step))
 
+    def _get_step(self, step):
+        return step if step is not None else self._local.step
+
     def log(self, level, content, step=None):
-        events.fire(events.LogEvent(self.location, step, level, content))
+        events.fire(events.LogEvent(self.location, self._get_step(step), level, content))
 
     def log_check(self, description, outcome, details, step=None):
-        events.fire(events.CheckEvent(self.location, step, description, outcome, details))
+        events.fire(events.CheckEvent(self.location, self._get_step(step), description, outcome, details))
 
     def log_url(self, url, description, step=None):
-        events.fire(events.LogUrlEvent(self.location, step, url, description))
+        events.fire(events.LogUrlEvent(self.location, self._get_step(step), url, description))
 
     @contextmanager
     def prepare_attachment(self, filename, description, step=None):
@@ -74,7 +79,7 @@ class _Runtime:
         yield os.path.join(self.attachments_dir, attachment_filename)
 
         events.fire(events.LogAttachmentEvent(
-            self.location, step, "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description
+            self.location, self._get_step(step), "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description
         ))
 
     def save_attachment_file(self, filename, description, step=None):
