@@ -1,3 +1,19 @@
+# 0.17.0 (2018-04-11)
+
+- **API**: replace `add_test_in_suite` and `add_tests_in_suite` functions by `add_test_in_suite`, this function no
+  longer modifies the function passed as argument (former functions has been kept and just call the new one,
+  `before_test` and `after_test` argument are now ignored)
+- **API**: add the ability to log into multiple steps at the same time using `set_step(description, detached=True)`,
+  `end_step(description)` and `detached_step(description)` context manager
+- **CLI**: when `--passed` or `--skipped` or `--failed` arguments are passed they imply `--from-report` 
+  with the default report directory
+- **report**: improve check description for `all_of` and `any_of` matchers
+- **under the hood**: event management refactoring: instead of passing all event related attributes directly to event
+  handlers, everything is now gather in Event classes
+- **under the hood**: for logging report data (steps, logs, checks, ...) the `ReportWriter` no longer maintains a
+  context to update the `Report` instance, instead, the needed context (report location) is now available in the 
+  Event instances (which is set by the `Runtime` class)
+
 # 0.16.6 (2018-03-14)
 
 - **CLI**: add three commands: `lcc top-suites`, `lcc top-tests` and `lcc top-steps` to show suites, tests and steps
