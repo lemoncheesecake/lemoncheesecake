@@ -17,7 +17,8 @@ from lemoncheesecake import events
 from lemoncheesecake.exceptions import ProgrammingError
 
 __all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "log_url", "log_check", \
-    "set_step", "end_step", "prepare_attachment", "save_attachment_file", "save_attachment_content", \
+    "set_step", "end_step", "detached_step", \
+    "prepare_attachment", "save_attachment_file", "save_attachment_content", \
     "add_report_info", "get_fixture"
 
 
@@ -120,6 +121,13 @@ def end_step(step):
     End a detached step.
     """
     get_runtime().end_step(step)
+
+
+@contextmanager
+def detached_step(description):
+    set_step(description, detached=True)
+    yield
+    end_step(description)
 
 
 def log_debug(content, step=None):

@@ -345,6 +345,22 @@ def test_end_step_on_standard_step():
     assert got_exception
 
 
+def test_detached_step():
+    @lcc.suite("MySuite")
+    class mysuite:
+        @lcc.test("Some test")
+        def sometest(self):
+            with lcc.detached_step("step"):
+                lcc.log_info("log")
+
+    report = run_suite_class(mysuite)
+
+    test = get_last_test(report)
+    assert test.status == "passed"
+    assert test.steps[0].description == "step"
+    assert test.steps[0].entries[0].level == "info"
+    assert test.steps[0].entries[0].message == "log"
+
 def test_default_step():
     @lcc.suite("MySuite")
     class mysuite:
