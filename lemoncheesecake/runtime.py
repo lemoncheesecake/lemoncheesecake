@@ -5,9 +5,9 @@ Created on Jan 24, 2016
 '''
 
 import os.path
-import time
 from contextlib import contextmanager
 import shutil
+import threading
 
 from lemoncheesecake.exceptions import LemonCheesecakeInternalError
 from lemoncheesecake.consts import ATTACHEMENT_DIR, \
@@ -17,7 +17,8 @@ from lemoncheesecake import events
 from lemoncheesecake.exceptions import ProgrammingError
 
 __all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "log_url", "log_check", \
-    "set_step", "prepare_attachment", "save_attachment_file", "save_attachment_content", \
+    "set_step", "end_step", "detached_step", \
+    "prepare_attachment", "save_attachment_file", "save_attachment_content", \
     "add_report_info", "get_fixture"
 
 
@@ -44,37 +45,33 @@ class _Runtime:
         self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
         self.attachment_count = 0
         self.step_lock = False
-        self.pending_step = None
-        self.pending_step_time = None
         self.location = None
+        self._local = threading.local()
 
-    def set_step(self, description, force_lock=False):
+    def set_step(self, description, force_lock=False, detached=False):
         if self.step_lock and not force_lock:
             return
 
-        self.pending_step = description
-        self.pending_step_time = time.time()
+        self._local.step = description
+        events.fire(events.StepEvent(self.location, description, detached=detached))
 
-    def _flush_pending_step(self):
-        if self.pending_step:
-            events.fire(events.StepEvent(self.location, self.pending_step))
-            self.pending_step = None
-            self.pending_step_time = None
+    def end_step(self, step):
+        events.fire(events.StepEndEvent(self.location, step))
 
-    def log(self, level, content):
-        self._flush_pending_step()
-        events.fire(events.LogEvent(self.location, level, content))
+    def _get_step(self, step):
+        return step if step is not None else self._local.step
 
-    def log_check(self, description, outcome, details):
-        self._flush_pending_step()
-        events.fire(events.CheckEvent(self.location, description, outcome, details))
+    def log(self, level, content, step=None):
+        events.fire(events.LogEvent(self.location, self._get_step(step), level, content))
 
-    def log_url(self, url, description):
-        self._flush_pending_step()
-        events.fire(events.LogUrlEvent(self.location, url, description))
+    def log_check(self, description, outcome, details, step=None):
+        events.fire(events.CheckEvent(self.location, self._get_step(step), description, outcome, details))
+
+    def log_url(self, url, description, step=None):
+        events.fire(events.LogUrlEvent(self.location, self._get_step(step), url, description))
 
     @contextmanager
-    def prepare_attachment(self, filename, description):
+    def prepare_attachment(self, filename, description, step=None):
         attachment_filename = "%04d_%s" % (self.attachment_count + 1, filename)
         self.attachment_count += 1
         if not os.path.exists(self.attachments_dir):
@@ -82,17 +79,16 @@ class _Runtime:
 
         yield os.path.join(self.attachments_dir, attachment_filename)
 
-        self._flush_pending_step()
         events.fire(events.LogAttachmentEvent(
-            self.location, "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description
+            self.location, self._get_step(step), "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description
         ))
 
-    def save_attachment_file(self, filename, description):
-        with self.prepare_attachment(os.path.basename(filename), description) as report_attachment_path:
+    def save_attachment_file(self, filename, description, step=None):
+        with self.prepare_attachment(os.path.basename(filename), description, step=step) as report_attachment_path:
             shutil.copy(filename, report_attachment_path)
 
-    def save_attachment_content(self, content, filename, description, binary_mode):
-        with self.prepare_attachment(filename, description) as report_attachment_path:
+    def save_attachment_content(self, content, filename, description, binary_mode, step=None):
+        with self.prepare_attachment(filename, description, step=step) as report_attachment_path:
             with open(report_attachment_path, "wb") as fh:
                 fh.write(content if binary_mode else content.encode("utf-8"))
 
@@ -113,76 +109,91 @@ class _Runtime:
             raise ProgrammingError(str(excp))
 
 
-def log_debug(content):
+def set_step(description, force_lock=False, detached=False):
+    """
+    Set a new step.
+    """
+    get_runtime().set_step(description, force_lock=force_lock, detached=detached)
+
+
+def end_step(step):
+    """
+    End a detached step.
+    """
+    get_runtime().end_step(step)
+
+
+@contextmanager
+def detached_step(description):
+    set_step(description, detached=True)
+    yield
+    end_step(description)
+
+
+def log_debug(content, step=None):
     """
     Log a debug level message.
     """
-    get_runtime().log(LOG_LEVEL_DEBUG, content)
+    get_runtime().log(LOG_LEVEL_DEBUG, content, step=step)
 
 
-def log_info(content):
+def log_info(content, step=None):
     """
     Log a info level message.
     """
-    get_runtime().log(LOG_LEVEL_INFO, content)
+    get_runtime().log(LOG_LEVEL_INFO, content, step=step)
 
 
-def log_warning(content):
+def log_warning(content, step=None):
     """
     Log a warning level message.
     """
-    get_runtime().log(LOG_LEVEL_WARN, content)
+    get_runtime().log(LOG_LEVEL_WARN, content, step=step)
+
 
 log_warn = log_warning
 
 
-def log_error(content):
+def log_error(content, step=None):
     """
     Log an error level message.
     """
-    get_runtime().log(LOG_LEVEL_ERROR, content)
+    get_runtime().log(LOG_LEVEL_ERROR, content, step=step)
 
 
-def log_check(description, outcome, details=None):
-    get_runtime().log_check(description, outcome, details)
+def log_check(description, outcome, details=None, step=None):
+    get_runtime().log_check(description, outcome, details, step=step)
 
 
-def set_step(description, force_lock=False):
-    """
-    Set a new step.
-    """
-    get_runtime().set_step(description, force_lock)
-
-
-def prepare_attachment(filename, description=None):
+def prepare_attachment(filename, description=None, step=None):
     """
     Prepare a attachment using a pseudo filename and an optional description.
     The function returns the real filename on disk that will be used by the caller
     to write the attachment content.
     """
-    return get_runtime().prepare_attachment(filename, description or filename)
+    return get_runtime().prepare_attachment(filename, description or filename, step=step)
 
 
-def save_attachment_file(filename, description=None):
+def save_attachment_file(filename, description=None, step=None):
     """
     Save an attachment using an existing file (identified by filename) and an optional
     description. The given file will be copied.
     """
-    get_runtime().save_attachment_file(filename, description or filename)
+    get_runtime().save_attachment_file(filename, description or filename, step=step)
 
 
-def save_attachment_content(content, filename, description=None, binary_mode=False):
+def save_attachment_content(content, filename, description=None, binary_mode=False, step=None):
     """
     Save a given content as attachment using pseudo filename and optional description.
     """
-    get_runtime().save_attachment_content(content, filename, description or filename, binary_mode)
+    get_runtime().save_attachment_content(content, filename, description or filename, binary_mode, step=step)
 
 
-def log_url(url, description=None):
+def log_url(url, description=None, step=None):
     """
     Log an URL.
     """
-    get_runtime().log_url(url, description or url)
+    get_runtime().log_url(url, description or url, step=step)
 
 
 def get_fixture(name):
