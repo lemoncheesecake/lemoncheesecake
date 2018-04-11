@@ -1,3 +1,7 @@
+# 0.17.1 (2018-04-11)
+
+- **API**: fix add_test_in_suite and add_tests_in_suite functions missing in `lemoncheesecake.api` module
+
 # 0.17.0 (2018-04-11)
 
 - **API**: replace `add_test_in_suite` and `add_tests_in_suite` functions by `add_test_in_suite`, this function no
