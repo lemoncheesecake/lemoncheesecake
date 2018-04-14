@@ -100,7 +100,11 @@ def _print_summary(stats, duration):
     print()
 
 
-class ConsoleReportingSession(ReportingSession):
+def _print_report_summary(report):
+    _print_summary(report.get_stats(), duration=report.end_time - report.start_time)
+
+
+class SequentialConsoleReportingSession(ReportingSession):
     def __init__(self, terminal_width, show_test_full_path, report):
         self.terminal_width = terminal_width
         self.show_test_full_path = show_test_full_path
@@ -196,7 +200,41 @@ class ConsoleReportingSession(ReportingSession):
         self.lp.print_line("%s (%s...)" % (self.step_prefix, event.step_description))
 
     def on_test_session_end(self, event):
-        _print_summary(self.report.get_stats(), duration=self.report.end_time - self.report.start_time)
+        _print_report_summary(self.report)
+
+
+class ParallelConsoleReportingSession(ReportingSession):
+    def __init__(self, terminal_width, report):
+        self.terminal_width = terminal_width
+        self.report = report
+        colorama.init()
+        self.lp = LinePrinter(self.terminal_width)
+        self.current_test_idx = 1
+
+    def on_test_end(self, event):
+        test_data = self.report.get_test(event.test)
+
+        line, _ = _make_test_result_line(
+            event.test.path, self.current_test_idx, test_data.status
+        )
+
+        print(line)
+
+        self.current_test_idx += 1
+
+    def _bypass_test(self, test, status):
+        line = " %s %2s # %s" % (_make_test_status_label(status), self.current_test_idx, test.path)
+        print(line)
+        self.current_test_idx += 1
+
+    def on_test_skipped(self, event):
+        self._bypass_test(event.test, "skipped")
+
+    def on_test_disabled(self, event):
+        self._bypass_test(event.test, "disabled")
+
+    def on_test_session_end(self, event):
+        _print_report_summary(self.report)
 
 
 class ConsoleBackend(ReportingBackend):
@@ -207,8 +245,10 @@ class ConsoleBackend(ReportingBackend):
         self.terminal_width = width
         self.show_test_full_path = False
 
-    def create_reporting_session(self, report_dir, report):
-        return ConsoleReportingSession(self.terminal_width, self.show_test_full_path, report)
+    def create_reporting_session(self, report_dir, report, parallel=False):
+        return \
+            ParallelConsoleReportingSession(self.terminal_width, report) if parallel else \
+            SequentialConsoleReportingSession(self.terminal_width, self.show_test_full_path, report)
 
 
 def display_report_suites(suites):
