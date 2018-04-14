@@ -285,7 +285,10 @@ class ReportPortalBackend(ReportingBackend):
     def is_available(self):
         return REPORT_PORTAL_CLIENT_IS_AVAILABLE
 
-    def create_reporting_session(self, report_dir, report):
+    def create_reporting_session(self, report_dir, report, parallel=False):
+        if parallel:
+            raise UserError("Parallel testing mode is not supported by ReportPortal reporting backend")
+
         try:
             url = os.environ["RP_URL"]
             auth_token = os.environ["RP_AUTH_TOKEN"]
