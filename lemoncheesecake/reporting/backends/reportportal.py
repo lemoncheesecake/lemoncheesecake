@@ -126,7 +126,11 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        self._end_test_item(event.time, event.teardown_outcome, wrapped=True)
+        self._end_test_item(
+            event.time,
+            False if (self.report.test_session_teardown and self.report.test_session_teardown.has_failure()) else True,
+            wrapped=True
+        )
 
     def on_suite_start(self, event):
         if self._has_rp_error():
@@ -161,7 +165,13 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        self._end_test_item(event.time, outcome=event.time, wrapped=len(event.suite.get_suites()) > 0)
+        suite_data = self.report.get_suite(event.suite)
+
+        self._end_test_item(
+            event.time,
+            False if (suite_data.suite_setup and suite_data.suite_setup.has_failure()) else True,
+            wrapped=len(event.suite.get_suites()) > 0
+        )
 
     def on_suite_teardown_start(self, event):
         if self._has_rp_error():
@@ -177,7 +187,13 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        self._end_test_item(event.time, outcome=event.teardown_outcome, wrapped=len(event.suite.get_suites()) > 0)
+        suite_data = self.report.get_suite(event.suite)
+
+        self._end_test_item(
+            event.time,
+            False if (suite_data.suite_teardown and suite_data.suite_teardown.has_failure()) else True,
+            wrapped=len(event.suite.get_suites()) > 0
+        )
 
     def on_test_start(self, event):
         if self._has_rp_error():
@@ -216,7 +232,7 @@ class ReportPortalReportingSession(ReportingSession):
         self._bypass_test(event.test, "skipped", event.time)
 
     def on_disabled_test(self, event):
-        # do not log disabled test, moreover it seems that the is not corresponding status in ReportPortal
+        # do not log disabled test, moreover it seems that there is not corresponding status in ReportPortal
         pass
 
     def on_step(self, event):
