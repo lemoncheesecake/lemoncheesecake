@@ -308,6 +308,30 @@ def test_multiple_steps_on_different_threads():
     assert len(remainings) == 0
 
 
+def test_exception_in_thread_detached_step():
+    def thread_func():
+        with lcc.detached_step("step"):
+            lcc.log_info("doing something")
+            raise Exception("this_is_an_exception")
+
+    @lcc.suite("MySuite")
+    class mysuite:
+        @lcc.test("Some test")
+        def sometest(self):
+            thread = threading.Thread(target=thread_func)
+            thread.start()
+            thread.join()
+
+    report = run_suite_class(mysuite)
+
+    test = get_last_test(report)
+
+    assert test.status == "failed"
+    assert test.steps[0].description == "step"
+    assert test.steps[0].entries[-1].level == "error"
+    assert "this_is_an_exception" in test.steps[0].entries[-1].message
+
+
 def test_end_step_on_detached_step():
     @lcc.suite("MySuite")
     class mysuite:
@@ -360,6 +384,7 @@ def test_detached_step():
     assert test.steps[0].description == "step"
     assert test.steps[0].entries[0].level == "info"
     assert test.steps[0].entries[0].message == "log"
+
 
 def test_default_step():
     @lcc.suite("MySuite")

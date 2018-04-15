@@ -8,7 +8,9 @@ import os.path
 from contextlib import contextmanager
 import shutil
 import threading
+import traceback
 
+from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.exceptions import LemonCheesecakeInternalError
 from lemoncheesecake.consts import ATTACHEMENT_DIR, \
     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
@@ -126,7 +128,14 @@ def end_step(step):
 @contextmanager
 def detached_step(description):
     set_step(description, detached=True)
-    yield
+    try:
+        yield
+    except Exception:
+        # FIXME: use exception instead of last implicit stacktrace
+        stacktrace = traceback.format_exc()
+        if not IS_PYTHON3:
+            stacktrace = stacktrace.decode("utf-8", "replace")
+        log_error("Caught unexpected exception while running test: " + stacktrace)
     end_step(description)
 
 
