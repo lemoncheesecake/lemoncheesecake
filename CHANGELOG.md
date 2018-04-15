@@ -1,3 +1,10 @@
+# 0.17.2 (2018-04-15)
+
+- **API**: in 'detached_step' context manager, handle possible exceptions in order to properly caught exceptions
+  raised within a new thread
+- **report**: simplify report check descriptions produced by `check_that_entry` and `check_that_in` functions
+- **ReportPortal**: fix various regressions introduced in 0.17.0
+
 # 0.17.1 (2018-04-11)
 
 - **API**: fix add_test_in_suite and add_tests_in_suite functions missing in `lemoncheesecake.api` module
