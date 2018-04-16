@@ -19,7 +19,7 @@ from lemoncheesecake import events
 from lemoncheesecake.exceptions import ProgrammingError
 
 __all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "log_url", "log_check", \
-    "set_step", "end_step", "detached_step", \
+    "set_step", "end_step", "detached_step", "Thread", \
     "prepare_attachment", "save_attachment_file", "save_attachment_content", \
     "add_report_info", "get_fixture"
 
@@ -47,30 +47,46 @@ class _Runtime:
         self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
         self.attachment_count = 0
         self.step_lock = False
-        self.location = None
+        self._failures = set()
         self._local = threading.local()
+        self._local.location = None
+        self._local.step = None
+
+    def set_location(self, location):
+        self._local.location = location
+
+    @property
+    def location(self):
+        return self._local.location
+
+    def is_successful(self, location):
+        return location not in self._failures
 
     def set_step(self, description, force_lock=False, detached=False):
         if self.step_lock and not force_lock:
             return
 
         self._local.step = description
-        events.fire(events.StepEvent(self.location, description, detached=detached))
+        events.fire(events.StepEvent(self._local.location, description, detached=detached))
 
     def end_step(self, step):
-        events.fire(events.StepEndEvent(self.location, step))
+        events.fire(events.StepEndEvent(self._local.location, step))
 
     def _get_step(self, step):
         return step if step is not None else self._local.step
 
     def log(self, level, content, step=None):
-        events.fire(events.LogEvent(self.location, self._get_step(step), level, content))
+        if level == LOG_LEVEL_ERROR:
+            self._failures.add(self.location)
+        events.fire(events.LogEvent(self._local.location, self._get_step(step), level, content))
 
     def log_check(self, description, outcome, details, step=None):
-        events.fire(events.CheckEvent(self.location, self._get_step(step), description, outcome, details))
+        if outcome is False:
+            self._failures.add(self.location)
+        events.fire(events.CheckEvent(self._local.location, self._get_step(step), description, outcome, details))
 
     def log_url(self, url, description, step=None):
-        events.fire(events.LogUrlEvent(self.location, self._get_step(step), url, description))
+        events.fire(events.LogUrlEvent(self._local.location, self._get_step(step), url, description))
 
     @contextmanager
     def prepare_attachment(self, filename, description, step=None):
@@ -82,7 +98,7 @@ class _Runtime:
         yield os.path.join(self.attachments_dir, attachment_filename)
 
         events.fire(events.LogAttachmentEvent(
-            self.location, self._get_step(step), "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description
+            self._local.location, self._get_step(step), "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description
         ))
 
     def save_attachment_file(self, filename, description, step=None):
@@ -218,5 +234,18 @@ def add_report_info(name, value):
 
 
 def set_runtime_location(location):
-    runtime = get_runtime()
-    runtime.location = location
+    get_runtime().set_location(location)
+
+
+def is_location_successful(location):
+    return get_runtime().is_successful(location)
+
+
+class Thread(threading.Thread):
+    def __init__(self, *args, **kwargs):
+        super(Thread, self).__init__(*args, **kwargs)
+        self.location = get_runtime().location
+
+    def run(self):
+        set_runtime_location(self.location)
+        return super(Thread, self).run()

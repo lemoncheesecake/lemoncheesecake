@@ -10,7 +10,7 @@ import traceback
 
 from lemoncheesecake.utils import IS_PYTHON3, get_distincts_in_list
 from lemoncheesecake.runtime import *
-from lemoncheesecake.runtime import initialize_runtime, set_runtime_location
+from lemoncheesecake.runtime import initialize_runtime, set_runtime_location, is_location_successful
 from lemoncheesecake.reporting import Report, initialize_report_writer, initialize_reporting_backends
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
     UserError, serialize_current_exception
@@ -49,18 +49,6 @@ class _Runner:
         self._abort_all_tests = False
         self._abort_suite = None
 
-    def _is_suite_setup_failure(self, suite):
-        suite_data = self._report.get_suite(suite)
-        return suite_data.suite_setup and suite_data.suite_setup.has_failure()
-
-    def _is_suite_teardown_failure(self, suite):
-        suite_data = self._report.get_suite(suite)
-        return suite_data.suite_teardown and suite_data.suite_teardown.has_failure()
-
-    def _is_test_failure(self, test):
-        test_data = self._report.get_test(test)
-        return test_data.has_failure()
-
     def get_fixtures_with_dependencies_for_scope(self, direct_fixtures, scope):
         fixtures = []
         for fixture in direct_fixtures:
@@ -86,7 +74,7 @@ class _Runner:
     def get_fixtures_to_be_executed_for_test(self, test):
         return self.get_fixtures_with_dependencies_for_scope(test.get_fixtures(), "test")
 
-    def run_setup_funcs(self, funcs, failure_checker):
+    def run_setup_funcs(self, funcs, location):
         teardown_funcs = []
         for setup_func, teardown_func in funcs:
             if setup_func:
@@ -96,7 +84,7 @@ class _Runner:
                     self.handle_exception(e)
                     break
                 else:
-                    if failure_checker():
+                    if not is_location_successful(location):
                         break
                     else:
                         teardown_funcs.append(teardown_func)
@@ -126,7 +114,7 @@ class _Runner:
 
     def get_setup_suite_as_func(self, suite):
         setup_suite = suite.get_hook("setup_suite")
-        if setup_suite == None:
+        if setup_suite is None:
             return None
 
         fixtures_names = suite.get_hook_params("setup_suite")
@@ -220,9 +208,7 @@ class _Runner:
 
         if len(list(filter(lambda p: p[0] is not None, setup_teardown_funcs))) > 0:
             self._begin_test_setup(test)
-            teardown_funcs = self.run_setup_funcs(
-                setup_teardown_funcs, lambda: self._is_test_failure(test)
-            )
+            teardown_funcs = self.run_setup_funcs(setup_teardown_funcs, TreeLocation.in_test(test))
             if len(teardown_funcs) != len(setup_teardown_funcs):
                 test_setup_error = True
             self._end_test_setup(test, not test_setup_error)
@@ -249,9 +235,9 @@ class _Runner:
         if len(list(filter(lambda f: f is not None, teardown_funcs))) > 0:
             self._begin_test_teardown(test)
             self.run_teardown_funcs(teardown_funcs)
-            self._end_test_teardown(test, not self._is_test_failure(test))
+            self._end_test_teardown(test, is_location_successful(TreeLocation.in_test(test)))
 
-        if self.stop_on_failure and self._is_test_failure(test):
+        if self.stop_on_failure and not is_location_successful(TreeLocation.in_test(test)):
             self._abort_all_tests = True
 
         self._end_test(test)
@@ -303,9 +289,7 @@ class _Runner:
 
             if len(list(filter(lambda p: p[0] is not None, setup_teardown_funcs))) > 0:
                 self._begin_suite_setup(suite)
-                teardown_funcs = self.run_setup_funcs(
-                    setup_teardown_funcs, lambda: self._is_suite_setup_failure(suite)
-                )
+                teardown_funcs = self.run_setup_funcs(setup_teardown_funcs, TreeLocation.in_suite_setup(suite))
                 if len(teardown_funcs) != len(setup_teardown_funcs):
                     self._abort_suite = suite
                 self._end_suite_setup(suite)
@@ -327,7 +311,7 @@ class _Runner:
         if len(list(filter(lambda f: f is not None, teardown_funcs))) > 0:
             self._begin_suite_teardown(suite)
             self.run_teardown_funcs(teardown_funcs)
-            if self.stop_on_failure and self._is_suite_teardown_failure(suite):
+            if self.stop_on_failure and not is_location_successful(TreeLocation.in_suite_teardown(suite)):
                 self._abort_all_tests = True
             self._end_suite_teardown(suite)
 
@@ -390,9 +374,7 @@ class _Runner:
 
         if len(list(filter(lambda p: p[0] is not None, setup_teardown_funcs))) > 0:
             self._begin_test_session_setup()
-            teardown_funcs = self.run_setup_funcs(
-                setup_teardown_funcs, lambda: self._session.report.test_session_setup.has_failure()
-            )
+            teardown_funcs = self.run_setup_funcs(setup_teardown_funcs, TreeLocation.in_test_session_setup())
             if len(teardown_funcs) != len(setup_teardown_funcs):
                 self._abort_all_tests = True
             self._end_test_session_setup()

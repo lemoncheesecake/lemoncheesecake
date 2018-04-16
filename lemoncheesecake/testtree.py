@@ -10,38 +10,6 @@ from lemoncheesecake.utils import get_distincts_in_list
 from lemoncheesecake.exceptions import CannotFindTreeNode
 
 
-class TreeLocation(object):
-    TEST_SESSION_SETUP = 0
-    TEST_SESSION_TEARDOWN = 1
-    SUITE_SETUP = 2
-    SUITE_TEARDOWN = 3
-    TEST = 4
-
-    def __init__(self, node_type, node_hierarchy=None):
-        self.node_type = node_type
-        self.node_hierarchy = node_hierarchy
-    
-    @classmethod
-    def in_test_session_setup(cls):
-        return cls(cls.TEST_SESSION_SETUP)
-    
-    @classmethod
-    def in_test_session_teardown(cls):
-        return cls(cls.TEST_SESSION_TEARDOWN)
-    
-    @classmethod
-    def in_suite_setup(cls, suite):
-        return cls(cls.SUITE_SETUP, suite)
-    
-    @classmethod
-    def in_suite_teardown(cls, suite):
-        return cls(cls.SUITE_TEARDOWN, suite)
-
-    @classmethod
-    def in_test(cls, test):
-        return cls(cls.TEST, test)
-
-
 class BaseTreeNode(object):
     def __init__(self, name, description):
         self.parent_suite = None
@@ -104,6 +72,64 @@ class BaseTreeNode(object):
         return self.path
 
 
+def _normalize_node_hierarchy(value):
+    if isinstance(value, BaseTreeNode):
+        return tuple(p.name for p in value.hierarchy)
+    elif type(value) in (list, tuple):
+        return tuple(value)
+    else:  # assume str
+        return tuple(value.split("."))
+
+
+class TreeLocation(object):
+    TEST_SESSION_SETUP = 0
+    TEST_SESSION_TEARDOWN = 1
+    SUITE_SETUP = 2
+    SUITE_TEARDOWN = 3
+    TEST = 4
+
+    def __init__(self, node_type, node_hierarchy=None):
+        self.node_type = node_type
+        self.node_hierarchy = node_hierarchy
+
+    @classmethod
+    def in_test_session_setup(cls):
+        return cls(cls.TEST_SESSION_SETUP)
+
+    @classmethod
+    def in_test_session_teardown(cls):
+        return cls(cls.TEST_SESSION_TEARDOWN)
+
+    @classmethod
+    def in_suite_setup(cls, suite):
+        return cls(cls.SUITE_SETUP, _normalize_node_hierarchy(suite))
+
+    @classmethod
+    def in_suite_teardown(cls, suite):
+        return cls(cls.SUITE_TEARDOWN, _normalize_node_hierarchy(suite))
+
+    @classmethod
+    def in_test(cls, test):
+        return cls(cls.TEST, _normalize_node_hierarchy(test))
+
+    def __eq__(self, other):
+        return all((
+            isinstance(other, TreeLocation),
+            self.node_type == other.node_type,
+            self.node_hierarchy == other.node_hierarchy
+        ))
+
+    def __hash__(self):
+        return hash((self.node_type, self.node_hierarchy))
+
+    def __str__(self):
+        ret = ""
+        if self.node_hierarchy:
+            ret += ".".join(self.node_hierarchy) + " "
+        ret += ("session setup", "session teardown", "suite setup", "suite teardown", "test")[self.node_type]
+        return "<%s>" % ret
+
+
 class BaseTest(BaseTreeNode):
     pass
 
@@ -159,13 +185,6 @@ def flatten_tests(suites):
     for suite in flatten_suites(suites):
         for test in suite.get_tests():
             yield test
-
-
-def _normalize_node_hierarchy(value):
-    if isinstance(value, BaseTreeNode):
-        return [p.name for p in value.hierarchy]
-    else:
-        return value.split(".")
 
 
 def get_suite_by_name(suites, suite_name):

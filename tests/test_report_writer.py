@@ -289,7 +289,7 @@ def test_multiple_steps_on_different_threads():
     class mysuite:
         @lcc.test("Some test")
         def sometest(self):
-            threads = [threading.Thread(target=thread_func, args=(i,)) for i in range(3)]
+            threads = [lcc.Thread(target=thread_func, args=(i,)) for i in range(3)]
             for thread in threads:
                 thread.start()
             for thread in threads:
@@ -318,7 +318,7 @@ def test_exception_in_thread_detached_step():
     class mysuite:
         @lcc.test("Some test")
         def sometest(self):
-            thread = threading.Thread(target=thread_func)
+            thread = lcc.Thread(target=thread_func)
             thread.start()
             thread.join()
 
