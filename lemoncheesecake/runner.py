@@ -7,6 +7,7 @@ Created on Jan 24, 2016
 import os
 import sys
 import traceback
+import threading
 
 from lemoncheesecake.utils import IS_PYTHON3, get_distincts_in_list
 from lemoncheesecake.runtime import *
@@ -363,6 +364,10 @@ class _Runner:
         self._abort_all_tests = False
         self._abort_suite = None
 
+        # start event handler thread
+        event_handler_thread = threading.Thread(target=events.handler_loop)
+        event_handler_thread.start()
+
         self._begin_test_session()
 
         # setup test session
@@ -392,6 +397,10 @@ class _Runner:
             self._end_test_session_teardown()
 
         self._end_test_session()
+
+        # wait for event handler to finish
+        events.end_of_events()
+        event_handler_thread.join()
 
     def run(self):
         executed_fixtures = []

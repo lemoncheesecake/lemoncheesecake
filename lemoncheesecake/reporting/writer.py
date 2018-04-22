@@ -188,9 +188,10 @@ class ReportWriter:
     def on_step_end(self, event):
         report_node_data = self.report.get(event.location)
         step = self._lookup_step(report_node_data.steps, event.step)
-        if not step._detached:
-            raise ProgrammingError("Cannot end step '%s', only detached steps can be explicitly ended" % step.description)
-        step.end_time = event.time
+
+        # only detached steps can be explicitly ended, otherwise do nothing
+        if step._detached:
+            step.end_time = event.time
 
     def on_log(self, event):
         self._add_step_entry(

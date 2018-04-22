@@ -350,25 +350,6 @@ def test_end_step_on_detached_step():
     assert test.steps[0].entries[0].message == "log"
 
 
-def test_end_step_on_standard_step():
-    got_exception = []
-
-    @lcc.suite("MySuite")
-    class mysuite:
-        @lcc.test("Some test")
-        def sometest(self):
-            lcc.set_step("step")
-            lcc.log_info("log")
-            try:
-                lcc.end_step("step")
-            except ProgrammingError:
-                got_exception.append(True)
-
-    report = run_suite_class(mysuite)
-
-    assert got_exception
-
-
 def test_detached_step():
     @lcc.suite("MySuite")
     class mysuite:

@@ -1,5 +1,3 @@
-import time
-
 import pytest
 
 from lemoncheesecake import events
@@ -9,6 +7,11 @@ from lemoncheesecake import events
 def reset_events():
     yield
     events.reset()
+
+
+def process_events():
+    events.end_of_events()
+    events.handler_loop()
 
 
 class MyEvent(events.Event):
@@ -24,6 +27,7 @@ def test_fire():
     events.register_event(MyEvent)
     events.subscribe_to_event(MyEvent, handler)
     events.fire(MyEvent(42))
+    process_events()
     assert i_got_called[0] == 42
 
 
@@ -35,6 +39,7 @@ def test_unsubscribe():
     events.subscribe_to_event(MyEvent, handler)
     events.unsubscribe_from_event(MyEvent, handler)
     events.fire(MyEvent(42))
+    process_events()
     assert len(i_got_called) == 0
 
 
@@ -46,4 +51,5 @@ def test_reset():
     events.subscribe_to_event(MyEvent, handler)
     events.reset()
     events.fire(MyEvent(42))
+    process_events()
     assert len(i_got_called) == 0
