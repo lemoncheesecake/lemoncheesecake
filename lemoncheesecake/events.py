@@ -3,6 +3,7 @@ import re
 import inspect
 
 from lemoncheesecake.utils import camel_case_to_snake_case, IS_PYTHON2
+from lemoncheesecake.exceptions import serialize_current_exception
 
 if IS_PYTHON2:
     from Queue import Queue
@@ -50,7 +51,7 @@ class EventManager:
     def __init__(self):
         self._event_types = {}
         self._queue = Queue()
-        self._pending_failure = None
+        self._pending_failure = None, None
 
     def register_events(self, *event_classes):
         for event_class in event_classes:
@@ -95,7 +96,7 @@ class EventManager:
             try:
                 self._event_types[event.__class__.get_name()].handle(event)
             except Exception as excp:
-                self._pending_failure = excp
+                self._pending_failure = excp, serialize_current_exception()
                 break
             finally:
                 self._queue.task_done()

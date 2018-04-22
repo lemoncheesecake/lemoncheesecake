@@ -149,25 +149,37 @@ class _Runner:
                 stacktrace = stacktrace.decode("utf-8", "replace")
             log_error("Caught unexpected exception while running test: " + stacktrace)
 
+    @staticmethod
+    def _check_event_failure():
+        exception, serialized_exception = events.get_pending_failure()
+        if exception:
+            raise exception.__class__(serialized_exception)
+
     def _begin_test(self, test):
+        self._check_event_failure()
         events.fire(events.TestStartEvent(test))
         set_runtime_location(TreeLocation.in_test(test))
 
     def _end_test(self, test):
+        self._check_event_failure()
         events.fire(events.TestEndEvent(test))
 
     def _begin_test_setup(self, test):
+        self._check_event_failure()
         events.fire(events.TestSetupStartEvent(test))
         set_step("Setup test")
 
     def _end_test_setup(self, test, outcome):
+        self._check_event_failure()
         events.fire(events.TestSetupEndEvent(test, outcome))
 
     def _begin_test_teardown(self, test):
+        self._check_event_failure()
         events.fire(events.TestTeardownStartEvent(test))
         set_step("Teardown test")
 
     def _end_test_teardown(self, test, outcome):
+        self._check_event_failure()
         events.fire(events.TestTeardownEndEvent(test, outcome))
 
     def run_test(self, test, suite):
@@ -244,25 +256,31 @@ class _Runner:
         self._end_test(test)
 
     def _begin_suite(self, suite):
+        self._check_event_failure()
         events.fire(events.SuiteStartEvent(suite))
 
     def _end_suite(self, suite):
+        self._check_event_failure()
         events.fire(events.SuiteEndEvent(suite))
 
     def _begin_suite_setup(self, suite):
+        self._check_event_failure()
         events.fire(events.SuiteSetupStartEvent(suite))
         set_runtime_location(TreeLocation.in_suite_setup(suite))
         set_step("Setup suite")
 
     def _end_suite_setup(self, suite):
+        self._check_event_failure()
         events.fire(events.SuiteSetupEndEvent(suite))
 
     def _begin_suite_teardown(self, suite):
+        self._check_event_failure()
         events.fire(events.SuiteTeardownStartEvent(suite))
         set_runtime_location(TreeLocation.in_suite_teardown(suite))
         set_step("Teardown suite")
 
     def _end_suite_teardown(self, suite):
+        self._check_event_failure()
         events.fire(events.SuiteTeardownEndEvent(suite))
 
     def run_suite(self, suite):
@@ -401,6 +419,7 @@ class _Runner:
         # wait for event handler to finish
         events.end_of_events()
         event_handler_thread.join()
+        self._check_event_failure()
 
     def run(self):
         executed_fixtures = []

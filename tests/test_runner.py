@@ -12,6 +12,8 @@ from lemoncheesecake.exceptions import *
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite import add_test_into_suite
 from lemoncheesecake.testtree import flatten_tests
+from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
+from lemoncheesecake.fixtures import  FixtureRegistry
 
 from helpers.runner import run_suite_class, run_suite_classes, build_fixture_registry, run_suite, build_suite_from_module
 from helpers.report import assert_test_statuses, assert_test_passed, assert_test_failed, assert_test_skipped, \
@@ -1235,3 +1237,25 @@ def test_get_fixture_not_executed():
     run_suite_class(mysuite)
 
     assert marker == ["exception"]
+
+
+def test_exception_in_reporting_backend(tmpdir):
+    class MyException(Exception):
+        pass
+
+    class MyReportingSession(ReportingSession):
+        def on_log(self, event):
+            raise MyException()
+
+    class MyReportingBackend(ReportingBackend):
+        def create_reporting_session(self, report_dir, report):
+            return MyReportingSession()
+
+    @lcc.suite("MySuite")
+    class mysuite(object):
+        @lcc.test("mytest")
+        def mytest(self):
+            lcc.log_info("some log")
+
+    with pytest.raises(MyException) as excinfo:
+        runner.run_suites(load_suites_from_classes([mysuite]), FixtureRegistry(), [MyReportingBackend()], tmpdir.strpath)
