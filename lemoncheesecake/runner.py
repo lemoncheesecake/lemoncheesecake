@@ -8,6 +8,7 @@ import os
 import sys
 import traceback
 import threading
+from multiprocessing.dummy import Pool
 
 from lemoncheesecake.utils import IS_PYTHON3, get_distincts_in_list
 from lemoncheesecake.runtime import *
@@ -16,7 +17,7 @@ from lemoncheesecake.reporting import Report, initialize_report_writer, initiali
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
     UserError, serialize_current_exception
 from lemoncheesecake import events
-from lemoncheesecake.testtree import TreeLocation
+from lemoncheesecake.testtree import TreeLocation, flatten_tests
 
 
 def _get_fixtures_used_in_suite(suite):
@@ -38,12 +39,13 @@ def _get_fixtures_used_in_suite_recursively(suite):
 
 
 class _Runner:
-    def __init__(self, suites, fixture_registry, reporting_backends, report_dir, stop_on_failure=False):
+    def __init__(self, suites, fixture_registry, reporting_backends, report_dir, stop_on_failure=False, nb_threads=1):
         self.suites = suites
         self.fixture_registry = fixture_registry
         self.reporting_backends = reporting_backends
         self.report_dir = report_dir
         self.stop_on_failure = stop_on_failure
+        self.nb_threads = nb_threads
         # attributes set at runtime:
         self._report = None
         self._session = None
@@ -182,7 +184,7 @@ class _Runner:
         self._check_event_failure()
         events.fire(events.TestTeardownEndEvent(test, outcome))
 
-    def run_test(self, test, suite):
+    def run_test(self, test):
         ###
         # Checker whether the test must be executed or not
         ###
@@ -207,6 +209,7 @@ class _Runner:
         ###
         # Setup test (setup and fixtures)
         ###
+        suite = test.parent_suite
         test_setup_error = False
         setup_teardown_funcs = []
         teardown_funcs = []
@@ -321,8 +324,9 @@ class _Runner:
         ###
         # Run tests
         ###
-        for test in suite.get_tests():
-            self.run_test(test, suite)
+        pool = Pool(self.nb_threads)
+        pool.map(self.run_test, suite.get_tests())
+        pool.close()
 
         ###
         # Teardown suite
@@ -377,8 +381,12 @@ class _Runner:
         self._report = Report()
         self._report.add_info("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:]))
         self._session = initialize_report_writer(self._report)
+        nb_tests = len(list(flatten_tests(self.suites)))
         initialize_runtime(self.report_dir, self._report, self.fixture_registry)
-        initialize_reporting_backends(self.reporting_backends, self.report_dir, self._report)
+        initialize_reporting_backends(
+            self.reporting_backends, self.report_dir, self._report,
+            parallel=self.nb_threads > 1 and nb_tests > 1
+        )
         self._abort_all_tests = False
         self._abort_suite = None
 
@@ -459,7 +467,7 @@ class _Runner:
         return stats.is_successful()
 
 
-def run_suites(suites, fixture_registry, reporting_backends, report_dir, stop_on_failure=False):
+def run_suites(suites, fixture_registry, reporting_backends, report_dir, stop_on_failure=False, nb_threads=1):
     """
     Run suites.
 
@@ -467,5 +475,5 @@ def run_suites(suites, fixture_registry, reporting_backends, report_dir, stop_on
     - reporting_backends: instance of reporting backends that will be used to report test results
     - report_dir: an existing directory where report files will be stored
     """
-    runner = _Runner(suites, fixture_registry, reporting_backends, report_dir, stop_on_failure)
+    runner = _Runner(suites, fixture_registry, reporting_backends, report_dir, stop_on_failure, nb_threads)
     return runner.run()  # TODO: return a Report instance instead

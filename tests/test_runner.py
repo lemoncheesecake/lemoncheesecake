@@ -13,7 +13,7 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.suite import add_test_into_suite
 from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
-from lemoncheesecake.fixtures import  FixtureRegistry
+from lemoncheesecake.fixtures import FixtureRegistry
 
 from helpers.runner import run_suite_class, run_suite_classes, build_fixture_registry, run_suite, build_suite_from_module
 from helpers.report import assert_test_statuses, assert_test_passed, assert_test_failed, assert_test_skipped, \
@@ -1248,7 +1248,7 @@ def test_exception_in_reporting_backend(tmpdir):
             raise MyException()
 
     class MyReportingBackend(ReportingBackend):
-        def create_reporting_session(self, report_dir, report):
+        def create_reporting_session(self, report_dir, report, parallel):
             return MyReportingSession()
 
     @lcc.suite("MySuite")

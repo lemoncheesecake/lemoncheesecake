@@ -165,7 +165,7 @@ class SlackReportingBackend(ReportingBackend):
     def is_available(self):
         return SLACKER_IS_AVAILABLE
 
-    def create_reporting_session(self, report_dir, report):
+    def create_reporting_session(self, report_dir, report, parallel=False):
         return EndOfTestsNotifier(
             get_slack_auth_token(), get_slack_channel(), get_message_template(),
             proxy=get_slack_http_proxy(), only_notify_failure=get_only_notify_on_failure()

@@ -46,21 +46,34 @@ class RunCommand(Command):
         add_run_filter_cli_args(cli_parser)
 
         test_execution_group = cli_parser.add_argument_group("Test execution")
-        test_execution_group.add_argument("--exit-error-on-failure", action="store_true",
+        test_execution_group.add_argument(
+            "--exit-error-on-failure", action="store_true",
             help="Exit with non-zero code if there is at least one non-passed test"
         )
-        test_execution_group.add_argument("--stop-on-failure", action="store_true",
+        test_execution_group.add_argument(
+            "--stop-on-failure", action="store_true",
             help="Stop tests execution on the first non-passed test"
         )
+        test_execution_group.add_argument(
+            "--threads", type=int, default=1,
+            help="Number of threads used to execute (default: 1; threads > 1 is still EXPERIMENTAL)"
+        )
+
         reporting_group = cli_parser.add_argument_group("Reporting")
-        reporting_group.add_argument("--report-dir", "-r", required=False, help="Directory where report data will be stored")
-        reporting_group.add_argument("--reporting", nargs="+", default=default_reporting_backend_names,
+        reporting_group.add_argument(
+            "--report-dir", "-r", required=False,
+            help="Directory where report data will be stored"
+        )
+        reporting_group.add_argument(
+            "--reporting", nargs="+", default=default_reporting_backend_names,
             help="The list of reporting backends to use"
         )
-        reporting_group.add_argument("--enable-reporting", nargs="+", default=[],
+        reporting_group.add_argument(
+            "--enable-reporting", nargs="+", default=[],
             help="The list of reporting backends to add (to base backends)"
         )
-        reporting_group.add_argument("--disable-reporting", nargs="+", default=[],
+        reporting_group.add_argument(
+            "--disable-reporting", nargs="+", default=[],
             help="The list of reporting backends to remove (from base backends)"
         )
 
@@ -80,7 +93,9 @@ class RunCommand(Command):
         # Set reporting backends
         reporting_backends = {
             backend.name: backend for backend in
-                filter_reporting_backends_by_capabilities(project.get_all_reporting_backends(), CAPABILITY_REPORTING_SESSION)
+                filter_reporting_backends_by_capabilities(
+                    project.get_all_reporting_backends(), CAPABILITY_REPORTING_SESSION
+                )
         }
         selected_reporting_backends = set()
         for backend_name in cli_args.reporting + cli_args.enable_reporting:
@@ -126,7 +141,7 @@ class RunCommand(Command):
         # Run tests
         is_successful = run_suites(
             suites, fixture_registry, selected_reporting_backends, report_dir,
-            stop_on_failure=cli_args.stop_on_failure
+            stop_on_failure=cli_args.stop_on_failure, nb_threads=cli_args.threads
         )
 
         # Handle after run hook
