@@ -42,6 +42,7 @@ def load_test(obj):
     test.properties.update(md.properties)
     test.links.extend(md.links)
     test.disabled = md.disabled
+    test.rank = md.rank
     return test
 
 

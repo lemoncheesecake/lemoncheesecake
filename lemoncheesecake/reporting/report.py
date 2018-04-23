@@ -20,6 +20,7 @@ __all__ = (
 TEST_STATUSES = "passed", "failed", "skipped", "disabled"
 DEFAULT_REPORT_TITLE = "Test Report"
 
+
 # NB: it would be nicer to use:
 # datetime.isoformat(sep=' ', timespec='milliseconds')
 # unfortunately, the timespec argument is only available since Python 3.6
@@ -115,6 +116,8 @@ class TestData(BaseTest):
         self.steps = []
         self.start_time = None
         self.end_time = None
+        # non-serialized attributes (only set in-memory during test execution)
+        self.rank = None
         
     def has_failure(self):
         return len(list(filter(lambda step: step.has_failure(), self.steps))) > 0
@@ -147,6 +150,8 @@ class SuiteData(BaseSuite):
         BaseSuite.__init__(self, name, description)
         self.suite_setup = None
         self.suite_teardown = None
+        # non-serialized attributes (only set in-memory during test execution)
+        self.rank = None
 
     @property
     def start_time(self):
@@ -169,6 +174,14 @@ class SuiteData(BaseSuite):
     @property
     def duration(self):
         return _get_duration(self.start_time, self.end_time)
+
+    def get_tests(self):
+        tests = super(SuiteData, self).get_tests()
+        return sorted(tests, key=lambda t: t.rank)
+
+    def get_suites(self, include_empty_suites=False):
+        suites = super(SuiteData, self).get_suites(include_empty_suites)
+        return sorted(suites, key=lambda s: s.rank)
 
 
 class _ReportStats:
@@ -282,7 +295,7 @@ class Report:
         self.suites.append(suite)
     
     def get_suites(self):
-        return self.suites
+        return sorted(self.suites, key=lambda s: s.rank)
 
     def get_suite(self, hierarchy):
         return find_suite(self.suites, hierarchy)

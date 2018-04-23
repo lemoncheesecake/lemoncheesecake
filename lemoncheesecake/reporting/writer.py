@@ -105,6 +105,7 @@ class ReportWriter:
         suite_data.tags.extend(suite.tags)
         suite_data.properties.update(suite.properties)
         suite_data.links.extend(suite.links)
+        suite_data.rank = suite.rank
         if suite.parent_suite:
             parent_suite_data = self._get_suite_data(suite.parent_suite)
             parent_suite_data.add_suite(suite_data)
@@ -145,6 +146,7 @@ class ReportWriter:
         test_data.tags.extend(test.tags)
         test_data.properties.update(test.properties)
         test_data.links.extend(test.links)
+        test_data.rank = test.rank
         test_data.start_time = event.time
 
         suite_data = self._get_suite_data(event.test.parent_suite)

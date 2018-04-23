@@ -20,6 +20,7 @@ class Test(BaseTest):
         BaseTest.__init__(self, name, description)
         self.callback = callback
         self.disabled = False
+        self.rank = 0
 
     def is_disabled(self):
         node = self
