@@ -117,7 +117,7 @@ class TestData(BaseTest):
         self.start_time = None
         self.end_time = None
         # non-serialized attributes (only set in-memory during test execution)
-        self.rank = None
+        self.rank = 0
         
     def has_failure(self):
         return len(list(filter(lambda step: step.has_failure(), self.steps))) > 0
@@ -151,7 +151,7 @@ class SuiteData(BaseSuite):
         self.suite_setup = None
         self.suite_teardown = None
         # non-serialized attributes (only set in-memory during test execution)
-        self.rank = None
+        self.rank = 0
 
     @property
     def start_time(self):
