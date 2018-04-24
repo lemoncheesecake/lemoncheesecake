@@ -46,6 +46,7 @@ class _Runtime:
         self.fixture_registry = fixture_registry
         self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
         self.attachment_count = 0
+        self._attachment_lock = threading.Lock()
         self._failures = set()
         self._local = threading.local()
         self._local.location = None
@@ -86,10 +87,11 @@ class _Runtime:
 
     @contextmanager
     def prepare_attachment(self, filename, description, step=None):
-        attachment_filename = "%04d_%s" % (self.attachment_count + 1, filename)
-        self.attachment_count += 1
-        if not os.path.exists(self.attachments_dir):
-            os.mkdir(self.attachments_dir)
+        with self._attachment_lock:
+            attachment_filename = "%04d_%s" % (self.attachment_count + 1, filename)
+            self.attachment_count += 1
+            if not os.path.exists(self.attachments_dir):
+                os.mkdir(self.attachments_dir)
 
         yield os.path.join(self.attachments_dir, attachment_filename)
 
