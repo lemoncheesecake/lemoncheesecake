@@ -46,7 +46,6 @@ class _Runtime:
         self.fixture_registry = fixture_registry
         self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
         self.attachment_count = 0
-        self.step_lock = False
         self._failures = set()
         self._local = threading.local()
         self._local.location = None
@@ -62,10 +61,7 @@ class _Runtime:
     def is_successful(self, location):
         return location not in self._failures
 
-    def set_step(self, description, force_lock=False, detached=False):
-        if self.step_lock and not force_lock:
-            return
-
+    def set_step(self, description, detached=False):
         self._local.step = description
         events.fire(events.StepEvent(self._local.location, description, detached=detached))
 
@@ -127,11 +123,11 @@ class _Runtime:
             raise ProgrammingError(str(excp))
 
 
-def set_step(description, force_lock=False, detached=False):
+def set_step(description, detached=False):
     """
     Set a new step.
     """
-    get_runtime().set_step(description, force_lock=force_lock, detached=detached)
+    get_runtime().set_step(description, detached=detached)
 
 
 def end_step(step):
