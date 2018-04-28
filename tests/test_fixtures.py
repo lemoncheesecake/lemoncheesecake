@@ -2,8 +2,11 @@ import pytest
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.fixtures import load_fixtures_from_func, FixtureRegistry, BuiltinFixture
-from lemoncheesecake.suite import load_suite_from_class
+from lemoncheesecake.suite import load_suite_from_class, load_suites_from_classes
+
 from lemoncheesecake import exceptions
+
+from helpers.runner import build_fixture_registry
 
 
 def test_fixture_decorator():
@@ -493,3 +496,90 @@ def test_check_fixtures_in_suites_incompatible_fixture_in_inject():
     registry = build_registry()
     with pytest.raises(exceptions.FixtureError):
         registry.check_fixtures_in_suites([suite])
+
+
+@pytest.fixture()
+def fixture_registry_sample():
+    @lcc.fixture(scope="session_prerun")
+    def fixt_for_session_prerun1():
+        pass
+
+    @lcc.fixture(scope="session")
+    def fixt_for_session1():
+        pass
+
+    @lcc.fixture(scope="session")
+    def fixt_for_session2(fixt_for_session_prerun1):
+        pass
+
+    @lcc.fixture(scope="session")
+    def fixt_for_session3():
+        pass
+
+    @lcc.fixture(scope="suite")
+    def fixt_for_suite1(fixt_for_session1):
+        pass
+
+    @lcc.fixture(scope="suite")
+    def fixt_for_suite2(fixt_for_session2):
+        pass
+
+    @lcc.fixture(scope="test")
+    def fixt_for_test1(fixt_for_suite1):
+        pass
+
+    @lcc.fixture(scope="test")
+    def fixt_for_test2(fixt_for_test1):
+        pass
+
+    @lcc.fixture(scope="test")
+    def fixt_for_test3(fixt_for_session2):
+        pass
+
+    return build_fixture_registry(
+        fixt_for_session_prerun1, fixt_for_session1, fixt_for_session2, fixt_for_session3,
+        fixt_for_suite1, fixt_for_suite2,
+        fixt_for_test1, fixt_for_test2, fixt_for_test3
+    )
+
+
+@pytest.fixture()
+def suites_sample():
+    @lcc.suite("suite1")
+    class suite1:
+        @lcc.test("Test 1")
+        def suite1_test1(self, fixt_for_suite1):
+            pass
+
+        @lcc.test("Test 2")
+        def suite1_test2(self, fixt_for_test3):
+            pass
+
+    @lcc.suite("suite2")
+    class suite2:
+        @lcc.test("Test 1")
+        def suite2_test1(self, fixt_for_test2):
+            pass
+
+    return load_suites_from_classes([suite1, suite2])
+
+
+def test_get_fixtures_to_be_executed_for_session_prerun(fixture_registry_sample, suites_sample):
+    actual = fixture_registry_sample.get_fixtures_to_be_executed_for_session_prerun(suites_sample)
+    assert sorted(actual) == ["fixt_for_session_prerun1"]
+
+
+def test_get_fixtures_to_be_executed_for_session(fixture_registry_sample, suites_sample):
+    actual = fixture_registry_sample.get_fixtures_to_be_executed_for_session(suites_sample)
+    assert sorted(actual) == ["fixt_for_session1", "fixt_for_session2"]
+
+
+def test_get_fixtures_to_be_executed_for_suite(fixture_registry_sample, suites_sample):
+    assert sorted(fixture_registry_sample.get_fixtures_to_be_executed_for_suite(suites_sample[0])) == ["fixt_for_suite1"]
+    assert sorted(fixture_registry_sample.get_fixtures_to_be_executed_for_suite(suites_sample[1])) == ["fixt_for_suite1"]
+
+
+def test_get_fixtures_to_be_executed_for_test(fixture_registry_sample, suites_sample):
+    assert sorted(fixture_registry_sample.get_fixtures_to_be_executed_for_test(suites_sample[0].get_tests()[0])) == []
+    assert sorted(fixture_registry_sample.get_fixtures_to_be_executed_for_test(suites_sample[0].get_tests()[1])) == ["fixt_for_test3"]
+    assert sorted(fixture_registry_sample.get_fixtures_to_be_executed_for_test(suites_sample[1].get_tests()[0])) == ["fixt_for_test1", "fixt_for_test2"]

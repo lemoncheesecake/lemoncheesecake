@@ -15,7 +15,7 @@ from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
 from lemoncheesecake.fixtures import FixtureRegistry
 
-from helpers.runner import run_suite_class, run_suite_classes, build_fixture_registry, run_suite, build_suite_from_module
+from helpers.runner import run_suite_class, run_suite_classes, run_suite, build_suite_from_module
 from helpers.report import assert_test_statuses, assert_test_passed, assert_test_failed, assert_test_skipped, \
     assert_report_errors
 
@@ -931,99 +931,6 @@ def test_fixture_called_multiple_times():
     run_suite_class(MySuite, fixtures=[fixt])
 
     assert marker == [1, 1]
-
-
-@pytest.fixture()
-def fixture_registry_sample():
-    @lcc.fixture(scope="session_prerun")
-    def fixt_for_session_prerun1():
-        pass
-
-    @lcc.fixture(scope="session")
-    def fixt_for_session1():
-        pass
-
-    @lcc.fixture(scope="session")
-    def fixt_for_session2(fixt_for_session_prerun1):
-        pass
-
-    @lcc.fixture(scope="session")
-    def fixt_for_session3():
-        pass
-
-    @lcc.fixture(scope="suite")
-    def fixt_for_suite1(fixt_for_session1):
-        pass
-
-    @lcc.fixture(scope="suite")
-    def fixt_for_suite2(fixt_for_session2):
-        pass
-
-    @lcc.fixture(scope="test")
-    def fixt_for_test1(fixt_for_suite1):
-        pass
-
-    @lcc.fixture(scope="test")
-    def fixt_for_test2(fixt_for_test1):
-        pass
-
-    @lcc.fixture(scope="test")
-    def fixt_for_test3(fixt_for_session2):
-        pass
-
-    return build_fixture_registry(
-        fixt_for_session_prerun1, fixt_for_session1, fixt_for_session2, fixt_for_session3,
-        fixt_for_suite1, fixt_for_suite2,
-        fixt_for_test1, fixt_for_test2, fixt_for_test3
-    )
-
-
-@pytest.fixture()
-def suites_sample():
-    @lcc.suite("suite1")
-    class suite1:
-        @lcc.test("Test 1")
-        def suite1_test1(self, fixt_for_suite1):
-            pass
-
-        @lcc.test("Test 2")
-        def suite1_test2(self, fixt_for_test3):
-            pass
-
-    @lcc.suite("suite2")
-    class suite2:
-        @lcc.test("Test 1")
-        def suite2_test1(self, fixt_for_test2):
-            pass
-
-    return load_suites_from_classes([suite1, suite2])
-
-
-def test_get_fixtures_to_be_executed_for_session_prerun(fixture_registry_sample, suites_sample):
-    run = runner._Runner(suites_sample, fixture_registry_sample, [], None)
-
-    assert sorted(run.get_fixtures_to_be_executed_for_session_prerun()) == ["fixt_for_session_prerun1"]
-
-
-def test_get_fixtures_to_be_executed_for_session(fixture_registry_sample, suites_sample):
-    run = runner._Runner(suites_sample, fixture_registry_sample, [], None)
-
-    assert sorted(run.get_fixtures_to_be_executed_for_session()) == ["fixt_for_session1", "fixt_for_session2"]
-
-
-def test_get_fixtures_to_be_executed_for_suite(fixture_registry_sample, suites_sample):
-    run = runner._Runner(suites_sample, fixture_registry_sample, [], None)
-
-    assert sorted(run.get_fixtures_to_be_executed_for_suite(suites_sample[0])) == ["fixt_for_suite1"]
-    assert sorted(run.get_fixtures_to_be_executed_for_suite(suites_sample[1])) == ["fixt_for_suite1"]
-
-
-def test_get_fixtures_to_be_executed_for_test(fixture_registry_sample, suites_sample):
-    run = runner._Runner(suites_sample, fixture_registry_sample, [], None)
-
-    assert sorted(run.get_fixtures_to_be_executed_for_test(suites_sample[0].get_tests()[0])) == []
-    assert sorted(run.get_fixtures_to_be_executed_for_test(suites_sample[0].get_tests()[1])) == ["fixt_for_test3"]
-    assert sorted(run.get_fixtures_to_be_executed_for_test(suites_sample[1].get_tests()[0])) == ["fixt_for_test1", "fixt_for_test2"]
 
 
 def test_fixture_name_scopes():

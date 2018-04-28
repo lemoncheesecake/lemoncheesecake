@@ -10,8 +10,6 @@ import traceback
 import threading
 from multiprocessing.dummy import Pool
 
-from orderedset import OrderedSet
-
 from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.runtime import *
 from lemoncheesecake.runtime import initialize_runtime, set_runtime_location, is_location_successful
@@ -20,24 +18,6 @@ from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, Fix
     UserError, serialize_current_exception
 from lemoncheesecake import events
 from lemoncheesecake.testtree import TreeLocation, flatten_tests
-
-
-def _get_fixtures_used_in_suite(suite):
-    fixtures = suite.get_fixtures()
-
-    for test in suite.get_tests():
-        fixtures.update(test.get_fixtures())
-
-    return fixtures
-
-
-def _get_fixtures_used_in_suite_recursively(suite):
-    fixtures = _get_fixtures_used_in_suite(suite)
-
-    for sub_suite in suite.get_suites():
-        fixtures.update(_get_fixtures_used_in_suite_recursively(sub_suite))
-
-    return fixtures
 
 
 class _Runner:
@@ -53,31 +33,6 @@ class _Runner:
         self._session = None
         self._abort_all_tests = False
         self._abort_suite = None
-
-    def get_fixtures_with_dependencies_for_scope(self, direct_fixtures, scope):
-        fixtures = OrderedSet()
-        for fixture in direct_fixtures:
-            fixtures.update(self.fixture_registry.get_fixture_dependencies(fixture))
-        fixtures.update(direct_fixtures)
-        return OrderedSet(filter(lambda f: self.fixture_registry.get_fixture_scope(f) == scope, fixtures))
-
-    def get_fixtures_to_be_executed_for_session_prerun(self):
-        fixtures = OrderedSet()
-        for suite in self.suites:
-            fixtures.update(_get_fixtures_used_in_suite_recursively(suite))
-        return self.get_fixtures_with_dependencies_for_scope(fixtures, "session_prerun")
-
-    def get_fixtures_to_be_executed_for_session(self):
-        fixtures = OrderedSet()
-        for suite in self.suites:
-            fixtures.update(_get_fixtures_used_in_suite_recursively(suite))
-        return self.get_fixtures_with_dependencies_for_scope(fixtures, "session")
-
-    def get_fixtures_to_be_executed_for_suite(self, suite):
-        return self.get_fixtures_with_dependencies_for_scope(_get_fixtures_used_in_suite(suite), "suite")
-
-    def get_fixtures_to_be_executed_for_test(self, test):
-        return self.get_fixtures_with_dependencies_for_scope(test.get_fixtures(), "test")
 
     def run_setup_funcs(self, funcs, location):
         teardown_funcs = []
@@ -221,7 +176,7 @@ class _Runner:
             (lambda: suite.get_hook("teardown_test")(test.name)) if suite.has_hook("teardown_test") else None
         ])
         setup_teardown_funcs.extend([
-            self.get_fixture_as_funcs(f) for f in self.get_fixtures_to_be_executed_for_test(test)
+            self.get_fixture_as_funcs(f) for f in self.fixture_registry.get_fixtures_to_be_executed_for_test(test)
         ])
 
         if len(list(filter(lambda p: p[0] is not None, setup_teardown_funcs))) > 0:
@@ -302,7 +257,7 @@ class _Runner:
             setup_teardown_funcs = []
             # first, fixtures must be executed
             setup_teardown_funcs.extend([
-                self.get_fixture_as_funcs(f) for f in self.get_fixtures_to_be_executed_for_suite(suite)
+                self.get_fixture_as_funcs(f) for f in self.fixture_registry.get_fixtures_to_be_executed_for_suite(suite)
             ])
             # then, fixtures must be injected into suite
             setup_teardown_funcs.append((lambda: self.inject_fixtures_into_suite(suite), None))
@@ -402,7 +357,7 @@ class _Runner:
         setup_teardown_funcs = []
         teardown_funcs = []
         setup_teardown_funcs.extend([
-            self.get_fixture_as_funcs(f) for f in self.get_fixtures_to_be_executed_for_session()
+            self.get_fixture_as_funcs(f) for f in self.fixture_registry.get_fixtures_to_be_executed_for_session(self.suites)
         ])
 
         if len(list(filter(lambda p: p[0] is not None, setup_teardown_funcs))) > 0:
@@ -436,7 +391,7 @@ class _Runner:
 
         # setup pre_session fixtures
         errors = []
-        for fixture in self.get_fixtures_to_be_executed_for_session_prerun():
+        for fixture in self.fixture_registry.get_fixtures_to_be_executed_for_session_prerun(self.suites):
             try:
                 self.fixture_registry.execute_fixture(fixture)
             except UserError:

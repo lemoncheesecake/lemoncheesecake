@@ -216,6 +216,49 @@ class FixtureRegistry:
     def get_fixture_scope(self, name):
         return self._fixtures[name].scope
 
+    @staticmethod
+    def get_fixtures_used_in_suite(suite):
+        fixtures = suite.get_fixtures()
+
+        for test in suite.get_tests():
+            fixtures.update(test.get_fixtures())
+
+        return fixtures
+
+    @staticmethod
+    def get_fixtures_used_in_suite_recursively(suite):
+        fixtures = FixtureRegistry.get_fixtures_used_in_suite(suite)
+
+        for sub_suite in suite.get_suites():
+            fixtures.update(FixtureRegistry.get_fixtures_used_in_suite_recursively(sub_suite))
+
+        return fixtures
+
+    def get_fixtures_with_dependencies_for_scope(self, direct_fixtures, scope):
+        fixtures = OrderedSet()
+        for fixture in direct_fixtures:
+            fixtures.update(self.get_fixture_dependencies(fixture))
+        fixtures.update(direct_fixtures)
+        return OrderedSet(filter(lambda f: self._fixtures[f].scope == scope, fixtures))
+
+    def get_fixtures_to_be_executed_for_session_prerun(self, suites):
+        fixtures = OrderedSet()
+        for suite in suites:
+            fixtures.update(FixtureRegistry.get_fixtures_used_in_suite_recursively(suite))
+        return self.get_fixtures_with_dependencies_for_scope(fixtures, "session_prerun")
+
+    def get_fixtures_to_be_executed_for_session(self, suites):
+        fixtures = OrderedSet()
+        for suite in suites:
+            fixtures.update(FixtureRegistry.get_fixtures_used_in_suite_recursively(suite))
+        return self.get_fixtures_with_dependencies_for_scope(fixtures, "session")
+
+    def get_fixtures_to_be_executed_for_suite(self, suite):
+        return self.get_fixtures_with_dependencies_for_scope(FixtureRegistry.get_fixtures_used_in_suite(suite), "suite")
+
+    def get_fixtures_to_be_executed_for_test(self, test):
+        return self.get_fixtures_with_dependencies_for_scope(test.get_fixtures(), "test")
+
     def execute_fixture(self, name):
         fixture = self._fixtures[name]
         params = {}
