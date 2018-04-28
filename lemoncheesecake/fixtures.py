@@ -6,9 +6,11 @@ Created on Jan 7, 2017
 
 import inspect
 
+from orderedset import OrderedSet
+
 from lemoncheesecake.importer import import_module, get_matching_files, get_py_files_from_dir
 from lemoncheesecake.exceptions import FixtureError, ProgrammingError
-from lemoncheesecake.utils import get_distincts_in_list, get_callable_args
+from lemoncheesecake.utils import get_callable_args
 
 __all__ = (
     "fixture",
@@ -134,29 +136,25 @@ class FixtureRegistry:
     def get_fixture(self, name):
         return self._fixtures[name]
 
-    def _get_fixture_dependencies(self, name, orig_fixture):
+    def get_fixture_dependencies(self, name, orig_fixture=None):
         fixture_params = [p for p in self._fixtures[name].params if p != "fixture_name"]
         if orig_fixture and orig_fixture in fixture_params:
             raise FixtureError("Fixture '%s' has a circular dependency on fixture '%s'" % (orig_fixture, name))
 
-        dependencies = []
+        dependencies = OrderedSet()
         for param in fixture_params:
             if param not in self._fixtures:
                 raise FixtureError("Fixture '%s' used by fixture '%s' does not exist" % (param, name))
-            dependencies.extend(self._get_fixture_dependencies(param, orig_fixture if orig_fixture else name))
-        dependencies.extend(fixture_params)
+            dependencies.update(self.get_fixture_dependencies(param, orig_fixture if orig_fixture else name))
+        dependencies.update(fixture_params)
 
         return dependencies
 
-    def get_fixture_dependencies(self, name):
-        dependencies = self._get_fixture_dependencies(name, None)
-        return get_distincts_in_list(dependencies)
-
     def filter_fixtures(self, base_names=[], scope=None, is_executed=None, with_dependencies=False):
         def do_filter_fixture(fixture):
-            if scope != None and fixture.scope != scope:
+            if scope and fixture.scope != scope:
                 return False
-            if is_executed != None and fixture.is_executed() != is_executed:
+            if is_executed is not None and fixture.is_executed() != is_executed:
                 return False
             return True
 

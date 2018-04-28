@@ -10,7 +10,9 @@ import traceback
 import threading
 from multiprocessing.dummy import Pool
 
-from lemoncheesecake.utils import IS_PYTHON3, get_distincts_in_list
+from orderedset import OrderedSet
+
+from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.runtime import *
 from lemoncheesecake.runtime import initialize_runtime, set_runtime_location, is_location_successful
 from lemoncheesecake.reporting import Report, initialize_report_writer, initialize_reporting_backends
@@ -24,18 +26,18 @@ def _get_fixtures_used_in_suite(suite):
     fixtures = suite.get_fixtures()
 
     for test in suite.get_tests():
-        fixtures.extend(test.get_fixtures())
+        fixtures.update(test.get_fixtures())
 
-    return get_distincts_in_list(fixtures)
+    return fixtures
 
 
 def _get_fixtures_used_in_suite_recursively(suite):
     fixtures = _get_fixtures_used_in_suite(suite)
 
     for sub_suite in suite.get_suites():
-        fixtures.extend(_get_fixtures_used_in_suite_recursively(sub_suite))
+        fixtures.update(_get_fixtures_used_in_suite_recursively(sub_suite))
 
-    return get_distincts_in_list(fixtures)
+    return fixtures
 
 
 class _Runner:
@@ -53,23 +55,23 @@ class _Runner:
         self._abort_suite = None
 
     def get_fixtures_with_dependencies_for_scope(self, direct_fixtures, scope):
-        fixtures = []
+        fixtures = OrderedSet()
         for fixture in direct_fixtures:
-            fixtures.extend(self.fixture_registry.get_fixture_dependencies(fixture))
-        fixtures.extend(direct_fixtures)
-        return [f for f in get_distincts_in_list(fixtures) if self.fixture_registry.get_fixture_scope(f) == scope]
+            fixtures.update(self.fixture_registry.get_fixture_dependencies(fixture))
+        fixtures.update(direct_fixtures)
+        return OrderedSet(filter(lambda f: self.fixture_registry.get_fixture_scope(f) == scope, fixtures))
 
     def get_fixtures_to_be_executed_for_session_prerun(self):
-        fixtures = []
+        fixtures = OrderedSet()
         for suite in self.suites:
-            fixtures.extend(_get_fixtures_used_in_suite_recursively(suite))
-        return self.get_fixtures_with_dependencies_for_scope(get_distincts_in_list(fixtures), "session_prerun")
+            fixtures.update(_get_fixtures_used_in_suite_recursively(suite))
+        return self.get_fixtures_with_dependencies_for_scope(fixtures, "session_prerun")
 
     def get_fixtures_to_be_executed_for_session(self):
-        fixtures = []
+        fixtures = OrderedSet()
         for suite in self.suites:
-            fixtures.extend(_get_fixtures_used_in_suite_recursively(suite))
-        return self.get_fixtures_with_dependencies_for_scope(get_distincts_in_list(fixtures), "session")
+            fixtures.update(_get_fixtures_used_in_suite_recursively(suite))
+        return self.get_fixtures_with_dependencies_for_scope(fixtures, "session")
 
     def get_fixtures_to_be_executed_for_suite(self, suite):
         return self.get_fixtures_with_dependencies_for_scope(_get_fixtures_used_in_suite(suite), "suite")
