@@ -241,22 +241,22 @@ class FixtureRegistry:
         fixtures.update(direct_fixtures)
         return OrderedSet(filter(lambda f: self._fixtures[f].scope == scope, fixtures))
 
-    def get_fixtures_to_be_executed_for_session_prerun(self, suites):
+    def get_fixtures_scheduled_for_session_prerun(self, suites):
         fixtures = OrderedSet()
         for suite in suites:
             fixtures.update(FixtureRegistry.get_fixtures_used_in_suite_recursively(suite))
         return self.get_fixtures_with_dependencies_for_scope(fixtures, "session_prerun")
 
-    def get_fixtures_to_be_executed_for_session(self, suites):
+    def get_fixtures_scheduled_for_session(self, suites):
         fixtures = OrderedSet()
         for suite in suites:
             fixtures.update(FixtureRegistry.get_fixtures_used_in_suite_recursively(suite))
         return self.get_fixtures_with_dependencies_for_scope(fixtures, "session")
 
-    def get_fixtures_to_be_executed_for_suite(self, suite):
+    def get_fixtures_scheduled_for_suite(self, suite):
         return self.get_fixtures_with_dependencies_for_scope(FixtureRegistry.get_fixtures_used_in_suite(suite), "suite")
 
-    def get_fixtures_to_be_executed_for_test(self, test):
+    def get_fixtures_scheduled_for_test(self, test):
         return self.get_fixtures_with_dependencies_for_scope(test.get_fixtures(), "test")
 
     def execute_fixture(self, name):

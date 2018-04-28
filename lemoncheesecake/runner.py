@@ -176,7 +176,7 @@ class _Runner:
             (lambda: suite.get_hook("teardown_test")(test.name)) if suite.has_hook("teardown_test") else None
         ])
         setup_teardown_funcs.extend([
-            self.get_fixture_as_funcs(f) for f in self.fixture_registry.get_fixtures_to_be_executed_for_test(test)
+            self.get_fixture_as_funcs(f) for f in self.fixture_registry.get_fixtures_scheduled_for_test(test)
         ])
 
         if len(list(filter(lambda p: p[0] is not None, setup_teardown_funcs))) > 0:
@@ -257,7 +257,7 @@ class _Runner:
             setup_teardown_funcs = []
             # first, fixtures must be executed
             setup_teardown_funcs.extend([
-                self.get_fixture_as_funcs(f) for f in self.fixture_registry.get_fixtures_to_be_executed_for_suite(suite)
+                self.get_fixture_as_funcs(f) for f in self.fixture_registry.get_fixtures_scheduled_for_suite(suite)
             ])
             # then, fixtures must be injected into suite
             setup_teardown_funcs.append((lambda: self.inject_fixtures_into_suite(suite), None))
@@ -357,7 +357,7 @@ class _Runner:
         setup_teardown_funcs = []
         teardown_funcs = []
         setup_teardown_funcs.extend([
-            self.get_fixture_as_funcs(f) for f in self.fixture_registry.get_fixtures_to_be_executed_for_session(self.suites)
+            self.get_fixture_as_funcs(f) for f in self.fixture_registry.get_fixtures_scheduled_for_session(self.suites)
         ])
 
         if len(list(filter(lambda p: p[0] is not None, setup_teardown_funcs))) > 0:
@@ -391,7 +391,7 @@ class _Runner:
 
         # setup pre_session fixtures
         errors = []
-        for fixture in self.fixture_registry.get_fixtures_to_be_executed_for_session_prerun(self.suites):
+        for fixture in self.fixture_registry.get_fixtures_scheduled_for_session_prerun(self.suites):
             try:
                 self.fixture_registry.execute_fixture(fixture)
             except UserError:

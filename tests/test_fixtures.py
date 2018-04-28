@@ -564,22 +564,22 @@ def suites_sample():
     return load_suites_from_classes([suite1, suite2])
 
 
-def test_get_fixtures_to_be_executed_for_session_prerun(fixture_registry_sample, suites_sample):
-    actual = fixture_registry_sample.get_fixtures_to_be_executed_for_session_prerun(suites_sample)
+def test_get_fixtures_scheduled_for_session_prerun(fixture_registry_sample, suites_sample):
+    actual = fixture_registry_sample.get_fixtures_scheduled_for_session_prerun(suites_sample)
     assert sorted(actual) == ["fixt_for_session_prerun1"]
 
 
-def test_get_fixtures_to_be_executed_for_session(fixture_registry_sample, suites_sample):
-    actual = fixture_registry_sample.get_fixtures_to_be_executed_for_session(suites_sample)
+def test_get_fixtures_scheduled_for_session(fixture_registry_sample, suites_sample):
+    actual = fixture_registry_sample.get_fixtures_scheduled_for_session(suites_sample)
     assert sorted(actual) == ["fixt_for_session1", "fixt_for_session2"]
 
 
-def test_get_fixtures_to_be_executed_for_suite(fixture_registry_sample, suites_sample):
-    assert sorted(fixture_registry_sample.get_fixtures_to_be_executed_for_suite(suites_sample[0])) == ["fixt_for_suite1"]
-    assert sorted(fixture_registry_sample.get_fixtures_to_be_executed_for_suite(suites_sample[1])) == ["fixt_for_suite1"]
+def test_get_fixtures_scheduled_for_suite(fixture_registry_sample, suites_sample):
+    assert sorted(fixture_registry_sample.get_fixtures_scheduled_for_suite(suites_sample[0])) == ["fixt_for_suite1"]
+    assert sorted(fixture_registry_sample.get_fixtures_scheduled_for_suite(suites_sample[1])) == ["fixt_for_suite1"]
 
 
-def test_get_fixtures_to_be_executed_for_test(fixture_registry_sample, suites_sample):
-    assert sorted(fixture_registry_sample.get_fixtures_to_be_executed_for_test(suites_sample[0].get_tests()[0])) == []
-    assert sorted(fixture_registry_sample.get_fixtures_to_be_executed_for_test(suites_sample[0].get_tests()[1])) == ["fixt_for_test3"]
-    assert sorted(fixture_registry_sample.get_fixtures_to_be_executed_for_test(suites_sample[1].get_tests()[0])) == ["fixt_for_test1", "fixt_for_test2"]
+def test_get_fixtures_scheduled_for_test(fixture_registry_sample, suites_sample):
+    assert sorted(fixture_registry_sample.get_fixtures_scheduled_for_test(suites_sample[0].get_tests()[0])) == []
+    assert sorted(fixture_registry_sample.get_fixtures_scheduled_for_test(suites_sample[0].get_tests()[1])) == ["fixt_for_test3"]
+    assert sorted(fixture_registry_sample.get_fixtures_scheduled_for_test(suites_sample[1].get_tests()[0])) == ["fixt_for_test1", "fixt_for_test2"]
