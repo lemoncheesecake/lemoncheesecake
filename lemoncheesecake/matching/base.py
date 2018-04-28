@@ -6,7 +6,8 @@ Created on Mar 27, 2017
 
 import json
 
-from lemoncheesecake.utils import get_distincts_in_list
+from orderedset import OrderedSet
+
 from lemoncheesecake.exceptions import method_not_implemented
 
 
@@ -16,10 +17,10 @@ class MatchResult:
         self.description = description
 
     def is_success(self):
-        return self.outcome == True
+        return self.outcome is True
 
     def is_failure(self):
-        return self.outcome == False
+        return self.outcome is False
 
 
 def match_success(description=None):
@@ -75,7 +76,7 @@ def got_values(values):
 
 def merge_match_result_descriptions(results):
     return ", ".join(
-        get_distincts_in_list([result.description for result in results if result.description != None])
+        OrderedSet([result.description for result in results if result.description])
     )
 
 

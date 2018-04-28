@@ -6,7 +6,8 @@ Created on Jun 16, 2017
 
 import copy
 
-from lemoncheesecake.utils import get_distincts_in_list
+from orderedset import OrderedSet
+
 from lemoncheesecake.exceptions import CannotFindTreeNode
 
 
@@ -44,10 +45,10 @@ class BaseTreeNode(object):
 
     @property
     def hierarchy_tags(self):
-        tags = []
+        tags = OrderedSet()
         for node in self.hierarchy:
-            tags.extend(node.tags)
-        return get_distincts_in_list(tags)
+            tags.update(node.tags)
+        return tags
 
     @property
     def hierarchy_properties(self):
@@ -58,10 +59,10 @@ class BaseTreeNode(object):
 
     @property
     def hierarchy_links(self):
-        links = []
+        links = OrderedSet()
         for node in self.hierarchy:
-            links.extend(node.links)
-        return get_distincts_in_list(links)
+            links.update(node.links)
+        return links
 
     def pull_node(self):
         node = copy.copy(self)
