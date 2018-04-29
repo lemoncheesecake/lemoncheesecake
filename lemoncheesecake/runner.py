@@ -66,12 +66,6 @@ class _Runner:
                 count += 1
         return count
 
-    def get_fixture_as_funcs(self, fixture):
-        return [
-            lambda: self.fixture_registry.execute_fixture(fixture),
-            lambda: self.fixture_registry.teardown_fixture(fixture)
-        ]
-
     def get_setup_suite_as_func(self, suite, scheduled_fixtures):
         setup_suite = suite.get_hook("setup_suite")
         if setup_suite is None:
