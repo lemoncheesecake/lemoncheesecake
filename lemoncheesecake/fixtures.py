@@ -46,7 +46,31 @@ def fixture(names=None, scope="test"):
     return wrapper
 
 
-class BaseFixture:
+class FixtureResult(object):
+    def __init__(self, result):
+        if inspect.isgenerator(result):
+            self._generator = result
+            self._result = next(result)
+        else:
+            self._generator = None
+            self._result = result
+
+    def get(self):
+        return self._result
+
+    def teardown(self):
+        if not self._generator:
+            return
+
+        try:
+            next(self._generator)
+        except StopIteration:
+            pass
+        else:
+            raise FixtureError("The fixture yields more than once, only one yield is supported")
+
+
+class BaseFixture(object):
     def is_builtin(self):
         return False
 
@@ -58,15 +82,6 @@ class BaseFixture:
             "session_prerun": 4
         }[self.scope]
 
-    def is_executed(self):
-        return hasattr(self, "_result")
-
-    def teardown(self):
-        pass
-
-    def reset(self):
-        pass
-
 
 class Fixture(BaseFixture):
     def __init__(self, name, func, scope, params):
@@ -74,34 +89,12 @@ class Fixture(BaseFixture):
         self.func = func
         self.scope = scope
         self.params = params
-        self._generator = None
 
     def execute(self, params={}):
-        assert not self.is_executed(), "fixture '%s' has already been executed" % self.name
         for param_name in params.keys():
             assert param_name in self.params
 
-        result = self.func(**params)
-        if inspect.isgenerator(result):
-            self._generator = result
-            self._result = next(result)
-        else:
-            self._result = result
-
-    def get_result(self):
-        assert self.is_executed(), "fixture '%s' has not been executed" % self.name
-        return self._result
-
-    def teardown(self):
-        assert self.is_executed(), "fixture '%s' has not been executed" % self.name
-        delattr(self, "_result")
-        if self._generator:
-            try:
-                next(self._generator)
-            except StopIteration:
-                self._generator = None
-            else:
-                raise FixtureError("The fixture yields more than once, only one yield is supported")
+        return FixtureResult(self.func(**params))
 
 
 class BuiltinFixture(BaseFixture):
@@ -115,10 +108,7 @@ class BuiltinFixture(BaseFixture):
         return True
 
     def execute(self, params={}):
-        self._result = self._value() if callable(self._value) else self._value
-
-    def get_result(self):
-        return self._result
+        return FixtureResult(self._value() if callable(self._value) else self._value)
 
 
 class ScheduledFixtures(object):
@@ -126,6 +116,7 @@ class ScheduledFixtures(object):
         self.scope = scope
         self._fixtures = OrderedDict()
         self._parent_scheduled_fixtures = parent_scheduled_fixtures
+        self._results = {}
         for fixture in fixtures:
             self.add_fixture(fixture)
 
@@ -142,24 +133,31 @@ class ScheduledFixtures(object):
     def is_empty(self):
         return len(self._fixtures) == 0
 
-    def _get_fixture_params(self, fixture):
+    def _get_fixture_params(self, name):
         return {
-            param_name: fixture.name if param_name == "fixture_name" else self.get_fixture_result(param_name)
-                for param_name in fixture.params
+            param_name: name if param_name == "fixture_name" else self.get_fixture_result(param_name)
+                for param_name in self._fixtures[name].params
         }
 
-    def get_setup_teardown_pairs(self):
-        def pair(fixture):
-            return (
-                lambda: fixture.execute(self._get_fixture_params(fixture)),
-                lambda: fixture.teardown()
-            )
+    def _setup_fixture(self, name):
+        assert name not in self._results, "Cannot setup fixture '%s', it has already been executed" % name
+        self._results[name] = self._fixtures[name].execute(self._get_fixture_params(name))
 
-        return map(pair, self._fixtures.values())
+    def _teardown_fixture(self, name):
+        assert name in self._results, "Cannot teardown fixture '%s', it has not been previously executed" % name
+        self._results[name].teardown()
+        del self._results[name]
+
+    def get_setup_teardown_pairs(self):
+        return map(
+            lambda name: (lambda: self._setup_fixture(name), lambda: self._teardown_fixture(name)),
+            self._fixtures
+        )
 
     def get_fixture_result(self, name):
         if name in self._fixtures:
-            return self._fixtures[name].get_result()
+            assert name in self._results, "Cannot get fixture '%s' result, it has not been previously executed" % name
+            return self._results[name].get()
         elif self._parent_scheduled_fixtures:
             return self._parent_scheduled_fixtures.get_fixture_result(name)
         else:
