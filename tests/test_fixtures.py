@@ -340,34 +340,7 @@ def test_registry_forbidden_fixture_name():
     assert "forbidden" in str(excinfo.value)
 
 
-def test_registry_execute_fixture_without_dependency():
-    @lcc.fixture()
-    def foo():
-        return 42
-
-    registry = FixtureRegistry()
-    registry.add_fixtures(load_fixtures_from_func(foo))
-    registry.execute_fixture("foo")
-    assert registry.get_fixture_result("foo") == 42
-
-
-def test_registry_execute_fixture_with_dependency():
-    @lcc.fixture()
-    def bar():
-        return 21
-
-    @lcc.fixture()
-    def foo(bar):
-        return bar * 2
-
-    registry = FixtureRegistry()
-    registry.add_fixtures(load_fixtures_from_func(foo))
-    registry.add_fixtures(load_fixtures_from_func(bar))
-    registry.execute_fixture("foo")
-    assert registry.get_fixture_result("foo") == 42
-
-
-def build_registry(*executed_fixtures):
+def build_registry():
     @lcc.fixture(scope="session_prerun")
     def fix0():
         pass
@@ -392,34 +365,7 @@ def build_registry(*executed_fixtures):
     for func in fix0, fix1, fix2, fix3, fix_:
         registry.add_fixtures(load_fixtures_from_func(func))
 
-    for fixture_name in executed_fixtures:
-        registry.execute_fixture(fixture_name)
-
     return registry
-
-
-def test_filter_fixtures_all():
-    assert sorted(build_registry().filter_fixtures()) == ["fix0", "fix1", "fix2", "fix3", "fix4", "fix5"]
-
-
-def test_filter_fixtures_on_scope():
-    assert sorted(build_registry().filter_fixtures(scope="suite")) == ["fix2"]
-
-
-def test_filter_fixtures_on_executed():
-    registry = build_registry("fix3", "fix4")
-    assert sorted(registry.filter_fixtures(is_executed=True)) == ["fix3", "fix4"]
-    assert sorted(registry.filter_fixtures(is_executed=False)) == ["fix0", "fix1", "fix2", "fix5"]
-
-
-def test_filter_fixtures_on_base_names():
-    assert sorted(build_registry().filter_fixtures(base_names=["fix1"])) == ["fix1"]
-
-
-def test_filter_fixtures_on_all_criteria():
-    registry = build_registry("fix5")
-    fixtures = registry.filter_fixtures(base_names=["fix5"], is_executed=True, scope="test")
-    assert sorted(fixtures) == ["fix5"]
 
 
 def test_check_fixtures_in_suites_ok():
@@ -565,21 +511,29 @@ def suites_sample():
 
 
 def test_get_fixtures_scheduled_for_session_prerun(fixture_registry_sample, suites_sample):
-    actual = fixture_registry_sample.get_fixtures_scheduled_for_session_prerun(suites_sample)
-    assert sorted(actual) == ["fixt_for_session_prerun1"]
+    scheduled = fixture_registry_sample.get_fixtures_scheduled_for_session_prerun(suites_sample)
+    assert sorted(scheduled.get_fixture_names()) == ["fixt_for_session_prerun1"]
 
 
 def test_get_fixtures_scheduled_for_session(fixture_registry_sample, suites_sample):
-    actual = fixture_registry_sample.get_fixtures_scheduled_for_session(suites_sample)
-    assert sorted(actual) == ["fixt_for_session1", "fixt_for_session2"]
+    scheduled = fixture_registry_sample.get_fixtures_scheduled_for_session(suites_sample, None)
+    assert sorted(scheduled.get_fixture_names()) == ["fixt_for_session1", "fixt_for_session2"]
 
 
 def test_get_fixtures_scheduled_for_suite(fixture_registry_sample, suites_sample):
-    assert sorted(fixture_registry_sample.get_fixtures_scheduled_for_suite(suites_sample[0])) == ["fixt_for_suite1"]
-    assert sorted(fixture_registry_sample.get_fixtures_scheduled_for_suite(suites_sample[1])) == ["fixt_for_suite1"]
+    scheduled = fixture_registry_sample.get_fixtures_scheduled_for_suite(suites_sample[0], None)
+    assert sorted(scheduled.get_fixture_names()) == ["fixt_for_suite1"]
+
+    scheduled = fixture_registry_sample.get_fixtures_scheduled_for_suite(suites_sample[1], None)
+    assert sorted(scheduled.get_fixture_names()) == ["fixt_for_suite1"]
 
 
 def test_get_fixtures_scheduled_for_test(fixture_registry_sample, suites_sample):
-    assert sorted(fixture_registry_sample.get_fixtures_scheduled_for_test(suites_sample[0].get_tests()[0])) == []
-    assert sorted(fixture_registry_sample.get_fixtures_scheduled_for_test(suites_sample[0].get_tests()[1])) == ["fixt_for_test3"]
-    assert sorted(fixture_registry_sample.get_fixtures_scheduled_for_test(suites_sample[1].get_tests()[0])) == ["fixt_for_test1", "fixt_for_test2"]
+    scheduled = fixture_registry_sample.get_fixtures_scheduled_for_test(suites_sample[0].get_tests()[0], None)
+    assert sorted(scheduled.get_fixture_names()) == []
+
+    scheduled = fixture_registry_sample.get_fixtures_scheduled_for_test(suites_sample[0].get_tests()[1], None)
+    assert sorted(scheduled.get_fixture_names()) == ["fixt_for_test3"]
+
+    scheduled = fixture_registry_sample.get_fixtures_scheduled_for_test(suites_sample[1].get_tests()[0], None)
+    assert sorted(scheduled.get_fixture_names()) == ["fixt_for_test1", "fixt_for_test2"]

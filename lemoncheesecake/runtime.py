@@ -27,9 +27,9 @@ __all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "log_
 _runtime = None  # singleton
 
 
-def initialize_runtime(report_dir, report, fixture_registry):
+def initialize_runtime(report_dir, report, scheduled_fixtures):
     global _runtime
-    _runtime = _Runtime(report_dir, report, fixture_registry)
+    _runtime = _Runtime(report_dir, report, scheduled_fixtures)
     events.add_listener(_runtime)
 
 
@@ -40,10 +40,10 @@ def get_runtime():
 
 
 class _Runtime:
-    def __init__(self, report_dir, report, fixture_registry):
+    def __init__(self, report_dir, report, scheduled_fixtures):
         self.report_dir = report_dir
         self.report = report
-        self.fixture_registry = fixture_registry
+        self.scheduled_fixtures = scheduled_fixtures
         self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
         self.attachment_count = 0
         self._attachment_lock = threading.Lock()
@@ -109,18 +109,11 @@ class _Runtime:
                 fh.write(content if binary_mode else content.encode("utf-8"))
 
     def get_fixture(self, name):
-        try:
-            scope = self.fixture_registry.get_fixture_scope(name)
-        except KeyError:
-            raise ProgrammingError("Fixture '%s' does not exist" % name)
-
-        if scope != "session_prerun":
-            raise ProgrammingError("Fixture '%s' has scope '%s' while only fixtures with scope 'session_prerun' can be retrieved" % (
-                name, scope
-            ))
+        if not self.scheduled_fixtures.has_fixture(name):
+            raise ProgrammingError("Fixture '%s' either does not exist or don't have a prerun_session scope" % name)
 
         try:
-            return self.fixture_registry.get_fixture_result(name)
+            return self.scheduled_fixtures.get_fixture_result(name)
         except AssertionError as excp:
             raise ProgrammingError(str(excp))
 
