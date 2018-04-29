@@ -149,10 +149,10 @@ class ScheduledFixtures(object):
         del self._results[name]
 
     def get_setup_teardown_pairs(self):
-        return map(
+        return list(map(
             lambda name: (lambda: self._setup_fixture(name), lambda: self._teardown_fixture(name)),
             self._fixtures
-        )
+        ))
 
     def get_fixture_result(self, name):
         if name in self._fixtures:
