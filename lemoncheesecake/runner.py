@@ -95,7 +95,6 @@ class _Runner:
             log_error(str(excp))
             self._abort_all_tests = True
         elif isinstance(excp, KeyboardInterrupt):
-            log_error("All tests have been interrupted manually by the user")
             self._abort_all_tests = True
         else:
             # FIXME: use exception instead of last implicit stacktrace
@@ -278,7 +277,10 @@ class _Runner:
         # Run tests
         ###
         pool = Pool(self.nb_threads)
-        pool.map(lambda test: self.run_test(test, scheduled_fixtures), suite.get_tests())
+        try:
+            pool.map(lambda test: self.run_test(test, scheduled_fixtures), suite.get_tests())
+        except (Exception, KeyboardInterrupt) as excp:
+            self.handle_exception(excp, suite=suite)
         pool.close()
 
         ###
