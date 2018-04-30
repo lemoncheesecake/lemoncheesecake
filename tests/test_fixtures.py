@@ -2,8 +2,11 @@ import pytest
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.fixtures import load_fixtures_from_func, FixtureRegistry, BuiltinFixture
-from lemoncheesecake.suite import load_suite_from_class
+from lemoncheesecake.suite import load_suite_from_class, load_suites_from_classes
+
 from lemoncheesecake import exceptions
+
+from helpers.runner import build_fixture_registry
 
 
 def test_fixture_decorator():
@@ -25,7 +28,6 @@ def test_load_from_func():
     assert len(fixtures) == 1
     assert fixtures[0].name == "myfixture"
     assert fixtures[0].scope == "test"
-    assert fixtures[0].is_executed() is False
     assert len(fixtures[0].params) == 0
 
 
@@ -39,11 +41,9 @@ def test_load_from_func_with_multiple_fixture_names():
     assert len(fixtures) == 2
     assert fixtures[0].name == "foo"
     assert fixtures[0].scope == "test"
-    assert fixtures[0].is_executed() is False
     assert len(fixtures[0].params) == 0
     assert fixtures[1].name == "bar"
     assert fixtures[1].scope == "test"
-    assert fixtures[1].is_executed() is False
     assert len(fixtures[1].params) == 0
 
 
@@ -57,7 +57,6 @@ def test_load_from_func_with_parameters():
     assert len(fixtures) == 1
     assert fixtures[0].name == "myfixture"
     assert fixtures[0].scope == "test"
-    assert fixtures[0].is_executed() is False
     assert fixtures[0].params == ["foo", "bar"]
 
 
@@ -67,20 +66,20 @@ def test_execute_fixture():
         return 42
 
     fixture = load_fixtures_from_func(myfixture)[0]
-    fixture.execute()
-    assert fixture.get_result() == 42
+    result = fixture.execute()
+    assert result.get() == 42
 
 
 def test_execute_fixture_builtin():
     fixture = BuiltinFixture("fix", 42)
-    fixture.execute()
-    assert fixture.get_result() == 42
+    result = fixture.execute()
+    assert result.get() == 42
 
 
 def test_execute_fixture_builtin_lambda():
     fixture = BuiltinFixture("fix", lambda: 42)
-    fixture.execute()
-    assert fixture.get_result() == 42
+    result = fixture.execute()
+    assert result.get() == 42
 
 
 def test_execute_fixture_with_yield():
@@ -89,8 +88,8 @@ def test_execute_fixture_with_yield():
         yield 42
 
     fixture = load_fixtures_from_func(myfixture)[0]
-    fixture.execute()
-    assert fixture.get_result() == 42
+    result = fixture.execute()
+    assert result.get() == 42
 
 
 def test_teardown_fixture():
@@ -99,9 +98,9 @@ def test_teardown_fixture():
         return 42
 
     fixture = load_fixtures_from_func(myfixture)[0]
-    fixture.execute()
-    fixture.get_result()
-    fixture.teardown()
+    result = fixture.execute()
+    result.get()
+    result.teardown()
 
 
 def test_teardown_fixture_with_yield():
@@ -112,10 +111,10 @@ def test_teardown_fixture_with_yield():
         flag.append(True)
 
     fixture = load_fixtures_from_func(myfixture)[0]
-    fixture.execute()
-    assert fixture.get_result() == 42
+    result = fixture.execute()
+    assert result.get() == 42
     assert not flag
-    fixture.teardown()
+    result.teardown()
     assert flag
 
 
@@ -125,8 +124,8 @@ def test_execute_fixture_with_parameters():
         return val * 2
 
     fixture = load_fixtures_from_func(myfixture)[0]
-    fixture.execute({"val": 3})
-    assert fixture.get_result() == 6
+    result = fixture.execute({"val": 3})
+    assert result.get() == 6
 
 
 def test_get_fixture_result_multiple_times():
@@ -135,26 +134,24 @@ def test_get_fixture_result_multiple_times():
         return 42
 
     fixture = load_fixtures_from_func(myfixture)[0]
-    fixture.execute()
-    assert fixture.get_result() == 42
-    assert fixture.get_result() == 42
-    assert fixture.get_result() == 42
+    result = fixture.execute()
+    assert result.get() == 42
+    assert result.get() == 42
+    assert result.get() == 42
 
 
-def test_reset_fixture():
+def test_fixture_executed_multiple_times():
     @lcc.fixture()
     def myfixture(val):
         return val * 2
 
     fixture = load_fixtures_from_func(myfixture)[0]
 
-    fixture.execute({"val": 3})
-    assert fixture.get_result() == 6
-    fixture.teardown()
-    fixture.reset()
+    result = fixture.execute({"val": 3})
+    assert result.get() == 6
 
-    fixture.execute({"val": 4})
-    assert fixture.get_result() == 8
+    result = fixture.execute({"val": 4})
+    assert result.get() == 8
 
 
 def test_registry_fixture_without_params():
@@ -337,34 +334,7 @@ def test_registry_forbidden_fixture_name():
     assert "forbidden" in str(excinfo.value)
 
 
-def test_registry_execute_fixture_without_dependency():
-    @lcc.fixture()
-    def foo():
-        return 42
-
-    registry = FixtureRegistry()
-    registry.add_fixtures(load_fixtures_from_func(foo))
-    registry.execute_fixture("foo")
-    assert registry.get_fixture_result("foo") == 42
-
-
-def test_registry_execute_fixture_with_dependency():
-    @lcc.fixture()
-    def bar():
-        return 21
-
-    @lcc.fixture()
-    def foo(bar):
-        return bar * 2
-
-    registry = FixtureRegistry()
-    registry.add_fixtures(load_fixtures_from_func(foo))
-    registry.add_fixtures(load_fixtures_from_func(bar))
-    registry.execute_fixture("foo")
-    assert registry.get_fixture_result("foo") == 42
-
-
-def build_registry(*executed_fixtures):
+def build_registry():
     @lcc.fixture(scope="session_prerun")
     def fix0():
         pass
@@ -389,34 +359,7 @@ def build_registry(*executed_fixtures):
     for func in fix0, fix1, fix2, fix3, fix_:
         registry.add_fixtures(load_fixtures_from_func(func))
 
-    for fixture_name in executed_fixtures:
-        registry.execute_fixture(fixture_name)
-
     return registry
-
-
-def test_filter_fixtures_all():
-    assert sorted(build_registry().filter_fixtures()) == ["fix0", "fix1", "fix2", "fix3", "fix4", "fix5"]
-
-
-def test_filter_fixtures_on_scope():
-    assert sorted(build_registry().filter_fixtures(scope="suite")) == ["fix2"]
-
-
-def test_filter_fixtures_on_executed():
-    registry = build_registry("fix3", "fix4")
-    assert sorted(registry.filter_fixtures(is_executed=True)) == ["fix3", "fix4"]
-    assert sorted(registry.filter_fixtures(is_executed=False)) == ["fix0", "fix1", "fix2", "fix5"]
-
-
-def test_filter_fixtures_on_base_names():
-    assert sorted(build_registry().filter_fixtures(base_names=["fix1"])) == ["fix1"]
-
-
-def test_filter_fixtures_on_all_criteria():
-    registry = build_registry("fix5")
-    fixtures = registry.filter_fixtures(base_names=["fix5"], is_executed=True, scope="test")
-    assert sorted(fixtures) == ["fix5"]
 
 
 def test_check_fixtures_in_suites_ok():
@@ -493,3 +436,98 @@ def test_check_fixtures_in_suites_incompatible_fixture_in_inject():
     registry = build_registry()
     with pytest.raises(exceptions.FixtureError):
         registry.check_fixtures_in_suites([suite])
+
+
+@pytest.fixture()
+def fixture_registry_sample():
+    @lcc.fixture(scope="session_prerun")
+    def fixt_for_session_prerun1():
+        pass
+
+    @lcc.fixture(scope="session")
+    def fixt_for_session1():
+        pass
+
+    @lcc.fixture(scope="session")
+    def fixt_for_session2(fixt_for_session_prerun1):
+        pass
+
+    @lcc.fixture(scope="session")
+    def fixt_for_session3():
+        pass
+
+    @lcc.fixture(scope="suite")
+    def fixt_for_suite1(fixt_for_session1):
+        pass
+
+    @lcc.fixture(scope="suite")
+    def fixt_for_suite2(fixt_for_session2):
+        pass
+
+    @lcc.fixture(scope="test")
+    def fixt_for_test1(fixt_for_suite1):
+        pass
+
+    @lcc.fixture(scope="test")
+    def fixt_for_test2(fixt_for_test1):
+        pass
+
+    @lcc.fixture(scope="test")
+    def fixt_for_test3(fixt_for_session2):
+        pass
+
+    return build_fixture_registry(
+        fixt_for_session_prerun1, fixt_for_session1, fixt_for_session2, fixt_for_session3,
+        fixt_for_suite1, fixt_for_suite2,
+        fixt_for_test1, fixt_for_test2, fixt_for_test3
+    )
+
+
+@pytest.fixture()
+def suites_sample():
+    @lcc.suite("suite1")
+    class suite1:
+        @lcc.test("Test 1")
+        def suite1_test1(self, fixt_for_suite1):
+            pass
+
+        @lcc.test("Test 2")
+        def suite1_test2(self, fixt_for_test3):
+            pass
+
+    @lcc.suite("suite2")
+    class suite2:
+        @lcc.test("Test 1")
+        def suite2_test1(self, fixt_for_test2):
+            pass
+
+    return load_suites_from_classes([suite1, suite2])
+
+
+def test_get_fixtures_scheduled_for_session_prerun(fixture_registry_sample, suites_sample):
+    scheduled = fixture_registry_sample.get_fixtures_scheduled_for_session_prerun(suites_sample)
+    assert sorted(scheduled.get_fixture_names()) == ["fixt_for_session_prerun1"]
+
+
+def test_get_fixtures_scheduled_for_session(fixture_registry_sample, suites_sample):
+    scheduled = fixture_registry_sample.get_fixtures_scheduled_for_session(suites_sample, None)
+    assert sorted(scheduled.get_fixture_names()) == ["fixt_for_session1", "fixt_for_session2"]
+
+
+def test_get_fixtures_scheduled_for_suite(fixture_registry_sample, suites_sample):
+    scheduled = fixture_registry_sample.get_fixtures_scheduled_for_suite(suites_sample[0], None)
+    assert sorted(scheduled.get_fixture_names()) == ["fixt_for_suite1"]
+
+    scheduled = fixture_registry_sample.get_fixtures_scheduled_for_suite(suites_sample[1], None)
+    assert sorted(scheduled.get_fixture_names()) == ["fixt_for_suite1"]
+
+
+def test_get_fixtures_scheduled_for_test(fixture_registry_sample, suites_sample):
+    scheduled = fixture_registry_sample.get_fixtures_scheduled_for_test(suites_sample[0].get_tests()[0], None)
+    assert sorted(scheduled.get_fixture_names()) == []
+
+    scheduled = fixture_registry_sample.get_fixtures_scheduled_for_test(suites_sample[0].get_tests()[1], None)
+    assert sorted(scheduled.get_fixture_names()) == ["fixt_for_test3"]
+
+    scheduled = fixture_registry_sample.get_fixtures_scheduled_for_test(suites_sample[1].get_tests()[0], None)
+    assert sorted(scheduled.get_fixture_names()) == ["fixt_for_test1", "fixt_for_test2"]

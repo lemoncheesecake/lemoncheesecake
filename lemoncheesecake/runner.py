@@ -10,7 +10,7 @@ import traceback
 import threading
 from multiprocessing.dummy import Pool
 
-from lemoncheesecake.utils import IS_PYTHON3, get_distincts_in_list
+from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.runtime import *
 from lemoncheesecake.runtime import initialize_runtime, set_runtime_location, is_location_successful
 from lemoncheesecake.reporting import Report, initialize_report_writer, initialize_reporting_backends
@@ -18,24 +18,6 @@ from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, Fix
     UserError, serialize_current_exception
 from lemoncheesecake import events
 from lemoncheesecake.testtree import TreeLocation, flatten_tests
-
-
-def _get_fixtures_used_in_suite(suite):
-    fixtures = suite.get_fixtures()
-
-    for test in suite.get_tests():
-        fixtures.extend(test.get_fixtures())
-
-    return get_distincts_in_list(fixtures)
-
-
-def _get_fixtures_used_in_suite_recursively(suite):
-    fixtures = _get_fixtures_used_in_suite(suite)
-
-    for sub_suite in suite.get_suites():
-        fixtures.extend(_get_fixtures_used_in_suite_recursively(sub_suite))
-
-    return get_distincts_in_list(fixtures)
 
 
 class _Runner:
@@ -51,31 +33,6 @@ class _Runner:
         self._session = None
         self._abort_all_tests = False
         self._abort_suite = None
-
-    def get_fixtures_with_dependencies_for_scope(self, direct_fixtures, scope):
-        fixtures = []
-        for fixture in direct_fixtures:
-            fixtures.extend(self.fixture_registry.get_fixture_dependencies(fixture))
-        fixtures.extend(direct_fixtures)
-        return [f for f in get_distincts_in_list(fixtures) if self.fixture_registry.get_fixture_scope(f) == scope]
-
-    def get_fixtures_to_be_executed_for_session_prerun(self):
-        fixtures = []
-        for suite in self.suites:
-            fixtures.extend(_get_fixtures_used_in_suite_recursively(suite))
-        return self.get_fixtures_with_dependencies_for_scope(get_distincts_in_list(fixtures), "session_prerun")
-
-    def get_fixtures_to_be_executed_for_session(self):
-        fixtures = []
-        for suite in self.suites:
-            fixtures.extend(_get_fixtures_used_in_suite_recursively(suite))
-        return self.get_fixtures_with_dependencies_for_scope(get_distincts_in_list(fixtures), "session")
-
-    def get_fixtures_to_be_executed_for_suite(self, suite):
-        return self.get_fixtures_with_dependencies_for_scope(_get_fixtures_used_in_suite(suite), "suite")
-
-    def get_fixtures_to_be_executed_for_test(self, test):
-        return self.get_fixtures_with_dependencies_for_scope(test.get_fixtures(), "test")
 
     def run_setup_funcs(self, funcs, location):
         teardown_funcs = []
@@ -109,28 +66,24 @@ class _Runner:
                 count += 1
         return count
 
-    def get_fixture_as_funcs(self, fixture):
-        return [
-            lambda: self.fixture_registry.execute_fixture(fixture),
-            lambda: self.fixture_registry.teardown_fixture(fixture)
-        ]
-
-    def get_setup_suite_as_func(self, suite):
+    def get_setup_suite_as_func(self, suite, scheduled_fixtures):
         setup_suite = suite.get_hook("setup_suite")
         if setup_suite is None:
             return None
 
         fixtures_names = suite.get_hook_params("setup_suite")
         def func():
-            fixtures = self.fixture_registry.get_fixture_results(fixtures_names)
+            fixtures = scheduled_fixtures.get_fixture_results(fixtures_names)
             setup_suite(**fixtures)
 
         return func
 
-    def inject_fixtures_into_suite(self, suite):
-        fixture_names = suite.get_injected_fixture_names()
-        fixtures = self.fixture_registry.get_fixture_results(fixture_names)
-        suite.inject_fixtures(fixtures)
+    def inject_fixtures_into_suite(self, suite, scheduled_fixtures):
+        suite.inject_fixtures(
+            scheduled_fixtures.get_fixture_results(
+                suite.get_injected_fixture_names()
+            )
+        )
 
     def handle_exception(self, excp, suite=None):
         if isinstance(excp, AbortTest):
@@ -184,7 +137,7 @@ class _Runner:
         self._check_event_failure()
         events.fire(events.TestTeardownEndEvent(test, outcome))
 
-    def run_test(self, test):
+    def run_test(self, test, suite_scheduled_fixtures):
         ###
         # Checker whether the test must be executed or not
         ###
@@ -212,15 +165,13 @@ class _Runner:
         suite = test.parent_suite
         test_setup_error = False
         setup_teardown_funcs = []
-        teardown_funcs = []
 
         setup_teardown_funcs.append([
             (lambda: suite.get_hook("setup_test")(test.name)) if suite.has_hook("setup_test") else None,
             (lambda: suite.get_hook("teardown_test")(test.name)) if suite.has_hook("teardown_test") else None
         ])
-        setup_teardown_funcs.extend([
-            self.get_fixture_as_funcs(f) for f in self.get_fixtures_to_be_executed_for_test(test)
-        ])
+        scheduled_fixtures = self.fixture_registry.get_fixtures_scheduled_for_test(test, suite_scheduled_fixtures)
+        setup_teardown_funcs.extend(scheduled_fixtures.get_setup_teardown_pairs())
 
         if len(list(filter(lambda p: p[0] is not None, setup_teardown_funcs))) > 0:
             self._begin_test_setup(test)
@@ -238,7 +189,7 @@ class _Runner:
         # Run test:
         ###
         if not test_setup_error:
-            test_func_params = self.fixture_registry.get_fixture_results(test.get_fixtures())
+            test_func_params = scheduled_fixtures.get_fixture_results(test.get_fixtures())
             set_step(test.description)
             try:
                 test.callback(**test_func_params)
@@ -286,7 +237,7 @@ class _Runner:
         self._check_event_failure()
         events.fire(events.SuiteTeardownEndEvent(suite))
 
-    def run_suite(self, suite):
+    def run_suite(self, suite, session_scheduled_fixtures):
         ###
         # Begin suite
         ###
@@ -299,14 +250,13 @@ class _Runner:
         if not self._abort_all_tests:
             setup_teardown_funcs = []
             # first, fixtures must be executed
-            setup_teardown_funcs.extend([
-                self.get_fixture_as_funcs(f) for f in self.get_fixtures_to_be_executed_for_suite(suite)
-            ])
+            scheduled_fixtures = self.fixture_registry.get_fixtures_scheduled_for_suite(suite, session_scheduled_fixtures)
+            setup_teardown_funcs.extend(scheduled_fixtures.get_setup_teardown_pairs())
             # then, fixtures must be injected into suite
-            setup_teardown_funcs.append((lambda: self.inject_fixtures_into_suite(suite), None))
+            setup_teardown_funcs.append((lambda: self.inject_fixtures_into_suite(suite, scheduled_fixtures), None))
             # and at the end, the setup_suite hook of the suite will be called
             setup_teardown_funcs.append([
-                self.get_setup_suite_as_func(suite), suite.get_hook("teardown_suite")
+                self.get_setup_suite_as_func(suite, scheduled_fixtures), suite.get_hook("teardown_suite")
             ])
 
             if len(list(filter(lambda p: p[0] is not None, setup_teardown_funcs))) > 0:
@@ -320,12 +270,15 @@ class _Runner:
             
             if self.stop_on_failure and self._abort_suite:
                 self._abort_all_tests = True
+        else:
+            # if self._abort_all_tests is true, then scheduled_fixtures won't be used by run_test
+            scheduled_fixtures = None
 
         ###
         # Run tests
         ###
         pool = Pool(self.nb_threads)
-        pool.map(self.run_test, suite.get_tests())
+        pool.map(lambda test: self.run_test(test, scheduled_fixtures), suite.get_tests())
         pool.close()
 
         ###
@@ -346,7 +299,7 @@ class _Runner:
         # Run sub suites
         ###
         for sub_suite in suite.get_suites():
-            self.run_suite(sub_suite)
+            self.run_suite(sub_suite, session_scheduled_fixtures)
 
         ###
         # End of suite
@@ -376,13 +329,13 @@ class _Runner:
     def _end_test_session_teardown(self):
         events.fire(events.TestSessionTeardownEndEvent())
 
-    def run_session(self):
+    def run_session(self, prerun_session_scheduled_fixtures):
         # initialize runtime & global test variables
         self._report = Report()
         self._report.add_info("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:]))
         self._session = initialize_report_writer(self._report)
         nb_tests = len(list(flatten_tests(self.suites)))
-        initialize_runtime(self.report_dir, self._report, self.fixture_registry)
+        initialize_runtime(self.report_dir, self._report, prerun_session_scheduled_fixtures)
         initialize_reporting_backends(
             self.reporting_backends, self.report_dir, self._report,
             parallel=self.nb_threads > 1 and nb_tests > 1
@@ -397,11 +350,10 @@ class _Runner:
         self._begin_test_session()
 
         # setup test session
-        setup_teardown_funcs = []
-        teardown_funcs = []
-        setup_teardown_funcs.extend([
-            self.get_fixture_as_funcs(f) for f in self.get_fixtures_to_be_executed_for_session()
-        ])
+        scheduled_fixtures = self.fixture_registry.get_fixtures_scheduled_for_session(
+            self.suites, prerun_session_scheduled_fixtures
+        )
+        setup_teardown_funcs = scheduled_fixtures.get_setup_teardown_pairs()
 
         if len(list(filter(lambda p: p[0] is not None, setup_teardown_funcs))) > 0:
             self._begin_test_session_setup()
@@ -414,7 +366,7 @@ class _Runner:
 
         # run suites
         for suite in self.suites:
-            self.run_suite(suite)
+            self.run_suite(suite, scheduled_fixtures)
 
         # teardown_test_session handling
         if len(list(filter(lambda f: f is not None, teardown_funcs))) > 0:
@@ -430,34 +382,35 @@ class _Runner:
         self._check_event_failure()
 
     def run(self):
-        executed_fixtures = []
+        fixture_teardowns = []
 
         # setup pre_session fixtures
         errors = []
-        for fixture in self.get_fixtures_to_be_executed_for_session_prerun():
+        scheduled_fixtures = self.fixture_registry.get_fixtures_scheduled_for_session_prerun(self.suites)
+        for setup, teardown in scheduled_fixtures.get_setup_teardown_pairs():
             try:
-                self.fixture_registry.execute_fixture(fixture)
+                setup()
             except UserError:
                 raise
             except (Exception, KeyboardInterrupt):
-                errors.append("Got the following exception when executing fixture '%s' (scope 'session_prerun')%s" % (
-                    fixture, serialize_current_exception(show_stacktrace=True)
+                errors.append("Got the following exception when executing fixture (scope 'session_prerun')%s" % (
+                    serialize_current_exception(show_stacktrace=True)
                 ))
                 break
-            executed_fixtures.append(fixture)
+            fixture_teardowns.append(teardown)
 
         if not errors:
-            self.run_session()
+            self.run_session(scheduled_fixtures)
 
         # teardown pre_session fixtures
-        for fixture in executed_fixtures:
+        for teardown in fixture_teardowns:
             try:
-                self.fixture_registry.teardown_fixture(fixture)
+                teardown()
             except UserError:
                 raise
             except (Exception, KeyboardInterrupt):
-                errors.append("Got the following exception on fixture '%s' teardown (scope 'session_prerun')%s" % (
-                    fixture, serialize_current_exception(show_stacktrace=True)
+                errors.append("Got the following exception on fixture teardown (scope 'session_prerun')%s" % (
+                    serialize_current_exception(show_stacktrace=True)
                 ))
 
         if errors:
