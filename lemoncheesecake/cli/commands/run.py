@@ -29,6 +29,9 @@ def build_fixture_registry(project, cli_args):
 
 
 def run_project(project, cli_args):
+    if cli_args.threads > 1 and not project.is_threaded():
+        raise LemonCheesecakeException("Project does not support multi-threading")
+
     suites = get_suites_from_project(project, cli_args)
     events.add_listener(project)
 
