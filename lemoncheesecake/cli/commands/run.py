@@ -28,8 +28,23 @@ def build_fixture_registry(project, cli_args):
     return registry
 
 
+def get_nb_threads(cli_args):
+    if cli_args.threads is not None:
+        return max(cli_args.threads, 1)
+    elif "LCC_THREADS" in os.environ:
+        try:
+            return max(int(os.environ["LCC_THREADS"]), 1)
+        except ValueError:
+            raise LemonCheesecakeException(
+                "Invalid value '%s' for $LCC_THREADS environment variable (expect integer)" % os.environ["LCC_THREADS"]
+            )
+    else:
+        return 1
+
+
 def run_project(project, cli_args):
-    if cli_args.threads > 1 and not project.is_threaded():
+    nb_threads = get_nb_threads(cli_args)
+    if nb_threads > 1 and not project.is_threaded():
         raise LemonCheesecakeException("Project does not support multi-threading")
 
     suites = get_suites_from_project(project, cli_args)
@@ -90,7 +105,7 @@ def run_project(project, cli_args):
     # Run tests
     is_successful = run_suites(
         suites, fixture_registry, selected_reporting_backends, report_dir,
-        stop_on_failure=cli_args.stop_on_failure, nb_threads=cli_args.threads
+        stop_on_failure=cli_args.stop_on_failure, nb_threads=nb_threads
     )
 
     # Handle after run hook
@@ -137,8 +152,8 @@ class RunCommand(Command):
             help="Stop tests execution on the first non-passed test"
         )
         test_execution_group.add_argument(
-            "--threads", type=int, default=1,
-            help="Number of threads used to execute (default: 1; threads > 1 is still EXPERIMENTAL)"
+            "--threads", type=int, default=None,
+            help="Number of threads used to run tests (default: $LCC_THREADS or 1)"
         )
 
         reporting_group = cli_parser.add_argument_group("Reporting")
