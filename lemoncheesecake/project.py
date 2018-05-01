@@ -30,14 +30,14 @@ class HasCustomCliArgs:
 
 class HasPreRunHook:
     """Mixin class for project configuration that requires code to be executed before tests"""
-    def pre_run(self, report_dir):
+    def pre_run(self, cli_args, report_dir):
         """Pre-run hook"""
         pass
 
 
 class HasPostRunHook:
     """Mixin class for project configuration that requires code to be executed after tests"""
-    def post_run(self, report_dir):
+    def post_run(self, cli_args, report_dir):
         """Post-run hook"""
         pass
 
@@ -149,13 +149,13 @@ class Project:
     def get_default_reporting_backends_for_test_run(self):
         return filter_available_reporting_backends(self._config.get_default_reporting_backends_for_test_run())
 
-    def run_pre_session_hook(self, report_dir):
+    def run_pre_session_hook(self, cli_args, report_dir):
         if isinstance(self._config, HasPreRunHook):
-            self._config.pre_run(report_dir)
+            self._config.pre_run(cli_args, report_dir)
 
-    def run_post_session_hook(self, report_dir):
+    def run_post_session_hook(self, cli_args, report_dir):
         if isinstance(self._config, HasPostRunHook):
-            self._config.post_run(report_dir)
+            self._config.post_run(cli_args, report_dir)
 
     def on_test_session_start(self, event):
         title = self._config.get_report_title()
