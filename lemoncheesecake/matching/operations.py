@@ -4,6 +4,8 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
+import threading
+
 from lemoncheesecake.utils import is_string
 from lemoncheesecake.runtime import log_check
 from lemoncheesecake.exceptions import AbortTest, ProgrammingError
@@ -34,8 +36,9 @@ class DictContext:
         self.base_key = base_key
 
 
-class ThisDict:
-    _contexts = []
+class ThisDict(object):
+    _local = threading.local()
+    _local.contexts = []
 
     def __init__(self, actual):
         self.context = DictContext(actual, [])
@@ -45,17 +48,20 @@ class ThisDict:
         return self
 
     def __enter__(self):
-        self._contexts.append(self.context)
+        try:
+            self._local.contexts.append(self.context)
+        except AttributeError:
+            self._local.contexts = [self.context]
         return self.context.actual
 
     def __exit__(self, type_, value, traceback):
-        self._contexts.pop()
+        self._local.contexts.pop()
 
     @staticmethod
     def get_current_context():
         try:
-            return ThisDict._contexts[-1]
-        except IndexError:
+            return ThisDict._local.contexts[-1]
+        except (IndexError, AttributeError):
             return None
 
 

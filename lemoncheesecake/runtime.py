@@ -19,7 +19,7 @@ from lemoncheesecake import events
 from lemoncheesecake.exceptions import ProgrammingError
 
 __all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "log_url", "log_check", \
-    "set_step", "end_step", "detached_step", \
+    "set_step", "end_step", "detached_step", "Thread", \
     "prepare_attachment", "save_attachment_file", "save_attachment_content", \
     "add_report_info", "get_fixture"
 
@@ -27,9 +27,9 @@ __all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "log_
 _runtime = None  # singleton
 
 
-def initialize_runtime(report_dir, report, fixture_registry):
+def initialize_runtime(report_dir, report, scheduled_fixtures):
     global _runtime
-    _runtime = _Runtime(report_dir, report, fixture_registry)
+    _runtime = _Runtime(report_dir, report, scheduled_fixtures)
     events.add_listener(_runtime)
 
 
@@ -40,49 +40,63 @@ def get_runtime():
 
 
 class _Runtime:
-    def __init__(self, report_dir, report, fixture_registry):
+    def __init__(self, report_dir, report, scheduled_fixtures):
         self.report_dir = report_dir
         self.report = report
-        self.fixture_registry = fixture_registry
+        self.scheduled_fixtures = scheduled_fixtures
         self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
         self.attachment_count = 0
-        self.step_lock = False
-        self.location = None
+        self._attachment_lock = threading.Lock()
+        self._failures = set()
         self._local = threading.local()
+        self._local.location = None
+        self._local.step = None
 
-    def set_step(self, description, force_lock=False, detached=False):
-        if self.step_lock and not force_lock:
-            return
+    def set_location(self, location):
+        self._local.location = location
 
+    @property
+    def location(self):
+        return self._local.location
+
+    def is_successful(self, location):
+        return location not in self._failures
+
+    def set_step(self, description, detached=False):
         self._local.step = description
-        events.fire(events.StepEvent(self.location, description, detached=detached))
+        events.fire(events.StepEvent(self._local.location, description, detached=detached))
 
     def end_step(self, step):
-        events.fire(events.StepEndEvent(self.location, step))
+        events.fire(events.StepEndEvent(self._local.location, step))
 
     def _get_step(self, step):
         return step if step is not None else self._local.step
 
     def log(self, level, content, step=None):
-        events.fire(events.LogEvent(self.location, self._get_step(step), level, content))
+        if level == LOG_LEVEL_ERROR:
+            self._failures.add(self.location)
+        events.fire(events.LogEvent(self._local.location, self._get_step(step), level, content))
 
     def log_check(self, description, outcome, details, step=None):
-        events.fire(events.CheckEvent(self.location, self._get_step(step), description, outcome, details))
+        if outcome is False:
+            self._failures.add(self.location)
+        events.fire(events.CheckEvent(self._local.location, self._get_step(step), description, outcome, details))
 
     def log_url(self, url, description, step=None):
-        events.fire(events.LogUrlEvent(self.location, self._get_step(step), url, description))
+        events.fire(events.LogUrlEvent(self._local.location, self._get_step(step), url, description))
 
     @contextmanager
     def prepare_attachment(self, filename, description, step=None):
-        attachment_filename = "%04d_%s" % (self.attachment_count + 1, filename)
-        self.attachment_count += 1
-        if not os.path.exists(self.attachments_dir):
-            os.mkdir(self.attachments_dir)
+        with self._attachment_lock:
+            attachment_filename = "%04d_%s" % (self.attachment_count + 1, filename)
+            self.attachment_count += 1
+            if not os.path.exists(self.attachments_dir):
+                os.mkdir(self.attachments_dir)
 
         yield os.path.join(self.attachments_dir, attachment_filename)
 
         events.fire(events.LogAttachmentEvent(
-            self.location, self._get_step(step), "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description
+            self._local.location, self._get_step(step), "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description
         ))
 
     def save_attachment_file(self, filename, description, step=None):
@@ -95,27 +109,20 @@ class _Runtime:
                 fh.write(content if binary_mode else content.encode("utf-8"))
 
     def get_fixture(self, name):
-        try:
-            scope = self.fixture_registry.get_fixture_scope(name)
-        except KeyError:
-            raise ProgrammingError("Fixture '%s' does not exist" % name)
-
-        if scope != "session_prerun":
-            raise ProgrammingError("Fixture '%s' has scope '%s' while only fixtures with scope 'session_prerun' can be retrieved" % (
-                name, scope
-            ))
+        if not self.scheduled_fixtures.has_fixture(name):
+            raise ProgrammingError("Fixture '%s' either does not exist or don't have a prerun_session scope" % name)
 
         try:
-            return self.fixture_registry.get_fixture_result(name)
+            return self.scheduled_fixtures.get_fixture_result(name)
         except AssertionError as excp:
             raise ProgrammingError(str(excp))
 
 
-def set_step(description, force_lock=False, detached=False):
+def set_step(description, detached=False):
     """
     Set a new step.
     """
-    get_runtime().set_step(description, force_lock=force_lock, detached=detached)
+    get_runtime().set_step(description, detached=detached)
 
 
 def end_step(step):
@@ -218,5 +225,18 @@ def add_report_info(name, value):
 
 
 def set_runtime_location(location):
-    runtime = get_runtime()
-    runtime.location = location
+    get_runtime().set_location(location)
+
+
+def is_location_successful(location):
+    return get_runtime().is_successful(location)
+
+
+class Thread(threading.Thread):
+    def __init__(self, *args, **kwargs):
+        super(Thread, self).__init__(*args, **kwargs)
+        self.location = get_runtime().location
+
+    def run(self):
+        set_runtime_location(self.location)
+        return super(Thread, self).run()

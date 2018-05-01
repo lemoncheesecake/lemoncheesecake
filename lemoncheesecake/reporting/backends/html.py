@@ -17,7 +17,7 @@ class HtmlBackend(ReportingBackend):
     def __init__(self, offline_mode=False):
         self.offline_mode = offline_mode
 
-    def create_reporting_session(self, report_dir, report):
+    def create_reporting_session(self, report_dir, report, parallel=False):
         class WriteHtmlReport(ReportingSession):
             def __init__(self, report_dir, offline_mode):
                 self.report_dir = report_dir

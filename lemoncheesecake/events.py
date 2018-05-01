@@ -2,7 +2,13 @@ import time
 import re
 import inspect
 
-from lemoncheesecake.utils import camel_case_to_snake_case
+from lemoncheesecake.utils import camel_case_to_snake_case, IS_PYTHON2
+from lemoncheesecake.exceptions import serialize_current_exception
+
+if IS_PYTHON2:
+    from Queue import Queue
+else:
+    from queue import Queue
 
 
 def _get_event_name_from_class_name(class_name):
@@ -32,7 +38,7 @@ class EventType:
     def reset(self):
         self._handlers = []
 
-    def fire(self, event):
+    def handle(self, event):
         for handler in self._handlers:
             handler(event)
 
@@ -44,6 +50,8 @@ def _get_event_name(val):
 class EventManager:
     def __init__(self):
         self._event_types = {}
+        self._queue = Queue()
+        self._pending_failure = None, None
 
     def register_events(self, *event_classes):
         for event_class in event_classes:
@@ -55,6 +63,7 @@ class EventManager:
                 event_type.reset()
         else:
             self._event_types[event_name].reset()
+        self._queue = Queue()
 
     def subscribe_to_event(self, event, handler):
         self._event_types[_get_event_name(event)].subscribe(handler)
@@ -74,7 +83,26 @@ class EventManager:
         self._event_types[_get_event_name(event)].unsubscribe(handler)
 
     def fire(self, event):
-        self._event_types[event.__class__.get_name()].fire(event)
+        self._queue.put(event)
+
+    def end_of_events(self):
+        self._queue.put(None)
+
+    def handler_loop(self):
+        while True:
+            event = self._queue.get()
+            if event is None:
+                break
+            try:
+                self._event_types[event.__class__.get_name()].handle(event)
+            except Exception as excp:
+                self._pending_failure = excp, serialize_current_exception()
+                break
+            finally:
+                self._queue.task_done()
+
+    def get_pending_failure(self):
+        return self._pending_failure
 
 
 eventmgr = EventManager()
@@ -86,6 +114,9 @@ unsubscribe_from_event = eventmgr.unsubscribe_from_event
 add_listener = eventmgr.add_listener
 reset = eventmgr.reset
 fire = eventmgr.fire
+handler_loop = eventmgr.handler_loop
+end_of_events = eventmgr.end_of_events
+get_pending_failure = eventmgr.get_pending_failure
 
 
 def event(class_):

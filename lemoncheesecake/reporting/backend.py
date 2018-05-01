@@ -59,9 +59,9 @@ class ReportingBackend:
 #         method_not_implemented("unserialize_report", self)
 
 
-def initialize_reporting_backends(backends, report_dir, report):
+def initialize_reporting_backends(backends, report_dir, report, parallel):
     for backend in backends:
-        session = backend.create_reporting_session(report_dir, report)
+        session = backend.create_reporting_session(report_dir, report, parallel)
         events.add_listener(session)
 
 
@@ -125,7 +125,7 @@ class FileReportBackend(ReportingBackend):
     def get_report_filename(self):
         method_not_implemented("get_report_filename", self)
 
-    def create_reporting_session(self, report_dir, report):
+    def create_reporting_session(self, report_dir, report, parallel):
         return FileReportSession(
             os.path.join(report_dir, self.get_report_filename()), report, self.save_report, self.save_mode
         )
@@ -141,8 +141,8 @@ def filter_reporting_backends_by_capabilities(backends, capabilities):
 
 def get_available_backends():
     from lemoncheesecake.reporting.backends import ConsoleBackend, XmlBackend, JsonBackend, HtmlBackend, JunitBackend
-
-    return list(filter(lambda b: b.is_available(), [ConsoleBackend(), XmlBackend(), JsonBackend(), HtmlBackend(), JunitBackend()]))
+    backends = ConsoleBackend(), XmlBackend(), JsonBackend(), HtmlBackend(), JunitBackend()
+    return list(filter(lambda b: b.is_available(), backends))
 
 
 class BoundReport(Report):

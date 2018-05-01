@@ -5,10 +5,13 @@ Created on Jan 7, 2017
 '''
 
 import inspect
+from collections import OrderedDict
+
+from orderedset import OrderedSet
 
 from lemoncheesecake.importer import import_module, get_matching_files, get_py_files_from_dir
 from lemoncheesecake.exceptions import FixtureError, ProgrammingError
-from lemoncheesecake.utils import get_distincts_in_list, get_callable_args
+from lemoncheesecake.utils import get_callable_args
 
 __all__ = (
     "fixture",
@@ -43,7 +46,31 @@ def fixture(names=None, scope="test"):
     return wrapper
 
 
-class BaseFixture:
+class FixtureResult(object):
+    def __init__(self, result):
+        if inspect.isgenerator(result):
+            self._generator = result
+            self._result = next(result)
+        else:
+            self._generator = None
+            self._result = result
+
+    def get(self):
+        return self._result
+
+    def teardown(self):
+        if not self._generator:
+            return
+
+        try:
+            next(self._generator)
+        except StopIteration:
+            pass
+        else:
+            raise FixtureError("The fixture yields more than once, only one yield is supported")
+
+
+class BaseFixture(object):
     def is_builtin(self):
         return False
 
@@ -55,15 +82,6 @@ class BaseFixture:
             "session_prerun": 4
         }[self.scope]
 
-    def is_executed(self):
-        return hasattr(self, "_result")
-
-    def teardown(self):
-        pass
-
-    def reset(self):
-        pass
-
 
 class Fixture(BaseFixture):
     def __init__(self, name, func, scope, params):
@@ -71,34 +89,12 @@ class Fixture(BaseFixture):
         self.func = func
         self.scope = scope
         self.params = params
-        self._generator = None
 
     def execute(self, params={}):
-        assert not self.is_executed(), "fixture '%s' has already been executed" % self.name
         for param_name in params.keys():
             assert param_name in self.params
 
-        result = self.func(**params)
-        if inspect.isgenerator(result):
-            self._generator = result
-            self._result = next(result)
-        else:
-            self._result = result
-
-    def get_result(self):
-        assert self.is_executed(), "fixture '%s' has not been executed" % self.name
-        return self._result
-
-    def teardown(self):
-        assert self.is_executed(), "fixture '%s' has not been executed" % self.name
-        delattr(self, "_result")
-        if self._generator:
-            try:
-                next(self._generator)
-            except StopIteration:
-                self._generator = None
-            else:
-                raise FixtureError("The fixture yields more than once, only one yield is supported")
+        return FixtureResult(self.func(**params))
 
 
 class BuiltinFixture(BaseFixture):
@@ -112,10 +108,63 @@ class BuiltinFixture(BaseFixture):
         return True
 
     def execute(self, params={}):
-        self._result = self._value() if callable(self._value) else self._value
+        return FixtureResult(self._value() if callable(self._value) else self._value)
 
-    def get_result(self):
-        return self._result
+
+class ScheduledFixtures(object):
+    def __init__(self, scope, fixtures=(), parent_scheduled_fixtures=None):
+        self.scope = scope
+        self._fixtures = OrderedDict()
+        self._parent_scheduled_fixtures = parent_scheduled_fixtures
+        self._results = {}
+        for fixture in fixtures:
+            self.add_fixture(fixture)
+
+    def add_fixture(self, fixture):
+        assert fixture.scope == self.scope
+        self._fixtures[fixture.name] = fixture
+
+    def get_fixture_names(self):
+        return self._fixtures.keys()
+
+    def has_fixture(self, name):
+        return name in self._fixtures
+
+    def is_empty(self):
+        return len(self._fixtures) == 0
+
+    def _get_fixture_params(self, name):
+        return {
+            param_name: name if param_name == "fixture_name" else self.get_fixture_result(param_name)
+                for param_name in self._fixtures[name].params
+        }
+
+    def _setup_fixture(self, name):
+        assert name not in self._results, "Cannot setup fixture '%s', it has already been executed" % name
+        self._results[name] = self._fixtures[name].execute(self._get_fixture_params(name))
+
+    def _teardown_fixture(self, name):
+        assert name in self._results, "Cannot teardown fixture '%s', it has not been previously executed" % name
+        self._results[name].teardown()
+        del self._results[name]
+
+    def get_setup_teardown_pairs(self):
+        return list(map(
+            lambda name: (lambda: self._setup_fixture(name), lambda: self._teardown_fixture(name)),
+            self._fixtures
+        ))
+
+    def get_fixture_result(self, name):
+        if name in self._fixtures:
+            assert name in self._results, "Cannot get fixture '%s' result, it has not been previously executed" % name
+            return self._results[name].get()
+        elif self._parent_scheduled_fixtures:
+            return self._parent_scheduled_fixtures.get_fixture_result(name)
+        else:
+            raise ProgrammingError("Cannot find fixture named '%s' in scheduled fixtures" % name)
+
+    def get_fixture_results(self, names):
+        return {name: self.get_fixture_result(name) for name in names}
 
 
 class FixtureRegistry:
@@ -134,35 +183,19 @@ class FixtureRegistry:
     def get_fixture(self, name):
         return self._fixtures[name]
 
-    def _get_fixture_dependencies(self, name, orig_fixture):
+    def get_fixture_dependencies(self, name, orig_fixture=None):
         fixture_params = [p for p in self._fixtures[name].params if p != "fixture_name"]
         if orig_fixture and orig_fixture in fixture_params:
             raise FixtureError("Fixture '%s' has a circular dependency on fixture '%s'" % (orig_fixture, name))
 
-        dependencies = []
+        dependencies = OrderedSet()
         for param in fixture_params:
             if param not in self._fixtures:
                 raise FixtureError("Fixture '%s' used by fixture '%s' does not exist" % (param, name))
-            dependencies.extend(self._get_fixture_dependencies(param, orig_fixture if orig_fixture else name))
-        dependencies.extend(fixture_params)
+            dependencies.update(self.get_fixture_dependencies(param, orig_fixture if orig_fixture else name))
+        dependencies.update(fixture_params)
 
         return dependencies
-
-    def get_fixture_dependencies(self, name):
-        dependencies = self._get_fixture_dependencies(name, None)
-        return get_distincts_in_list(dependencies)
-
-    def filter_fixtures(self, base_names=[], scope=None, is_executed=None, with_dependencies=False):
-        def do_filter_fixture(fixture):
-            if scope != None and fixture.scope != scope:
-                return False
-            if is_executed != None and fixture.is_executed() != is_executed:
-                return False
-            return True
-
-        names = base_names if base_names else self._fixtures.keys()
-        fixtures = filter(do_filter_fixture, [self._fixtures[name] for name in names])
-        return [f.name for f in fixtures]
 
     def check_dependencies(self):
         """
@@ -218,33 +251,55 @@ class FixtureRegistry:
     def get_fixture_scope(self, name):
         return self._fixtures[name].scope
 
-    def execute_fixture(self, name):
-        fixture = self._fixtures[name]
-        params = {}
-        for param in fixture.params:
-            if param == "fixture_name":
-                params["fixture_name"] = name
-            else:
-                dependency_fixture = self._fixtures[param]
-                if not dependency_fixture.is_executed():
-                    self.execute_fixture(dependency_fixture.name)
-                params[dependency_fixture.name] = dependency_fixture.get_result()
-        fixture.execute(params)
+    @staticmethod
+    def get_fixtures_used_in_suite(suite):
+        fixtures = suite.get_fixtures()
 
-    def get_fixture_result(self, name):
-        return self._fixtures[name].get_result()
+        for test in suite.get_tests():
+            fixtures.update(test.get_fixtures())
 
-    def is_fixture_executed(self, name):
-        return self._fixtures[name].is_executed()
+        return fixtures
 
-    def get_fixture_results(self, names):
-        results = {}
-        for name in names:
-            results[name] = self.get_fixture_result(name)
-        return results
+    @staticmethod
+    def get_fixtures_used_in_suite_recursively(suite):
+        fixtures = FixtureRegistry.get_fixtures_used_in_suite(suite)
 
-    def teardown_fixture(self, name):
-        self._fixtures[name].teardown()
+        for sub_suite in suite.get_suites():
+            fixtures.update(FixtureRegistry.get_fixtures_used_in_suite_recursively(sub_suite))
+
+        return fixtures
+
+    def get_scheduled_fixtures_for_scope(self, direct_fixtures, scope, parent_scheduled_fixtures=None):
+        fixtures = OrderedSet()
+        for fixture in direct_fixtures:
+            fixtures.update(self.get_fixture_dependencies(fixture))
+        fixtures.update(direct_fixtures)
+        return ScheduledFixtures(
+            scope, [self._fixtures[name] for name in fixtures if self._fixtures[name].scope == scope],
+            parent_scheduled_fixtures=parent_scheduled_fixtures
+        )
+
+    def get_fixtures_scheduled_for_session_prerun(self, suites):
+        fixtures = OrderedSet()
+        for suite in suites:
+            fixtures.update(FixtureRegistry.get_fixtures_used_in_suite_recursively(suite))
+        return self.get_scheduled_fixtures_for_scope(fixtures, "session_prerun")
+
+    def get_fixtures_scheduled_for_session(self, suites, prerun_session_scheduled_fixtures):
+        fixtures = OrderedSet()
+        for suite in suites:
+            fixtures.update(FixtureRegistry.get_fixtures_used_in_suite_recursively(suite))
+        return self.get_scheduled_fixtures_for_scope(fixtures, "session", prerun_session_scheduled_fixtures)
+
+    def get_fixtures_scheduled_for_suite(self, suite, session_scheduled_fixtures):
+        return self.get_scheduled_fixtures_for_scope(
+            FixtureRegistry.get_fixtures_used_in_suite(suite), "suite", session_scheduled_fixtures
+        )
+
+    def get_fixtures_scheduled_for_test(self, test, suite_scheduled_fixtures):
+        return self.get_scheduled_fixtures_for_scope(
+            test.get_fixtures(), "test", suite_scheduled_fixtures
+        )
 
 
 def load_fixtures_from_func(func):

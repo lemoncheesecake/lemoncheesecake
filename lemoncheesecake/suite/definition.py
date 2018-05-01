@@ -47,6 +47,8 @@ def add_test_in_suite(test, suite, before_test=None, after_test=None):
     backward-compatibility function: use add_test_into_suite instead
     before_test and after_test arguments are simply ignored
     """
+    if not test.rank:
+        test.rank = get_metadata_next_rank()
     add_test_into_suite(test, suite)
 
 

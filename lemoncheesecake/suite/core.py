@@ -4,8 +4,10 @@ Created on Sep 8, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError, InternalError
-from lemoncheesecake.utils import get_distincts_in_list, get_callable_args
+from orderedset import OrderedSet
+
+from lemoncheesecake.exceptions import InvalidMetadataError, InternalError
+from lemoncheesecake.utils import get_callable_args
 from lemoncheesecake.testtree import BaseTest, BaseSuite
 
 SUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
@@ -20,6 +22,7 @@ class Test(BaseTest):
         BaseTest.__init__(self, name, description)
         self.callback = callback
         self.disabled = False
+        self.rank = 0
 
     def is_disabled(self):
         node = self
@@ -77,7 +80,7 @@ class Suite(BaseSuite):
 
     def get_hook_params(self, hook_name):
         hook = self.get_hook(hook_name)
-        assert hook != None
+        assert hook
         return get_callable_args(hook)
 
     def get_injected_fixture_names(self):
@@ -135,12 +138,10 @@ class Suite(BaseSuite):
         BaseSuite.add_suite(self, suite)
 
     def get_fixtures(self):
-        fixtures = []
-
-        fixtures.extend(self._injected_fixtures.keys())
+        fixtures = OrderedSet(self._injected_fixtures.keys())
 
         suite_setup = self.get_hook("setup_suite")
         if suite_setup:
-            fixtures.extend(get_callable_args(suite_setup))
+            fixtures.update(get_callable_args(suite_setup))
 
-        return get_distincts_in_list(fixtures)
+        return fixtures

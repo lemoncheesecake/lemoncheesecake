@@ -105,6 +105,7 @@ class ReportWriter:
         suite_data.tags.extend(suite.tags)
         suite_data.properties.update(suite.properties)
         suite_data.links.extend(suite.links)
+        suite_data.rank = suite.rank
         if suite.parent_suite:
             parent_suite_data = self._get_suite_data(suite.parent_suite)
             parent_suite_data.add_suite(suite_data)
@@ -145,6 +146,7 @@ class ReportWriter:
         test_data.tags.extend(test.tags)
         test_data.properties.update(test.properties)
         test_data.links.extend(test.links)
+        test_data.rank = test.rank
         test_data.start_time = event.time
 
         suite_data = self._get_suite_data(event.test.parent_suite)
@@ -188,9 +190,10 @@ class ReportWriter:
     def on_step_end(self, event):
         report_node_data = self.report.get(event.location)
         step = self._lookup_step(report_node_data.steps, event.step)
-        if not step._detached:
-            raise ProgrammingError("Cannot end step '%s', only detached steps can be explicitly ended" % step.description)
-        step.end_time = event.time
+
+        # only detached steps can be explicitly ended, otherwise do nothing
+        if step._detached:
+            step.end_time = event.time
 
     def on_log(self, event):
         self._add_step_entry(

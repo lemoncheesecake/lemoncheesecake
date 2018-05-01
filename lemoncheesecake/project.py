@@ -30,14 +30,14 @@ class HasCustomCliArgs:
 
 class HasPreRunHook:
     """Mixin class for project configuration that requires code to be executed before tests"""
-    def pre_run(self, report_dir):
+    def pre_run(self, cli_args, report_dir):
         """Pre-run hook"""
         pass
 
 
 class HasPostRunHook:
     """Mixin class for project configuration that requires code to be executed after tests"""
-    def post_run(self, report_dir):
+    def post_run(self, cli_args, report_dir):
         """Post-run hook"""
         pass
 
@@ -80,12 +80,17 @@ class ProjectConfiguration:
         """Return a list of key/value tuple to be added to report info"""
         return []
 
+    def is_threaded(self):
+        """Indicate, whether or not if the project can be ran on multiple threads"""
+        return True
+
 
 class SimpleProjectConfiguration(ProjectConfiguration):
-    def __init__(self, suites_dir, fixtures_dir=None, report_title=None):
+    def __init__(self, suites_dir, fixtures_dir=None, report_title=None, threaded=True):
         self._suites_dir = suites_dir
         self._fixtures_dir = fixtures_dir
         self._report_title = report_title
+        self._threaded = threaded
         self.console_backend = ConsoleBackend()
         self.json_backend = JsonBackend()
         self.xml_backend = XmlBackend()
@@ -115,6 +120,9 @@ class SimpleProjectConfiguration(ProjectConfiguration):
     
     def create_report_dir(self, top_dir):
         return create_report_dir_with_rotation(top_dir)
+
+    def is_threaded(self):
+        return self._threaded
 
 
 class Project:
@@ -149,13 +157,16 @@ class Project:
     def get_default_reporting_backends_for_test_run(self):
         return filter_available_reporting_backends(self._config.get_default_reporting_backends_for_test_run())
 
-    def run_pre_session_hook(self, report_dir):
-        if isinstance(self._config, HasPreRunHook):
-            self._config.pre_run(report_dir)
+    def is_threaded(self):
+        return self._config.is_threaded()
 
-    def run_post_session_hook(self, report_dir):
+    def run_pre_session_hook(self, cli_args, report_dir):
+        if isinstance(self._config, HasPreRunHook):
+            self._config.pre_run(cli_args, report_dir)
+
+    def run_post_session_hook(self, cli_args, report_dir):
         if isinstance(self._config, HasPostRunHook):
-            self._config.post_run(report_dir)
+            self._config.post_run(cli_args, report_dir)
 
     def on_test_session_start(self, event):
         title = self._config.get_report_title()
