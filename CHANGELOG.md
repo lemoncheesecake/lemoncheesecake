@@ -1,3 +1,15 @@
+# 0.18.0 (2018-05-01)
+
+- tests can now be run in parallel using `lcc run --threads N` command; please note that test suites are run
+  **sequentially** and that tests within test suites are run in **parallel**, this behavior will be improved
+  in future releases so that tests can be spread on different threads independently from their parent suite
+
+## API breaking changes
+
+- the signature of `pre_run` and `post_run` methods of `ProjectConfiguration` class in user `project.py` file
+  is now `{pre_run,post_run}(self, cli_args, report_dir)` instead of `{pre_run,post_run}(self, report_dir)`,
+  in other words: CLI arguments are now passed in pre and post hook methods of the project
+
 # 0.17.2 (2018-04-15)
 
 - **API**: in 'detached_step' context manager, handle possible exceptions in order to properly caught exceptions
