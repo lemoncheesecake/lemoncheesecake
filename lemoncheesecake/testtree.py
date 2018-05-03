@@ -6,8 +6,7 @@ Created on Jun 16, 2017
 
 import copy
 
-from orderedset import OrderedSet
-
+from lemoncheesecake.utils import OrderedSet
 from lemoncheesecake.exceptions import CannotFindTreeNode
 
 
