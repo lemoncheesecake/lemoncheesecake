@@ -1,3 +1,8 @@
+# 0.18.1 (2018-05-04)
+
+- Replace the `orderedset` module by the Raymond Hettinger's implementation of `OrderedSet` to avoid a dependency
+  to a non-pure-Python module
+
 # 0.18.0 (2018-05-01)
 
 - tests can now be run in parallel using `lcc run --threads N` command; please note that test suites are run
