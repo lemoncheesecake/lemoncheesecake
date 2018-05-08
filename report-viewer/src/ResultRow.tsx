@@ -23,12 +23,12 @@ interface State {
 
 interface Props {
     id: string,
-    status: Status,
-    status_details?: string,
+    status: Status | null,
+    status_details?: string | null,
     steps: Array<StepData>
 }
 
-function get_text_class_from_test_status(status: Status) {
+function get_text_class_from_test_status(status: Status | null) {
     if (status == null)
         return ""
     
@@ -82,11 +82,11 @@ class ResultRow extends React.Component<Props, State> {
         return (
             <tbody>
                 <tr id={this.props.id} className="test" key={this.props.id}>
-                    <td className="test_status" title={this.props.status_details}
+                    <td className="test_status" title={this.props.status_details || ""}
                         style={this.props.steps.length > 0 ? {cursor: "pointer"} : undefined}
                         onClick={this.props.steps.length > 0 ? this.toggle : undefined}>
                         <span className={get_text_class_from_test_status(this.props.status)} style={{fontSize: "120%"}}>
-                            {this.props.status.toUpperCase()}
+                            {this.props.status ? this.props.status.toUpperCase() : "n/a"}
                         </span>
                     </td>
                     {this.props.children}

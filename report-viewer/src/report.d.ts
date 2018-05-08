@@ -41,7 +41,7 @@ declare interface StepData extends TimeInterval {
 }
 
 declare interface HookData extends TimeInterval {
-    outcome: Boolean,
+    outcome: Boolean | null,
     steps: Array<StepData>
 }
 
@@ -62,8 +62,8 @@ declare interface BaseTestData {
 
 declare interface TestData extends BaseTestData, TimeInterval {
     steps: Array<StepData>,
-    status: Status,
-    status_details: string
+    status: Status | null,
+    status_details: string | null
 }
 
 declare interface SuiteData extends BaseTestData {
