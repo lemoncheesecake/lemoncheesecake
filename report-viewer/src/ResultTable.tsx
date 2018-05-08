@@ -1,10 +1,8 @@
 import * as React from 'react';
-import TimeExtraInfo from './TimeExtraInfo';
 
 interface Props {
     heading: any,
-    start: DateTime | null,
-    end: DateTime | null
+    extra_info?: any
 }
 
 class ResultTable extends React.Component<Props, {}> {
@@ -13,7 +11,7 @@ class ResultTable extends React.Component<Props, {}> {
             <div className='panel panel-default'>
                 <div className="panel-heading extra-info-container">
                     { this.props.heading }
-                    { this.props.start && <TimeExtraInfo start={this.props.start} end={this.props.end}/> }
+                    { this.props.extra_info }
                 </div>
                 <table className="table table-hover table-bordered table-condensed">
                     <colgroup>

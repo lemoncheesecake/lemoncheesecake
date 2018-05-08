@@ -4,6 +4,7 @@ import Suite from './Suite';
 import { HookProps, Hook } from './Hook';
 import ResultTable from './ResultTable';
 import { get_result_row_by_id } from './ResultRow';
+import TimeExtraInfo from './TimeExtraInfo';
 
 class ReportHook extends React.Component<HookProps, {}> {
     render() {
@@ -18,7 +19,9 @@ class ReportHook extends React.Component<HookProps, {}> {
         }
 
         return (
-            <ResultTable heading={<Heading desc={this.props.description}/>} start={this.props.hook.start_time} end={this.props.hook.end_time}>
+            <ResultTable
+                heading={<Heading desc={this.props.description}/>}
+                extra_info={<TimeExtraInfo start={this.props.hook.start_time} end={this.props.hook.end_time}/>}>
                 <Hook {...this.props}/>
             </ResultTable>
         );

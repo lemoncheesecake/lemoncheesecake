@@ -2,6 +2,7 @@ import * as React from 'react';
 import Test from './Test';
 import Hook from './Hook';
 import ResultTable from './ResultTable';
+import TimeExtraInfo from './TimeExtraInfo';
 
 interface SuiteProps {
     suite: SuiteData,
@@ -53,7 +54,7 @@ class Suite extends React.Component<SuiteProps, {}> {
         }
 
         return (
-            <ResultTable heading={<Heading/>} start={start_time} end={end_time}>
+            <ResultTable heading={<Heading/>} extra_info={start_time && <TimeExtraInfo start={start_time} end={end_time}/>}>
                 {
                     suite.suite_setup && <Hook hook={suite.suite_setup} description="- Setup suite -" id={suite_id + ".setup_suite"}/>
                 }
