@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 import os
 import os.path as osp
@@ -6,9 +6,8 @@ import sys
 import shutil
 import glob
 
-os.chdir("react-report")
-ret = os.system("npm run build")
-if ret != 0:
+
+if os.system("npm run build") != 0:
     sys.exit(1)
 
 js_src_filename = glob.glob(osp.join("build", "static", "js", "main.*.js"))[0]
