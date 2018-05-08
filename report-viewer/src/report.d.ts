@@ -25,21 +25,22 @@ declare interface AttachmentData {
 declare interface UrlData {
     type: "url",
     url: string,
-    description: string
+    description: string,
 }
 
 type StepEntryData = LogData | CheckData | AttachmentData | UrlData;
 
-declare interface StepData {
-    description: string,
+declare interface TimeInterval {
     start_time: DateTime,
     end_time: DateTime | null,
+}
+
+declare interface StepData extends TimeInterval {
+    description: string,
     entries: Array<StepEntryData>;
 }
 
-declare interface HookData {
-    start_time: DateTime,
-    end_time: DateTime | null,
+declare interface HookData extends TimeInterval {
     outcome: Boolean,
     steps: Array<StepData>
 }
@@ -59,9 +60,7 @@ declare interface BaseTestData {
     links: Array<Link>
 }
 
-declare interface TestData extends BaseTestData {
-    start_time: DateTime,
-    end_time: DateTime | null,
+declare interface TestData extends BaseTestData, TimeInterval {
     steps: Array<StepData>,
     status: Status,
     status_details: string
