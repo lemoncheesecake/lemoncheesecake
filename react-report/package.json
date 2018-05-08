@@ -1,6 +1,5 @@
 {
-  "name": "baz",
-  "version": "0.1.0",
+  "name": "lemoncheesecake",
   "private": true,
   "dependencies": {
     "@types/jest": "^20.0.7",
