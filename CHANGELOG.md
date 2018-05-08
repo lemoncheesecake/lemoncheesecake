@@ -1,3 +1,7 @@
+# 0.18.2 (2018-05-09)
+
+- **HTML report**: various minor fixes and improvements related to tests parallelization
+
 # 0.18.1 (2018-05-04)
 
 - Replace the `orderedset` module by the Raymond Hettinger's implementation of `OrderedSet` to avoid a dependency
