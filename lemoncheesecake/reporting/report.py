@@ -188,9 +188,7 @@ class SuiteData(BaseSuite):
 class _Stats(object):
     def __init__(self):
         self.tests = 0
-        self.enabled_tests = 0
         self.test_statuses = {s: 0 for s in TEST_STATUSES}
-        self.successful_tests_percentage = 0
         self.errors = 0
         self.checks = 0
         self.check_successes = 0
@@ -199,6 +197,14 @@ class _Stats(object):
         self.warning_logs = 0
         self.duration = None
         self.duration_cumulative = 0
+
+    @property
+    def enabled_tests(self):
+        return self.tests - self.test_statuses["disabled"]
+
+    @property
+    def successful_tests_percentage(self):
+        return (float(self.test_statuses["passed"]) / self.enabled_tests * 100) if self.enabled_tests else 0
 
     @property
     def duration_cumulative_description(self):
@@ -234,17 +240,12 @@ def _update_stats_from_tests(stats, tests):
         if test.status:
             stats.test_statuses[test.status] += 1
 
-    stats.enabled_tests = len(tests) - stats.test_statuses["disabled"]
-
-    stats.successful_tests_percentage = \
-        (float(stats.test_statuses["passed"]) / stats.enabled_tests * 100) if stats.enabled_tests else 0
-
 
 def get_stats_from_report(report):
     stats = _Stats()
 
     if report.end_time is not None:
-        stats.duration = (report.end_time - report.start_time)
+        stats.duration = report.end_time - report.start_time
     _update_stats_from_results(stats, flatten_results_from_report(report))
     _update_stats_from_tests(stats, list(flatten_tests(report.suites)))
 
