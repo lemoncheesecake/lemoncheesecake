@@ -49,7 +49,7 @@ def _serialize_steps(steps):
                 entry = _dict("type", "attachment", "description", entry.description, "filename", entry.filename)
             elif isinstance(entry, UrlData):
                 entry = _dict("type", "url", "description", entry.description, "url", entry.url)
-            else: # TestCheck
+            else:  # TestCheck
                 entry = _dict("type", "check", "description", entry.description, "outcome", entry.outcome, "details", entry.details)
             json_step["entries"].append(entry)
     return json_steps
@@ -60,7 +60,7 @@ def _serialize_common_data(obj):
         "name", obj.name, "description", obj.description,
         "tags", obj.tags,
         "properties", obj.properties,
-        "links", [ _dict("name", link[1], "url", link[0]) for link in obj.links ]
+        "links", [_dict("name", link[1], "url", link[0]) for link in obj.links]
     )
 
 
@@ -88,8 +88,8 @@ def _serialize_hook_data(hook_data):
 def _serialize_suite_data(suite):
     json_suite = _serialize_common_data(suite)
     json_suite.update(_dict(
-        "tests", [ _serialize_test_data(t) for t in suite.get_tests() ],
-        "suites", [ _serialize_suite_data(s) for s in suite.get_suites() ]
+        "tests", [_serialize_test_data(t) for t in suite.get_tests()],
+        "suites", [_serialize_suite_data(s) for s in suite.get_suites()]
     ))
     if suite.suite_setup:
         json_suite["suite_setup"] = _serialize_hook_data(suite.suite_setup)
@@ -107,14 +107,14 @@ def serialize_report_into_json(report):
         "end_time", _serialize_time(report.end_time),
         "generation_time", _serialize_time(report.report_generation_time),
         "title", report.title,
-        "info", [ [ n, v ] for n, v in report.info ],
-        "stats", [ [ n, v ] for n, v in report.serialize_stats() ]
+        "info", [[n, v] for n, v in report.info],
+        "stats", [[n, v] for n, v in report.serialize_stats()]
     )
 
     if report.test_session_setup:
         serialized["test_session_setup"] = _serialize_hook_data(report.test_session_setup)
 
-    serialized["suites"] = [ _serialize_suite_data(s) for s in report.suites ]
+    serialized["suites"] = [_serialize_suite_data(s) for s in report.suites]
 
     if report.test_session_teardown:
         serialized["test_session_teardown"] = _serialize_hook_data(report.test_session_teardown)
@@ -163,8 +163,8 @@ def _unserialize_test_data(js):
     test.end_time = _unserialize_time(js["end_time"])
     test.tags = js["tags"]
     test.properties = js["properties"]
-    test.links = [ (link["url"], link["name"]) for link in js["links"] ]
-    test.steps = [ _unserialize_step_data(s) for s in js["steps"] ]
+    test.links = [(link["url"], link["name"]) for link in js["links"]]
+    test.steps = [_unserialize_step_data(s) for s in js["steps"]]
     return test
 
 
@@ -173,7 +173,7 @@ def _unserialize_hook_data(js):
     data.outcome = js["outcome"]
     data.start_time = _unserialize_time(js["start_time"])
     data.end_time = _unserialize_time(js["end_time"])
-    data.steps = [ _unserialize_step_data(s) for s in js["steps"] ]
+    data.steps = [_unserialize_step_data(s) for s in js["steps"]]
 
     return data
 
