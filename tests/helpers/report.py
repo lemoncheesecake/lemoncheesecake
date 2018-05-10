@@ -202,6 +202,7 @@ def assert_report(actual, expected):
     assert round(actual.start_time, 3) == round(expected.start_time, 3)
     assert round(actual.end_time, 3) == round(expected.end_time, 3)
     assert round(actual.report_generation_time, 3) == round(expected.report_generation_time, 3)
+    assert actual.nb_threads == expected.nb_threads
     assert len(actual.suites) == len(expected.suites)
 
     assert_hook_data(actual.test_session_setup, expected.test_session_setup)

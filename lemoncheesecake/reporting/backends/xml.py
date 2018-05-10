@@ -165,6 +165,7 @@ def _serialize_suite_data(suite):
 
 def serialize_report_as_tree(report):
     xml = E("lemoncheesecake-report")
+    xml.attrib["nb-threads"] = str(report.nb_threads)
     report_version_node = make_xml_child(xml, "lemoncheesecake-version")
     report_version_node.text = lemoncheesecake.__version__
     report_version_node = make_xml_child(xml, "lemoncheesecake-report-version")
@@ -315,6 +316,7 @@ def load_report_from_file(filename):
     report.start_time = _unserialize_datetime(root.attrib["start-time"]) if "start-time" in root.attrib else None
     report.end_time = _unserialize_datetime(root.attrib["end-time"]) if "end-time" in root.attrib else None
     report.report_generation_time = _unserialize_datetime(root.attrib["generation-time"]) if "generation-time" in root.attrib else None
+    report.nb_threads = int(root.attrib["nb-threads"])
     report.title = root.xpath("title")[0].text
     report.info = _unserialize_keyvalue_list(root.xpath("info"))
     report.stats = _unserialize_keyvalue_list(root.xpath("stat"))

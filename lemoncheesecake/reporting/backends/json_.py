@@ -106,6 +106,7 @@ def serialize_report_into_json(report):
         "start_time", _serialize_time(report.start_time),
         "end_time", _serialize_time(report.end_time),
         "generation_time", _serialize_time(report.report_generation_time),
+        "nb_threads", report.nb_threads,
         "title", report.title,
         "info", [[n, v] for n, v in report.info],
         "stats", [[n, v] for n, v in report.serialize_stats()]
@@ -207,7 +208,7 @@ def load_report_from_file(filename):
         with open(filename, "r") as fh:
             js_content = fh.read()
     except IOError as e:
-        raise e # re-raise as-is
+        raise e  # re-raise as-is
 
     js_content = re.sub("^" + JS_PREFIX, "", js_content)
 
@@ -225,6 +226,7 @@ def load_report_from_file(filename):
     report.start_time = _unserialize_time(js["start_time"])
     report.end_time = _unserialize_time(js["end_time"])
     report.report_generation_time = _unserialize_time(js["generation_time"])
+    report.nb_threads = js["nb_threads"]
 
     if "test_session_setup" in js:
         report.test_session_setup = _unserialize_hook_data(js["test_session_setup"])

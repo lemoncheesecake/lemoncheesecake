@@ -334,6 +334,7 @@ class _Runner:
     def run_session(self, prerun_session_scheduled_fixtures):
         # initialize runtime & global test variables
         self._report = Report()
+        self._report.nb_threads = self.nb_threads
         self._report.add_info("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:]))
         self._session = initialize_report_writer(self._report)
         nb_tests = len(list(flatten_tests(self.suites)))

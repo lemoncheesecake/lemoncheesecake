@@ -417,7 +417,23 @@ def test_report_title(backend, tmpdir):
     assert_report(unserialized_report, report)
 
 
-# TODO: see below, the behavior of each save mode is not tested in fact, but
+def test_nb_threads(backend, tmpdir):
+    report = Report()
+    report.nb_threads = 3
+    report.start_time = time.time()
+    report.end_time = report.start_time
+    report.report_generation_time = report.start_time
+
+    report_filename = tmpdir.join("report").strpath
+    backend.save_report(report_filename, report)
+    unserialized_report = backend.load_report(report_filename)
+
+    #    dump_report(unserialized_report)
+
+    assert_report(unserialized_report, report)
+
+
+ # TODO: see below, the behavior of each save mode is not tested in fact, but
 # at least we want to make sure that each of this mode is not failing
 
 def test_save_at_end_of_tests(backend, tmpdir):

@@ -263,6 +263,7 @@ class Report:
         self.end_time = None
         self.report_generation_time = None
         self.title = DEFAULT_REPORT_TITLE
+        self.nb_threads = 1
 
     @property
     def duration(self):
