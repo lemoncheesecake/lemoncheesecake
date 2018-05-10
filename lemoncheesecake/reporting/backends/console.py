@@ -86,12 +86,9 @@ def _make_test_result_line(name, num, status):
 def _print_summary(stats, duration):
     print()
     print(colored("Statistics", attrs=["bold"]), ":")
-    print(" * Duration: %s" % humanize_duration(duration))
+    print(" * Duration: %s" % (humanize_duration(duration) if duration is not None else "n/a"))
     print(" * Tests: %d" % stats.tests)
-    print(" * Successes: %d (%d%%)" % (
-        stats.test_statuses["passed"],
-        float(stats.test_statuses["passed"]) / stats.get_enabled_tests() * 100 if stats.get_enabled_tests() else 0)
-    )
+    print(" * Successes: %d (%d%%)" % (stats.test_statuses["passed"], stats.successful_tests_percentage))
     print(" * Failures: %d" % (stats.test_statuses["failed"]))
     if stats.test_statuses["skipped"]:
         print(" * Skipped: %d" % (stats.test_statuses["skipped"]))

@@ -26,9 +26,9 @@ def assert_test_statuses(report, passed=(), failed=(), skipped=(), disabled=()):
     _assert_tests_status(report, "disabled", disabled)
 
 
-def assert_report_errors(report, errors_nb):
-    stats = report.get_stats()
-    assert stats.errors == errors_nb
+def assert_report_node_success(report, location, expected):
+    node = report.get(location)
+    assert node.is_successful() == expected
 
 
 def _assert_test_status(report, status):

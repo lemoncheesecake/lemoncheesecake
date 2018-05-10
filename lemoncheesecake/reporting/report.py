@@ -7,10 +7,11 @@ Created on Mar 26, 2016
 import time
 import re
 from decimal import Decimal
+from functools import reduce
 
 from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 from lemoncheesecake.utils import humanize_duration
-from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, find_test, find_suite, TreeLocation
+from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, TreeLocation
 
 __all__ = (
     "LogData", "CheckData", "AttachmentData", "UrlData", "StepData", "TestData",
@@ -169,7 +170,11 @@ class SuiteData(BaseSuite):
 
     @property
     def duration(self):
-        return _get_duration(self.start_time, self.end_time)
+        return reduce(
+            lambda x, y: x + y,
+            [result.duration for result in flatten_results_from_suites([self])],
+            0
+        )
 
     def get_tests(self):
         tests = super(SuiteData, self).get_tests()
@@ -180,91 +185,70 @@ class SuiteData(BaseSuite):
         return sorted(suites, key=lambda s: s.rank)
 
 
-class _ReportStats:
+class _Stats:
     def __init__(self):
         self.tests = 0
+        self.enabled_tests = 0
         self.test_statuses = {s: 0 for s in TEST_STATUSES}
+        self.successful_tests_percentage = 0
         self.errors = 0
         self.checks = 0
         self.check_successes = 0
         self.check_failures = 0
         self.error_logs = 0
         self.warning_logs = 0
-        self.duration = 0
+        self.duration = None
+        self.duration_cumulative = 0
 
-    def is_successful(self):
-        return self.test_statuses["failed"] == 0 and self.test_statuses["skipped"] == 0
 
-    def get_enabled_tests(self):
-        return self.tests - self.test_statuses["disabled"]
-
-    def _walk_steps(self, steps):
-        for step in steps:
+def _update_stats_from_results(stats, results):
+    for result in results:
+        if result.duration is not None:
+            stats.duration_cumulative += result.duration
+        for step in result.steps:
             for entry in step.entries:
                 if isinstance(entry, CheckData):
-                    self.checks += 1
+                    stats.checks += 1
                     if entry.outcome == True:
-                        self.check_successes += 1
+                        stats.check_successes += 1
                     elif entry.outcome == False:
-                        self.check_failures += 1
+                        stats.check_failures += 1
                 if isinstance(entry, LogData):
                     if entry.level == LOG_LEVEL_WARN:
-                        self.warning_logs += 1
+                        stats.warning_logs += 1
                     elif entry.level == LOG_LEVEL_ERROR:
-                        self.error_logs += 1
+                        stats.error_logs += 1
 
-    def _walk_hook(self, hook):
-        if hook.end_time is not None:
-            self.duration += hook.end_time - hook.start_time
-        if not hook.is_successful():
-            self.errors += 1
-        self._walk_steps(hook.steps)
-    walk_setup_hook = _walk_hook
-    walk_teardown_hook = _walk_hook
 
-    def walk_test(self, test):
-        self.tests += 1
-        if test.end_time is not None:
-            self.duration += test.end_time - test.start_time
-        if test.status is not None:
-            self.test_statuses[test.status] += 1
-        self._walk_steps(test.steps)
+def _update_stats_from_tests(stats, tests):
+    stats.tests = len(tests)
 
-    def walk_suite(self, suite):
-        if suite.suite_setup:
-            self.walk_setup_hook(suite.suite_setup)
+    for test in tests:
+        if test.status:
+            stats.test_statuses[test.status] += 1
 
-        if suite.suite_teardown:
-            self.walk_teardown_hook(suite.suite_teardown)
+    stats.enabled_tests = len(tests) - stats.test_statuses["disabled"]
 
-        for test in suite.get_tests():
-            self.walk_test(test)
-
-        for sub_suite in suite.get_suites():
-            self.walk_suite(sub_suite)
-
-    def walk_suites(self, suites):
-        for suite in suites:
-            self.walk_suite(suite)
+    stats.successful_tests_percentage = \
+        (float(stats.test_statuses["passed"]) / stats.enabled_tests * 100) if stats.enabled_tests else 0
 
 
 def get_stats_from_report(report):
-    stats = _ReportStats()
+    stats = _Stats()
 
-    if report.test_session_setup:
-        stats.walk_setup_hook(report.test_session_setup)
-
-    if report.test_session_teardown:
-        stats.walk_teardown_hook(report.test_session_teardown)
-
-    stats.walk_suites(report.suites)
+    if report.end_time is not None:
+        stats.duration = (report.end_time - report.start_time)
+    _update_stats_from_results(stats, flatten_results_from_report(report))
+    _update_stats_from_tests(stats, list(flatten_tests(report.suites)))
 
     return stats
 
 
 def get_stats_from_suites(suites):
-    stats = _ReportStats()
-    stats.walk_suites(suites)
+    stats = _Stats()
+
+    _update_stats_from_results(stats, flatten_results_from_suites(suites))
+    _update_stats_from_tests(stats, list(flatten_tests(suites)))
 
     return stats
 
@@ -318,20 +302,22 @@ class Report:
         else:
             raise Exception("Unknown location type %s" % location.node_type)
 
+    def is_successful(self):
+        return all(test.status in ("passed", "disabled") for test in flatten_tests(self.suites))
+
     def serialize_stats(self):
         stats = self.get_stats()
-        enabled_tests = stats.get_enabled_tests()
+
         return (
             ("Start time", time.asctime(time.localtime(self.start_time))),
             ("End time", time.asctime(time.localtime(self.end_time)) if self.end_time else "n/a"),
             ("Duration", humanize_duration(self.end_time - self.start_time) if self.end_time else "n/a"),
             ("Tests", str(stats.tests)),
             ("Successful tests", str(stats.test_statuses["passed"])),
-            ("Successful tests in %", "%d%%" % (float(stats.test_statuses["passed"]) / enabled_tests * 100 if enabled_tests else 0)),
+            ("Successful tests in %", "%d%%" % stats.successful_tests_percentage),
             ("Failed tests", str(stats.test_statuses["failed"])),
             ("Skipped tests", str(stats.test_statuses["skipped"])),
-            ("Disabled tests", str(stats.test_statuses["disabled"])),
-            ("Errors", str(stats.errors))
+            ("Disabled tests", str(stats.test_statuses["disabled"]))
         )
 
 
@@ -339,3 +325,22 @@ def flatten_steps(suites):
     for test in flatten_tests(suites):
         for step in test.steps:
             yield step
+
+
+def flatten_results_from_suites(suites):
+    for suite in flatten_suites(suites):
+        if suite.suite_setup:
+            yield suite.suite_setup
+        for test in suite.get_tests():
+            yield test
+        if suite.suite_teardown:
+            yield suite.suite_teardown
+
+
+def flatten_results_from_report(report):
+    if report.test_session_setup:
+        yield report.test_session_setup
+    for result in flatten_results_from_suites(report.get_suites()):
+        yield result
+    if report.test_session_teardown:
+        yield report.test_session_teardown

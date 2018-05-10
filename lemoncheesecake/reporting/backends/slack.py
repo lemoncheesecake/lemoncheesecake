@@ -51,24 +51,27 @@ def get_message_template_parameters():
         "duration": lambda report, stats: humanize_duration(report.end_time - report.start_time),
 
         "total": lambda report, stats: stats.tests,
-        "enabled": lambda report, stats: stats.get_enabled_tests(),
+        "enabled": lambda report, stats: stats.enabled_tests,
 
         "passed": lambda report, stats: stats.test_statuses["passed"],
-        "passed_pct": lambda report, stats: percent(stats.test_statuses["passed"], of=stats.get_enabled_tests()),
+        "passed_pct": lambda report, stats: percent(stats.test_statuses["passed"], of=stats.enabled_tests),
 
         "failed": lambda report, stats: stats.test_statuses["failed"],
-        "failed_pct": lambda report, stats: percent(stats.test_statuses["failed"], of=stats.get_enabled_tests()),
+        "failed_pct": lambda report, stats: percent(stats.test_statuses["failed"], of=stats.enabled_tests),
 
         "skipped": lambda report, stats: stats.test_statuses["skipped"],
-        "skipped_pct": lambda report, stats: percent(stats.test_statuses["skipped"], of=stats.get_enabled_tests()),
+        "skipped_pct": lambda report, stats: percent(stats.test_statuses["skipped"], of=stats.enabled_tests),
 
         "disabled": lambda report, stats: stats.test_statuses["disabled"],
         "disabled_pct": lambda report, stats: percent(stats.test_statuses["disabled"], of=stats.tests)
     }
 
 
-def build_message_parameters(report, stats):
-    return {name: func(report, stats) for name, func in get_message_template_parameters().items()}
+def build_message_parameters(report):
+    stats = report.get_stats()
+    return {
+        name: func(report, stats) for name, func in get_message_template_parameters().items()
+    }
 
 
 def build_message_empty_parameters():
@@ -89,39 +92,11 @@ class EndOfTestsNotifier(BaseSlackReportingSession):
         self.message_template = message_template
         self.only_notify_failure = only_notify_failure
 
-    def build_message_parameters(self, report, stats):
-        enabled_tests = stats.get_enabled_tests()
-
-        def percent(val, of):
-            return "%d%%" % ((float(val) / of * 100) if of else 0)
-
-        return {
-            "start_time": time.asctime(time.localtime(report.start_time)),
-            "end_time": time.asctime(time.localtime(report.end_time)),
-            "duration": humanize_duration(report.end_time - report.start_time),
-
-            "total": stats.tests,
-            "enabled": enabled_tests,
-
-            "passed": stats.test_statuses["passed"],
-            "passed_pct": percent(stats.test_statuses["passed"], of=enabled_tests),
-
-            "failed": stats.test_statuses["failed"],
-            "failed_pct": percent(stats.test_statuses["failed"], of=enabled_tests),
-
-            "skipped": stats.test_statuses["skipped"],
-            "skipped_pct": percent(stats.test_statuses["skipped"], of=enabled_tests),
-
-            "disabled": stats.test_statuses["disabled"],
-            "disabled_pct": percent(stats.test_statuses["disabled"], of=stats.tests)
-        }
-
     def on_test_session_end(self, event):
-        stats = event.report.get_stats()
-        if self.only_notify_failure and stats.is_successful():
+        if self.only_notify_failure and event.report.is_successful():
             return
 
-        message = self.message_template.format(**build_message_parameters(event.report, stats))
+        message = self.message_template.format(**build_message_parameters(event.report))
         self.send_message(message)
 
         self.show_errors()

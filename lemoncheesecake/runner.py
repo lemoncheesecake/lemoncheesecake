@@ -418,8 +418,7 @@ class _Runner:
         if errors:
             raise FixtureError("\n".join(errors))
 
-        stats = self._report.get_stats()
-        return stats.is_successful()
+        return self._report.is_successful()
 
 
 def run_suites(suites, fixture_registry, reporting_backends, report_dir, stop_on_failure=False, nb_threads=1):
