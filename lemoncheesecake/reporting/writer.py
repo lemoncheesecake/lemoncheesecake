@@ -38,7 +38,7 @@ class ReportWriter:
     def _end_hook(hook_data, ts):
         if hook_data:
             hook_data.end_time = ts
-            hook_data.outcome = not hook_data.has_failure()
+            hook_data.outcome = hook_data.is_successful()
 
     @staticmethod
     def _lookup_step(steps, step):
@@ -156,7 +156,7 @@ class ReportWriter:
         test_data = self._get_test_data(event.test)
         self._finalize_steps(test_data.steps, event.time)
 
-        test_data.status = "failed" if test_data.has_failure() else "passed"
+        test_data.status = "passed" if test_data.is_successful() else "failed"
         test_data.end_time = event.time
 
     def _bypass_test(self, test, status, status_details, time):

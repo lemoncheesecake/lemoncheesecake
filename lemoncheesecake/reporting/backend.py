@@ -75,32 +75,36 @@ class FileReportSession(ReportingSession):
     def save(self):
         self.save_func(self.report_filename, self.report)
 
-    def _handle_code_end(self, is_failure):
-        if (self.save_mode == SAVE_AT_EACH_TEST) or (self.save_mode == SAVE_AT_EACH_FAILED_TEST and is_failure):
+    def _handle_code_end(self, is_successful):
+        if (self.save_mode == SAVE_AT_EACH_TEST) or (self.save_mode == SAVE_AT_EACH_FAILED_TEST and not is_successful):
             self.save()
             return
 
     def on_test_session_setup_end(self, event):
         self._handle_code_end(
-            self.report.test_session_setup.has_failure() if self.report.test_session_setup else False
+            not self.report.test_session_setup or self.report.test_session_setup.is_successful()
         )
 
     def on_test_session_teardown_end(self, event):
         self._handle_code_end(
-            self.report.test_session_teardown.has_failure() if self.report.test_session_teardown else False
+            not self.report.test_session_teardown or self.report.test_session_teardown.is_successful()
         )
 
     def on_suite_setup_end(self, event):
         suite_data = self.report.get_suite(event.suite)
-        self._handle_code_end(suite_data.suite_setup and suite_data.suite_setup.has_failure())
+        self._handle_code_end(
+            not suite_data.suite_setup or suite_data.suite_setup.is_successful()
+        )
 
     def on_suite_teardown_end(self, event):
         suite_data = self.report.get_suite(event.suite)
-        self._handle_code_end(suite_data.suite_teardown and suite_data.suite_teardown.has_failure())
+        self._handle_code_end(
+            not suite_data.suite_teardown or suite_data.suite_teardown.is_successful()
+        )
 
     def on_test_end(self, event):
         test_data = self.report.get_test(event.test)
-        self._handle_code_end(test_data.status == "failed")
+        self._handle_code_end(test_data.status == "passed")
 
     def on_suite_end(self, event):
         if self.save_mode == SAVE_AT_EACH_SUITE:

@@ -68,8 +68,8 @@ class ReportPortalReportingSession(ReportingSession):
             name=name, description=description
         )
 
-    def _end_test_item(self, end_time, outcome, wrapped=False):
-        status = "passed" if outcome else "failed"
+    def _end_test_item(self, end_time, is_successful, wrapped=False):
+        status = "passed" if is_successful else "failed"
         if wrapped:
             self._end_current_test_item(end_time, status=status)
         self._end_current_test_item(end_time, status=status)
@@ -108,7 +108,7 @@ class ReportPortalReportingSession(ReportingSession):
 
         self._end_test_item(
             event.time,
-            False if self.report.test_session_setup and self.report.test_session_setup.has_failure() else True,
+            not self.report.test_session_setup or self.report.test_session_setup.is_successful(),
             wrapped=True
         )
 
@@ -128,7 +128,7 @@ class ReportPortalReportingSession(ReportingSession):
 
         self._end_test_item(
             event.time,
-            False if (self.report.test_session_teardown and self.report.test_session_teardown.has_failure()) else True,
+            not self.report.test_session_teardown or self.report.test_session_teardown.is_successful(),
             wrapped=True
         )
 
@@ -169,7 +169,7 @@ class ReportPortalReportingSession(ReportingSession):
 
         self._end_test_item(
             event.time,
-            False if (suite_data.suite_setup and suite_data.suite_setup.has_failure()) else True,
+            not suite_data.suite_setup or suite_data.suite_setup.is_successful(),
             wrapped=len(event.suite.get_suites()) > 0
         )
 
@@ -191,7 +191,7 @@ class ReportPortalReportingSession(ReportingSession):
 
         self._end_test_item(
             event.time,
-            False if (suite_data.suite_teardown and suite_data.suite_teardown.has_failure()) else True,
+            not suite_data.suite_teardown or suite_data.suite_teardown.is_successful(),
             wrapped=len(event.suite.get_suites()) > 0
         )
 

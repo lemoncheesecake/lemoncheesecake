@@ -60,8 +60,8 @@ class LogData:
         self.message = message
         self.time = ts
 
-    def has_failure(self):
-        return self.level == LOG_LEVEL_ERROR
+    def is_successful(self):
+        return self.level != LOG_LEVEL_ERROR
 
 
 class CheckData:
@@ -70,8 +70,8 @@ class CheckData:
         self.outcome = outcome
         self.details = details
 
-    def has_failure(self):
-        return self.outcome is False
+    def is_successful(self):
+        return self.outcome
 
 
 class AttachmentData:
@@ -79,8 +79,8 @@ class AttachmentData:
         self.description = description
         self.filename = filename
 
-    def has_failure(self):
-        return False
+    def is_successful(self):
+        return True
 
 
 class UrlData:
@@ -88,8 +88,8 @@ class UrlData:
         self.description = description
         self.url = url
 
-    def has_failure(self):
-        return False
+    def is_successful(self):
+        return True
 
 
 class StepData:
@@ -100,8 +100,8 @@ class StepData:
         self.start_time = None
         self.end_time = None
 
-    def has_failure(self):
-        return len(list(filter(lambda entry: entry.has_failure(), self.entries))) > 0
+    def is_successful(self):
+        return all(entry.is_successful() for entry in self.entries)
 
     @property
     def duration(self):
@@ -119,8 +119,8 @@ class TestData(BaseTest):
         # non-serialized attributes (only set in-memory during test execution)
         self.rank = 0
         
-    def has_failure(self):
-        return len(list(filter(lambda step: step.has_failure(), self.steps))) > 0
+    def is_successful(self):
+        return all(step.is_successful() for step in self.steps)
 
     @property
     def duration(self):
@@ -134,8 +134,8 @@ class HookData:
         self.end_time = None
         self.outcome = None
 
-    def has_failure(self):
-        return len(list(filter(lambda step: step.has_failure(), self.steps))) > 0
+    def is_successful(self):
+        return all(step.is_successful() for step in self.steps)
 
     def is_empty(self):
         return len(self.steps) == 0
@@ -220,7 +220,7 @@ class _ReportStats:
     def _walk_hook(self, hook):
         if hook.end_time is not None:
             self.duration += hook.end_time - hook.start_time
-        if hook.has_failure():
+        if not hook.is_successful():
             self.errors += 1
         self._walk_steps(hook.steps)
     walk_setup_hook = _walk_hook
