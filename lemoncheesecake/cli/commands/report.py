@@ -1,7 +1,7 @@
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import auto_detect_reporting_backends, add_report_path_cli_arg, get_report_path
 from lemoncheesecake.reporting import load_report
-from lemoncheesecake.reporting.backends.console import display_report_suites
+from lemoncheesecake.reporting.backends.console import display_report
 from lemoncheesecake.filter import add_report_filter_cli_args, make_report_filter, filter_suites
 
 
@@ -19,9 +19,10 @@ class ReportCommand(Command):
 
     def run_cmd(self, cli_args):
         report_path = get_report_path(cli_args)
-        report = load_report(report_path, auto_detect_reporting_backends())
-        suites = filter_suites(report.get_suites(), make_report_filter(cli_args))
 
-        display_report_suites(suites)
+        display_report(
+            load_report(report_path, auto_detect_reporting_backends()),
+            make_report_filter(cli_args)
+        )
 
         return 0

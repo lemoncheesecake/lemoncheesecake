@@ -13,7 +13,8 @@ from termcolor import colored
 
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
 from lemoncheesecake.reporting.backends import terminalsize
-from lemoncheesecake.reporting.report import get_stats_from_suites
+from lemoncheesecake.reporting.report import get_stats_from_suites, get_stats_from_report
+from lemoncheesecake.filter import filter_suites
 from lemoncheesecake.testtree import flatten_suites
 from lemoncheesecake.utils import IS_PYTHON3, humanize_duration, get_status_color
 
@@ -83,10 +84,10 @@ def _make_test_result_line(name, num, status):
     return line, len(raw_line)
 
 
-def _print_summary(stats, duration):
+def _print_summary(stats):
     print()
     print(colored("Statistics", attrs=["bold"]), ":")
-    print(" * Duration: %s" % (humanize_duration(duration) if duration is not None else "n/a"))
+    print(" * Duration: %s" % (humanize_duration(stats.duration) if stats.duration is not None else "n/a"))
     print(" * Tests: %d" % stats.tests)
     print(" * Successes: %d (%d%%)" % (stats.test_statuses["passed"], stats.successful_tests_percentage))
     print(" * Failures: %d" % (stats.test_statuses["failed"]))
@@ -95,10 +96,6 @@ def _print_summary(stats, duration):
     if stats.test_statuses["disabled"]:
         print(" * Disabled: %d" % (stats.test_statuses["disabled"]))
     print()
-
-
-def _print_report_summary(report):
-    _print_summary(report.get_stats(), duration=report.end_time - report.start_time)
 
 
 class SequentialConsoleReportingSession(ReportingSession):
@@ -197,7 +194,7 @@ class SequentialConsoleReportingSession(ReportingSession):
         self.lp.print_line("%s (%s...)" % (self.step_prefix, event.step_description))
 
     def on_test_session_end(self, event):
-        _print_report_summary(self.report)
+        _print_summary(self.report.get_stats())
 
 
 class ParallelConsoleReportingSession(ReportingSession):
@@ -231,7 +228,7 @@ class ParallelConsoleReportingSession(ReportingSession):
         self._bypass_test(event.test, "disabled")
 
     def on_test_session_end(self, event):
-        _print_report_summary(self.report)
+        _print_summary(self.report.get_stats())
 
 
 class ConsoleBackend(ReportingBackend):
@@ -248,7 +245,9 @@ class ConsoleBackend(ReportingBackend):
             SequentialConsoleReportingSession(self.terminal_width, self.show_test_full_path, report)
 
 
-def display_report_suites(suites):
+def display_report(report, filtr):
+    suites = filter_suites(report.get_suites(), filtr)
+
     ###
     # Setup terminal
     ###
@@ -275,7 +274,10 @@ def display_report_suites(suites):
     # Display summary
     ###
     if suite_idx > 0:
-        stats = get_stats_from_suites(suites)
-        _print_summary(stats, stats.duration)
+        if filtr.is_empty():
+            stats = get_stats_from_report(report)
+        else:
+            stats = get_stats_from_suites(suites)
+        _print_summary(stats)
     else:
         print("No test found in report")
