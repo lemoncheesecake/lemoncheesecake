@@ -185,7 +185,7 @@ class SuiteData(BaseSuite):
         return sorted(suites, key=lambda s: s.rank)
 
 
-class _Stats:
+class _Stats(object):
     def __init__(self):
         self.tests = 0
         self.enabled_tests = 0
@@ -199,6 +199,13 @@ class _Stats:
         self.warning_logs = 0
         self.duration = None
         self.duration_cumulative = 0
+
+    @property
+    def duration_cumulative_description(self):
+        description = humanize_duration(self.duration_cumulative)
+        if self.duration:
+            description += " (parallelization speedup factor is %.1f)" % (float(self.duration_cumulative) / self.duration)
+        return description
 
 
 def _update_stats_from_results(stats, results):
@@ -269,6 +276,10 @@ class Report:
     def duration(self):
         return _get_duration(self.start_time, self.end_time)
 
+    @property
+    def parallelized(self):
+        return self.nb_threads > 1 and len(list(flatten_tests(self.suites))) > 1
+
     def add_info(self, name, value):
         self.info.append([name, value])
     
@@ -309,10 +320,16 @@ class Report:
     def serialize_stats(self):
         stats = self.get_stats()
 
-        return (
+        serialized = (
             ("Start time", time.asctime(time.localtime(self.start_time))),
             ("End time", time.asctime(time.localtime(self.end_time)) if self.end_time else "n/a"),
-            ("Duration", humanize_duration(self.end_time - self.start_time) if self.end_time else "n/a"),
+            ("Duration", humanize_duration(stats.duration) if stats.duration is not None else "n/a")
+        )
+
+        if self.nb_threads > 1:
+            serialized += (("Cumulative duration", stats.duration_cumulative_description),)
+
+        serialized += (
             ("Tests", str(stats.tests)),
             ("Successful tests", str(stats.test_statuses["passed"])),
             ("Successful tests in %", "%d%%" % stats.successful_tests_percentage),
@@ -320,6 +337,8 @@ class Report:
             ("Skipped tests", str(stats.test_statuses["skipped"])),
             ("Disabled tests", str(stats.test_statuses["disabled"]))
         )
+
+        return serialized
 
 
 def flatten_steps(suites):

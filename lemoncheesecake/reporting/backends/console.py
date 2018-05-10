@@ -84,10 +84,12 @@ def _make_test_result_line(name, num, status):
     return line, len(raw_line)
 
 
-def _print_summary(stats):
+def _print_summary(stats, parallel=False):
     print()
     print(colored("Statistics", attrs=["bold"]), ":")
     print(" * Duration: %s" % (humanize_duration(stats.duration) if stats.duration is not None else "n/a"))
+    if parallel:
+        print(" * Cumulative duration: %s" % stats.duration_cumulative_description)
     print(" * Tests: %d" % stats.tests)
     print(" * Successes: %d (%d%%)" % (stats.test_statuses["passed"], stats.successful_tests_percentage))
     print(" * Failures: %d" % (stats.test_statuses["failed"]))
@@ -194,7 +196,7 @@ class SequentialConsoleReportingSession(ReportingSession):
         self.lp.print_line("%s (%s...)" % (self.step_prefix, event.step_description))
 
     def on_test_session_end(self, event):
-        _print_summary(self.report.get_stats())
+        _print_summary(self.report.get_stats(), self.report.parallelized)
 
 
 class ParallelConsoleReportingSession(ReportingSession):
@@ -228,7 +230,7 @@ class ParallelConsoleReportingSession(ReportingSession):
         self._bypass_test(event.test, "disabled")
 
     def on_test_session_end(self, event):
-        _print_summary(self.report.get_stats())
+        _print_summary(self.report.get_stats(), self.report.parallelized)
 
 
 class ConsoleBackend(ReportingBackend):
@@ -278,6 +280,6 @@ def display_report(report, filtr):
             stats = get_stats_from_report(report)
         else:
             stats = get_stats_from_suites(suites)
-        _print_summary(stats)
+        _print_summary(stats, report.parallelized)
     else:
         print("No test found in report")
