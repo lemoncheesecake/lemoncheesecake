@@ -108,41 +108,37 @@ class StepData:
         return _get_duration(self.start_time, self.end_time)
 
 
-class TestData(BaseTest):
-    def __init__(self, name, description):
-        BaseTest.__init__(self, name, description)
-        self.status = None
-        self.status_details = None
-        self.steps = []
-        self.start_time = None
-        self.end_time = None
-        # non-serialized attributes (only set in-memory during test execution)
-        self.rank = 0
-        
-    def is_successful(self):
-        return all(step.is_successful() for step in self.steps)
-
-    @property
-    def duration(self):
-        return _get_duration(self.start_time, self.end_time)
-
-
-class HookData:
+class ResultData(object):
     def __init__(self):
         self.steps = []
         self.start_time = None
         self.end_time = None
-        self.outcome = None
 
     def is_successful(self):
         return all(step.is_successful() for step in self.steps)
 
-    def is_empty(self):
-        return len(self.steps) == 0
-
     @property
     def duration(self):
         return _get_duration(self.start_time, self.end_time)
+
+
+class TestData(BaseTest, ResultData):
+    def __init__(self, name, description):
+        BaseTest.__init__(self, name, description)
+        ResultData.__init__(self)
+        self.status = None
+        self.status_details = None
+        # non-serialized attributes (only set in-memory during test execution)
+        self.rank = 0
+
+
+class HookData(ResultData):
+    def __init__(self):
+        ResultData.__init__(self)
+        self.outcome = None
+
+    def is_empty(self):
+        return len(self.steps) == 0
 
 
 class SuiteData(BaseSuite):
