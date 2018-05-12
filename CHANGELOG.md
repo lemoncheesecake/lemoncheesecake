@@ -1,3 +1,8 @@
+# 0.18.3 (2018-05-12)
+
+- **lcc report**: fix the duration information while tests are parallelized
+- **lcc report, HTML report**: display information about cumulative duration of tests when they are parallelized
+
 # 0.18.2 (2018-05-09)
 
 - **HTML report**: various minor fixes and improvements related to tests parallelization
