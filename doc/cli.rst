@@ -8,15 +8,15 @@ The ``lcc`` command line tool
 ``lcc`` commands
 ----------------
 
-In addition to the main sub command ``run``, the ``lcc`` command provides other sub commands that helps with the test
-project and report:
+In addition to the main command ``run``, the ``lcc`` command provides other commands that work with test project and
+reports:
 
-- Show the tests hierarchy with metadata:
+- ``lcc show`` (shows the project tests hierarchy and their metadata):
 
   .. code-block:: none
 
       $ lcc show
-      * suite_1:
+      * suite_1
           - suite_1.test_1 (slow, priority:low)
           - suite_1.test_2 (priority:low)
           - suite_1.test_3 (priority:medium, #1235)
@@ -26,7 +26,7 @@ project and report:
           - suite_1.test_7 (priority:high)
           - suite_1.test_8 (priority:medium)
           - suite_1.test_9 (priority:medium)
-      * suite_2:
+      * suite_2
           - suite_2.test_1 (priority:low)
           - suite_2.test_2 (priority:low)
           - suite_2.test_3 (priority:high)
@@ -37,7 +37,7 @@ project and report:
           - suite_2.test_8 (slow, priority:low, #1234)
           - suite_2.test_9 (slow, priority:medium)
 
-- Compare two reports:
+- ``lcc diff`` (compares two reports):
 
   .. code-block:: none
 
@@ -52,7 +52,7 @@ project and report:
       - suite_2.test_3 (failed => passed)
       - suite_2.test_4 (passed => failed)
 
-- Show available fixtures:
+- ``lcc fixtures`` (show available project fixtures):
 
   .. code-block:: none
 
@@ -94,7 +94,7 @@ project and report:
       | fixt_9  | -              | 0                | 1             |
       +---------+----------------+------------------+---------------+
 
-- Show statistics on tests based on metadata:
+- ``lcc stats`` (shows project statistics):
 
   .. code-block:: none
 
@@ -125,11 +125,11 @@ project and report:
 
       Total: 18 tests in 2 suites
 
-- Show a generated report on the console:
+- ``lcc report`` (shows a generated report on the console, the same way it is printed by ``lcc run``):
 
   .. code-block:: none
 
-      $ lcc.py report report/
+      $ lcc report
       =================================== suite_1 ===================================
        OK  1 # test_1
        OK  2 # test_2
@@ -158,11 +158,11 @@ project and report:
        * Successes: 18 (100%)
        * Failures: 0
 
-- Show top suites ordered by their duration:
+- ``lcc top-suites`` (show suites ordered by their duration):
 
   .. code-block:: none
 
-      $ lcc top-suites report/
+      $ lcc top-suites
       Suites, ordered by duration:
       +---------+----------+------+
       | Suite   | Duration | In % |
@@ -171,11 +171,11 @@ project and report:
       | suite_1 | 1.000s   | 33%  |
       +---------+----------+------+
 
-- Show top tests ordered by their duration:
+- ``lcc top-tests`` (shows tests ordered by their duration):
 
   .. code-block:: none
 
-      $ lcc top-tests report/
+      $ lcc top-tests
       Tests, ordered by duration:
       +--------------+----------+------+
       | Suite        | Duration | In % |
@@ -184,11 +184,11 @@ project and report:
       | suite_1.test | 1.000s   | 33%  |
       +--------------+----------+------+
 
-- Show top steps aggregated and ordered by their duration:
+- ``lcc top-steps`` (shows steps aggregated, ordered by their duration):
 
   .. code-block:: none
 
-      $ lcc top-steps report/
+      $ lcc top-steps
       Steps, aggregated and ordered by duration:
       +--------------------+------+--------+--------+--------+--------+------+
       | Step               | Occ. | Min.   | Max    | Avg.   | Total  | In % |
@@ -221,11 +221,11 @@ arguments:
       --link LINK [LINK ...], -l LINK [LINK ...]
                             Filter on links (names and URLs)
       --disabled            Filter on disabled tests
-      --passed              Filter on passed tests (only available with --from-
+      --passed              Filter on passed tests (implies/triggers --from-
                             report)
-      --failed              Filter on failed tests (only available with --from-
+      --failed              Filter on failed tests (implies/triggers --from-
                             report)
-      --skipped             Filter on skipped tests (only available with --from-
+      --skipped             Filter on skipped tests (implies/triggers --from-
                             report)
       --enabled             Filter on enabled (non-disabled) tests
       --from-report FROM_REPORT
@@ -233,10 +233,20 @@ arguments:
                             report
 
 
-The ``--from-report`` argument tells ``lcc`` to use tests from the report rather than from the project to build
-the actual filter. The ``--passed``, ``--failed``, ``skipped`` can only be used in conjunction with ``--from-report``.
+The ``--from-report`` argument tells ``lcc`` to use tests from the specified report rather than from the project to build
+the actual filter. The ``--passed``, ``--failed``, ``--skipped`` arguments can only be used in conjunction with ``--from-report``,
+if no ``--from-report`` is specified, then the latest report is used.
+
 A typical application of this functionality is to re-run failed tests from a previous report:
 
 .. code-block:: none
 
-    $ lcc run --failed --from-report report/
+    $ lcc run --failed --from-report reports/report-2
+
+Or simply:
+
+.. code-block:: none
+
+    $ lcc run --failed
+
+if you want to re-run the failed tests from the latest run.
