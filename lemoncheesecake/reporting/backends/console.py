@@ -279,7 +279,7 @@ def display_report(report, filtr):
         if filtr.is_empty():
             stats = get_stats_from_report(report)
         else:
-            stats = get_stats_from_suites(suites)
+            stats = get_stats_from_suites(suites, report.parallelized)
         _print_summary(stats, report.parallelized)
     else:
         print("No test found in report")

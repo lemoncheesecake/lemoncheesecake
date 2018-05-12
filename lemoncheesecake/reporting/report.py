@@ -252,10 +252,15 @@ def get_stats_from_report(report):
     return stats
 
 
-def get_stats_from_suites(suites):
+def get_stats_from_suites(suites, parallelized):
     stats = _Stats()
 
-    _update_stats_from_results(stats, flatten_results_from_suites(suites))
+    results = list(flatten_results_from_suites(suites))
+
+    if not parallelized:
+        stats.duration = results[-1].end_time - results[0].start_time
+
+    _update_stats_from_results(stats, results)
     _update_stats_from_tests(stats, list(flatten_tests(suites)))
 
     return stats
