@@ -96,6 +96,8 @@ Writing tests
 
 - :ref:`Setup and teardown methods <setup_teardown>`, :ref:`fixtures <fixtures>`
 
+- :ref:`Test parallelism <parallelism>`
+
 - :ref:`The lcc command line tool and filtering arguments <cli>`
 
 - :ref:`Project customization <project>`

@@ -14,5 +14,6 @@ Table of content
     logging
     setup-and-teardown-suites
     fixtures
+    parallelism
     cli
     project

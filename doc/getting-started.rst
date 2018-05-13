@@ -131,4 +131,4 @@ Tests are run like this:
      * Successes: 1 (100%)
      * Failures: 0
 
-The generated HTML report is available in the file ``report/report.html``:
+The generated HTML report is available in the file ``report/report.html``.
