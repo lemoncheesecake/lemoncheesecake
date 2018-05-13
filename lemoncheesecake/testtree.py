@@ -32,15 +32,15 @@ class BaseTreeNode(object):
 
     @property
     def path(self):
-        return ".".join([s.name for s in self.hierarchy])
+        return ".".join(s.name for s in self.hierarchy)
 
     @property
     def hierarchy_paths(self):
-        return map(lambda node: node.path, self.hierarchy)
+        return (node.path for node in self.hierarchy)
 
     @property
     def hierarchy_descriptions(self):
-        return map(lambda node: node.description, self.hierarchy)
+        return (node.description for node in self.hierarchy)
 
     @property
     def hierarchy_tags(self):
