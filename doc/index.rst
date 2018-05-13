@@ -10,10 +10,10 @@
 lemoncheesecake: a functional test framework for Python
 =======================================================
 
-lemoncheesecake makes reporting feature the first class citizen while providing modern test features such as
+lemoncheesecake makes reporting the first class citizen while providing modern test features such as
 fixtures and matchers.
 
-Here is an example of test:
+Here is a test example:
 
 .. code-block:: python
 
@@ -58,20 +58,26 @@ Here is an example of test:
             "public_members_url", ends_with("/public_members{/member}")
         )
 
-And the corresponding HTML report:
+And here are the corresponding test results:
 
 .. image:: _static/report-sample.png
 
 See :ref:`Getting Started <getting started>` to create your first test project.
 
-In short, lemoncheesecake provides:
+Features
+--------
 
-- a way to organize complex test hierarchies using suites, tests, and nested suites
+- Advanced test hierarchies using suites, tests and nested suites
 
-- all tests and suites have a name, a description and also metadata: tags, properties (key=value associations) and links;
-  all these information can be used for filtering
+- Test description and metadata: tags, properties (key=value associations) and links
 
-- multiple reporting flavors built-in: HTML, JSON, XML, JUnit, ReportPortal, Slack notifications
+- Support for test filtering
+
+- Multiple reporting flavors built-in: HTML, JSON, XML, JUnit, ReportPortal, Slack notifications
+
+- Test parallelization
+
+- Rich CLI toolbox
 
 lemoncheesecake is compatible with Python 2.7, 3.3-3.6.
 
