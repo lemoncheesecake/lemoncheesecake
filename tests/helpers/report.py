@@ -275,7 +275,7 @@ def assert_report_stats(report,
                         expected_errors=0,
                         expected_succeeded_checks=0, expected_failed_checks=0,
                         expected_error_logs=0, expected_warning_logs=0):
-    stats = report.get_stats()
+    stats = report.stats()
     assert stats.tests == expected_passed_tests + expected_failed_tests + expected_skipped_tests
     assert stats.test_statuses["passed"] == expected_passed_tests
     assert stats.test_statuses["failed"] == expected_failed_tests

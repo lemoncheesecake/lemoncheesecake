@@ -68,7 +68,7 @@ def get_message_template_parameters():
 
 
 def build_message_parameters(report):
-    stats = report.get_stats()
+    stats = report.stats()
     return {
         name: func(report, stats) for name, func in get_message_template_parameters().items()
     }

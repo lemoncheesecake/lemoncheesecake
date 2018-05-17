@@ -222,7 +222,6 @@ def load_report_from_file(filename):
 
     report.title = js["title"]
     report.info = js["info"]
-    report.stats = js["stats"]
     report.start_time = _unserialize_time(js["start_time"])
     report.end_time = _unserialize_time(js["end_time"])
     report.report_generation_time = _unserialize_time(js["generation_time"])

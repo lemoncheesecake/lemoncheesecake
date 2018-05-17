@@ -13,7 +13,7 @@ from termcolor import colored
 
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
 from lemoncheesecake.reporting.backends import terminalsize
-from lemoncheesecake.reporting.report import get_stats_from_suites, get_stats_from_report
+from lemoncheesecake.reporting.report import get_stats_from_suites
 from lemoncheesecake.filter import filter_suites
 from lemoncheesecake.testtree import flatten_suites
 from lemoncheesecake.utils import IS_PYTHON3, humanize_duration, get_status_color
@@ -196,7 +196,7 @@ class SequentialConsoleReportingSession(ReportingSession):
         self.lp.print_line("%s (%s...)" % (self.step_prefix, event.step_description))
 
     def on_test_session_end(self, event):
-        _print_summary(self.report.get_stats(), self.report.parallelized)
+        _print_summary(self.report.stats(), self.report.parallelized)
 
 
 class ParallelConsoleReportingSession(ReportingSession):
@@ -230,7 +230,7 @@ class ParallelConsoleReportingSession(ReportingSession):
         self._bypass_test(event.test, "disabled")
 
     def on_test_session_end(self, event):
-        _print_summary(self.report.get_stats(), self.report.parallelized)
+        _print_summary(self.report.stats(), self.report.parallelized)
 
 
 class ConsoleBackend(ReportingBackend):
@@ -277,7 +277,7 @@ def display_report(report, filtr):
     ###
     if suite_idx > 0:
         if filtr.is_empty():
-            stats = get_stats_from_report(report)
+            stats = report.stats()
         else:
             stats = get_stats_from_suites(suites, report.parallelized)
         _print_summary(stats, report.parallelized)

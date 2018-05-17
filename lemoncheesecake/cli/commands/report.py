@@ -2,7 +2,7 @@ from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import auto_detect_reporting_backends, add_report_path_cli_arg, get_report_path
 from lemoncheesecake.reporting import load_report
 from lemoncheesecake.reporting.backends.console import display_report
-from lemoncheesecake.filter import add_report_filter_cli_args, make_report_filter, filter_suites
+from lemoncheesecake.filter import add_report_filter_cli_args, make_report_filter
 
 
 class ReportCommand(Command):

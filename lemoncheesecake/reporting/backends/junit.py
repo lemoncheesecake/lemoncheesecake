@@ -80,7 +80,7 @@ def _serialize_suite_data(suite):
 def serialize_report_as_tree(report):
     junit_report_testsuites = E("testsuites")
     
-    report_stats = report.get_stats()
+    report_stats = report.stats()
     set_node_attr(junit_report_testsuites, "tests", str(report_stats.test_statuses["passed"]))
     set_node_attr(junit_report_testsuites, "failures", str(report_stats.test_statuses["failed"]))
     if report.end_time != None:

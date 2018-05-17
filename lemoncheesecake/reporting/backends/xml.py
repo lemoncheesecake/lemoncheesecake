@@ -319,7 +319,6 @@ def load_report_from_file(filename):
     report.nb_threads = int(root.attrib["nb-threads"])
     report.title = root.xpath("title")[0].text
     report.info = _unserialize_keyvalue_list(root.xpath("info"))
-    report.stats = _unserialize_keyvalue_list(root.xpath("stat"))
 
     test_session_setup = xml.xpath("test-session-setup")
     test_session_setup = test_session_setup[0] if len(test_session_setup) else None

@@ -241,17 +241,6 @@ def _update_stats_from_tests(stats, tests):
             stats.test_statuses[test.status] += 1
 
 
-def get_stats_from_report(report):
-    stats = _Stats()
-
-    if report.end_time is not None:
-        stats.duration = report.end_time - report.start_time
-    _update_stats_from_results(stats, report.all_results())
-    _update_stats_from_tests(stats, list(report.all_tests()))
-
-    return stats
-
-
 def get_stats_from_suites(suites, parallelized):
     stats = _Stats()
 
@@ -305,9 +294,6 @@ class Report:
     def get_test(self, hierarchy):
         return find_test(self.suites, hierarchy)
 
-    def get_stats(self):
-        return get_stats_from_report(self)
-
     def get(self, location):
         if location.node_type == TreeLocation.TEST_SESSION_SETUP:
             return self.test_session_setup
@@ -327,8 +313,18 @@ class Report:
     def is_successful(self):
         return all(test.status in ("passed", "disabled") for test in self.all_tests())
 
+    def stats(self):
+        stats = _Stats()
+
+        if self.end_time is not None:
+            stats.duration = self.end_time - self.start_time
+        _update_stats_from_results(stats, self.all_results())
+        _update_stats_from_tests(stats, list(self.all_tests()))
+
+        return stats
+
     def serialize_stats(self):
-        stats = self.get_stats()
+        stats = self.stats()
 
         serialized = (
             ("Start time", time.asctime(time.localtime(self.start_time))),
