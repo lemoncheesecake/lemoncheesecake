@@ -75,11 +75,12 @@ def _add_time_attr(node, name, value):
 
 
 def _serialize_outcome(outcome):
-    if outcome == True:
+    if outcome is True:
         return OUTCOME_SUCCESS
-    if outcome == False:
+    elif outcome is False:
         return OUTCOME_FAILURE
-    return OUTCOME_NOT_AVAILABLE
+    else:
+        return OUTCOME_NOT_AVAILABLE
 
 
 def _serialize_steps(steps, parent_node):
@@ -98,15 +99,19 @@ def _serialize_steps(steps, parent_node):
             elif isinstance(entry, UrlData):
                 url_node = make_xml_child(step_node, "url", "description", entry.description)
                 url_node.text = entry.url
-            else: # TestCheck
-                check_node = make_xml_child(step_node, "check", "description", entry.description,
-                                        "outcome", _serialize_outcome(entry.outcome))
+            else:  # TestCheck
+                check_node = make_xml_child(
+                    step_node, "check", "description", entry.description,
+                    "outcome", _serialize_outcome(entry.outcome)
+                )
                 check_node.text = entry.details
 
 
 def _serialize_test_data(test):
-    test_node = make_xml_node("test", "name", test.name, "description", test.description,
-                          "status", test.status, "status-details", test.status_details)
+    test_node = make_xml_node(
+        "test", "name", test.name, "description", test.description,
+        "status", test.status, "status-details", test.status_details
+    )
     _add_time_attr(test_node, "start-time", test.start_time)
     _add_time_attr(test_node, "end-time", test.end_time)
     for tag in test.tags:
@@ -218,11 +223,12 @@ def _unserialize_datetime(value):
 def _unserialize_outcome(value):
     if value == OUTCOME_SUCCESS:
         return True
-    if value == OUTCOME_FAILURE:
+    elif value == OUTCOME_FAILURE:
         return False
-    if value == OUTCOME_NOT_AVAILABLE:
+    elif value == OUTCOME_NOT_AVAILABLE:
         return None
-    raise ProgrammingError("Unknown value '%s' for outcome" % value)
+    else:
+        raise ProgrammingError("Unknown value '%s' for outcome" % value)
 
 
 def _unserialize_step_data(xml):
@@ -239,6 +245,8 @@ def _unserialize_step_data(xml):
         elif xml_entry.tag == "check":
             entry = CheckData(xml_entry.attrib["description"], _unserialize_outcome(xml_entry.attrib["outcome"]),
                               xml_entry.text)
+        else:
+            raise ProgrammingError("Unknown tag '%s' for step" % xml_entry.tag)
         step.entries.append(entry)
     return step
 
@@ -249,10 +257,10 @@ def _unserialize_test_data(xml):
     test.status_details = xml.attrib.get("status-details", None)
     test.start_time = _unserialize_datetime(xml.attrib["start-time"])
     test.end_time = _unserialize_datetime(xml.attrib["end-time"])
-    test.tags = [ node.text for node in xml.xpath("tag") ]
-    test.properties = { node.attrib["name"]: node.text for node in xml.xpath("property") }
-    test.links = [ (link.text, link.attrib["name"]) for link in xml.xpath("link") ]
-    test.steps = [ _unserialize_step_data(s) for s in xml.xpath("step") ]
+    test.tags = [node.text for node in xml.xpath("tag")]
+    test.properties = {node.attrib["name"]: node.text for node in xml.xpath("property")}
+    test.links = [(link.text, link.attrib["name"]) for link in xml.xpath("link")]
+    test.steps = [_unserialize_step_data(step) for step in xml.xpath("step")]
     return test
 
 
@@ -261,19 +269,19 @@ def _unserialize_hook_data(xml):
     data.outcome = _unserialize_outcome(xml.attrib["outcome"])
     data.start_time = _unserialize_datetime(xml.attrib["start-time"])
     data.end_time = _unserialize_datetime(xml.attrib["end-time"])
-    data.steps = [ _unserialize_step_data(s) for s in xml.xpath("step") ]
+    data.steps = [_unserialize_step_data(step) for step in xml.xpath("step")]
     return data
 
 
 def _unserialize_suite_data(xml):
     suite = SuiteData(xml.attrib["name"], xml.attrib["description"])
-    suite.tags = [ node.text for node in xml.xpath("tag") ]
-    suite.properties = { node.attrib["name"]: node.text for node in xml.xpath("property") }
-    suite.links = [ (link.text, link.attrib["name"]) for link in xml.xpath("link") ]
+    suite.tags = [node.text for node in xml.xpath("tag")]
+    suite.properties = {node.attrib["name"]: node.text for node in xml.xpath("property")}
+    suite.links = [(link.text, link.attrib["name"]) for link in xml.xpath("link")]
 
     suite_setup = xml.xpath("suite-setup")
     suite_setup = suite_setup[0] if len(suite_setup) > 0 else None
-    if suite_setup != None:
+    if suite_setup is not None:
         suite.suite_setup = _unserialize_hook_data(suite_setup)
 
     for xml_test in xml.xpath("test"):
@@ -282,7 +290,7 @@ def _unserialize_suite_data(xml):
 
     suite_teardown = xml.xpath("suite-teardown")
     suite_teardown = suite_teardown[0] if len(suite_teardown) > 0 else None
-    if suite_teardown != None:
+    if suite_teardown is not None:
         suite.suite_teardown = _unserialize_hook_data(suite_teardown)
 
     for xml_suite in xml.xpath("suite"):
@@ -290,13 +298,6 @@ def _unserialize_suite_data(xml):
         suite.add_suite(sub_suite)
 
     return suite
-
-
-def _unserialize_keyvalue_list(nodes):
-    ret = [ ]
-    for node in nodes:
-        ret.append([node.attrib["name"], node.text])
-    return ret
 
 
 def load_report_from_file(filename):
@@ -307,7 +308,7 @@ def load_report_from_file(filename):
     except ET.LxmlError as e:
         raise InvalidReportFile(str(e))
     except IOError as e:
-        raise e # re-raise as-is
+        raise e  # re-raise as-is
     try:
         root = xml.getroot().xpath("/lemoncheesecake-report")[0]
     except IndexError:
@@ -318,11 +319,11 @@ def load_report_from_file(filename):
     report.report_generation_time = _unserialize_datetime(root.attrib["generation-time"]) if "generation-time" in root.attrib else None
     report.nb_threads = int(root.attrib["nb-threads"])
     report.title = root.xpath("title")[0].text
-    report.info = _unserialize_keyvalue_list(root.xpath("info"))
+    report.info = [(node.attrib["name"], node.text) for node in root.xpath("info")]
 
     test_session_setup = xml.xpath("test-session-setup")
     test_session_setup = test_session_setup[0] if len(test_session_setup) else None
-    if test_session_setup != None:
+    if test_session_setup is not None:
         report.test_session_setup = _unserialize_hook_data(test_session_setup)
 
     for xml_suite in root.xpath("suite"):
@@ -331,7 +332,7 @@ def load_report_from_file(filename):
 
     test_session_teardown = xml.xpath("test-session-teardown")
     test_session_teardown = test_session_teardown[0] if len(test_session_teardown) else None
-    if test_session_teardown != None:
+    if test_session_teardown is not None:
         report.test_session_teardown = _unserialize_hook_data(test_session_teardown)
 
     return report

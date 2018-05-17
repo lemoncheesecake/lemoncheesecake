@@ -280,7 +280,7 @@ class Report:
         return self.nb_threads > 1 and self.nb_tests > 1
 
     def add_info(self, name, value):
-        self.info.append([name, value])
+        self.info.append((name, value))
     
     def add_suite(self, suite):
         self.suites.append(suite)

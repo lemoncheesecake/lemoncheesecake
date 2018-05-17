@@ -755,4 +755,4 @@ def test_add_report_info():
 
     report = run_suite_class(mysuite)
 
-    assert report.info[-1] == ["some info", "some data"]
+    assert report.info[-1] == ("some info", "some data")
