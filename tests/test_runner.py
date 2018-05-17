@@ -596,7 +596,7 @@ def test(test_fixture):
 
     report = run_suite(suite, fixtures=[test_fixture])
 
-    test = next(flatten_tests(report.suites))
+    test = next(report.all_tests())
     assert test.steps[0].entries[0].message == "2"
 
 

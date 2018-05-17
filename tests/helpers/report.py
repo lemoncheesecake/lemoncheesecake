@@ -6,7 +6,6 @@ Created on Sep 30, 2016
 
 
 from lemoncheesecake.suite import load_suite_from_class
-from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake import reporting
 
 
@@ -15,7 +14,7 @@ from lemoncheesecake import reporting
 ###
 
 def _assert_tests_status(report, status, expected):
-    actual = [t.path for t in flatten_tests(report.suites) if t.status == status]
+    actual = [t.path for t in report.all_tests() if t.status == status]
     assert sorted(actual) == sorted(expected)
 
 
@@ -49,7 +48,7 @@ def assert_test_skipped(report):
 
 
 def get_last_test(report):
-    return next(reversed(list(flatten_tests(report.suites))))
+    return next(reversed(list(report.all_tests())))
 
 
 def assert_last_test_status(report, status):
@@ -75,7 +74,7 @@ def get_last_test_checks(report):
 
 def count_logs(report, log_level):
     count = 0
-    for test in flatten_tests(report.suites):
+    for test in report.all_tests():
         for step in test.steps:
             for entry in step.entries:
                 if isinstance(entry, reporting.LogData) and entry.level == log_level:

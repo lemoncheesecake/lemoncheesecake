@@ -246,8 +246,8 @@ def get_stats_from_report(report):
 
     if report.end_time is not None:
         stats.duration = report.end_time - report.start_time
-    _update_stats_from_results(stats, flatten_results_from_report(report))
-    _update_stats_from_tests(stats, list(flatten_tests(report.suites)))
+    _update_stats_from_results(stats, report.all_results())
+    _update_stats_from_tests(stats, list(report.all_tests()))
 
     return stats
 
@@ -283,8 +283,12 @@ class Report:
         return _get_duration(self.start_time, self.end_time)
 
     @property
+    def nb_tests(self):
+        return len(list(self.all_tests()))
+
+    @property
     def parallelized(self):
-        return self.nb_threads > 1 and len(list(flatten_tests(self.suites))) > 1
+        return self.nb_threads > 1 and self.nb_tests > 1
 
     def add_info(self, name, value):
         self.info.append([name, value])
@@ -321,7 +325,7 @@ class Report:
             raise Exception("Unknown location type %s" % location.node_type)
 
     def is_successful(self):
-        return all(test.status in ("passed", "disabled") for test in flatten_tests(self.suites))
+        return all(test.status in ("passed", "disabled") for test in self.all_tests())
 
     def serialize_stats(self):
         stats = self.get_stats()
@@ -346,6 +350,20 @@ class Report:
 
         return serialized
 
+    def all_suites(self):
+        return flatten_suites(self.suites)
+
+    def all_tests(self):
+        return flatten_tests(self.suites)
+
+    def all_results(self):
+        if self.test_session_setup:
+            yield self.test_session_setup
+        for result in flatten_results_from_suites(self.get_suites()):
+            yield result
+        if self.test_session_teardown:
+            yield self.test_session_teardown
+
 
 def flatten_steps(suites):
     for test in flatten_tests(suites):
@@ -361,12 +379,3 @@ def flatten_results_from_suites(suites):
             yield test
         if suite.suite_teardown:
             yield suite.suite_teardown
-
-
-def flatten_results_from_report(report):
-    if report.test_session_setup:
-        yield report.test_session_setup
-    for result in flatten_results_from_suites(report.get_suites()):
-        yield result
-    if report.test_session_teardown:
-        yield report.test_session_teardown

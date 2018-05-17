@@ -113,11 +113,11 @@ def group_steps_by_description(steps):
 
 
 def get_steps_min_duration(steps):
-    return min([step.duration for step in steps])
+    return min(step.duration for step in steps)
 
 
 def get_steps_max_duration(steps):
-    return max([step.duration for step in steps])
+    return max(step.duration for step in steps)
 
 
 def get_steps_average_duration(steps):
