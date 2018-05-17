@@ -14,7 +14,7 @@ from lemoncheesecake.reporting.report import (
     LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, SuiteData,
     format_timestamp, parse_timestamp
 )
-from lemoncheesecake.exceptions import InvalidReportFile
+from lemoncheesecake.exceptions import InvalidReportFile, ProgrammingError
 
 JS_PREFIX = "var reporting_data = "
 
@@ -125,33 +125,30 @@ def serialize_report_into_json(report):
 
 def save_report_into_file(data, filename, javascript_compatibility=True, pretty_formatting=False):
     report = serialize_report_into_json(data)
-    file = open(filename, "w")
-    if javascript_compatibility:
-        file.write(JS_PREFIX)
-    if pretty_formatting:
-        file.write(json.dumps(report, indent=4))
-    else:
-        file.write(json.dumps(report))
-    file.close()
-
-
-def _unserialize_time(t):
-    return parse_timestamp(t)
+    with open(filename, "w") as fh:
+        if javascript_compatibility:
+            fh.write(JS_PREFIX)
+        if pretty_formatting:
+            fh.write(json.dumps(report, indent=4))
+        else:
+            fh.write(json.dumps(report))
 
 
 def _unserialize_step_data(js):
     step = StepData(js["description"])
-    step.start_time = _unserialize_time(js["start_time"])
-    step.end_time = _unserialize_time(js["end_time"])
+    step.start_time = parse_timestamp(js["start_time"])
+    step.end_time = parse_timestamp(js["end_time"])
     for js_entry in js["entries"]:
         if js_entry["type"] == "log":
-            entry = LogData(js_entry["level"], js_entry["message"], _unserialize_time(js_entry["time"]))
+            entry = LogData(js_entry["level"], js_entry["message"], parse_timestamp(js_entry["time"]))
         elif js_entry["type"] == "attachment":
             entry = AttachmentData(js_entry["description"], js_entry["filename"])
         elif js_entry["type"] == "url":
             entry = UrlData(js_entry["description"], js_entry["url"])
         elif js_entry["type"] == "check":
             entry = CheckData(js_entry["description"], js_entry["outcome"], js_entry["details"])
+        else:
+            raise ProgrammingError("Unknown entry type '%s'" % js_entry["type"])
         step.entries.append(entry)
     return step
 
@@ -160,8 +157,8 @@ def _unserialize_test_data(js):
     test = TestData(js["name"], js["description"])
     test.status = js["status"]
     test.status_details = js["status_details"]
-    test.start_time = _unserialize_time(js["start_time"])
-    test.end_time = _unserialize_time(js["end_time"])
+    test.start_time = parse_timestamp(js["start_time"])
+    test.end_time = parse_timestamp(js["end_time"])
     test.tags = js["tags"]
     test.properties = js["properties"]
     test.links = [(link["url"], link["name"]) for link in js["links"]]
@@ -172,8 +169,8 @@ def _unserialize_test_data(js):
 def _unserialize_hook_data(js):
     data = HookData()
     data.outcome = js["outcome"]
-    data.start_time = _unserialize_time(js["start_time"])
-    data.end_time = _unserialize_time(js["end_time"])
+    data.start_time = parse_timestamp(js["start_time"])
+    data.end_time = parse_timestamp(js["end_time"])
     data.steps = [_unserialize_step_data(s) for s in js["steps"]]
 
     return data
@@ -222,9 +219,9 @@ def load_report_from_file(filename):
 
     report.title = js["title"]
     report.info = js["info"]
-    report.start_time = _unserialize_time(js["start_time"])
-    report.end_time = _unserialize_time(js["end_time"])
-    report.report_generation_time = _unserialize_time(js["generation_time"])
+    report.start_time = parse_timestamp(js["start_time"])
+    report.end_time = parse_timestamp(js["end_time"])
+    report.report_generation_time = parse_timestamp(js["generation_time"])
     report.nb_threads = js["nb_threads"]
 
     if "test_session_setup" in js:
