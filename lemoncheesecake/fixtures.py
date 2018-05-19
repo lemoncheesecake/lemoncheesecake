@@ -181,16 +181,18 @@ class FixtureRegistry:
     def get_fixture(self, name):
         return self._fixtures[name]
 
-    def get_fixture_dependencies(self, name, orig_fixture=None):
+    def get_fixture_dependencies(self, name, ref_fixtures=()):
         fixture_params = [p for p in self._fixtures[name].params if p != "fixture_name"]
-        if orig_fixture and orig_fixture in fixture_params:
-            raise FixtureError("Fixture '%s' has a circular dependency on fixture '%s'" % (orig_fixture, name))
+        if any(ref_fixture in fixture_params for ref_fixture in ref_fixtures):
+            raise FixtureError(
+                "Fixture params %s have circular dependency on a fixture among %s" % (fixture_params, ref_fixtures)
+            )
 
         dependencies = OrderedSet()
         for param in fixture_params:
             if param not in self._fixtures:
                 raise FixtureError("Fixture '%s' used by fixture '%s' does not exist" % (param, name))
-            dependencies.update(self.get_fixture_dependencies(param, orig_fixture if orig_fixture else name))
+            dependencies.update(self.get_fixture_dependencies(param, (name,) + ref_fixtures))
         dependencies.update(fixture_params)
 
         return dependencies

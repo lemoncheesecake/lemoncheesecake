@@ -204,7 +204,7 @@ def test_registry_fixture_circular_dependency_direct():
     registry.add_fixtures(load_fixtures_from_func(foo))
     registry.add_fixtures(load_fixtures_from_func(bar))
     with pytest.raises(exceptions.LemonCheesecakeException) as excinfo:
-        registry.check_dependencies()
+        registry.get_fixture_dependencies("foo")
     assert 'circular' in str(excinfo.value)
 
 
@@ -226,7 +226,30 @@ def test_registry_fixture_circular_dependency_indirect():
     registry.add_fixtures(load_fixtures_from_func(bar))
     registry.add_fixtures(load_fixtures_from_func(baz))
     with pytest.raises(exceptions.LemonCheesecakeException) as excinfo:
-        registry.check_dependencies()
+        registry.get_fixture_dependencies("foo")
+    assert 'circular' in str(excinfo.value)
+
+
+def test_registry_fixture_circular_dependency_indirect_2():
+    @lcc.fixture()
+    def baz(bar):
+        return bar * 2
+
+    @lcc.fixture()
+    def bar(baz):
+        return baz * 2
+
+    @lcc.fixture()
+    def foo(bar):
+        return bar * 2
+
+    registry = FixtureRegistry()
+    registry.add_fixtures(load_fixtures_from_func(foo))
+    registry.add_fixtures(load_fixtures_from_func(bar))
+    registry.add_fixtures(load_fixtures_from_func(baz))
+
+    with pytest.raises(exceptions.LemonCheesecakeException) as excinfo:
+        registry.get_fixture_dependencies("foo")
     assert 'circular' in str(excinfo.value)
 
 
