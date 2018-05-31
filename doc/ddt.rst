@@ -62,13 +62,15 @@ The test suite module (the ``suites/add.py`` file):
             for entry in data:
                 test = lcc.Test(
                     entry["name"], entry["description"],
-                    lambda: self.test_add(entry["i"], entry["j"], entry["expected"])
+                    self.make_test_func(entry["i"], entry["j"], entry["expected"])
                 )
                 lcc.add_test_into_suite(test, self)
 
         @staticmethod
-        def test_add(i, j, expected):
-            check_that("%d + %d" % (i, j), i + j, equal_to(expected))
+        def make_test_func(i, j, expected):
+            def func():
+                check_that("%d + %d" % (i, j), i + j, equal_to(expected))
+            return func
 
 
 Tests are added to the suite through ``lcc.add_test_into_suite``. The usual extra metadata (tags, properties, links)
