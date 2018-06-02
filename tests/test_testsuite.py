@@ -12,7 +12,7 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.suite import load_suite_from_class, add_test_into_suite, add_test_in_suite, add_tests_in_suite
 from lemoncheesecake.exceptions import ProgrammingError, InvalidMetadataError
 
-from helpers.runner import dummy_test_callback
+from helpers.runner import dummy_test_callback, build_suite_from_module
 
 
 def test_decorator_test():
@@ -326,6 +326,19 @@ def test_add_test_into_suite_disabled():
     suite = load_suite_from_class(MySuite)
     test = suite.get_tests()[0]
     assert test.is_disabled()
+
+
+def test_add_test_into_module():
+    suite = build_suite_from_module("""
+import sys
+
+def func():
+    pass
+
+lcc.add_test_into_suite(lcc.Test("test", "Test", func), sys.modules[__name__])
+""")
+
+    assert len(suite.get_tests()) == 1
 
 
 def test_get_fixtures():

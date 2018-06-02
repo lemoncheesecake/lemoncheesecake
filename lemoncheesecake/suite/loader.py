@@ -176,7 +176,7 @@ def load_suite_from_module(mod):
     for test in load_tests_from_functions(get_test_functions_from_module(mod)):
         suite.add_test(test)
 
-    for test in get_generated_tests(suite):
+    for test in get_generated_tests(mod):
         suite.add_test(test)
 
     for sub_suite in load_suites_from_classes(get_suite_classes_from_module(mod)):
