@@ -1,3 +1,8 @@
+# 0.18.4 (2018-06-02)
+
+- **API**: fix circular dependency detection on fixtures
+- **API**: fix `add_test_into_suite` when used with a module as argument 
+
 # 0.18.3 (2018-05-12)
 
 - **lcc report**: fix the duration information while tests are parallelized
