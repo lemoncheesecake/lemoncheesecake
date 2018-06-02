@@ -71,7 +71,8 @@ def _remove_py_file(filename):
 def build_suite_from_module(module_content):
     fd, filename = tempfile.mkstemp(suffix=".py")
     fh = open(filename, "w")
-    fh.write("import lemoncheesecake.api as lcc\n\n")
+    fh.write("import lemoncheesecake.api as lcc\n")
+    fh.write("from lemoncheesecake.matching import *\n")
     fh.write("SUITE = {'description': 'My Suite'}\n\n")
     fh.write(module_content)
     fh.close()

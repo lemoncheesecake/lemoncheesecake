@@ -902,13 +902,17 @@ def test_run_with_fixture_injected_in_module():
         return "MARKER"
 
     suite = build_suite_from_module("""
+fixt1 = lcc.inject_fixture()
+
 @lcc.test("Some test")
-def sometest(fixt1):
-    assert fixt1 == "MARKER"
+def sometest():
+    lcc.log_info(fixt1)
     """)
 
     report = run_suite(suite, fixtures=[fixt1])
-    assert_test_passed(report)
+
+    test = next(report.all_tests())
+    assert test.steps[0].entries[0].message == "MARKER"
 
 
 def test_fixture_called_multiple_times():
