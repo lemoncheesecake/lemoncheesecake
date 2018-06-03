@@ -1,3 +1,7 @@
+# 0.19.0 (2018-06-03)
+
+- Rewrite the test runner in order be able to apply parallelism to all tests and not only to tests within the same suite
+
 # 0.18.4 (2018-06-02)
 
 - **API**: fix circular dependency detection on fixtures
