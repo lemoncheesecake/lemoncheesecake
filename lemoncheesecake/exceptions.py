@@ -17,6 +17,7 @@ class LemonCheesecakeException(Exception):
             s = "%s, %s" % (self.message_prefix, s)
         return s
 
+
 class LemonCheesecakeInternalError(LemonCheesecakeException):
     pass
 InternalError = LemonCheesecakeInternalError
@@ -93,6 +94,18 @@ class InvalidReportFile(LemonCheesecakeException):
 
 
 class CannotFindTreeNode(LemonCheesecakeException):
+    pass
+
+
+class AbortTask(LemonCheesecakeException):
+    pass
+
+
+class TasksExecutionFailure(LemonCheesecakeException):
+    pass
+
+
+class CircularDependencyError(LemonCheesecakeException):
     pass
 
 

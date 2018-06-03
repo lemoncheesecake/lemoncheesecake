@@ -1,3 +1,4 @@
+import sys
 import time
 import re
 import inspect
@@ -22,6 +23,9 @@ class Event(object):
     @classmethod
     def get_name(cls):
         return _get_event_name_from_class_name(cls.__name__)
+
+    def __str__(self):
+        return "<Event type='%s'>" % self.get_name()
 
 
 class EventType:
@@ -213,6 +217,9 @@ class _TestEvent(Event):
         super(_TestEvent, self).__init__()
         self.test = test
 
+    def __str__(self):
+        return "<Event type='%s' test_name='%s'>" % (self.get_name(), self.test.path)
+
 
 @event
 class TestStartEvent(_TestEvent):
@@ -279,6 +286,11 @@ class StepEvent(RuntimeEvent):
         self.step_description = description
         self.detached = detached
 
+    def __str__(self):
+        return "<Event type='%s' description='%s'>" % (
+            self.get_name(), self.step_description
+        )
+
 
 @event
 class StepEndEvent(RuntimeEvent):
@@ -300,6 +312,11 @@ class LogEvent(SteppedEvent):
         self.log_level = level
         self.log_message = message
 
+    def __str__(self):
+        return "<Event type='%s' level='%s' message='%s'>" % (
+            self.get_name(), self.log_level, self.log_message
+        )
+
 
 @event
 class CheckEvent(SteppedEvent):
@@ -308,6 +325,12 @@ class CheckEvent(SteppedEvent):
         self.check_description = description
         self.check_outcome = outcome
         self.check_details = details
+
+    def __str__(self):
+        return "<Event type='%s' description='%s' details='%s' outcome='%s'>" % (
+            self.get_name(), self.check_description, self.check_details,
+            "success" if self.check_outcome else "failure"
+        )
 
 
 @event
@@ -318,6 +341,11 @@ class LogAttachmentEvent(SteppedEvent):
         self.attachment_filename = filename
         self.attachment_description = description
 
+    def __str__(self):
+        return "<Event type='%s' filename='%s' description='%s'>" % (
+            self.get_name(), self.attachment_filename, self.attachment_description
+        )
+
 
 @event
 class LogUrlEvent(SteppedEvent):
@@ -325,3 +353,8 @@ class LogUrlEvent(SteppedEvent):
         super(LogUrlEvent, self).__init__(location, step)
         self.url = url
         self.url_description = description
+
+    def __str__(self):
+        return "<Event type='%s' url='%s' description='%s'>" % (
+            self.get_name(), self.url, self.url_description
+        )

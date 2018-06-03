@@ -857,7 +857,7 @@ def test_run_with_fixture_used_in_setup_suite():
 def test_run_with_fixture_injected_in_class():
     marker = []
 
-    @lcc.fixture(scope="suite")
+    @lcc.fixture(scope="session")
     def fixt1():
         return 1
 
@@ -878,7 +878,7 @@ def test_run_with_fixture_injected_in_class():
 def test_run_with_fixture_injected_in_class_and_fixture_name_arg():
     marker = []
 
-    @lcc.fixture(scope="suite")
+    @lcc.fixture(scope="session")
     def fixt1():
         return 1
 

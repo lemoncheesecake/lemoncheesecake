@@ -90,39 +90,23 @@ class Suite(BaseSuite):
             setattr(self.obj, attr_name, fixture_value)
 
     def assert_test_is_unique_in_suite(self, test):
-        try:
-            next(t for t in self._tests if t.description == test.description)
-        except StopIteration:
-            pass
-        else:
+        if any(t for t in self._tests if t.description == test.description):
             raise InvalidMetadataError(
                 "A test with description '%s' is already registered in test suite %s" % (test.description, self.path)
             )
 
-        try:
-            next(t for t in self._tests if t.name == test.name)
-        except StopIteration:
-            pass
-        else:
+        if any(t for t in self._tests if t.name == test.name):
             raise InvalidMetadataError(
                 "A test with name '%s' is already registered in test suite %s" % (test.name, self.path)
             )
 
     def assert_sub_suite_is_unique_in_suite(self, sub_suite):
-        try:
-            next(s for s in self._suites if s.description == sub_suite.description)
-        except StopIteration:
-            pass
-        else:
+        if any(s for s in self._suites if s.description == sub_suite.description):
             raise InvalidMetadataError(
                 "A sub test suite with description '%s' is already registered in test suite %s" % (sub_suite.name, self.path)
             )
 
-        try:
-            next(s for s in self._suites if s.name == sub_suite.name)
-        except StopIteration:
-            pass
-        else:
+        if any(s for s in self._suites if s.name == sub_suite.name):
             raise InvalidMetadataError(
                 "A sub test suite with name '%s' is already registered in test suite %s" % (sub_suite.name, self.path)
             )

@@ -23,6 +23,8 @@ class ReportWriter:
 
     def _add_step_entry(self, entry, event):
         report_node_data = self.report.get(event.location)
+        if not report_node_data:
+            raise ProgrammingError("Cannot find location %s in the report" % event.location)
         step = self._lookup_step(report_node_data.steps, event.step)
         if step.end_time:
             raise ProgrammingError("Cannot update step '%s', it is already ended" % step.description)
