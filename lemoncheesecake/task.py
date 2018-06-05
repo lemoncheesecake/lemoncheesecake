@@ -52,9 +52,16 @@ def run_task(task, context, completed_task_queue):
     completed_task_queue.put(task)
 
 
-def do_run_tasks(tasks, context, pool, completed_tasks_queue):
+def schedule_task(task, watchdog, context, completed_task_queue):
+    if watchdog is None or watchdog(task):
+        run_task(task, context, completed_task_queue)
+    else:
+        abort_task(task, context, completed_task_queue)
+
+
+def schedule_tasks(tasks, watchdog, context, pool, completed_tasks_queue):
     for task in tasks:
-        pool.apply_async(run_task, args=(task, context, completed_tasks_queue))
+        pool.apply_async(schedule_task, args=(task, watchdog, context, completed_tasks_queue))
 
 
 def abort_task(task, context, completed_task_queue):
@@ -92,23 +99,20 @@ def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
     completed_tasks_queue = Queue()
 
     try:
-        do_run_tasks(pop_runnable_tasks(remaining_tasks, completed_tasks, nb_threads), context, pool, completed_tasks_queue)
+        schedule_tasks(
+            pop_runnable_tasks(remaining_tasks, completed_tasks, nb_threads),
+            watchdog, context, pool, completed_tasks_queue
+        )
 
         while len(completed_tasks) != len(tasks):
             # wait for one task to complete
             completed_task = completed_tasks_queue.get()
             completed_tasks.append(completed_task)
 
-            # watchdog
-            exception_class, exception_arg = watchdog() if watchdog else (None, None)
-            if exception_class:
-                abort_all_tasks(tasks, remaining_tasks, completed_tasks, context, pool, completed_tasks_queue)
-                raise exception_class(exception_arg)
-
             # schedule next tasks depending on the completed task success
             if completed_task.successful:
                 runnable_tasks = pop_runnable_tasks(remaining_tasks, completed_tasks, nb_threads)
-                do_run_tasks(runnable_tasks, context, pool, completed_tasks_queue)
+                schedule_tasks(runnable_tasks, watchdog, context, pool, completed_tasks_queue)
             else:
                 abortable_tasks = pop_dependant_tasks(completed_task, remaining_tasks)
                 abort_tasks(abortable_tasks, context, pool, completed_tasks_queue)

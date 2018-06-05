@@ -520,12 +520,9 @@ def build_tasks(suites, fixture_registry, session_scheduled_fixtures):
     return list(filter(bool, task_iter))
 
 
-def watchdog():
-    exception, serialized_exception = events.get_pending_failure()
-    if exception:
-        return exception.__class__, serialized_exception
-    else:
-        return None, None
+def watchdog(task):
+    exception, _ = events.get_pending_failure()
+    return exception is None
 
 
 def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, reporting_backends, report_dir,
