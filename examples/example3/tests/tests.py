@@ -75,11 +75,37 @@ def test():
         has_entry("bar", is_(2))
     )))
 
-    # Expect value to be integer and to be greater than 0
-    
-    # Expect value to be an integer that is greater than 0
+    lcc.set_step("is_text")
+    check_that(
+        "text",
+        "\n".join("line%d" % (nb+1) for nb in range(10)),
+        is_text("\n".join("line%d" % (nb+1) for nb in range(10)))
+    )
+    check_that(
+        "text",
+        "\n".join("line%d" % (nb+1) for nb in range(10)),
+        is_text("\n".join("line%d" % (nb+1) for nb in range(12)))
+    )
 
-    # Expect dict to have entry 'value' that is an integer that is greater than 0
-    
-    # Expect dict to have entry 'value' that is a string that starts with 'foo'
-
+    lcc.set_step("is_json")
+    check_that(
+        "json",
+        {"foo": 1, "bar": 2},
+        is_json({"foo": 1, "bar": 2})
+    )
+    check_that(
+        "json",
+        {"foo": 1, "bar": 2, "baz": 3},
+        is_json({"foo": 1, "bar": 2})
+    )
+    check_that(
+        "dict",
+        {
+            "some": "thing",
+            "data": {"foo": 1, "bar": 2, "baz": 3}
+        },
+        all_of(
+            has_entry("some", equal_to("thing")),
+            has_entry("data", is_json({"foo": 1, "bar": 2}))
+        )
+    )

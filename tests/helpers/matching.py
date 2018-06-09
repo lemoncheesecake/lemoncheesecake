@@ -15,7 +15,7 @@ def assert_match_result(matcher, actual, result_outcome, result_details):
         assert details in check.details
 
 
-def assert_match_success(matcher, actual, result_details):
+def assert_match_success(matcher, actual, result_details=()):
     assert_match_result(matcher, actual, True, result_details)
 
 

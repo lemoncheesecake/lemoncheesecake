@@ -46,3 +46,19 @@ def test_match_pattern_with_pattern_success():
 
 def test_match_pattern_failure():
     assert_match_failure(match_pattern("^f"), "bar", "bar")
+
+
+def test_is_text_success():
+    assert_match_success(is_text("foo\nbar"), "foo\nbar")
+
+
+def test_is_text_failure():
+    assert_match_failure(is_text("foo\nbar"), "foo\nbar\nbaz", "+baz")
+
+
+def test_is_json_success():
+    assert_match_success(is_json({"foo": 1, "bar": 2}), {"foo": 1, "bar": 2})
+
+
+def test_is_json_failure():
+    assert_match_failure(is_json({"foo": 1, "bar": 2}), {"foo": 1, "bar": 2, "baz": 3}, '+    "baz": 3')

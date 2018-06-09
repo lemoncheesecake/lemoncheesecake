@@ -34,14 +34,21 @@ The following stock matchers are available:
 
   - ``is_false()``: check if value is a boolean false
 
+  - ``is_json(expected)``: check is the actual JSON equals ``expected``, if not, the unified diff of
+  actual vs expected is displayed
+
 - Character strings:
 
   - ``starts_with(expected)``: check if the actual string starts with ``expected``
 
   - ``ends_with(expected)``: check if the actual string ends with ``expected``
 
-  - ``match_pattern(expected)``: check if the actual match ``expected`` regexp (expected can be a raw string or an object
+  - ``match_pattern(expected)``: check if the actual string match ``expected`` regexp (expected can be a raw string or an object
     returned by ``re.compile()``)
+
+  - ``is_text(expected)``: check is the actual (multi-lined) text equals ``expected``, if not, the unified diff of
+  actual vs expected is displayed
+
 
 - Types (``expected`` is optional and can be a value or a matcher object):
 
