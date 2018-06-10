@@ -15,6 +15,7 @@ setup(
     name="lemoncheesecake",
     version=lemoncheesecake.__version__,
     description="A framework for functional QA testing",
+    long_description=open("README.rst").read(),
     author="Nicolas Delon",
     author_email="nicolas.delon@gmail.com",
     license="Apache License (Version 2.0)",
