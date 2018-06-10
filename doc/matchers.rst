@@ -35,7 +35,7 @@ The following stock matchers are available:
   - ``is_false()``: check if value is a boolean false
 
   - ``is_json(expected)``: check is the actual JSON equals ``expected``, if not, the unified diff of
-  actual vs expected is displayed
+    actual vs expected is displayed
 
 - Character strings:
 
@@ -47,7 +47,7 @@ The following stock matchers are available:
     returned by ``re.compile()``)
 
   - ``is_text(expected)``: check is the actual (multi-lined) text equals ``expected``, if not, the unified diff of
-  actual vs expected is displayed
+    actual vs expected is displayed
 
 
 - Types (``expected`` is optional and can be a value or a matcher object):
