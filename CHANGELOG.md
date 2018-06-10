@@ -1,3 +1,8 @@
+# 0.19.1 (2018-06-10)
+
+- **API**: add `is_text` and `is_json` matchers
+- **packaging**: add long_description for PyPI
+
 # 0.19.0 (2018-06-03)
 
 - Rewrite the test runner in order be able to apply parallelism to all tests and not only to tests within the same suite
