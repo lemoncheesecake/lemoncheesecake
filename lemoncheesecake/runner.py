@@ -90,6 +90,10 @@ class RunContext(object):
                 count += 1
         return count
 
+    def watchdog(self, task):
+        exception, _ = events.get_pending_failure()
+        return exception is None
+
 
 class TestTask(BaseTask):
     def __init__(self, test, suite_scheduled_fixtures, dependency=None):
@@ -520,11 +524,6 @@ def build_tasks(suites, fixture_registry, session_scheduled_fixtures):
     return list(filter(bool, task_iter))
 
 
-def watchdog(task):
-    exception, _ = events.get_pending_failure()
-    return exception is None
-
-
 def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, reporting_backends, report_dir,
                 force_disabled=False, stop_on_failure=False, nb_threads=1):
     # initialize runtime & global test variables
@@ -551,7 +550,7 @@ def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, rep
 
     try:
         events.fire(events.TestSessionStartEvent(report))
-        run_tasks(tasks, context, nb_threads, watchdog)
+        run_tasks(tasks, context, nb_threads, context.watchdog)
         events.fire(events.TestSessionEndEvent(report))
     finally:
         # wait for event handler to finish
