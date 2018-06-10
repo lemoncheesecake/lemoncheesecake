@@ -86,11 +86,11 @@ For more details about installing lemoncheesecake with the non-default reporting
 Documentation
 -------------
 
-The documentation is available on http://docs.lemoncheesecake.io .
+The documentation is available on http://docs.lemoncheesecake.io.
 
 
 Contact
 -------
 
 Bugs and improvement ideas are welcomed in tickets. A Google Groups forum is also available for discussions about
-lemoncheesecake: https://groups.google.com/forum/#!forum/lemoncheesecake .
+lemoncheesecake: https://groups.google.com/forum/#!forum/lemoncheesecake.
