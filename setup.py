@@ -19,7 +19,7 @@ setup(
     author="Nicolas Delon",
     author_email="nicolas.delon@gmail.com",
     license="Apache License (Version 2.0)",
-    url="https://github.com/lemoncheesecake",
+    url="http://lemoncheesecake.io",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Console",
