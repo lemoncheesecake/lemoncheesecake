@@ -91,8 +91,21 @@ class RunContext(object):
         return count
 
     def watchdog(self, task):
+        # check for error in event handling
         exception, _ = events.get_pending_failure()
-        return exception is None
+        if exception is not None:
+            return False
+
+        # check for test session abort
+        if self._abort_tests:
+            return False
+
+        # check for suite abort
+        if isinstance(task, TestTask):
+            if task.test.parent_suite in self._aborted_suites:
+                return False
+
+        return True
 
 
 class TestTask(BaseTask):
