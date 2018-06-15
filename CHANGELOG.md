@@ -1,3 +1,7 @@
+# 0.19.2 (2018-06-15)
+
+- **junit**: fix for multi-threads run
+
 # 0.19.1 (2018-06-10)
 
 - **API**: add `is_text` and `is_json` matchers
