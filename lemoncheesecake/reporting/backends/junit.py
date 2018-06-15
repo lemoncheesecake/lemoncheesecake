@@ -35,7 +35,7 @@ def _serialize_test_data(test):
     junit_test = make_xml_node(
         "testcase",
         "name", test.name,
-        "time", format_duration(test.duration),
+        "time", format_duration(test.duration if test.end_time else 0),
     )
     
     if test.status == "skipped":
@@ -43,7 +43,7 @@ def _serialize_test_data(test):
     else:
         for step in test.steps:
             for step_entry in step.entries:
-                if isinstance(step_entry, CheckData) and step_entry.outcome == False:
+                if isinstance(step_entry, CheckData) and step_entry.outcome is False:
                     make_xml_child(junit_test, "failure", "message", "failed check in step '%s'" % step.description)
                 elif isinstance(step_entry, LogData) and step_entry.level == LOG_LEVEL_ERROR:
                     make_xml_child(junit_test, "error", "message", "error log in step '%s'" % step.description)
@@ -61,8 +61,8 @@ def _serialize_suite_data(suite):
             "tests", str(len(tests)),
             "failures", str(len(list(filter(lambda t: t.status == "failed", tests)))),
             "skipped", str(len(list(filter(lambda t: t.status == "skipped", tests)))),
-            "time", format_duration(reduce(lambda x, y: x + y, [t.duration for t in tests], 0)),
-            "timestamp", format_timestamp_as_iso_8601(min([t.start_time for t in tests]))
+            "time", format_duration(reduce(lambda x, y: x + y, (t.duration for t in tests if t.end_time), 0)),
+            "timestamp", format_timestamp_as_iso_8601(min(t.start_time for t in tests))
         )
         junit_testsuites.append(junit_testsuite)
         for test in tests:
@@ -83,7 +83,7 @@ def serialize_report_as_tree(report):
     report_stats = report.stats()
     set_node_attr(junit_report_testsuites, "tests", str(report_stats.test_statuses["passed"]))
     set_node_attr(junit_report_testsuites, "failures", str(report_stats.test_statuses["failed"]))
-    if report.end_time != None:
+    if report.end_time is not None:
         set_node_attr(junit_report_testsuites, "time", format_duration(report.end_time - report.start_time))
     
     for suite in report.suites:
