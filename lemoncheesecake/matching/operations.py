@@ -190,7 +190,9 @@ def require_that(hint, actual, matcher, quiet=False):
 
     result = matcher.matches(actual)
     log_match_result(hint, matcher, result, quiet=quiet)
-    if result.is_failure():
+    if result:
+        return result
+    else:
         raise AbortTest("previous requirement was not fulfilled")
 
 
@@ -218,7 +220,9 @@ def assert_that(hint, actual, matcher, quiet=False):
     assert _is_matcher(matcher)
 
     result = matcher.matches(actual)
-    if result.is_failure():
+    if result:
+        return result
+    else:
         log_match_result(hint, matcher, result, quiet=quiet)
         raise AbortTest("assertion error")
 

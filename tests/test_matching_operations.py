@@ -94,7 +94,7 @@ def test_check_that_in_with_tuple_and_base_key(runtime_mock):
 def test_require_that_in(runtime_mock):
     with pytest.raises(lcc.AbortTest):
         require_that_in({"foo": 2, "bar": 2}, "foo", equal_to(1), "bar", equal_to(2))
-    
+
     results = get_mocked_logged_checks()
     
     assert len(results) == 1
@@ -113,7 +113,8 @@ def test_assert_that_in(runtime_mock):
 
 
 def test_require_that_success(runtime_mock):
-    require_that("value", "foo", equal_to("foo"))
+    result = require_that("value", "foo", equal_to("foo"))
+    assert result
     
     description, outcome, details = get_last_mocked_logged_check()
 
@@ -134,7 +135,8 @@ def test_require_that_failure(runtime_mock):
 
 
 def test_require_that_entry(runtime_mock):
-    require_that_entry("foo", equal_to("bar"), in_={"foo": "bar"})
+    result = require_that_entry("foo", equal_to("bar"), in_={"foo": "bar"})
+    assert result
 
     description, outcome, details = get_last_mocked_logged_check()
 
@@ -144,7 +146,8 @@ def test_require_that_entry(runtime_mock):
 
 
 def test_assert_that_success(runtime_mock):
-    assert_that("value", "foo", equal_to("foo"))
+    result = assert_that("value", "foo", equal_to("foo"))
+    assert result
 
     assert len(get_mocked_logged_checks()) == 0
 
@@ -161,7 +164,8 @@ def test_assert_that_failure(runtime_mock):
 
 
 def test_assert_that_entry_success(runtime_mock):
-    assert_that_entry("foo", equal_to("bar"), in_={"foo": "bar"})
+    result = assert_that_entry("foo", equal_to("bar"), in_={"foo": "bar"})
+    assert result
 
     assert len(get_mocked_logged_checks()) == 0
 
