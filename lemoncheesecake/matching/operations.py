@@ -136,7 +136,7 @@ def check_that(hint, actual, matcher, quiet=False):
 
     result = matcher.matches(actual)
     log_match_result(hint, matcher, result, quiet=quiet)
-    return result.outcome
+    return result
 
 
 def check_that_entry(key_matcher, value_matcher=None, in_=None, base_key=None, quiet=False):

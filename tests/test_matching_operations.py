@@ -179,7 +179,8 @@ def test_assert_that_entry_failure(runtime_mock):
 
 def test_this_dict(runtime_mock):
     with this_dict({"foo": "bar"}):
-        check_that_entry("foo", equal_to("bar"))
+        result = check_that_entry("foo", equal_to("bar"))
+    assert result
     
     description, outcome, details = get_last_mocked_logged_check()
 
@@ -190,9 +191,11 @@ def test_this_dict(runtime_mock):
 
 def test_this_dict_multiple(runtime_mock):
     with this_dict({"foo": "bar"}):
-        check_that_entry("foo", equal_to("bar"))
+        result = check_that_entry("foo", equal_to("bar"))
+    assert result
     with this_dict({"foo": "baz"}):
-        check_that_entry("foo", equal_to("baz"))
+        result = check_that_entry("foo", equal_to("baz"))
+    assert result
 
     description, outcome, details = get_mocked_logged_checks()[0]
     assert "foo" in description and "bar" in description
@@ -218,7 +221,8 @@ def test_this_dict_imbricated(runtime_mock):
 
 def test_this_dict_using_base_key(runtime_mock):
     with this_dict({"foo": {"bar": "baz"}}).using_base_key("foo"):
-        check_that_entry("bar", equal_to("baz"))
+        result = check_that_entry("bar", equal_to("baz"))
+    assert result
 
     description, outcome, details = get_last_mocked_logged_check()
 
@@ -229,7 +233,8 @@ def test_this_dict_using_base_key(runtime_mock):
 
 def test_this_dict_using_base_key_as_list(runtime_mock):
     with this_dict({"foo": {"bar": "baz"}}).using_base_key(["foo"]):
-        check_that_entry("bar", equal_to("baz"))
+        result = check_that_entry("bar", equal_to("baz"))
+    assert result
 
     description, outcome, details = get_last_mocked_logged_check()
 
@@ -239,7 +244,8 @@ def test_this_dict_using_base_key_as_list(runtime_mock):
 
 
 def test_unicode(runtime_mock):
-    check_that(u"ééé", u"éééààà", starts_with(u"ééé"))
+    result = check_that(u"ééé", u"éééààà", starts_with(u"ééé"))
+    assert result
     
     description, outcome, details = get_last_mocked_logged_check()
 
