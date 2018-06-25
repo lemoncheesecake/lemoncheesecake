@@ -1,3 +1,12 @@
+# 0.19.3 (2018-06-25)
+
+- **API**: the `MatchResult` class now implements `__bool__` (and `__nonzero__`) method and then can be used in boolean operations
+- **API**: the `check_that`, `require_that`, `assert_that` functions now return a `MatchResult` instance (instead of a boolean for 
+  the `check_that` and no return value for the two other functions)
+- **API**: the `check_that_in`, `require_that_in`, `assert_that_in` functions now return a list of matcher results
+- **API**: the `has_item` matcher now returns an enhanced match result instance with `index` (of the matched item in 
+  the actual list) and `item` attributes
+
 # 0.19.2 (2018-06-15)
 
 - **junit**: fix for multi-threads run
