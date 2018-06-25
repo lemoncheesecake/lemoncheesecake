@@ -48,7 +48,9 @@ def test_check_that_entry(runtime_mock):
 
 
 def test_check_that_in(runtime_mock):
-    check_that_in({"foo": 1, "bar": 2}, "foo", equal_to(1), "bar", equal_to(2))
+    results = check_that_in({"foo": 1, "bar": 2}, "foo", equal_to(1), "bar", equal_to(2))
+
+    assert all(results)
 
     description, outcome, details = get_mocked_logged_checks()[0]
     assert "foo" in description and "1" in description
@@ -62,7 +64,9 @@ def test_check_that_in(runtime_mock):
 
 
 def test_check_that_in_with_base_key(runtime_mock):
-    check_that_in({"foo": {"bar": "baz"}}, "bar", equal_to("baz"), base_key=["foo"])
+    results = check_that_in({"foo": {"bar": "baz"}}, "bar", equal_to("baz"), base_key=["foo"])
+
+    assert all(results)
     
     description, outcome, details = get_last_mocked_logged_check()
 
@@ -72,7 +76,9 @@ def test_check_that_in_with_base_key(runtime_mock):
 
 
 def test_check_that_in_with_list_and_base_key(runtime_mock):
-    check_that_in({"foo": {"bar": "baz"}}, ["bar"], equal_to("baz"), base_key=["foo"])
+    results = check_that_in({"foo": {"bar": "baz"}}, ["bar"], equal_to("baz"), base_key=["foo"])
+
+    assert all(results)
     
     description, outcome, details = get_last_mocked_logged_check()
 
@@ -82,7 +88,9 @@ def test_check_that_in_with_list_and_base_key(runtime_mock):
 
 
 def test_check_that_in_with_tuple_and_base_key(runtime_mock):
-    check_that_in({"foo": {"bar": "baz"}}, ("bar", ), equal_to("baz"), base_key=["foo"])
+    results = check_that_in({"foo": {"bar": "baz"}}, ("bar", ), equal_to("baz"), base_key=["foo"])
+
+    assert all(results)
 
     description, outcome, details = get_last_mocked_logged_check()
 
@@ -95,11 +103,11 @@ def test_require_that_in(runtime_mock):
     with pytest.raises(lcc.AbortTest):
         require_that_in({"foo": 2, "bar": 2}, "foo", equal_to(1), "bar", equal_to(2))
 
-    results = get_mocked_logged_checks()
+    mock_results = get_mocked_logged_checks()
     
-    assert len(results) == 1
+    assert len(mock_results) == 1
 
-    description, outcome, details = results[0]
+    description, outcome, details = mock_results[0]
 
     assert "foo" in description and "1" in description
     assert outcome is False
@@ -107,8 +115,9 @@ def test_require_that_in(runtime_mock):
 
 
 def test_assert_that_in(runtime_mock):
-    assert_that_in({"foo": 1, "bar": 2}, "foo", equal_to(1), "bar", equal_to(2))
+    results = assert_that_in({"foo": 1, "bar": 2}, "foo", equal_to(1), "bar", equal_to(2))
 
+    assert all(results)
     assert len(get_mocked_logged_checks()) == 0
 
 

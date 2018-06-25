@@ -160,23 +160,27 @@ def _do_that_in(func, actual, *args, **kwargs):
     base_key = kwargs.get("base_key", [])
     quiet = kwargs.get("quiet", False)
 
+    results = []
     i = 0
     while i < len(args):
         key, value_matcher = args[i], args[i+1]
-        func(key, value_matcher, in_=actual, base_key=base_key, quiet=quiet)
+        result = func(key, value_matcher, in_=actual, base_key=base_key, quiet=quiet)
+        results.append(result)
         i += 2
+
+    return results
 
 
 def check_that_in(actual, *args, **kwargs):
-    _do_that_in(check_that_entry, actual, *args, **kwargs)
+    return _do_that_in(check_that_entry, actual, *args, **kwargs)
 
 
 def require_that_in(actual, *args, **kwargs):
-    _do_that_in(require_that_entry, actual, *args, **kwargs)
+    return _do_that_in(require_that_entry, actual, *args, **kwargs)
 
 
 def assert_that_in(actual, *args, **kwargs):
-    _do_that_in(assert_that_entry, actual, *args, **kwargs)
+    return _do_that_in(assert_that_entry, actual, *args, **kwargs)
 
 
 def require_that(hint, actual, matcher, quiet=False):
