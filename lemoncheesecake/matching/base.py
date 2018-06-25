@@ -10,10 +10,14 @@ from lemoncheesecake.utils import OrderedSet
 from lemoncheesecake.exceptions import method_not_implemented
 
 
-class MatchResult:
+class MatchResult(object):
     def __init__(self, outcome, description):
         self.outcome = outcome
         self.description = description
+
+    def __bool__(self):
+        return self.is_success()
+    __nonzero__ = __bool__
 
     def is_success(self):
         return self.outcome is True

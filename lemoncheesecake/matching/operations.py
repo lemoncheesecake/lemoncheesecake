@@ -136,7 +136,7 @@ def check_that(hint, actual, matcher, quiet=False):
 
     result = matcher.matches(actual)
     log_match_result(hint, matcher, result, quiet=quiet)
-    return result.outcome
+    return result
 
 
 def check_that_entry(key_matcher, value_matcher=None, in_=None, base_key=None, quiet=False):
@@ -160,23 +160,27 @@ def _do_that_in(func, actual, *args, **kwargs):
     base_key = kwargs.get("base_key", [])
     quiet = kwargs.get("quiet", False)
 
+    results = []
     i = 0
     while i < len(args):
         key, value_matcher = args[i], args[i+1]
-        func(key, value_matcher, in_=actual, base_key=base_key, quiet=quiet)
+        result = func(key, value_matcher, in_=actual, base_key=base_key, quiet=quiet)
+        results.append(result)
         i += 2
+
+    return results
 
 
 def check_that_in(actual, *args, **kwargs):
-    _do_that_in(check_that_entry, actual, *args, **kwargs)
+    return _do_that_in(check_that_entry, actual, *args, **kwargs)
 
 
 def require_that_in(actual, *args, **kwargs):
-    _do_that_in(require_that_entry, actual, *args, **kwargs)
+    return _do_that_in(require_that_entry, actual, *args, **kwargs)
 
 
 def assert_that_in(actual, *args, **kwargs):
-    _do_that_in(assert_that_entry, actual, *args, **kwargs)
+    return _do_that_in(assert_that_entry, actual, *args, **kwargs)
 
 
 def require_that(hint, actual, matcher, quiet=False):
@@ -190,7 +194,9 @@ def require_that(hint, actual, matcher, quiet=False):
 
     result = matcher.matches(actual)
     log_match_result(hint, matcher, result, quiet=quiet)
-    if result.is_failure():
+    if result:
+        return result
+    else:
         raise AbortTest("previous requirement was not fulfilled")
 
 
@@ -218,7 +224,9 @@ def assert_that(hint, actual, matcher, quiet=False):
     assert _is_matcher(matcher)
 
     result = matcher.matches(actual)
-    if result.is_failure():
+    if result:
+        return result
+    else:
         log_match_result(hint, matcher, result, quiet=quiet)
         raise AbortTest("assertion error")
 
