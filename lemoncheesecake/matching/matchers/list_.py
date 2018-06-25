@@ -4,10 +4,25 @@ Created on May 2, 2017
 @author: nicolas
 '''
 
-from lemoncheesecake.matching.base import MatchExpected, match_failure, match_success, match_result, got_value, to_have, to_be, serialize_values
+from lemoncheesecake.matching.base import MatchExpected, MatchResult, match_failure, match_success, match_result, got_value, to_have, to_be, serialize_values
 from lemoncheesecake.matching.matchers.composites import is_
 
 __all__ = ("has_item", "has_values", "has_only_values", "is_in")
+
+
+class HasItemMatchResult(MatchResult):
+    def __init__(self, outcome, description, index, item):
+        MatchResult.__init__(self, outcome, description)
+        self.item = item
+        self.index = index
+
+    @classmethod
+    def success(cls, description, index, item):
+        return cls(True, description, index, item)
+
+    @classmethod
+    def failure(cls):
+        return cls(False, "no matching item", -1, None)
 
 
 class HasItem(MatchExpected):
@@ -18,11 +33,11 @@ class HasItem(MatchExpected):
         return "%s an item whose value %s" % (to_have(conjugate), self.expected.short_description(conjugate=True))
 
     def matches(self, actual):
-        for item in actual:
+        for index, item in enumerate(actual):
             result = self.expected.matches(item)
             if result.is_success():
-                return result
-        return match_failure("no matching item")
+                return HasItemMatchResult.success(result.description, index, item)
+        return HasItemMatchResult.failure()
 
 
 def has_item(expected):

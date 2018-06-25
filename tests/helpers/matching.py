@@ -7,10 +7,12 @@ def assert_match_result(matcher, actual, result_outcome, result_details):
     for details in result_details_lst:
         assert details in result.description
 
+    return result
+
 
 def assert_match_success(matcher, actual, result_details=()):
-    assert_match_result(matcher, actual, True, result_details)
+    return assert_match_result(matcher, actual, True, result_details)
 
 
 def assert_match_failure(matcher, actual, result_details):
-    assert_match_result(matcher, actual, False, result_details)
+    return assert_match_result(matcher, actual, False, result_details)
