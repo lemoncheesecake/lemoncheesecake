@@ -202,11 +202,11 @@ def assert_report(actual, expected):
     assert round(actual.end_time, 3) == round(expected.end_time, 3)
     assert round(actual.report_generation_time, 3) == round(expected.report_generation_time, 3)
     assert actual.nb_threads == expected.nb_threads
-    assert len(actual.suites) == len(expected.suites)
+    assert len(actual.get_suites()) == len(expected.get_suites())
 
     assert_hook_data(actual.test_session_setup, expected.test_session_setup)
 
-    for actual_suite, expected_suite in zip(actual.suites, expected.suites):
+    for actual_suite, expected_suite in zip(actual.get_suites(), expected.get_suites()):
         assert_suite_data(actual_suite, expected_suite)
 
     assert_hook_data(actual.test_session_teardown, expected.test_session_teardown)
@@ -260,8 +260,8 @@ def assert_report_from_suites(report, suite_classes):
     assert report.start_time is not None
     assert report.end_time is not None
     assert report.report_generation_time is not None
-    assert len(report.suites) == len(suite_classes)
-    for suite_data, suite_class in zip(report.suites, suite_classes):
+    assert len(report.get_suites()) == len(suite_classes)
+    for suite_data, suite_class in zip(report.get_suites(), suite_classes):
         suite = load_suite_from_class(suite_class)
         assert_suite_data_from_suite(suite_data, suite)
 

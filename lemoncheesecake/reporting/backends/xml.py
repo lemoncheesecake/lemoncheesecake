@@ -191,7 +191,7 @@ def serialize_report_as_tree(report):
     if report.test_session_setup:
         _serialize_hook_data(report.test_session_setup, make_xml_child(xml, "test-session-setup"))
 
-    for suite in report.suites:
+    for suite in report.get_suites():
         suite_node = _serialize_suite_data(suite)
         xml.append(suite_node)
 

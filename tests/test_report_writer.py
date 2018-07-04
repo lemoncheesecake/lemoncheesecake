@@ -7,20 +7,18 @@ Created on Nov 1, 2016
 '''
 
 import os.path
-import threading
 import time
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.testtree import find_test, find_suite
-from lemoncheesecake.exceptions import ProgrammingError
 
 from helpers.runner import run_suite_class, run_suite_classes
 from helpers.report import assert_report_from_suite, assert_report_from_suites, get_last_test
 
 
 def _get_suite(report, suite_path=None):
-    return find_suite(report.suites, suite_path) if suite_path is not None else report.suites[0]
+    return report.get_suite(suite_path) if suite_path else report.get_suites()[0]
 
 
 def _get_suite_setup(report, suite_path=None):
@@ -218,7 +216,7 @@ def test_all_types_of_logs():
 
     report = run_suite_class(mysuite)
 
-    test = find_test(report.suites, "mysuite.test_1")
+    test = report.get_test("mysuite.test_1")
     assert test.status == "passed"
     step = test.steps[0]
     assert step.entries[0].level == "debug"
@@ -227,7 +225,7 @@ def test_all_types_of_logs():
     assert step.entries[1].message == "some info message"
     assert step.entries[2].level == "warn"
 
-    test = find_test(report.suites, "mysuite.test_2")
+    test = report.get_test("mysuite.test_2")
     assert test.status == "failed"
     step = test.steps[0]
     assert step.entries[0].message == "some error message"

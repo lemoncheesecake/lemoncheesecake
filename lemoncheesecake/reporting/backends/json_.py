@@ -115,7 +115,7 @@ def serialize_report_into_json(report):
     if report.test_session_setup:
         serialized["test_session_setup"] = _serialize_hook_data(report.test_session_setup)
 
-    serialized["suites"] = [_serialize_suite_data(s) for s in report.suites]
+    serialized["suites"] = [_serialize_suite_data(s) for s in report.get_suites()]
 
     if report.test_session_teardown:
         serialized["test_session_teardown"] = _serialize_hook_data(report.test_session_teardown)

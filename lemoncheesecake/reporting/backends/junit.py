@@ -86,7 +86,7 @@ def serialize_report_as_tree(report):
     if report.end_time is not None:
         set_node_attr(junit_report_testsuites, "time", format_duration(report.end_time - report.start_time))
     
-    for suite in report.suites:
+    for suite in report.get_suites():
         junit_testsuites = _serialize_suite_data(suite)
         for junit_testsuite in junit_testsuites:
             junit_report_testsuites.append(junit_testsuite)

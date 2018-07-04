@@ -269,7 +269,7 @@ class Report:
         self.info = []
         self.test_session_setup = None
         self.test_session_teardown = None
-        self.suites = []
+        self._suites = []
         self.start_time = None
         self.end_time = None
         self.report_generation_time = None
@@ -292,16 +292,16 @@ class Report:
         self.info.append((name, value))
     
     def add_suite(self, suite):
-        self.suites.append(suite)
+        self._suites.append(suite)
     
     def get_suites(self):
-        return sorted(self.suites, key=lambda s: s.rank)
+        return sorted(self._suites, key=lambda s: s.rank)
 
     def get_suite(self, hierarchy):
-        return find_suite(self.suites, hierarchy)
+        return find_suite(self._suites, hierarchy)
 
     def get_test(self, hierarchy):
-        return find_test(self.suites, hierarchy)
+        return find_test(self._suites, hierarchy)
 
     def get(self, location):
         if location.node_type == TreeLocation.TEST_SESSION_SETUP:
@@ -356,10 +356,10 @@ class Report:
         return serialized
 
     def all_suites(self):
-        return flatten_suites(self.suites)
+        return flatten_suites(self._suites)
 
     def all_tests(self):
-        return flatten_tests(self.suites)
+        return flatten_tests(self._suites)
 
     def all_results(self):
         if self.test_session_setup:
