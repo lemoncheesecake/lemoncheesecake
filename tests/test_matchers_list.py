@@ -4,7 +4,7 @@ from lemoncheesecake.matching.matchers import *
 
 
 def test_has_item_success():
-    result = assert_match_success(has_item(greater_than(2)), [1, 3], "3")
+    result = assert_match_success(has_item(greater_than(2)), [1, 3], "index 1")
     assert result.index == 1
     assert result.item == 3
 

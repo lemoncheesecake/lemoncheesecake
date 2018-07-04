@@ -17,8 +17,8 @@ class HasItemMatchResult(MatchResult):
         self.index = index
 
     @classmethod
-    def success(cls, description, index, item):
-        return cls(True, description, index, item)
+    def success(cls, index, item):
+        return cls(True, "found matching item at index %d" % index, index, item)
 
     @classmethod
     def failure(cls):
@@ -36,7 +36,7 @@ class HasItem(MatchExpected):
         for index, item in enumerate(actual):
             result = self.expected.matches(item)
             if result.is_success():
-                return HasItemMatchResult.success(result.description, index, item)
+                return HasItemMatchResult.success(index, item)
         return HasItemMatchResult.failure()
 
 
