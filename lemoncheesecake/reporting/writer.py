@@ -144,11 +144,7 @@ class ReportWriter:
     def on_test_start(self, event):
         test = event.test
 
-        test_data = TestData(test.name, test.description)
-        test_data.tags.extend(test.tags)
-        test_data.properties.update(test.properties)
-        test_data.links.extend(test.links)
-        test_data.rank = test.rank
+        test_data = TestData.from_test(test)
         test_data.start_time = event.time
 
         suite_data = self._get_suite_data(event.test.parent_suite)
@@ -162,10 +158,7 @@ class ReportWriter:
         test_data.end_time = event.time
 
     def _bypass_test(self, test, status, status_details, time):
-        test_data = TestData(test.name, test.description)
-        test_data.tags.extend(test.tags)
-        test_data.properties.update(test.properties)
-        test_data.links.extend(test.links)
+        test_data = TestData.from_test(test)
         test_data.end_time = test_data.start_time = time
         test_data.status = status
         test_data.status_details = status_details

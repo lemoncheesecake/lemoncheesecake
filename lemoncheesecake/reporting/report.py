@@ -132,6 +132,15 @@ class TestData(BaseTest, ResultData):
         # non-serialized attributes (only set in-memory during test execution)
         self.rank = 0
 
+    @classmethod
+    def from_test(cls, test):
+        test_data = cls(test.name, test.description)
+        test_data.tags.extend(test.tags)
+        test_data.properties.update(test.properties)
+        test_data.links.extend(test.links)
+        test_data.rank = test.rank
+        return test_data
+
 
 class HookData(ResultData):
     def __init__(self):
