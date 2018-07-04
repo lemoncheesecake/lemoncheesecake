@@ -1,3 +1,10 @@
+# 0.19.4 (2018-07-05)
+
+- **reporting**: fix unordered tests in suite when test's status is disabled or skipped
+- **reporting**: fix unordered top suites
+- **matchers**: has_item: in matcher details, display the index of the matching element instead of the sub matcher 
+  details
+
 # 0.19.3 (2018-06-25)
 
 - **API**: the `MatchResult` class now implements `__bool__` (and `__nonzero__`) method and then can be used in boolean operations
