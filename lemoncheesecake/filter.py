@@ -63,7 +63,7 @@ class Filter(object):
     def is_test_disabled(self, test):
         raise NotImplemented()
 
-    def match_test(self, test, suite):
+    def match_test(self, test):
         raise NotImplemented()
 
 
@@ -85,7 +85,7 @@ class BaseFilter(Filter):
     def is_test_disabled(self, test):
         return test.is_disabled()
 
-    def match_test(self, test, suite):
+    def match_test(self, test):
         funcs = [
             lambda: self.is_test_disabled(test) if self.disabled else True,
             lambda: not self.is_test_disabled(test) if self.enabled else True,
@@ -116,8 +116,8 @@ class ReportFilter(RunFilter):
     def is_test_disabled(self, test):
         return test.status == "disabled"
 
-    def match_test(self, test, suite):
-        if not RunFilter.match_test(self, test, suite):
+    def match_test(self, test):
+        if not RunFilter.match_test(self, test):
             return False
 
         if len(self.statuses) == 0:
@@ -136,7 +136,7 @@ class FromTestsFilter(Filter):
     def is_test_disabled(self, test):
         return test.status == "disabled"
 
-    def match_test(self, test, suite):
+    def match_test(self, test):
         return test.path in self.tests
 
 
@@ -144,7 +144,7 @@ def filter_suite(suite, filtr):
     filtered_suite = suite.pull_node()
 
     for test in suite.get_tests():
-        if filtr.match_test(test, suite):
+        if filtr.match_test(test):
             filtered_suite.add_test(test.pull_node())
 
     for filtered_sub_suite in filter_suites(suite.get_suites(), filtr):

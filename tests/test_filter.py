@@ -901,7 +901,7 @@ def test_run_filter_from_report(tmpdir):
     add_run_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=["--from-report", tmpdir.strpath])
     filtr = make_report_filter(cli_args)
-    assert filtr.match_test(suite.get_tests()[0], suite)
+    assert filtr.match_test(suite.get_tests()[0])
 
 
 # very simple test that at least checks that add_report_filter_cli_args and make_report_filter
