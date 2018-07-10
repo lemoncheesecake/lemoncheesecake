@@ -3,10 +3,12 @@ import argparse
 import lemoncheesecake.api as lcc
 from lemoncheesecake.filter import RunFilter, ReportFilter, filter_suites, \
     add_report_filter_cli_args, add_run_filter_cli_args, make_report_filter, make_run_filter
-from lemoncheesecake.suite import load_suites_from_classes
+from lemoncheesecake.suite import load_suites_from_classes, load_suite_from_class
 from lemoncheesecake.testtree import flatten_tests
+from lemoncheesecake.reporting.backends.json_ import JsonBackend
 
 from helpers.testtreemockup import suite_mockup, tst_mockup, make_suite_data_from_mockup
+from helpers.runner import run_suite
 
 
 def _test_filter(suites, filtr, expected_test_paths):
@@ -882,6 +884,24 @@ def test_run_filter_handling():
     cli_args = cli_parser.parse_args(args=[])
     filtr = make_run_filter(cli_args)
     assert filtr.is_empty()
+
+
+def test_run_filter_from_report(tmpdir):
+    @lcc.suite("mysuite")
+    class mysuite:
+        @lcc.test("mytest")
+        def mytest(self):
+            pass
+
+    suite = load_suite_from_class(mysuite)
+
+    run_suite(suite, backends=[JsonBackend()], tmpdir=tmpdir)
+
+    cli_parser = argparse.ArgumentParser()
+    add_run_filter_cli_args(cli_parser)
+    cli_args = cli_parser.parse_args(args=["--from-report", tmpdir.strpath])
+    filtr = make_report_filter(cli_args)
+    assert filtr.match_test(suite.get_tests()[0], suite)
 
 
 # very simple test that at least checks that add_report_filter_cli_args and make_report_filter

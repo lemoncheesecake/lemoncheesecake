@@ -258,7 +258,7 @@ def _make_report_filter(cli_args):
 def _make_from_report_filter(cli_args):
     report = load_report(cli_args.from_report or DEFAULT_REPORT_DIR_NAME)
     filtr = _make_report_filter(cli_args)
-    suites = filter_suites(report.suites, filtr)
+    suites = filter_suites(report.get_suites(), filtr)
     return FromTestsFilter(flatten_tests(suites))
 
 
