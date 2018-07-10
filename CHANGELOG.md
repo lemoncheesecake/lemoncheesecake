@@ -1,3 +1,7 @@
+# 0.19.5 (2018-07-10)
+
+- **cli**: fix broken `--from-report` argument handling (regression introduced in 0.19.4)
+
 # 0.19.4 (2018-07-05)
 
 - **reporting**: fix unordered tests in suite when test's status is disabled or skipped
