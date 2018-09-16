@@ -161,8 +161,8 @@ def test_setup_test():
 
     @lcc.suite("MySuite")
     class MySuite:
-        def setup_test(self, test_name):
-            marker.append("ok")
+        def setup_test(self, test):
+            marker.append(test.name)
 
         @lcc.test("Some test")
         def sometest(self):
@@ -170,7 +170,7 @@ def test_setup_test():
 
     run_suite_class(MySuite)
 
-    assert marker
+    assert marker == ["sometest"]
 
 
 def test_teardown_test():
@@ -178,8 +178,8 @@ def test_teardown_test():
 
     @lcc.suite("MySuite")
     class MySuite:
-        def teardown_test(self, test_name):
-            marker.append("ok")
+        def teardown_test(self, test):
+            marker.append(test.name)
 
         @lcc.test("Some test")
         def sometest(self):
@@ -187,7 +187,7 @@ def test_teardown_test():
 
     run_suite_class(MySuite)
 
-    assert marker
+    assert marker == ["sometest"]
 
 
 def test_setup_suite():
@@ -229,15 +229,15 @@ def test_setup_test_error():
 
     @lcc.suite("MySuite")
     class MySuite:
-        def setup_test(self, test_name):
+        def setup_test(self, test):
             1 / 0
 
         @lcc.test("Some test")
         def sometest(self):
             pass
 
-        def teardown_test(self, test_name):
-            marker.append(test_name)
+        def teardown_test(self, test):
+            marker.append(test)
 
     report = run_suite_class(MySuite)
 
@@ -262,7 +262,7 @@ def test_setup_test_error_in_fixture():
 def test_teardown_test_error():
     @lcc.suite("MySuite")
     class MySuite:
-        def teardown_test(self, test_name):
+        def teardown_test(self, test):
             1 / 0
 
         @lcc.test("Some test")

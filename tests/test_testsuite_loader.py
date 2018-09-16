@@ -330,17 +330,21 @@ def test_load_suite_from_class_with_hooks():
         def teardown_suite(self):
             return 2
 
-        def setup_test(self, test_name):
+        def setup_test(self, test):
             return 3
 
-        def teardown_test(self, test_name):
+        def teardown_test(self, test):
             return 4
+
+        @lcc.test("some test")
+        def sometest(self):
+            pass
 
     suite = load_suite_from_class(Suite)
     assert suite.get_hook("setup_suite")() == 1
     assert suite.get_hook("teardown_suite")() == 2
-    assert suite.get_hook("setup_test")("dummy") == 3
-    assert suite.get_hook("teardown_test")("dummy") == 4
+    assert suite.get_hook("setup_test")(suite.get_tests()[0]) == 3
+    assert suite.get_hook("teardown_test")(suite.get_tests()[0]) == 4
 
 
 def test_load_suite_from_class_with_fixture_dependencies():
@@ -639,10 +643,10 @@ def setup_suite():
 def teardown_suite():
     return 2
 
-def setup_test(test_name):
+def setup_test(test):
     return 3
 
-def teardown_test(test_name):
+def teardown_test(test):
     return 4
 
 @lcc.test('My Test')
@@ -652,8 +656,8 @@ def mytest():
     suite = load_suite_from_file(file.strpath)
     assert suite.get_hook("setup_suite")() == 1
     assert suite.get_hook("teardown_suite")() == 2
-    assert suite.get_hook("setup_test")("dummy") == 3
-    assert suite.get_hook("teardown_test")("dummy") == 4
+    assert suite.get_hook("setup_test")(suite.get_tests()[0]) == 3
+    assert suite.get_hook("teardown_test")(suite.get_tests()[0]) == 4
 
 
 def test_load_suites_from_directory_with_suite_and_sub_suite(tmpdir):

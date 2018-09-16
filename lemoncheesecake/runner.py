@@ -133,8 +133,8 @@ class TestTask(BaseTask):
         setup_teardown_funcs = list()
 
         setup_teardown_funcs.append([
-            (lambda: suite.get_hook("setup_test")(self.test.name)) if suite.has_hook("setup_test") else None,
-            (lambda: suite.get_hook("teardown_test")(self.test.name)) if suite.has_hook("teardown_test") else None
+            (lambda: suite.get_hook("setup_test")(self.test)) if suite.has_hook("setup_test") else None,
+            (lambda: suite.get_hook("teardown_test")(self.test)) if suite.has_hook("teardown_test") else None
         ])
         scheduled_fixtures = context.fixture_registry.get_fixtures_scheduled_for_test(
             self.test, self.suite_scheduled_fixtures

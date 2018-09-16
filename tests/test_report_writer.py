@@ -384,7 +384,7 @@ def test_default_step():
 def test_step_after_test_setup():
     @lcc.suite("mysuite")
     class mysuite:
-        def setup_test(self, test_name):
+        def setup_test(self, test):
             lcc.log_info("in test setup")
 
         @lcc.test("Some test")
