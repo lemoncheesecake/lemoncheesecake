@@ -132,10 +132,20 @@ class TestTask(BaseTask):
         test_setup_error = False
         setup_teardown_funcs = list()
 
-        setup_teardown_funcs.append([
-            (lambda: suite.get_hook("setup_test")(self.test)) if suite.has_hook("setup_test") else None,
-            (lambda: suite.get_hook("teardown_test")(self.test)) if suite.has_hook("teardown_test") else None
-        ])
+        if suite.has_hook("setup_test"):
+            def setup_test_wrapper():
+                suite.get_hook("setup_test")(self.test)
+        else:
+            setup_test_wrapper = None
+
+        if suite.has_hook("teardown_test"):
+            def teardown_test_wrapper():
+                status_so_far = "passed" if is_location_successful(TreeLocation.in_test(self.test)) else "failed"
+                suite.get_hook("teardown_test")(self.test, status_so_far)
+        else:
+            teardown_test_wrapper = None
+
+        setup_teardown_funcs.append((setup_test_wrapper, teardown_test_wrapper))
         scheduled_fixtures = context.fixture_registry.get_fixtures_scheduled_for_test(
             self.test, self.suite_scheduled_fixtures
         )

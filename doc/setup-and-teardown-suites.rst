@@ -6,16 +6,16 @@ Setup and teardown methods
 Test suites provide several methods that give the user the possibility to execute code at particular steps
 of the suite execution:
 
-- ``setup_suite`` is called before executing the tests of the suite; if something wrong happens
+- ``setup_suite()`` is called before executing the tests of the suite; if something wrong happens
   (a call to ``log_error`` or a raised exception) then the whole suite execution is aborted
 
-- ``setup_test`` takes the test name as argument and is called before each test,
+- ``setup_test(test)`` takes the test instance as argument and is called before each test,
   if something wrong happen then the test execution is aborted
 
-- ``teardown_test`` is called after each test (it takes the test name as argument),
+- ``teardown_test(test, status)`` is called after each test, it takes the test instance as argument and the status of the test "so far",
   if something wrong happens the executed test will be mark as failed
 
-- ``teardown_suite`` is called after executing the tests of the suite
+- ``teardown_suite()`` is called after executing the tests of the suite
 
 .. note::
 
