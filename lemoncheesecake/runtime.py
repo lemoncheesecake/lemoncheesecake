@@ -99,15 +99,6 @@ class _Runtime:
             self._local.location, self._get_step(step), "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description
         ))
 
-    def save_attachment_file(self, filename, description, step=None):
-        with self.prepare_attachment(os.path.basename(filename), description, step=step) as report_attachment_path:
-            shutil.copy(filename, report_attachment_path)
-
-    def save_attachment_content(self, content, filename, description, binary_mode, step=None):
-        with self.prepare_attachment(filename, description, step=step) as report_attachment_path:
-            with open(report_attachment_path, "wb") as fh:
-                fh.write(content if binary_mode else content.encode("utf-8"))
-
     def get_fixture(self, name):
         if not self.scheduled_fixtures.has_fixture(name):
             raise ProgrammingError("Fixture '%s' either does not exist or don't have a prerun_session scope" % name)
@@ -195,14 +186,17 @@ def save_attachment_file(filename, description=None, step=None):
     Save an attachment using an existing file (identified by filename) and an optional
     description. The given file will be copied.
     """
-    get_runtime().save_attachment_file(filename, description or filename, step=step)
+    with prepare_attachment(os.path.basename(filename), description, step=step) as report_attachment_path:
+        shutil.copy(filename, report_attachment_path)
 
 
 def save_attachment_content(content, filename, description=None, binary_mode=False, step=None):
     """
     Save a given content as attachment using pseudo filename and optional description.
     """
-    get_runtime().save_attachment_content(content, filename, description or filename, binary_mode, step=step)
+    with prepare_attachment(filename, description, step=step) as report_attachment_path:
+        with open(report_attachment_path, "wb") as fh:
+            fh.write(content if binary_mode else content.encode("utf-8"))
 
 
 def log_url(url, description=None, step=None):
