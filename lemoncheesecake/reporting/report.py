@@ -76,9 +76,10 @@ class CheckData:
 
 
 class AttachmentData:
-    def __init__(self, description, filename):
+    def __init__(self, description, filename, as_image):
         self.description = description
         self.filename = filename
+        self.as_image = as_image
 
     def is_successful(self):
         return True

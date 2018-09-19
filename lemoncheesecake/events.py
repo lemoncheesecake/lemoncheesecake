@@ -335,11 +335,12 @@ class CheckEvent(SteppedEvent):
 
 @event
 class LogAttachmentEvent(SteppedEvent):
-    def __init__(self, location, step, path, filename, description):
+    def __init__(self, location, step, path, filename, description, as_image):
         super(LogAttachmentEvent, self).__init__(location, step)
         self.attachment_path = path
         self.attachment_filename = filename
         self.attachment_description = description
+        self.as_image = as_image
 
     def __str__(self):
         return "<Event type='%s' filename='%s' description='%s'>" % (

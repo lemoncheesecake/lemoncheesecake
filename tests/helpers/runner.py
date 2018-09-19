@@ -142,14 +142,14 @@ def run_suite_class(suite_class, filter=None, fixtures=None, backends=[], tmpdir
     return run_suite(suite, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
 
 
-def run_func_in_test(callback):
+def run_func_in_test(callback, tmpdir=None):
     @lcc.suite("My Suite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             callback()
 
-    return run_suite_class(MySuite)
+    return run_suite_class(MySuite, tmpdir=tmpdir)
 
 
 def dump_report(report):

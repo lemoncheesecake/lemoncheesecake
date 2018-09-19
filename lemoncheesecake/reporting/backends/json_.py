@@ -46,7 +46,7 @@ def _serialize_steps(steps):
             if isinstance(entry, LogData):
                 entry = _dict("type", "log", "level", entry.level, "message", entry.message, "time", _serialize_time(entry.time))
             elif isinstance(entry, AttachmentData):
-                entry = _dict("type", "attachment", "description", entry.description, "filename", entry.filename)
+                entry = _dict("type", "attachment", "description", entry.description, "filename", entry.filename, "as_image", entry.as_image)
             elif isinstance(entry, UrlData):
                 entry = _dict("type", "url", "description", entry.description, "url", entry.url)
             else:  # TestCheck
@@ -142,7 +142,7 @@ def _unserialize_step_data(js):
         if js_entry["type"] == "log":
             entry = LogData(js_entry["level"], js_entry["message"], parse_timestamp(js_entry["time"]))
         elif js_entry["type"] == "attachment":
-            entry = AttachmentData(js_entry["description"], js_entry["filename"])
+            entry = AttachmentData(js_entry["description"], js_entry["filename"], js_entry["as_image"])
         elif js_entry["type"] == "url":
             entry = UrlData(js_entry["description"], js_entry["url"])
         elif js_entry["type"] == "check":
