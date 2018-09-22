@@ -15,7 +15,7 @@ try:
 except ImportError:
     pass
 else:
-    from helpers.reporttests import *
+    from helpers.reporttests import *  # import the actual tests against XML serialization
 
     @pytest.fixture(scope="function")
     def backend():
