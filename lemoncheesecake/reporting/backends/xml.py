@@ -319,7 +319,7 @@ def load_report_from_file(filename):
     report.report_generation_time = _unserialize_datetime(root.attrib["generation-time"]) if "generation-time" in root.attrib else None
     report.nb_threads = int(root.attrib["nb-threads"])
     report.title = root.xpath("title")[0].text
-    report.info = [(node.attrib["name"], node.text) for node in root.xpath("info")]
+    report.info = [[node.attrib["name"], node.text] for node in root.xpath("info")]
 
     test_session_setup = xml.xpath("test-session-setup")
     test_session_setup = test_session_setup[0] if len(test_session_setup) else None
