@@ -61,7 +61,7 @@ Within a test, you also have the possibility to attach files to the report:
 
 .. code-block:: python
 
-    lcc.save_attachment_file(filename, "The application screenshot")
+    lcc.save_attachment_file(filename, "file.pdf")
 
 The file will be copied into the report dir and is prefixed by a unique value, making it possible to save
 multiple times an attachment with the same base file name. The attachment description is optional.
@@ -72,12 +72,23 @@ If the file you want to save is loaded in memory:
 
 .. code-block:: python
 
-    lcc.save_attachment_content(image_data, "screenshot.png", "The application screenshot")
+    lcc.save_attachment_content(data, "file.pdf", "PDF file")
 
 If you need the effective file path to write into:
 
 .. code-block:: python
 
-    with lcc.prepare_attachment("screenshot.png", "The application screenshot") as filename:
+    with lcc.prepare_attachment("file.pdf", "PDF file") as filename:
         with open(filename, "w") as fh:
             fh.write(image_data)
+
+Each of these three functions as a corresponding function for image attachment:
+
+- ``save_image_file``
+
+- ``save_attachment_content``
+
+- ``prepare_image_attachment``
+
+In that case, the attached file will be considered as an image
+and will be displayed inline in the HTML report.
