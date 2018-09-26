@@ -1,3 +1,15 @@
+# 0.19.6 (2018-09-27)
+
+- **API & HTML report**: three new `lemoncheesecake.api` functions are available: `prepare_image_attachment`,
+  `save_image_file` and `save_image_content` that allow to save an image as attachment in the report and to
+  display the image inline in the HTML report
+
+## API breaking changes
+
+- **API**: the `setup_test` and `teardown_test` suite methods now take the test instance as argument instead
+  of the test name
+- **API**: the `teardown_test` suite method now takes a second argument that represents the status of the test "so far"
+
 # 0.19.5 (2018-07-10)
 
 - **cli**: fix broken `--from-report` argument handling (regression introduced in 0.19.4)
