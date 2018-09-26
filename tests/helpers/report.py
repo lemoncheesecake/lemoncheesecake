@@ -5,8 +5,11 @@ Created on Sep 30, 2016
 '''
 
 
+import os.path
+
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake import reporting
+from lemoncheesecake.runtime import get_runtime
 
 
 ###
@@ -58,8 +61,19 @@ def assert_last_test_status(report, status):
 
 def get_last_logged_check(report):
     test = get_last_test(report)
-    check = next(entry for entry in reversed(test.steps[-1].entries) if isinstance(entry, reporting.CheckData))
-    return check
+    return next(entry for entry in reversed(test.steps[-1].entries) if isinstance(entry, reporting.CheckData))
+
+
+def get_last_attachment(report):
+    test = get_last_test(report)
+    return next(entry for entry in reversed(test.steps[-1].entries) if isinstance(entry, reporting.AttachmentData))
+
+
+def assert_attachment(attachment, filename, description, as_image, content, file_reader):
+    assert attachment.filename.endswith(filename)
+    assert attachment.description == description
+    assert attachment.as_image is as_image
+    assert file_reader(os.path.join(get_runtime().report_dir, attachment.filename)) == content
 
 
 def get_last_test_checks(report):
@@ -117,6 +131,7 @@ def assert_log_data(actual, expected):
 def assert_attachment_data(actual, expected):
     assert actual.description == expected.description
     assert actual.filename == expected.filename
+    assert actual.as_image == expected.as_image
 
 
 def assert_url_data(actual, expected):

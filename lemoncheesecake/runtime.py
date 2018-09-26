@@ -21,6 +21,7 @@ from lemoncheesecake.exceptions import ProgrammingError
 __all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "log_url", "log_check", \
     "set_step", "end_step", "detached_step", "Thread", \
     "prepare_attachment", "save_attachment_file", "save_attachment_content", \
+    "prepare_image_attachment", "save_image_file", "save_image_content", \
     "add_report_info", "get_fixture"
 
 
@@ -86,7 +87,7 @@ class _Runtime:
         events.fire(events.LogUrlEvent(self._local.location, self._get_step(step), url, description))
 
     @contextmanager
-    def prepare_attachment(self, filename, description, step=None):
+    def prepare_attachment(self, filename, description, as_image=False, step=None):
         with self._attachment_lock:
             attachment_filename = "%04d_%s" % (self.attachment_count + 1, filename)
             self.attachment_count += 1
@@ -96,7 +97,8 @@ class _Runtime:
         yield os.path.join(self.attachments_dir, attachment_filename)
 
         events.fire(events.LogAttachmentEvent(
-            self._local.location, self._get_step(step), "%s/%s" % (ATTACHEMENT_DIR, attachment_filename), filename, description
+            self._local.location, self._get_step(step), "%s/%s" % (ATTACHEMENT_DIR, attachment_filename),
+            filename, description, as_image
         ))
 
     def get_fixture(self, name):
@@ -172,13 +174,31 @@ def log_check(description, outcome, details=None, step=None):
     get_runtime().log_check(description, outcome, details, step=step)
 
 
+def _prepare_attachment(filename, description=None, as_image=False, step=None):
+    return get_runtime().prepare_attachment(filename, description or filename, as_image=as_image, step=step)
+
+
 def prepare_attachment(filename, description=None, step=None):
     """
     Prepare a attachment using a pseudo filename and an optional description.
     The function returns the real filename on disk that will be used by the caller
     to write the attachment content.
     """
-    return get_runtime().prepare_attachment(filename, description or filename, step=step)
+    return _prepare_attachment(filename, description, step=step)
+
+
+def prepare_image_attachment(filename, description=None, step=None):
+    """
+    Prepare an image attachment using a pseudo filename and an optional description.
+    The function returns the real filename on disk that will be used by the caller
+    to write the attachment content.
+    """
+    return _prepare_attachment(filename, description, as_image=True, step=step)
+
+
+def _save_attachment_file(filename, description=None, as_image=False, step=None):
+    with _prepare_attachment(os.path.basename(filename), description, as_image=as_image, step=step) as report_attachment_path:
+        shutil.copy(filename, report_attachment_path)
 
 
 def save_attachment_file(filename, description=None, step=None):
@@ -186,17 +206,35 @@ def save_attachment_file(filename, description=None, step=None):
     Save an attachment using an existing file (identified by filename) and an optional
     description. The given file will be copied.
     """
-    with prepare_attachment(os.path.basename(filename), description, step=step) as report_attachment_path:
-        shutil.copy(filename, report_attachment_path)
+    return _save_attachment_file(filename, description, step=step)
+
+
+def save_image_file(filename, description=None, step=None):
+    """
+    Save an image using an existing file (identified by filename) and an optional
+    description. The given file will be copied.
+    """
+    return _save_attachment_file(filename, description, as_image=True, step=step)
+
+
+def _save_attachment_content(content, filename, description=None, as_image=False, binary_mode=False, step=None):
+    with _prepare_attachment(filename, description, as_image=as_image, step=step) as report_attachment_path:
+        with open(report_attachment_path, "wb") as fh:
+            fh.write(content if binary_mode else content.encode("utf-8"))
 
 
 def save_attachment_content(content, filename, description=None, binary_mode=False, step=None):
     """
     Save a given content as attachment using pseudo filename and optional description.
     """
-    with prepare_attachment(filename, description, step=step) as report_attachment_path:
-        with open(report_attachment_path, "wb") as fh:
-            fh.write(content if binary_mode else content.encode("utf-8"))
+    return _save_attachment_content(content, filename, description, binary_mode=binary_mode, as_image=False, step=step)
+
+
+def save_image_content(content, filename, description=None, step=None):
+    """
+    Save a given image content as attachment using pseudo filename and optional description.
+    """
+    return _save_attachment_content(content, filename, description, binary_mode=True, as_image=True, step=step)
 
 
 def log_url(url, description=None, step=None):

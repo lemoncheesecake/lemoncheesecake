@@ -19,7 +19,8 @@ declare interface CheckData {
 declare interface AttachmentData {
     type: "attachment",
     filename: string,
-    description: string
+    description: string,
+    as_image: boolean
 }
 
 declare interface UrlData {

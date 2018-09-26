@@ -233,6 +233,16 @@ def test_attachment(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 
+def test_image(backend, tmpdir):
+    @lcc.suite("MySuite")
+    class MySuite:
+        @lcc.test("Some test")
+        def sometest(self):
+            lcc.save_image_content("foobar", "foobar.txt")  # not actual image content, but it does not matter here
+
+    do_test_serialization(MySuite, backend, tmpdir)
+
+
 def test_log_url(backend, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:

@@ -6,15 +6,20 @@ Created on Nov 1, 2016
 @author: nicolas
 '''
 
-import os.path
+import os.path as osp
 import time
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.runtime import get_runtime
-from lemoncheesecake.testtree import find_test, find_suite
+from lemoncheesecake.utils import IS_PYTHON2
 
-from helpers.runner import run_suite_class, run_suite_classes
-from helpers.report import assert_report_from_suite, assert_report_from_suites, get_last_test
+from helpers.runner import run_suite_class, run_suite_classes, run_func_in_test
+from helpers.report import assert_report_from_suite, assert_report_from_suites, get_last_test, get_last_attachment, \
+    assert_attachment
+
+SAMPLE_IMAGE_PATH = osp.join(osp.dirname(__file__), osp.pardir, "misc", "report-screenshot.png")
+
+with open(SAMPLE_IMAGE_PATH, "rb") as fh:
+    SAMPLE_IMAGE_CONTENT = fh.read()
 
 
 def _get_suite(report, suite_path=None):
@@ -29,6 +34,16 @@ def _get_suite_setup(report, suite_path=None):
 def _get_suite_teardown(report, suite_path=None):
     suite = _get_suite(report, suite_path)
     return suite.suite_teardown
+
+
+def make_file_reader(encoding=None, binary=False):
+    def reader(path):
+        with open(path, "rb" if binary else "r") as fh:
+            content = fh.read()
+        if encoding and IS_PYTHON2:
+            content = content.decode(encoding)
+        return content
+    return reader
 
 
 def test_simple_test():
@@ -404,77 +419,89 @@ def test_step_after_test_setup():
 
 
 def test_prepare_attachment(tmpdir):
-    @lcc.suite("MySuite")
-    class mysuite:
-        @lcc.test("Some test")
-        def sometest(self):
-            with lcc.prepare_attachment("foobar.txt", "some description") as filename:
-                with open(filename, "w") as fh:
-                    fh.write("some content")
+    def do():
+        with lcc.prepare_attachment("foobar.txt", "some description") as filename:
+            with open(filename, "w") as fh:
+                fh.write("some content")
 
-    report = run_suite_class(mysuite, tmpdir=tmpdir)
+    report = run_func_in_test(do, tmpdir=tmpdir)
 
-    test = get_last_test(report)
-    assert test.steps[0].entries[0].filename.endswith("foobar.txt")
-    assert test.steps[0].entries[0].description == "some description"
-    assert test.status == "passed"
-    with open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename)) as fh:
-        assert fh.read() == "some content"
+    assert_attachment(
+        get_last_attachment(report), "foobar.txt", "some description", False, "some content", make_file_reader()
+    )
+
+
+def test_prepare_image_attachment(tmpdir):
+    def do():
+        with lcc.prepare_image_attachment("foobar.png", "some description") as filename:
+            with open(filename, "wb") as fh:
+                fh.write(SAMPLE_IMAGE_CONTENT)
+
+    report = run_func_in_test(do, tmpdir=tmpdir)
+
+    assert_attachment(
+        get_last_attachment(report), "foobar.png", "some description", True, SAMPLE_IMAGE_CONTENT,
+        make_file_reader(binary=True)
+    )
 
 
 def test_save_attachment_file(tmpdir):
-    @lcc.suite("MySuite")
-    class mysuite:
-        @lcc.test("Some test")
-        def sometest(self):
-            filename = os.path.join(tmpdir.strpath, "somefile.txt")
-            with open(filename, "w") as fh:
-                fh.write("some other content")
-            lcc.save_attachment_file(filename, "some other file")
+    def do():
+        filename = osp.join(tmpdir.strpath, "somefile.txt")
+        with open(filename, "w") as fh:
+            fh.write("some other content")
+        lcc.save_attachment_file(filename, "some other file")
 
-    report = run_suite_class(mysuite, tmpdir=tmpdir.mkdir("report"))
+    report = run_func_in_test(do, tmpdir=tmpdir.mkdir("report"))
 
-    test = get_last_test(report)
-    assert test.steps[0].entries[0].filename.endswith("somefile.txt")
-    assert test.steps[0].entries[0].description == "some other file"
-    assert test.status == "passed"
-    with open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename)) as fh:
-        assert fh.read() == "some other content"
+    assert_attachment(
+        get_last_attachment(report), "somefile.txt", "some other file", False, "some other content", make_file_reader()
+    )
 
 
-def _test_save_attachment_content(tmpdir, file_name, file_content, encoding=None):
-    @lcc.suite("MySuite")
-    class mysuite:
-        @lcc.test("Some test")
-        def sometest(self):
-            lcc.save_attachment_content(file_content, file_name, binary_mode=not encoding)
+def test_save_image_file(tmpdir):
+    def do():
+        lcc.save_image_file(SAMPLE_IMAGE_PATH, "some other file")
 
-    report = run_suite_class(mysuite, tmpdir=tmpdir)
+    report = run_func_in_test(do, tmpdir=tmpdir.mkdir("report"))
 
-    test = get_last_test(report)
-    assert test.steps[0].entries[0].filename.endswith(file_name)
-    assert test.steps[0].entries[0].description == file_name
-    assert test.status == "passed"
-    with open(os.path.join(get_runtime().report_dir, test.steps[0].entries[0].filename), "rb") as fh:
-        actual_content = fh.read()
-    if encoding is not None:
-        actual_content = actual_content.decode(encoding)
-    assert actual_content == file_content
+    assert_attachment(
+        get_last_attachment(report), osp.basename(SAMPLE_IMAGE_PATH), "some other file", True, SAMPLE_IMAGE_CONTENT,
+        make_file_reader(binary=True)
+    )
+
+
+def _test_save_attachment_content(tmpdir, file_name, file_content, binary_mode, file_reader):
+    def do():
+        lcc.save_attachment_content(file_content, file_name, binary_mode=binary_mode)
+
+    report = run_func_in_test(do, tmpdir=tmpdir)
+
+    assert_attachment(get_last_attachment(report), file_name, file_name, False, file_content, file_reader)
 
 
 def test_save_attachment_text_ascii(tmpdir):
-    _test_save_attachment_content(tmpdir, "foobar.txt", "foobar", encoding="ascii")
+    _test_save_attachment_content(tmpdir, "foobar.txt", "foobar", False, make_file_reader())
 
 
 def test_save_attachment_text_utf8(tmpdir):
-    _test_save_attachment_content(tmpdir, "foobar.txt", u"éééçççààà", encoding="utf-8")
+    _test_save_attachment_content(tmpdir, "foobar.txt", u"éééçççààà", False, make_file_reader(encoding="utf-8"))
 
 
 def test_save_attachment_binary(tmpdir):
-    p = os.path
-    with open(p.join(p.dirname(__file__), p.pardir, "misc", "report-screenshot.png"), "rb") as fh:
-        content = fh.read()
-    _test_save_attachment_content(tmpdir, "foobar.png", content)
+    _test_save_attachment_content(tmpdir, "foobar.png", SAMPLE_IMAGE_CONTENT, True, make_file_reader(binary=True))
+
+
+def test_save_image_content(tmpdir):
+    def do():
+        lcc.save_image_content(SAMPLE_IMAGE_CONTENT, "somefile.png", "some file")
+
+    report = run_func_in_test(do, tmpdir=tmpdir)
+
+    assert_attachment(
+        get_last_attachment(report), "somefile.png", "some file", True, SAMPLE_IMAGE_CONTENT,
+        make_file_reader(binary=True)
+    )
 
 
 def test_log_url():
@@ -510,10 +537,7 @@ def test_unicode(tmpdir):
     assert u"éééààà" in step.entries[0].description
     assert "1" in step.entries[0].description
     assert step.entries[1].message == u"éééààà"
-    assert step.entries[2].filename.endswith(u"somefileààà")
-    assert step.entries[2].description == u"éééààà"
-    with open(os.path.join(get_runtime().report_dir, step.entries[2].filename)) as fh:
-        assert fh.read() == "A" * 1024
+    assert_attachment(step.entries[2], u"somefileààà", u"éééààà", False, "A" * 1024, make_file_reader(encoding="utf8"))
 
 
 def test_setup_suite_success():

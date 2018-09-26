@@ -83,6 +83,10 @@ def _serialize_outcome(outcome):
         return OUTCOME_NOT_AVAILABLE
 
 
+def _serialize_bool(value):
+    return "true" if value else "false"
+
+
 def _serialize_steps(steps, parent_node):
     for step in steps:
         step_node = make_xml_child(parent_node, "step", "description", step.description)
@@ -94,7 +98,10 @@ def _serialize_steps(steps, parent_node):
                 _add_time_attr(log_node, "time", entry.time)
                 log_node.text = entry.message
             elif isinstance(entry, AttachmentData):
-                attachment_node = make_xml_child(step_node, "attachment", "description", entry.description)
+                attachment_node = make_xml_child(
+                    step_node, "attachment", "description", entry.description,
+                    "as-image", _serialize_bool(entry.as_image)
+                )
                 attachment_node.text = entry.filename
             elif isinstance(entry, UrlData):
                 url_node = make_xml_child(step_node, "url", "description", entry.description)
@@ -231,6 +238,15 @@ def _unserialize_outcome(value):
         raise ProgrammingError("Unknown value '%s' for outcome" % value)
 
 
+def _unserialize_bool(value):
+    if value == "true":
+        return True
+    elif value == "false":
+        return False
+    else:
+        raise ProgrammingError("Invalid boolean representation: '%s'" % value)
+
+
 def _unserialize_step_data(xml):
     step = StepData(xml.attrib["description"])
     step.start_time = _unserialize_datetime(xml.attrib["start-time"])
@@ -239,7 +255,8 @@ def _unserialize_step_data(xml):
         if xml_entry.tag == "log":
             entry = LogData(xml_entry.attrib["level"], xml_entry.text, _unserialize_datetime(xml_entry.attrib["time"]))
         elif xml_entry.tag == "attachment":
-            entry = AttachmentData(xml_entry.attrib["description"], xml_entry.text)
+            entry = AttachmentData(xml_entry.attrib["description"], xml_entry.text,
+                                   _unserialize_bool(xml_entry.attrib["as-image"]))
         elif xml_entry.tag == "url":
             entry = UrlData(xml_entry.attrib["description"], xml_entry.text)
         elif xml_entry.tag == "check":
