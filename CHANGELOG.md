@@ -1,3 +1,8 @@
+# 0.19.7 (2018-09-28)
+
+- **HTML report**: fix regression introduced in the previous 0.19.6 version where raw attachments are displayed
+  as images and vice versa
+
 # 0.19.6 (2018-09-27)
 
 - **API & HTML report**: three new `lemoncheesecake.api` functions are available: `prepare_image_attachment`,
