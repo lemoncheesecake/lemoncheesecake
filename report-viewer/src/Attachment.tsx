@@ -11,9 +11,9 @@ class Attachment extends React.Component<Props, {}> {
         let attached_file;
 
         if (attachment.as_image) {
-            attached_file = <a href={attachment.filename} target="_blank">{attachment.description}</a>
-        } else {
             attached_file = <a href={attachment.filename} target="_blank"><img src={attachment.filename} title={attachment.description}/></a>
+        } else {
+            attached_file = <a href={attachment.filename} target="_blank">{attachment.description}</a>
         }
 
         return (
