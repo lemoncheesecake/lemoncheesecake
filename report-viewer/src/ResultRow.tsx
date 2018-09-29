@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {render_steps} from './Step';
+import { scroller } from 'react-scroll';
 
 let all_rows = {};
 
@@ -45,12 +46,15 @@ function get_text_class_from_test_status(status: Status | null) {
 }
 
 class ResultRow extends React.Component<Props, State> {
+    domRef: any;
+
     constructor() {
         super();
         this.state = {
             expanded: false
         };
         this.toggle = this.toggle.bind(this);
+        this.domRef = null;
     }
 
     isExpanded() {
@@ -74,6 +78,14 @@ class ResultRow extends React.Component<Props, State> {
         }
     }
 
+    scrollTo() {
+        scroller.scrollTo(this.props.id, {
+            duration: 1500,
+            delay: 100,
+            smooth: "easeInOutQuint",
+          });
+   }
+
     componentDidMount() {
         all_rows[this.props.id] = this;
     }
@@ -81,7 +93,7 @@ class ResultRow extends React.Component<Props, State> {
     render() {
         return (
             <tbody>
-                <tr id={this.props.id} className="test" key={this.props.id}>
+                <tr id={this.props.id} className="test" key={this.props.id} ref={(re) => { this.domRef = re }}>
                     <td className="test_status" title={this.props.status_details || ""}
                         style={this.props.steps.length > 0 ? {cursor: "pointer"} : undefined}
                         onClick={this.props.steps.length > 0 ? this.toggle : undefined}>
