@@ -1,3 +1,8 @@
+# 0.19.8 (2018-09-30)
+
+- **HTML report**: fix the goto-to-test feature through the anchor in the URL (it has been broken since 0.12.0 when
+  the HTML report has been rewritten using React) + add a smooth scroll effect
+
 # 0.19.7 (2018-09-28)
 
 - **HTML report**: fix regression introduced in the previous 0.19.6 version where raw attachments are displayed
