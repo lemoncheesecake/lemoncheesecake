@@ -67,6 +67,8 @@ class Report extends React.Component<ReportProps, {}> {
                 <h2>Statistics</h2>
                 <KeyValueTable rows={report.stats}/>
 
+                <p style={{textAlign: 'right'}}><a href="report.js" download="report.js">Download raw report data</a></p>
+
                 {report.test_session_setup &&
                     <ReportHook hook={report.test_session_setup} description="- Setup test session -" id="setup_test_session"/>}
 
