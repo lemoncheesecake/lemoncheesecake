@@ -8,6 +8,7 @@ from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError
 
 __all__ = ("MetadataPolicy",)
 
+
 class MetadataPolicy:
     def __init__(self):
         self._properties = {}
@@ -16,10 +17,10 @@ class MetadataPolicy:
         self._disallow_unknown_tags = False
 
     def has_constraints(self):
-        return len(self._properties) != 0 or len(self._tags) != 0 or self._disallow_unknown_properties or self._disallow_unknown_tags
+        return self._properties or self._tags or self._disallow_unknown_properties or self._disallow_unknown_tags
 
     def _get_rule_application(self, on_test, on_suite):
-        if on_test == None and on_suite == None:
+        if on_test is None and on_suite is None:
             return True, False
         if not on_test and not on_suite:
             raise ProgrammingError("either on_test or on_suite need to be True")
@@ -77,13 +78,14 @@ class MetadataPolicy:
         # check unknown properties
         if self._disallow_unknown_properties:
             for property_name in obj.properties.keys():
-                if not property_name in available_properties:
-                    help_msg = "available are %s" % ", ".join(available_properties.keys()) \
+                if property_name not in available_properties:
+                    help_msg = "available are %s" % ", ".join(map(repr, available_properties.keys())) \
                         if available_properties else "no property is available"
                     raise InvalidMetadataError(
                         "In %s '%s', the property '%s' is not supported (%s)" % (
-                        obj_type, obj.path, property_name, help_msg
-                    ))
+                            obj_type, obj.path, property_name, help_msg
+                        )
+                    )
 
         # check forbidden properties
         for property_name in obj.properties.keys():
@@ -96,32 +98,35 @@ class MetadataPolicy:
 
         # check required properties
         for required_property in filter(lambda p: available_properties[p]["required"], available_properties.keys()):
-            if not required_property in obj.properties.keys():
+            if required_property not in obj.properties.keys():
                 raise InvalidMetadataError(
                     "In %s '%s', the mandatory property '%s' is missing" % (
-                    obj_type, obj.path, required_property
-                ))
+                        obj_type, obj.path, required_property
+                    )
+                )
 
         # check properties allowed values
         for name, value in obj.properties.items():
             if name not in available_properties:
                 continue
-            if available_properties[name]["values"] and not value in available_properties[name]["values"]:
+            if available_properties[name]["values"] and value not in available_properties[name]["values"]:
                 raise InvalidMetadataError(
                     "In %s '%s', value '%s' of property '%s' is not among accepted values: %s" % (
-                    obj_type, obj.path, value, name, available_properties[name]["values"]
-                ))
+                        obj_type, obj.path, value, name, available_properties[name]["values"]
+                    )
+                )
 
         # check unknown tags
         if self._disallow_unknown_tags:
             for tag in obj.tags:
                 if tag not in available_tags.keys():
-                    help_msg = "available are %s" % ", ".join(available_tags.keys()) \
+                    help_msg = "available are %s" % ", ".join(map(repr, available_tags.keys())) \
                         if available_tags else "no property is available"
                     raise InvalidMetadataError(
                         "In %s '%s', the tag '%s' is not supported (%s)" % (
-                        obj_type, obj.path, tag, help_msg
-                    ))
+                            obj_type, obj.path, tag, help_msg
+                        )
+                    )
 
         # check forbidden tags
         for tag in obj.tags:
