@@ -5,6 +5,7 @@ Created on Sep 8, 2016
 '''
 
 from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError
+from lemoncheesecake.testtree import flatten_suites
 
 __all__ = ("MetadataPolicy",)
 
@@ -150,7 +151,7 @@ class MetadataPolicy:
             [tag_name for tag_name, t in self._tags.items() if not t["on_test"]]
         )
 
-    def check_suite_compliance(self, suite, recursive=True):
+    def check_suite_compliance(self, suite):
         """
         Check if the suite complies to the metadata policy.
         If recursive if set to True (which is the default), then suite tests and sub suites are also checked.
@@ -163,19 +164,14 @@ class MetadataPolicy:
             {tag_name: t for tag_name, t in self._tags.items() if t["on_suite"]},
             [tag_name for tag_name, t in self._tags.items() if not t["on_suite"]]
         )
-        if not recursive:
-            return
 
         for test in suite.get_tests():
             self.check_test_compliance(test)
-
-        for sub_suite in suite.get_suites():
-            self.check_suite_compliance(sub_suite, recursive=True)
 
     def check_suites_compliance(self, suites):
         """
         Check if the suites comply to the metadata policy.
         Raise InvalidMetadataError if not compliant.
         """
-        for suite in suites:
-            self.check_suite_compliance(suite, recursive=True)
+        for suite in flatten_suites(suites):
+            self.check_suite_compliance(suite)
