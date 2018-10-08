@@ -10,7 +10,8 @@ import difflib
 import json
 
 
-from lemoncheesecake.matching.base import MatchExpected, match_result, match_success, match_failure, got_value, to_be
+from lemoncheesecake.matching.base import MatchExpected, match_result, match_success, match_failure, got_value, to_be, \
+    serialize_value
 
 __all__ = (
     "starts_with", "ends_with", "contains_string", "match_pattern", "is_text", "is_json"
@@ -63,7 +64,11 @@ class MatchPattern(MatchExpected):
         return '%s "%s"' % ("matches pattern" if conjugate else "to match pattern", self.expected.pattern)
 
     def matches(self, actual):
-        return match_result(self.expected.search(actual) is not None, got_value(actual))
+        try:
+            match = self.expected.search(actual)
+        except TypeError:
+            return match_failure("Invalid value %s (%s)" % (repr(actual), type(actual)))
+        return match_result(match is not None, got_value(actual))
 
 
 def match_pattern(pattern):

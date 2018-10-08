@@ -48,6 +48,10 @@ def test_match_pattern_failure():
     assert_match_failure(match_pattern("^f"), "bar", "bar")
 
 
+def test_match_pattern_failure_invalid_type():
+    assert_match_failure(match_pattern("^f"), None, "Invalid value")
+
+
 def test_is_text_success():
     assert_match_success(is_text("foo\nbar"), "foo\nbar")
 
