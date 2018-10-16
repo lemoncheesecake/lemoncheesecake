@@ -262,14 +262,84 @@ def test_suite_rank_forced():
     assert suite.get_suites()[3].name == "D"
 
 
-def test_add_test_into_suite():
+def test_add_test_into_suite_with_function():
+    def func():
+        pass
+
     @lcc.suite("My Suite")
     class MySuite:
         def __init__(self):
-            add_test_into_suite(lcc.Test("mytest", "My Test", dummy_test_callback()), self)
+            add_test_into_suite(lcc.Test("mytest", "My Test", func), self)
 
     suite = load_suite_from_class(MySuite)
     assert len(suite.get_tests()) == 1
+
+
+def test_add_test_into_suite_with_function_and_fixture():
+     def func(fixt):
+         pass
+
+     @lcc.suite("My Suite")
+     class MySuite:
+         def __init__(self):
+             add_test_into_suite(lcc.Test("mytest", "My Test", func), self)
+
+     suite = load_suite_from_class(MySuite)
+     assert suite.get_tests()[0].get_fixtures() == ["fixt"]
+
+
+def test_add_test_into_suite_with_method():
+    @lcc.suite("My Suite")
+    class MySuite:
+        def __init__(self):
+            add_test_into_suite(lcc.Test("mytest", "My Test", self.func), self)
+
+        def func(self):
+            pass
+
+    suite = load_suite_from_class(MySuite)
+    assert len(suite.get_tests()) == 1
+
+
+def test_add_test_into_suite_with_method_and_fixture():
+     @lcc.suite("My Suite")
+     class MySuite:
+        def __init__(self):
+             add_test_into_suite(lcc.Test("mytest", "My Test", self.func), self)
+
+        def func(self, fixt):
+            pass
+
+     suite = load_suite_from_class(MySuite)
+     assert suite.get_tests()[0].get_fixtures() == ["fixt"]
+
+
+def test_add_test_into_suite_with_callable():
+    class SomeTest(object):
+        def __call__(self):
+            pass
+
+    @lcc.suite("My Suite")
+    class MySuite:
+        def __init__(self):
+            add_test_into_suite(lcc.Test("mytest", "My Test", SomeTest()), self)
+
+    suite = load_suite_from_class(MySuite)
+    assert len(suite.get_tests()) == 1
+
+
+def test_add_test_into_suite_with_callable_and_fixture():
+    class SomeTest(object):
+        def __call__(self, fixt):
+            pass
+
+    @lcc.suite("My Suite")
+    class MySuite:
+        def __init__(self):
+            add_test_into_suite(lcc.Test("mytest", "My Test", SomeTest()), self)
+
+    suite = load_suite_from_class(MySuite)
+    assert suite.get_tests()[0].get_fixtures() == ["fixt"]
 
 
 def test_add_test_in_suite():
