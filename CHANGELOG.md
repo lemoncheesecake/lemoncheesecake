@@ -1,3 +1,9 @@
+# 0.19.9 (2018-10-17)
+
+- **HTML report**: add a link to make the report raw data downloadable
+- **API**: in `match_pattern`, fix handling of non-string values
+- **API**: add support for object implementing the `__call__` method as `callback` argument in `lcc.Test`
+
 # 0.19.8 (2018-09-30)
 
 - **HTML report**: fix the goto-to-test feature through the anchor in the URL (it has been broken since 0.12.0 when
