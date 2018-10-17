@@ -1,3 +1,7 @@
+# 0.19.10 (2018-10-17)
+
+- **API**: fix buggy `all_of` and `any_of` matchers when a single instance is used multiple times on Python 3
+
 # 0.19.9 (2018-10-17)
 
 - **HTML report**: add a link to make the report raw data downloadable
