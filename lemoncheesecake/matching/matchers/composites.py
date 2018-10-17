@@ -72,7 +72,7 @@ class AllOf(Matcher):
 
 def all_of(*matchers):
     """Test if all matchers match (logical AND between matchers)."""
-    return AllOf(map(is_, matchers))
+    return AllOf(list(map(is_, matchers)))
 
 
 class AnyOf(Matcher):
@@ -104,7 +104,7 @@ class AnyOf(Matcher):
 
 def any_of(*matchers):
     """Test if at least one of the matcher match (logical OR between matchers)"""
-    return AnyOf(map(is_, matchers))
+    return AnyOf(list(map(is_, matchers)))
 
 
 class Anything(Matcher):
