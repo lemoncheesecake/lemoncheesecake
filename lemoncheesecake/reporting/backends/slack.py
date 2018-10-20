@@ -12,7 +12,7 @@ except ImportError:
 
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
 from lemoncheesecake.exceptions import UserError
-from lemoncheesecake.utils import humanize_duration
+from lemoncheesecake.helpers.display import humanize_duration
 
 
 class BaseSlackReportingSession(ReportingSession):

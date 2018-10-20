@@ -7,6 +7,8 @@ Created on Jun 14, 2017
 from decimal import Decimal
 from functools import reduce
 
+import six
+
 # This junit backend implementation is based on the documentation 
 # http://llg.cubic.org/docs/junit/
 # also see:
@@ -21,7 +23,6 @@ except ImportError:
 
 from lemoncheesecake.reporting.backend import FileReportBackend, SAVE_AT_EACH_FAILED_TEST
 from lemoncheesecake.reporting.report import LogData, CheckData, format_timestamp_as_iso_8601
-from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.consts import LOG_LEVEL_ERROR
 from lemoncheesecake.reporting.backends.xml import make_xml_child, make_xml_node, indent_xml, set_node_attr, \
     DEFAULT_INDENT_LEVEL
@@ -98,9 +99,10 @@ def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
     report = serialize_report_as_tree(report)
     indent_xml(report, indent_level=indent_level)
 
-    if IS_PYTHON3:
+    if six.PY3:
         return ET.tostring(report, pretty_print=True, encoding="unicode")
-    return ET.tostring(report, pretty_print=True, xml_declaration=True, encoding="utf-8")
+    else:
+        return ET.tostring(report, pretty_print=True, xml_declaration=True, encoding="utf-8")
 
 
 def save_report_into_file(report, filename, indent_level=DEFAULT_INDENT_LEVEL):

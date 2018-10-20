@@ -10,7 +10,8 @@ import shutil
 import threading
 import traceback
 
-from lemoncheesecake.utils import IS_PYTHON3
+import six
+
 from lemoncheesecake.exceptions import LemonCheesecakeInternalError
 from lemoncheesecake.consts import ATTACHEMENT_DIR, \
     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
@@ -133,7 +134,7 @@ def detached_step(description):
     except Exception:
         # FIXME: use exception instead of last implicit stacktrace
         stacktrace = traceback.format_exc()
-        if not IS_PYTHON3:
+        if six.PY2:
             stacktrace = stacktrace.decode("utf-8", "replace")
         log_error("Caught unexpected exception while running test: " + stacktrace)
     end_step(description)

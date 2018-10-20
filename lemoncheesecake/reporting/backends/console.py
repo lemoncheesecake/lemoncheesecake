@@ -10,13 +10,14 @@ import sys
 
 import colorama
 from termcolor import colored
+import six
 
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
 from lemoncheesecake.reporting.backends import terminalsize
 from lemoncheesecake.reporting.report import get_stats_from_suites
 from lemoncheesecake.filter import filter_suites
 from lemoncheesecake.testtree import flatten_suites
-from lemoncheesecake.utils import IS_PYTHON3, humanize_duration, get_status_color
+from lemoncheesecake.helpers.display import humanize_duration, get_status_color
 
 
 class LinePrinter:
@@ -26,7 +27,7 @@ class LinePrinter:
 
     def print_line(self, line, force_len=None):
         value_len = force_len if force_len else len(line)
-        if not IS_PYTHON3:
+        if six.PY2:
             if type(line) is unicode:
                 line = line.encode("utf-8")
 

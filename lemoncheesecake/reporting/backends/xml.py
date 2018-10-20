@@ -11,13 +11,14 @@ try:
 except ImportError:
     LXML_IS_AVAILABLE = False
 
+import six
+
 import lemoncheesecake
 from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend, SAVE_AT_EACH_FAILED_TEST
 from lemoncheesecake.reporting.report import (
     LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, SuiteData,
     format_timestamp, parse_timestamp
 )
-from lemoncheesecake.utils import IS_PYTHON3
 from lemoncheesecake.exceptions import ProgrammingError, InvalidReportFile
 
 OUTCOME_NOT_AVAILABLE = "n/a"
@@ -45,7 +46,7 @@ def indent_xml(elem, level=0, indent_level=DEFAULT_INDENT_LEVEL):
 
 
 def set_node_attr(node, attr_name, attr_value):
-    if IS_PYTHON3:
+    if six.PY3:
         node.attrib[attr_name] = attr_value
     else:
         node.attrib[attr_name] = attr_value if type(attr_value) is unicode else unicode(attr_value, "utf-8")
@@ -212,9 +213,10 @@ def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
     report = serialize_report_as_tree(report)
     indent_xml(report, indent_level=indent_level)
 
-    if IS_PYTHON3:
+    if six.PY3:
         return ET.tostring(report, pretty_print=True, encoding="unicode")
-    return ET.tostring(report, pretty_print=True, xml_declaration=True, encoding="utf-8")
+    else:
+        return ET.tostring(report, pretty_print=True, xml_declaration=True, encoding="utf-8")
 
 
 def save_report_into_file(report, filename, indent_level=DEFAULT_INDENT_LEVEL):

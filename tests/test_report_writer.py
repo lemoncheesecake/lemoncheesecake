@@ -9,8 +9,9 @@ Created on Nov 1, 2016
 import os.path as osp
 import time
 
+import six
+
 import lemoncheesecake.api as lcc
-from lemoncheesecake.utils import IS_PYTHON2
 
 from helpers.runner import run_suite_class, run_suite_classes, run_func_in_test
 from helpers.report import assert_report_from_suite, assert_report_from_suites, get_last_test, get_last_attachment, \
@@ -40,7 +41,7 @@ def make_file_reader(encoding=None, binary=False):
     def reader(path):
         with open(path, "rb" if binary else "r") as fh:
             content = fh.read()
-        if encoding and IS_PYTHON2:
+        if encoding and six.PY2:
             content = content.decode(encoding)
         return content
     return reader

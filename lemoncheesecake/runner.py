@@ -10,7 +10,8 @@ import traceback
 import threading
 import itertools
 
-from lemoncheesecake.utils import IS_PYTHON3
+import six
+
 from lemoncheesecake.runtime import *
 from lemoncheesecake.runtime import initialize_runtime, set_runtime_location, is_location_successful
 from lemoncheesecake.reporting import Report, initialize_report_writer, initialize_reporting_backends
@@ -52,7 +53,7 @@ class RunContext(object):
         else:
             # FIXME: use exception instead of last implicit stacktrace
             stacktrace = traceback.format_exc()
-            if not IS_PYTHON3:
+            if six.PY2:
                 stacktrace = stacktrace.decode("utf-8", "replace")
             log_error("Caught unexpected exception while running test: " + stacktrace)
 

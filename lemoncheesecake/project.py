@@ -15,7 +15,7 @@ from lemoncheesecake.reporting import ConsoleBackend, HtmlBackend, JsonBackend, 
     ReportPortalBackend, SlackReportingBackend, filter_available_reporting_backends
 from lemoncheesecake.reporting.reportdir import create_report_dir_with_rotation
 from lemoncheesecake.exceptions import ProjectError, UserError, serialize_current_exception
-from lemoncheesecake.utils import get_resource_path
+from lemoncheesecake.helpers.resources import get_resource_path
 from lemoncheesecake.importer import import_module
 
 PROJECT_CONFIG_FILE = "project.py"
@@ -205,7 +205,7 @@ def find_project_dir():
 
 
 def create_project(project_dir):
-    shutil.copyfile(get_resource_path(osp.join("project", "template.py")), osp.join(project_dir, PROJECT_CONFIG_FILE))
+    shutil.copyfile(get_resource_path(("project", "template.py")), osp.join(project_dir, PROJECT_CONFIG_FILE))
     os.mkdir(osp.join(project_dir, "suites"))
     os.mkdir(osp.join(project_dir, "fixtures"))
 

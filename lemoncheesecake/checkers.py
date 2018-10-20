@@ -11,11 +11,13 @@ Created on Jan 24, 2016
 @author: nicolas
 '''
 
+import sys
+
+import six
+
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.exceptions import AbortTest
-from lemoncheesecake.utils import IS_PYTHON3
 
-import sys
 
 CHECKER_OBJECTS = {}
 BASE_CHECKER_NAMES = [ ]
@@ -375,7 +377,7 @@ def register_dict_has_key_typed(type_name, types, base_class, default_show_actua
 
 register_dict_has_key_typed("int", [int], Check)
 register_dict_has_key_typed("float", [float], Check)
-if IS_PYTHON3:
+if six.PY3:
     register_dict_has_key_typed("str", [str], CheckStrEq)
 else:
     register_dict_has_key_typed("str", [str, unicode], CheckStrEq)

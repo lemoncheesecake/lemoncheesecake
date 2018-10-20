@@ -8,7 +8,7 @@ import os
 import os.path as osp
 
 from lemoncheesecake.exceptions import InvalidReportFile, ProgrammingError, method_not_implemented
-from lemoncheesecake.utils import object_has_method
+from lemoncheesecake.helpers.introspection import object_has_method
 from lemoncheesecake.reporting.report import Report
 from lemoncheesecake import events
 
