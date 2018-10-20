@@ -1,6 +1,6 @@
 from functools import reduce
 
-from lemoncheesecake.utils import humanize_duration
+from lemoncheesecake.helpers.display import humanize_duration
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import auto_detect_reporting_backends, add_report_path_cli_arg, get_report_path
 from lemoncheesecake.cli.display import print_table

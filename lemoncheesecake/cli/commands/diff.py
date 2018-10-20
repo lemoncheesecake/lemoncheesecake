@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from termcolor import colored
 
-from lemoncheesecake.utils import get_status_color
+from lemoncheesecake.helpers.display import get_status_color
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import auto_detect_reporting_backends
 from lemoncheesecake.reporting import load_report

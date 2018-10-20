@@ -16,7 +16,8 @@ from lemoncheesecake.reporting.backends import terminalsize
 from lemoncheesecake.reporting.report import get_stats_from_suites
 from lemoncheesecake.filter import filter_suites
 from lemoncheesecake.testtree import flatten_suites
-from lemoncheesecake.utils import IS_PYTHON3, humanize_duration, get_status_color
+from lemoncheesecake.helpers.display import humanize_duration, get_status_color
+from lemoncheesecake.utils import IS_PYTHON3
 
 
 class LinePrinter:
