@@ -1,6 +1,7 @@
 import pytest
 
-from lemoncheesecake.utils import IS_PYTHON2
+import six
+
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite.loader import load_suites_from_directory, load_suite_from_file, \
     load_suite_from_class, load_suites_from_files, load_suites_from_classes, load_test_from_function, \
@@ -249,19 +250,11 @@ def test_load_suites_from_classes_with_condition_on_suite_not_met():
     assert len(suites) == 0
 
 
-def _get_instance_method_function(method):
-    return method.im_func if IS_PYTHON2 else method.__func__
-
-
-def _get_class_method_function(method):
-    return method.im_func if IS_PYTHON2 else method
-
-
 def test_load_suites_from_classes_with_condition_on_test_met():
     @lcc.suite("My Suite")
     class MySuite:
         @lcc.test("My Test")
-        @lcc.conditional(lambda test_arg: _get_instance_method_function(test_arg) == _get_class_method_function(MySuite.mytest))
+        @lcc.conditional(lambda test_arg: six.get_method_function(test_arg) == six.get_unbound_function((MySuite.mytest)))
         def mytest(self):
             pass
 
@@ -274,7 +267,7 @@ def test_load_suites_from_classes_with_condition_on_test_not_met():
     @lcc.suite("My Suite")
     class MySuite:
         @lcc.test("My Test")
-        @lcc.conditional(lambda test_arg: _get_instance_method_function(test_arg) != _get_class_method_function(MySuite.mytest))
+        @lcc.conditional(lambda test_arg: six.get_method_function(test_arg) != six.get_unbound_function(MySuite.mytest))
         def mytest(self):
             pass
 

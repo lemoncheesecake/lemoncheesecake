@@ -4,7 +4,8 @@ Created on Apr 3, 2017
 @author: nicolas
 '''
 
-from lemoncheesecake.utils import IS_PYTHON3, IS_PYTHON2
+import six
+
 from lemoncheesecake.matching.base import Matcher, match_success, match_failure, got, serialize_value, got_value, to_be
 from lemoncheesecake.matching.matchers.value import is_
 
@@ -20,7 +21,7 @@ TYPE_NAMES = {
     list: "array", tuple: "array"
 }
 
-if IS_PYTHON2:
+if six.PY2:
     TYPE_NAMES[unicode] = "string",
 
 
@@ -66,6 +67,6 @@ def is_type(types, type_name):
 is_integer = is_type([int], "an integer")
 is_float = is_type([float], "a float")
 is_bool = is_type([bool], "a boolean")
-is_str = is_type([str] if IS_PYTHON3 else [str, unicode], "a string")
+is_str = is_type([str] if six.PY3 else [str, unicode], "a string")
 is_dict = is_type([dict], "a collection")
 is_list = is_type([list, tuple], "a list")

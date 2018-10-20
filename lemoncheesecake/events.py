@@ -2,14 +2,10 @@ import time
 import re
 import inspect
 
-from lemoncheesecake.helpers.misc import camel_case_to_snake_case
-from lemoncheesecake.utils import IS_PYTHON2
-from lemoncheesecake.exceptions import serialize_current_exception
+from six.moves.queue import Queue
 
-if IS_PYTHON2:
-    from Queue import Queue
-else:
-    from queue import Queue
+from lemoncheesecake.helpers.misc import camel_case_to_snake_case
+from lemoncheesecake.exceptions import serialize_current_exception
 
 
 def _get_event_name_from_class_name(class_name):
