@@ -7,9 +7,6 @@ Created on Mar 18, 2016
 import os
 import sys
 import re
-import inspect
-
-from lemoncheesecake.exceptions import ProgrammingError
 
 IS_PYTHON3 = sys.version_info > (3,)
 IS_PYTHON2 = sys.version_info < (3,)
@@ -47,25 +44,6 @@ def get_status_color(status):
         return "cyan"
     else:
         return "yellow"
-
-
-def object_has_method(obj, method_name):
-    try:
-        return callable(getattr(obj, method_name))
-    except AttributeError:
-        return False
-
-
-def get_callable_args(cb):
-    if not inspect.isroutine(cb):
-        try:
-            cb = getattr(cb, "__call__")
-        except AttributeError:
-            raise ProgrammingError("%s is not something that can be called" % cb)
-
-    spec = inspect.getfullargspec(cb) if IS_PYTHON3 else inspect.getargspec(cb)
-    args_start = 1 if inspect.ismethod(cb) else 0
-    return spec.args[args_start:]
 
 
 def get_resource_path(relpath):
