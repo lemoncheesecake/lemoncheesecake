@@ -8,6 +8,7 @@ import os.path as osp
 import inspect
 
 from lemoncheesecake.helpers.moduleimport import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
+from lemoncheesecake.helpers.introspection import get_object_attributes
 from lemoncheesecake.exceptions import UserError, ProgrammingError, ModuleImportError, InvalidMetadataError, \
     InvalidSuiteError, VisibilityConditionNotMet, serialize_current_exception
 from lemoncheesecake.suite.core import Test, Suite, SUITE_HOOKS
@@ -70,12 +71,12 @@ def load_tests_from_functions(funcs):
     return load_tests(funcs)
 
 
-def _list_object_attributes(obj):
-    return [getattr(obj, n) for n in dir(obj) if not n.startswith("__")]
-
-
 def _get_test_symbols(obj, filter_func):
-    return sorted(filter(filter_func, _list_object_attributes(obj)), key=lambda sym: sym._lccmetadata.rank)
+    return sorted(
+        filter(
+            filter_func, (attr for _, attr in get_object_attributes(obj))
+        ),
+        key=lambda sym: sym._lccmetadata.rank)
 
 
 def get_test_methods_from_class(obj):

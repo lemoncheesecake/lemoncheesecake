@@ -6,7 +6,7 @@ Created on Sep 8, 2016
 
 from lemoncheesecake.exceptions import InvalidMetadataError, InternalError
 from lemoncheesecake.helpers.orderedset import OrderedSet
-from lemoncheesecake.helpers.introspection import get_callable_args
+from lemoncheesecake.helpers.introspection import get_callable_args, get_object_attributes
 from lemoncheesecake.testtree import BaseTest, BaseSuite
 
 SUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
@@ -47,12 +47,9 @@ class InjectedFixture:
 
 def _load_injected_fixtures(obj):
     fixtures = {}
-    for attr_name in dir(obj):
-        if attr_name.startswith("__"):
-            continue
-        sym = getattr(obj, attr_name)
-        if isinstance(sym, InjectedFixture):
-            fixtures[sym.fixture_name or attr_name] = attr_name
+    for attr_name, attr in get_object_attributes(obj):
+        if isinstance(attr, InjectedFixture):
+            fixtures[attr.fixture_name or attr_name] = attr_name
     return fixtures
 
 

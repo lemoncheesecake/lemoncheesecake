@@ -707,3 +707,19 @@ class mysuite:
 
     with pytest.raises(InvalidSuiteError):
         load_suite_from_file(file.strpath)
+
+
+def test_load_suite_class_with_property():
+    @lcc.suite("mysuite")
+    class mysuite(object):
+        @lcc.test("mytest")
+        def mytest(self):
+            pass
+
+        @property
+        def myprop(self):
+            # ensure that myprop is not called:
+            assert False
+
+    suite = load_suite_from_class(mysuite)
+    assert len(suite.get_tests()) == 1
