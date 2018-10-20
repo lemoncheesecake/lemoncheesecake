@@ -50,13 +50,6 @@ def get_resource_path(relpath):
     return os.path.join(os.path.dirname(__file__), "resources", relpath)
 
 
-def is_string(s):
-    if IS_PYTHON2:
-        return type(s) in (str, unicode)
-    else:
-        return type(s) is str
-
-
 # borrowed from https://stackoverflow.com/a/1176023
 def camel_case_to_snake_case(name):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)

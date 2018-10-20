@@ -6,7 +6,8 @@ Created on Mar 27, 2017
 
 import threading
 
-from lemoncheesecake.utils import is_string
+import six
+
 from lemoncheesecake.runtime import log_check
 from lemoncheesecake.exceptions import AbortTest, ProgrammingError
 from lemoncheesecake.matching.base import Matcher
@@ -104,7 +105,7 @@ def format_result_details(details):
     if details is None:
         return None
 
-    if not is_string(details):
+    if not isinstance(details, six.string_types):
         details = str(details)
 
     return details[0].upper() + details[1:]
