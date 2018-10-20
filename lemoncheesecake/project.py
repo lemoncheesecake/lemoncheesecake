@@ -16,7 +16,7 @@ from lemoncheesecake.reporting import ConsoleBackend, HtmlBackend, JsonBackend, 
 from lemoncheesecake.reporting.reportdir import create_report_dir_with_rotation
 from lemoncheesecake.exceptions import ProjectError, UserError, serialize_current_exception
 from lemoncheesecake.helpers.resources import get_resource_path
-from lemoncheesecake.importer import import_module
+from lemoncheesecake.helpers.moduleimport import import_module
 
 PROJECT_CONFIG_FILE = "project.py"
 

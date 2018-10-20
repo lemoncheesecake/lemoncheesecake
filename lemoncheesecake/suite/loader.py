@@ -7,7 +7,7 @@ Created on Feb 5, 2017
 import os.path as osp
 import inspect
 
-from lemoncheesecake.importer import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
+from lemoncheesecake.helpers.moduleimport import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
 from lemoncheesecake.exceptions import UserError, ProgrammingError, ModuleImportError, InvalidMetadataError, \
     InvalidSuiteError, VisibilityConditionNotMet, serialize_current_exception
 from lemoncheesecake.suite.core import Test, Suite, SUITE_HOOKS

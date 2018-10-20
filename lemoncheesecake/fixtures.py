@@ -7,7 +7,7 @@ Created on Jan 7, 2017
 import inspect
 from collections import OrderedDict
 
-from lemoncheesecake.importer import import_module, get_matching_files, get_py_files_from_dir
+from lemoncheesecake.helpers.moduleimport import import_module, get_matching_files, get_py_files_from_dir
 from lemoncheesecake.exceptions import FixtureError, ProgrammingError
 from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.helpers.introspection import get_callable_args
