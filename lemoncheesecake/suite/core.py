@@ -5,7 +5,8 @@ Created on Sep 8, 2016
 '''
 
 from lemoncheesecake.exceptions import InvalidMetadataError, InternalError
-from lemoncheesecake.utils import get_callable_args, OrderedSet
+from lemoncheesecake.helpers.orderedset import OrderedSet
+from lemoncheesecake.utils import get_callable_args
 from lemoncheesecake.testtree import BaseTest, BaseSuite
 
 SUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"

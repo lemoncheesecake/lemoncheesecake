@@ -6,7 +6,7 @@ Created on Mar 27, 2017
 
 import json
 
-from lemoncheesecake.utils import OrderedSet
+from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.exceptions import method_not_implemented
 
 
