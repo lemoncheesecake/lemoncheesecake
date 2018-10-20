@@ -1073,6 +1073,19 @@ def test_disabled_test():
     assert_test_statuses(report, disabled=["mysuite.mytest"])
 
 
+def test_disabled_test_with_force_disabled():
+    @lcc.suite("Suite")
+    class mysuite:
+        @lcc.test("Test")
+        @lcc.disabled()
+        def mytest(self):
+            pass
+
+    report = run_suite_class(mysuite, force_disabled=True)
+
+    assert_test_statuses(report, passed=["mysuite.mytest"])
+
+
 def test_disabled_suite():
     @lcc.suite("Suite")
     @lcc.disabled()

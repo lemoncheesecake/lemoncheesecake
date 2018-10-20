@@ -23,7 +23,8 @@ from lemoncheesecake.task import BaseTask, run_tasks
 
 
 class RunContext(object):
-    def __init__(self, stop_on_failure, fixture_registry):
+    def __init__(self, force_disabled, stop_on_failure, fixture_registry):
+        self.force_disabled = force_disabled
         self.stop_on_failure = stop_on_failure
         self.fixture_registry = fixture_registry
         self._abort_tests = False
@@ -109,7 +110,7 @@ class TestTask(BaseTask):
         ###
         # Checker whether the test must be executed or not
         ###
-        if self.test.is_disabled():
+        if self.test.is_disabled() and not context.force_disabled:
             events.fire(events.TestDisabledEvent(self.test, ""))
             return
 
@@ -528,7 +529,7 @@ def watchdog():
 
 
 def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, reporting_backends, report_dir,
-                stop_on_failure=False, nb_threads=1):
+                force_disabled=False, stop_on_failure=False, nb_threads=1):
     # initialize runtime & global test variables
     report = Report()
     report.nb_threads = nb_threads
@@ -545,7 +546,7 @@ def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, rep
         suites, prerun_session_scheduled_fixtures
     )
     tasks = build_tasks(suites, fixture_registry, session_scheduled_fixtures)
-    context = RunContext(stop_on_failure, fixture_registry)
+    context = RunContext(force_disabled, stop_on_failure, fixture_registry)
 
     # start event handler thread
     event_handler_thread = threading.Thread(target=events.handler_loop)
@@ -567,7 +568,8 @@ def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, rep
     return report
 
 
-def run_suites(suites, fixture_registry, reporting_backends, report_dir, stop_on_failure=False, nb_threads=1):
+def run_suites(suites, fixture_registry, reporting_backends, report_dir,
+               force_disabled=False, stop_on_failure=False, nb_threads=1):
     fixture_teardowns = []
 
     # setup pre_session fixtures
@@ -588,7 +590,8 @@ def run_suites(suites, fixture_registry, reporting_backends, report_dir, stop_on
     if not errors:
         report = run_session(
             suites, fixture_registry, scheduled_fixtures,
-            reporting_backends, report_dir, stop_on_failure=stop_on_failure, nb_threads=nb_threads
+            reporting_backends, report_dir, force_disabled=force_disabled, stop_on_failure=stop_on_failure,
+            nb_threads=nb_threads
         )
     else:
         report = None

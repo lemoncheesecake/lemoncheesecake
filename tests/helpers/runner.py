@@ -99,7 +99,7 @@ def build_fixture_registry(*funcs):
     return registry
 
 
-def run_suites(suites, fixtures=None, backends=None, tmpdir=None, stop_on_failure=False):
+def run_suites(suites, fixtures=None, backends=None, tmpdir=None, force_disabled=False, stop_on_failure=False):
     if fixtures is None:
         fixture_registry = FixtureRegistry()
     else:
@@ -114,11 +114,17 @@ def run_suites(suites, fixtures=None, backends=None, tmpdir=None, stop_on_failur
     events.reset()
 
     if tmpdir:
-        runner.run_suites(suites, fixture_registry, backends, tmpdir.strpath, stop_on_failure=stop_on_failure)
+        runner.run_suites(
+            suites, fixture_registry, backends, tmpdir.strpath,
+            force_disabled=force_disabled, stop_on_failure=stop_on_failure
+        )
     else:
         report_dir = tempfile.mkdtemp()
         try:
-            runner.run_suites(suites, fixture_registry, backends, report_dir, stop_on_failure=stop_on_failure)
+            runner.run_suites(
+                suites, fixture_registry, backends, report_dir,
+                force_disabled=force_disabled, stop_on_failure=stop_on_failure
+            )
         finally:
             shutil.rmtree(report_dir)
 
@@ -128,18 +134,29 @@ def run_suites(suites, fixtures=None, backends=None, tmpdir=None, stop_on_failur
     return report
 
 
-def run_suite_classes(suite_classes, fixtures=None, backends=None, tmpdir=None, stop_on_failure=False):
+def run_suite_classes(suite_classes, fixtures=None, backends=None, tmpdir=None,
+                      force_disabled=False, stop_on_failure=False):
     suites = load_suites_from_classes(suite_classes)
-    return run_suites(suites, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+    return run_suites(
+        suites, fixtures=fixtures, backends=backends, tmpdir=tmpdir,
+        force_disabled=force_disabled, stop_on_failure=stop_on_failure
+    )
 
 
-def run_suite(suite, fixtures=None, backends=[], tmpdir=None, stop_on_failure=False):
-    return run_suites([suite], fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+def run_suite(suite, fixtures=None, backends=[], tmpdir=None, force_disabled=False, stop_on_failure=False):
+    return run_suites(
+        [suite], fixtures=fixtures, backends=backends, tmpdir=tmpdir,
+        force_disabled=force_disabled, stop_on_failure=stop_on_failure
+    )
 
 
-def run_suite_class(suite_class, filter=None, fixtures=None, backends=[], tmpdir=None, stop_on_failure=False):
+def run_suite_class(suite_class, filter=None, fixtures=None, backends=[], tmpdir=None,
+                    force_disabled=False, stop_on_failure=False):
     suite = load_suite_from_class(suite_class)
-    return run_suite(suite, fixtures=fixtures, backends=backends, tmpdir=tmpdir, stop_on_failure=stop_on_failure)
+    return run_suite(
+        suite, fixtures=fixtures, backends=backends, tmpdir=tmpdir,
+        force_disabled=force_disabled, stop_on_failure=stop_on_failure
+    )
 
 
 def run_func_in_test(callback, tmpdir=None):

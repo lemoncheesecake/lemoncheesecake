@@ -105,7 +105,8 @@ def run_project(project, cli_args):
     # Run tests
     is_successful = run_suites(
         suites, fixture_registry, selected_reporting_backends, report_dir,
-        stop_on_failure=cli_args.stop_on_failure, nb_threads=nb_threads
+        force_disabled=cli_args.force_disabled, stop_on_failure=cli_args.stop_on_failure,
+        nb_threads=nb_threads
     )
 
     # Handle after run hook
@@ -143,6 +144,10 @@ class RunCommand(Command):
         add_run_filter_cli_args(cli_parser)
 
         test_execution_group = cli_parser.add_argument_group("Test execution")
+        test_execution_group.add_argument(
+            "--force-disabled", action="store_true",
+            help="Force the run of disabled tests"
+        )
         test_execution_group.add_argument(
             "--exit-error-on-failure", action="store_true",
             help="Exit with non-zero code if there is at least one non-passed test"
