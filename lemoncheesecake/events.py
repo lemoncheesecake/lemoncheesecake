@@ -1,9 +1,9 @@
-import sys
 import time
 import re
 import inspect
 
-from lemoncheesecake.utils import camel_case_to_snake_case, IS_PYTHON2
+from lemoncheesecake.helpers.misc import camel_case_to_snake_case
+from lemoncheesecake.utils import IS_PYTHON2
 from lemoncheesecake.exceptions import serialize_current_exception
 
 if IS_PYTHON2:
