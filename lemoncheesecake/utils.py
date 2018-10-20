@@ -72,13 +72,6 @@ def get_resource_path(relpath):
     return os.path.join(os.path.dirname(__file__), "resources", relpath)
 
 
-def dict_cat(d1, d2):
-    new = dict()
-    new.update(d1)
-    new.update(d2)
-    return new
-
-
 def is_string(s):
     if IS_PYTHON2:
         return type(s) in (str, unicode)
