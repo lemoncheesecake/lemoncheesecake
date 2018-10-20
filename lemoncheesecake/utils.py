@@ -4,16 +4,11 @@ Created on Mar 18, 2016
 @author: nicolas
 '''
 
-import os
 import sys
 import re
 
 IS_PYTHON3 = sys.version_info > (3,)
 IS_PYTHON2 = sys.version_info < (3,)
-
-
-def get_resource_path(relpath):
-    return os.path.join(os.path.dirname(__file__), "resources", relpath)
 
 
 # borrowed from https://stackoverflow.com/a/1176023
