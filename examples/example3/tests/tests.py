@@ -5,6 +5,7 @@ from lemoncheesecake.matching import *
 
 SUITE = {"description": "My test"}
 
+
 @lcc.test("test")
 def test():
     check_that("val1", 1, equal_to(1))
@@ -23,6 +24,10 @@ def test():
     check_that("float value", 2.5, is_float(greater_than(2)), quiet=True)
 
     check_that("value", "42", match_pattern("^\d+$"))
+
+    check_that("value", "42", match_pattern("^\d+$", "a number"))
+
+    check_that("value", "42", match_pattern("^\d+$", "a number", mention_regexp=True))
 
     check_that("list", (1, 2, 3, 4), has_item(3))
 

@@ -10,8 +10,7 @@ import difflib
 import json
 
 
-from lemoncheesecake.matching.base import MatchExpected, match_result, match_success, match_failure, got_value, to_be, \
-    serialize_value
+from lemoncheesecake.matching.base import MatchExpected, match_result, match_success, match_failure, got_value, to_be
 
 __all__ = (
     "starts_with", "ends_with", "contains_string", "match_pattern", "is_text", "is_json"
@@ -60,8 +59,20 @@ def contains_string(s):
 
 
 class MatchPattern(MatchExpected):
+    def __init__(self, expected, description=None, mention_regexp=False):
+        MatchExpected.__init__(self, expected)
+        assert not (mention_regexp and description is None)
+        self._description = description
+        self._mention_regexp = mention_regexp
+
     def description(self, conjugate=False):
-        return '%s "%s"' % ("matches pattern" if conjugate else "to match pattern", self.expected.pattern)
+        if self._description:
+            desc = "%s %s" % (to_be(conjugate), self._description)
+            if self._mention_regexp:
+                desc += ' (pattern: "%s")' % self.expected.pattern
+            return desc
+        else:
+            return '%s "%s"' % ("matches pattern" if conjugate else "to match pattern", self.expected.pattern)
 
     def matches(self, actual):
         try:
@@ -71,9 +82,17 @@ class MatchPattern(MatchExpected):
         return match_result(match is not None, got_value(actual))
 
 
-def match_pattern(pattern):
+def match_pattern(pattern, description=None, mention_regexp=False):
     """Test if string matches given pattern (using the `search` method of the `re` module)"""
-    return MatchPattern(pattern if type(pattern) == _REGEXP_TYPE else re.compile(pattern))
+    return MatchPattern(
+        pattern if type(pattern) == _REGEXP_TYPE else re.compile(pattern), description, mention_regexp
+    )
+
+
+def make_pattern_matcher(pattern, description=None, mention_regexp=False):
+    def matcher():
+        return match_pattern(pattern, description, mention_regexp)
+    return matcher
 
 
 def _diff_text(text1, text2, linesep):

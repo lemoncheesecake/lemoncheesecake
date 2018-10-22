@@ -5,6 +5,7 @@ import re
 from helpers.matching import assert_match_success, assert_match_failure
 
 from lemoncheesecake.matching.matchers import *
+from lemoncheesecake.matching.matchers.string import make_pattern_matcher
 
 
 def test_starts_with_success():
@@ -42,6 +43,31 @@ def test_match_pattern_search_success():
 
 def test_match_pattern_with_pattern_success():
     assert_match_success(match_pattern(re.compile("^foo", re.IGNORECASE)), "FOOBAR", "FOOBAR")
+
+
+def test_match_pattern_description_default():
+    description = match_pattern("^\d+$").description()
+    assert "^\d+$" in description
+
+
+def test_match_pattern_description_description():
+    description = match_pattern("^\d+$", "a number").description()
+    assert "a number" in description
+    assert "^\d+$" not in description
+
+
+def test_match_pattern_description_description_and_mention_regexp():
+    description = match_pattern("^\d+$", "a number", mention_regexp=True).description()
+    assert "a number" in description
+    assert "^\d+$" in description
+
+
+def test_make_pattern_matcher():
+    matcher = make_pattern_matcher("^\d+$", "a number", mention_regexp=True)
+    description = matcher().description()
+    assert "a number" in description
+    assert "^\d+$" in description
+    assert_match_success(matcher(), "42", "42")
 
 
 def test_match_pattern_failure():
