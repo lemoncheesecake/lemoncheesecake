@@ -54,22 +54,22 @@ def run_project(project, cli_args):
     fixture_registry = build_fixture_registry(project, cli_args)
     fixture_registry.check_fixtures_in_suites(suites)
 
-    # Set reporting backends
-    reporting_backends = {
+    # Set active reporting backends
+    available_reporting_backends = {
         backend.name: backend for backend in
         filter_reporting_backends_by_capabilities(
             project.get_all_reporting_backends(), CAPABILITY_REPORTING_SESSION
         )
     }
-    selected_reporting_backends = set()
+    active_reporting_backends = set()
     for backend_name in cli_args.reporting + cli_args.enable_reporting:
         try:
-            selected_reporting_backends.add(reporting_backends[backend_name])
+            active_reporting_backends.add(available_reporting_backends[backend_name])
         except KeyError:
             raise LemonCheesecakeException("Unknown reporting backend '%s'" % backend_name)
     for backend_name in cli_args.disable_reporting:
         try:
-            selected_reporting_backends.discard(reporting_backends[backend_name])
+            active_reporting_backends.discard(available_reporting_backends[backend_name])
         except KeyError:
             raise LemonCheesecakeException("Unknown reporting backend '%s'" % backend_name)
 
@@ -104,7 +104,7 @@ def run_project(project, cli_args):
 
     # Run tests
     is_successful = run_suites(
-        suites, fixture_registry, selected_reporting_backends, report_dir,
+        suites, fixture_registry, active_reporting_backends, report_dir,
         force_disabled=cli_args.force_disabled, stop_on_failure=cli_args.stop_on_failure,
         nb_threads=nb_threads
     )
