@@ -98,7 +98,7 @@ class ResultRow extends React.Component<Props, State> {
                         style={this.props.steps.length > 0 ? {cursor: "pointer"} : undefined}
                         onClick={this.props.steps.length > 0 ? this.toggle : undefined}>
                         <span className={get_text_class_from_test_status(this.props.status)} style={{fontSize: "120%"}}>
-                            {this.props.status ? this.props.status.toUpperCase() : "n/a"}
+                            {this.props.status ? this.props.status.toUpperCase() : "IN PROGRESS"}
                         </span>
                     </td>
                     {this.props.children}
