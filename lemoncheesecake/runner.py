@@ -94,18 +94,18 @@ class RunContext(object):
         # check for error in event handling
         exception, _ = events.get_pending_failure()
         if exception is not None:
-            return False
+            return str(exception)
 
         # check for test session abort
         if self.is_session_aborted():
-            return False
+            return "all tests have been aborted"
 
         # check for suite abort
         if isinstance(task, TestTask):
             if self.is_suite_aborted(task.test.parent_suite):
-                return False
+                return "the tests of this test suite have been aborted"
 
-        return True
+        return None
 
 
 class TestTask(BaseTask):
@@ -286,7 +286,8 @@ class SuiteBeginningTask(BaseTask):
     def run(self, context):
         events.fire(events.SuiteStartEvent(self.suite))
 
-    abort = run
+    def abort(self, context, _):
+        self.run(context)
 
     def __str__(self):
         return "<%s %s>" % (self.__class__.__name__, self.suite.path)
@@ -382,7 +383,8 @@ class SuiteEndingTask(BaseTask):
     def run(self, context):
         events.fire(events.SuiteEndEvent(self.suite))
 
-    abort = run
+    def abort(self, context, _):
+        self.run(context)
 
     def __str__(self):
         return "<%s %s>" % (self.__class__.__name__, self.suite.path)

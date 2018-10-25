@@ -16,7 +16,7 @@ class BaseTask(object):
     def run(self, context):
         pass
 
-    def abort(self, context):
+    def abort(self, context, reason):
         pass
 
 
@@ -53,10 +53,13 @@ def run_task(task, context, completed_task_queue):
 
 
 def schedule_task(task, watchdog, context, completed_task_queue):
-    if watchdog is None or watchdog(task):
-        run_task(task, context, completed_task_queue)
-    else:
-        abort_task(task, context, completed_task_queue)
+    if watchdog:
+        error = watchdog(task)
+        if error:
+            abort_task(task, context, completed_task_queue, reason=error)
+            return
+
+    run_task(task, context, completed_task_queue)
 
 
 def schedule_tasks(tasks, watchdog, context, pool, completed_tasks_queue):
@@ -64,9 +67,9 @@ def schedule_tasks(tasks, watchdog, context, pool, completed_tasks_queue):
         pool.apply_async(schedule_task, args=(task, watchdog, context, completed_tasks_queue))
 
 
-def abort_task(task, context, completed_task_queue):
+def abort_task(task, context, completed_task_queue, reason=""):
     try:
-        task.abort(context)
+        task.abort(context, reason)
     except Exception:
         task.successful = False
         task.exception = serialize_current_exception()
