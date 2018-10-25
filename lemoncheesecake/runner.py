@@ -97,12 +97,12 @@ class RunContext(object):
             return False
 
         # check for test session abort
-        if self._abort_tests:
+        if self.is_session_aborted():
             return False
 
         # check for suite abort
         if isinstance(task, TestTask):
-            if task.test.parent_suite in self._aborted_suites:
+            if self.is_suite_aborted(task.test.parent_suite):
                 return False
 
         return True
@@ -129,14 +129,6 @@ class TestTask(BaseTask):
         ###
         if self.test.is_disabled() and not context.force_disabled:
             events.fire(events.TestDisabledEvent(self.test, ""))
-            return
-
-        if context.is_suite_aborted(suite):
-            self.abort(context, "Cannot execute this test: the tests of this test suite have been aborted.")
-            return
-
-        if context.is_session_aborted():
-            self.abort(context, "Cannot execute this test: all tests have been aborted.")
             return
 
         ###
@@ -326,9 +318,6 @@ class SuiteInitializationTask(BaseTask):
         events.fire(events.SuiteSetupEndEvent(suite))
 
     def run(self, context):
-        if context.is_session_aborted():
-            return
-
         if any(setup for setup, _ in self.setup_teardown_funcs):
             SuiteInitializationTask.begin_suite_setup(self.suite)
             self.teardown_funcs = context.run_setup_funcs(
