@@ -52,8 +52,8 @@ def run_task(task, context, completed_task_queue):
     completed_task_queue.put(task)
 
 
-def schedule_task(task, watchdog, context, completed_task_queue):
-    if watchdog:
+def schedule_task(task, watchdogs, context, completed_task_queue):
+    for watchdog in watchdogs:
         error = watchdog(task)
         if error:
             abort_task(task, context, completed_task_queue, reason=error)
@@ -62,9 +62,9 @@ def schedule_task(task, watchdog, context, completed_task_queue):
     run_task(task, context, completed_task_queue)
 
 
-def schedule_tasks(tasks, watchdog, context, pool, completed_tasks_queue):
+def schedule_tasks(tasks, watchdogs, context, pool, completed_tasks_queue):
     for task in tasks:
-        pool.apply_async(schedule_task, args=(task, watchdog, context, completed_tasks_queue))
+        pool.apply_async(schedule_task, args=(task, watchdogs, context, completed_tasks_queue))
 
 
 def abort_task(task, context, completed_task_queue, reason=""):
@@ -104,7 +104,7 @@ def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
     try:
         schedule_tasks(
             pop_runnable_tasks(remaining_tasks, completed_tasks, nb_threads),
-            watchdog, context, pool, completed_tasks_queue
+            [watchdog] if watchdog else [], context, pool, completed_tasks_queue
         )
 
         while len(completed_tasks) != len(tasks):
@@ -115,7 +115,7 @@ def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
             # schedule next tasks depending on the completed task success
             if completed_task.successful:
                 runnable_tasks = pop_runnable_tasks(remaining_tasks, completed_tasks, nb_threads)
-                schedule_tasks(runnable_tasks, watchdog, context, pool, completed_tasks_queue)
+                schedule_tasks(runnable_tasks, [watchdog] if watchdog else [], context, pool, completed_tasks_queue)
             else:
                 abortable_tasks = pop_dependant_tasks(completed_task, remaining_tasks)
                 abort_tasks(abortable_tasks, context, pool, completed_tasks_queue)
