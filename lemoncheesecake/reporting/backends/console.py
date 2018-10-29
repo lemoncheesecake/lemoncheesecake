@@ -117,16 +117,12 @@ class SequentialConsoleReportingSession(ReportingSession):
             return test.path
         return test.name
 
-    def on_test_session_start(self, event):
-        self.previous_obj = None
+    def ensure_suite_header_is_displayed(self, suite):
+        if suite == self.current_suite:
+            return
 
-    def on_suite_start(self, event):
-        suite = event.suite
         self.current_suite = suite
         self.current_test_idx = 1
-
-        if not suite.get_tests():
-            return
 
         if self.previous_obj:
             sys.stdout.write("\n")
@@ -135,7 +131,12 @@ class SequentialConsoleReportingSession(ReportingSession):
 
         self.previous_obj = suite
 
+    def on_test_session_start(self, event):
+        self.previous_obj = None
+
     def on_suite_setup_start(self, event):
+        self.ensure_suite_header_is_displayed(event.suite)
+
         self.step_prefix = " => setup suite: "
         self.lp.print_line(self.step_prefix + "...")
 
@@ -164,6 +165,8 @@ class SequentialConsoleReportingSession(ReportingSession):
     on_test_session_teardown_end = on_test_session_setup_end
 
     def on_test_start(self, event):
+        self.ensure_suite_header_is_displayed(event.test.parent_suite)
+
         self.step_prefix = " -- %2s # %s" % (self.current_test_idx, self.get_test_label(event.test))
         self.lp.print_line(self.step_prefix + "...")
         self.previous_obj = event.test
@@ -181,6 +184,8 @@ class SequentialConsoleReportingSession(ReportingSession):
         self.current_test_idx += 1
 
     def _bypass_test(self, test, status):
+        self.ensure_suite_header_is_displayed(test.parent_suite)
+
         line = " %s %2s # %s" % (_make_test_status_label(status), self.current_test_idx, self.get_test_label(test))
         raw_line = "%s %2s # %s" % ("KO", self.current_test_idx, self.get_test_label(test))
         self.lp.print_line(line, force_len=len(raw_line))
