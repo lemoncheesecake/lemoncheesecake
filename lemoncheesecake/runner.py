@@ -90,6 +90,23 @@ class RunContext(object):
                 count += 1
         return count
 
+    def watchdog(self, task):
+        # check for error in event handling
+        exception, _ = events.get_pending_failure()
+        if exception is not None:
+            return str(exception)
+
+        # check for test session abort
+        if self.is_session_aborted():
+            return "all tests have been aborted"
+
+        # check for suite abort
+        if isinstance(task, TestTask):
+            if self.is_suite_aborted(task.test.parent_suite):
+                return "the tests of this test suite have been aborted"
+
+        return None
+
 
 class TestTask(BaseTask):
     def __init__(self, test, suite_scheduled_fixtures, dependency=None):
@@ -112,14 +129,6 @@ class TestTask(BaseTask):
         ###
         if self.test.is_disabled() and not context.force_disabled:
             events.fire(events.TestDisabledEvent(self.test, ""))
-            return
-
-        if context.is_suite_aborted(suite):
-            self.abort(context, "Cannot execute this test: the tests of this test suite have been aborted.")
-            return
-
-        if context.is_session_aborted():
-            self.abort(context, "Cannot execute this test: all tests have been aborted.")
             return
 
         ###
@@ -277,7 +286,8 @@ class SuiteBeginningTask(BaseTask):
     def run(self, context):
         events.fire(events.SuiteStartEvent(self.suite))
 
-    abort = run
+    def abort(self, context, _):
+        self.run(context)
 
     def __str__(self):
         return "<%s %s>" % (self.__class__.__name__, self.suite.path)
@@ -309,9 +319,6 @@ class SuiteInitializationTask(BaseTask):
         events.fire(events.SuiteSetupEndEvent(suite))
 
     def run(self, context):
-        if context.is_session_aborted():
-            return
-
         if any(setup for setup, _ in self.setup_teardown_funcs):
             SuiteInitializationTask.begin_suite_setup(self.suite)
             self.teardown_funcs = context.run_setup_funcs(
@@ -376,7 +383,8 @@ class SuiteEndingTask(BaseTask):
     def run(self, context):
         events.fire(events.SuiteEndEvent(self.suite))
 
-    abort = run
+    def abort(self, context, _):
+        self.run(context)
 
     def __str__(self):
         return "<%s %s>" % (self.__class__.__name__, self.suite.path)
@@ -520,14 +528,6 @@ def build_tasks(suites, fixture_registry, session_scheduled_fixtures):
     return list(filter(bool, task_iter))
 
 
-def watchdog():
-    exception, serialized_exception = events.get_pending_failure()
-    if exception:
-        return exception.__class__, serialized_exception
-    else:
-        return None, None
-
-
 def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, reporting_backends, report_dir,
                 force_disabled=False, stop_on_failure=False, nb_threads=1):
     # initialize runtime & global test variables
@@ -554,7 +554,7 @@ def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, rep
 
     try:
         events.fire(events.TestSessionStartEvent(report))
-        run_tasks(tasks, context, nb_threads, watchdog)
+        run_tasks(tasks, context, nb_threads, context.watchdog)
         events.fire(events.TestSessionEndEvent(report))
     finally:
         # wait for event handler to finish
