@@ -246,7 +246,7 @@ class ConsoleBackend(ReportingBackend):
     def __init__(self):
         width, height = terminalsize.get_terminal_size()
         self.terminal_width = width
-        self.show_test_full_path = False
+        self.show_test_full_path = True
 
     def create_reporting_session(self, report_dir, report, parallel=False):
         return \
