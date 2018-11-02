@@ -2,6 +2,9 @@ import lemoncheesecake.api as lcc
 import re
 import time
 
+MULTI_LINE_TEXT = "- first line\n- second line\n- third line"
+
+
 @lcc.suite("A")
 @lcc.tags("my_tag")
 @lcc.prop("key1", "value1")
@@ -72,6 +75,13 @@ class A:
     def fourth_test(self):
         lcc.check_gteq("value", 4, 2)
         lcc.check_str_contains("string", "foobar", "foo")
+
+    @lcc.suite(MULTI_LINE_TEXT)
+    class multi_line_description_suite:
+        @lcc.test(MULTI_LINE_TEXT)
+        def multi_line_description_test(self):
+            lcc.set_step(MULTI_LINE_TEXT)
+            lcc.log_info("some log")
     
     @lcc.suite("HTML Escaping")
     @lcc.tags("<h1>My Tag</h1>")    
