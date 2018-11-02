@@ -13,11 +13,12 @@ project_dir = os.path.dirname(__file__)
 ###
 class MyProjectConfiguration(SimpleProjectConfiguration):
     def get_report_info(self):
-        return [["foo", "bar"]]
+        return SimpleProjectConfiguration.get_report_info(self) + [["foo", "bar"]]
 
 
 project = MyProjectConfiguration(
     suites_dir=os.path.join(project_dir, "suites"),
     fixtures_dir=os.path.join(project_dir, "fixtures"),
-    report_title="Awesome report"
+    report_title="Awesome report",
+    hide_command_line_in_report=True
 )

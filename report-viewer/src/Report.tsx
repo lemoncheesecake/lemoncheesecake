@@ -61,11 +61,9 @@ class Report extends React.Component<ReportProps, {}> {
             <div>
                 <h1>{report.title}</h1>
 
-                <h2>Information</h2>
-                <KeyValueTable rows={report.info}/>
+                <KeyValueTable title="Information" rows={report.info}/>
 
-                <h2>Statistics</h2>
-                <KeyValueTable rows={report.stats}/>
+                <KeyValueTable title="Statistics" rows={report.stats}/>
 
                 <p style={{textAlign: 'right'}}><a href="report.js" download="report.js">Download raw report data</a></p>
 

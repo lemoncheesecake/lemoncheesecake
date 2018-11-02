@@ -533,7 +533,6 @@ def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, rep
     # initialize runtime & global test variables
     report = Report()
     report.nb_threads = nb_threads
-    report.add_info("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:]))
     session = initialize_report_writer(report)
     nb_tests = len(list(flatten_tests(suites)))
     initialize_runtime(report_dir, report, prerun_session_scheduled_fixtures)

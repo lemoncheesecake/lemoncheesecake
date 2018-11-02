@@ -6,6 +6,7 @@ Created on Dec 10, 2016
 
 import os
 import os.path as osp
+import sys
 import shutil
 
 from lemoncheesecake.suite import load_suites_from_directory
@@ -86,11 +87,13 @@ class ProjectConfiguration:
 
 
 class SimpleProjectConfiguration(ProjectConfiguration):
-    def __init__(self, suites_dir, fixtures_dir=None, report_title=None, threaded=True):
+    def __init__(self, suites_dir, fixtures_dir=None, report_title=None,
+                 threaded=True, hide_command_line_in_report=False):
         self._suites_dir = suites_dir
         self._fixtures_dir = fixtures_dir
         self._report_title = report_title
         self._threaded = threaded
+        self._hide_command_line_in_report = hide_command_line_in_report
         self.console_backend = ConsoleBackend()
         self.json_backend = JsonBackend()
         self.xml_backend = XmlBackend()
@@ -123,6 +126,12 @@ class SimpleProjectConfiguration(ProjectConfiguration):
 
     def is_threaded(self):
         return self._threaded
+
+    def get_report_info(self):
+        info = []
+        if not self._hide_command_line_in_report:
+            info.append(("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:])))
+        return info
 
 
 class Project:
@@ -183,7 +192,7 @@ def _find_file_in_parent_directories(filename, dirname):
 
     parent_dirname = osp.dirname(dirname)
     if parent_dirname == dirname:
-        return None # root directory has been reached
+        return None  # root directory has been reached
 
     return _find_file_in_parent_directories(filename, parent_dirname)
 
@@ -217,7 +226,7 @@ def load_project_from_file(project_filename):
     try:
         project_config_module = import_module(project_filename)
     except UserError as e:
-        raise e # propagate UserError
+        raise e  # propagate UserError
     except Exception:
         raise ProjectError("Got an unexpected error while loading project:%s" % (
             serialize_current_exception()
