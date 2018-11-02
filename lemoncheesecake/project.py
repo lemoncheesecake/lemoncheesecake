@@ -87,11 +87,13 @@ class ProjectConfiguration:
 
 
 class SimpleProjectConfiguration(ProjectConfiguration):
-    def __init__(self, suites_dir, fixtures_dir=None, report_title=None, threaded=True):
+    def __init__(self, suites_dir, fixtures_dir=None, report_title=None,
+                 threaded=True, hide_command_line_in_report=False):
         self._suites_dir = suites_dir
         self._fixtures_dir = fixtures_dir
         self._report_title = report_title
         self._threaded = threaded
+        self._hide_command_line_in_report = hide_command_line_in_report
         self.console_backend = ConsoleBackend()
         self.json_backend = JsonBackend()
         self.xml_backend = XmlBackend()
@@ -126,7 +128,10 @@ class SimpleProjectConfiguration(ProjectConfiguration):
         return self._threaded
 
     def get_report_info(self):
-        return [("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:]))]
+        info = []
+        if not self._hide_command_line_in_report:
+            info.append(("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:])))
+        return info
 
 
 class Project:
