@@ -46,7 +46,7 @@ class Suite extends React.Component<SuiteProps, {}> {
             return (
                 <div>
                     <span>
-                        <h4>{suite_description}<br/><small>{suite_id}</small></h4>
+                        <h4 className="multi-line-text">{suite_description}<br/><small>{suite_id}</small></h4>
                     </span>
                     <div>{tags_and_properties}</div>
                     <div>

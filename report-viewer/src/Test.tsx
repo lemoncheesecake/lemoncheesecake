@@ -17,7 +17,7 @@ class Test extends React.Component<Props, {}> {
                 <td>
                     <div className="extra-info-container">
                         <h5>
-                            {test.description}&nbsp;
+                            <span className="multi-line-text">{test.description}</span>&nbsp;
                             <a href={"#" + test_id} className="glyphicon glyphicon-link extra-info anchorlink" style={{fontSize: "90%"}}/>
                             <br/>
                             <small>{test_id}</small>
