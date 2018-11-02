@@ -6,6 +6,7 @@ Created on Dec 10, 2016
 
 import os
 import os.path as osp
+import sys
 import shutil
 
 from lemoncheesecake.suite import load_suites_from_directory
@@ -124,6 +125,9 @@ class SimpleProjectConfiguration(ProjectConfiguration):
     def is_threaded(self):
         return self._threaded
 
+    def get_report_info(self):
+        return [("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:]))]
+
 
 class Project:
     def __init__(self, project_config, project_dir):
@@ -183,7 +187,7 @@ def _find_file_in_parent_directories(filename, dirname):
 
     parent_dirname = osp.dirname(dirname)
     if parent_dirname == dirname:
-        return None # root directory has been reached
+        return None  # root directory has been reached
 
     return _find_file_in_parent_directories(filename, parent_dirname)
 
@@ -217,7 +221,7 @@ def load_project_from_file(project_filename):
     try:
         project_config_module = import_module(project_filename)
     except UserError as e:
-        raise e # propagate UserError
+        raise e  # propagate UserError
     except Exception:
         raise ProjectError("Got an unexpected error while loading project:%s" % (
             serialize_current_exception()
