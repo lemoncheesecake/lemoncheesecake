@@ -18,6 +18,7 @@ from lemoncheesecake.reporting.report import get_stats_from_suites
 from lemoncheesecake.filter import filter_suites
 from lemoncheesecake.testtree import flatten_suites
 from lemoncheesecake.helpers.display import humanize_duration, get_status_color
+from lemoncheesecake.helpers.string import normalize_multi_line_text
 
 
 class LinePrinter:
@@ -199,7 +200,7 @@ class SequentialConsoleReportingSession(ReportingSession):
         self._bypass_test(event.test, "disabled")
 
     def on_step(self, event):
-        self.lp.print_line("%s (%s...)" % (self.step_prefix, event.step_description))
+        self.lp.print_line("%s (%s...)" % (self.step_prefix, normalize_multi_line_text(event.step_description)))
 
     def on_test_session_end(self, event):
         _print_summary(self.report.stats(), self.report.parallelized)

@@ -35,7 +35,7 @@ class Step extends React.Component<Props, {}> {
                                     <span className="glyphicon glyphicon-remove text-danger"></span>
                             }
                             &nbsp;
-                            <strong>{step.description}</strong>
+                            <span className="multi-line-text"><strong>{step.description}</strong></span>
                         </span>
                         <TimeExtraInfo start={step.start_time} end={step.end_time}/>
                     </h6>

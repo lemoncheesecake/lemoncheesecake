@@ -12,6 +12,7 @@ from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import get_suites_from_project
 from lemoncheesecake.filter import add_run_filter_cli_args
 from lemoncheesecake.project import load_project
+from lemoncheesecake.helpers.string import normalize_multi_line_text
 
 
 class ShowCommand(Command):
@@ -44,14 +45,14 @@ class ShowCommand(Command):
     
     def get_test_label(self, test, suite):
         if self.show_description:
-            return test.description
+            return normalize_multi_line_text(test.description)
         if self.short:
             return test.name
         return test.path
 
     def get_suite_label(self, suite):
         if self.show_description:
-            return suite.description
+            return normalize_multi_line_text(suite.description)
         if self.short:
             return suite.name
         return suite.path

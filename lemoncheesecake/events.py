@@ -4,7 +4,7 @@ import inspect
 
 from six.moves.queue import Queue
 
-from lemoncheesecake.helpers.misc import camel_case_to_snake_case
+from lemoncheesecake.helpers.string import camel_case_to_snake_case
 from lemoncheesecake.exceptions import serialize_current_exception
 
 
