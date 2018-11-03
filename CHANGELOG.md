@@ -1,3 +1,22 @@
+# 0.20.0 (2018-11-03)
+
+- **lcc run**: when `--threads` is used, the Ctrl-C handling has been greatly improved, the tests in-progress are not 
+  stopped, but all the pending tests won't be run
+- **lcc run**: fix the suite header line not being properly displayed when the tests are run sequentially
+- **lcc run**: add a `--force-disabled` CLI argument to force the execution of disabled tests and suites
+- **lcc run**: the report save frequency can now be set through the `--save-report-at` CLI argument
+  or `$LCC_SAVE_REPORT_AT` env variable
+- **lcc run**: show the test full path by default with the console reporting backend
+- **API**: fix properties being automatically called when a suite class is loaded
+- **API**: add a `hide_command_line_in_report` argument in `SimpleProjectConfiguration` constructor to make it
+  possible to hide the command line in the resulting report
+- **API**, `match_pattern`:
+  - add `description` and `mention_regexp` argument to make the matcher description customizable
+  - add `make_pattern_matcher` function to easily create a new matcher function from a given pattern
+- **HTML report**: tests in progress are not displayed with a (pseudo) `IN_PROGRESS` status instead of `n/a`
+- **console & HTML report**: support multi-line test descriptions, suite descriptions and steps
+- Add official support for Python 3.7 and drop official support for Python 3.3
+
 # 0.19.10 (2018-10-17)
 
 - **API**: fix buggy `all_of` and `any_of` matchers when a single instance is used multiple times on Python 3
