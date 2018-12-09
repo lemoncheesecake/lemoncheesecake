@@ -11,10 +11,10 @@ from lemoncheesecake.suite.core import InjectedFixture
 from lemoncheesecake.exceptions import ProgrammingError
 
 __all__ = "add_test_into_suite", "add_test_in_suite", "add_tests_in_suite", "get_metadata", \
-    "suite", "test", "tags", "prop", "link", "disabled", "conditional", "hidden", "inject_fixture"
+    "suite", "test", "tags", "prop", "link", "disabled", "conditional", "hidden", "depends_on", "inject_fixture"
 
 
-class Metadata:
+class Metadata(object):
     _next_rank = 1
 
     def __init__(self):
@@ -26,6 +26,7 @@ class Metadata:
         self.tags = []
         self.links = []
         self.rank = 0
+        self.dependencies = []
         self.disabled = False
         self.condition = None
 
@@ -66,7 +67,7 @@ def get_metadata(obj):
     global _objects_with_metadata
 
     if hasattr(obj, "_lccmetadata"):
-        if obj not in _objects_with_metadata: # metadata comes from the superclass
+        if obj not in _objects_with_metadata:  # metadata comes from the superclass
             obj._lccmetadata = copy.deepcopy(obj._lccmetadata)
         return obj._lccmetadata
     else:
@@ -81,8 +82,10 @@ def suite(description, name=None, rank=None):
         if not inspect.isclass(klass):
             raise ProgrammingError("%s is not a class (suite decorator can only be used on a class)" % klass)
         md = get_metadata(klass)
+        if md.dependencies:
+            raise ProgrammingError("'depends_on' can not be used on a suite class")
         md.is_suite = True
-        md.rank = rank if rank != None else get_metadata_next_rank()
+        md.rank = rank if rank is not None else get_metadata_next_rank()
         md.name = name or klass.__name__
         md.description = description
         return klass
@@ -150,6 +153,21 @@ def conditional(condition):
 
 def hidden():
     return conditional(lambda _: False)
+
+
+def depends_on(*deps):
+    """
+    Decorator, only applicable to a test. Add dependencies to a test.
+
+    :param deps: the list of test paths that the current is depending on.
+    """
+    def wrapper(obj):
+        md = get_metadata(obj)
+        if md.is_suite:
+            raise ProgrammingError("'depends_on' can not be used on a suite class")
+        md.dependencies.extend(deps)
+        return obj
+    return wrapper
 
 
 def inject_fixture(fixture_name=None):

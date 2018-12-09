@@ -44,6 +44,7 @@ def load_test(obj):
     test.links.extend(md.links)
     test.disabled = md.disabled
     test.rank = md.rank
+    test.dependencies.extend(md.dependencies)
     return test
 
 
@@ -108,7 +109,7 @@ def load_suite_from_class(class_):
     try:
         suite_obj = class_()
     except UserError as e:
-        raise e # propagate UserError
+        raise e  # propagate UserError
     except Exception:
         raise ProgrammingError("Got an unexpected error while instantiating suite class '%s':%s" % (
             class_.__name__, serialize_current_exception()

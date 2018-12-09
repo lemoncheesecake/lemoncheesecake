@@ -421,3 +421,26 @@ def test_get_fixtures():
 
     assert suite.get_fixtures() == ["foo"]
 
+
+def test_depends_on_test():
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("My Test")
+        @lcc.depends_on("another.test")
+        def test(self):
+            pass
+
+    suite = load_suite_from_class(suite)
+    test = suite.get_tests()[0]
+
+    assert test.dependencies == ["another.test"]
+
+
+def test_depends_on_suite():
+    with pytest.raises(ProgrammingError):
+        @lcc.suite("suite")
+        @lcc.depends_on("another.suite")
+        class suite:
+            @lcc.test("My Test")
+            def test(self):
+                pass

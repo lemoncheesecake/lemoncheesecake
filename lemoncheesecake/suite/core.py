@@ -22,6 +22,7 @@ class Test(BaseTest):
         self.callback = callback
         self.disabled = False
         self.rank = 0
+        self.dependencies = []
 
     def is_disabled(self):
         node = self
