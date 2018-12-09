@@ -6,14 +6,11 @@ Created on Sep 30, 2016
 
 import pytest
 
-from lemoncheesecake import runner
-from lemoncheesecake.suite import load_suites_from_classes
 from lemoncheesecake.exceptions import *
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite import add_test_into_suite
-from lemoncheesecake.testtree import flatten_tests, TreeLocation
+from lemoncheesecake.testtree import TreeLocation
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
-from lemoncheesecake.fixtures import FixtureRegistry
 
 from helpers.runner import run_suite_class, run_suite_classes, run_suite, build_suite_from_module
 from helpers.report import assert_test_statuses, assert_test_passed, assert_test_failed, assert_test_skipped, \
@@ -1199,4 +1196,4 @@ def test_exception_in_reporting_backend(tmpdir):
             lcc.log_info("some log")
 
     with pytest.raises(MyException) as excinfo:
-        runner.run_suites(load_suites_from_classes([mysuite]), FixtureRegistry(), [MyReportingBackend()], tmpdir.strpath)
+        run_suite_class(mysuite, backends=[MyReportingBackend()], tmpdir=tmpdir)
