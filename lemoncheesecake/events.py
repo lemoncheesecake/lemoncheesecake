@@ -64,6 +64,7 @@ class EventManager:
         else:
             self._event_types[event_name].reset()
         self._queue = Queue()
+        self._pending_failure = None, None
 
     def subscribe_to_event(self, event, handler):
         self._event_types[_get_event_name(event)].subscribe(handler)

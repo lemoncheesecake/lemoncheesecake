@@ -83,7 +83,7 @@ A suite can be nested in another suite, it can be performed in different ways:
 
 - as a module in a sub directory whose name matches the parent suite module:
 
-  .. code-block:: none
+  .. code-block:: text
 
       $ tree
       .
@@ -197,3 +197,29 @@ Usage::
         @lcc.conditional(lambda test: mysuite.some_feature_enabled)
         def test_something(self):
             pass
+
+Dependency between tests
+------------------------
+
+Dependency between tests can be added using the ``@lcc.depends_on(*test_paths)`` decorator::
+
+    @lcc.suite("My Suite")
+    class mysuite:
+        @lcc.test("Test 1")
+        def test_1():
+            pass
+
+        @lcc.test("Test 2")
+        @lcc.depends_on("mysuite.test_1")
+        def test_2():
+            pass
+
+If "mysuite.test_1" fails, then "mysuite.test_2" will be skipped.
+
+This decorator:
+
+- can take multiple test paths
+
+- it is only applicable to tests (not suites)
+
+- the test path must point to a test (not a suite)

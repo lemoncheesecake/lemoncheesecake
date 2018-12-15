@@ -6,14 +6,11 @@ Created on Sep 30, 2016
 
 import pytest
 
-from lemoncheesecake import runner
-from lemoncheesecake.suite import load_suites_from_classes
 from lemoncheesecake.exceptions import *
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite import add_test_into_suite
-from lemoncheesecake.testtree import flatten_tests, TreeLocation
+from lemoncheesecake.testtree import TreeLocation
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
-from lemoncheesecake.fixtures import FixtureRegistry
 
 from helpers.runner import run_suite_class, run_suite_classes, run_suite, build_suite_from_module
 from helpers.report import assert_test_statuses, assert_test_passed, assert_test_failed, assert_test_skipped, \
@@ -1199,4 +1196,85 @@ def test_exception_in_reporting_backend(tmpdir):
             lcc.log_info("some log")
 
     with pytest.raises(MyException) as excinfo:
-        runner.run_suites(load_suites_from_classes([mysuite]), FixtureRegistry(), [MyReportingBackend()], tmpdir.strpath)
+        run_suite_class(mysuite, backends=[MyReportingBackend()], tmpdir=tmpdir)
+
+
+def test_depends_on_passed():
+    @lcc.suite("s")
+    class suite:
+        @lcc.test("t1")
+        def test1(self):
+            pass
+
+        @lcc.test("t2")
+        @lcc.depends_on("suite.test1")
+        def test2(self):
+            pass
+
+    report = run_suite_class(suite)
+
+    assert_test_statuses(report, passed=["suite.test1", "suite.test2"])
+
+
+def test_depends_on_failed_exception():
+    @lcc.suite("s")
+    class suite:
+        @lcc.test("t1")
+        def test1(self):
+            raise Exception()
+
+        @lcc.test("t2")
+        @lcc.depends_on("suite.test1")
+        def test2(self):
+            pass
+
+        @lcc.test("t3")
+        def test3(self):
+            pass
+
+    report = run_suite_class(suite)
+
+    assert_test_statuses(report, failed=["suite.test1"], skipped=["suite.test2"], passed=["suite.test3"])
+
+
+def test_depends_on_failed_failure():
+    @lcc.suite("s")
+    class suite:
+        @lcc.test("t1")
+        def test1(self):
+            lcc.log_error("some error")
+
+        @lcc.test("t2")
+        @lcc.depends_on("suite.test1")
+        def test2(self):
+            pass
+
+        @lcc.test("t3")
+        def test3(self):
+            pass
+
+    report = run_suite_class(suite)
+
+    assert_test_statuses(report, failed=["suite.test1"], skipped=["suite.test2"], passed=["suite.test3"])
+
+
+def test_depends_on_skipped():
+    @lcc.suite("s")
+    class suite:
+        @lcc.test("t1")
+        def test1(self):
+            lcc.log_error("some error")
+
+        @lcc.test("t2")
+        @lcc.depends_on("suite.test1")
+        def test2(self):
+            pass
+
+        @lcc.test("t3")
+        @lcc.depends_on("suite.test2")
+        def test3(self):
+            pass
+
+    report = run_suite_class(suite)
+
+    assert_test_statuses(report, failed=["suite.test1"], skipped=["suite.test2", "suite.test3"])
