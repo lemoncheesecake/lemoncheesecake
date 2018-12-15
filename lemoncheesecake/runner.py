@@ -4,8 +4,6 @@ Created on Jan 24, 2016
 @author: nicolas
 '''
 
-import os
-import sys
 import traceback
 import threading
 import itertools
@@ -19,7 +17,7 @@ from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, Fix
     UserError, serialize_current_exception
 from lemoncheesecake import events
 from lemoncheesecake.testtree import TreeLocation, flatten_tests
-from lemoncheesecake.task import BaseTask, run_tasks
+from lemoncheesecake.task import BaseTask, run_tasks, AbortTask
 
 
 class RunContext(object):
@@ -113,10 +111,10 @@ class TestTask(BaseTask):
         BaseTask.__init__(self)
         self.test = test
         self.suite_scheduled_fixtures = suite_scheduled_fixtures
-        self.dependency = dependency
+        self.dependencies = {dependency} if dependency else set()
 
     def get_dependencies(self):
-        return (self.dependency,) if self.dependency else ()
+        return self.dependencies
 
     def abort(self, context, reason=""):
         events.fire(events.TestSkippedEvent(self.test, reason))
@@ -195,10 +193,15 @@ class TestTask(BaseTask):
             context.run_teardown_funcs(teardown_funcs)
             events.fire(events.TestTeardownEndEvent(self.test, is_location_successful(TreeLocation.in_test(self.test))))
 
-        if context.stop_on_failure and not is_location_successful(TreeLocation.in_test(self.test)):
+        is_test_successful = is_location_successful(TreeLocation.in_test(self.test))
+
+        if context.stop_on_failure and not is_test_successful:
             context.abort_session()
 
         events.fire(events.TestEndEvent(self.test))
+
+        if not is_test_successful:
+            raise AbortTask("Test '%s' has failed" % self.test.path)
 
     def __str__(self):
         return "<%s %s>" % (self.__class__.__name__, self.test.path)
@@ -493,6 +496,13 @@ def build_test_session_teardown_task(test_session_setup_task, dependencies):
     return TestSessionTeardownTask(test_session_setup_task, dependencies) if test_session_setup_task else None
 
 
+def lookup_test_task(tasks, test_path):
+    try:
+        return next(task for task in tasks if isinstance(task, TestTask) and task.test.path == test_path)
+    except StopIteration:
+        raise LookupError("Cannot find test '%s' in tasks" % test_path)
+
+
 def build_tasks(suites, fixture_registry, session_scheduled_fixtures):
     ###
     # Build test session setup task
@@ -522,10 +532,32 @@ def build_tasks(suites, fixture_registry, session_scheduled_fixtures):
         test_session_teardown_task = None
 
     ###
-    # Return tasks != None
+    # Get all effective tasks (task != None)
     ###
     task_iter = itertools.chain((test_session_setup_task,), suite_tasks, (test_session_teardown_task,))
-    return list(filter(bool, task_iter))
+    tasks = list(filter(bool, task_iter))
+
+    ###
+    # Add extra dependencies in tasks for tests that depend on other tests
+    ###
+    for test in flatten_tests(suites):
+        if not test.dependencies:
+            continue
+        test_task = lookup_test_task(tasks, test.path)
+        for dep_test_path in test.dependencies:
+            try:
+                dep_test = lookup_test_task(tasks, dep_test_path)
+            except LookupError:
+                raise UserError(
+                    "Cannot find dependency test '%s' for '%s', "
+                    "either the test does not exist or is not going to be run" % (dep_test_path, test.path)
+                )
+            test_task.dependencies.add(dep_test)
+
+    ###
+    # Return tasks
+    ###
+    return tasks
 
 
 def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, reporting_backends, report_dir,

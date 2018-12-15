@@ -1197,3 +1197,84 @@ def test_exception_in_reporting_backend(tmpdir):
 
     with pytest.raises(MyException) as excinfo:
         run_suite_class(mysuite, backends=[MyReportingBackend()], tmpdir=tmpdir)
+
+
+def test_depends_on_passed():
+    @lcc.suite("s")
+    class suite:
+        @lcc.test("t1")
+        def test1(self):
+            pass
+
+        @lcc.test("t2")
+        @lcc.depends_on("suite.test1")
+        def test2(self):
+            pass
+
+    report = run_suite_class(suite)
+
+    assert_test_statuses(report, passed=["suite.test1", "suite.test2"])
+
+
+def test_depends_on_failed_exception():
+    @lcc.suite("s")
+    class suite:
+        @lcc.test("t1")
+        def test1(self):
+            raise Exception()
+
+        @lcc.test("t2")
+        @lcc.depends_on("suite.test1")
+        def test2(self):
+            pass
+
+        @lcc.test("t3")
+        def test3(self):
+            pass
+
+    report = run_suite_class(suite)
+
+    assert_test_statuses(report, failed=["suite.test1"], skipped=["suite.test2"], passed=["suite.test3"])
+
+
+def test_depends_on_failed_failure():
+    @lcc.suite("s")
+    class suite:
+        @lcc.test("t1")
+        def test1(self):
+            lcc.log_error("some error")
+
+        @lcc.test("t2")
+        @lcc.depends_on("suite.test1")
+        def test2(self):
+            pass
+
+        @lcc.test("t3")
+        def test3(self):
+            pass
+
+    report = run_suite_class(suite)
+
+    assert_test_statuses(report, failed=["suite.test1"], skipped=["suite.test2"], passed=["suite.test3"])
+
+
+def test_depends_on_skipped():
+    @lcc.suite("s")
+    class suite:
+        @lcc.test("t1")
+        def test1(self):
+            lcc.log_error("some error")
+
+        @lcc.test("t2")
+        @lcc.depends_on("suite.test1")
+        def test2(self):
+            pass
+
+        @lcc.test("t3")
+        @lcc.depends_on("suite.test2")
+        def test3(self):
+            pass
+
+    report = run_suite_class(suite)
+
+    assert_test_statuses(report, failed=["suite.test1"], skipped=["suite.test2", "suite.test3"])

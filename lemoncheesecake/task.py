@@ -32,7 +32,7 @@ def pop_runnable_tasks(remaining_tasks, completed_tasks, nb_tasks):
 
 def pop_dependant_tasks(ref_task, tasks):
     for task in list(tasks):
-        if ref_task in task.get_dependencies():
+        if ref_task in task.get_dependencies() and task in tasks:
             tasks.remove(task)
             yield task
             for indirect_task in pop_dependant_tasks(task, tasks):
