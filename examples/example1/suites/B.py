@@ -1,8 +1,10 @@
 import lemoncheesecake.api as lcc
+from lemoncheesecake.matching import *
 
 SUITE = {
     "description": "B"
 }
+
 
 @lcc.suite("BB1")
 class BB1:
@@ -10,7 +12,8 @@ class BB1:
     def c_test_1(self):
         import time
         time.sleep(0.21)
-        lcc.assert_eq("value", 32, 54)
+        require_that("value", 1, is_integer(2))
+
 
 @lcc.suite("BB2")
 class BB2:

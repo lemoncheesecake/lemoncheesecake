@@ -1,6 +1,8 @@
-import lemoncheesecake.api as lcc
 import re
 import time
+
+import lemoncheesecake.api as lcc
+from lemoncheesecake.matching import *
 
 MULTI_LINE_TEXT = "- first line\n- second line\n- third line"
 
@@ -21,35 +23,27 @@ class A:
     @lcc.tags("my_tag1")
     @lcc.test("My test description")
     def this_is_a_test(self, fixt1, fixt9):
-        lcc.set_step("test list checkers")
-        lcc.log_info("do test 1 !")
-        lcc.check_list_len("my list", [1,2], 3)
-        lcc.check_list_contains("my other list", [ 1, 2, 3 ], [ 1, 4])
-        lcc.check_list_contains("param", ("foo", "baz"), ("bar", ))
-        lcc.check_choice("param", "foo", ("foo", "bar"))
-        lcc.check_choice("param", "baz", ("foo", "bar"))
-        lcc.set_step("test dict checkers")
-        lcc.check_dict_has_key("foo", { "foo": 33 })
-        lcc.check_dict_has_int("foo", { "foo": 33 })
-        lcc.check_dict_has_list("foo", { "foo": [1, 2] })
-        lcc.check_dict_has_dict("foo", { "foo": {"foo": "bar"} })
-        lcc.check_dict_value("bar", { "bar": 33 }, 33, lcc.check_eq, key_label="bar key")
-        lcc.set_step("test simple value checkers")
-        lcc.log_info("something else")
-        lcc.check_eq("some value", 1, 1)
-        lcc.check_eq("some value", 1, 2)
-        lcc.check_str_eq("some string", "foo", "bar")
-        lcc.check_int_eq("my num", "33", 33)
-        lcc.set_step("test dict composed checkers")
-        lcc.check_dictval_str_eq("foo", {"foo": "bar"}, "bar")
-        lcc.check_str_match("some value", "foo bar", re.compile("foo.+"))
-        lcc.check_str_does_not_match("some value", "foo bar", re.compile("foo.+"))
-        lcc.check_int_eq("some value", None, None)
-        lcc.check_dictval_int_eq("foo", {"foo": None}, None)
-        lcc.check_int_eq("some value", 42, None)
-        lcc.check_bool_eq("some bool", False, False)
-        lcc.log_url("http://example.com")
-        
+        lcc.set_step("Test list matchers")
+        check_that("my list", [1, 2], has_length(3))
+        check_that("my other list", [1, 2, 3], has_values((1, 4)))
+        check_that("param", ("foo", "baz"), has_values(("bar", )))
+        check_that("param", "foo", is_in(("foo", "bar")))
+        check_that("param", "baz", is_in(("foo", "bar")))
+
+        lcc.set_step("Test dict matchers")
+        check_that("dict", {"foo", 1}, has_entry("foo"))
+        check_that("dict", {"foo", 1}, has_entry("foo", is_integer()))
+        check_that("dict", {"foo", (1, 2)}, has_entry("foo", is_list()))
+        check_that("dict", {"foo": {"foo": "bar"}}, has_entry("foo", is_dict()))
+        check_that("dict", {"foo": 1}, has_entry("foo", equal_to(1)))
+
+        lcc.set_step("Test simple value matchers")
+        check_that("some value", 1, equal_to(1))
+        check_that("some value", 1, equal_to(2))
+        check_that("some string", "foo", equal_to("bar"))
+        check_that("some integer", "1", is_integer(1))
+        check_that("some boolean", True, is_bool(True))
+
     def foo(self):
         pass
 
@@ -73,8 +67,7 @@ class A:
     
     @lcc.test("Fourth test")
     def fourth_test(self):
-        lcc.check_gteq("value", 4, 2)
-        lcc.check_str_contains("string", "foobar", "foo")
+        pass
 
     @lcc.suite(MULTI_LINE_TEXT)
     class multi_line_description_suite:
@@ -96,7 +89,7 @@ class A:
         @lcc.test("<h1>html escaping</h1>")
         def html_escaping(self):
             lcc.set_step("<h1>step description</h1>")
-            lcc.check_eq("<h1>value</h1>", "<h1>actual</h1>", "<h1>expected</h1>")
+            lcc.check_that("<h1>value</h1>", "<h1>actual</h1>", equal_to("<h1>expected</h1>"))
             lcc.log_info("<h1>some log</h1>")
             lcc.save_attachment_content("content", "filename", "<h1>attachment</h1>")
     
@@ -113,5 +106,4 @@ class A:
         class a_suite_with_parent_without_direct_tests:
             @lcc.test("Yet Another Test")
             def yet_another_test(self):
-                lcc.check_str_not_eq("string", "foo", "foo")
-        
+                check_that("string", "foo", not_equal_to("foo"))

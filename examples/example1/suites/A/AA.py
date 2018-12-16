@@ -1,4 +1,5 @@
 import lemoncheesecake.api as lcc
+from lemoncheesecake.matching import *
 
 @lcc.suite("AA")
 @lcc.link("http://bugtracker.net/tickets/1234")
@@ -19,4 +20,4 @@ class AA:
     class AAA:
         @lcc.test("Test of AAA")
         def test_of_B(self):
-            lcc.assert_eq("value", 1, 2)
+            check_that("value", 1, equal_to(2))
