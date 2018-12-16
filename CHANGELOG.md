@@ -1,3 +1,11 @@
+# 0.21.0 (2018-12-16)
+
+- **API**: add `lcc.depends_on()` decorator which provides dependencies between tests
+
+## API breaking changes
+
+- **API**: the checkers API has been removed (whose implementation was lying in the `lemoncheesecake.checkers` module)
+
 # 0.20.0 (2018-11-03)
 
 - **lcc run**: when `--threads` is used, the Ctrl-C handling has been greatly improved, the tests in-progress are not 
