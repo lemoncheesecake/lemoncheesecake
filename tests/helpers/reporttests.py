@@ -19,14 +19,13 @@ from helpers.runner import run_suite_class, run_suite_classes, dump_report
 from helpers.report import assert_report
 
 
-def do_test_serialization(suites, backend, tmpdir, fixtures=[]):
+def do_test_serialization(suites, backend, tmpdir, fixtures=()):
     if type(suites) in (list, tuple):
-        report = run_suite_classes(suites, fixtures=fixtures, backends=[backend])
+        report = run_suite_classes(suites, fixtures=fixtures, backends=[backend], tmpdir=tmpdir)
     else:
-        report = run_suite_class(suites, fixtures=fixtures, backends=[backend])
+        report = run_suite_class(suites, fixtures=fixtures, backends=[backend], tmpdir=tmpdir)
 
-    report_filename = tmpdir.join("report").strpath
-    backend.save_report(report_filename, report)
+    report_filename = tmpdir.join(backend.get_report_filename()).strpath
     unserialized_report = backend.load_report(report_filename)
 
 #     dump_report(unserialized_report)
