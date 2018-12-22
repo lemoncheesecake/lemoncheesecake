@@ -19,11 +19,11 @@ from helpers.runner import run_suite_class, run_suite_classes, dump_report
 from helpers.report import assert_report
 
 
-def do_test_serialization(suites, backend, tmpdir, fixtures=()):
+def do_test_serialization(suites, backend, tmpdir, fixtures=(), save_mode=None):
     if type(suites) in (list, tuple):
-        report = run_suite_classes(suites, fixtures=fixtures, backends=[backend], tmpdir=tmpdir)
+        report = run_suite_classes(suites, fixtures=fixtures, backends=[backend], tmpdir=tmpdir, save_mode=save_mode)
     else:
-        report = run_suite_class(suites, fixtures=fixtures, backends=[backend], tmpdir=tmpdir)
+        report = run_suite_class(suites, fixtures=fixtures, backends=[backend], tmpdir=tmpdir, save_mode=save_mode)
 
     report_filename = tmpdir.join(backend.get_report_filename()).strpath
     unserialized_report = backend.load_report(report_filename)
@@ -33,14 +33,14 @@ def do_test_serialization(suites, backend, tmpdir, fixtures=()):
     assert_report(unserialized_report, report)
 
 
-def test_simple_test(backend, tmpdir):
+def test_simple_test(backend, tmpdir, save_mode=None):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             lcc.check_that("foo", 1, lcc.equal_to(1))
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    do_test_serialization(MySuite, backend, tmpdir, save_mode=save_mode)
 
 
 def test_test_with_all_metadata(backend, tmpdir):
@@ -446,25 +446,20 @@ def test_nb_threads(backend, tmpdir):
 # at least we want to make sure that each of this mode is not failing
 
 def test_save_at_end_of_tests(backend, tmpdir):
-    backend.save_mode = SAVE_AT_END_OF_TESTS
-    test_simple_test(backend, tmpdir)
+    test_simple_test(backend, tmpdir, SAVE_AT_END_OF_TESTS)
 
 
 def test_save_at_end_of_each_event(backend, tmpdir):
-    backend.save_mode = SAVE_AT_EACH_EVENT
-    test_simple_test(backend, tmpdir)
+    test_simple_test(backend, tmpdir, SAVE_AT_EACH_EVENT)
 
 
 def test_save_at_each_failed_test(backend, tmpdir):
-    backend.save_mode = SAVE_AT_EACH_FAILED_TEST
-    test_simple_test(backend, tmpdir)
+    test_simple_test(backend, tmpdir, SAVE_AT_EACH_FAILED_TEST)
 
 
 def test_save_at_each_test(backend, tmpdir):
-    backend.save_mode = SAVE_AT_EACH_TEST
-    test_simple_test(backend, tmpdir)
+    test_simple_test(backend, tmpdir, SAVE_AT_EACH_TEST)
 
 
 def test_save_at_each_suite(backend, tmpdir):
-    backend.save_mode = SAVE_AT_EACH_SUITE
-    test_simple_test(backend, tmpdir)
+    test_simple_test(backend, tmpdir, SAVE_AT_EACH_SUITE)
