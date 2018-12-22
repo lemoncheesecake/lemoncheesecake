@@ -7,7 +7,7 @@ Created on Mar 29, 2016
 import os
 import os.path as osp
 
-from lemoncheesecake.exceptions import InvalidReportFile, ProgrammingError, method_not_implemented
+from lemoncheesecake.exceptions import InvalidReportFile, ProgrammingError
 from lemoncheesecake.helpers.introspection import object_has_method
 from lemoncheesecake.reporting.report import Report
 from lemoncheesecake import events
@@ -66,14 +66,14 @@ def initialize_reporting_backends(backends, report_dir, report, parallel, save_m
 
 
 class FileReportSession(ReportingSession):
-    def __init__(self, report_filename, report, save_func, save_mode):
+    def __init__(self, report_filename, report, reporting_backend, save_mode):
         self.report_filename = report_filename
         self.report = report
-        self.save_func = save_func
+        self.reporting_backend = reporting_backend
         self.save_mode = save_mode
 
     def save(self):
-        self.save_func(self.report_filename, self.report)
+        self.reporting_backend.save_report(self.report_filename, self.report)
 
     def _handle_code_end(self, is_successful):
         if (self.save_mode == SAVE_AT_EACH_TEST) or (self.save_mode == SAVE_AT_EACH_FAILED_TEST and not is_successful):
@@ -124,11 +124,14 @@ class FileReportSession(ReportingSession):
 
 class FileReportBackend(ReportingBackend):
     def get_report_filename(self):
-        method_not_implemented("get_report_filename", self)
+        raise NotImplemented()
+
+    def save_report(self, filename, report):
+        raise NotImplemented()
 
     def create_reporting_session(self, report_dir, report, parallel, save_mode=None):
         return FileReportSession(
-            os.path.join(report_dir, self.get_report_filename()), report, self.save_report, save_mode
+            os.path.join(report_dir, self.get_report_filename()), report, self, save_mode
         )
 
 
