@@ -31,11 +31,11 @@ SAVE_AT_EACH_FAILED_TEST = 4
 SAVE_AT_EACH_EVENT = 5
 
 
-class ReportingSession:
+class ReportingSession(object):
     pass
 
 
-class ReportingBackend:
+class ReportingBackend(object):
     def is_available(self):
         return True
 
@@ -59,9 +59,9 @@ class ReportingBackend:
 #         method_not_implemented("unserialize_report", self)
 
 
-def initialize_reporting_backends(backends, report_dir, report, parallel):
+def initialize_reporting_backends(backends, report_dir, report, parallel, save_mode):
     for backend in backends:
-        session = backend.create_reporting_session(report_dir, report, parallel)
+        session = backend.create_reporting_session(report_dir, report, parallel, save_mode)
         events.add_listener(session)
 
 
@@ -123,15 +123,12 @@ class FileReportSession(ReportingSession):
 
 
 class FileReportBackend(ReportingBackend):
-    def __init__(self, save_mode=SAVE_AT_EACH_FAILED_TEST):
-        self.save_mode = save_mode
-
     def get_report_filename(self):
         method_not_implemented("get_report_filename", self)
 
-    def create_reporting_session(self, report_dir, report, parallel):
+    def create_reporting_session(self, report_dir, report, parallel, save_mode=None):
         return FileReportSession(
-            os.path.join(report_dir, self.get_report_filename()), report, self.save_report, self.save_mode
+            os.path.join(report_dir, self.get_report_filename()), report, self.save_report, save_mode
         )
 
 

@@ -114,8 +114,7 @@ def save_report_into_file(report, filename, indent_level=DEFAULT_INDENT_LEVEL):
 class JunitBackend(FileReportBackend):
     name = "junit"
 
-    def __init__(self, save_mode=SAVE_AT_EACH_FAILED_TEST):
-        FileReportBackend.__init__(self, save_mode)
+    def __init__(self):
         self.indent_level = DEFAULT_INDENT_LEVEL
 
     def get_report_filename(self):

@@ -9,7 +9,7 @@ import json
 from collections import OrderedDict
 
 import lemoncheesecake
-from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend, SAVE_AT_EACH_FAILED_TEST
+from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend
 from lemoncheesecake.reporting.report import (
     LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, SuiteData,
     format_timestamp, parse_timestamp
@@ -240,8 +240,7 @@ def load_report_from_file(filename):
 class JsonBackend(FileReportBackend):
     name = "json"
 
-    def __init__(self, save_mode=SAVE_AT_EACH_FAILED_TEST, javascript_compatibility=True, pretty_formatting=False):
-        FileReportBackend.__init__(self, save_mode)
+    def __init__(self, javascript_compatibility=True, pretty_formatting=False):
         self.javascript_compatibility = javascript_compatibility
         self.pretty_formatting = pretty_formatting
 

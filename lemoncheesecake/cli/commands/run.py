@@ -15,7 +15,7 @@ from lemoncheesecake.filter import add_run_filter_cli_args
 from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture
 from lemoncheesecake.project import find_project_file, load_project_from_file, load_project
 from lemoncheesecake.reporting import filter_reporting_backends_by_capabilities, CAPABILITY_REPORTING_SESSION
-from lemoncheesecake.reporting.backend import FileReportBackend, SAVE_AT_EACH_EVENT, SAVE_AT_EACH_FAILED_TEST, SAVE_AT_EACH_SUITE, \
+from lemoncheesecake.reporting.backend import SAVE_AT_EACH_EVENT, SAVE_AT_EACH_FAILED_TEST, SAVE_AT_EACH_SUITE, \
     SAVE_AT_EACH_TEST, SAVE_AT_END_OF_TESTS
 from lemoncheesecake.runner import run_suites
 from lemoncheesecake import events
@@ -100,11 +100,8 @@ def run_project(project, cli_args):
         except KeyError:
             raise LemonCheesecakeException("Unknown reporting backend '%s'" % backend_name)
 
-    # Set report save mode (when relevant)
+    # Get report save mode
     save_mode = get_report_save_mode(cli_args)
-    for reporting_backend in active_reporting_backends:
-        if isinstance(reporting_backend, FileReportBackend):
-            reporting_backend.save_mode = save_mode
 
     # Create report dir
     if cli_args.report_dir:
@@ -139,7 +136,7 @@ def run_project(project, cli_args):
     is_successful = run_suites(
         suites, fixture_registry, active_reporting_backends, report_dir,
         force_disabled=cli_args.force_disabled, stop_on_failure=cli_args.stop_on_failure,
-        nb_threads=nb_threads
+        nb_threads=nb_threads, save_mode=save_mode
     )
 
     # Handle after run hook

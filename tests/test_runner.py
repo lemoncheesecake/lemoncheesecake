@@ -1186,7 +1186,7 @@ def test_exception_in_reporting_backend(tmpdir):
             raise MyException()
 
     class MyReportingBackend(ReportingBackend):
-        def create_reporting_session(self, report_dir, report, parallel):
+        def create_reporting_session(self, report_dir, report, parallel, save_mode):
             return MyReportingSession()
 
     @lcc.suite("MySuite")

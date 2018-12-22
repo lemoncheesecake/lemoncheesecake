@@ -360,8 +360,7 @@ def load_report_from_file(filename):
 class XmlBackend(FileReportBackend):
     name = "xml"
 
-    def __init__(self, save_mode=SAVE_AT_EACH_FAILED_TEST):
-        FileReportBackend.__init__(self, save_mode)
+    def __init__(self):
         self.indent_level = DEFAULT_INDENT_LEVEL
 
     def get_report_filename(self):
