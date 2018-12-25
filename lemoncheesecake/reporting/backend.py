@@ -81,6 +81,8 @@ class FileReportSession(ReportingSession):
     on_test_end = _handle_event
     on_suite_end = _handle_event
     on_log = _handle_event
+    on_log_attachment = _handle_event
+    on_log_url = _handle_event
     on_check = _handle_event
 
     def on_test_session_end(self, event):
