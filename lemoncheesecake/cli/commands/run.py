@@ -196,7 +196,7 @@ class RunCommand(Command):
             "--save-report", required=False,
             help="At what frequency the reporting backends such as json or xml must save reporting data to disk. "
                  "(default: $LCC_SAVE_REPORT_AT or each_failed_test, possible values are: "
-                 "at_end_of_tests, at_each_suite, at_each_test, at_each_failed_test, at_each_event)"
+                 "at_end_of_tests, at_each_suite, at_each_test, at_each_failed_test, at_each_event, every_${N}s)"
         )
 
         if project:

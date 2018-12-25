@@ -12,8 +12,7 @@ import time
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.reporting import Report
-from lemoncheesecake.reporting.savingstrategy import save_at_each_event_strategy, save_at_each_failed_test_strategy,\
-    save_at_each_suite_strategy, save_at_each_test_strategy
+from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy
 
 from helpers.runner import run_suite_class, run_suite_classes, dump_report
 from helpers.report import assert_report
@@ -454,16 +453,20 @@ def test_save_at_end_of_tests(backend, tmpdir):
 
 
 def test_save_at_event(backend, tmpdir):
-    test_simple_test(backend, tmpdir, save_at_each_event_strategy)
+    test_simple_test(backend, tmpdir, make_report_saving_strategy("at_each_event"))
 
 
 def test_save_at_each_failed_test(backend, tmpdir):
-    test_simple_test(backend, tmpdir, save_at_each_failed_test_strategy)
+    test_simple_test(backend, tmpdir, make_report_saving_strategy("at_each_failed_test"))
 
 
 def test_save_at_each_test(backend, tmpdir):
-    test_simple_test(backend, tmpdir, save_at_each_test_strategy)
+    test_simple_test(backend, tmpdir, make_report_saving_strategy("at_each_test"))
 
 
 def test_save_at_each_suite(backend, tmpdir):
-    test_simple_test(backend, tmpdir, save_at_each_suite_strategy)
+    test_simple_test(backend, tmpdir, make_report_saving_strategy("at_each_suite"))
+
+
+def test_save_every_seconds(backend, tmpdir):
+    test_simple_test(backend, tmpdir, make_report_saving_strategy("every_1s"))

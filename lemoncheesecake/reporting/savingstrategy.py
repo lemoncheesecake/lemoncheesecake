@@ -1,3 +1,6 @@
+import re
+import time
+
 from lemoncheesecake.events import TestSessionSetupEndEvent, TestSessionTeardownEndEvent, \
     TestEndEvent, SuiteSetupEndEvent, SuiteTeardownEndEvent, SuiteEndEvent, SteppedEvent
 
@@ -44,7 +47,25 @@ def save_at_each_event_strategy(event, _):
     return isinstance(event, SteppedEvent)
 
 
+class SaveAtInterval(object):
+    def __init__(self, interval):
+        self.interval = interval
+        self.last_saving = None
+
+    def __call__(self, event, report):
+        now = time.time()
+        if self.last_saving:
+            must_be_saved = now > self.last_saving + self.interval
+            if must_be_saved:
+                self.last_saving = now
+            return must_be_saved
+        else:
+            self.last_saving = now  # not a saving but an initialization
+            return False
+
+
 def make_report_saving_strategy(expression):
+    # first, try with a static expression
     static_expressions = {
         "at_end_of_tests": None,  # no need to an intermediate report saving in this case
         "at_each_suite": save_at_each_suite_strategy,
@@ -56,4 +77,12 @@ def make_report_saving_strategy(expression):
     try:
         return static_expressions[expression]
     except KeyError:
-        return ValueError("Unknown report saving strategy expression '%s'" % expression)
+        pass
+
+    # second, try with "every_Ns"
+    m = re.compile("^every[_ ](\d+)s$").match(expression)
+    if m:
+        return SaveAtInterval(int(m.group(1)))
+
+    # ok... nothing we know about
+    raise ValueError("Unknown report saving strategy expression '%s'" % expression)
