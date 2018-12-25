@@ -24,12 +24,6 @@ CAPABILITY_REPORTING_SESSION = 0x1
 CAPABILITY_SAVE_REPORT = 0x2
 CAPABILITY_LOAD_REPORT = 0x4
 
-SAVE_AT_END_OF_TESTS = 1
-SAVE_AT_EACH_SUITE = 2
-SAVE_AT_EACH_TEST = 3
-SAVE_AT_EACH_FAILED_TEST = 4
-SAVE_AT_EACH_EVENT = 5
-
 
 class ReportingSession(object):
     pass
@@ -59,67 +53,40 @@ class ReportingBackend(object):
 #         method_not_implemented("unserialize_report", self)
 
 
-def initialize_reporting_backends(backends, report_dir, report, parallel, save_mode):
+def initialize_reporting_backends(backends, report_dir, report, parallel, report_saving_strategy):
     for backend in backends:
-        session = backend.create_reporting_session(report_dir, report, parallel, save_mode)
+        session = backend.create_reporting_session(report_dir, report, parallel, report_saving_strategy)
         events.add_listener(session)
 
 
 class FileReportSession(ReportingSession):
-    def __init__(self, report_filename, report, reporting_backend, save_mode):
+    def __init__(self, report_filename, report, reporting_backend, report_saving_strategy):
         self.report_filename = report_filename
         self.report = report
         self.reporting_backend = reporting_backend
-        self.save_mode = save_mode
+        self.report_saving_strategy = report_saving_strategy
 
-    def save(self):
+    def _save(self):
         self.reporting_backend.save_report(self.report_filename, self.report)
 
-    def _handle_code_end(self, is_successful):
-        if (self.save_mode == SAVE_AT_EACH_TEST) or (self.save_mode == SAVE_AT_EACH_FAILED_TEST and not is_successful):
-            self.save()
-            return
+    def _handle_event(self, event):
+        report_must_be_saved = self.report_saving_strategy and self.report_saving_strategy(event, self.report)
+        if report_must_be_saved:
+            self._save()
 
-    def on_test_session_setup_end(self, event):
-        self._handle_code_end(
-            not self.report.test_session_setup or self.report.test_session_setup.is_successful()
-        )
-
-    def on_test_session_teardown_end(self, event):
-        self._handle_code_end(
-            not self.report.test_session_teardown or self.report.test_session_teardown.is_successful()
-        )
-
-    def on_suite_setup_end(self, event):
-        suite_data = self.report.get_suite(event.suite)
-        self._handle_code_end(
-            not suite_data.suite_setup or suite_data.suite_setup.is_successful()
-        )
-
-    def on_suite_teardown_end(self, event):
-        suite_data = self.report.get_suite(event.suite)
-        self._handle_code_end(
-            not suite_data.suite_teardown or suite_data.suite_teardown.is_successful()
-        )
-
-    def on_test_end(self, event):
-        test_data = self.report.get_test(event.test)
-        self._handle_code_end(test_data.status == "passed")
-
-    def on_suite_end(self, event):
-        if self.save_mode == SAVE_AT_EACH_SUITE:
-            self.save()
-
-    def on_log(self, event):
-        if self.save_mode == SAVE_AT_EACH_EVENT:
-            self.save()
-
-    def on_check(self, event):
-        if self.save_mode == SAVE_AT_EACH_EVENT:
-            self.save()
+    on_test_session_setup_end = _handle_event
+    on_test_session_teardown_end = _handle_event
+    on_suite_setup_end = _handle_event
+    on_suite_teardown_end = _handle_event
+    on_test_end = _handle_event
+    on_suite_end = _handle_event
+    on_log = _handle_event
+    on_check = _handle_event
 
     def on_test_session_end(self, event):
-        self.save()
+        # no matter what is the report_saving_strategy,
+        # the report will always be saved at the end of tests
+        self._save()
 
 
 class FileReportBackend(ReportingBackend):
@@ -129,9 +96,9 @@ class FileReportBackend(ReportingBackend):
     def save_report(self, filename, report):
         raise NotImplemented()
 
-    def create_reporting_session(self, report_dir, report, parallel, save_mode=None):
+    def create_reporting_session(self, report_dir, report, parallel, report_saving_strategy=None):
         return FileReportSession(
-            os.path.join(report_dir, self.get_report_filename()), report, self, save_mode
+            os.path.join(report_dir, self.get_report_filename()), report, self, report_saving_strategy
         )
 
 

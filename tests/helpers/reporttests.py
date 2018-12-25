@@ -11,19 +11,23 @@ from __future__ import print_function
 import time
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.reporting.backend import SAVE_AT_EACH_EVENT, SAVE_AT_EACH_FAILED_TEST, \
-    SAVE_AT_EACH_TEST, SAVE_AT_EACH_SUITE, SAVE_AT_END_OF_TESTS
 from lemoncheesecake.reporting import Report
+from lemoncheesecake.reporting.savingstrategy import save_at_each_event_strategy, save_at_each_failed_test_strategy,\
+    save_at_each_suite_strategy, save_at_each_test_strategy
 
 from helpers.runner import run_suite_class, run_suite_classes, dump_report
 from helpers.report import assert_report
 
 
-def do_test_serialization(suites, backend, tmpdir, fixtures=(), save_mode=None):
+def do_test_serialization(suites, backend, tmpdir, fixtures=(), report_saving_strategy=None):
     if type(suites) in (list, tuple):
-        report = run_suite_classes(suites, fixtures=fixtures, backends=[backend], tmpdir=tmpdir, save_mode=save_mode)
+        report = run_suite_classes(
+            suites, fixtures=fixtures, backends=[backend], tmpdir=tmpdir, report_saving_strategy=report_saving_strategy
+        )
     else:
-        report = run_suite_class(suites, fixtures=fixtures, backends=[backend], tmpdir=tmpdir, save_mode=save_mode)
+        report = run_suite_class(
+            suites, fixtures=fixtures, backends=[backend], tmpdir=tmpdir, report_saving_strategy=report_saving_strategy
+        )
 
     report_filename = tmpdir.join(backend.get_report_filename()).strpath
     unserialized_report = backend.load_report(report_filename)
@@ -33,14 +37,14 @@ def do_test_serialization(suites, backend, tmpdir, fixtures=(), save_mode=None):
     assert_report(unserialized_report, report)
 
 
-def test_simple_test(backend, tmpdir, save_mode=None):
+def test_simple_test(backend, tmpdir, report_saving_strategy=None):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             lcc.check_that("foo", 1, lcc.equal_to(1))
 
-    do_test_serialization(MySuite, backend, tmpdir, save_mode=save_mode)
+    do_test_serialization(MySuite, backend, tmpdir, report_saving_strategy=report_saving_strategy)
 
 
 def test_test_with_all_metadata(backend, tmpdir):
@@ -446,20 +450,20 @@ def test_nb_threads(backend, tmpdir):
 # at least we want to make sure that each of this mode is not failing
 
 def test_save_at_end_of_tests(backend, tmpdir):
-    test_simple_test(backend, tmpdir, SAVE_AT_END_OF_TESTS)
+    test_simple_test(backend, tmpdir, None)
 
 
-def test_save_at_end_of_each_event(backend, tmpdir):
-    test_simple_test(backend, tmpdir, SAVE_AT_EACH_EVENT)
+def test_save_at_event(backend, tmpdir):
+    test_simple_test(backend, tmpdir, save_at_each_event_strategy)
 
 
 def test_save_at_each_failed_test(backend, tmpdir):
-    test_simple_test(backend, tmpdir, SAVE_AT_EACH_FAILED_TEST)
+    test_simple_test(backend, tmpdir, save_at_each_failed_test_strategy)
 
 
 def test_save_at_each_test(backend, tmpdir):
-    test_simple_test(backend, tmpdir, SAVE_AT_EACH_TEST)
+    test_simple_test(backend, tmpdir, save_at_each_test_strategy)
 
 
 def test_save_at_each_suite(backend, tmpdir):
-    test_simple_test(backend, tmpdir, SAVE_AT_EACH_SUITE)
+    test_simple_test(backend, tmpdir, save_at_each_suite_strategy)

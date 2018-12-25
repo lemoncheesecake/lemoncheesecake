@@ -21,7 +21,7 @@ try:
 except ImportError:
     LXML_IS_AVAILABLE = False
 
-from lemoncheesecake.reporting.backend import FileReportBackend, SAVE_AT_EACH_FAILED_TEST
+from lemoncheesecake.reporting.backend import FileReportBackend
 from lemoncheesecake.reporting.report import LogData, CheckData, format_timestamp_as_iso_8601
 from lemoncheesecake.consts import LOG_LEVEL_ERROR
 from lemoncheesecake.reporting.backends.xml import make_xml_child, make_xml_node, indent_xml, set_node_attr, \

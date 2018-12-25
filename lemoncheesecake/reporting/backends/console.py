@@ -248,7 +248,7 @@ class ConsoleBackend(ReportingBackend):
         self.terminal_width = width
         self.show_test_full_path = True
 
-    def create_reporting_session(self, report_dir, report, parallel, save_mode):
+    def create_reporting_session(self, report_dir, report, parallel, saving_strategy):
         return \
             ParallelConsoleReportingSession(self.terminal_width, report) if parallel else \
             SequentialConsoleReportingSession(self.terminal_width, self.show_test_full_path, report)

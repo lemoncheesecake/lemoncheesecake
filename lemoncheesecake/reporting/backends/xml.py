@@ -14,7 +14,7 @@ except ImportError:
 import six
 
 import lemoncheesecake
-from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend, SAVE_AT_EACH_FAILED_TEST
+from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend
 from lemoncheesecake.reporting.report import (
     LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, SuiteData,
     format_timestamp, parse_timestamp
