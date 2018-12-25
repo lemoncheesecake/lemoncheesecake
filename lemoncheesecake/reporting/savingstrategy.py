@@ -1,4 +1,4 @@
-from lemoncheesecake.events import TestSessionEndEvent, TestSessionSetupEndEvent, TestSessionTeardownEndEvent, \
+from lemoncheesecake.events import TestSessionSetupEndEvent, TestSessionTeardownEndEvent, \
     TestEndEvent, SuiteSetupEndEvent, SuiteTeardownEndEvent, SuiteEndEvent, SteppedEvent
 
 
@@ -46,11 +46,11 @@ def save_at_each_event_strategy(event, _):
 
 def make_report_saving_strategy(expression):
     static_expressions = {
-        "end_of_tests": None,  # no need to an intermediate report saving in this case
-        "each_suite": save_at_each_suite_strategy,
-        "each_test": save_at_each_test_strategy,
-        "each_failed_test": save_at_each_failed_test_strategy,
-        "each_event": save_at_each_event_strategy
+        "at_end_of_tests": None,  # no need to an intermediate report saving in this case
+        "at_each_suite": save_at_each_suite_strategy,
+        "at_each_test": save_at_each_test_strategy,
+        "at_each_failed_test": save_at_each_failed_test_strategy,
+        "at_each_event": save_at_each_event_strategy
     }
 
     try:

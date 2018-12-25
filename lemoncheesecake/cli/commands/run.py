@@ -45,7 +45,7 @@ def get_nb_threads(cli_args):
 
 
 def get_report_saving_strategy(cli_args):
-    saving_strategy_expression = cli_args.save_report_at or os.environ.get("LCC_SAVE_REPORT_AT") or "each_failed_test"
+    saving_strategy_expression = cli_args.save_report or os.environ.get("LCC_SAVE_REPORT") or "at_each_failed_test"
 
     try:
         return make_report_saving_strategy(saving_strategy_expression)
@@ -193,10 +193,10 @@ class RunCommand(Command):
             help="The list of reporting backends to remove (from base backends)"
         )
         reporting_group.add_argument(
-            "--save-report-at", required=False,
+            "--save-report", required=False,
             help="At what frequency the reporting backends such as json or xml must save reporting data to disk. "
                  "(default: $LCC_SAVE_REPORT_AT or each_failed_test, possible values are: "
-                 "end_of_tests, each_suite, each_test, each_failed_test, each_event)"
+                 "at_end_of_tests, at_each_suite, at_each_test, at_each_failed_test, at_each_event)"
         )
 
         if project:
