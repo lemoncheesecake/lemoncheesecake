@@ -164,7 +164,7 @@ def filter_suites(suites, filtr):
     return filtered_suites
 
 
-def add_run_filter_cli_args(cli_parser, no_positional_argument=False):
+def _add_run_filter_cli_args(cli_parser, no_positional_argument=False):
     def property_value(value):
         splitted = value.split(":")
         if len(splitted) != 2:
@@ -213,7 +213,13 @@ def add_run_filter_cli_args(cli_parser, no_positional_argument=False):
 
     return group
 
-add_report_filter_cli_args = add_run_filter_cli_args
+
+def add_run_filter_cli_args(cli_parser):
+    return _add_run_filter_cli_args(cli_parser)
+
+
+def add_report_filter_cli_args(cli_parser):
+    return _add_run_filter_cli_args(cli_parser, no_positional_argument=True)
 
 
 def _set_base_filter(fltr, cli_args):

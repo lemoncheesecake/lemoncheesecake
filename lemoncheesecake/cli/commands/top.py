@@ -54,7 +54,7 @@ class TopTests(Command):
     def add_cli_args(self, cli_parser):
         group = cli_parser.add_argument_group("Top tests")
         add_report_path_cli_arg(group)
-        add_report_filter_cli_args(cli_parser, no_positional_argument=True)
+        add_report_filter_cli_args(cli_parser)
 
     def run_cmd(self, cli_args):
         report_path = get_report_path(cli_args)
@@ -87,7 +87,7 @@ class TopSuites(Command):
     def add_cli_args(self, cli_parser):
         group = cli_parser.add_argument_group("Top suites")
         add_report_path_cli_arg(group)
-        add_report_filter_cli_args(cli_parser, no_positional_argument=True)
+        add_report_filter_cli_args(cli_parser)
 
     def run_cmd(self, cli_args):
         report_path = get_report_path(cli_args)
@@ -173,7 +173,7 @@ class TopSteps(Command):
     def add_cli_args(self, cli_parser):
         group = cli_parser.add_argument_group("Top steps")
         add_report_path_cli_arg(group)
-        add_report_filter_cli_args(cli_parser, no_positional_argument=True)
+        add_report_filter_cli_args(cli_parser)
 
     def run_cmd(self, cli_args):
         report_path = get_report_path(cli_args)
