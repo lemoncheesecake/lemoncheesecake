@@ -14,7 +14,7 @@ except ImportError:
 import six
 
 import lemoncheesecake
-from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend, SAVE_AT_EACH_FAILED_TEST
+from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend
 from lemoncheesecake.reporting.report import (
     LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, SuiteData,
     format_timestamp, parse_timestamp
@@ -360,8 +360,7 @@ def load_report_from_file(filename):
 class XmlBackend(FileReportBackend):
     name = "xml"
 
-    def __init__(self, save_mode=SAVE_AT_EACH_FAILED_TEST):
-        FileReportBackend.__init__(self, save_mode)
+    def __init__(self):
         self.indent_level = DEFAULT_INDENT_LEVEL
 
     def get_report_filename(self):

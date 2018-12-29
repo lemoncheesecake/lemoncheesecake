@@ -561,7 +561,7 @@ def build_tasks(suites, fixture_registry, session_scheduled_fixtures):
 
 
 def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, reporting_backends, report_dir,
-                force_disabled=False, stop_on_failure=False, nb_threads=1):
+                force_disabled=False, stop_on_failure=False, nb_threads=1, report_saving_strategy=None):
     # initialize runtime & global test variables
     report = Report()
     report.nb_threads = nb_threads
@@ -569,7 +569,8 @@ def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, rep
     nb_tests = len(list(flatten_tests(suites)))
     initialize_runtime(report_dir, report, prerun_session_scheduled_fixtures)
     initialize_reporting_backends(
-        reporting_backends, report_dir, report, parallel=nb_threads > 1 and nb_tests > 1
+        reporting_backends, report_dir, report,
+        parallel=nb_threads > 1 and nb_tests > 1, report_saving_strategy=report_saving_strategy
     )
 
     # build tasks and run context
@@ -600,7 +601,7 @@ def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, rep
 
 
 def run_suites(suites, fixture_registry, reporting_backends, report_dir,
-               force_disabled=False, stop_on_failure=False, nb_threads=1):
+               force_disabled=False, stop_on_failure=False, nb_threads=1, report_saving_strategy=None):
     fixture_teardowns = []
 
     # setup pre_session fixtures
@@ -622,7 +623,7 @@ def run_suites(suites, fixture_registry, reporting_backends, report_dir,
         report = run_session(
             suites, fixture_registry, scheduled_fixtures,
             reporting_backends, report_dir, force_disabled=force_disabled, stop_on_failure=stop_on_failure,
-            nb_threads=nb_threads
+            nb_threads=nb_threads, report_saving_strategy=report_saving_strategy
         )
     else:
         report = None

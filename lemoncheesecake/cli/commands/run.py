@@ -15,18 +15,9 @@ from lemoncheesecake.filter import add_run_filter_cli_args
 from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture
 from lemoncheesecake.project import find_project_file, load_project_from_file, load_project
 from lemoncheesecake.reporting import filter_reporting_backends_by_capabilities, CAPABILITY_REPORTING_SESSION
-from lemoncheesecake.reporting.backend import FileReportBackend, SAVE_AT_EACH_EVENT, SAVE_AT_EACH_FAILED_TEST, SAVE_AT_EACH_SUITE, \
-    SAVE_AT_EACH_TEST, SAVE_AT_END_OF_TESTS
+from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy
 from lemoncheesecake.runner import run_suites
 from lemoncheesecake import events
-
-SAVE_REPORT_AT_VALUES = OrderedDict((
-    ("end_of_tests", SAVE_AT_END_OF_TESTS),
-    ("each_suite", SAVE_AT_EACH_SUITE),
-    ("each_test", SAVE_AT_EACH_TEST),
-    ("each_failed_test", SAVE_AT_EACH_FAILED_TEST),
-    ("each_event", SAVE_AT_EACH_EVENT)
-))
 
 
 def build_fixture_registry(project, cli_args):
@@ -53,20 +44,13 @@ def get_nb_threads(cli_args):
         return 1
 
 
-def get_report_save_mode(cli_args):
-    if cli_args.save_report_at:
-        return SAVE_REPORT_AT_VALUES[cli_args.save_report_at]
-    elif "LCC_SAVE_REPORT_AT" in os.environ:
-        try:
-            return SAVE_REPORT_AT_VALUES[os.environ["LCC_SAVE_REPORT_AT"]]
-        except KeyError:
-            raise LemonCheesecakeException(
-                "Invalid value '%s' for $LCC_SAVE_REPORT_AT environment variable; accepted values are: %s" % (
-                    os.environ["LCC_SAVE_REPORT_AT"], ", ".join(SAVE_REPORT_AT_VALUES.keys())
-                )
-            )
-    else:
-        return SAVE_AT_EACH_FAILED_TEST
+def get_report_saving_strategy(cli_args):
+    saving_strategy_expression = cli_args.save_report or os.environ.get("LCC_SAVE_REPORT") or "at_each_failed_test"
+
+    try:
+        return make_report_saving_strategy(saving_strategy_expression)
+    except ValueError:
+        raise LemonCheesecakeException("Invalid expression '%s' for report saving strategy" % saving_strategy_expression)
 
 
 def run_project(project, cli_args):
@@ -100,11 +84,8 @@ def run_project(project, cli_args):
         except KeyError:
             raise LemonCheesecakeException("Unknown reporting backend '%s'" % backend_name)
 
-    # Set report save mode (when relevant)
-    save_mode = get_report_save_mode(cli_args)
-    for reporting_backend in active_reporting_backends:
-        if isinstance(reporting_backend, FileReportBackend):
-            reporting_backend.save_mode = save_mode
+    # Get report save mode
+    report_saving_strategy = get_report_saving_strategy(cli_args)
 
     # Create report dir
     if cli_args.report_dir:
@@ -139,7 +120,7 @@ def run_project(project, cli_args):
     is_successful = run_suites(
         suites, fixture_registry, active_reporting_backends, report_dir,
         force_disabled=cli_args.force_disabled, stop_on_failure=cli_args.stop_on_failure,
-        nb_threads=nb_threads
+        nb_threads=nb_threads, report_saving_strategy=report_saving_strategy
     )
 
     # Handle after run hook
@@ -212,9 +193,10 @@ class RunCommand(Command):
             help="The list of reporting backends to remove (from base backends)"
         )
         reporting_group.add_argument(
-            "--save-report-at", default=None, choices=SAVE_REPORT_AT_VALUES.keys(),
+            "--save-report", required=False,
             help="At what frequency the reporting backends such as json or xml must save reporting data to disk. "
-                 "(default: $LCC_SAVE_REPORT_AT or each_failed_test)"
+                 "(default: $LCC_SAVE_REPORT_AT or each_failed_test, possible values are: "
+                 "at_end_of_tests, at_each_suite, at_each_test, at_each_failed_test, at_each_event, every_${N}s)"
         )
 
         if project:
