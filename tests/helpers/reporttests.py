@@ -72,6 +72,18 @@ def test_suite_with_all_metadata(backend, tmpdir):
     do_test_serialization(MySuite, backend, tmpdir)
 
 
+def test_link_without_name(backend, tmpdir):
+    @lcc.suite("MySuite")
+    @lcc.link("http://foo.bar")
+    class MySuite:
+        @lcc.test("Some test")
+        @lcc.link("http://foo.bar")
+        def sometest(self):
+            pass
+
+    do_test_serialization(MySuite, backend, tmpdir)
+
+
 def test_unicode(backend, tmpdir):
     @lcc.link("http://foo.bar", u"éééààà")
     @lcc.prop(u"ééé", u"ààà")

@@ -278,7 +278,7 @@ def _unserialize_test_data(xml):
     test.end_time = _unserialize_datetime(xml.attrib["end-time"])
     test.tags = [node.text for node in xml.xpath("tag")]
     test.properties = {node.attrib["name"]: node.text for node in xml.xpath("property")}
-    test.links = [(link.text, link.attrib["name"]) for link in xml.xpath("link")]
+    test.links = [(link.text, link.attrib.get("name", None)) for link in xml.xpath("link")]
     test.steps = [_unserialize_step_data(step) for step in xml.xpath("step")]
     return test
 
@@ -296,7 +296,7 @@ def _unserialize_suite_data(xml):
     suite = SuiteData(xml.attrib["name"], xml.attrib["description"])
     suite.tags = [node.text for node in xml.xpath("tag")]
     suite.properties = {node.attrib["name"]: node.text for node in xml.xpath("property")}
-    suite.links = [(link.text, link.attrib["name"]) for link in xml.xpath("link")]
+    suite.links = [(link.text, link.attrib.get("name", None)) for link in xml.xpath("link")]
 
     suite_setup = xml.xpath("suite-setup")
     suite_setup = suite_setup[0] if len(suite_setup) > 0 else None
