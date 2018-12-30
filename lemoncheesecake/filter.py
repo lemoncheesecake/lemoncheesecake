@@ -12,8 +12,10 @@ from lemoncheesecake.reporting.reportdir import DEFAULT_REPORT_DIR_NAME
 from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.exceptions import UserError
 
-__all__ = ("RunFilter", "ReportFilter", "filter_suites", "add_run_filter_cli_args",
-           "make_run_filter")
+__all__ = (
+    "RunFilter", "ReportFilter", "filter_suites",
+    "add_run_filter_cli_args", "make_run_filter", "add_report_filter_cli_args", "make_report_filter"
+)
 
 NEGATIVE_FILTER_CHARS = "-^~"
 
@@ -51,7 +53,7 @@ def match_keyvalues(keyvalues, patterns):
 
 def match_values_lists(lsts, patterns):
     return match_values(
-        reduce(lambda x, y: list(x) + list(y), lsts, []), # make a flat list
+        reduce(lambda x, y: list(x) + list(y), lsts, []),  # make a flat list
         patterns
     )
 
@@ -103,9 +105,9 @@ class RunFilter(BaseFilter):
 
 
 class ReportFilter(RunFilter):
-    def __init__(self, statuses=(), **kwargs):
+    def __init__(self, statuses=None, **kwargs):
         RunFilter.__init__(self, **kwargs)
-        self.statuses = list(statuses)
+        self.statuses = statuses if statuses is not None else set()
 
     def is_empty(self):
         if not RunFilter.is_empty(self):
@@ -203,6 +205,9 @@ def _add_filter_cli_args(cli_parser, no_positional_argument=False, only_executed
             "--skipped", action="store_true", help="Filter on skipped tests (implies/triggers --from-report)"
         )
         group.add_argument(
+            "--non-passed", action="store_true", help="Alias for --failed --skipped"
+        )
+        group.add_argument(
             "--disabled", action="store_true", help="Filter on disabled tests"
         )
         group.add_argument(
@@ -255,20 +260,22 @@ def _make_report_filter(cli_args, only_executed_tests=False):
 
     if only_executed_tests:
         if cli_args.passed:
-            fltr.statuses.append("passed")
+            fltr.statuses.add("passed")
         if cli_args.failed:
-            fltr.statuses.append("failed")
+            fltr.statuses.add("failed")
         # when neither --passed not --failed was passed, enforce statuses passed and failed
         # to select tests that have been executed
         if len(fltr.statuses) == 0:
-            fltr.statuses = ["passed", "failed"]
+            fltr.statuses.update(("passed", "failed"))
     else:
         if cli_args.passed:
-            fltr.statuses.append("passed")
+            fltr.statuses.add("passed")
         if cli_args.failed:
-            fltr.statuses.append("failed")
+            fltr.statuses.add("failed")
         if cli_args.skipped:
-            fltr.statuses.append("skipped")
+            fltr.statuses.add("skipped")
+        if cli_args.non_passed:
+            fltr.statuses.update(("failed", "skipped"))
 
     return fltr
 
