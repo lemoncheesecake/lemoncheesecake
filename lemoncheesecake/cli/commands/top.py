@@ -54,13 +54,13 @@ class TopTests(Command):
     def add_cli_args(self, cli_parser):
         group = cli_parser.add_argument_group("Top tests")
         add_report_path_cli_arg(group)
-        add_report_filter_cli_args(cli_parser)
+        add_report_filter_cli_args(cli_parser, only_executed_tests=True)
 
     def run_cmd(self, cli_args):
         report_path = get_report_path(cli_args)
 
         report = load_report(report_path, auto_detect_reporting_backends())
-        suites = filter_suites(report.get_suites(), make_report_filter(cli_args))
+        suites = filter_suites(report.get_suites(), make_report_filter(cli_args, only_executed_tests=True))
 
         print_table(
             "Tests, ordered by duration",
@@ -87,13 +87,13 @@ class TopSuites(Command):
     def add_cli_args(self, cli_parser):
         group = cli_parser.add_argument_group("Top suites")
         add_report_path_cli_arg(group)
-        add_report_filter_cli_args(cli_parser)
+        add_report_filter_cli_args(cli_parser, only_executed_tests=True)
 
     def run_cmd(self, cli_args):
         report_path = get_report_path(cli_args)
 
         report = load_report(report_path, auto_detect_reporting_backends())
-        suites = filter_suites(report.get_suites(), make_report_filter(cli_args))
+        suites = filter_suites(report.get_suites(), make_report_filter(cli_args, only_executed_tests=True))
 
         print_table(
             "Suites, ordered by duration",
@@ -173,13 +173,13 @@ class TopSteps(Command):
     def add_cli_args(self, cli_parser):
         group = cli_parser.add_argument_group("Top steps")
         add_report_path_cli_arg(group)
-        add_report_filter_cli_args(cli_parser)
+        add_report_filter_cli_args(cli_parser, only_executed_tests=True)
 
     def run_cmd(self, cli_args):
         report_path = get_report_path(cli_args)
 
         report = load_report(report_path, auto_detect_reporting_backends())
-        suites = filter_suites(report.get_suites(), make_report_filter(cli_args))
+        suites = filter_suites(report.get_suites(), make_report_filter(cli_args, only_executed_tests=True))
 
         print_table(
             "Steps, aggregated and ordered by duration",
