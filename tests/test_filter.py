@@ -919,6 +919,7 @@ def test_add_report_filter_cli_args():
     assert hasattr(cli_args, "skipped")
     assert hasattr(cli_args, "enabled")
     assert hasattr(cli_args, "disabled")
+    assert hasattr(cli_args, "non_passed")
 
 
 def test_add_report_filter_cli_args_with_only_executed_tests():
@@ -930,6 +931,7 @@ def test_add_report_filter_cli_args_with_only_executed_tests():
     assert not hasattr(cli_args, "skipped")
     assert not hasattr(cli_args, "enabled")
     assert not hasattr(cli_args, "disabled")
+    assert not hasattr(cli_args, "non_passed")
 
 
 def test_make_report_filter_with_only_executed_tests():
@@ -946,3 +948,11 @@ def test_make_report_filter_with_only_executed_tests_and_passed():
     cli_args = cli_parser.parse_args(args=["--passed"])
     filtr = make_report_filter(cli_args, only_executed_tests=True)
     assert filtr.statuses == {"passed"}
+
+
+def test_make_report_filter_non_passed():
+    cli_parser = argparse.ArgumentParser()
+    add_report_filter_cli_args(cli_parser)
+    cli_args = cli_parser.parse_args(args=["--non-passed"])
+    filtr = make_report_filter(cli_args)
+    assert filtr.statuses == {"skipped", "failed"}
