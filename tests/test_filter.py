@@ -876,9 +876,7 @@ def test_project_filter_on_failed():
     )
 
 
-# very simple test that at least checks that add_filter_cli_args and make_run_filter
-# works well with each other on the most minimalist test-case (cli without argument)
-def test_run_filter_handling():
+def test_make_run_filter():
     cli_parser = argparse.ArgumentParser()
     add_run_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=[])
@@ -904,11 +902,47 @@ def test_run_filter_from_report(tmpdir):
     assert filtr.match_test(suite.get_tests()[0])
 
 
-# very simple test that at least checks that add_report_filter_cli_args and make_report_filter
-# works well with each other on the most minimalist test-case (cli without argument)
-def test_report_filter_handling():
+def test_make_report_filter():
     cli_parser = argparse.ArgumentParser()
     add_report_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=[])
     filtr = make_report_filter(cli_args)
     assert filtr.is_empty()
+
+
+def test_add_report_filter_cli_args():
+    cli_parser = argparse.ArgumentParser()
+    add_report_filter_cli_args(cli_parser)
+    cli_args = cli_parser.parse_args(args=[])
+    assert hasattr(cli_args, "passed")
+    assert hasattr(cli_args, "failed")
+    assert hasattr(cli_args, "skipped")
+    assert hasattr(cli_args, "enabled")
+    assert hasattr(cli_args, "disabled")
+
+
+def test_add_report_filter_cli_args_with_only_executed_tests():
+    cli_parser = argparse.ArgumentParser()
+    add_report_filter_cli_args(cli_parser, only_executed_tests=True)
+    cli_args = cli_parser.parse_args(args=[])
+    assert hasattr(cli_args, "passed")
+    assert hasattr(cli_args, "failed")
+    assert not hasattr(cli_args, "skipped")
+    assert not hasattr(cli_args, "enabled")
+    assert not hasattr(cli_args, "disabled")
+
+
+def test_make_report_filter_with_only_executed_tests():
+    cli_parser = argparse.ArgumentParser()
+    add_report_filter_cli_args(cli_parser, only_executed_tests=True)
+    cli_args = cli_parser.parse_args(args=[])
+    filtr = make_report_filter(cli_args, only_executed_tests=True)
+    assert filtr.statuses == ["passed", "failed"]
+
+
+def test_make_report_filter_with_only_executed_tests_and_passed():
+    cli_parser = argparse.ArgumentParser()
+    add_report_filter_cli_args(cli_parser, only_executed_tests=True)
+    cli_args = cli_parser.parse_args(args=["--passed"])
+    filtr = make_report_filter(cli_args, only_executed_tests=True)
+    assert filtr.statuses == ["passed"]

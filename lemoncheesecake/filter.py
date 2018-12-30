@@ -164,7 +164,7 @@ def filter_suites(suites, filtr):
     return filtered_suites
 
 
-def add_run_filter_cli_args(cli_parser, no_positional_argument=False):
+def _add_filter_cli_args(cli_parser, no_positional_argument=False, only_executed_tests=False):
     def property_value(value):
         splitted = value.split(":")
         if len(splitted) != 2:
@@ -193,31 +193,38 @@ def add_run_filter_cli_args(cli_parser, no_positional_argument=False):
         "--link", "-l", nargs="+", action="append", default=[], help="Filter on links (names and URLs)"
     )
     group.add_argument(
-        "--disabled", action="store_true", help="Filter on disabled tests"
-    )
-    group.add_argument(
         "--passed", action="store_true", help="Filter on passed tests (implies/triggers --from-report)"
     )
     group.add_argument(
         "--failed", action="store_true", help="Filter on failed tests (implies/triggers --from-report)"
     )
-    group.add_argument(
-        "--skipped", action="store_true", help="Filter on skipped tests (implies/triggers --from-report)"
-    )
-    group.add_argument(
-        "--enabled", action="store_true", help="Filter on enabled (non-disabled) tests"
-    )
+    if not only_executed_tests:
+        group.add_argument(
+            "--skipped", action="store_true", help="Filter on skipped tests (implies/triggers --from-report)"
+        )
+        group.add_argument(
+            "--disabled", action="store_true", help="Filter on disabled tests"
+        )
+        group.add_argument(
+            "--enabled", action="store_true", help="Filter on enabled (non-disabled) tests"
+        )
     group.add_argument(
         "--from-report", required=False, help="When enabled, the filtering is based on the given report"
     )
 
     return group
 
-add_report_filter_cli_args = add_run_filter_cli_args
+
+def add_run_filter_cli_args(cli_parser):
+    return _add_filter_cli_args(cli_parser)
 
 
-def _set_base_filter(fltr, cli_args):
-    if cli_args.disabled and cli_args.enabled:
+def add_report_filter_cli_args(cli_parser, only_executed_tests=False):
+    return _add_filter_cli_args(cli_parser, no_positional_argument=True, only_executed_tests=only_executed_tests)
+
+
+def _set_base_filter(fltr, cli_args, only_executed_tests=False):
+    if not only_executed_tests and (cli_args.disabled and cli_args.enabled):
         raise UserError("--disabled and --enabled arguments are mutually exclusive")
 
     fltr.paths = cli_args.path
@@ -225,8 +232,9 @@ def _set_base_filter(fltr, cli_args):
     fltr.tags = cli_args.tag
     fltr.properties = cli_args.property
     fltr.links = cli_args.link
-    fltr.disabled = cli_args.disabled
-    fltr.enabled = cli_args.enabled
+    if not only_executed_tests:
+        fltr.disabled = cli_args.disabled
+        fltr.enabled = cli_args.enabled
 
 
 def _set_run_filter(filtr, cli_args):
@@ -241,23 +249,33 @@ def _make_run_filter(cli_args):
     return fltr
 
 
-def _make_report_filter(cli_args):
+def _make_report_filter(cli_args, only_executed_tests=False):
     fltr = ReportFilter()
-    _set_base_filter(fltr, cli_args)
+    _set_base_filter(fltr, cli_args, only_executed_tests=only_executed_tests)
 
-    if cli_args.passed:
-        fltr.statuses.append("passed")
-    if cli_args.failed:
-        fltr.statuses.append("failed")
-    if cli_args.skipped:
-        fltr.statuses.append("skipped")
+    if only_executed_tests:
+        if cli_args.passed:
+            fltr.statuses.append("passed")
+        if cli_args.failed:
+            fltr.statuses.append("failed")
+        # when neither --passed not --failed was passed, enforce statuses passed and failed
+        # to select tests that have been executed
+        if len(fltr.statuses) == 0:
+            fltr.statuses = ["passed", "failed"]
+    else:
+        if cli_args.passed:
+            fltr.statuses.append("passed")
+        if cli_args.failed:
+            fltr.statuses.append("failed")
+        if cli_args.skipped:
+            fltr.statuses.append("skipped")
 
     return fltr
 
 
-def _make_from_report_filter(cli_args):
+def _make_from_report_filter(cli_args, only_executed_tests=False):
     report = load_report(cli_args.from_report or DEFAULT_REPORT_DIR_NAME)
-    filtr = _make_report_filter(cli_args)
+    filtr = _make_report_filter(cli_args, only_executed_tests=only_executed_tests)
     suites = filter_suites(report.get_suites(), filtr)
     return FromTestsFilter(flatten_tests(suites))
 
@@ -269,8 +287,8 @@ def make_run_filter(cli_args):
         return _make_run_filter(cli_args)
 
 
-def make_report_filter(cli_args):
+def make_report_filter(cli_args, only_executed_tests=False):
     if cli_args.from_report:
-        return _make_from_report_filter(cli_args)
+        return _make_from_report_filter(cli_args, only_executed_tests=only_executed_tests)
     else:
-        return _make_report_filter(cli_args)
+        return _make_report_filter(cli_args, only_executed_tests=only_executed_tests)

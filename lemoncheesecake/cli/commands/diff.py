@@ -110,7 +110,7 @@ class DiffCommand(Command):
     def add_cli_args(self, cli_parser):
         cli_parser.add_argument("old_report_path", help="Old report path")
         cli_parser.add_argument("new_report_path", help="New report path")
-        add_report_filter_cli_args(cli_parser, no_positional_argument=True)
+        add_report_filter_cli_args(cli_parser)
 
     def run_cmd(self, cli_args):
         reporting_backends = auto_detect_reporting_backends()
