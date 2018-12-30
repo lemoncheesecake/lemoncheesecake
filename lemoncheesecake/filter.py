@@ -103,9 +103,9 @@ class RunFilter(BaseFilter):
 
 
 class ReportFilter(RunFilter):
-    def __init__(self, statuses=(), **kwargs):
+    def __init__(self, statuses=None, **kwargs):
         RunFilter.__init__(self, **kwargs)
-        self.statuses = list(statuses)
+        self.statuses = statuses if statuses is not None else set()
 
     def is_empty(self):
         if not RunFilter.is_empty(self):
@@ -255,20 +255,20 @@ def _make_report_filter(cli_args, only_executed_tests=False):
 
     if only_executed_tests:
         if cli_args.passed:
-            fltr.statuses.append("passed")
+            fltr.statuses.add("passed")
         if cli_args.failed:
-            fltr.statuses.append("failed")
+            fltr.statuses.add("failed")
         # when neither --passed not --failed was passed, enforce statuses passed and failed
         # to select tests that have been executed
         if len(fltr.statuses) == 0:
-            fltr.statuses = ["passed", "failed"]
+            fltr.statuses.update(("passed", "failed"))
     else:
         if cli_args.passed:
-            fltr.statuses.append("passed")
+            fltr.statuses.add("passed")
         if cli_args.failed:
-            fltr.statuses.append("failed")
+            fltr.statuses.add("failed")
         if cli_args.skipped:
-            fltr.statuses.append("skipped")
+            fltr.statuses.add("skipped")
 
     return fltr
 
