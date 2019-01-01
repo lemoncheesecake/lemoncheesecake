@@ -13,13 +13,14 @@ from termcolor import colored
 import six
 
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
-from lemoncheesecake.reporting.backends import terminalsize
 from lemoncheesecake.reporting.report import get_stats_from_suites
 from lemoncheesecake.filter import filter_suites
 from lemoncheesecake.testtree import flatten_suites
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.helpers.string import normalize_multi_line_text
+from lemoncheesecake.helpers import terminalsize
 from lemoncheesecake.console import test_status_to_color
+
 
 class LinePrinter:
     def __init__(self, terminal_width):
