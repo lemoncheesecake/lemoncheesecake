@@ -18,9 +18,8 @@ from lemoncheesecake.reporting.report import get_stats_from_suites
 from lemoncheesecake.filter import filter_suites
 from lemoncheesecake.testtree import flatten_suites
 from lemoncheesecake.helpers.time import humanize_duration
-from lemoncheesecake.helpers.display import get_status_color
 from lemoncheesecake.helpers.string import normalize_multi_line_text
-
+from lemoncheesecake.console import test_status_to_color
 
 class LinePrinter:
     def __init__(self, terminal_width):
@@ -77,7 +76,7 @@ def _make_test_status_label(status):
     else:
         label = "KO"
 
-    return colored(label, get_status_color(status), attrs=["bold"])
+    return colored(label, test_status_to_color(status), attrs=["bold"])
 
 
 def _make_test_result_line(name, num, status):

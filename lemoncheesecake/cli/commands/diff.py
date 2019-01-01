@@ -2,9 +2,9 @@ from __future__ import print_function
 
 from termcolor import colored
 
-from lemoncheesecake.helpers.display import get_status_color
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import auto_detect_reporting_backends
+from lemoncheesecake.console import test_status_to_color
 from lemoncheesecake.reporting import load_report
 from lemoncheesecake.filter import add_report_filter_cli_args, make_report_filter, \
     filter_suites
@@ -63,14 +63,14 @@ def display_diff_type(title, test_entries):
 
 
 def render_test_with_status(test):
-    return "%s (%s)" % (test.path, colored(test.status, get_status_color(test.status)))
+    return "%s (%s)" % (test.path, colored(test.status, test_status_to_color(test.status)))
 
 
 def render_test_with_status_changed(test, old_status):
     return "%s (%s => %s)" % (
         test.path,
-        colored(old_status, get_status_color(old_status)),
-        colored(test.status, get_status_color(test.status))
+        colored(old_status, test_status_to_color(old_status)),
+        colored(test.status, test_status_to_color(test.status))
     )
 
 
