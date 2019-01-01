@@ -36,6 +36,3 @@ class Command:
             return termcolor.colored(text, color, on_color, attrs)
         else:
             return text
-
-    def bold(self, text):
-        return self.colored(text, attrs=["bold"])

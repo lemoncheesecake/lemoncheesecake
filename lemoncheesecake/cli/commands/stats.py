@@ -7,8 +7,8 @@ Created on Feb 14, 2017
 from __future__ import print_function
 from functools import reduce
 
+from lemoncheesecake.helpers.console import print_table, bold
 from lemoncheesecake.cli.command import Command
-from lemoncheesecake.cli.display import print_table
 from lemoncheesecake.cli.utils import get_suites_from_project
 from lemoncheesecake.filter import add_run_filter_cli_args
 from lemoncheesecake.testtree import flatten_suites
@@ -77,8 +77,8 @@ class StatsCommand(Command):
         # Show tags
         lines = []
         for tag in sorted(stats.tags.keys(), key=lambda k: stats.tags[k], reverse=True):
-            lines.append([self.bold(tag), stats.tags[tag], percent_of_tests(stats.tags[tag])])
-        print_table(self.bold("Tags"), ["Tag", "Tests", "In %"], lines)
+            lines.append([bold(tag), stats.tags[tag], percent_of_tests(stats.tags[tag])])
+        print_table(bold("Tags"), ["Tag", "Tests", "In %"], lines)
 
         # Show properties
         lines = []
@@ -95,25 +95,25 @@ class StatsCommand(Command):
             )
             for prop_value in prop_values:
                 lines.append([
-                    self.bold(prop_name), self.bold(prop_value),
+                    bold(prop_name), bold(prop_value),
                     stats.properties[prop_name][prop_value],
                     percent_of_tests(stats.properties[prop_name][prop_value])
                 ])
-        print_table(self.bold("Properties"), ["Property", "Value", "Tests", "In %"], lines)
+        print_table(bold("Properties"), ["Property", "Value", "Tests", "In %"], lines)
 
         # Show links
         lines = []
         for link in sorted(stats.links.keys(), key=lambda k: stats.links[k], reverse=True):
             lines.append([
-                self.bold(link[1] or "-"), link[0], stats.links[link], percent_of_tests(stats.links[link])
+                bold(link[1] or "-"), link[0], stats.links[link], percent_of_tests(stats.links[link])
             ])
-        print_table(self.bold("Links"), ["Name", "URL", "Tests", "In %"], lines)
+        print_table(bold("Links"), ["Name", "URL", "Tests", "In %"], lines)
 
-        tests_info = self.bold("%d tests" % stats.tests_nb)
+        tests_info = bold("%d tests" % stats.tests_nb)
         if stats.disabled_tests_nb > 0:
             tests_info += " (among which %s disabled tests)" % stats.disabled_tests_nb
 
-        suites_info = self.bold("%d suites" % stats.non_empty_suites_nb)
+        suites_info = bold("%d suites" % stats.non_empty_suites_nb)
         if stats.suites_nb > stats.non_empty_suites_nb:
             suites_info += " (+ %d empty suites)" % (stats.suites_nb - stats.non_empty_suites_nb)
 

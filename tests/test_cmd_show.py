@@ -47,7 +47,7 @@ def test_show_opt_short(project, cmdout):
 def test_show_opt_flat_mode(project, cmdout):
     assert run_main(["show", "--flat-mode"]) == 0
 
-    cmdout.assert_line_startswith(0, "mysuite")
+    cmdout.assert_substrs_in_line(0, ["mysuite"])
     cmdout.assert_substrs_in_line(0, ["suite_prop", "suite_prop_value", "suite_tag", "#1234"])
     cmdout.assert_line_startswith(1, "mysuite.mytest")
     cmdout.assert_substrs_in_line(1, ["test_prop", "test_prop_value", "test_tag", "#1235"])

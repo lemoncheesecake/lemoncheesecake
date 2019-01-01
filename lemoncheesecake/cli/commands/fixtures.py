@@ -6,7 +6,7 @@ Created on Feb 14, 2017
 
 from __future__ import print_function
 
-from lemoncheesecake.cli.display import print_table
+from lemoncheesecake.helpers.console import print_table, bold
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.project import load_project
@@ -33,10 +33,10 @@ class FixturesCommand(Command):
         )
         for fixt in ordered_fixtures:
             lines.append([
-                self.bold(fixt.name), ", ".join(fixt.params or "-"),
+                bold(fixt.name), ", ".join(fixt.params or "-"),
                 used_by_fixtures.get(fixt.name, 0), used_by_tests.get(fixt.name, 0)
             ])
-        print_table("Fixture with scope %s" % self.bold(scope), ["Fixture", "Dependencies", "Used by fixtures", "Used by tests"], lines)
+        print_table("Fixture with scope %s" % bold(scope), ["Fixture", "Dependencies", "Used by fixtures", "Used by tests"], lines)
 
     def run_cmd(self, cli_args):
         self.process_color_cli_args(cli_args)
