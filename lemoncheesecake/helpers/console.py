@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 from terminaltables import AsciiTable
+from termcolor import colored
 
 
 def print_table(title, headers, lines):
@@ -10,3 +11,7 @@ def print_table(title, headers, lines):
     else:
         print("%s: <none>" % title)
     print()
+
+
+def bold(s):
+    return colored(s, attrs=["bold"])
