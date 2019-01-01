@@ -8,6 +8,7 @@ from __future__ import print_function
 
 from termcolor import colored
 
+from lemoncheesecake.helpers.console import bold
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import get_suites_from_project
 from lemoncheesecake.filter import add_run_filter_cli_args
@@ -69,11 +70,11 @@ class ShowCommand(Command):
     def show_suite(self, suite):
         md = self.serialize_metadata(suite) if self.show_metadata else ""
         if self.flat_mode:
-            print("%s%s" % (self.bold(self.get_suite_label(suite)), " (%s)" % md if md else ""))
+            print("%s%s" % (bold(self.get_suite_label(suite)), " (%s)" % md if md else ""))
         else:
             padding = self.get_padding(suite.hierarchy_depth)
             suite_label = self.get_suite_label(suite)
-            print("%s* %s%s" % (padding, self.bold(suite_label), " (%s)" % md if md else ""))
+            print("%s* %s%s" % (padding, bold(suite_label), " (%s)" % md if md else ""))
 
         for test in suite.get_tests():
             self.show_test(test, suite)
