@@ -10,7 +10,7 @@ from decimal import Decimal
 from functools import reduce
 
 from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
-from lemoncheesecake.helpers.display import humanize_duration
+from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, TreeLocation
 
 __all__ = (

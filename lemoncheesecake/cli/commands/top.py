@@ -1,6 +1,6 @@
 from functools import reduce
 
-from lemoncheesecake.helpers.display import humanize_duration
+from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.helpers.string import normalize_multi_line_text
 from lemoncheesecake.helpers.console import print_table
 from lemoncheesecake.cli.command import Command
