@@ -2,9 +2,9 @@ from functools import reduce
 
 from lemoncheesecake.helpers.display import humanize_duration
 from lemoncheesecake.helpers.string import normalize_multi_line_text
+from lemoncheesecake.helpers.console import print_table
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import auto_detect_reporting_backends, add_report_path_cli_arg, get_report_path
-from lemoncheesecake.cli.display import print_table
 from lemoncheesecake.reporting import load_report
 from lemoncheesecake.filter import add_report_filter_cli_args, make_report_filter, filter_suites
 from lemoncheesecake.testtree import flatten_tests, flatten_suites

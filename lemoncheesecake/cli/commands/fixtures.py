@@ -6,7 +6,7 @@ Created on Feb 14, 2017
 
 from __future__ import print_function
 
-from lemoncheesecake.cli.display import print_table
+from lemoncheesecake.helpers.console import print_table
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.project import load_project

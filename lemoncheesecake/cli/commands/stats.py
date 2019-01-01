@@ -7,8 +7,8 @@ Created on Feb 14, 2017
 from __future__ import print_function
 from functools import reduce
 
+from lemoncheesecake.helpers.console import print_table
 from lemoncheesecake.cli.command import Command
-from lemoncheesecake.cli.display import print_table
 from lemoncheesecake.cli.utils import get_suites_from_project
 from lemoncheesecake.filter import add_run_filter_cli_args
 from lemoncheesecake.testtree import flatten_suites
