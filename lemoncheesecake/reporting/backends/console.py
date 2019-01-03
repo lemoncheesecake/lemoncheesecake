@@ -15,11 +15,11 @@ import six
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
 from lemoncheesecake.reporting.report import get_stats_from_suites
 from lemoncheesecake.filter import filter_suites
-from lemoncheesecake.testtree import flatten_suites
 from lemoncheesecake.helpers.time import humanize_duration
-from lemoncheesecake.helpers.string import normalize_multi_line_text
+from lemoncheesecake.testtree import flatten_suites
+from lemoncheesecake.helpers.text import ensure_single_line_text
 from lemoncheesecake.helpers import terminalsize
-from lemoncheesecake.console import test_status_to_color
+from lemoncheesecake.reporting.console import test_status_to_color
 
 
 class LinePrinter:
@@ -201,7 +201,7 @@ class SequentialConsoleReportingSession(ReportingSession):
         self._bypass_test(event.test, "disabled")
 
     def on_step(self, event):
-        self.lp.print_line("%s (%s...)" % (self.step_prefix, normalize_multi_line_text(event.step_description)))
+        self.lp.print_line("%s (%s...)" % (self.step_prefix, ensure_single_line_text(event.step_description)))
 
     def on_test_session_end(self, event):
         _print_summary(self.report.stats(), self.report.parallelized)
@@ -255,7 +255,7 @@ class ConsoleBackend(ReportingBackend):
             SequentialConsoleReportingSession(self.terminal_width, self.show_test_full_path, report)
 
 
-def display_report(report, filtr):
+def print_report_as_test_run(report, filtr):
     suites = filter_suites(report.get_suites(), filtr)
 
     ###

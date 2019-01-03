@@ -1,7 +1,7 @@
 from functools import reduce
 
 from lemoncheesecake.helpers.time import humanize_duration
-from lemoncheesecake.helpers.string import normalize_multi_line_text
+from lemoncheesecake.helpers.text import ensure_single_line_text
 from lemoncheesecake.helpers.console import print_table
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import auto_detect_reporting_backends, add_report_path_cli_arg, get_report_path
@@ -107,7 +107,7 @@ class TopSuites(Command):
 def group_steps_by_description(steps):
     steps_by_description = {}
     for step in steps:
-        description = normalize_multi_line_text(step.description)
+        description = ensure_single_line_text(step.description)
         if description not in steps_by_description:
             steps_by_description[description] = []
         steps_by_description[description].append(step)

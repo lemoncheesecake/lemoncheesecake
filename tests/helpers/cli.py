@@ -49,8 +49,8 @@ def cmdout(capsys):
         def dump(self):
             stdout = self.get_lines()
             stderr = self.get_lines(on_stderr=True)
-            print("STDOUT:\n<<<\n%s\n>>>\n" % "\n".join(stdout))
-            print("STDERR:\n<<<\n%s\n>>>\n" % "\n".join(stderr))
+            print("STDOUT:\n<<<\n%s>>>\n" % "\n".join(stdout))
+            print("STDERR:\n<<<\n%s>>>\n" % "\n".join(stderr))
 
     return _CmdOutput()
 
