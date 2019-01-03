@@ -1,3 +1,21 @@
+# 0.22.0 (2019-01-04)
+
+- **lcc report**: the command now prints a detailed view of the report, the former output style (ala `lcc run`) is now
+  used when the `-s/--short` argument is passed
+- **lcc run**: the `--save-report` now accepts an argument with a format `every_Ns` where `N` is the time interval at which the report will be saved on disk (example: `lcc run --save-report every_10s`)
+- **CLI**: in filtering arguments (when the filter is a based on an existing report), add a `--non-passed` argument 
+  which is the equivalent of `--failed --skipped`
+- **lcc top-{suites,tests,steps}**: disabled tests are no longer taken into account (because it makes no sense in commands that deal with test duration) 
+  and `--disabled` and `--enabled` filtering arguments have also been removed accordingly 
+- **XML report**: fix an exception when an XML report is read while a link without name is present
+
+## CLI breaking changes
+
+- **lcc top-{suites,tests,steps}**: as indicated in the previous section, the `--disabled` and `--enabled` filtering 
+  arguments have been removed
+- **lcc run**: the `--save-report-at` argument has been renamed into `--save-report` and the existing (as of 0.21.0)
+  associated values have been prefixed with `at_`
+
 # 0.21.0 (2018-12-16)
 
 - **API**: add `lcc.depends_on()` decorator which provides dependencies between tests
