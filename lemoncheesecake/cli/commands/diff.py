@@ -4,7 +4,7 @@ from termcolor import colored
 
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import auto_detect_reporting_backends
-from lemoncheesecake.console import test_status_to_color
+from lemoncheesecake.reporting.console import test_status_to_color
 from lemoncheesecake.reporting import load_report
 from lemoncheesecake.filter import add_report_filter_cli_args, make_report_filter, \
     filter_suites

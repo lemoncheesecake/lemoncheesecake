@@ -165,14 +165,18 @@ def run_suite_class(suite_class, filter=None, fixtures=None, backends=[], tmpdir
     )
 
 
-def run_func_in_test(callback, tmpdir=None):
+def wrap_func_into_suites(callback):
     @lcc.suite("My Suite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             callback()
 
-    return run_suite_class(MySuite, tmpdir=tmpdir)
+    return [MySuite]
+
+
+def run_func_in_test(callback, tmpdir=None):
+    return run_suite_classes(wrap_func_into_suites(callback), tmpdir=tmpdir)
 
 
 def dump_report(report):

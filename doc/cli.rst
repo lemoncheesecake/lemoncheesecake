@@ -13,7 +13,7 @@ reports:
 
 - ``lcc show`` (shows the project tests hierarchy and their metadata):
 
-  .. code-block:: none
+  .. code-block:: console
 
       $ lcc show
       * suite_1
@@ -39,7 +39,7 @@ reports:
 
 - ``lcc diff`` (compares two reports):
 
-  .. code-block:: none
+  .. code-block:: console
 
       $ lcc diff reports/report-1/ report/
       Added tests (1):
@@ -54,7 +54,7 @@ reports:
 
 - ``lcc fixtures`` (show available project fixtures):
 
-  .. code-block:: none
+  .. code-block:: console
 
       $ lcc fixtures
 
@@ -96,7 +96,7 @@ reports:
 
 - ``lcc stats`` (shows project statistics):
 
-  .. code-block:: none
+  .. code-block:: console
 
       $ lcc stats
       Tags:
@@ -125,42 +125,88 @@ reports:
 
       Total: 18 tests in 2 suites
 
-- ``lcc report`` (shows a generated report on the console, the same way it is printed by ``lcc run``):
+- ``lcc report`` (shows a generated report on the console, passing the ``--short`` argument will print it the same way
+  as ``lcc run`` does):
 
-  .. code-block:: none
+  .. code-block:: console
 
-      $ lcc report
-      =================================== suite_1 ===================================
-       OK  1 # test_1
-       OK  2 # test_2
-       OK  3 # test_3
-       OK  4 # test_4
-       OK  5 # test_5
-       OK  6 # test_6
-       OK  7 # test_7
-       OK  8 # test_8
-       OK  9 # test_9
-
-      =================================== suite_2 ===================================
-       OK  1 # test_1
-       OK  2 # test_2
-       OK  3 # test_3
-       OK  4 # test_4
-       OK  5 # test_5
-       OK  6 # test_6
-       OK  7 # test_7
-       OK  8 # test_8
-       OK  9 # test_9
-
-      Statistics :
-       * Duration: 0s
-       * Tests: 18
-       * Successes: 18 (100%)
-       * Failures: 0
+    Test Organization end-point
+    (github.organization)
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    |       | Get lemoncheesecake organization information                                                     |                                                              |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    | INFO  | GET https://api.github.com/orgs/lemoncheesecake                                                  |                                                              |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    | CHECK | Expect HTTP code to be equal to 200                                                              | Got 200                                                      |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    | INFO  | Response                                                                                         |                                                              |
+    |       | {                                                                                                |                                                              |
+    |       |     "login": "lemoncheesecake",                                                                  |                                                              |
+    |       |     "id": 28742541,                                                                              |                                                              |
+    |       |     "node_id": "MDEyOk9yZ2FuaXphdGlvbjI4NzQyNTQx",                                               |                                                              |
+    |       |     "url": "https://api.github.com/orgs/lemoncheesecake",                                        |                                                              |
+    |       |     "repos_url": "https://api.github.com/orgs/lemoncheesecake/repos",                            |                                                              |
+    |       |     "events_url": "https://api.github.com/orgs/lemoncheesecake/events",                          |                                                              |
+    |       |     "hooks_url": "https://api.github.com/orgs/lemoncheesecake/hooks",                            |                                                              |
+    |       |     "issues_url": "https://api.github.com/orgs/lemoncheesecake/issues",                          |                                                              |
+    |       |     "members_url": "https://api.github.com/orgs/lemoncheesecake/members{/member}",               |                                                              |
+    |       |     "public_members_url": "https://api.github.com/orgs/lemoncheesecake/public_members{/member}", |                                                              |
+    |       |     "avatar_url": "https://avatars3.githubusercontent.com/u/28742541?v=4",                       |                                                              |
+    |       |     "description": "Python framework for functional/QA testing",                                 |                                                              |
+    |       |     "name": "lemoncheesecake",                                                                   |                                                              |
+    |       |     "company": null,                                                                             |                                                              |
+    |       |     "blog": "https://github.com/lemoncheesecake/lemoncheesecake",                                |                                                              |
+    |       |     "location": null,                                                                            |                                                              |
+    |       |     "email": "",                                                                                 |                                                              |
+    |       |     "is_verified": false,                                                                        |                                                              |
+    |       |     "has_organization_projects": true,                                                           |                                                              |
+    |       |     "has_repository_projects": true,                                                             |                                                              |
+    |       |     "public_repos": 1,                                                                           |                                                              |
+    |       |     "public_gists": 0,                                                                           |                                                              |
+    |       |     "followers": 0,                                                                              |                                                              |
+    |       |     "following": 0,                                                                              |                                                              |
+    |       |     "html_url": "https://github.com/lemoncheesecake",                                            |                                                              |
+    |       |     "created_at": "2017-05-16T22:03:10Z",                                                        |                                                              |
+    |       |     "updated_at": "2017-05-25T09:58:35Z",                                                        |                                                              |
+    |       |     "type": "Organization"                                                                       |                                                              |
+    |       | }                                                                                                |                                                              |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    |       | Check API response                                                                               |                                                              |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    | CHECK | Expect "type" to be equal to "Organization"                                                      | Got "Organization"                                           |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    | CHECK | Expect "id" to be an integer                                                                     | Got 28742541                                                 |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    | CHECK | Expect "description" to be not equal to null                                                     | Got "Python framework for functional/QA testing"             |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    | CHECK | Expect "login" to be present                                                                     | Got "lemoncheesecake"                                        |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    | CHECK | Expect "created_at" to match pattern "^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$"                    | Got "2017-05-16T22:03:10Z"                                   |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    | CHECK | Expect "has_organization_projects" to be a boolean that is equal to true                         | Got true                                                     |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    | CHECK | Expect "followers" to be greater than or equal to 0                                              | Got 0                                                        |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    | CHECK | Expect "following" to be greater than or equal to 0                                              | Got 0                                                        |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    | CHECK | Expect "repos_url" to end with "/repos"                                                          | Got "https://api.github.com/orgs/lemoncheesecake/repos"      |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    | CHECK | Expect "issues_url" to end with "/issues"                                                        | Got "https://api.github.com/orgs/lemoncheesecake/issues"     |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    | CHECK | Expect "events_url" to end with "/events"                                                        | Got "https://api.github.com/orgs/lemoncheesecake/events"     |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    | CHECK | Expect "hooks_url" to end with "/hooks"                                                          | Got "https://api.github.com/orgs/lemoncheesecake/hooks"      |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    | CHECK | Expect "members_url" to end with "/members{/member}"                                             | Got "https://api.github.com/orgs/lemoncheesecake/members{/me |
+    |       |                                                                                                  | mber}"                                                       |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+    | CHECK | Expect "public_members_url" to end with "/public_members{/member}"                               | Got "https://api.github.com/orgs/lemoncheesecake/public_memb |
+    |       |                                                                                                  | ers{/member}"                                                |
+    +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
 
 - ``lcc top-suites`` (show suites ordered by their duration):
 
-  .. code-block:: none
+  .. code-block:: console
 
       $ lcc top-suites
       Suites, ordered by duration:
@@ -173,7 +219,7 @@ reports:
 
 - ``lcc top-tests`` (shows tests ordered by their duration):
 
-  .. code-block:: none
+  .. code-block:: console
 
       $ lcc top-tests
       Tests, ordered by duration:
@@ -186,7 +232,7 @@ reports:
 
 - ``lcc top-steps`` (shows steps aggregated, ordered by their duration):
 
-  .. code-block:: none
+  .. code-block:: console
 
       $ lcc top-steps
       Steps, aggregated and ordered by duration:
@@ -239,13 +285,13 @@ if no ``--from-report`` is specified, then the latest report is used.
 
 A typical application of this functionality is to re-run failed tests from a previous report:
 
-.. code-block:: none
+.. code-block:: console
 
     $ lcc run --failed --from-report reports/report-2
 
 Or simply:
 
-.. code-block:: none
+.. code-block:: console
 
     $ lcc run --failed
 

@@ -148,6 +148,15 @@ class HookData(ResultData):
         ResultData.__init__(self)
         self.outcome = None
 
+    @property
+    def status(self):
+        if self.outcome is None:
+            return None
+        elif self.outcome:
+            return "passed"
+        else:
+            return "failed"
+
     def is_empty(self):
         return len(self.steps) == 0
 
