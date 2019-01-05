@@ -162,17 +162,18 @@ def _print_data(data_it):
         print(data if six.PY3 else data.encode("utf8"))
 
 
-def print_report(report, filtr=None, explicit=False):
+def print_report(report, filtr=None, max_width=None, explicit=False):
     ###
     # Setup terminal
     ###
     colorama.init()
-    terminal_width, _ = terminalsize.get_terminal_size()
+    if not max_width:
+        max_width, _ = terminalsize.get_terminal_size()
 
     ###
     # Get a generator over data to be printed on the console
     ###
-    renderer = Renderer(max_width=terminal_width, explicit=explicit)
+    renderer = Renderer(max_width=max_width, explicit=explicit)
     if not filtr or filtr.is_empty():
         if report.nb_tests == 0:
             print("No tests found in report")

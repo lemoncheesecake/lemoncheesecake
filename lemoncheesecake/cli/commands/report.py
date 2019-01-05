@@ -24,6 +24,11 @@ class ReportCommand(Command):
             "--explicit", "-e", action="store_true", required=False,
             help="Make all indicators 'explicit' (not only relying on color)"
         )
+        group.add_argument(
+            "--max-width", "-w", type=int, required=False,
+            help="Set a max width for tables (default is current terminal width)"
+        )
+
         add_report_filter_cli_args(cli_parser)
 
     def run_cmd(self, cli_args):
@@ -34,6 +39,6 @@ class ReportCommand(Command):
         if cli_args.short:
             print_report_as_test_run(report, filtr)
         else:
-            print_report(report, filtr, cli_args.explicit)
+            print_report(report, filtr=filtr, max_width=cli_args.max_width, explicit=cli_args.explicit)
 
         return 0
