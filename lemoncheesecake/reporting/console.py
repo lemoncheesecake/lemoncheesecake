@@ -98,9 +98,28 @@ class Renderer(object):
     def render_test(self, test):
         return self.render_result(test.description, test.path, test.status, test.steps)
 
-    def render_tests(self, suites):
-        for test in flatten_tests(suites):
+    def render_tests(self, tests):
+        for test in tests:
             yield self.render_test(test)
+            yield ""
+
+    def render_suite(self, suite):
+        if suite.suite_setup:
+            yield self.render_result(
+                "- SUITE SETUP - %s" % suite.description, suite.path,
+                suite.suite_setup.status, suite.suite_setup.steps
+            )
+            yield ""
+
+        for test in suite.get_tests():
+            yield self.render_test(test)
+            yield ""
+
+        if suite.suite_teardown:
+            yield self.render_result(
+                "- SUITE TEARDOWN - %s" % suite.description, suite.path,
+                suite.suite_teardown.status, suite.suite_teardown.steps
+            )
             yield ""
 
     def render_report(self, report):
@@ -112,23 +131,8 @@ class Renderer(object):
             yield ""
 
         for suite in report.all_suites():
-            if suite.suite_setup:
-                yield self.render_result(
-                    "- SUITE SETUP - %s" % suite.description, suite.path,
-                    suite.suite_setup.status, suite.suite_setup.steps
-                )
-                yield ""
-
-            for test in suite.get_tests():
-                yield self.render_test(test)
-                yield ""
-
-            if suite.suite_teardown:
-                yield self.render_result(
-                    "- SUITE TEARDOWN - %s" % suite.description, suite.path,
-                    suite.suite_teardown.status, suite.suite_teardown.steps
-                )
-                yield ""
+            for data in self.render_suite(suite):
+                yield data
 
         if report.test_session_teardown:
             yield self.render_result(
@@ -158,15 +162,15 @@ def print_report(report, filtr=None):
         if report.nb_tests == 0:
             print("No tests found in report")
             return
-        results = renderer.render_report(report)
+        data = renderer.render_report(report)
     else:
         suites = filter_suites(report.get_suites(), filtr)
         if not suites:
             print("The filter does not match any test in the report")
             return
-        results = renderer.render_tests(suites)
+        data = renderer.render_tests(flatten_tests(suites))
 
     ###
     # Do the actual job
     ###
-    _print_data(results)
+    _print_data(data)
