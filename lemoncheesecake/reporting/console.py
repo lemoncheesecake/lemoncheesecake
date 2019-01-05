@@ -101,6 +101,7 @@ class Renderer(object):
     def render_tests(self, suites):
         for test in flatten_tests(suites):
             yield self.render_test(test)
+            yield ""
 
     def render_report(self, report):
         if report.test_session_setup:
@@ -108,6 +109,7 @@ class Renderer(object):
                 "- TEST SESSION SETUP -", None,
                 report.test_session_setup.status, report.test_session_setup.steps
             )
+            yield ""
 
         for suite in report.all_suites():
             if suite.suite_setup:
@@ -115,27 +117,30 @@ class Renderer(object):
                     "- SUITE SETUP - %s" % suite.description, suite.path,
                     suite.suite_setup.status, suite.suite_setup.steps
                 )
+                yield ""
 
             for test in suite.get_tests():
                 yield self.render_test(test)
+                yield ""
 
             if suite.suite_teardown:
                 yield self.render_result(
                     "- SUITE TEARDOWN - %s" % suite.description, suite.path,
                     suite.suite_teardown.status, suite.suite_teardown.steps
                 )
+                yield ""
 
         if report.test_session_teardown:
             yield self.render_result(
                 "- TEST SESSION TEARDOWN -", None,
                 report.test_session_teardown.status, report.test_session_teardown.steps
             )
+            yield ""
 
 
-def _print_results(results):
-    for result in results:
-        print(result if six.PY3 else result.encode("utf8"))
-        print()
+def _print_data(data_it):
+    for data in data_it:
+        print(data if six.PY3 else data.encode("utf8"))
 
 
 def print_report(report, filtr=None):
@@ -164,4 +169,4 @@ def print_report(report, filtr=None):
     ###
     # Do the actual job
     ###
-    _print_results(results)
+    _print_data(results)
