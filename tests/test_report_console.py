@@ -5,14 +5,14 @@ import sys
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import *
-from lemoncheesecake.reporting.console import _render_report
+from lemoncheesecake.reporting.console import Renderer
 
 from helpers.runner import run_suite_classes, wrap_func_into_suites
 
 
 def _test_render_test(suites, *expected_lines):
     report = run_suite_classes(suites)
-    actual = "\n".join(_render_report(report, 80))
+    actual = "\n".join(Renderer(80).render_report(report))
     print("<<<\n%s\n>>>" % actual, file=sys.stderr)
     for actual_line, expected_line in zip(actual.split("\n"), expected_lines):
         assert re.compile(expected_line).search(actual_line)

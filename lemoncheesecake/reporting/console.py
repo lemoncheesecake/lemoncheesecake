@@ -35,103 +35,101 @@ def outcome_to_color(outcome):
     return "green" if outcome else "red"
 
 
-def _render_steps(steps, terminal_width):
-    # "15" is an approximation of the maximal overhead of table border, padding, and table first cell
-    wrap_description = partial(wrap_text, width=int((terminal_width - 15) * 0.75))
-    wrap_details = partial(wrap_text, width=int((terminal_width - 15) * 0.25))
+class Renderer(object):
+    def __init__(self, max_width):
+        self.max_width = max_width
+        # "15" is an approximation of the maximal overhead of table border, padding, and table first cell
+        self._table_overhead = 15
 
-    rows = []
-    for step in steps:
-        rows.append(["", colored(wrap_description(step.description), attrs=["bold"])])
-        for entry in step.entries:
-            if isinstance(entry, LogData):
-                rows.append([
-                    colored(entry.level.upper(), color=log_level_to_color(entry.level), attrs=["bold"]),
-                    wrap_description(entry.message)
-                ])
-            if isinstance(entry, CheckData):
-                rows.append([
-                    colored("CHECK", color=outcome_to_color(entry.outcome), attrs=["bold"]),
-                    wrap_description(entry.description),
-                    wrap_details(entry.details)
-                ])
-            if isinstance(entry, UrlData):
-                rows.append([
-                    colored("URL", color="cyan", attrs=["bold"]),
-                    wrap_description("%s (%s)" % (entry.url, entry.description))
-                ])
-            if isinstance(entry, AttachmentData):
-                rows.append([
-                    colored("ATTACH", color="cyan", attrs=["bold"]),
-                    wrap_description(entry.description),
-                    "IMAGE" if entry.as_image else ""
-                ])
+    def wrap_description_col(self, description):
+        return wrap_text(description, int((self.max_width - self._table_overhead) * 0.75))
 
-    table = AsciiTable(rows)
-    table.inner_heading_row_border = False
-    table.justify_columns[0] = "center"
-    table.inner_row_border = True
+    def wrap_details_col(self, details):
+        return wrap_text(details, int((self.max_width - self._table_overhead) * 0.25))
 
-    return table.table
+    def render_steps(self, steps):
+        rows = []
+        for step in steps:
+            rows.append(["", colored(self.wrap_description_col(step.description), attrs=["bold"])])
+            for entry in step.entries:
+                if isinstance(entry, LogData):
+                    rows.append([
+                        colored(entry.level.upper(), color=log_level_to_color(entry.level), attrs=["bold"]),
+                        self.wrap_description_col(entry.message)
+                    ])
+                if isinstance(entry, CheckData):
+                    rows.append([
+                        colored("CHECK", color=outcome_to_color(entry.outcome), attrs=["bold"]),
+                        self.wrap_description_col(entry.description),
+                        self.wrap_details_col(entry.details)
+                    ])
+                if isinstance(entry, UrlData):
+                    rows.append([
+                        colored("URL", color="cyan", attrs=["bold"]),
+                        self.wrap_description_col("%s (%s)" % (entry.url, entry.description))
+                    ])
+                if isinstance(entry, AttachmentData):
+                    rows.append([
+                        colored("ATTACH", color="cyan", attrs=["bold"]),
+                        self.wrap_description_col(entry.description),
+                        "IMAGE" if entry.as_image else ""
+                    ])
 
+        table = AsciiTable(rows)
+        table.inner_heading_row_border = False
+        table.justify_columns[0] = "center"
+        table.inner_row_border = True
 
-def _render_result(description, short_description, status, steps, terminal_width):
-    if steps:
-        details = _render_steps(steps, terminal_width)
-    else:
-        details = "n/a"
+        return table.table
 
-    parts = [colored(description, color=test_status_to_color(status), attrs=["bold"])]
-    if short_description:
-        parts.append(colored("(%s)" % short_description, attrs=["bold"]))
-    parts.append(details)
+    def render_result(self, description, short_description, status, steps):
+        if steps:
+            details = self.render_steps(steps)
+        else:
+            details = "n/a"
 
-    return "\n".join(parts)
+        parts = [colored(description, color=test_status_to_color(status), attrs=["bold"])]
+        if short_description:
+            parts.append(colored("(%s)" % short_description, attrs=["bold"]))
+        parts.append(details)
 
+        return "\n".join(parts)
 
-def _render_test(test, terminal_width):
-    return _render_result(
-        test.description, test.path, test.status, test.steps, terminal_width
-    )
+    def render_test(self, test):
+        return self.render_result(test.description, test.path, test.status, test.steps)
 
+    def render_tests(self, suites):
+        for test in flatten_tests(suites):
+            yield self.render_test(test)
 
-def _render_tests(suites, terminal_width):
-    for test in flatten_tests(suites):
-        yield _render_test(test, terminal_width)
-
-
-def _render_report(report, terminal_width):
-    if report.test_session_setup:
-        yield _render_result(
-            "- TEST SESSION SETUP -", None,
-            report.test_session_setup.status, report.test_session_setup.steps,
-            terminal_width
-        )
-
-    for suite in report.all_suites():
-        if suite.suite_setup:
-            yield _render_result(
-                "- SUITE SETUP - %s" % suite.description, suite.path,
-                suite.suite_setup.status, suite.suite_setup.steps,
-                terminal_width
+    def render_report(self, report):
+        if report.test_session_setup:
+            yield self.render_result(
+                "- TEST SESSION SETUP -", None,
+                report.test_session_setup.status, report.test_session_setup.steps
             )
 
-        for test in suite.get_tests():
-            yield _render_test(test, terminal_width)
+        for suite in report.all_suites():
+            if suite.suite_setup:
+                yield self.render_result(
+                    "- SUITE SETUP - %s" % suite.description, suite.path,
+                    suite.suite_setup.status, suite.suite_setup.steps
+                )
 
-        if suite.suite_teardown:
-            yield _render_result(
-                "- SUITE TEARDOWN - %s" % suite.description, suite.path,
-                suite.suite_teardown.status, suite.suite_teardown.steps,
-                terminal_width
+            for test in suite.get_tests():
+                yield self.render_test(test)
+
+            if suite.suite_teardown:
+                yield self.render_result(
+                    "- SUITE TEARDOWN - %s" % suite.description, suite.path,
+                    suite.suite_teardown.status, suite.suite_teardown.steps
+                )
+
+        if report.test_session_teardown:
+            yield self.render_result(
+                "- TEST SESSION TEARDOWN -", None,
+                report.test_session_teardown.status, report.test_session_teardown.steps
             )
-
-    if report.test_session_teardown:
-        yield _render_result(
-            "- TEST SESSION TEARDOWN -", None,
-            report.test_session_teardown.status, report.test_session_teardown.steps,
-            terminal_width
-        )
 
 
 def _print_results(results):
@@ -150,17 +148,18 @@ def print_report(report, filtr=None):
     ###
     # Get a generator over data to be printed on the console
     ###
+    renderer = Renderer(terminal_width)
     if not filtr or filtr.is_empty():
         if report.nb_tests == 0:
             print("No tests found in report")
             return
-        results = _render_report(report, terminal_width)
+        results = renderer.render_report(report)
     else:
         suites = filter_suites(report.get_suites(), filtr)
         if not suites:
             print("The filter does not match any test in the report")
             return
-        results = _render_tests(suites, terminal_width)
+        results = renderer.render_tests(suites)
 
     ###
     # Do the actual job
