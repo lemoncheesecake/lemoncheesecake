@@ -36,8 +36,9 @@ def outcome_to_color(outcome):
 
 
 class Renderer(object):
-    def __init__(self, max_width):
+    def __init__(self, max_width, explicit=False):
         self.max_width = max_width
+        self.explicit = explicit
         # "15" is an approximation of the maximal overhead of table border, padding, and table first cell
         self._table_overhead = 15
 
@@ -46,6 +47,14 @@ class Renderer(object):
 
     def wrap_details_col(self, details):
         return wrap_text(details, int((self.max_width - self._table_overhead) * 0.25))
+
+    def render_check_outcome(self, outcome):
+        if self.explicit:
+            check_label = "CHECK %s" % ("OK" if outcome else "KO")
+        else:
+            check_label = "CHECK"
+
+        return colored(check_label, color=outcome_to_color(outcome), attrs=["bold"])
 
     def render_steps(self, steps):
         rows = []
@@ -59,7 +68,7 @@ class Renderer(object):
                     ])
                 if isinstance(entry, CheckData):
                     rows.append([
-                        colored("CHECK", color=outcome_to_color(entry.outcome), attrs=["bold"]),
+                        self.render_check_outcome(entry.outcome),
                         self.wrap_description_col(entry.description),
                         self.wrap_details_col(entry.details)
                     ])
@@ -88,7 +97,13 @@ class Renderer(object):
         else:
             details = "n/a"
 
-        parts = [colored(description, color=test_status_to_color(status), attrs=["bold"])]
+        parts = [
+            colored(
+                "%s: %s" % (status.upper(), description) if self.explicit else description,
+                color=test_status_to_color(status),
+                attrs=["bold"]
+            )
+        ]
         if short_description:
             parts.append(colored("(%s)" % short_description, attrs=["bold"]))
         parts.append(details)
@@ -147,7 +162,7 @@ def _print_data(data_it):
         print(data if six.PY3 else data.encode("utf8"))
 
 
-def print_report(report, filtr=None):
+def print_report(report, filtr=None, explicit=False):
     ###
     # Setup terminal
     ###
@@ -157,7 +172,7 @@ def print_report(report, filtr=None):
     ###
     # Get a generator over data to be printed on the console
     ###
-    renderer = Renderer(terminal_width)
+    renderer = Renderer(max_width=terminal_width, explicit=explicit)
     if not filtr or filtr.is_empty():
         if report.nb_tests == 0:
             print("No tests found in report")

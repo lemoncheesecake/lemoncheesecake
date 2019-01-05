@@ -20,6 +20,10 @@ class ReportCommand(Command):
             "--short", "-s", action="store_true", required=False,
             help="Display report as lcc run display test results"
         )
+        group.add_argument(
+            "--explicit", "-e", action="store_true", required=False,
+            help="Make all indicators 'explicit' (not only relying on color)"
+        )
         add_report_filter_cli_args(cli_parser)
 
     def run_cmd(self, cli_args):
@@ -30,6 +34,6 @@ class ReportCommand(Command):
         if cli_args.short:
             print_report_as_test_run(report, filtr)
         else:
-            print_report(report, filtr)
+            print_report(report, filtr, cli_args.explicit)
 
         return 0
