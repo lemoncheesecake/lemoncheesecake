@@ -59,7 +59,14 @@ class Renderer(object):
     def render_steps(self, steps):
         rows = []
         for step in steps:
-            rows.append(["", colored(self.wrap_description_col(step.description), attrs=["bold"])])
+            rows.append([
+                "",
+                colored(
+                    self.wrap_description_col(step.description),
+                    color=outcome_to_color(step.is_successful()),
+                    attrs=["bold"]
+                )
+            ])
             for entry in step.entries:
                 if isinstance(entry, LogData):
                     rows.append([
