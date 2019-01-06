@@ -1,3 +1,5 @@
+import sys
+
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import auto_detect_reporting_backends, add_report_path_cli_arg, get_report_path
 from lemoncheesecake.reporting import load_report
@@ -22,7 +24,8 @@ class ReportCommand(Command):
         )
         group.add_argument(
             "--explicit", "-e", action="store_true", required=False,
-            help="Make all indicators 'explicit' (not only relying on color)"
+            help="Make all indicators 'explicit' (i.e not only relying on a color-code), "
+                 "will be enforced is stdout is redirected"
         )
         group.add_argument(
             "--max-width", "-w", type=int, required=False,
@@ -39,6 +42,9 @@ class ReportCommand(Command):
         if cli_args.short:
             print_report_as_test_run(report, filtr)
         else:
-            print_report(report, filtr=filtr, max_width=cli_args.max_width, explicit=cli_args.explicit)
+            print_report(
+                report, filtr=filtr, max_width=cli_args.max_width,
+                explicit=cli_args.explicit or not sys.stdout.isatty()
+            )
 
         return 0
