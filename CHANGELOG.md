@@ -1,3 +1,10 @@
+# 0.22.1 (2019-01-06)
+
+- **lcc report**:
+  - various visualization improvements
+  - add a `--explicit` argument to make some indicators understandable even without color codes
+  - add a `--max-width` argument to manually control the maximum width of tables
+
 # 0.22.0 (2019-01-04)
 
 - **lcc report**: the command now prints a detailed view of the report, the former output style (ala `lcc run`) is now
