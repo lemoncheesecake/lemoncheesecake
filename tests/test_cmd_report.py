@@ -57,6 +57,22 @@ def test_report_detailed(tmpdir, cmdout):
     cmdout.assert_lines_nb(13)
 
 
+def test_report_detailed_with_arguments(tmpdir, cmdout):
+    run_suite_class(mysuite, tmpdir=tmpdir, backends=[JsonBackend()])
+
+    assert main(["report", tmpdir.strpath, "--explicit", "--max-width=80"]) == 0
+
+    cmdout.dump()
+    cmdout.assert_substrs_in_line(0, ["FAILED: My Test 1"])
+    cmdout.assert_substrs_in_line(1, ["mysuite.mytest1"])
+    cmdout.assert_substrs_in_line(3, ["My Test 1"])
+    cmdout.assert_substrs_in_line(5, ["ERROR", "failure"])
+    cmdout.assert_substrs_in_line(8, ["My Test 2"])
+    cmdout.assert_substrs_in_line(9, ["mysuite.mytest2"])
+    cmdout.assert_substrs_in_line(10, ["n/a"])
+    cmdout.assert_lines_nb(13)
+
+
 def test_report_detailed_with_filter(tmpdir, cmdout):
     run_suite_class(mysuite, tmpdir=tmpdir, backends=[JsonBackend()])
 

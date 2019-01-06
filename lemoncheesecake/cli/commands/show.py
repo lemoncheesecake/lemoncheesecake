@@ -6,14 +6,13 @@ Created on Feb 14, 2017
 
 from __future__ import print_function
 
-from termcolor import colored
-
 from lemoncheesecake.helpers.console import bold
+from lemoncheesecake.helpers.text import ensure_single_line_text
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import get_suites_from_project
 from lemoncheesecake.filter import add_run_filter_cli_args
 from lemoncheesecake.project import load_project
-from lemoncheesecake.helpers.text import ensure_single_line_text
+from lemoncheesecake.reporting.console import serialize_metadata
 
 
 class ShowCommand(Command):
@@ -35,15 +34,7 @@ class ShowCommand(Command):
 
     def get_padding(self, depth):
         return " " * (depth * self.indent)
-    
-    def serialize_metadata(self, obj):
-        return ", ".join(
-            ([colored("DISABLED", attrs=[])] if obj.disabled else []) +
-            obj.tags +
-            ["%s:%s" % (k, v) for k, v in obj.properties.items()] +
-            [link_name or link_url for link_url, link_name in obj.links]
-        )
-    
+
     def get_test_label(self, test, suite):
         if self.show_description:
             return ensure_single_line_text(test.description)
@@ -59,7 +50,7 @@ class ShowCommand(Command):
         return suite.path
 
     def show_test(self, test, suite):
-        md = self.serialize_metadata(test) if self.show_metadata else ""
+        md = serialize_metadata(test) if self.show_metadata else ""
         if self.flat_mode:
             print("%s%s" % (self.get_test_label(test, suite), " (%s)" % md if md else ""))
         else:
@@ -68,7 +59,7 @@ class ShowCommand(Command):
             print("%s- %s%s" % (padding, test_label, " (%s)" % md if md else ""))
         
     def show_suite(self, suite):
-        md = self.serialize_metadata(suite) if self.show_metadata else ""
+        md = serialize_metadata(suite) if self.show_metadata else ""
         if self.flat_mode:
             print("%s%s" % (bold(self.get_suite_label(suite)), " (%s)" % md if md else ""))
         else:
