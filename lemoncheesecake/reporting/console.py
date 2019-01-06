@@ -81,7 +81,7 @@ class Renderer(object):
                     rows.append([
                         colored("ATTACH", color="cyan", attrs=["bold"]),
                         self.wrap_description_col(entry.description),
-                        "IMAGE" if entry.as_image else ""
+                        entry.filename
                     ])
 
         table = AsciiTable(rows)
