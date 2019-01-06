@@ -34,6 +34,32 @@ def outcome_to_color(outcome):
     return "green" if outcome else "red"
 
 
+def _serialize_metadata(tags, properties, links, disabled):
+    parts = []
+
+    if disabled:
+        parts.append("DISABLED")
+    parts.extend(tags)
+    parts.extend("%s:%s" % (key, properties[key]) for key in sorted(properties))
+    parts.extend(link_name or link_url for link_url, link_name in links)
+
+    return ", ".join(parts)
+
+
+def serialize_metadata(obj, hide_disabled=False):
+    return _serialize_metadata(
+        obj.tags, obj.properties, obj.links,
+        disabled=not hide_disabled and getattr(obj, "disabled", False)
+    )
+
+
+def serialize_hierarchy_metadata(obj, hide_disabled=False):
+    return _serialize_metadata(
+        obj.hierarchy_tags, obj.hierarchy_properties, obj.hierarchy_links,
+        disabled=not hide_disabled and (hasattr(obj, "is_disabled") and obj.is_disabled())
+    )
+
+
 class Renderer(object):
     def __init__(self, max_width, explicit=False):
         self.max_width = max_width
@@ -120,7 +146,13 @@ class Renderer(object):
         return "\n".join(parts)
 
     def render_test(self, test):
-        return self.render_result(test.description, test.path, test.status, test.steps)
+        test_metadata = serialize_hierarchy_metadata(test, hide_disabled=True)
+        if test_metadata:
+            short_description = "%s - %s" % (test.path, test_metadata)
+        else:
+            short_description = test.path
+
+        return self.render_result(test.description, short_description, test.status, test.steps)
 
     def render_tests(self, tests):
         for test in tests:
