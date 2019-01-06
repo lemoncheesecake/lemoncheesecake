@@ -1,13 +1,12 @@
 from __future__ import print_function
 
-from functools import partial
-
 from terminaltables import AsciiTable
 import colorama
 from termcolor import colored
 import six
 
 from lemoncheesecake.helpers.text import wrap_text
+from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.helpers import terminalsize
 from lemoncheesecake.reporting import LogData, CheckData, UrlData, AttachmentData
 from lemoncheesecake.testtree import flatten_tests
@@ -65,7 +64,10 @@ class Renderer(object):
                     self.wrap_description_col(step.description),
                     color=outcome_to_color(step.is_successful()),
                     attrs=["bold"]
-                )
+                ),
+                colored(humanize_duration(step.duration, show_milliseconds=True), attrs=["bold"])
+                    if step.duration is not None
+                    else "n/a"
             ])
             for entry in step.entries:
                 if isinstance(entry, LogData):
