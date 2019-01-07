@@ -425,6 +425,9 @@ class SuiteTeardownTask(BaseTask):
                 context.abort_session()
             SuiteTeardownTask.end_suite_teardown(self.suite)
 
+    def abort(self, context, _):
+        self.run(context)
+
     def __str__(self):
         return "<%s %s>" % (self.__class__.__name__, self.suite.path)
 
@@ -490,6 +493,9 @@ class TestSessionTeardownTask(BaseTask):
             TestSessionTeardownTask.begin_test_session_teardown()
             context.run_teardown_funcs(self.test_session_setup_task.teardown_funcs)
             TestSessionTeardownTask.end_test_session_teardown()
+
+    def abort(self, context, _):
+        self.run(context)
 
 
 def build_test_session_teardown_task(test_session_setup_task, dependencies):

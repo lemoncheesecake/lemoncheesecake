@@ -197,7 +197,7 @@ def test_teardown_test_after_test_failure():
 
         @lcc.test("Some test")
         def sometest(self):
-            1/0
+            1 / 0
 
     run_suite_class(MySuite)
 
@@ -232,6 +232,23 @@ def test_teardown_suite():
         @lcc.test("Some test")
         def sometest(self):
             pass
+
+    run_suite_class(MySuite)
+
+    assert marker
+
+
+def test_teardown_suite_after_test_failure():
+    marker = []
+
+    @lcc.suite("MySuite")
+    class MySuite:
+        def teardown_suite(self):
+            marker.append("ok")
+
+        @lcc.test("Some test")
+        def sometest(self):
+            1 / 0
 
     run_suite_class(MySuite)
 
@@ -507,6 +524,25 @@ def test_teardown_test_session_error_because_of_exception():
 
     assert_test_statuses(report, passed=["MySuite.sometest", "MySuite.sometest_bis"])
     assert_report_node_success(report, TreeLocation.in_test_session_teardown(), expected=False)
+
+
+def test_teardown_test_session_after_test_failure():
+    marker = []
+
+    @lcc.fixture(scope="session")
+    def fixt():
+        yield 1
+        marker.append(1)
+
+    @lcc.suite("MySuite")
+    class MySuite:
+        @lcc.test("Some test")
+        def sometest(self, fixt):
+            1 / 0
+
+    run_suite_class(MySuite, fixtures=[fixt])
+
+    assert marker
 
 
 def test_session_prerun_fixture_exception():
