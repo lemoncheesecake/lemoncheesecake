@@ -64,8 +64,8 @@ class Renderer(object):
     def __init__(self, max_width, explicit=False):
         self.max_width = max_width
         self.explicit = explicit
-        # "15" is an approximation of the maximal overhead of table border, padding, and table first cell
-        self._table_overhead = 15
+        # "20" is an approximation of the maximal overhead of table border, padding, and table first cell
+        self._table_overhead = 20
 
     def wrap_description_col(self, description):
         return wrap_text(description, int((self.max_width - self._table_overhead) * 0.75))
