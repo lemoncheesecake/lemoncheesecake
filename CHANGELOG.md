@@ -1,3 +1,7 @@
+# 0.22.2 (2019-01-07)
+
+- Fix fixture (with scope > test) and suite teardowns not being called in case of failed test in a suite (bug was introduced in 0.19.0)
+
 # 0.22.1 (2019-01-06)
 
 - **lcc report**:
