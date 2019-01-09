@@ -1,3 +1,7 @@
+# 0.22.3 (2019-01-09)
+
+- Fix `suite_teardown` & session/suite fixtures teardown called as soon as a test fails in a suite while other tests remain to be executed (regression introduced in 0.22.2 while trying to fix teardowns not being called at all)
+
 # 0.22.2 (2019-01-07)
 
 - Fix fixture (with scope > test) and suite teardowns not being called in case of failed test in a suite (bug was introduced in 0.19.0)
