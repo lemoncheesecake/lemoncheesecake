@@ -11,13 +11,14 @@ import itertools
 import six
 
 from lemoncheesecake.runtime import *
-from lemoncheesecake.runtime import initialize_runtime, set_runtime_location, is_location_successful
+from lemoncheesecake.runtime import initialize_runtime, set_runtime_location, is_location_successful,\
+    mark_location_as_failed
 from lemoncheesecake.reporting import Report, initialize_report_writer, initialize_reporting_backends
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
     UserError, serialize_current_exception
 from lemoncheesecake import events
 from lemoncheesecake.testtree import TreeLocation, flatten_tests
-from lemoncheesecake.task import BaseTask, run_tasks, AbortTask
+from lemoncheesecake.task import BaseTask, run_tasks
 
 
 class RunContext(object):
@@ -116,8 +117,9 @@ class TestTask(BaseTask):
     def get_dependencies(self):
         return self.dependencies
 
-    def abort(self, context, reason=""):
+    def abort(self, _, reason=""):
         events.fire(events.TestSkippedEvent(self.test, reason))
+        mark_location_as_failed(TreeLocation.in_test(self.test))
 
     def run(self, context):
         suite = self.test.parent_suite
@@ -127,6 +129,14 @@ class TestTask(BaseTask):
         ###
         if self.test.is_disabled() and not context.force_disabled:
             events.fire(events.TestDisabledEvent(self.test, ""))
+            return
+
+        has_failed_test_dependencies = any(
+            isinstance(task, TestTask) and not is_location_successful(TreeLocation.in_test(task.test))
+                for task in self.dependencies
+        )
+        if has_failed_test_dependencies:
+            self.abort(None, "Dependencies not met")
             return
 
         ###
@@ -199,9 +209,6 @@ class TestTask(BaseTask):
             context.abort_session()
 
         events.fire(events.TestEndEvent(self.test))
-
-        if not is_test_successful:
-            raise AbortTask("Test '%s' has failed" % self.test.path)
 
     def __str__(self):
         return "<%s %s>" % (self.__class__.__name__, self.test.path)

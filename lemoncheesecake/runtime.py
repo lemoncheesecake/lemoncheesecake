@@ -61,6 +61,9 @@ class _Runtime:
     def location(self):
         return self._local.location
 
+    def mark_location_as_failed(self, location):
+        self._failures.add(location)
+
     def is_successful(self, location):
         return location not in self._failures
 
@@ -76,12 +79,12 @@ class _Runtime:
 
     def log(self, level, content, step=None):
         if level == LOG_LEVEL_ERROR:
-            self._failures.add(self.location)
+            self.mark_location_as_failed(self.location)
         events.fire(events.LogEvent(self._local.location, self._get_step(step), level, content))
 
     def log_check(self, description, outcome, details, step=None):
         if outcome is False:
-            self._failures.add(self.location)
+            self.mark_location_as_failed(self.location)
         events.fire(events.CheckEvent(self._local.location, self._get_step(step), description, outcome, details))
 
     def log_url(self, url, description, step=None):
@@ -259,6 +262,10 @@ def add_report_info(name, value):
 
 def set_runtime_location(location):
     get_runtime().set_location(location)
+
+
+def mark_location_as_failed(location):
+    get_runtime().mark_location_as_failed(location)
 
 
 def is_location_successful(location):

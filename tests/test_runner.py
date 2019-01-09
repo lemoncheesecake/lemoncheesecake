@@ -255,6 +255,28 @@ def test_teardown_suite_after_test_failure():
     assert marker
 
 
+def test_teardown_suite_after_test_failure_and_test_success():
+    marker = []
+
+    @lcc.suite("MySuite")
+    class MySuite:
+        def teardown_suite(self):
+            marker.append("teardown_suite")
+
+        @lcc.test("Test 1")
+        def test_1(self):
+            marker.append("test_1")
+            1 / 0
+
+        @lcc.test("Test 2")
+        def test_2(self):
+            marker.append("test_2")
+
+    run_suite_class(MySuite)
+
+    assert marker == ["test_1", "test_2", "teardown_suite"]
+
+
 def test_setup_test_error():
     marker = []
 
@@ -543,6 +565,31 @@ def test_teardown_test_session_after_test_failure():
     run_suite_class(MySuite, fixtures=[fixt])
 
     assert marker
+
+
+def test_teardown_test_session_after_test_failure_and_test_success():
+    marker = []
+
+    @lcc.fixture(scope="session")
+    def fixt():
+        marker.append("test_session_setup")
+        yield 1
+        marker.append("test_session_teardown")
+
+    @lcc.suite("MySuite")
+    class MySuite:
+        @lcc.test("Test 1")
+        def test_1(self, fixt):
+            marker.append("test_1")
+            1 / 0
+
+        @lcc.test("Test 2")
+        def test_2(self):
+            marker.append("test_2")
+
+    run_suite_class(MySuite, fixtures=[fixt])
+
+    assert marker == ["test_session_setup", "test_1", "test_2", "test_session_teardown"]
 
 
 def test_session_prerun_fixture_exception():
