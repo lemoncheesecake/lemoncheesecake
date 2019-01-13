@@ -18,7 +18,7 @@ class BaseTestTask(BaseTask):
     def get_dependencies(self):
         return set(self.dependencies)
 
-    def abort(self, context, reason):
+    def skip(self, context, reason):
         self.aborted = True
         if self.exception_within_abort:
             raise self.exception_within_abort

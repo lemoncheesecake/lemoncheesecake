@@ -17,7 +17,7 @@ class BaseTask(object):
     def run(self, context):
         pass
 
-    def abort(self, context, reason):
+    def skip(self, context, reason):
         pass
 
 
@@ -62,7 +62,7 @@ def schedule_task(task, watchdogs, context, completed_task_queue):
     for watchdog in watchdogs:
         error = watchdog(task)
         if error:
-            abort_task(task, context, completed_task_queue, reason=error)
+            skip_task(task, context, completed_task_queue, reason=error)
             return
 
     run_task(task, context, completed_task_queue)
@@ -73,9 +73,9 @@ def schedule_tasks(tasks, watchdogs, context, pool, completed_tasks_queue):
         pool.apply_async(schedule_task, args=(task, watchdogs, context, completed_tasks_queue))
 
 
-def abort_task(task, context, completed_task_queue, reason=""):
+def skip_task(task, context, completed_task_queue, reason=""):
     try:
-        task.abort(context, reason)
+        task.skip(context, reason)
     except Exception:
         task.successful = False
         task.exception = serialize_current_exception()
@@ -85,13 +85,13 @@ def abort_task(task, context, completed_task_queue, reason=""):
     completed_task_queue.put(task)
 
 
-def abort_tasks(tasks, context, pool, completed_tasks_queue, reason=""):
+def skip_tasks(tasks, context, pool, completed_tasks_queue, reason=""):
     for task in tasks:
-        pool.apply_async(abort_task, args=(task, context, completed_tasks_queue, reason))
+        pool.apply_async(skip_task, args=(task, context, completed_tasks_queue, reason))
 
 
-def abort_all_tasks(tasks, remaining_tasks, completed_tasks, context, pool, completed_tasks_queue, reason):
-    abort_tasks(remaining_tasks, context, pool, completed_tasks_queue, reason)
+def skip_all_tasks(tasks, remaining_tasks, completed_tasks, context, pool, completed_tasks_queue, reason):
+    skip_tasks(remaining_tasks, context, pool, completed_tasks_queue, reason)
     while len(completed_tasks) != len(tasks):
         completed_task = completed_tasks_queue.get()
         completed_tasks.append(completed_task)
@@ -125,15 +125,15 @@ def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
 
             # schedule next tasks depending on the completed task success
             if completed_task.successful:
-                runnable_tasks = pop_runnable_tasks(remaining_tasks, completed_tasks, nb_threads)
-                schedule_tasks(runnable_tasks, watchdogs, context, pool, completed_tasks_queue)
+                tasks_to_be_run = pop_runnable_tasks(remaining_tasks, completed_tasks, nb_threads)
+                schedule_tasks(tasks_to_be_run, watchdogs, context, pool, completed_tasks_queue)
             else:
-                abortable_tasks = pop_dependant_tasks(completed_task, remaining_tasks)
-                abort_tasks(abortable_tasks, context, pool, completed_tasks_queue)
+                tasks_to_be_skipped = pop_dependant_tasks(completed_task, remaining_tasks)
+                skip_tasks(tasks_to_be_skipped, context, pool, completed_tasks_queue)
 
     except KeyboardInterrupt:
         got_keyboard_interrupt = True
-        abort_all_tasks(
+        skip_all_tasks(
             tasks, remaining_tasks, completed_tasks, context, pool, completed_tasks_queue,
             _KEYBOARD_INTERRUPT_ERROR_MESSAGE
         )

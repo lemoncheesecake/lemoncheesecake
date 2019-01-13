@@ -117,7 +117,7 @@ class TestTask(BaseTask):
     def get_dependencies(self):
         return self.dependencies
 
-    def abort(self, _, reason=""):
+    def skip(self, _, reason=""):
         events.fire(events.TestSkippedEvent(self.test, reason))
         mark_location_as_failed(TreeLocation.in_test(self.test))
 
@@ -136,7 +136,7 @@ class TestTask(BaseTask):
                 for task in self.dependencies
         )
         if has_failed_test_dependencies:
-            self.abort(None, "Dependencies not met")
+            self.skip(None, "Dependencies not met")
             return
 
         ###
@@ -296,7 +296,7 @@ class SuiteBeginningTask(BaseTask):
     def run(self, context):
         events.fire(events.SuiteStartEvent(self.suite))
 
-    def abort(self, context, _):
+    def skip(self, context, _):
         self.run(context)
 
     def __str__(self):
@@ -393,7 +393,7 @@ class SuiteEndingTask(BaseTask):
     def run(self, context):
         events.fire(events.SuiteEndEvent(self.suite))
 
-    def abort(self, context, _):
+    def skip(self, context, _):
         self.run(context)
 
     def __str__(self):
@@ -432,7 +432,7 @@ class SuiteTeardownTask(BaseTask):
                 context.abort_session()
             SuiteTeardownTask.end_suite_teardown(self.suite)
 
-    def abort(self, context, _):
+    def skip(self, context, _):
         self.run(context)
 
     def __str__(self):
@@ -501,7 +501,7 @@ class TestSessionTeardownTask(BaseTask):
             context.run_teardown_funcs(self.test_session_setup_task.teardown_funcs)
             TestSessionTeardownTask.end_test_session_teardown()
 
-    def abort(self, context, _):
+    def skip(self, context, _):
         self.run(context)
 
 
