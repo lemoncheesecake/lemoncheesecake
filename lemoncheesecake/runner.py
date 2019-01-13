@@ -26,30 +26,30 @@ class RunContext(object):
         self.force_disabled = force_disabled
         self.stop_on_failure = stop_on_failure
         self.fixture_registry = fixture_registry
-        self._abort_tests = False
+        self._abort_session = False
         self._aborted_suites = set()
 
-    def abort_suite(self, suite):
+    def mark_suite_as_aborted(self, suite):
         self._aborted_suites.add(suite)
 
     def is_suite_aborted(self, suite):
         return suite in self._aborted_suites
 
-    def abort_session(self):
-        self._abort_tests = True
+    def mark_session_as_aborted(self):
+        self._abort_session = True
 
     def is_session_aborted(self):
-        return self._abort_tests
+        return self._abort_session
 
     def handle_exception(self, excp, suite=None):
         if isinstance(excp, AbortTest):
             log_error(str(excp))
         elif isinstance(excp, AbortSuite):
             log_error(str(excp))
-            self.abort_suite(suite)
+            self.mark_suite_as_aborted(suite)
         elif isinstance(excp, AbortAllTests):
             log_error(str(excp))
-            self.abort_session()
+            self.mark_session_as_aborted()
         else:
             # FIXME: use exception instead of last implicit stacktrace
             stacktrace = traceback.format_exc()
@@ -181,7 +181,7 @@ class TestTask(BaseTask):
             teardown_funcs = [teardown for _, teardown in setup_teardown_funcs if teardown]
 
         if context.stop_on_failure and test_setup_error:
-            context.abort_session()
+            context.mark_session_as_aborted()
 
         ###
         # Run test:
@@ -206,7 +206,7 @@ class TestTask(BaseTask):
         is_test_successful = is_location_successful(TreeLocation.in_test(self.test))
 
         if context.stop_on_failure and not is_test_successful:
-            context.abort_session()
+            context.mark_session_as_aborted()
 
         events.fire(events.TestEndEvent(self.test))
 
@@ -335,13 +335,13 @@ class SuiteInitializationTask(BaseTask):
                 self.setup_teardown_funcs, TreeLocation.in_suite_setup(self.suite)
             )
             if len(self.teardown_funcs) != len(self.setup_teardown_funcs):
-                context.abort_suite(self.suite)
+                context.mark_suite_as_aborted(self.suite)
             SuiteInitializationTask.end_suite_setup(self.suite)
         else:
             self.teardown_funcs = [teardown for _, teardown in self.setup_teardown_funcs if teardown]
 
         if context.stop_on_failure and context.is_suite_aborted(self.suite):
-            context.abort_session()
+            context.mark_session_as_aborted()
 
     def __str__(self):
         return "<%s %s>" % (self.__class__.__name__, self.suite.path)
@@ -429,7 +429,7 @@ class SuiteTeardownTask(BaseTask):
             SuiteTeardownTask.begin_suite_teardown(self.suite)
             context.run_teardown_funcs(self.suite_setup_task.teardown_funcs)
             if context.stop_on_failure and not is_location_successful(TreeLocation.in_suite_teardown(self.suite)):
-                context.abort_session()
+                context.mark_session_as_aborted()
             SuiteTeardownTask.end_suite_teardown(self.suite)
 
     def skip(self, context, _):
@@ -466,7 +466,7 @@ class TestSessionSetupTask(BaseTask):
             TestSessionSetupTask.begin_test_session_setup()
             self.teardown_funcs = context.run_setup_funcs(setup_teardown_funcs, TreeLocation.in_test_session_setup())
             if len(self.teardown_funcs) != len(setup_teardown_funcs):
-                context.abort_session()
+                context.mark_session_as_aborted()
             TestSessionSetupTask.end_test_session_setup()
         else:
             self.teardown_funcs = [teardown for _, teardown in setup_teardown_funcs if teardown]
