@@ -25,7 +25,7 @@ def pop_runnable_tasks(remaining_tasks, completed_tasks, nb_tasks):
     runnable_tasks = [
         task for task in remaining_tasks if set(task.get_dependencies()).issubset(completed_tasks)
     ]
-    # run the tasks with the greater number of dependencies first
+    # return the tasks with the greater number of dependencies first
     runnable_tasks_by_priority = sorted(
         runnable_tasks, key=lambda task: len(task.get_dependencies()), reverse=True
     )
@@ -44,6 +44,9 @@ def pop_dependant_tasks(ref_task, tasks):
                 yield indirect_task
 
 
+pop_skippable_tasks = pop_dependant_tasks  # make an alias to provide a better name to the caller
+
+
 def run_task(task, context, completed_task_queue):
     try:
         task.run(context)
@@ -58,7 +61,7 @@ def run_task(task, context, completed_task_queue):
     completed_task_queue.put(task)
 
 
-def schedule_task(task, watchdogs, context, completed_task_queue):
+def handle_task(task, watchdogs, context, completed_task_queue):
     for watchdog in watchdogs:
         error = watchdog(task)
         if error:
@@ -68,9 +71,9 @@ def schedule_task(task, watchdogs, context, completed_task_queue):
     run_task(task, context, completed_task_queue)
 
 
-def schedule_tasks(tasks, watchdogs, context, pool, completed_tasks_queue):
+def schedule_tasks_to_be_run(tasks, watchdogs, context, pool, completed_tasks_queue):
     for task in tasks:
-        pool.apply_async(schedule_task, args=(task, watchdogs, context, completed_tasks_queue))
+        pool.apply_async(handle_task, args=(task, watchdogs, context, completed_tasks_queue))
 
 
 def skip_task(task, context, completed_task_queue, reason=""):
@@ -85,13 +88,13 @@ def skip_task(task, context, completed_task_queue, reason=""):
     completed_task_queue.put(task)
 
 
-def skip_tasks(tasks, context, pool, completed_tasks_queue, reason=""):
+def schedule_tasks_to_be_skipped(tasks, context, pool, completed_tasks_queue, reason=""):
     for task in tasks:
         pool.apply_async(skip_task, args=(task, context, completed_tasks_queue, reason))
 
 
 def skip_all_tasks(tasks, remaining_tasks, completed_tasks, context, pool, completed_tasks_queue, reason):
-    skip_tasks(remaining_tasks, context, pool, completed_tasks_queue, reason)
+    schedule_tasks_to_be_skipped(remaining_tasks, context, pool, completed_tasks_queue, reason)
     while len(completed_tasks) != len(tasks):
         completed_task = completed_tasks_queue.get()
         completed_tasks.append(completed_task)
@@ -113,7 +116,7 @@ def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
     completed_tasks_queue = Queue()
 
     try:
-        schedule_tasks(
+        schedule_tasks_to_be_run(
             pop_runnable_tasks(remaining_tasks, completed_tasks, nb_threads),
             watchdogs, context, pool, completed_tasks_queue
         )
@@ -126,10 +129,10 @@ def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
             # schedule next tasks depending on the completed task success
             if completed_task.successful:
                 tasks_to_be_run = pop_runnable_tasks(remaining_tasks, completed_tasks, nb_threads)
-                schedule_tasks(tasks_to_be_run, watchdogs, context, pool, completed_tasks_queue)
+                schedule_tasks_to_be_run(tasks_to_be_run, watchdogs, context, pool, completed_tasks_queue)
             else:
-                tasks_to_be_skipped = pop_dependant_tasks(completed_task, remaining_tasks)
-                skip_tasks(tasks_to_be_skipped, context, pool, completed_tasks_queue)
+                tasks_to_be_skipped = pop_skippable_tasks(completed_task, remaining_tasks)
+                schedule_tasks_to_be_skipped(tasks_to_be_skipped, context, pool, completed_tasks_queue)
 
     except KeyboardInterrupt:
         got_keyboard_interrupt = True
