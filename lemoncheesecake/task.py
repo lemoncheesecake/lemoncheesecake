@@ -11,8 +11,14 @@ class BaseTask(object):
         self.successful = None
         self.exception = None
 
-    def get_dependencies(self):
-        return set()
+    def get_all_dependencies(self):
+        return self.get_on_completion_dependencies() + self.get_on_success_dependencies()
+
+    def get_on_success_dependencies(self):
+        return []
+
+    def get_on_completion_dependencies(self):
+        return []
 
     def run(self, context):
         pass
@@ -23,11 +29,11 @@ class BaseTask(object):
 
 def pop_runnable_tasks(remaining_tasks, completed_tasks, nb_tasks):
     runnable_tasks = [
-        task for task in remaining_tasks if set(task.get_dependencies()).issubset(completed_tasks)
+        task for task in remaining_tasks if set(task.get_all_dependencies()).issubset(completed_tasks)
     ]
     # return the tasks with the greater number of dependencies first
     runnable_tasks_by_priority = sorted(
-        runnable_tasks, key=lambda task: len(task.get_dependencies()), reverse=True
+        runnable_tasks, key=lambda task: len(task.get_all_dependencies()), reverse=True
     )
 
     for task in runnable_tasks_by_priority[:nb_tasks]:
@@ -35,16 +41,13 @@ def pop_runnable_tasks(remaining_tasks, completed_tasks, nb_tasks):
         yield task
 
 
-def pop_dependant_tasks(ref_task, tasks):
+def pop_skippable_tasks(ref_task, tasks):
     for task in list(tasks):
-        if ref_task in task.get_dependencies() and task in tasks:
+        if ref_task in task.get_on_success_dependencies() and task in tasks:
             tasks.remove(task)
             yield task
-            for indirect_task in pop_dependant_tasks(task, tasks):
+            for indirect_task in pop_skippable_tasks(task, tasks):
                 yield indirect_task
-
-
-pop_skippable_tasks = pop_dependant_tasks  # make an alias to provide a better name to the caller
 
 
 def run_task(task, context, completed_task_queue):
@@ -126,13 +129,14 @@ def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
             completed_task = completed_tasks_queue.get()
             completed_tasks.append(completed_task)
 
-            # schedule next tasks depending on the completed task success
-            if completed_task.successful:
-                tasks_to_be_run = pop_runnable_tasks(remaining_tasks, completed_tasks, nb_threads)
-                schedule_tasks_to_be_run(tasks_to_be_run, watchdogs, context, pool, completed_tasks_queue)
-            else:
+            # schedule tasks to be skipped after task failure
+            if not completed_task.successful:
                 tasks_to_be_skipped = pop_skippable_tasks(completed_task, remaining_tasks)
                 schedule_tasks_to_be_skipped(tasks_to_be_skipped, context, pool, completed_tasks_queue)
+
+            # schedule tasks to be run waiting for task success or simple completion
+            tasks_to_be_run = pop_runnable_tasks(remaining_tasks, completed_tasks, nb_threads)
+            schedule_tasks_to_be_run(tasks_to_be_run, watchdogs, context, pool, completed_tasks_queue)
 
     except KeyboardInterrupt:
         got_keyboard_interrupt = True
@@ -152,8 +156,8 @@ def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
 
 def check_task_dependencies(task, task_path=()):
     for task_in_path in task_path:
-        if task_in_path in task.get_dependencies():
+        if task_in_path in task.get_all_dependencies():
             raise CircularDependencyError("Task %s has a circular dependency on task %s" % (task, task_in_path))
 
-    for dependency in task.get_dependencies():
+    for dependency in task.get_all_dependencies():
         check_task_dependencies(dependency, task_path=(task,) + task_path)

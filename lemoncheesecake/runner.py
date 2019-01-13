@@ -112,9 +112,9 @@ class TestTask(BaseTask):
         BaseTask.__init__(self)
         self.test = test
         self.suite_scheduled_fixtures = suite_scheduled_fixtures
-        self.dependencies = {dependency} if dependency else set()
+        self.dependencies = [dependency] if dependency else []
 
-    def get_dependencies(self):
+    def get_on_success_dependencies(self):
         return self.dependencies
 
     def skip(self, _, reason=""):
@@ -225,7 +225,7 @@ def build_suite_tasks(
     # Build suite beginning task
     ###
     suite_beginning_task = build_suite_beginning_task(
-        suite, list(filter(bool, (test_session_setup_task, parent_suite_beginning_task)))
+        suite, list((filter(bool, (test_session_setup_task, parent_suite_beginning_task))))
     )
 
     ###
@@ -234,7 +234,7 @@ def build_suite_tasks(
     suite_scheduled_fixtures = fixture_registry.get_fixtures_scheduled_for_suite(
         suite, session_scheduled_fixtures
     )
-    suite_setup_task = build_suite_initialization_task(suite, suite_scheduled_fixtures, (suite_beginning_task,))
+    suite_setup_task = build_suite_initialization_task(suite, suite_scheduled_fixtures, [suite_beginning_task])
 
     ###
     # Build test tasks
@@ -290,7 +290,7 @@ class SuiteBeginningTask(BaseTask):
         self.suite = suite
         self._dependencies = dependencies
 
-    def get_dependencies(self):
+    def get_on_success_dependencies(self):
         return self._dependencies
 
     def run(self, context):
@@ -315,7 +315,7 @@ class SuiteInitializationTask(BaseTask):
         self._dependencies = dependencies
         self.teardown_funcs = []
 
-    def get_dependencies(self):
+    def get_on_success_dependencies(self):
         return self._dependencies
 
     @staticmethod
@@ -387,7 +387,7 @@ class SuiteEndingTask(BaseTask):
         self.suite = suite
         self._dependencies = dependencies
 
-    def get_dependencies(self):
+    def get_on_success_dependencies(self):
         return self._dependencies
 
     def run(self, context):
@@ -411,7 +411,7 @@ class SuiteTeardownTask(BaseTask):
         self.suite_setup_task = suite_setup_task
         self._dependencies = dependencies
 
-    def get_dependencies(self):
+    def get_on_completion_dependencies(self):
         return self._dependencies
 
     @staticmethod
@@ -482,7 +482,7 @@ class TestSessionTeardownTask(BaseTask):
         self.test_session_setup_task = test_session_setup_task
         self._dependencies = dependencies
 
-    def get_dependencies(self):
+    def get_on_completion_dependencies(self):
         return self._dependencies
 
     @staticmethod
@@ -565,7 +565,7 @@ def build_tasks(suites, fixture_registry, session_scheduled_fixtures):
                     "Cannot find dependency test '%s' for '%s', "
                     "either the test does not exist or is not going to be run" % (dep_test_path, test.path)
                 )
-            test_task.dependencies.add(dep_test)
+            test_task.dependencies.append(dep_test)
 
     ###
     # Return tasks
