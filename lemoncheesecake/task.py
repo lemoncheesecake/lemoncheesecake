@@ -1,6 +1,6 @@
 from multiprocessing.dummy import Pool, Queue
 
-from lemoncheesecake.exceptions import AbortTask, TasksExecutionFailure, CircularDependencyError, \
+from lemoncheesecake.exceptions import TaskFailure, TasksExecutionFailure, CircularDependencyError, \
     serialize_current_exception
 
 _KEYBOARD_INTERRUPT_ERROR_MESSAGE = "all tests have been interrupted by the user"
@@ -22,8 +22,13 @@ class BaseTask(object):
 
 
 def pop_runnable_tasks(remaining_tasks, completed_tasks, nb_tasks):
-    runnable_tasks = [task for task in remaining_tasks if set(task.get_dependencies()).issubset(completed_tasks)]
-    runnable_tasks_by_priority = sorted(runnable_tasks, key=lambda task: len(task.get_dependencies()), reverse=True)
+    runnable_tasks = [
+        task for task in remaining_tasks if set(task.get_dependencies()).issubset(completed_tasks)
+    ]
+    # run the tasks with the greater number of dependencies first
+    runnable_tasks_by_priority = sorted(
+        runnable_tasks, key=lambda task: len(task.get_dependencies()), reverse=True
+    )
 
     for task in runnable_tasks_by_priority[:nb_tasks]:
         remaining_tasks.remove(task)
@@ -42,7 +47,7 @@ def pop_dependant_tasks(ref_task, tasks):
 def run_task(task, context, completed_task_queue):
     try:
         task.run(context)
-    except AbortTask:
+    except TaskFailure:
         task.successful = False
     except Exception:
         task.successful = False

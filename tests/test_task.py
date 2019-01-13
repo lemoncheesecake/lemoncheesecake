@@ -4,7 +4,7 @@ from functools import reduce
 import pytest
 
 from lemoncheesecake.task import BaseTask, TasksExecutionFailure, run_tasks, check_task_dependencies
-from lemoncheesecake.exceptions import AbortTask, CircularDependencyError
+from lemoncheesecake.exceptions import TaskFailure, CircularDependencyError
 
 
 class BaseTestTask(BaseTask):
@@ -63,7 +63,7 @@ def test_run_tasks_success():
 
 
 def test_run_tasks_failure_1():
-    a = ExceptionTask("a", AbortTask())
+    a = ExceptionTask("a", TaskFailure())
     b = DummyTask("b", 2, (a,))
     c = DummyTask("c", 3, (a,))
     d = DummyTask("d", 4, (b, c))
@@ -79,7 +79,7 @@ def test_run_tasks_failure_1():
 def test_run_tasks_failure_2():
     a = DummyTask("a", 1)
     b = DummyTask("b", 2, (a,))
-    c = ExceptionTask("c", AbortTask(), (a,))
+    c = ExceptionTask("c", TaskFailure(), (a,))
     d = DummyTask("d", 4, (b, c))
 
     run_tasks((a, b, c, d), nb_threads=1)
@@ -110,7 +110,7 @@ def test_run_tasks_unexpected_exception_in_run():
 def test_run_tasks_unexpected_exception_in_abort():
     a = DummyTask("a", 1)
     b = DummyTask("b", 2, (a,))
-    c = ExceptionTask("c", AbortTask(), (a,))
+    c = ExceptionTask("c", TaskFailure(), (a,))
     d = DummyTask("d", 4, (b, c))
     d.exception_within_abort = Exception("something bad happened")
 

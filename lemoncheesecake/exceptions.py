@@ -97,7 +97,7 @@ class CannotFindTreeNode(LemonCheesecakeException):
     pass
 
 
-class AbortTask(LemonCheesecakeException):
+class TaskFailure(LemonCheesecakeException):
     pass
 
 
