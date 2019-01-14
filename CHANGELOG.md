@@ -1,3 +1,8 @@
+# 0.22.4 (2019-01-15)
+
+- Fix `lcc run --save-report at_each_failed_test` (also the default value for `--save-report`) that saves the report at
+  each successful test instead of each failed test (regression introduced in 0.22.0)
+
 # 0.22.3 (2019-01-09)
 
 - Fix `suite_teardown` & session/suite fixtures teardown called as soon as a test fails in a suite while other tests remain to be executed (regression introduced in 0.22.2 while trying to fix teardowns not being called at all)
