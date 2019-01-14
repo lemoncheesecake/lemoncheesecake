@@ -38,7 +38,7 @@ def save_at_each_test_strategy(event, report):
 
 def save_at_each_failed_test_strategy(event, report):
     is_testish_end, is_successful = _get_testish_info(event, report)
-    return is_testish_end and is_successful
+    return is_testish_end and not is_successful
 
 
 def save_at_each_event_strategy(event, _):
