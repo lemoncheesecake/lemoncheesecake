@@ -11,7 +11,10 @@ The ``lcc`` command line tool
 In addition to the main command ``run``, the ``lcc`` command provides other commands that work with test project and
 reports:
 
-- ``lcc show`` (shows the project tests hierarchy and their metadata):
+``lcc show``
+~~~~~~~~~~~~
+
+Shows the project tests hierarchy.
 
   .. code-block:: console
 
@@ -37,7 +40,10 @@ reports:
           - suite_2.test_8 (slow, priority:low, #1234)
           - suite_2.test_9 (slow, priority:medium)
 
-- ``lcc diff`` (compares two reports):
+``lcc diff``
+~~~~~~~~~~~~
+
+Compares two reports.
 
   .. code-block:: console
 
@@ -52,7 +58,10 @@ reports:
       - suite_2.test_3 (failed => passed)
       - suite_2.test_4 (passed => failed)
 
-- ``lcc fixtures`` (show available project fixtures):
+``lcc fixtures``
+~~~~~~~~~~~~~~~~
+
+Shows available project fixtures.
 
   .. code-block:: console
 
@@ -94,7 +103,10 @@ reports:
       | fixt_9  | -              | 0                | 1             |
       +---------+----------------+------------------+---------------+
 
-- ``lcc stats`` (shows project statistics):
+``lcc stats``
+~~~~~~~~~~~~~
+
+Shows project statistics.
 
   .. code-block:: console
 
@@ -125,8 +137,11 @@ reports:
 
       Total: 18 tests in 2 suites
 
-- ``lcc report`` (shows a generated report on the console, passing the ``--short`` argument will print it the same way
-  as ``lcc run`` does):
+``lcc report``
+~~~~~~~~~~~~~~
+
+Shows a generated report on the console, passing the ``--short`` argument will print it the same way as
+``lcc run`` does.
 
   .. code-block:: console
 
@@ -204,7 +219,10 @@ reports:
     |       |                                                                                                  | ers{/member}"                                                |
     +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
 
-- ``lcc top-suites`` (show suites ordered by their duration):
+``lcc top-suites``
+~~~~~~~~~~~~~~~~~~
+
+Show suites ordered by their duration.
 
   .. code-block:: console
 
@@ -217,7 +235,10 @@ reports:
       | suite_1 | 1.000s   | 33%  |
       +---------+----------+------+
 
-- ``lcc top-tests`` (shows tests ordered by their duration):
+``lcc top-tests``
+~~~~~~~~~~~~~~~~~
+
+Shows tests ordered by their duration.
 
   .. code-block:: console
 
@@ -230,7 +251,10 @@ reports:
       | suite_1.test | 1.000s   | 33%  |
       +--------------+----------+------+
 
-- ``lcc top-steps`` (shows steps aggregated, ordered by their duration):
+``lcc top-steps``
+~~~~~~~~~~~~~~~~~
+
+Shows steps aggregated, ordered by their duration.
 
   .. code-block:: console
 
