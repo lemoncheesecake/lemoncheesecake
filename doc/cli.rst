@@ -274,8 +274,8 @@ Also see the ``--help`` of these sub commands.
 ``lcc`` filtering arguments
 ---------------------------
 
-``lcc`` sub commands ``run``, ``show``, ``stats``, ``report`` and ``diff`` take advantage of a powerful set of filtering
-arguments:
+``lcc`` sub commands ``run``, ``show``, ``stats``, ``report``, ``top-suites``, ``top-tests``, ``top-steps``
+and ``diff`` take advantage of a powerful set of filtering arguments. Example for ``lcc run``:
 
 .. code-block:: none
 
@@ -290,22 +290,26 @@ arguments:
                             Filter on properties
       --link LINK [LINK ...], -l LINK [LINK ...]
                             Filter on links (names and URLs)
-      --disabled            Filter on disabled tests
       --passed              Filter on passed tests (implies/triggers --from-
                             report)
       --failed              Filter on failed tests (implies/triggers --from-
                             report)
       --skipped             Filter on skipped tests (implies/triggers --from-
                             report)
+      --non-passed          Alias for --failed --skipped
+      --disabled            Filter on disabled tests
       --enabled             Filter on enabled (non-disabled) tests
       --from-report FROM_REPORT
                             When enabled, the filtering is based on the given
                             report
 
 
+Please note that the available filtering arguments may sightly differ depending on what command is used, please refer
+to the corresponding command ``--help``.
+
 The ``--from-report`` argument tells ``lcc`` to use tests from the specified report rather than from the project to build
-the actual filter. The ``--passed``, ``--failed``, ``--skipped`` arguments can only be used in conjunction with ``--from-report``,
-if no ``--from-report`` is specified, then the latest report is used.
+the actual filter. The ``--passed``, ``--failed``, ``--skipped`` and ``-non-passed`` arguments can only be used in
+conjunction with ``--from-report``.  If no ``--from-report`` is specified, then the latest report is used.
 
 A typical application of this functionality is to re-run failed tests from a previous report:
 
