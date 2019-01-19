@@ -99,6 +99,8 @@ The test function could also be implemented as a callable object (i.e implementi
                 )
                 lcc.add_test_into_suite(test, self)
 
+Test functions can take fixtures the same way as static test functions do.
+
 Tests are added to the suite through ``lcc.add_test_into_suite``. The usual extra metadata (tags, properties, links)
 can also be associated to the ``lcc.Test`` instance through their corresponding attributes.
 Tests are generated at project load time meaning they are visible to all ``lcc`` commands like any other test:
