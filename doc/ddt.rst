@@ -72,6 +72,32 @@ The test suite module (the ``suites/add.py`` file):
                 check_that("%d + %d" % (i, j), i + j, equal_to(expected))
             return func
 
+The test function could also be implemented as a callable object (i.e implementing the ``__call__`` method):
+
+.. code-block:: python
+
+    class TestAdd(object):
+        def __init__(self, i, j, expected):
+            self.i = i
+            self.j = j
+            self.expected = expected
+
+        def __call__(self):
+            check_that(
+                "%d + %d" % (self.i, self.j), self.i + self.j, equal_to(self.expected)
+            )
+
+
+    @lcc.suite("Add")
+    class add(object):
+        def __init__(self):
+            data = json.load(open(osp.join(PROJECT_DIR, "data.json")))
+            for entry in data:
+                test = lcc.Test(
+                    entry["name"], entry["description"],
+                    TestAdd(entry["i"], entry["j"], entry["expected"])
+                )
+                lcc.add_test_into_suite(test, self)
 
 Tests are added to the suite through ``lcc.add_test_into_suite``. The usual extra metadata (tags, properties, links)
 can also be associated to the ``lcc.Test`` instance through their corresponding attributes.
