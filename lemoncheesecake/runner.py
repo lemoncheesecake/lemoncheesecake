@@ -12,10 +12,10 @@ import six
 
 from lemoncheesecake.runtime import *
 from lemoncheesecake.runtime import initialize_runtime, set_runtime_location, is_location_successful,\
-    mark_location_as_failed
+    is_everything_successful, mark_location_as_failed
 from lemoncheesecake.reporting import Report, initialize_report_writer, initialize_reporting_backends
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
-    UserError, serialize_current_exception
+    UserError, TaskFailure, serialize_current_exception
 from lemoncheesecake import events
 from lemoncheesecake.testtree import TreeLocation, flatten_tests
 from lemoncheesecake.task import BaseTask, run_tasks
@@ -26,30 +26,30 @@ class RunContext(object):
         self.force_disabled = force_disabled
         self.stop_on_failure = stop_on_failure
         self.fixture_registry = fixture_registry
-        self._abort_tests = False
+        self._abort_session = False
         self._aborted_suites = set()
 
-    def abort_suite(self, suite):
+    def mark_suite_as_aborted(self, suite):
         self._aborted_suites.add(suite)
 
     def is_suite_aborted(self, suite):
         return suite in self._aborted_suites
 
-    def abort_session(self):
-        self._abort_tests = True
+    def mark_session_as_aborted(self):
+        self._abort_session = True
 
     def is_session_aborted(self):
-        return self._abort_tests
+        return self._abort_session
 
     def handle_exception(self, excp, suite=None):
         if isinstance(excp, AbortTest):
             log_error(str(excp))
         elif isinstance(excp, AbortSuite):
             log_error(str(excp))
-            self.abort_suite(suite)
+            self.mark_suite_as_aborted(suite)
         elif isinstance(excp, AbortAllTests):
             log_error(str(excp))
-            self.abort_session()
+            self.mark_session_as_aborted()
         else:
             # FIXME: use exception instead of last implicit stacktrace
             stacktrace = traceback.format_exc()
@@ -76,18 +76,12 @@ class RunContext(object):
         return teardown_funcs
 
     def run_teardown_funcs(self, teardown_funcs):
-        count = 0
         for teardown_func in teardown_funcs:
             if teardown_func:
                 try:
                     teardown_func()
                 except Exception as e:
                     self.handle_exception(e)
-                else:
-                    count += 1
-            else:
-                count += 1
-        return count
 
     def watchdog(self, task):
         # check for error in event handling
@@ -104,6 +98,10 @@ class RunContext(object):
             if self.is_suite_aborted(task.test.parent_suite):
                 return "the tests of this test suite have been aborted"
 
+        # check for --stop-on-failure
+        if self.stop_on_failure and not is_everything_successful():
+            return "tests have been aborted on --stop-on-failure"
+
         return None
 
 
@@ -112,12 +110,12 @@ class TestTask(BaseTask):
         BaseTask.__init__(self)
         self.test = test
         self.suite_scheduled_fixtures = suite_scheduled_fixtures
-        self.dependencies = {dependency} if dependency else set()
+        self.dependencies = [dependency] if dependency else []
 
-    def get_dependencies(self):
+    def get_on_success_dependencies(self):
         return self.dependencies
 
-    def abort(self, _, reason=""):
+    def skip(self, _, reason=""):
         events.fire(events.TestSkippedEvent(self.test, reason))
         mark_location_as_failed(TreeLocation.in_test(self.test))
 
@@ -131,14 +129,6 @@ class TestTask(BaseTask):
             events.fire(events.TestDisabledEvent(self.test, ""))
             return
 
-        has_failed_test_dependencies = any(
-            isinstance(task, TestTask) and not is_location_successful(TreeLocation.in_test(task.test))
-                for task in self.dependencies
-        )
-        if has_failed_test_dependencies:
-            self.abort(None, "Dependencies not met")
-            return
-
         ###
         # Begin test
         ###
@@ -148,7 +138,6 @@ class TestTask(BaseTask):
         ###
         # Setup test (setup and fixtures)
         ###
-        test_setup_error = False
         setup_teardown_funcs = list()
 
         if suite.has_hook("setup_test"):
@@ -174,19 +163,14 @@ class TestTask(BaseTask):
             events.fire(events.TestSetupStartEvent(self.test))
             set_step("Setup test")
             teardown_funcs = context.run_setup_funcs(setup_teardown_funcs, TreeLocation.in_test(self.test))
-            if len(teardown_funcs) != len(setup_teardown_funcs):
-                test_setup_error = True
-            events.fire(events.TestSetupEndEvent(self.test, not test_setup_error))
+            events.fire(events.TestSetupEndEvent(self.test))
         else:
             teardown_funcs = [teardown for _, teardown in setup_teardown_funcs if teardown]
-
-        if context.stop_on_failure and test_setup_error:
-            context.abort_session()
 
         ###
         # Run test:
         ###
-        if not test_setup_error:
+        if is_location_successful(TreeLocation.in_test(self.test)):
             test_func_params = scheduled_fixtures.get_fixture_results(self.test.get_fixtures())
             set_step(self.test.description)
             try:
@@ -201,14 +185,12 @@ class TestTask(BaseTask):
             events.fire(events.TestTeardownStartEvent(self.test))
             set_step("Teardown test")
             context.run_teardown_funcs(teardown_funcs)
-            events.fire(events.TestTeardownEndEvent(self.test, is_location_successful(TreeLocation.in_test(self.test))))
-
-        is_test_successful = is_location_successful(TreeLocation.in_test(self.test))
-
-        if context.stop_on_failure and not is_test_successful:
-            context.abort_session()
+            events.fire(events.TestTeardownEndEvent(self.test))
 
         events.fire(events.TestEndEvent(self.test))
+
+        if not is_location_successful(TreeLocation.in_test(self.test)):
+            raise TaskFailure()
 
     def __str__(self):
         return "<%s %s>" % (self.__class__.__name__, self.test.path)
@@ -225,7 +207,7 @@ def build_suite_tasks(
     # Build suite beginning task
     ###
     suite_beginning_task = build_suite_beginning_task(
-        suite, list(filter(bool, (test_session_setup_task, parent_suite_beginning_task)))
+        suite, list((filter(bool, (test_session_setup_task, parent_suite_beginning_task))))
     )
 
     ###
@@ -234,7 +216,7 @@ def build_suite_tasks(
     suite_scheduled_fixtures = fixture_registry.get_fixtures_scheduled_for_suite(
         suite, session_scheduled_fixtures
     )
-    suite_setup_task = build_suite_initialization_task(suite, suite_scheduled_fixtures, (suite_beginning_task,))
+    suite_setup_task = build_suite_initialization_task(suite, suite_scheduled_fixtures, [suite_beginning_task])
 
     ###
     # Build test tasks
@@ -290,13 +272,13 @@ class SuiteBeginningTask(BaseTask):
         self.suite = suite
         self._dependencies = dependencies
 
-    def get_dependencies(self):
+    def get_on_success_dependencies(self):
         return self._dependencies
 
     def run(self, context):
         events.fire(events.SuiteStartEvent(self.suite))
 
-    def abort(self, context, _):
+    def skip(self, context, _):
         self.run(context)
 
     def __str__(self):
@@ -315,7 +297,7 @@ class SuiteInitializationTask(BaseTask):
         self._dependencies = dependencies
         self.teardown_funcs = []
 
-    def get_dependencies(self):
+    def get_on_success_dependencies(self):
         return self._dependencies
 
     @staticmethod
@@ -334,14 +316,11 @@ class SuiteInitializationTask(BaseTask):
             self.teardown_funcs = context.run_setup_funcs(
                 self.setup_teardown_funcs, TreeLocation.in_suite_setup(self.suite)
             )
-            if len(self.teardown_funcs) != len(self.setup_teardown_funcs):
-                context.abort_suite(self.suite)
             SuiteInitializationTask.end_suite_setup(self.suite)
+            if not is_location_successful(TreeLocation.in_suite_setup(self.suite)):
+                raise TaskFailure()
         else:
             self.teardown_funcs = [teardown for _, teardown in self.setup_teardown_funcs if teardown]
-
-        if context.stop_on_failure and context.is_suite_aborted(self.suite):
-            context.abort_session()
 
     def __str__(self):
         return "<%s %s>" % (self.__class__.__name__, self.suite.path)
@@ -387,13 +366,13 @@ class SuiteEndingTask(BaseTask):
         self.suite = suite
         self._dependencies = dependencies
 
-    def get_dependencies(self):
+    def get_on_success_dependencies(self):
         return self._dependencies
 
     def run(self, context):
         events.fire(events.SuiteEndEvent(self.suite))
 
-    def abort(self, context, _):
+    def skip(self, context, _):
         self.run(context)
 
     def __str__(self):
@@ -411,7 +390,7 @@ class SuiteTeardownTask(BaseTask):
         self.suite_setup_task = suite_setup_task
         self._dependencies = dependencies
 
-    def get_dependencies(self):
+    def get_on_completion_dependencies(self):
         return self._dependencies
 
     @staticmethod
@@ -428,11 +407,9 @@ class SuiteTeardownTask(BaseTask):
         if any(self.suite_setup_task.teardown_funcs):
             SuiteTeardownTask.begin_suite_teardown(self.suite)
             context.run_teardown_funcs(self.suite_setup_task.teardown_funcs)
-            if context.stop_on_failure and not is_location_successful(TreeLocation.in_suite_teardown(self.suite)):
-                context.abort_session()
             SuiteTeardownTask.end_suite_teardown(self.suite)
 
-    def abort(self, context, _):
+    def skip(self, context, _):
         self.run(context)
 
     def __str__(self):
@@ -465,9 +442,9 @@ class TestSessionSetupTask(BaseTask):
         if any(setup for setup, _ in setup_teardown_funcs):
             TestSessionSetupTask.begin_test_session_setup()
             self.teardown_funcs = context.run_setup_funcs(setup_teardown_funcs, TreeLocation.in_test_session_setup())
-            if len(self.teardown_funcs) != len(setup_teardown_funcs):
-                context.abort_session()
             TestSessionSetupTask.end_test_session_setup()
+            if not is_location_successful(TreeLocation.in_test_session_setup()):
+                raise TaskFailure()
         else:
             self.teardown_funcs = [teardown for _, teardown in setup_teardown_funcs if teardown]
 
@@ -482,7 +459,7 @@ class TestSessionTeardownTask(BaseTask):
         self.test_session_setup_task = test_session_setup_task
         self._dependencies = dependencies
 
-    def get_dependencies(self):
+    def get_on_completion_dependencies(self):
         return self._dependencies
 
     @staticmethod
@@ -501,7 +478,7 @@ class TestSessionTeardownTask(BaseTask):
             context.run_teardown_funcs(self.test_session_setup_task.teardown_funcs)
             TestSessionTeardownTask.end_test_session_teardown()
 
-    def abort(self, context, _):
+    def skip(self, context, _):
         self.run(context)
 
 
@@ -565,7 +542,7 @@ def build_tasks(suites, fixture_registry, session_scheduled_fixtures):
                     "Cannot find dependency test '%s' for '%s', "
                     "either the test does not exist or is not going to be run" % (dep_test_path, test.path)
                 )
-            test_task.dependencies.add(dep_test)
+            test_task.dependencies.append(dep_test)
 
     ###
     # Return tasks

@@ -26,7 +26,7 @@ __all__ = "log_debug", "log_info", "log_warn", "log_warning", "log_error", "log_
     "add_report_info", "get_fixture"
 
 
-_runtime = None  # singleton
+_runtime = None  # type: _Runtime
 
 
 def initialize_runtime(report_dir, report, scheduled_fixtures):
@@ -35,13 +35,7 @@ def initialize_runtime(report_dir, report, scheduled_fixtures):
     events.add_listener(_runtime)
 
 
-def get_runtime():
-    if not _runtime:
-        raise LemonCheesecakeInternalError("Runtime is not initialized")
-    return _runtime
-
-
-class _Runtime:
+class _Runtime(object):
     def __init__(self, report_dir, report, scheduled_fixtures):
         self.report_dir = report_dir
         self.report = report
@@ -66,6 +60,9 @@ class _Runtime:
 
     def is_successful(self, location):
         return location not in self._failures
+
+    def is_everything_successful(self):
+        return len(self._failures) == 0
 
     def set_step(self, description, detached=False):
         self._local.step = description
@@ -113,6 +110,13 @@ class _Runtime:
             return self.scheduled_fixtures.get_fixture_result(name)
         except AssertionError as excp:
             raise ProgrammingError(str(excp))
+
+
+def get_runtime():
+    # type: () -> _Runtime
+    if not _runtime:
+        raise LemonCheesecakeInternalError("Runtime is not initialized")
+    return _runtime
 
 
 def set_step(description, detached=False):
@@ -270,6 +274,10 @@ def mark_location_as_failed(location):
 
 def is_location_successful(location):
     return get_runtime().is_successful(location)
+
+
+def is_everything_successful():
+    return get_runtime().is_everything_successful()
 
 
 class Thread(threading.Thread):
