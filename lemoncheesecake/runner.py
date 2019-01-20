@@ -442,9 +442,9 @@ class TestSessionSetupTask(BaseTask):
         if any(setup for setup, _ in setup_teardown_funcs):
             TestSessionSetupTask.begin_test_session_setup()
             self.teardown_funcs = context.run_setup_funcs(setup_teardown_funcs, TreeLocation.in_test_session_setup())
-            if len(self.teardown_funcs) != len(setup_teardown_funcs):
-                context.mark_session_as_aborted()
             TestSessionSetupTask.end_test_session_setup()
+            if not is_location_successful(TreeLocation.in_test_session_setup()):
+                raise TaskFailure()
         else:
             self.teardown_funcs = [teardown for _, teardown in setup_teardown_funcs if teardown]
 
