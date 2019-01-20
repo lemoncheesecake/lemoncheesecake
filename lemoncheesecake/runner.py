@@ -12,7 +12,7 @@ import six
 
 from lemoncheesecake.runtime import *
 from lemoncheesecake.runtime import initialize_runtime, set_runtime_location, is_location_successful,\
-    mark_location_as_failed
+    is_everything_successful, mark_location_as_failed
 from lemoncheesecake.reporting import Report, initialize_report_writer, initialize_reporting_backends
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
     UserError, serialize_current_exception
@@ -104,6 +104,10 @@ class RunContext(object):
             if self.is_suite_aborted(task.test.parent_suite):
                 return "the tests of this test suite have been aborted"
 
+        # check for --stop-on-failure
+        if self.stop_on_failure and not is_everything_successful():
+            return "tests have been aborted on --stop-on-failure"
+
         return None
 
 
@@ -180,9 +184,6 @@ class TestTask(BaseTask):
         else:
             teardown_funcs = [teardown for _, teardown in setup_teardown_funcs if teardown]
 
-        if context.stop_on_failure and test_setup_error:
-            context.mark_session_as_aborted()
-
         ###
         # Run test:
         ###
@@ -202,11 +203,6 @@ class TestTask(BaseTask):
             set_step("Teardown test")
             context.run_teardown_funcs(teardown_funcs)
             events.fire(events.TestTeardownEndEvent(self.test, is_location_successful(TreeLocation.in_test(self.test))))
-
-        is_test_successful = is_location_successful(TreeLocation.in_test(self.test))
-
-        if context.stop_on_failure and not is_test_successful:
-            context.mark_session_as_aborted()
 
         events.fire(events.TestEndEvent(self.test))
 
@@ -340,9 +336,6 @@ class SuiteInitializationTask(BaseTask):
         else:
             self.teardown_funcs = [teardown for _, teardown in self.setup_teardown_funcs if teardown]
 
-        if context.stop_on_failure and context.is_suite_aborted(self.suite):
-            context.mark_session_as_aborted()
-
     def __str__(self):
         return "<%s %s>" % (self.__class__.__name__, self.suite.path)
 
@@ -428,8 +421,6 @@ class SuiteTeardownTask(BaseTask):
         if any(self.suite_setup_task.teardown_funcs):
             SuiteTeardownTask.begin_suite_teardown(self.suite)
             context.run_teardown_funcs(self.suite_setup_task.teardown_funcs)
-            if context.stop_on_failure and not is_location_successful(TreeLocation.in_suite_teardown(self.suite)):
-                context.mark_session_as_aborted()
             SuiteTeardownTask.end_suite_teardown(self.suite)
 
     def skip(self, context, _):
