@@ -81,6 +81,16 @@ Features
 
 lemoncheesecake is compatible with Python 2.7, 3.4-3.7.
 
+Changelog
+---------
+
+The |location_link| will tell you about features, improvements, fixes and possible backward-incompatibilities of each
+version.
+
+.. |location_link| raw:: html
+
+   <a href="https://github.com/lemoncheesecake/lemoncheesecake/blob/master/CHANGELOG.md" target="_blank">Changelog</a>
+
 Installation and configuration
 ------------------------------
 
