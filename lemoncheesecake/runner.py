@@ -325,9 +325,9 @@ class SuiteInitializationTask(BaseTask):
             self.teardown_funcs = context.run_setup_funcs(
                 self.setup_teardown_funcs, TreeLocation.in_suite_setup(self.suite)
             )
-            if len(self.teardown_funcs) != len(self.setup_teardown_funcs):
-                context.mark_suite_as_aborted(self.suite)
             SuiteInitializationTask.end_suite_setup(self.suite)
+            if not is_location_successful(TreeLocation.in_suite_setup(self.suite)):
+                raise TaskFailure()
         else:
             self.teardown_funcs = [teardown for _, teardown in self.setup_teardown_funcs if teardown]
 
