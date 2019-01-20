@@ -138,7 +138,6 @@ class TestTask(BaseTask):
         ###
         # Setup test (setup and fixtures)
         ###
-        test_setup_error = False
         setup_teardown_funcs = list()
 
         if suite.has_hook("setup_test"):
@@ -164,16 +163,14 @@ class TestTask(BaseTask):
             events.fire(events.TestSetupStartEvent(self.test))
             set_step("Setup test")
             teardown_funcs = context.run_setup_funcs(setup_teardown_funcs, TreeLocation.in_test(self.test))
-            if len(teardown_funcs) != len(setup_teardown_funcs):
-                test_setup_error = True
-            events.fire(events.TestSetupEndEvent(self.test, not test_setup_error))
+            events.fire(events.TestSetupEndEvent(self.test))
         else:
             teardown_funcs = [teardown for _, teardown in setup_teardown_funcs if teardown]
 
         ###
         # Run test:
         ###
-        if not test_setup_error:
+        if is_location_successful(TreeLocation.in_test(self.test)):
             test_func_params = scheduled_fixtures.get_fixture_results(self.test.get_fixtures())
             set_step(self.test.description)
             try:
@@ -188,7 +185,7 @@ class TestTask(BaseTask):
             events.fire(events.TestTeardownStartEvent(self.test))
             set_step("Teardown test")
             context.run_teardown_funcs(teardown_funcs)
-            events.fire(events.TestTeardownEndEvent(self.test, is_location_successful(TreeLocation.in_test(self.test))))
+            events.fire(events.TestTeardownEndEvent(self.test))
 
         events.fire(events.TestEndEvent(self.test))
 

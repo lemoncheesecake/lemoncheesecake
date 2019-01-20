@@ -9,7 +9,7 @@ from lemoncheesecake.exceptions import serialize_current_exception
 
 
 def _get_event_name_from_class_name(class_name):
-    return re.sub("_event$", "", camel_case_to_snake_case(class_name))
+    return re.sub(r"_event$", "", camel_case_to_snake_case(class_name))
 
 
 class Event(object):
@@ -249,9 +249,7 @@ class TestSetupStartEvent(_TestEvent):
 
 @event
 class TestSetupEndEvent(_TestEvent):
-    def __init__(self, test, outcome):
-        super(TestSetupEndEvent, self).__init__(test)
-        self.setup_outcome = outcome
+    pass
 
 
 @event
@@ -261,9 +259,7 @@ class TestTeardownStartEvent(_TestEvent):
 
 @event
 class TestTeardownEndEvent(_TestEvent):
-    def __init__(self, test, outcome):
-        super(TestTeardownEndEvent, self).__init__(test)
-        self.teardown_outcome = outcome
+    pass
 
 
 ###
