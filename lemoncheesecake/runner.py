@@ -15,7 +15,7 @@ from lemoncheesecake.runtime import initialize_runtime, set_runtime_location, is
     is_everything_successful, mark_location_as_failed
 from lemoncheesecake.reporting import Report, initialize_report_writer, initialize_reporting_backends
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
-    UserError, serialize_current_exception
+    UserError, TaskFailure, serialize_current_exception
 from lemoncheesecake import events
 from lemoncheesecake.testtree import TreeLocation, flatten_tests
 from lemoncheesecake.task import BaseTask, run_tasks
@@ -135,14 +135,6 @@ class TestTask(BaseTask):
             events.fire(events.TestDisabledEvent(self.test, ""))
             return
 
-        has_failed_test_dependencies = any(
-            isinstance(task, TestTask) and not is_location_successful(TreeLocation.in_test(task.test))
-                for task in self.dependencies
-        )
-        if has_failed_test_dependencies:
-            self.skip(None, "Dependencies not met")
-            return
-
         ###
         # Begin test
         ###
@@ -205,6 +197,9 @@ class TestTask(BaseTask):
             events.fire(events.TestTeardownEndEvent(self.test, is_location_successful(TreeLocation.in_test(self.test))))
 
         events.fire(events.TestEndEvent(self.test))
+
+        if not is_location_successful(TreeLocation.in_test(self.test)):
+            raise TaskFailure()
 
     def __str__(self):
         return "<%s %s>" % (self.__class__.__name__, self.test.path)
