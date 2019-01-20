@@ -13,3 +13,4 @@ class VersionCommand(Command):
 
     def run_cmd(self, cli_args):
         print(LEMONCHEESECAKE_VERSION)
+        return 0
