@@ -76,18 +76,12 @@ class RunContext(object):
         return teardown_funcs
 
     def run_teardown_funcs(self, teardown_funcs):
-        count = 0
         for teardown_func in teardown_funcs:
             if teardown_func:
                 try:
                     teardown_func()
                 except Exception as e:
                     self.handle_exception(e)
-                else:
-                    count += 1
-            else:
-                count += 1
-        return count
 
     def watchdog(self, task):
         # check for error in event handling
