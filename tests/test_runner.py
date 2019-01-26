@@ -1282,6 +1282,27 @@ def test_exception_in_reporting_backend(tmpdir):
         run_suite_class(mysuite, backends=[MyReportingBackend()], tmpdir=tmpdir)
 
 
+# this bug was provoke a freeze and was introduced in 0.21.0 and fixed in 0.22.3
+def test_bug_in_task_handling():
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test 1")
+        def test_1(self):
+            lcc.log_error("error")
+
+        @lcc.test("test 2")
+        def test_2(self):
+            lcc.log_error("error")
+
+        @lcc.test("test 3")
+        def test_3(self):
+            pass
+
+    report = run_suite_class(suite)
+
+    assert_test_statuses(report, failed=["suite.test_1", "suite.test_2"], passed=["suite.test_3"])
+
+
 def test_depends_on_passed():
     @lcc.suite("s")
     class suite:
