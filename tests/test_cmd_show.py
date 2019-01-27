@@ -37,36 +37,11 @@ def test_show_default_options(project, cmdout):
     cmdout.assert_substrs_in_line(1, ["mysuite.mytest", "test_prop", "test_prop_value", "test_tag", "#1235"])
 
 
-def test_show_opt_short(project, cmdout):
-    assert run_main(["show", "--short"]) == 0
-
-    cmdout.assert_substrs_in_line(0, ["mysuite", "suite_prop", "suite_prop_value", "suite_tag", "#1234"])
-    cmdout.assert_substrs_in_line(1, ["mytest", "test_prop", "test_prop_value", "test_tag", "#1235"])
-
-
-def test_show_opt_flat_mode(project, cmdout):
-    assert run_main(["show", "--flat-mode"]) == 0
-
-    cmdout.assert_substrs_in_line(0, ["mysuite"])
-    cmdout.assert_substrs_in_line(0, ["suite_prop", "suite_prop_value", "suite_tag", "#1234"])
-    cmdout.assert_line_startswith(1, "mysuite.mytest")
-    cmdout.assert_substrs_in_line(1, ["test_prop", "test_prop_value", "test_tag", "#1235"])
-
-
-def test_show_opt_desc_mode(project, cmdout):
-    assert run_main(["show", "--desc-mode"]) == 0
+def test_show_opt_show_description(project, cmdout):
+    assert run_main(["show", "--show-description"]) == 0
 
     cmdout.assert_substrs_in_line(0, ["My Suite", "suite_prop", "suite_prop_value", "suite_tag", "#1234"])
     cmdout.assert_substrs_in_line(1, ["My Test", "test_prop", "test_prop_value", "test_tag", "#1235"])
-
-
-def test_show_opt_no_metadata(project, cmdout):
-    assert run_main(["show", "--no-metadata"]) == 0
-
-    cmdout.assert_substrs_in_line(0, ["mysuite"])
-    cmdout.assert_substrs_not_in_line(0, ["suite_prop", "suite_prop_value", "suite_tag", "#1234"])
-    cmdout.assert_substrs_in_line(1, ["mysuite.mytest"])
-    cmdout.assert_substrs_not_in_line(1, ["test_prop", "test_prop_value", "test_tag", "#1235"])
 
 
 def test_show_with_filter(project, cmdout):
