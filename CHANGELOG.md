@@ -1,3 +1,8 @@
+# 0.22.5 (2019-01-27)
+
+- **under the hood**: improve task management, make it more robust and code cleaner
+- **lcc version / lcc -v**: show the Python version in use
+
 # 0.22.4 (2019-01-15)
 
 - Fix `lcc run --save-report at_each_failed_test` (also the default value for `--save-report`) that saves the report at
