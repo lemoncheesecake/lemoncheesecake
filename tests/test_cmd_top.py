@@ -1,5 +1,5 @@
 from lemoncheesecake.cli import main
-from lemoncheesecake.cli.commands.top import get_top_suites, get_top_tests, get_top_steps
+from lemoncheesecake.cli.commands.top import TopSuites, TopTests, TopSteps
 from lemoncheesecake.reporting.backends.json_ import save_report_into_file
 
 from helpers.cli import cmdout
@@ -11,7 +11,7 @@ def test_get_top_suites():
     suite1 = suite_mockup("suite1").add_test(tst_mockup("test", start_time=0.0, end_time=1.0))
     suite2 = suite_mockup("suite2").add_test(tst_mockup("test", start_time=1.0, end_time=4.0))
 
-    top_suites = get_top_suites([make_suite_data_from_mockup(suite) for suite in (suite1, suite2)])
+    top_suites = TopSuites.get_top_suites([make_suite_data_from_mockup(suite) for suite in (suite1, suite2)])
     assert len(top_suites) == 2
     assert top_suites[0][0] == "suite2"
     assert top_suites[0][1] == "3.000s"
@@ -39,7 +39,7 @@ def test_get_top_tests():
     suite1 = suite_mockup("suite1").add_test(tst_mockup("test", start_time=0.0, end_time=1.0))
     suite2 = suite_mockup("suite2").add_test(tst_mockup("test", start_time=1.0, end_time=4.0))
 
-    top_suites = get_top_tests([make_suite_data_from_mockup(suite) for suite in (suite1, suite2)])
+    top_suites = TopTests.get_top_tests([make_suite_data_from_mockup(suite) for suite in (suite1, suite2)])
     assert len(top_suites) == 2
     assert top_suites[0][0] == "suite2.test"
     assert top_suites[0][1] == "3.000s"
@@ -71,7 +71,7 @@ def test_get_top_steps():
     suite1 = suite_mockup("suite1").add_test(tst_mockup().add_step(first_step).add_step(second_step))
     suite2 = suite_mockup("suite2").add_test(tst_mockup().add_step(third_step))
 
-    top_steps = get_top_steps([make_suite_data_from_mockup(suite) for suite in (suite1, suite2)])
+    top_steps = TopSteps.get_top_steps([make_suite_data_from_mockup(suite) for suite in (suite1, suite2)])
 
     assert len(top_steps) == 2
 
