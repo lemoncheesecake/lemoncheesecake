@@ -19,12 +19,7 @@ class FixturesCommand(Command):
     def get_description(self):
         return "Show the fixtures available in the project"
 
-    def add_cli_args(self, cli_parser):
-        group = cli_parser.add_argument_group("Display")
-        self.add_color_cli_args(group)
-        group.add_argument("--verbose", "-v", action="store_true", help="Show extra fixture information")
-
-    def show_fixtures(self, scope, fixtures, used_by_tests, used_by_fixtures, verbose):
+    def show_fixtures(self, scope, fixtures, used_by_tests, used_by_fixtures):
         lines = []
         ordered_fixtures = sorted(
             fixtures,
@@ -36,11 +31,12 @@ class FixturesCommand(Command):
                 bold(fixt.name), ", ".join(fixt.params or "-"),
                 used_by_fixtures.get(fixt.name, 0), used_by_tests.get(fixt.name, 0)
             ])
-        print_table("Fixture with scope %s" % bold(scope), ["Fixture", "Dependencies", "Used by fixtures", "Used by tests"], lines)
+        print_table(
+            "Fixture with scope %s" % bold(scope),
+            ["Fixture", "Dependencies", "Used by fixtures", "Used by tests"], lines
+        )
 
     def run_cmd(self, cli_args):
-        self.process_color_cli_args(cli_args)
-
         project = load_project()
         suites = project.get_suites()
         fixtures = project.get_fixtures()
@@ -63,7 +59,7 @@ class FixturesCommand(Command):
                 used_by_fixtures[param] = used_by_fixtures.get(param, 0) + 1
 
         for scope in "session_prerun", "session", "suite", "test":
-            self.show_fixtures(scope, fixtures_by_scope.get(scope, []), used_by_tests, used_by_fixtures, cli_args.verbose)
+            self.show_fixtures(scope, fixtures_by_scope.get(scope, []), used_by_tests, used_by_fixtures)
             print()
 
         return 0
