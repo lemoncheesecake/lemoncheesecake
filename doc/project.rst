@@ -40,6 +40,71 @@ And then accessed through the ``cli_args`` fixture::
 
 ``cli_parser`` is an ``ArgumentParser`` instance of the `argparse <https://docs.python.org/2/library/argparse.html>`_ module.
 
+.. _prepostrunhooks:
+
+Running code before and/or after the test session
+-------------------------------------------------
+
+Hook methods can be defined to be run before and/or after the test session. Since the code of these methods is not run within
+the context of a test session, all functions logging information (such as ``lcc.log_info``, ``check_that``, etc...)
+into the report won't be available (they will raise an exception)::
+
+    # project.py:
+
+    import os.path
+
+    from lemoncheesecake.project import SimpleProjectConfiguration, HasPreRunHook, HasPostRunHook
+
+
+    class MyProjectConfiguration(SimpleProjectConfiguration, HasPreRunHook, HasPostRunHook):
+        def pre_run(self, cli_args, report_dir):
+            # do something before the tests are run
+
+        def post_run(self, cli_args, report_dir):
+            # do something after the tests are run
+
+
+    project_dir = os.path.dirname(__file__)
+    project = MyProjectConfiguration(
+        suites_dir=os.path.join(project_dir, "suites"),
+        fixtures_dir=os.path.join(project_dir, "fixtures"),
+    )
+
+An exception raised within the ``pre_run`` method will prevent the tests from being run. The ``lcc.UserError`` exception class
+can be used to show the user an error message. Any other exception will be considered as an unexpected error and a
+full error stacktrace will be displayed to the user.
+
+Regarding the previous example, please note that the ``pre_run`` and ``post_run`` methods can be defined independently.
+
+.. _reportextrainfo:
+
+Adding extra information in the report
+--------------------------------------
+
+Extra key/value pairs can be added to the "Information" section of the report::
+
+    # project.py:
+
+    import os.path
+
+    from lemoncheesecake.project import SimpleProjectConfiguration
+
+
+    class MyProjectConfiguration(SimpleProjectConfiguration):
+        def get_report_info(self):
+            return SimpleProjectConfiguration.get_report_info(self) + \
+                [
+                    ["info1", "value1"],
+                    ["info2", "value2"]
+                ]
+
+
+    project_dir = os.path.dirname(__file__)
+    project = MyProjectConfiguration(
+        suites_dir=os.path.join(project_dir, "suites"),
+        fixtures_dir=os.path.join(project_dir, "fixtures"),
+    )
+
 .. _metadatapolicy:
 
 Metadata Policy
