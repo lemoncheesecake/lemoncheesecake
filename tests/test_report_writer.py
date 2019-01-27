@@ -17,7 +17,7 @@ from helpers.runner import run_suite_class, run_suite_classes, run_func_in_test
 from helpers.report import assert_report_from_suite, assert_report_from_suites, get_last_test, get_last_attachment, \
     assert_attachment
 
-SAMPLE_IMAGE_PATH = osp.join(osp.dirname(__file__), osp.pardir, "misc", "report-screenshot.png")
+SAMPLE_IMAGE_PATH = osp.join(osp.dirname(__file__), osp.pardir, "doc", "_static", "report-sample.png")
 
 with open(SAMPLE_IMAGE_PATH, "rb") as fh:
     SAMPLE_IMAGE_CONTENT = fh.read()

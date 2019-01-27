@@ -48,7 +48,7 @@ Here is a test example:
 
 And here are the corresponding test results:
 
-.. image:: https://github.com/lemoncheesecake/lemoncheesecake/blob/master/misc/github-testsuite.png?raw=true
+.. image:: https://github.com/lemoncheesecake/lemoncheesecake/blob/master/doc/_static/report-sample.png?raw=true
     :alt: test results
 
 
