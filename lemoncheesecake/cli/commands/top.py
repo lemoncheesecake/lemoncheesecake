@@ -15,17 +15,6 @@ def get_total_duration(elems):
     return reduce(lambda x, y: x + y, [elem.duration for elem in elems], 0)
 
 
-def format_test_entry(elem, total_time):
-    if elem.duration is not None:
-        return (
-            elem.path,
-            humanize_duration(elem.duration, show_milliseconds=True),
-            "%d%%" % (elem.duration / total_time * 100)
-        )
-    else:
-        return elem.path, "-", "-"
-
-
 class TopTests(Command):
     def get_name(self):
         return "top-tests"
@@ -43,10 +32,21 @@ class TopTests(Command):
         return sorted(tests, key=lambda test: test.duration, reverse=True)
 
     @staticmethod
+    def format_test_entry(test, total_time):
+        if test.duration is not None:
+            return (
+                test.path,
+                humanize_duration(test.duration, show_milliseconds=True),
+                "%d%%" % (test.duration / total_time * 100)
+            )
+        else:
+            return test.path, "-", "-"
+
+    @staticmethod
     def get_top_tests(suites):
         tests = TopTests.get_tests_ordered_by_duration(flatten_tests(suites))
         total_duration = get_total_duration(tests)
-        return [format_test_entry(test, total_duration) for test in tests]
+        return [TopTests.format_test_entry(test, total_duration) for test in tests]
 
     def run_cmd(self, cli_args):
         report_path = get_report_path(cli_args)
@@ -84,10 +84,22 @@ class TopSuites(Command):
         )
 
     @staticmethod
+    def format_suite_entry(suite, total_time):
+        if suite.duration is not None:
+            return (
+                suite.path,
+                len(suite.get_tests()),
+                humanize_duration(suite.duration, show_milliseconds=True),
+                "%d%%" % (suite.duration / total_time * 100)
+            )
+        else:
+            return suite.path, len(suite.get_tests()), "-", "-"
+
+    @staticmethod
     def get_top_suites(suites):
         processed_suites = TopSuites.get_suites_ordered_by_duration(flatten_suites(suites))
         total_duration = get_total_duration(processed_suites)
-        return [format_test_entry(suite, total_duration) for suite in processed_suites]
+        return [TopSuites.format_suite_entry(suite, total_duration) for suite in processed_suites]
 
     def run_cmd(self, cli_args):
         report_path = get_report_path(cli_args)
@@ -97,7 +109,7 @@ class TopSuites(Command):
 
         print_table(
             "Suites, ordered by duration",
-            ("Suite", "Duration", "In %"),
+            ("Suite", "Tests Nb.", "Duration", "In %"),
             TopSuites.get_top_suites(suites)
         )
 

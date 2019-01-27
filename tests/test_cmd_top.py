@@ -14,11 +14,13 @@ def test_get_top_suites():
     top_suites = TopSuites.get_top_suites([make_suite_data_from_mockup(suite) for suite in (suite1, suite2)])
     assert len(top_suites) == 2
     assert top_suites[0][0] == "suite2"
-    assert top_suites[0][1] == "3.000s"
-    assert top_suites[0][2] == "75%"
+    assert top_suites[0][1] == 1
+    assert top_suites[0][2] == "3.000s"
+    assert top_suites[0][3] == "75%"
     assert top_suites[1][0] == "suite1"
-    assert top_suites[1][1] == "1.000s"
-    assert top_suites[1][2] == "25%"
+    assert top_suites[1][1] == 1
+    assert top_suites[1][2] == "1.000s"
+    assert top_suites[1][3] == "25%"
 
 
 def test_top_suites_cmd(tmpdir, cmdout):
