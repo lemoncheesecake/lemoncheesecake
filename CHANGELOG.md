@@ -1,3 +1,17 @@
+# 0.22.6 (2019-01-29)
+
+- **lcc top-suites**: show the number of tests per suite
+- **CLI**: on multiple commands, the console styling was not turned off when the output got redirected
+- **CLI**: fix `lcc` crash when no command is passed (Python 3 only)
+
+## CLI breaking changes
+
+- the following command arguments have been dropped:
+  - **lcc fixtures**: `--color`, `--verbose`
+  - **lcc show**: `--no-metadata`, `--short`, `--flat-mode`, `--color`
+  - **lcc stats**: `--color`
+- **lcc show**: `--desc-mode` has been renamed into `--show-description`
+
 # 0.22.5 (2019-01-27)
 
 - **under the hood**: improve task management, make it more robust and code cleaner
