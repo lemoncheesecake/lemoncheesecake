@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 from termcolor import colored
+import colorama
 
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import auto_detect_reporting_backends
@@ -113,6 +114,8 @@ class DiffCommand(Command):
         add_report_filter_cli_args(cli_parser)
 
     def run_cmd(self, cli_args):
+        colorama.init()
+
         reporting_backends = auto_detect_reporting_backends()
 
         old_report = load_report(cli_args.old_report_path, reporting_backends)
