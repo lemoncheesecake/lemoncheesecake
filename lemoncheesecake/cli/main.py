@@ -26,6 +26,7 @@ def build_cli_parser():
     cli_parser = argparse.ArgumentParser()
     cli_parser.add_argument("--version", "-v", nargs=0, action=Version)
     cli_sub_parsers = cli_parser.add_subparsers(dest="command")
+    cli_sub_parsers.required = True
     for command in get_commands():
         cli_cmd_parser = cli_sub_parsers.add_parser(command.get_name(), help=command.get_description())
         command.add_cli_args(cli_cmd_parser)
