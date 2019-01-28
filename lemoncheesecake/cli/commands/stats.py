@@ -7,6 +7,8 @@ Created on Feb 14, 2017
 from __future__ import print_function
 from functools import reduce
 
+import colorama
+
 from lemoncheesecake.helpers.console import print_table, bold
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import get_suites_from_project
@@ -59,12 +61,10 @@ class StatsCommand(Command):
         return "Display statistics about the project's tests"
 
     def add_cli_args(self, cli_parser):
-        group = cli_parser.add_argument_group("Display")
-        self.add_color_cli_args(group)
         add_run_filter_cli_args(cli_parser)
 
     def run_cmd(self, cli_args):
-        self.process_color_cli_args(cli_args)
+        colorama.init()
 
         project = load_project()
         suites = get_suites_from_project(project, cli_args)
