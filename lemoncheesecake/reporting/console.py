@@ -18,6 +18,7 @@ def test_status_to_color(status):
         "passed": "green",
         "failed": "red",
         "disabled": "cyan",
+        "in_progress": "cyan"
     }.get(status, "yellow")
 
 
@@ -92,8 +93,7 @@ class Renderer(object):
                     attrs=["bold"]
                 ),
                 colored(humanize_duration(step.duration, show_milliseconds=True), attrs=["bold"])
-                    if step.duration is not None
-                    else "n/a"
+                    if step.duration is not None else "-"
             ])
             for entry in step.entries:
                 if isinstance(entry, LogData):
@@ -127,6 +127,9 @@ class Renderer(object):
         return table.table
 
     def render_result(self, description, short_description, status, steps):
+        if status is None:
+            status = "in_progress"
+
         if steps:
             details = self.render_steps(steps)
         else:

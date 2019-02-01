@@ -2,6 +2,7 @@ import os.path as osp
 
 from helpers.runner import run_suite_class
 from helpers.cli import assert_run_output, cmdout
+from helpers.report import report_in_progress_path
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.cli import main
@@ -84,3 +85,12 @@ def test_report_detailed_with_filter(tmpdir, cmdout):
     cmdout.assert_substrs_in_line(3, ["My Test 1"])
     cmdout.assert_substrs_in_line(5, ["ERROR", "failure"])
     cmdout.assert_lines_nb(9)
+
+
+def test_report_test_run_in_progress(report_in_progress_path, cmdout):
+    assert main(["report", report_in_progress_path]) == 0
+
+    cmdout.dump()
+    cmdout.assert_substrs_anywhere(["suite.test"])
+    cmdout.assert_substrs_anywhere(["step"])
+    cmdout.assert_substrs_anywhere(["message"])

@@ -13,11 +13,10 @@ import pytest
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
-from lemoncheesecake.reporting import Report, HookData, SuiteData, TestData, StepData, LogData
+from lemoncheesecake.reporting import Report, HookData, SuiteData, TestData, StepData, LogData, JsonBackend
 
 
-@pytest.fixture()
-def report_in_progress():
+def make_report_in_progress():
     # create a pseudo report where all elements that can be "in-progress" (meaning without
     # an end time) are present in the report
     now = time.time()
@@ -42,6 +41,19 @@ def report_in_progress():
     log = LogData("info", "message", now)
     step.entries.append(log)
     return report
+
+
+@pytest.fixture()
+def report_in_progress():
+    return make_report_in_progress()
+
+
+@pytest.fixture()
+def report_in_progress_path(tmpdir):
+    backend = JsonBackend()
+    report_path = os.path.join(tmpdir.strpath, "report.json")
+    backend.save_report(report_path, make_report_in_progress())
+    return report_path
 
 
 ###
