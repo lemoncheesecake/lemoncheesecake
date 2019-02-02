@@ -3,6 +3,7 @@ from lemoncheesecake.cli.commands.top import TopSuites, TopTests, TopSteps
 from lemoncheesecake.reporting.backends.json_ import save_report_into_file
 
 from helpers.cli import cmdout
+from helpers.report import report_in_progress_path
 from helpers.testtreemockup import suite_mockup, tst_mockup, step_mockup, make_suite_data_from_mockup, \
     report_mockup, make_report_from_mockup
 
@@ -35,6 +36,13 @@ def test_top_suites_cmd(tmpdir, cmdout):
 
     lines = cmdout.get_lines()
     assert "suite2" in lines[4]
+
+
+def test_top_suites_cmd_test_run_in_progress(report_in_progress_path, cmdout):
+    assert main(["top-suites", report_in_progress_path]) == 0
+
+    cmdout.dump()
+    cmdout.assert_substrs_anywhere(["suite"])
 
 
 def test_get_top_tests():

@@ -191,7 +191,8 @@ class SuiteData(BaseSuite):
     def duration(self):
         return reduce(
             lambda x, y: x + y,
-            [result.duration for result in flatten_results_from_suites([self])],
+            # result.duration is None if the corresponding testish is in progress
+            [result.duration or 0 for result in flatten_results_from_suites([self])],
             0
         )
 

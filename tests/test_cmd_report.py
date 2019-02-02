@@ -91,6 +91,6 @@ def test_report_test_run_in_progress(report_in_progress_path, cmdout):
     assert main(["report", report_in_progress_path]) == 0
 
     cmdout.dump()
-    cmdout.assert_substrs_anywhere(["suite.test"])
+    cmdout.assert_substrs_anywhere(["suite.test_1"])
     cmdout.assert_substrs_anywhere(["step"])
     cmdout.assert_substrs_anywhere(["message"])

@@ -28,11 +28,13 @@ def make_report_in_progress():
     report.test_session_teardown.start_time = now
     suite = SuiteData("suite", "suite")
     report.add_suite(suite)
+    
     suite.suite_setup = HookData()
     suite.suite_setup.start_time = now
     suite.suite_teardown = HookData()
     suite.suite_teardown.start_time = now
-    test = TestData("test", "test")
+    
+    test = TestData("test_1", "test_1")
     suite.add_test(test)
     test.start_time = now
     step = StepData("step")
@@ -40,6 +42,19 @@ def make_report_in_progress():
     step.start_time = now
     log = LogData("info", "message", now)
     step.entries.append(log)
+
+    test = TestData("test_2", "test_2")
+    suite.add_test(test)
+    test.start_time = now
+    test.end_time = now + 1
+    test.status = "passed"
+    step = StepData("step")
+    test.steps.append(step)
+    step.start_time = now
+    step.end_time = now + 1
+    log = LogData("info", "message", now)
+    step.entries.append(log)
+
     return report
 
 
