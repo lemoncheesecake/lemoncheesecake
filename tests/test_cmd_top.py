@@ -125,3 +125,10 @@ def test_top_steps_cmd(tmpdir, cmdout):
 
     lines = cmdout.get_lines()
     assert "step1" in lines[4]
+
+
+def test_top_steps_cmd_test_run_in_progress(report_in_progress_path, cmdout):
+    assert main(["top-steps", report_in_progress_path]) == 0
+
+    cmdout.dump()
+    cmdout.assert_substrs_anywhere(["step"])
