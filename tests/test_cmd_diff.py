@@ -1,5 +1,7 @@
 from helpers.cli import cmdout
-from helpers.testtreemockup import report_mockup, suite_mockup, tst_mockup, make_report_from_mockup, make_suite_data_from_mockup
+from helpers.report import report_in_progress_path
+from helpers.testtreemockup import report_mockup, suite_mockup, tst_mockup, make_report_from_mockup, \
+    make_suite_data_from_mockup
 
 from lemoncheesecake.cli import main
 from lemoncheesecake.reporting.backends.json_ import save_report_into_file
@@ -95,3 +97,9 @@ def test_diff_cmd(tmpdir, cmdout):
     assert "mysuite.mytest3" in removed[1]
     assert "mysuite.mytest2" in status_changed[1]
     assert "mysuite.mytest1" in status_changed[2]
+
+
+def test_diff_cmd_test_run_in_progress(report_in_progress_path, cmdout):
+    assert main(["diff", report_in_progress_path, report_in_progress_path]) == 0
+
+    cmdout.assert_substrs_anywhere("no difference")

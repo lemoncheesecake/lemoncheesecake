@@ -252,7 +252,7 @@ def _unserialize_bool(value):
 def _unserialize_step_data(xml):
     step = StepData(xml.attrib["description"])
     step.start_time = _unserialize_datetime(xml.attrib["start-time"])
-    step.end_time = _unserialize_datetime(xml.attrib["end-time"])
+    step.end_time = _unserialize_datetime(xml.attrib["end-time"]) if "end-time" in xml.attrib else None
     for xml_entry in xml:
         if xml_entry.tag == "log":
             entry = LogData(xml_entry.attrib["level"], xml_entry.text, _unserialize_datetime(xml_entry.attrib["time"]))
@@ -272,10 +272,10 @@ def _unserialize_step_data(xml):
 
 def _unserialize_test_data(xml):
     test = TestData(xml.attrib["name"], xml.attrib["description"])
-    test.status = xml.attrib["status"]
+    test.status = xml.attrib.get("status", None)
     test.status_details = xml.attrib.get("status-details", None)
     test.start_time = _unserialize_datetime(xml.attrib["start-time"])
-    test.end_time = _unserialize_datetime(xml.attrib["end-time"])
+    test.end_time = _unserialize_datetime(xml.attrib["end-time"]) if "end-time" in xml.attrib else None
     test.tags = [node.text for node in xml.xpath("tag")]
     test.properties = {node.attrib["name"]: node.text for node in xml.xpath("property")}
     test.links = [(link.text, link.attrib.get("name", None)) for link in xml.xpath("link")]
@@ -287,7 +287,7 @@ def _unserialize_hook_data(xml):
     data = HookData()
     data.outcome = _unserialize_outcome(xml.attrib["outcome"])
     data.start_time = _unserialize_datetime(xml.attrib["start-time"])
-    data.end_time = _unserialize_datetime(xml.attrib["end-time"])
+    data.end_time = _unserialize_datetime(xml.attrib["end-time"]) if "end-time" in xml.attrib else None
     data.steps = [_unserialize_step_data(step) for step in xml.xpath("step")]
     return data
 

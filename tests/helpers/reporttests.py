@@ -15,20 +15,23 @@ from lemoncheesecake.reporting import Report
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy
 
 from helpers.runner import run_suite_class, run_suite_classes, dump_report
-from helpers.report import assert_report
+from helpers.report import assert_report, report_in_progress
 
 
-def do_test_serialization(suites, backend, tmpdir, fixtures=(), report_saving_strategy=None):
-    if type(suites) in (list, tuple):
+def do_test_serialization(suites_or_report, backend, tmpdir, fixtures=(), report_saving_strategy=None):
+    report_filename = tmpdir.join(backend.get_report_filename()).strpath
+
+    if isinstance(suites_or_report, Report):
+        report = suites_or_report
+        backend.save_report(report_filename, report)
+    else:
+        suites = suites_or_report
+        if type(suites) not in (list, tuple):
+            suites = [suites]
         report = run_suite_classes(
             suites, fixtures=fixtures, backends=[backend], tmpdir=tmpdir, report_saving_strategy=report_saving_strategy
         )
-    else:
-        report = run_suite_class(
-            suites, fixtures=fixtures, backends=[backend], tmpdir=tmpdir, report_saving_strategy=report_saving_strategy
-        )
 
-    report_filename = tmpdir.join(backend.get_report_filename()).strpath
     unserialized_report = backend.load_report(report_filename)
 
 #     dump_report(unserialized_report)
@@ -455,6 +458,10 @@ def test_nb_threads(backend, tmpdir):
     #    dump_report(unserialized_report)
 
     assert_report(unserialized_report, report)
+
+
+def test_report_in_progress(backend, tmpdir, report_in_progress):
+    do_test_serialization(report_in_progress, backend, tmpdir)
 
 
  # TODO: see below, the behavior of each save mode is not tested in fact, but

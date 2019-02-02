@@ -6,10 +6,69 @@ Created on Sep 30, 2016
 
 
 import os.path
+import time
+
+import pytest
 
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
+from lemoncheesecake.reporting import Report, HookData, SuiteData, TestData, StepData, LogData, JsonBackend
+
+
+def make_report_in_progress():
+    # create a pseudo report where all elements that can be "in-progress" (meaning without
+    # an end time) are present in the report
+    now = time.time()
+    report = Report()
+    report.start_time = now
+    report.test_session_setup = HookData()
+    report.test_session_setup.start_time = now
+    report.test_session_teardown = HookData()
+    report.test_session_teardown.start_time = now
+    suite = SuiteData("suite", "suite")
+    report.add_suite(suite)
+    
+    suite.suite_setup = HookData()
+    suite.suite_setup.start_time = now
+    suite.suite_teardown = HookData()
+    suite.suite_teardown.start_time = now
+    
+    test = TestData("test_1", "test_1")
+    suite.add_test(test)
+    test.start_time = now
+    step = StepData("step")
+    test.steps.append(step)
+    step.start_time = now
+    log = LogData("info", "message", now)
+    step.entries.append(log)
+
+    test = TestData("test_2", "test_2")
+    suite.add_test(test)
+    test.start_time = now
+    test.end_time = now + 1
+    test.status = "passed"
+    step = StepData("step")
+    test.steps.append(step)
+    step.start_time = now
+    step.end_time = now + 1
+    log = LogData("info", "message", now)
+    step.entries.append(log)
+
+    return report
+
+
+@pytest.fixture()
+def report_in_progress():
+    return make_report_in_progress()
+
+
+@pytest.fixture()
+def report_in_progress_path(tmpdir):
+    backend = JsonBackend()
+    report_path = os.path.join(tmpdir.strpath, "report.json")
+    backend.save_report(report_path, make_report_in_progress())
+    return report_path
 
 
 ###
@@ -141,7 +200,10 @@ def assert_url_data(actual, expected):
 
 def assert_step_data(actual, expected):
     assert round(actual.start_time, 3) == round(expected.start_time, 3)
-    assert round(actual.end_time, 3) == round(expected.end_time, 3)
+    if expected.end_time is None:
+        assert actual.end_time is None
+    else:
+        assert round(actual.end_time, 3) == round(expected.end_time, 3)
     assert actual.description == expected.description
     assert len(actual.entries) == len(expected.entries)
     for actual_entry, expected_entry in zip(actual.entries, expected.entries):
@@ -167,8 +229,10 @@ def assert_test_data(actual, expected):
     assert actual.status == expected.status
     assert actual.status_details == expected.status_details
     assert round(actual.start_time, 3) == round(expected.start_time, 3)
-    assert round(actual.end_time, 3) == round(expected.end_time, 3)
-
+    if expected.end_time is None:
+        assert actual.end_time is None
+    else:
+        assert round(actual.end_time, 3) == round(expected.end_time, 3)
     assert len(actual.steps) == len(expected.steps)
     for actual_step, expected_step in zip(actual.steps, expected.steps):
         assert_step_data(actual_step, expected_step)
@@ -180,7 +244,10 @@ def assert_hook_data(actual, expected):
     else:
         assert actual.outcome == expected.outcome
         assert round(actual.start_time, 3) == round(expected.start_time, 3)
-        assert round(actual.end_time, 3) == round(expected.end_time, 3)
+        if expected.end_time is None:
+            assert actual.end_time is None
+        else:
+            assert round(actual.end_time, 3) == round(expected.end_time, 3)
         assert len(actual.steps) == len(expected.steps)
         for actual_step, expected_step in zip(actual.steps, expected.steps):
             assert_step_data(actual_step, expected_step)
@@ -214,8 +281,14 @@ def assert_report(actual, expected):
     assert actual.title == expected.title
     assert actual.info == expected.info
     assert round(actual.start_time, 3) == round(expected.start_time, 3)
-    assert round(actual.end_time, 3) == round(expected.end_time, 3)
-    assert round(actual.report_generation_time, 3) == round(expected.report_generation_time, 3)
+    if expected.end_time is None:
+        assert actual.end_time is None
+    else:
+        assert round(actual.end_time, 3) == round(expected.end_time, 3)
+    if expected.report_generation_time is None:
+        assert actual.report_generation_time is None
+    else:
+        assert round(actual.report_generation_time, 3) == round(expected.report_generation_time, 3)
     assert actual.nb_threads == expected.nb_threads
     assert len(actual.get_suites()) == len(expected.get_suites())
 

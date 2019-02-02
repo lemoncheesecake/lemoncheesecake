@@ -22,6 +22,17 @@ def cmdout(capsys):
             for substr in substrs:
                 assert substr in lines[line_nb]
 
+        def assert_substrs_anywhere(self, substrs, on_stderr=False):
+            for line_nb in range(len(self.get_lines(on_stderr))):
+                try:
+                    self.assert_substrs_in_line(line_nb, substrs, on_stderr)
+                except AssertionError:
+                    pass
+                else:
+                    return
+            else:
+                raise AssertionError()
+
         def assert_substrs_not_in_line(self, line_nb, substrs, on_stderr=False):
             lines = self.get_lines(on_stderr)
             for substr in substrs:

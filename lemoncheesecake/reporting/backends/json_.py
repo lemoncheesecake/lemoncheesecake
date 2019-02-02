@@ -137,7 +137,7 @@ def save_report_into_file(data, filename, javascript_compatibility=True, pretty_
 def _unserialize_step_data(js):
     step = StepData(js["description"])
     step.start_time = parse_timestamp(js["start_time"])
-    step.end_time = parse_timestamp(js["end_time"])
+    step.end_time = parse_timestamp(js["end_time"]) if js["end_time"] else None
     for js_entry in js["entries"]:
         if js_entry["type"] == "log":
             entry = LogData(js_entry["level"], js_entry["message"], parse_timestamp(js_entry["time"]))
@@ -158,7 +158,7 @@ def _unserialize_test_data(js):
     test.status = js["status"]
     test.status_details = js["status_details"]
     test.start_time = parse_timestamp(js["start_time"])
-    test.end_time = parse_timestamp(js["end_time"])
+    test.end_time = parse_timestamp(js["end_time"]) if js["end_time"] else None
     test.tags = js["tags"]
     test.properties = js["properties"]
     test.links = [(link["url"], link["name"]) for link in js["links"]]
@@ -170,7 +170,7 @@ def _unserialize_hook_data(js):
     data = HookData()
     data.outcome = js["outcome"]
     data.start_time = parse_timestamp(js["start_time"])
-    data.end_time = parse_timestamp(js["end_time"])
+    data.end_time = parse_timestamp(js["end_time"]) if js["end_time"] else None
     data.steps = [_unserialize_step_data(s) for s in js["steps"]]
 
     return data
@@ -220,8 +220,8 @@ def load_report_from_file(filename):
     report.title = js["title"]
     report.info = js["info"]
     report.start_time = parse_timestamp(js["start_time"])
-    report.end_time = parse_timestamp(js["end_time"])
-    report.report_generation_time = parse_timestamp(js["generation_time"])
+    report.end_time = parse_timestamp(js["end_time"]) if js["end_time"] else None
+    report.report_generation_time = parse_timestamp(js["generation_time"]) if js["generation_time"] else None
     report.nb_threads = js["nb_threads"]
 
     if "test_session_setup" in js:
