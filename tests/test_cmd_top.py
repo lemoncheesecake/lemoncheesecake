@@ -73,6 +73,13 @@ def test_top_tests_cmd(tmpdir, cmdout):
     assert "suite2.test" in lines[4]
 
 
+def test_top_tests_cmd_test_run_in_progress(report_in_progress_path, cmdout):
+    assert main(["top-tests", report_in_progress_path]) == 0
+
+    cmdout.dump()
+    cmdout.assert_substrs_anywhere(["suite.test_2"])
+
+
 def test_get_top_steps():
     first_step = step_mockup("step1", start_time=0.0, end_time=1.0)
     second_step = step_mockup("step1", start_time=1.0, end_time=3.0)
