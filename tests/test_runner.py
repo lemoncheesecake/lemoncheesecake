@@ -1382,3 +1382,22 @@ def test_depends_on_skipped():
     report = run_suite_class(suite)
 
     assert_test_statuses(report, failed=["suite.test1"], skipped=["suite.test2", "suite.test3"])
+
+
+def test_depends_on_failed_and_subsuite():
+    @lcc.suite("s1")
+    class suite1:
+        @lcc.test("t1")
+        def test1(self):
+            lcc.log_error("some error")
+
+        @lcc.suite("s2")
+        class suite2:
+            @lcc.test("t2")
+            @lcc.depends_on("suite1.test1")
+            def test2(self):
+                pass
+
+    report = run_suite_class(suite1)
+
+    assert_test_statuses(report, failed=["suite1.test1"], skipped=["suite1.suite2.test2"])
