@@ -148,10 +148,9 @@ def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
     finally:
         pool.close()
 
-    if any(task.exception for task in tasks):
-        raise TasksExecutionFailure(
-            "Caught exceptions:\n%s" % "\n".join(task.exception for task in tasks if task.exception)
-        )
+    exceptions = [task.exception for task in tasks if task.exception]
+    if exceptions:
+        raise TasksExecutionFailure("Caught exceptions:\n%s" % "\n".join(exceptions))
 
 
 def check_task_dependencies(task, task_path=()):
