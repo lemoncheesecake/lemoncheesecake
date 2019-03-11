@@ -3,13 +3,20 @@ from multiprocessing.dummy import Pool, Queue
 from lemoncheesecake.exceptions import TaskFailure, TasksExecutionFailure, CircularDependencyError, \
     serialize_current_exception
 
+DEBUG = 0
 _KEYBOARD_INTERRUPT_ERROR_MESSAGE = "all tests have been interrupted by the user"
+
+
+def _debug(msg):
+    if DEBUG:
+        print(msg)
 
 
 class BaseTask(object):
     def __init__(self):
         self.successful = None
         self.exception = None
+        self.skipped = False
 
     def get_all_dependencies(self):
         return self.get_on_completion_dependencies() + self.get_on_success_dependencies()
@@ -38,19 +45,12 @@ def pop_runnable_tasks(remaining_tasks, completed_tasks, nb_tasks):
 
     for task in runnable_tasks_by_priority[:nb_tasks]:
         remaining_tasks.remove(task)
+        _debug("pop runnable task %s" % task)
         yield task
 
 
-def pop_skippable_tasks(ref_task, tasks):
-    for task in list(tasks):
-        if ref_task in task.get_on_success_dependencies() and task in tasks:
-            tasks.remove(task)
-            yield task
-            for indirect_task in pop_skippable_tasks(task, tasks):
-                yield indirect_task
-
-
 def run_task(task, context, completed_task_queue):
+    _debug("run task %s" % task)
     try:
         task.run(context)
     except TaskFailure:
@@ -65,6 +65,12 @@ def run_task(task, context, completed_task_queue):
 
 
 def handle_task(task, watchdogs, context, completed_task_queue):
+    _debug("handle task %s" % task)
+    for dep_task in task.get_on_success_dependencies():
+        if not dep_task.successful or dep_task.skipped:
+            skip_task(task, context, completed_task_queue)
+            return
+
     for watchdog in watchdogs:
         error = watchdog(task)
         if error:
@@ -80,6 +86,7 @@ def schedule_tasks_to_be_run(tasks, watchdogs, context, pool, completed_tasks_qu
 
 
 def skip_task(task, context, completed_task_queue, reason=""):
+    _debug("skip task %s" % task)
     try:
         task.skip(context, reason)
     except Exception:
@@ -87,6 +94,8 @@ def skip_task(task, context, completed_task_queue, reason=""):
         task.exception = serialize_current_exception()
     else:
         task.successful = True
+    finally:
+        task.skipped = True
 
     completed_task_queue.put(task)
 
@@ -128,11 +137,6 @@ def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
             # wait for one task to complete
             completed_task = completed_tasks_queue.get()
             completed_tasks.append(completed_task)
-
-            # schedule tasks to be skipped after task failure
-            if not completed_task.successful:
-                tasks_to_be_skipped = pop_skippable_tasks(completed_task, remaining_tasks)
-                schedule_tasks_to_be_skipped(tasks_to_be_skipped, context, pool, completed_tasks_queue)
 
             # schedule tasks to be run waiting for task success or simple completion
             tasks_to_be_run = pop_runnable_tasks(remaining_tasks, completed_tasks, nb_threads)
