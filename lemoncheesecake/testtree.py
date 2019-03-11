@@ -191,7 +191,9 @@ def get_suite_by_name(suites, suite_name):
     try:
         return next(s for s in suites if s.name == suite_name)
     except StopIteration:
-        raise CannotFindTreeNode("Cannot find suite named '%s'" % suite_name)
+        raise CannotFindTreeNode("Cannot find suite named '%s' within %s" % (
+            suite_name, [s.name for s in suites]
+        ))
 
 
 def _find_suite(suites, hierarchy):
@@ -201,7 +203,7 @@ def _find_suite(suites, hierarchy):
         lookup_suite = get_suite_by_name(lookup_suites, lookup_suite_name)
         lookup_suites = lookup_suite.get_suites(include_empty_suites=True)
     if lookup_suite is None:
-        raise CannotFindTreeNode("Cannot find suite named %s" % hierarchy)
+        raise CannotFindTreeNode("Cannot find suite %s" % hierarchy)
 
     return lookup_suite
 

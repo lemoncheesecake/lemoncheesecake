@@ -7,6 +7,8 @@ from six.moves.queue import Queue
 from lemoncheesecake.helpers.text import camel_case_to_snake_case
 from lemoncheesecake.exceptions import serialize_current_exception
 
+DEBUG = 0
+
 
 def _get_event_name_from_class_name(class_name):
     return re.sub(r"_event$", "", camel_case_to_snake_case(class_name))
@@ -84,6 +86,8 @@ class EventManager:
         self._event_types[_get_event_name(event)].unsubscribe(handler)
 
     def fire(self, event):
+        if DEBUG:
+            print("Fire event %s" % event)
         self._queue.put(event)
 
     def end_of_events(self):
@@ -174,6 +178,9 @@ class _SuiteEvent(Event):
         super(_SuiteEvent, self).__init__()
         self.suite = suite
 
+    def __str__(self):
+        return "<Event type='%s' suite='%s'>" % (self.get_name(), self.suite.path)
+
 
 @event
 class SuiteStartEvent(_SuiteEvent):
@@ -215,7 +222,7 @@ class _TestEvent(Event):
         self.test = test
 
     def __str__(self):
-        return "<Event type='%s' test_name='%s'>" % (self.get_name(), self.test.path)
+        return "<Event type='%s' test='%s'>" % (self.get_name(), self.test.path)
 
 
 @event
