@@ -1,3 +1,10 @@
+# 0.22.7 (2019-03-11)
+
+- Fix: make all commands that use a report (``lcc diff``, ``lcc report``, ``lcc top-*``)
+  work with a report corresponding to a running test session
+- Fix possible crash when a test uses a ``lcc.depends_on()`` and that the referenced test fails and is defined
+  in a higher level suite
+
 # 0.22.6 (2019-01-29)
 
 - **lcc top-suites**: show the number of tests per suite
