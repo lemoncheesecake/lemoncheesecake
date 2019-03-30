@@ -37,7 +37,6 @@ class ReportPortalReportingSession(ReportingSession):
         self.report_dir = report_dir
         self.report = report
         self._rp_exc_info = None
-        self._current_suite_test_statuses = []
 
     def _handle_rp_error(self, exc_info):
         self._rp_exc_info = exc_info
