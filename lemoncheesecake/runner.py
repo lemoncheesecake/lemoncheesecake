@@ -11,8 +11,8 @@ import itertools
 import six
 
 from lemoncheesecake.runtime import *
-from lemoncheesecake.runtime import initialize_runtime, set_runtime_location, is_location_successful,\
-    is_everything_successful, mark_location_as_failed
+from lemoncheesecake.runtime import initialize_runtime, initialize_fixtures_cache, set_runtime_location,\
+    is_location_successful, is_everything_successful, mark_location_as_failed
 from lemoncheesecake.reporting import Report, initialize_report_writer, initialize_reporting_backends
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
     UserError, TaskFailure, serialize_current_exception
@@ -557,7 +557,8 @@ def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, rep
     report.nb_threads = nb_threads
     session = initialize_report_writer(report)
     nb_tests = len(list(flatten_tests(suites)))
-    initialize_runtime(report_dir, report, prerun_session_scheduled_fixtures)
+    initialize_runtime(report_dir, report)
+    initialize_fixtures_cache(prerun_session_scheduled_fixtures)
     initialize_reporting_backends(
         reporting_backends, report_dir, report,
         parallel=nb_threads > 1 and nb_tests > 1, report_saving_strategy=report_saving_strategy
