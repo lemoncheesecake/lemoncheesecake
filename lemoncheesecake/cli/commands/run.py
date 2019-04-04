@@ -5,7 +5,6 @@ Created on Dec 31, 2016
 '''
 
 import os
-from collections import OrderedDict
 
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import get_suites_from_project
@@ -16,7 +15,7 @@ from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture
 from lemoncheesecake.project import find_project_file, load_project_from_file, load_project
 from lemoncheesecake.reporting import filter_reporting_backends_by_capabilities, CAPABILITY_REPORTING_SESSION
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy
-from lemoncheesecake.runner import run_suites
+from lemoncheesecake.runner import initialize_event_manager, run_suites
 from lemoncheesecake import events
 
 
@@ -59,7 +58,6 @@ def run_project(project, cli_args):
         raise LemonCheesecakeException("Project does not support multi-threading")
 
     suites = get_suites_from_project(project, cli_args)
-    events.add_listener(project)
 
     # Build fixture registry
     fixture_registry = build_fixture_registry(project, cli_args)
@@ -116,11 +114,15 @@ def run_project(project, cli_args):
             serialize_current_exception(show_stacktrace=True)
         )
 
+    # Initialize event manager
+    initialize_event_manager(suites, active_reporting_backends, report_dir, report_saving_strategy, nb_threads)
+    events.add_listener(project)
+
     # Run tests
     is_successful = run_suites(
-        suites, fixture_registry, active_reporting_backends, report_dir,
+        suites, fixture_registry,
         force_disabled=cli_args.force_disabled, stop_on_failure=cli_args.stop_on_failure,
-        nb_threads=nb_threads, report_saving_strategy=report_saving_strategy
+        nb_threads=nb_threads
     )
 
     # Handle after run hook

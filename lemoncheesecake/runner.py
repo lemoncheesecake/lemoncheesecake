@@ -10,15 +10,15 @@ import itertools
 
 import six
 
-from lemoncheesecake.runtime import *
 from lemoncheesecake.runtime import initialize_runtime, initialize_fixtures_cache, set_runtime_location,\
-    is_location_successful, is_everything_successful, mark_location_as_failed
-from lemoncheesecake.reporting import Report, initialize_report_writer, initialize_reporting_backends
+    is_location_successful, is_everything_successful, mark_location_as_failed, get_report,\
+    log_error, set_step
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
     UserError, TaskFailure, serialize_current_exception
 from lemoncheesecake import events
 from lemoncheesecake.testtree import TreeLocation, flatten_tests
 from lemoncheesecake.task import BaseTask, run_tasks
+from lemoncheesecake.reporting import Report, initialize_report_writer, initialize_reporting_backends
 
 
 class RunContext(object):
@@ -550,20 +550,8 @@ def build_tasks(suites, fixture_registry, session_scheduled_fixtures):
     return tasks
 
 
-def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, reporting_backends, report_dir,
-                force_disabled=False, stop_on_failure=False, nb_threads=1, report_saving_strategy=None):
-    # initialize runtime & global test variables
-    report = Report()
-    report.nb_threads = nb_threads
-    session = initialize_report_writer(report)
-    nb_tests = len(list(flatten_tests(suites)))
-    initialize_runtime(report_dir, report)
-    initialize_fixtures_cache(prerun_session_scheduled_fixtures)
-    initialize_reporting_backends(
-        reporting_backends, report_dir, report,
-        parallel=nb_threads > 1 and nb_tests > 1, report_saving_strategy=report_saving_strategy
-    )
-
+def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures,
+                force_disabled=False, stop_on_failure=False, nb_threads=1):
     # build tasks and run context
     session_scheduled_fixtures = fixture_registry.get_fixtures_scheduled_for_session(
         suites, prerun_session_scheduled_fixtures
@@ -575,6 +563,7 @@ def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, rep
     event_handler_thread = threading.Thread(target=events.handler_loop)
     event_handler_thread.start()
 
+    report = get_report()
     try:
         events.fire(events.TestSessionStartEvent(report))
         run_tasks(tasks, context, nb_threads, context.watchdog)
@@ -591,13 +580,13 @@ def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, rep
     return report
 
 
-def run_suites(suites, fixture_registry, reporting_backends, report_dir,
-               force_disabled=False, stop_on_failure=False, nb_threads=1, report_saving_strategy=None):
+def run_suites(suites, fixture_registry, force_disabled=False, stop_on_failure=False, nb_threads=1):
     fixture_teardowns = []
 
     # setup pre_session fixtures
     errors = []
     scheduled_fixtures = fixture_registry.get_fixtures_scheduled_for_session_prerun(suites)
+    initialize_fixtures_cache(scheduled_fixtures)
     for setup, teardown in scheduled_fixtures.get_setup_teardown_pairs():
         try:
             setup()
@@ -613,8 +602,7 @@ def run_suites(suites, fixture_registry, reporting_backends, report_dir,
     if not errors:
         report = run_session(
             suites, fixture_registry, scheduled_fixtures,
-            reporting_backends, report_dir, force_disabled=force_disabled, stop_on_failure=stop_on_failure,
-            nb_threads=nb_threads, report_saving_strategy=report_saving_strategy
+            force_disabled=force_disabled, stop_on_failure=stop_on_failure, nb_threads=nb_threads
         )
     else:
         report = None
@@ -634,3 +622,15 @@ def run_suites(suites, fixture_registry, reporting_backends, report_dir,
         raise FixtureError("\n".join(errors))
 
     return report.is_successful() if report else False
+
+
+def initialize_event_manager(suites, reporting_backends, report_dir, report_saving_strategy, nb_threads):
+    report = Report()
+    report.nb_threads = nb_threads
+    initialize_report_writer(report)
+    initialize_runtime(report_dir, report)
+    nb_tests = len(list(flatten_tests(suites)))
+    initialize_reporting_backends(
+        reporting_backends, report_dir, report,
+        parallel=nb_threads > 1 and nb_tests > 1, report_saving_strategy=report_saving_strategy
+    )
