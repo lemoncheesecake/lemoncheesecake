@@ -116,7 +116,7 @@ class AsyncEventManager(BaseEventManager):
     def get_pending_failure(self):
         return self._pending_failure
 
-    def handler_loop(self):
+    def _handler_loop(self):
         while True:
             event = self._queue.get()
             if event is None:
@@ -133,7 +133,7 @@ class AsyncEventManager(BaseEventManager):
     def handle_events(self):
         self._queue = Queue()
 
-        thread = threading.Thread(target=self.handler_loop)
+        thread = threading.Thread(target=self._handler_loop)
         thread.start()
 
         try:
@@ -142,6 +142,11 @@ class AsyncEventManager(BaseEventManager):
             self._queue.put(None)
             thread.join()
             self._queue = None
+
+
+class SyncEventManager(BaseEventManager):
+    def fire(self, event):
+        return self.handle_event(event)
 
 
 ###
