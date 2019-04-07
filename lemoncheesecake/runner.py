@@ -10,22 +10,23 @@ import itertools
 
 import six
 
-from lemoncheesecake.runtime import *
-from lemoncheesecake.runtime import initialize_runtime, set_runtime_location, is_location_successful,\
-    is_everything_successful, mark_location_as_failed
-from lemoncheesecake.reporting import Report, initialize_report_writer, initialize_reporting_backends
+from lemoncheesecake.runtime import initialize_runtime, initialize_fixtures_cache, set_runtime_location,\
+    is_location_successful, is_everything_successful, mark_location_as_failed, get_report,\
+    log_error, set_step
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
     UserError, TaskFailure, serialize_current_exception
 from lemoncheesecake import events
 from lemoncheesecake.testtree import TreeLocation, flatten_tests
 from lemoncheesecake.task import BaseTask, run_tasks
+from lemoncheesecake.reporting import Report, ReportWriter
 
 
 class RunContext(object):
-    def __init__(self, force_disabled, stop_on_failure, fixture_registry):
+    def __init__(self, event_manager, fixture_registry, force_disabled, stop_on_failure):
+        self.event_manager = event_manager
+        self.fixture_registry = fixture_registry
         self.force_disabled = force_disabled
         self.stop_on_failure = stop_on_failure
-        self.fixture_registry = fixture_registry
         self._abort_session = False
         self._aborted_suites = set()
 
@@ -85,7 +86,7 @@ class RunContext(object):
 
     def watchdog(self, task):
         # check for error in event handling
-        exception, _ = events.get_pending_failure()
+        exception, _ = self.event_manager.get_pending_failure()
         if exception is not None:
             return str(exception)
 
@@ -115,8 +116,8 @@ class TestTask(BaseTask):
     def get_on_success_dependencies(self):
         return self.dependencies
 
-    def skip(self, _, reason=""):
-        events.fire(events.TestSkippedEvent(self.test, reason))
+    def skip(self, context, reason=""):
+        context.event_manager.fire(events.TestSkippedEvent(self.test, reason))
         mark_location_as_failed(TreeLocation.in_test(self.test))
 
     def run(self, context):
@@ -126,13 +127,13 @@ class TestTask(BaseTask):
         # Checker whether the test must be executed or not
         ###
         if self.test.is_disabled() and not context.force_disabled:
-            events.fire(events.TestDisabledEvent(self.test, ""))
+            context.event_manager.fire(events.TestDisabledEvent(self.test, ""))
             return
 
         ###
         # Begin test
         ###
-        events.fire(events.TestStartEvent(self.test))
+        context.event_manager.fire(events.TestStartEvent(self.test))
         set_runtime_location(TreeLocation.in_test(self.test))
 
         ###
@@ -160,10 +161,10 @@ class TestTask(BaseTask):
         setup_teardown_funcs.extend(scheduled_fixtures.get_setup_teardown_pairs())
 
         if any(setup for setup, _ in setup_teardown_funcs):
-            events.fire(events.TestSetupStartEvent(self.test))
+            context.event_manager.fire(events.TestSetupStartEvent(self.test))
             set_step("Setup test")
             teardown_funcs = context.run_setup_funcs(setup_teardown_funcs, TreeLocation.in_test(self.test))
-            events.fire(events.TestSetupEndEvent(self.test))
+            context.event_manager.fire(events.TestSetupEndEvent(self.test))
         else:
             teardown_funcs = [teardown for _, teardown in setup_teardown_funcs if teardown]
 
@@ -182,12 +183,12 @@ class TestTask(BaseTask):
         # Teardown
         ###
         if any(teardown_funcs):
-            events.fire(events.TestTeardownStartEvent(self.test))
+            context.event_manager.fire(events.TestTeardownStartEvent(self.test))
             set_step("Teardown test")
             context.run_teardown_funcs(teardown_funcs)
-            events.fire(events.TestTeardownEndEvent(self.test))
+            context.event_manager.fire(events.TestTeardownEndEvent(self.test))
 
-        events.fire(events.TestEndEvent(self.test))
+        context.event_manager.fire(events.TestEndEvent(self.test))
 
         if not is_location_successful(TreeLocation.in_test(self.test)):
             raise TaskFailure()
@@ -276,7 +277,7 @@ class SuiteBeginningTask(BaseTask):
         return self._dependencies
 
     def run(self, context):
-        events.fire(events.SuiteStartEvent(self.suite))
+        context.event_manager.fire(events.SuiteStartEvent(self.suite))
 
     def skip(self, context, _):
         self.run(context)
@@ -300,23 +301,18 @@ class SuiteInitializationTask(BaseTask):
     def get_on_success_dependencies(self):
         return self._dependencies
 
-    @staticmethod
-    def begin_suite_setup(suite):
-        events.fire(events.SuiteSetupStartEvent(suite))
-        set_runtime_location(TreeLocation.in_suite_setup(suite))
-        set_step("Setup suite")
-
-    @staticmethod
-    def end_suite_setup(suite):
-        events.fire(events.SuiteSetupEndEvent(suite))
-
     def run(self, context):
         if any(setup for setup, _ in self.setup_teardown_funcs):
-            SuiteInitializationTask.begin_suite_setup(self.suite)
+            # before actual initialization
+            context.event_manager.fire(events.SuiteSetupStartEvent(self.suite))
+            set_runtime_location(TreeLocation.in_suite_setup(self.suite))
+            set_step("Setup suite")
+            # actual initialization
             self.teardown_funcs = context.run_setup_funcs(
                 self.setup_teardown_funcs, TreeLocation.in_suite_setup(self.suite)
             )
-            SuiteInitializationTask.end_suite_setup(self.suite)
+            # after actual initialization
+            context.event_manager.fire(events.SuiteSetupEndEvent(self.suite))
             if not is_location_successful(TreeLocation.in_suite_setup(self.suite)):
                 raise TaskFailure()
         else:
@@ -370,7 +366,7 @@ class SuiteEndingTask(BaseTask):
         return self._dependencies
 
     def run(self, context):
-        events.fire(events.SuiteEndEvent(self.suite))
+        context.event_manager.fire(events.SuiteEndEvent(self.suite))
 
     def skip(self, context, _):
         self.run(context)
@@ -393,21 +389,16 @@ class SuiteTeardownTask(BaseTask):
     def get_on_completion_dependencies(self):
         return self._dependencies
 
-    @staticmethod
-    def begin_suite_teardown(suite):
-        events.fire(events.SuiteTeardownStartEvent(suite))
-        set_runtime_location(TreeLocation.in_suite_teardown(suite))
-        set_step("Teardown suite")
-
-    @staticmethod
-    def end_suite_teardown(suite):
-        events.fire(events.SuiteTeardownEndEvent(suite))
-
     def run(self, context):
         if any(self.suite_setup_task.teardown_funcs):
-            SuiteTeardownTask.begin_suite_teardown(self.suite)
+            # before actual teardown
+            context.event_manager.fire(events.SuiteTeardownStartEvent(self.suite))
+            set_runtime_location(TreeLocation.in_suite_teardown(self.suite))
+            set_step("Teardown suite")
+            # actual teardown
             context.run_teardown_funcs(self.suite_setup_task.teardown_funcs)
-            SuiteTeardownTask.end_suite_teardown(self.suite)
+            # after actual teardown
+            context.event_manager.fire(events.SuiteTeardownEndEvent(self.suite))
 
     def skip(self, context, _):
         self.run(context)
@@ -426,23 +417,18 @@ class TestSessionSetupTask(BaseTask):
         self.scheduled_fixtures = scheduled_fixtures
         self.teardown_funcs = []
 
-    @staticmethod
-    def begin_test_session_setup():
-        events.fire(events.TestSessionSetupStartEvent())
-        set_runtime_location(TreeLocation.in_test_session_setup())
-        set_step("Setup test session")
-
-    @staticmethod
-    def end_test_session_setup():
-        events.fire(events.TestSessionSetupEndEvent())
-
     def run(self, context):
         setup_teardown_funcs = self.scheduled_fixtures.get_setup_teardown_pairs()
 
         if any(setup for setup, _ in setup_teardown_funcs):
-            TestSessionSetupTask.begin_test_session_setup()
+            # before actual setup
+            context.event_manager.fire(events.TestSessionSetupStartEvent())
+            set_runtime_location(TreeLocation.in_test_session_setup())
+            set_step("Setup test session")
+            # actual setup
             self.teardown_funcs = context.run_setup_funcs(setup_teardown_funcs, TreeLocation.in_test_session_setup())
-            TestSessionSetupTask.end_test_session_setup()
+            # after actual setup
+            context.event_manager.fire(events.TestSessionSetupEndEvent())
             if not is_location_successful(TreeLocation.in_test_session_setup()):
                 raise TaskFailure()
         else:
@@ -462,21 +448,16 @@ class TestSessionTeardownTask(BaseTask):
     def get_on_completion_dependencies(self):
         return self._dependencies
 
-    @staticmethod
-    def begin_test_session_teardown():
-        events.fire(events.TestSessionTeardownStartEvent())
-        set_runtime_location(TreeLocation.in_test_session_teardown())
-        set_step("Teardown test session")
-
-    @staticmethod
-    def end_test_session_teardown():
-        events.fire(events.TestSessionTeardownEndEvent())
-
     def run(self, context):
         if any(self.test_session_setup_task.teardown_funcs):
-            TestSessionTeardownTask.begin_test_session_teardown()
+            # before actual teardown
+            context.event_manager.fire(events.TestSessionTeardownStartEvent())
+            set_runtime_location(TreeLocation.in_test_session_teardown())
+            set_step("Teardown test session")
+            # actual teardown
             context.run_teardown_funcs(self.test_session_setup_task.teardown_funcs)
-            TestSessionTeardownTask.end_test_session_teardown()
+            # after actual teardown
+            context.event_manager.fire(events.TestSessionTeardownEndEvent())
 
     def skip(self, context, _):
         self.run(context)
@@ -550,53 +531,36 @@ def build_tasks(suites, fixture_registry, session_scheduled_fixtures):
     return tasks
 
 
-def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, reporting_backends, report_dir,
-                force_disabled=False, stop_on_failure=False, nb_threads=1, report_saving_strategy=None):
-    # initialize runtime & global test variables
-    report = Report()
-    report.nb_threads = nb_threads
-    session = initialize_report_writer(report)
-    nb_tests = len(list(flatten_tests(suites)))
-    initialize_runtime(report_dir, report, prerun_session_scheduled_fixtures)
-    initialize_reporting_backends(
-        reporting_backends, report_dir, report,
-        parallel=nb_threads > 1 and nb_tests > 1, report_saving_strategy=report_saving_strategy
-    )
-
+def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, event_manager,
+                force_disabled=False, stop_on_failure=False, nb_threads=1):
     # build tasks and run context
     session_scheduled_fixtures = fixture_registry.get_fixtures_scheduled_for_session(
         suites, prerun_session_scheduled_fixtures
     )
     tasks = build_tasks(suites, fixture_registry, session_scheduled_fixtures)
-    context = RunContext(force_disabled, stop_on_failure, fixture_registry)
+    context = RunContext(event_manager, fixture_registry, force_disabled, stop_on_failure)
 
-    # start event handler thread
-    event_handler_thread = threading.Thread(target=events.handler_loop)
-    event_handler_thread.start()
+    report = get_report()
 
-    try:
-        events.fire(events.TestSessionStartEvent(report))
+    with event_manager.handle_events():
+        event_manager.fire(events.TestSessionStartEvent(report))
         run_tasks(tasks, context, nb_threads, context.watchdog)
-        events.fire(events.TestSessionEndEvent(report))
-    finally:
-        # wait for event handler to finish
-        events.end_of_events()
-        event_handler_thread.join()
+        event_manager.fire(events.TestSessionEndEvent(report))
 
-    exception, serialized_exception = events.get_pending_failure()
+    exception, serialized_exception = event_manager.get_pending_failure()
     if exception:
         raise exception.__class__(serialized_exception)
 
     return report
 
 
-def run_suites(suites, fixture_registry, reporting_backends, report_dir,
-               force_disabled=False, stop_on_failure=False, nb_threads=1, report_saving_strategy=None):
+def run_suites(suites, fixture_registry, event_manager, force_disabled=False, stop_on_failure=False, nb_threads=1):
     fixture_teardowns = []
 
     # setup pre_session fixtures
     errors = []
     scheduled_fixtures = fixture_registry.get_fixtures_scheduled_for_session_prerun(suites)
+    initialize_fixtures_cache(scheduled_fixtures)
     for setup, teardown in scheduled_fixtures.get_setup_teardown_pairs():
         try:
             setup()
@@ -611,9 +575,8 @@ def run_suites(suites, fixture_registry, reporting_backends, report_dir,
 
     if not errors:
         report = run_session(
-            suites, fixture_registry, scheduled_fixtures,
-            reporting_backends, report_dir, force_disabled=force_disabled, stop_on_failure=stop_on_failure,
-            nb_threads=nb_threads, report_saving_strategy=report_saving_strategy
+            suites, fixture_registry, scheduled_fixtures, event_manager,
+            force_disabled=force_disabled, stop_on_failure=stop_on_failure, nb_threads=nb_threads
         )
     else:
         report = None
@@ -633,3 +596,22 @@ def run_suites(suites, fixture_registry, reporting_backends, report_dir,
         raise FixtureError("\n".join(errors))
 
     return report.is_successful() if report else False
+
+
+def initialize_event_manager(suites, reporting_backends, report_dir, report_saving_strategy, nb_threads):
+    event_manager = events.AsyncEventManager.load()
+
+    report = Report()
+    report.nb_threads = nb_threads
+    writer = ReportWriter(report)
+    event_manager.add_listener(writer)
+
+    initialize_runtime(event_manager, report_dir, report)
+
+    nb_tests = len(list(flatten_tests(suites)))
+    parallelized = nb_threads > 1 and nb_tests > 1
+    for backend in reporting_backends:
+        session = backend.create_reporting_session(report_dir, report, parallelized, report_saving_strategy)
+        event_manager.add_listener(session)
+
+    return event_manager

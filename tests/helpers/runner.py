@@ -112,20 +112,23 @@ def run_suites(suites, fixtures=None, backends=None, tmpdir=None, force_disabled
     if backends is None:
         backends = []
 
-    events.reset()
-
     if tmpdir:
+        event_manager = runner.initialize_event_manager(
+            suites, backends, tmpdir.strpath, report_saving_strategy, nb_threads=1
+        )
         runner.run_suites(
-            suites, fixture_registry, backends, tmpdir.strpath,
+            suites, fixture_registry, event_manager,
             force_disabled=force_disabled, stop_on_failure=stop_on_failure
         )
     else:
         report_dir = tempfile.mkdtemp()
+        event_manager = runner.initialize_event_manager(
+            suites, backends, report_dir, report_saving_strategy, nb_threads=1
+        )
         try:
             runner.run_suites(
-                suites, fixture_registry, backends, report_dir,
-                force_disabled=force_disabled, stop_on_failure=stop_on_failure,
-                report_saving_strategy=report_saving_strategy
+                suites, fixture_registry, event_manager,
+                force_disabled=force_disabled, stop_on_failure=stop_on_failure
             )
         finally:
             shutil.rmtree(report_dir)
@@ -196,5 +199,4 @@ def dummy_test_callback():
 
 
 def run_main(args):
-    events.reset()
     return main(args)

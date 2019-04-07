@@ -1,6 +1,9 @@
+import sys
 import time
 import re
 import inspect
+import threading
+from contextlib import contextmanager
 
 from six.moves.queue import Queue
 
@@ -10,17 +13,13 @@ from lemoncheesecake.exceptions import serialize_current_exception
 DEBUG = 0
 
 
-def _get_event_name_from_class_name(class_name):
-    return re.sub(r"_event$", "", camel_case_to_snake_case(class_name))
-
-
 class Event(object):
     def __init__(self):
         self.time = time.time()
 
     @classmethod
     def get_name(cls):
-        return _get_event_name_from_class_name(cls.__name__)
+        return re.sub(r"_event$", "", camel_case_to_snake_case(cls.__name__))
 
     def __str__(self):
         return "<Event type='%s'>" % self.get_name()
@@ -45,31 +44,41 @@ class EventType:
             handler(event)
 
 
-def _get_event_name(val):
-    return val.get_name() if inspect.isclass(val) and issubclass(val, Event) else val
-
-
-class EventManager:
+class BaseEventManager(object):
     def __init__(self):
         self._event_types = {}
-        self._queue = Queue()
-        self._pending_failure = None, None
 
-    def register_events(self, *event_classes):
+    @staticmethod
+    def _get_event_classes():
+        """
+        Get available event classes by introspecting this module to get available event classes.
+        """
+        current_module = sys.modules[__name__]
+        for sym_name in dir(current_module):
+            if sym_name.startswith("_"):
+                continue
+            sym = getattr(current_module, sym_name)
+            if inspect.isclass(sym) and sym is not Event and issubclass(sym, Event):
+                yield sym
+
+    @classmethod
+    def load(cls):
+        eventmgr = cls()
+        for event_class in eventmgr._get_event_classes():
+            eventmgr.register_event(event_class)
+        return eventmgr
+
+    @staticmethod
+    def _get_event_name(val):
+        # val can be either an Event-based class or the name of the event itself (as an str)
+        return val.get_name() if inspect.isclass(val) and issubclass(val, Event) else val
+
+    def register_event(self, *event_classes):
         for event_class in event_classes:
             self._event_types[event_class.get_name()] = EventType(event_class)
 
-    def reset(self, event_name=None):
-        if event_name is None:
-            for event_type in self._event_types.values():
-                event_type.reset()
-        else:
-            self._event_types[event_name].reset()
-        self._queue = Queue()
-        self._pending_failure = None, None
-
     def subscribe_to_event(self, event, handler):
-        self._event_types[_get_event_name(event)].subscribe(handler)
+        self._event_types[self._get_event_name(event)].subscribe(handler)
 
     def subscribe_to_events(self, event_handler_pairs):
         for event, handler in event_handler_pairs.items():
@@ -83,15 +92,29 @@ class EventManager:
                 self.subscribe_to_event(event_name, handler)
 
     def unsubscribe_from_event(self, event, handler):
-        self._event_types[_get_event_name(event)].unsubscribe(handler)
+        self._event_types[self._get_event_name(event)].unsubscribe(handler)
+
+    def handle_event(self, event):
+        self._event_types[event.__class__.get_name()].handle(event)
 
     def fire(self, event):
+        raise NotImplemented()
+
+
+class AsyncEventManager(BaseEventManager):
+    def __init__(self):
+        BaseEventManager.__init__(self)
+        self._queue = None
+        self._pending_failure = None, None
+
+    def fire(self, event):
+        assert self._queue, "Events can't be fired outside the 'handle_events' context manager."
         if DEBUG:
             print("Fire event %s" % event)
         self._queue.put(event)
 
-    def end_of_events(self):
-        self._queue.put(None)
+    def get_pending_failure(self):
+        return self._pending_failure
 
     def handler_loop(self):
         while True:
@@ -99,34 +122,26 @@ class EventManager:
             if event is None:
                 break
             try:
-                self._event_types[event.__class__.get_name()].handle(event)
+                self.handle_event(event)
             except Exception as excp:
                 self._pending_failure = excp, serialize_current_exception()
                 break
             finally:
                 self._queue.task_done()
 
-    def get_pending_failure(self):
-        return self._pending_failure
+    @contextmanager
+    def handle_events(self):
+        self._queue = Queue()
 
+        thread = threading.Thread(target=self.handler_loop)
+        thread.start()
 
-eventmgr = EventManager()
-register_event = eventmgr.register_events
-register_events = eventmgr.register_events
-subscribe_to_event = eventmgr.subscribe_to_event
-subscribe_to_events = eventmgr.subscribe_to_events
-unsubscribe_from_event = eventmgr.unsubscribe_from_event
-add_listener = eventmgr.add_listener
-reset = eventmgr.reset
-fire = eventmgr.fire
-handler_loop = eventmgr.handler_loop
-end_of_events = eventmgr.end_of_events
-get_pending_failure = eventmgr.get_pending_failure
-
-
-def event(class_):
-    register_event(class_)
-    return class_
+        try:
+            yield
+        finally:
+            self._queue.put(None)
+            thread.join()
+            self._queue = None
 
 
 ###
@@ -139,32 +154,26 @@ class _ReportEvent(Event):
         self.report = report
 
 
-@event
 class TestSessionStartEvent(_ReportEvent):
     pass
 
 
-@event
 class TestSessionEndEvent(_ReportEvent):
     pass
 
 
-@event
 class TestSessionSetupStartEvent(Event):
     pass
 
 
-@event
 class TestSessionSetupEndEvent(Event):
     pass
 
 
-@event
 class TestSessionTeardownStartEvent(Event):
     pass
 
 
-@event
 class TestSessionTeardownEndEvent(Event):
     pass
 
@@ -182,32 +191,26 @@ class _SuiteEvent(Event):
         return "<Event type='%s' suite='%s'>" % (self.get_name(), self.suite.path)
 
 
-@event
 class SuiteStartEvent(_SuiteEvent):
     pass
 
 
-@event
 class SuiteEndEvent(_SuiteEvent):
     pass
 
 
-@event
 class SuiteSetupStartEvent(_SuiteEvent):
     pass
 
 
-@event
 class SuiteSetupEndEvent(_SuiteEvent):
     pass
 
 
-@event
 class SuiteTeardownStartEvent(_SuiteEvent):
     pass
 
 
-@event
 class SuiteTeardownEndEvent(_SuiteEvent):
     pass
 
@@ -225,46 +228,38 @@ class _TestEvent(Event):
         return "<Event type='%s' test='%s'>" % (self.get_name(), self.test.path)
 
 
-@event
 class TestStartEvent(_TestEvent):
     pass
 
 
-@event
 class TestEndEvent(_TestEvent):
     pass
 
 
-@event
 class TestSkippedEvent(_TestEvent):
     def __init__(self, test, reason):
         super(TestSkippedEvent, self).__init__(test)
         self.skipped_reason = reason
 
 
-@event
 class TestDisabledEvent(_TestEvent):
     def __init__(self, test, reason):
         super(TestDisabledEvent, self).__init__(test)
         self.disabled_reason = reason
 
 
-@event
 class TestSetupStartEvent(_TestEvent):
     pass
 
 
-@event
 class TestSetupEndEvent(_TestEvent):
     pass
 
 
-@event
 class TestTeardownStartEvent(_TestEvent):
     pass
 
 
-@event
 class TestTeardownEndEvent(_TestEvent):
     pass
 
@@ -279,7 +274,6 @@ class RuntimeEvent(Event):
         self.location = location
 
 
-@event
 class StepEvent(RuntimeEvent):
     def __init__(self, location, description, detached=False):
         super(StepEvent, self).__init__(location)
@@ -292,7 +286,6 @@ class StepEvent(RuntimeEvent):
         )
 
 
-@event
 class StepEndEvent(RuntimeEvent):
     def __init__(self, location, step):
         super(StepEndEvent, self).__init__(location)
@@ -300,12 +293,15 @@ class StepEndEvent(RuntimeEvent):
 
 
 class SteppedEvent(RuntimeEvent):
+    """
+    This event class cannot be instantiated directly and only serve has a base
+    class for all events happening within a step.
+    """
     def __init__(self, location, step):
         super(SteppedEvent, self).__init__(location)
         self.step = step
 
 
-@event
 class LogEvent(SteppedEvent):
     def __init__(self, location, step, level, message):
         super(LogEvent, self).__init__(location, step)
@@ -318,7 +314,6 @@ class LogEvent(SteppedEvent):
         )
 
 
-@event
 class CheckEvent(SteppedEvent):
     def __init__(self, location, step, description, outcome, details=None):
         super(CheckEvent, self).__init__(location, step)
@@ -333,7 +328,6 @@ class CheckEvent(SteppedEvent):
         )
 
 
-@event
 class LogAttachmentEvent(SteppedEvent):
     def __init__(self, location, step, path, filename, description, as_image):
         super(LogAttachmentEvent, self).__init__(location, step)
@@ -348,7 +342,6 @@ class LogAttachmentEvent(SteppedEvent):
         )
 
 
-@event
 class LogUrlEvent(SteppedEvent):
     def __init__(self, location, step, url, description):
         super(LogUrlEvent, self).__init__(location, step)
