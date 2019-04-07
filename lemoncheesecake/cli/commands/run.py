@@ -16,7 +16,6 @@ from lemoncheesecake.project import find_project_file, load_project_from_file, l
 from lemoncheesecake.reporting import filter_reporting_backends_by_capabilities, CAPABILITY_REPORTING_SESSION
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy
 from lemoncheesecake.runner import initialize_event_manager, run_suites
-from lemoncheesecake import events
 
 
 def build_fixture_registry(project, cli_args):
@@ -115,12 +114,14 @@ def run_project(project, cli_args):
         )
 
     # Initialize event manager
-    initialize_event_manager(suites, active_reporting_backends, report_dir, report_saving_strategy, nb_threads)
-    events.add_listener(project)
+    event_manager = initialize_event_manager(
+        suites, active_reporting_backends, report_dir, report_saving_strategy, nb_threads
+    )
+    event_manager.add_listener(project)
 
     # Run tests
     is_successful = run_suites(
-        suites, fixture_registry,
+        suites, fixture_registry, event_manager,
         force_disabled=cli_args.force_disabled, stop_on_failure=cli_args.stop_on_failure,
         nb_threads=nb_threads
     )

@@ -32,10 +32,10 @@ _runtime = None  # type: _Runtime
 _scheduled_fixtures = None  # type: ScheduledFixtures
 
 
-def initialize_runtime(report_dir, report):
+def initialize_runtime(event_manager, report_dir, report):
     global _runtime
-    _runtime = _Runtime(report_dir, report)
-    events.add_listener(_runtime)
+    _runtime = _Runtime(event_manager, report_dir, report)
+    event_manager.add_listener(_runtime)
 
 
 def initialize_fixtures_cache(scheduled_fixtures):
@@ -44,7 +44,8 @@ def initialize_fixtures_cache(scheduled_fixtures):
 
 
 class _Runtime(object):
-    def __init__(self, report_dir, report):
+    def __init__(self, event_manager, report_dir, report):
+        self.event_manager = event_manager
         self.report_dir = report_dir
         self.report = report
         self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
@@ -73,10 +74,10 @@ class _Runtime(object):
 
     def set_step(self, description, detached=False):
         self._local.step = description
-        events.fire(events.StepEvent(self._local.location, description, detached=detached))
+        self.event_manager.fire(events.StepEvent(self._local.location, description, detached=detached))
 
     def end_step(self, step):
-        events.fire(events.StepEndEvent(self._local.location, step))
+        self.event_manager.fire(events.StepEndEvent(self._local.location, step))
 
     def _get_step(self, step):
         return step if step is not None else self._local.step
@@ -84,15 +85,15 @@ class _Runtime(object):
     def log(self, level, content, step=None):
         if level == LOG_LEVEL_ERROR:
             self.mark_location_as_failed(self.location)
-        events.fire(events.LogEvent(self._local.location, self._get_step(step), level, content))
+        self.event_manager.fire(events.LogEvent(self._local.location, self._get_step(step), level, content))
 
     def log_check(self, description, outcome, details, step=None):
         if outcome is False:
             self.mark_location_as_failed(self.location)
-        events.fire(events.CheckEvent(self._local.location, self._get_step(step), description, outcome, details))
+        self.event_manager.fire(events.CheckEvent(self._local.location, self._get_step(step), description, outcome, details))
 
     def log_url(self, url, description, step=None):
-        events.fire(events.LogUrlEvent(self._local.location, self._get_step(step), url, description))
+        self.event_manager.fire(events.LogUrlEvent(self._local.location, self._get_step(step), url, description))
 
     @contextmanager
     def prepare_attachment(self, filename, description, as_image=False, step=None):
@@ -104,7 +105,7 @@ class _Runtime(object):
 
         yield os.path.join(self.attachments_dir, attachment_filename)
 
-        events.fire(events.LogAttachmentEvent(
+        self.event_manager.fire(events.LogAttachmentEvent(
             self._local.location, self._get_step(step), "%s/%s" % (ATTACHEMENT_DIR, attachment_filename),
             filename, description, as_image
         ))

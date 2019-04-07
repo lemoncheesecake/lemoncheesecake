@@ -1,3 +1,4 @@
+import sys
 import time
 import re
 import inspect
@@ -55,7 +56,27 @@ class EventManager:
         self._queue = Queue()
         self._pending_failure = None, None
 
-    def register_events(self, *event_classes):
+    @staticmethod
+    def _get_event_classes():
+        """
+        Get available event classes by introspecting this module to get available event classes.
+        """
+        current_module = sys.modules[__name__]
+        for sym_name in dir(current_module):
+            if sym_name.startswith("_"):
+                continue
+            sym = getattr(current_module, sym_name)
+            if inspect.isclass(sym) and sym is not Event and issubclass(sym, Event):
+                yield sym
+
+    @classmethod
+    def load(cls):
+        eventmgr = cls()
+        for event_class in eventmgr._get_event_classes():
+            eventmgr.register_event(event_class)
+        return eventmgr
+
+    def register_event(self, *event_classes):
         for event_class in event_classes:
             self._event_types[event_class.get_name()] = EventType(event_class)
 
@@ -110,25 +131,6 @@ class EventManager:
         return self._pending_failure
 
 
-eventmgr = EventManager()
-register_event = eventmgr.register_events
-register_events = eventmgr.register_events
-subscribe_to_event = eventmgr.subscribe_to_event
-subscribe_to_events = eventmgr.subscribe_to_events
-unsubscribe_from_event = eventmgr.unsubscribe_from_event
-add_listener = eventmgr.add_listener
-reset = eventmgr.reset
-fire = eventmgr.fire
-handler_loop = eventmgr.handler_loop
-end_of_events = eventmgr.end_of_events
-get_pending_failure = eventmgr.get_pending_failure
-
-
-def event(class_):
-    register_event(class_)
-    return class_
-
-
 ###
 # Events related to the test session
 ###
@@ -139,32 +141,26 @@ class _ReportEvent(Event):
         self.report = report
 
 
-@event
 class TestSessionStartEvent(_ReportEvent):
     pass
 
 
-@event
 class TestSessionEndEvent(_ReportEvent):
     pass
 
 
-@event
 class TestSessionSetupStartEvent(Event):
     pass
 
 
-@event
 class TestSessionSetupEndEvent(Event):
     pass
 
 
-@event
 class TestSessionTeardownStartEvent(Event):
     pass
 
 
-@event
 class TestSessionTeardownEndEvent(Event):
     pass
 
@@ -182,32 +178,26 @@ class _SuiteEvent(Event):
         return "<Event type='%s' suite='%s'>" % (self.get_name(), self.suite.path)
 
 
-@event
 class SuiteStartEvent(_SuiteEvent):
     pass
 
 
-@event
 class SuiteEndEvent(_SuiteEvent):
     pass
 
 
-@event
 class SuiteSetupStartEvent(_SuiteEvent):
     pass
 
 
-@event
 class SuiteSetupEndEvent(_SuiteEvent):
     pass
 
 
-@event
 class SuiteTeardownStartEvent(_SuiteEvent):
     pass
 
 
-@event
 class SuiteTeardownEndEvent(_SuiteEvent):
     pass
 
@@ -225,46 +215,38 @@ class _TestEvent(Event):
         return "<Event type='%s' test='%s'>" % (self.get_name(), self.test.path)
 
 
-@event
 class TestStartEvent(_TestEvent):
     pass
 
 
-@event
 class TestEndEvent(_TestEvent):
     pass
 
 
-@event
 class TestSkippedEvent(_TestEvent):
     def __init__(self, test, reason):
         super(TestSkippedEvent, self).__init__(test)
         self.skipped_reason = reason
 
 
-@event
 class TestDisabledEvent(_TestEvent):
     def __init__(self, test, reason):
         super(TestDisabledEvent, self).__init__(test)
         self.disabled_reason = reason
 
 
-@event
 class TestSetupStartEvent(_TestEvent):
     pass
 
 
-@event
 class TestSetupEndEvent(_TestEvent):
     pass
 
 
-@event
 class TestTeardownStartEvent(_TestEvent):
     pass
 
 
-@event
 class TestTeardownEndEvent(_TestEvent):
     pass
 
@@ -279,7 +261,6 @@ class RuntimeEvent(Event):
         self.location = location
 
 
-@event
 class StepEvent(RuntimeEvent):
     def __init__(self, location, description, detached=False):
         super(StepEvent, self).__init__(location)
@@ -292,7 +273,6 @@ class StepEvent(RuntimeEvent):
         )
 
 
-@event
 class StepEndEvent(RuntimeEvent):
     def __init__(self, location, step):
         super(StepEndEvent, self).__init__(location)
@@ -300,12 +280,15 @@ class StepEndEvent(RuntimeEvent):
 
 
 class SteppedEvent(RuntimeEvent):
+    """
+    This event class cannot be instantiated directly and only serve has a base
+    class for all events happening within a step.
+    """
     def __init__(self, location, step):
         super(SteppedEvent, self).__init__(location)
         self.step = step
 
 
-@event
 class LogEvent(SteppedEvent):
     def __init__(self, location, step, level, message):
         super(LogEvent, self).__init__(location, step)
@@ -318,7 +301,6 @@ class LogEvent(SteppedEvent):
         )
 
 
-@event
 class CheckEvent(SteppedEvent):
     def __init__(self, location, step, description, outcome, details=None):
         super(CheckEvent, self).__init__(location, step)
@@ -333,7 +315,6 @@ class CheckEvent(SteppedEvent):
         )
 
 
-@event
 class LogAttachmentEvent(SteppedEvent):
     def __init__(self, location, step, path, filename, description, as_image):
         super(LogAttachmentEvent, self).__init__(location, step)
@@ -348,7 +329,6 @@ class LogAttachmentEvent(SteppedEvent):
         )
 
 
-@event
 class LogUrlEvent(SteppedEvent):
     def __init__(self, location, step, url, description):
         super(LogUrlEvent, self).__init__(location, step)

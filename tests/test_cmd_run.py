@@ -105,7 +105,6 @@ def test_pre_run(tmpdir):
             marker.append(cli_args.command)
 
     project = Project(ProjectConfig([DUMMY_SUITE]), tmpdir.strpath)
-    events.reset()
     run_project(project, build_cli_args(["run"]))
 
     assert marker == ["run"]
@@ -119,7 +118,6 @@ def test_post_run(tmpdir):
             marker.append(cli_args.command)
 
     project = Project(ProjectConfig([DUMMY_SUITE]), tmpdir.strpath)
-    events.reset()
     run_project(project, build_cli_args(["run"]))
 
     assert marker == ["run"]

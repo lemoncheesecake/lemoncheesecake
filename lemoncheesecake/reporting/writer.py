@@ -5,10 +5,9 @@ Created on Jan 24, 2016
 '''
 
 from lemoncheesecake.reporting.report import *
-from lemoncheesecake import events
 from lemoncheesecake.exceptions import ProgrammingError
 
-__all__ = "ReportWriter", "initialize_report_writer"
+__all__ = "ReportWriter",
 
 
 class ReportWriter:
@@ -209,9 +208,3 @@ class ReportWriter:
         self._add_step_entry(
             UrlData(event.url_description, event.url), event
         )
-
-
-def initialize_report_writer(report):
-    writer = ReportWriter(report)
-    events.add_listener(writer)
-    return writer
