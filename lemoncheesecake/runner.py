@@ -540,19 +540,12 @@ def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, eve
     tasks = build_tasks(suites, fixture_registry, session_scheduled_fixtures)
     context = RunContext(event_manager, fixture_registry, force_disabled, stop_on_failure)
 
-    # start event handler thread
-    event_handler_thread = threading.Thread(target=event_manager.handler_loop)
-    event_handler_thread.start()
-
     report = get_report()
-    try:
+
+    with event_manager.handle_events():
         event_manager.fire(events.TestSessionStartEvent(report))
         run_tasks(tasks, context, nb_threads, context.watchdog)
         event_manager.fire(events.TestSessionEndEvent(report))
-    finally:
-        # wait for event handler to finish
-        event_manager.end_of_events()
-        event_handler_thread.join()
 
     exception, serialized_exception = event_manager.get_pending_failure()
     if exception:
@@ -606,7 +599,7 @@ def run_suites(suites, fixture_registry, event_manager, force_disabled=False, st
 
 
 def initialize_event_manager(suites, reporting_backends, report_dir, report_saving_strategy, nb_threads):
-    event_manager = events.EventManager.load()
+    event_manager = events.AsyncEventManager.load()
 
     report = Report()
     report.nb_threads = nb_threads

@@ -1,9 +1,4 @@
-from lemoncheesecake.events import EventManager, Event
-
-
-def process_events(eventmgr):
-    eventmgr.end_of_events()
-    eventmgr.handler_loop()
+from lemoncheesecake.events import AsyncEventManager, Event
 
 
 class MyEvent(Event):
@@ -12,39 +7,26 @@ class MyEvent(Event):
         self.val = val
 
 
-def test_fire():
+def test_async_fire():
     i_got_called = []
     def handler(event):
         i_got_called.append(event.val)
-    eventmgr = EventManager()
+    eventmgr = AsyncEventManager()
     eventmgr.register_event(MyEvent)
     eventmgr.subscribe_to_event(MyEvent, handler)
-    eventmgr.fire(MyEvent(42))
-    process_events(eventmgr)
-    assert i_got_called[0] == 42
+    with eventmgr.handle_events():
+        eventmgr.fire(MyEvent(42))
+    assert i_got_called
 
 
 def test_unsubscribe():
     i_got_called = []
     def handler(event):
         i_got_called.append(event.val)
-    eventmgr = EventManager()
+    eventmgr = AsyncEventManager()
     eventmgr.register_event(MyEvent)
     eventmgr.subscribe_to_event(MyEvent, handler)
     eventmgr.unsubscribe_from_event(MyEvent, handler)
-    eventmgr.fire(MyEvent(42))
-    process_events(eventmgr)
-    assert len(i_got_called) == 0
-
-
-def test_reset():
-    i_got_called = []
-    def handler(event):
-        i_got_called.append(event.val)
-    eventmgr = EventManager()
-    eventmgr.register_event(MyEvent)
-    eventmgr.subscribe_to_event(MyEvent, handler)
-    eventmgr.reset()
-    eventmgr.fire(MyEvent(42))
-    process_events(eventmgr)
-    assert len(i_got_called) == 0
+    with eventmgr.handle_events():
+        eventmgr.fire(MyEvent(42))
+    assert not i_got_called
