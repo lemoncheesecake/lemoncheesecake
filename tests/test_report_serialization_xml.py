@@ -21,6 +21,10 @@ else:
     def backend():
         return XmlBackend()
 
+    @pytest.fixture()
+    def serialization_tester():
+        return do_test_serialization
+
     def test_load_report_non_xml(tmpdir):
         file = tmpdir.join("report.xml")
         file.write("foobar")

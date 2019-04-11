@@ -39,17 +39,17 @@ def do_test_serialization(suites_or_report, backend, tmpdir, fixtures=(), report
     assert_report(unserialized_report, report)
 
 
-def test_simple_test(backend, tmpdir, report_saving_strategy=None):
+def test_simple_test(backend, serialization_tester, tmpdir, report_saving_strategy=None):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             lcc.check_that("foo", 1, lcc.equal_to(1))
 
-    do_test_serialization(MySuite, backend, tmpdir, report_saving_strategy=report_saving_strategy)
+    serialization_tester(MySuite, backend, tmpdir, report_saving_strategy=report_saving_strategy)
 
 
-def test_test_with_all_metadata(backend, tmpdir):
+def test_test_with_all_metadata(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.link("http://foo.bar", "foobar")
@@ -59,10 +59,10 @@ def test_test_with_all_metadata(backend, tmpdir):
         def sometest(self):
             lcc.check_that("foo", 1, lcc.equal_to(1))
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_suite_with_all_metadata(backend, tmpdir):
+def test_suite_with_all_metadata(backend, serialization_tester, tmpdir):
     @lcc.link("http://foo.bar", "foobar")
     @lcc.prop("foo", "bar")
     @lcc.tags("foo", "bar")
@@ -72,10 +72,10 @@ def test_suite_with_all_metadata(backend, tmpdir):
         def sometest(self):
             lcc.check_that("foo", 1, lcc.equal_to(1))
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_link_without_name(backend, tmpdir):
+def test_link_without_name(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     @lcc.link("http://foo.bar")
     class MySuite:
@@ -84,10 +84,10 @@ def test_link_without_name(backend, tmpdir):
         def sometest(self):
             pass
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_unicode(backend, tmpdir):
+def test_unicode(backend, serialization_tester, tmpdir):
     @lcc.link("http://foo.bar", u"éééààà")
     @lcc.prop(u"ééé", u"ààà")
     @lcc.tags(u"ééé", u"ààà")
@@ -104,10 +104,10 @@ def test_unicode(backend, tmpdir):
             lcc.save_attachment_content("A" * 1024, u"somefileààà", u"éééààà")
             lcc.log_url("http://example.com", "example")
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_multiple_suites_and_tests(backend, tmpdir):
+def test_multiple_suites_and_tests(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite1")
     class MySuite1:
         @lcc.tags("foo")
@@ -152,66 +152,66 @@ def test_multiple_suites_and_tests(backend, tmpdir):
             @lcc.prop("foo", "baz")
             @lcc.test("Some test 2")
             def test_3_2(self):
-                raise lcc.AbortTest()
+                raise lcc.AbortTest("")
 
             @lcc.test("Some test 3")
             def test_3_3(self):
                 lcc.check_that("foo", 1, lcc.equal_to(1))
 
-    do_test_serialization((MySuite1, MySuite2), backend, tmpdir)
+    serialization_tester((MySuite1, MySuite2), backend, tmpdir)
 
 
-def test_check_success(backend, tmpdir):
+def test_check_success(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
             lcc.check_that("somevalue", "foo", lcc.equal_to("foo"))
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_check_failure(backend, tmpdir):
+def test_check_failure(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
             lcc.check_that("somevalue", "foo", lcc.equal_to("bar"))
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_require_success(backend, tmpdir):
+def test_require_success(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
             lcc.require_that("somevalue", "foo", lcc.equal_to("foo"))
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_require_failure(backend, tmpdir):
+def test_require_failure(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
             lcc.require_that("somevalue", "foo", lcc.equal_to("bar"))
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_assert_failure(backend, tmpdir):
+def test_assert_failure(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
             lcc.assert_that("somevalue", "foo", lcc.equal_to("bar"))
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_all_types_of_logs(backend, tmpdir):
+def test_all_types_of_logs(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Test 1")
@@ -224,10 +224,10 @@ def test_all_types_of_logs(backend, tmpdir):
         def test_2(self):
             lcc.log_error("some error message")
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_multiple_steps(backend, tmpdir):
+def test_multiple_steps(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
@@ -237,40 +237,40 @@ def test_multiple_steps(backend, tmpdir):
             lcc.set_step("step 2")
             lcc.log_info("do something else")
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_attachment(backend, tmpdir):
+def test_attachment(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             lcc.save_attachment_content("foobar", "foobar.txt")
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_image(backend, tmpdir):
+def test_image(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             lcc.save_image_content("foobar", "foobar.txt")  # not actual image content, but it does not matter here
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_log_url(backend, tmpdir):
+def test_log_url(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
             lcc.log_url("http://www.example.com", "example")
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_setup_suite_success(backend, tmpdir):
+def test_setup_suite_success(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
         def setup_suite(self):
@@ -280,10 +280,10 @@ def test_setup_suite_success(backend, tmpdir):
         def sometest(self):
             pass
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_setup_suite_failure(backend, tmpdir):
+def test_setup_suite_failure(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
         def setup_suite(self):
@@ -293,11 +293,11 @@ def test_setup_suite_failure(backend, tmpdir):
         def sometest(self):
             pass
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
 # reproduce a bug introduced in 3e4d341
-def test_setup_suite_nested(backend, tmpdir):
+def test_setup_suite_nested(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.suite("MySubSuite")
@@ -309,10 +309,10 @@ def test_setup_suite_nested(backend, tmpdir):
             def sometest(self):
                 pass
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_teardown_suite_success(backend, tmpdir):
+def test_teardown_suite_success(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
@@ -322,10 +322,10 @@ def test_teardown_suite_success(backend, tmpdir):
         def teardown_suite(self):
             lcc.log_info("some log")
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_teardown_suite_failure(backend, tmpdir):
+def test_teardown_suite_failure(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
@@ -335,10 +335,10 @@ def test_teardown_suite_failure(backend, tmpdir):
         def teardown_suite(self):
             lcc.log_error("something bad happened")
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_setup_and_teardown_suite(backend, tmpdir):
+def test_setup_and_teardown_suite(backend, serialization_tester, tmpdir):
     @lcc.suite("MySuite")
     class MySuite:
         @lcc.test("Some test")
@@ -351,10 +351,10 @@ def test_setup_and_teardown_suite(backend, tmpdir):
         def teardown_suite(self):
             lcc.log_info("some other log")
 
-    do_test_serialization(MySuite, backend, tmpdir)
+    serialization_tester(MySuite, backend, tmpdir)
 
 
-def test_setup_test_session_success(backend, tmpdir):
+def test_setup_test_session_success(backend, serialization_tester, tmpdir):
     @lcc.fixture(scope="session")
     def fixt():
         lcc.log_info("some log")
@@ -365,10 +365,10 @@ def test_setup_test_session_success(backend, tmpdir):
         def sometest(self, fixt):
             pass
 
-    do_test_serialization(MySuite, backend, tmpdir, fixtures=[fixt])
+    serialization_tester(MySuite, backend, tmpdir, fixtures=[fixt])
 
 
-def test_setup_test_session_failure(backend, tmpdir):
+def test_setup_test_session_failure(backend, serialization_tester, tmpdir):
     @lcc.fixture(scope="session")
     def fixt():
         lcc.log_error("some error")
@@ -379,10 +379,10 @@ def test_setup_test_session_failure(backend, tmpdir):
         def sometest(self, fixt):
             pass
 
-    do_test_serialization(MySuite, backend, tmpdir, fixtures=[fixt])
+    serialization_tester(MySuite, backend, tmpdir, fixtures=[fixt])
 
 
-def test_teardown_test_session_success(backend, tmpdir):
+def test_teardown_test_session_success(backend, serialization_tester, tmpdir):
     @lcc.fixture(scope="session")
     def fixt():
         yield
@@ -394,10 +394,10 @@ def test_teardown_test_session_success(backend, tmpdir):
         def sometest(self, fixt):
             pass
 
-    do_test_serialization(MySuite, backend, tmpdir, fixtures=[fixt])
+    serialization_tester(MySuite, backend, tmpdir, fixtures=[fixt])
 
 
-def test_teardown_test_session_failure(backend, tmpdir):
+def test_teardown_test_session_failure(backend, serialization_tester, tmpdir):
     @lcc.fixture(scope="session")
     def fixt():
         yield
@@ -409,10 +409,10 @@ def test_teardown_test_session_failure(backend, tmpdir):
         def sometest(self, fixt):
             pass
 
-    do_test_serialization(MySuite, backend, tmpdir, fixtures=[fixt])
+    serialization_tester(MySuite, backend, tmpdir, fixtures=[fixt])
 
 
-def test_setup_and_teardown_test_session(backend, tmpdir):
+def test_setup_and_teardown_test_session(backend, serialization_tester, tmpdir):
     @lcc.fixture(scope="session")
     def fixt():
         lcc.log_info("some info")
@@ -425,10 +425,13 @@ def test_setup_and_teardown_test_session(backend, tmpdir):
         def sometest(self, fixt):
             pass
 
-    do_test_serialization(MySuite, backend, tmpdir, fixtures=[fixt])
+    serialization_tester(MySuite, backend, tmpdir, fixtures=[fixt])
 
 
 def test_report_title(backend, tmpdir):
+    if backend is None:
+        return  # test is not relevant
+
     report = Report()
     report.title = "Report Title"
     report.start_time = time.time()
@@ -445,6 +448,9 @@ def test_report_title(backend, tmpdir):
 
 
 def test_nb_threads(backend, tmpdir):
+    if backend is None:
+        return  # test is not relevant
+
     report = Report()
     report.nb_threads = 3
     report.start_time = time.time()
@@ -460,32 +466,32 @@ def test_nb_threads(backend, tmpdir):
     assert_report(unserialized_report, report)
 
 
-def test_report_in_progress(backend, tmpdir, report_in_progress):
-    do_test_serialization(report_in_progress, backend, tmpdir)
+def test_report_in_progress(backend, serialization_tester, tmpdir, report_in_progress):
+    serialization_tester(report_in_progress, backend, tmpdir)
 
 
  # TODO: see below, the behavior of each save mode is not tested in fact, but
 # at least we want to make sure that each of this mode is not failing
 
-def test_save_at_end_of_tests(backend, tmpdir):
-    test_simple_test(backend, tmpdir, None)
+def test_save_at_end_of_tests(backend, serialization_tester, tmpdir):
+    test_simple_test(backend, serialization_tester, tmpdir, None)
 
 
-def test_save_at_event(backend, tmpdir):
-    test_simple_test(backend, tmpdir, make_report_saving_strategy("at_each_event"))
+def test_save_at_event(backend, serialization_tester, tmpdir):
+    test_simple_test(backend, serialization_tester, tmpdir, make_report_saving_strategy("at_each_event"))
 
 
-def test_save_at_each_failed_test(backend, tmpdir):
-    test_simple_test(backend, tmpdir, make_report_saving_strategy("at_each_failed_test"))
+def test_save_at_each_failed_test(backend, serialization_tester, tmpdir):
+    test_simple_test(backend, serialization_tester, tmpdir, make_report_saving_strategy("at_each_failed_test"))
 
 
-def test_save_at_each_test(backend, tmpdir):
-    test_simple_test(backend, tmpdir, make_report_saving_strategy("at_each_test"))
+def test_save_at_each_test(backend, serialization_tester, tmpdir):
+    test_simple_test(backend, serialization_tester, tmpdir, make_report_saving_strategy("at_each_test"))
 
 
-def test_save_at_each_suite(backend, tmpdir):
-    test_simple_test(backend, tmpdir, make_report_saving_strategy("at_each_suite"))
+def test_save_at_each_suite(backend, serialization_tester, tmpdir):
+    test_simple_test(backend, serialization_tester, tmpdir, make_report_saving_strategy("at_each_suite"))
 
 
-def test_save_every_seconds(backend, tmpdir):
-    test_simple_test(backend, tmpdir, make_report_saving_strategy("every_1s"))
+def test_save_every_seconds(backend, serialization_tester, tmpdir):
+    test_simple_test(backend, serialization_tester, tmpdir, make_report_saving_strategy("every_1s"))

@@ -10,12 +10,12 @@ from six.moves.queue import Queue
 from lemoncheesecake.helpers.text import camel_case_to_snake_case
 from lemoncheesecake.exceptions import serialize_current_exception
 
-DEBUG = 0
+DEBUG = False
 
 
 class Event(object):
-    def __init__(self):
-        self.time = time.time()
+    def __init__(self, event_time=None):
+        self.time = event_time or time.time()
 
     @classmethod
     def get_name(cls):
@@ -146,6 +146,8 @@ class AsyncEventManager(BaseEventManager):
 
 class SyncEventManager(BaseEventManager):
     def fire(self, event):
+        if DEBUG:
+            print("Fire event %s" % event)
         return self.handle_event(event)
 
 
@@ -154,8 +156,8 @@ class SyncEventManager(BaseEventManager):
 ###
 
 class _ReportEvent(Event):
-    def __init__(self, report):
-        super(_ReportEvent, self).__init__()
+    def __init__(self, report, event_time=None):
+        super(_ReportEvent, self).__init__(event_time)
         self.report = report
 
 
@@ -188,8 +190,8 @@ class TestSessionTeardownEndEvent(Event):
 ###
 
 class _SuiteEvent(Event):
-    def __init__(self, suite):
-        super(_SuiteEvent, self).__init__()
+    def __init__(self, suite, event_time=None):
+        super(_SuiteEvent, self).__init__(event_time)
         self.suite = suite
 
     def __str__(self):
@@ -225,8 +227,8 @@ class SuiteTeardownEndEvent(_SuiteEvent):
 ###
 
 class _TestEvent(Event):
-    def __init__(self, test):
-        super(_TestEvent, self).__init__()
+    def __init__(self, test, event_time=None):
+        super(_TestEvent, self).__init__(event_time)
         self.test = test
 
     def __str__(self):
@@ -242,14 +244,14 @@ class TestEndEvent(_TestEvent):
 
 
 class TestSkippedEvent(_TestEvent):
-    def __init__(self, test, reason):
-        super(TestSkippedEvent, self).__init__(test)
+    def __init__(self, test, reason, event_time=None):
+        super(TestSkippedEvent, self).__init__(test, event_time)
         self.skipped_reason = reason
 
 
 class TestDisabledEvent(_TestEvent):
-    def __init__(self, test, reason):
-        super(TestDisabledEvent, self).__init__(test)
+    def __init__(self, test, reason, event_time=None):
+        super(TestDisabledEvent, self).__init__(test, event_time)
         self.disabled_reason = reason
 
 
@@ -274,14 +276,14 @@ class TestTeardownEndEvent(_TestEvent):
 ###
 
 class RuntimeEvent(Event):
-    def __init__(self, location):
-        super(RuntimeEvent, self).__init__()
+    def __init__(self, location, event_time=None):
+        super(RuntimeEvent, self).__init__(event_time)
         self.location = location
 
 
 class StepEvent(RuntimeEvent):
-    def __init__(self, location, description, detached=False):
-        super(StepEvent, self).__init__(location)
+    def __init__(self, location, description, detached=False, event_time=None):
+        super(StepEvent, self).__init__(location, event_time)
         self.step_description = description
         self.detached = detached
 
@@ -292,8 +294,8 @@ class StepEvent(RuntimeEvent):
 
 
 class StepEndEvent(RuntimeEvent):
-    def __init__(self, location, step):
-        super(StepEndEvent, self).__init__(location)
+    def __init__(self, location, step, event_time=None):
+        super(StepEndEvent, self).__init__(location, event_time)
         self.step = step
 
 
@@ -302,14 +304,14 @@ class SteppedEvent(RuntimeEvent):
     This event class cannot be instantiated directly and only serve has a base
     class for all events happening within a step.
     """
-    def __init__(self, location, step):
-        super(SteppedEvent, self).__init__(location)
+    def __init__(self, location, step, event_time=None):
+        super(SteppedEvent, self).__init__(location, event_time)
         self.step = step
 
 
 class LogEvent(SteppedEvent):
-    def __init__(self, location, step, level, message):
-        super(LogEvent, self).__init__(location, step)
+    def __init__(self, location, step, level, message, event_time=None):
+        super(LogEvent, self).__init__(location, step, event_time)
         self.log_level = level
         self.log_message = message
 
@@ -320,8 +322,8 @@ class LogEvent(SteppedEvent):
 
 
 class CheckEvent(SteppedEvent):
-    def __init__(self, location, step, description, outcome, details=None):
-        super(CheckEvent, self).__init__(location, step)
+    def __init__(self, location, step, description, outcome, details=None, event_time=None):
+        super(CheckEvent, self).__init__(location, step, event_time)
         self.check_description = description
         self.check_outcome = outcome
         self.check_details = details
@@ -334,22 +336,21 @@ class CheckEvent(SteppedEvent):
 
 
 class LogAttachmentEvent(SteppedEvent):
-    def __init__(self, location, step, path, filename, description, as_image):
-        super(LogAttachmentEvent, self).__init__(location, step)
+    def __init__(self, location, step, path, description, as_image, event_time=None):
+        super(LogAttachmentEvent, self).__init__(location, step, event_time)
         self.attachment_path = path
-        self.attachment_filename = filename
         self.attachment_description = description
         self.as_image = as_image
 
     def __str__(self):
-        return "<Event type='%s' filename='%s' description='%s'>" % (
-            self.get_name(), self.attachment_filename, self.attachment_description
+        return "<Event type='%s' path='%s' description='%s'>" % (
+            self.get_name(), self.attachment_path, self.attachment_description
         )
 
 
 class LogUrlEvent(SteppedEvent):
-    def __init__(self, location, step, url, description):
-        super(LogUrlEvent, self).__init__(location, step)
+    def __init__(self, location, step, url, description, event_time=None):
+        super(LogUrlEvent, self).__init__(location, step, event_time)
         self.url = url
         self.url_description = description
 
