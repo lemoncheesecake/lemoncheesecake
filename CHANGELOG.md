@@ -1,3 +1,11 @@
+# 0.22.8 (2019-04-14)
+
+- **ReportPortal**: the reporting backend now supports parallelized tests
+- **under the hood**: the EventManager is no longer a global instance, two event
+  manager implementations now exist: AsyncEventManager and SyncEventManager
+- **under the hood**: suite's start/end times, as well as checks, attachments and urls times
+  are now stored in JSON and XML report data
+
 # 0.22.7 (2019-03-11)
 
 - Fix: make all commands that use a report (``lcc diff``, ``lcc report``, ``lcc top-*``)
