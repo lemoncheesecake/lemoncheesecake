@@ -38,12 +38,8 @@ def pop_runnable_tasks(remaining_tasks, completed_tasks, nb_tasks):
     runnable_tasks = [
         task for task in remaining_tasks if set(task.get_all_dependencies()).issubset(completed_tasks)
     ]
-    # return the tasks with the greater number of dependencies first
-    runnable_tasks_by_priority = sorted(
-        runnable_tasks, key=lambda task: len(task.get_all_dependencies()), reverse=True
-    )
 
-    for task in runnable_tasks_by_priority[:nb_tasks]:
+    for task in runnable_tasks[:nb_tasks]:
         remaining_tasks.remove(task)
         _debug("pop runnable task %s" % task)
         yield task
