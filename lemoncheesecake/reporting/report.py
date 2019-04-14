@@ -179,30 +179,12 @@ class HookData(ResultData):
 class SuiteData(BaseSuite):
     def __init__(self, name, description):
         BaseSuite.__init__(self, name, description)
+        self.start_time = None  # type: Union[None, float]
+        self.end_time = None  # type: Union[None, float]
         self.suite_setup = None  # type: Union[None, HookData]
         self.suite_teardown = None  # type: Union[None, HookData]
         # non-serialized attributes (only set in-memory during test execution)
         self.rank = 0
-
-    @property
-    def start_time(self):
-        # type: () -> Union[None, float]
-        if self.suite_setup:
-            return self.suite_setup.start_time
-        elif len(self.get_tests()) > 0:
-            return self.get_tests()[0].start_time
-        else:
-            return None
-
-    @property
-    def end_time(self):
-        # type: () -> Union[None, float]
-        if self.suite_teardown:
-            return self.suite_teardown.end_time
-        elif len(self.get_tests()) > 0:
-            return self.get_tests()[-1].end_time
-        else:
-            return None
 
     @property
     def duration(self):

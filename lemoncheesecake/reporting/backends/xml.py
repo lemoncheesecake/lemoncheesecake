@@ -145,6 +145,8 @@ def _serialize_hook_data(data, node):
 
 def _serialize_suite_data(suite):
     suite_node = make_xml_node("suite", "name", suite.name, "description", suite.description)
+    _add_time_attr(suite_node, "start-time", suite.start_time)
+    _add_time_attr(suite_node, "end-time", suite.end_time)
     for tag in suite.tags:
         tag_node = make_xml_child(suite_node, "tag")
         tag_node.text = tag
@@ -294,6 +296,8 @@ def _unserialize_hook_data(xml):
 
 def _unserialize_suite_data(xml):
     suite = SuiteData(xml.attrib["name"], xml.attrib["description"])
+    suite.start_time = _unserialize_datetime(xml.attrib["start-time"])
+    suite.end_time = _unserialize_datetime(xml.attrib["end-time"]) if "end-time" in xml.attrib else None
     suite.tags = [node.text for node in xml.xpath("tag")]
     suite.properties = {node.attrib["name"]: node.text for node in xml.xpath("property")}
     suite.links = [(link.text, link.attrib.get("name", None)) for link in xml.xpath("link")]

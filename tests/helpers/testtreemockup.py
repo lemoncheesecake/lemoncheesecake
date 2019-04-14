@@ -10,7 +10,9 @@ def _make_tree_node_attrs(name, kwargs):
         "description": kwargs.get("description", name.title()),
         "tags": kwargs.get("tags", []),
         "properties": kwargs.get("properties", {}),
-        "links": kwargs.get("links", [])
+        "links": kwargs.get("links", []),
+        "start_time": kwargs.get("start_time", None),
+        "end_time": kwargs.get("end_time", None)
     }
 
 
@@ -54,9 +56,11 @@ def make_step_data_from_mockup(mockup):
 
 
 class TreeNodeMockup:
-    def __init__(self, name, description, tags, properties, links):
+    def __init__(self, name, description, tags, properties, links, start_time, end_time):
         self.name = name
         self.description = description
+        self.start_time = start_time
+        self.end_time = end_time
         self.tags = tags[:]
         self.properties = dict(properties)
         self.links = links[:]
@@ -64,9 +68,7 @@ class TreeNodeMockup:
 
 class TestMockup(TreeNodeMockup):
     def __init__(self, name, description, tags, properties, links, status, start_time, end_time):
-        TreeNodeMockup.__init__(self, name, description, tags, properties, links)
-        self.start_time = start_time
-        self.end_time = end_time
+        TreeNodeMockup.__init__(self, name, description, tags, properties, links, start_time, end_time)
         self.status = status
         self.steps = []
 
@@ -87,8 +89,6 @@ def tst_mockup(name=None, **kwargs):
 
     attrs = _make_tree_node_attrs(name, kwargs)
     attrs["status"] = kwargs.get("status", "passed")
-    attrs["start_time"] = kwargs.get("start_time", None)
-    attrs["end_time"] = kwargs.get("end_time", None)
 
     return TestMockup(name, **attrs)
 
@@ -183,6 +183,8 @@ def make_test_data_from_mockup(mockup):
 
 def make_suite_data_from_mockup(mockup):
     data = SuiteData(mockup.name, mockup.description)
+    data.start_time = mockup.start_time if mockup.start_time is not None else NOW
+    data.end_time = mockup.end_time if mockup.end_time is not None else NOW
     data.suite_setup = make_hook_data_from_mockup(mockup.setup)
     data.suite_teardown = make_hook_data_from_mockup(mockup.teardown)
     for test_mockup in mockup.tests:

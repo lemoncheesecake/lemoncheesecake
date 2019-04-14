@@ -88,6 +88,8 @@ def _serialize_hook_data(hook_data):
 def _serialize_suite_data(suite):
     json_suite = _serialize_common_data(suite)
     json_suite.update(_dict(
+        "start_time", _serialize_time(suite.start_time),
+        "end_time", _serialize_time(suite.end_time),
         "tests", [_serialize_test_data(t) for t in suite.get_tests()],
         "suites", [_serialize_suite_data(s) for s in suite.get_suites()]
     ))
@@ -178,6 +180,8 @@ def _unserialize_hook_data(js):
 
 def _unserialize_suite_data(js):
     suite = SuiteData(js["name"], js["description"])
+    suite.start_time = parse_timestamp(js["start_time"])
+    suite.end_time = parse_timestamp(js["end_time"]) if js["end_time"] else None
     suite.tags = js["tags"]
     suite.properties = js["properties"]
     suite.links = [(link["url"], link["name"]) for link in js["links"]]
