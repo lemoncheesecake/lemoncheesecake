@@ -18,19 +18,27 @@ class EventReplayer(object):
         for entry in step.entries:
             if isinstance(entry, LogData):
                 self.eventmgr.fire(
-                    events.LogEvent(location, step.description, entry.level, entry.message, entry.time)
+                    events.LogEvent(
+                        location, step.description, entry.level, entry.message, entry.time
+                    )
                 )
             elif isinstance(entry, AttachmentData):
                 self.eventmgr.fire(
-                    events.LogAttachmentEvent(location, step.description, entry.filename, entry.description, entry.as_image)
+                    events.LogAttachmentEvent(
+                        location, step.description, entry.filename, entry.description, entry.as_image, entry.time
+                    )
                 )
             elif isinstance(entry, UrlData):
                 self.eventmgr.fire(
-                    events.LogUrlEvent(location, step.description, entry.url, entry.description)
+                    events.LogUrlEvent(
+                        location, step.description, entry.url, entry.description, entry.time
+                    )
                 )
             elif isinstance(entry, CheckData):
                 self.eventmgr.fire(
-                    events.CheckEvent(location, step.description, entry.description, entry.outcome, entry.details)
+                    events.CheckEvent(
+                        location, step.description, entry.description, entry.outcome, entry.details, entry.time
+                    )
                 )
             else:
                 raise LemonCheesecakeInternalError("Unknown step entry %s" % entry)

@@ -184,6 +184,7 @@ def assert_check_data(actual, expected):
     assert actual.description == expected.description
     assert actual.outcome == expected.outcome
     assert actual.details == expected.details
+    assert_time(actual.time, expected.time)
 
 
 def assert_log_data(actual, expected):
@@ -196,11 +197,13 @@ def assert_attachment_data(actual, expected):
     assert actual.description == expected.description
     assert actual.filename == expected.filename
     assert actual.as_image == expected.as_image
+    assert_time(actual.time, expected.time)
 
 
 def assert_url_data(actual, expected):
     assert actual.description == expected.description
     assert actual.url == expected.url
+    assert_time(actual.time, expected.time)
 
 
 def assert_step_data(actual, expected):

@@ -44,13 +44,35 @@ def _serialize_steps(steps):
         json_steps.append(json_step)
         for entry in step.entries:
             if isinstance(entry, LogData):
-                entry = _dict("type", "log", "level", entry.level, "message", entry.message, "time", _serialize_time(entry.time))
+                entry = _dict(
+                    "type", "log",
+                    "level", entry.level,
+                    "message", entry.message,
+                    "time", _serialize_time(entry.time)
+                )
             elif isinstance(entry, AttachmentData):
-                entry = _dict("type", "attachment", "description", entry.description, "filename", entry.filename, "as_image", entry.as_image)
+                entry = _dict(
+                    "type", "attachment",
+                    "description", entry.description,
+                    "filename", entry.filename,
+                    "as_image", entry.as_image,
+                    "time", _serialize_time(entry.time)
+                )
             elif isinstance(entry, UrlData):
-                entry = _dict("type", "url", "description", entry.description, "url", entry.url)
+                entry = _dict(
+                    "type", "url",
+                    "description", entry.description,
+                    "url", entry.url,
+                    "time", _serialize_time(entry.time)
+                )
             else:  # TestCheck
-                entry = _dict("type", "check", "description", entry.description, "outcome", entry.outcome, "details", entry.details)
+                entry = _dict(
+                    "type", "check",
+                    "description", entry.description,
+                    "outcome", entry.outcome,
+                    "details", entry.details,
+                    "time", _serialize_time(entry.time)
+                )
             json_step["entries"].append(entry)
     return json_steps
 
@@ -142,13 +164,21 @@ def _unserialize_step_data(js):
     step.end_time = parse_timestamp(js["end_time"]) if js["end_time"] else None
     for js_entry in js["entries"]:
         if js_entry["type"] == "log":
-            entry = LogData(js_entry["level"], js_entry["message"], parse_timestamp(js_entry["time"]))
+            entry = LogData(
+                js_entry["level"], js_entry["message"], parse_timestamp(js_entry["time"])
+            )
         elif js_entry["type"] == "attachment":
-            entry = AttachmentData(js_entry["description"], js_entry["filename"], js_entry["as_image"])
+            entry = AttachmentData(
+                js_entry["description"], js_entry["filename"], js_entry["as_image"], parse_timestamp(js_entry["time"])
+            )
         elif js_entry["type"] == "url":
-            entry = UrlData(js_entry["description"], js_entry["url"])
+            entry = UrlData(
+                js_entry["description"], js_entry["url"], parse_timestamp(js_entry["time"])
+            )
         elif js_entry["type"] == "check":
-            entry = CheckData(js_entry["description"], js_entry["outcome"], js_entry["details"])
+            entry = CheckData(
+                js_entry["description"], js_entry["outcome"], js_entry["details"], parse_timestamp(js_entry["time"])
+            )
         else:
             raise ProgrammingError("Unknown entry type '%s'" % js_entry["type"])
         step.entries.append(entry)

@@ -70,32 +70,35 @@ class LogData:
 
 
 class CheckData:
-    def __init__(self, description, outcome, details=None):
-        # type: (str, bool, Union[None, str]) -> None
+    def __init__(self, description, outcome, details, ts):
+        # type: (str, bool, Union[None, str], float) -> None
         self.description = description
         self.outcome = outcome
         self.details = details
+        self.time = ts
 
     def is_successful(self):
         return self.outcome
 
 
 class AttachmentData:
-    def __init__(self, description, filename, as_image):
-        # type: (str, str, bool) -> None
+    def __init__(self, description, filename, as_image, ts):
+        # type: (str, str, bool, float) -> None
         self.description = description
         self.filename = filename
         self.as_image = as_image
+        self.time = ts
 
     def is_successful(self):
         return True
 
 
 class UrlData:
-    def __init__(self, description, url):
-        # type: (str, str) -> None
+    def __init__(self, description, url, ts):
+        # type: (str, str, float) -> None
         self.description = description
         self.url = url
+        self.time = ts
 
     def is_successful(self):
         return True

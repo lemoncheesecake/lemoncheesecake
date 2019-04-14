@@ -201,15 +201,15 @@ class ReportWriter:
 
     def on_check(self, event):
         self._add_step_entry(
-            CheckData(event.check_description, event.check_outcome, event.check_details), event
+            CheckData(event.check_description, event.check_outcome, event.check_details, event.time), event
         )
 
     def on_log_attachment(self, event):
         self._add_step_entry(
-            AttachmentData(event.attachment_description, event.attachment_path, event.as_image), event
+            AttachmentData(event.attachment_description, event.attachment_path, event.as_image, event.time), event
         )
 
     def on_log_url(self, event):
         self._add_step_entry(
-            UrlData(event.url_description, event.url), event
+            UrlData(event.url_description, event.url, event.time), event
         )

@@ -95,22 +95,33 @@ def _serialize_steps(steps, parent_node):
         _add_time_attr(step_node, "end-time", step.end_time)
         for entry in step.entries:
             if isinstance(entry, LogData):
-                log_node = make_xml_child(step_node, "log", "level", entry.level)
-                _add_time_attr(log_node, "time", entry.time)
+                log_node = make_xml_child(
+                    step_node, "log",
+                    "level", entry.level,
+                    "time", format_timestamp(entry.time)
+                )
                 log_node.text = entry.message
             elif isinstance(entry, AttachmentData):
                 attachment_node = make_xml_child(
-                    step_node, "attachment", "description", entry.description,
-                    "as-image", _serialize_bool(entry.as_image)
+                    step_node, "attachment",
+                    "description", entry.description,
+                    "as-image", _serialize_bool(entry.as_image),
+                    "time", format_timestamp(entry.time)
                 )
                 attachment_node.text = entry.filename
             elif isinstance(entry, UrlData):
-                url_node = make_xml_child(step_node, "url", "description", entry.description)
+                url_node = make_xml_child(
+                    step_node, "url",
+                    "description", entry.description,
+                    "time", format_timestamp(entry.time)
+                )
                 url_node.text = entry.url
             else:  # TestCheck
                 check_node = make_xml_child(
-                    step_node, "check", "description", entry.description,
-                    "outcome", _serialize_outcome(entry.outcome)
+                    step_node, "check",
+                    "description", entry.description,
+                    "outcome", _serialize_outcome(entry.outcome),
+                    "time", format_timestamp(entry.time)
                 )
                 check_node.text = entry.details
 
@@ -257,15 +268,24 @@ def _unserialize_step_data(xml):
     step.end_time = _unserialize_datetime(xml.attrib["end-time"]) if "end-time" in xml.attrib else None
     for xml_entry in xml:
         if xml_entry.tag == "log":
-            entry = LogData(xml_entry.attrib["level"], xml_entry.text, _unserialize_datetime(xml_entry.attrib["time"]))
+            entry = LogData(
+                xml_entry.attrib["level"], xml_entry.text, _unserialize_datetime(xml_entry.attrib["time"])
+            )
         elif xml_entry.tag == "attachment":
-            entry = AttachmentData(xml_entry.attrib["description"], xml_entry.text,
-                                   _unserialize_bool(xml_entry.attrib["as-image"]))
+            entry = AttachmentData(
+                xml_entry.attrib["description"], xml_entry.text,
+                _unserialize_bool(xml_entry.attrib["as-image"]),
+                _unserialize_datetime(xml_entry.attrib["time"])
+            )
         elif xml_entry.tag == "url":
-            entry = UrlData(xml_entry.attrib["description"], xml_entry.text)
+            entry = UrlData(
+                xml_entry.attrib["description"], xml_entry.text, _unserialize_datetime(xml_entry.attrib["time"])
+            )
         elif xml_entry.tag == "check":
-            entry = CheckData(xml_entry.attrib["description"], _unserialize_outcome(xml_entry.attrib["outcome"]),
-                              xml_entry.text)
+            entry = CheckData(
+                xml_entry.attrib["description"], _unserialize_outcome(xml_entry.attrib["outcome"]),
+                xml_entry.text, _unserialize_datetime(xml_entry.attrib["time"])
+            )
         else:
             raise ProgrammingError("Unknown tag '%s' for step" % xml_entry.tag)
         step.entries.append(entry)
