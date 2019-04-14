@@ -27,6 +27,7 @@ def make_report_in_progress():
     report.test_session_teardown = HookData()
     report.test_session_teardown.start_time = now
     suite = SuiteData("suite", "suite")
+    suite.start_time = now
     report.add_suite(suite)
     
     suite.suite_setup = HookData()
@@ -128,6 +129,10 @@ def get_last_attachment(report):
     return next(entry for entry in reversed(test.steps[-1].entries) if isinstance(entry, reporting.AttachmentData))
 
 
+def assert_time(actual, expected):
+    assert round(actual, 3) == round(expected, 3)
+
+
 def assert_attachment(attachment, filename, description, as_image, content, file_reader):
     assert attachment.filename.endswith(filename)
     assert attachment.description == description
@@ -179,31 +184,34 @@ def assert_check_data(actual, expected):
     assert actual.description == expected.description
     assert actual.outcome == expected.outcome
     assert actual.details == expected.details
+    assert_time(actual.time, expected.time)
 
 
 def assert_log_data(actual, expected):
     assert actual.level == expected.level
     assert actual.message == expected.message
-    assert round(actual.time, 3) == round(expected.time, 3)
+    assert_time(actual.time, expected.time)
 
 
 def assert_attachment_data(actual, expected):
     assert actual.description == expected.description
     assert actual.filename == expected.filename
     assert actual.as_image == expected.as_image
+    assert_time(actual.time, expected.time)
 
 
 def assert_url_data(actual, expected):
     assert actual.description == expected.description
     assert actual.url == expected.url
+    assert_time(actual.time, expected.time)
 
 
 def assert_step_data(actual, expected):
-    assert round(actual.start_time, 3) == round(expected.start_time, 3)
+    assert_time(actual.start_time, expected.start_time)
     if expected.end_time is None:
         assert actual.end_time is None
     else:
-        assert round(actual.end_time, 3) == round(expected.end_time, 3)
+        assert_time(actual.end_time, expected.end_time)
     assert actual.description == expected.description
     assert len(actual.entries) == len(expected.entries)
     for actual_entry, expected_entry in zip(actual.entries, expected.entries):
@@ -228,11 +236,11 @@ def assert_test_data(actual, expected):
     assert actual.links == expected.links
     assert actual.status == expected.status
     assert actual.status_details == expected.status_details
-    assert round(actual.start_time, 3) == round(expected.start_time, 3)
+    assert_time(actual.start_time, expected.start_time)
     if expected.end_time is None:
         assert actual.end_time is None
     else:
-        assert round(actual.end_time, 3) == round(expected.end_time, 3)
+        assert_time(actual.end_time, expected.end_time)
     assert len(actual.steps) == len(expected.steps)
     for actual_step, expected_step in zip(actual.steps, expected.steps):
         assert_step_data(actual_step, expected_step)
@@ -243,11 +251,11 @@ def assert_hook_data(actual, expected):
         assert actual is None
     else:
         assert actual.outcome == expected.outcome
-        assert round(actual.start_time, 3) == round(expected.start_time, 3)
+        assert_time(actual.start_time, expected.start_time)
         if expected.end_time is None:
             assert actual.end_time is None
         else:
-            assert round(actual.end_time, 3) == round(expected.end_time, 3)
+            assert_time(actual.end_time, expected.end_time)
         assert len(actual.steps) == len(expected.steps)
         for actual_step, expected_step in zip(actual.steps, expected.steps):
             assert_step_data(actual_step, expected_step)
@@ -256,6 +264,11 @@ def assert_hook_data(actual, expected):
 def assert_suite_data(actual, expected):
     assert actual.name == expected.name
     assert actual.description == expected.description
+    assert_time(actual.start_time, expected.start_time)
+    if expected.end_time is None:
+        assert actual.end_time is None
+    else:
+        assert_time(actual.end_time, expected.end_time)
     if expected.parent_suite is None:
         assert actual.parent_suite is None
     else:
@@ -280,15 +293,15 @@ def assert_suite_data(actual, expected):
 def assert_report(actual, expected):
     assert actual.title == expected.title
     assert actual.info == expected.info
-    assert round(actual.start_time, 3) == round(expected.start_time, 3)
+    assert_time(actual.start_time, expected.start_time)
     if expected.end_time is None:
         assert actual.end_time is None
     else:
-        assert round(actual.end_time, 3) == round(expected.end_time, 3)
+        assert_time(actual.end_time, expected.end_time)
     if expected.report_generation_time is None:
         assert actual.report_generation_time is None
     else:
-        assert round(actual.report_generation_time, 3) == round(expected.report_generation_time, 3)
+        assert_time(actual.report_generation_time, expected.report_generation_time)
     assert actual.nb_threads == expected.nb_threads
     assert len(actual.get_suites()) == len(expected.get_suites())
 

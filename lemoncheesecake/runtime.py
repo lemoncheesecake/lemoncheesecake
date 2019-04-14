@@ -107,7 +107,7 @@ class _Runtime(object):
 
         self.event_manager.fire(events.LogAttachmentEvent(
             self._local.location, self._get_step(step), "%s/%s" % (ATTACHEMENT_DIR, attachment_filename),
-            filename, description, as_image
+            description, as_image
         ))
 
 

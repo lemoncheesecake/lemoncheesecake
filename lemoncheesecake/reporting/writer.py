@@ -103,6 +103,7 @@ class ReportWriter:
     def on_suite_start(self, event):
         suite = event.suite
         suite_data = SuiteData(suite.name, suite.description)
+        suite_data.start_time = event.time
         suite_data.tags.extend(suite.tags)
         suite_data.properties.update(suite.properties)
         suite_data.links.extend(suite.links)
@@ -112,6 +113,10 @@ class ReportWriter:
             parent_suite_data.add_suite(suite_data)
         else:
             self.report.add_suite(suite_data)
+
+    def on_suite_end(self, event):
+        suite_data = self._get_suite_data(event.suite)
+        suite_data.end_time = event.time
 
     def on_suite_setup_start(self, event):
         suite_data = self._get_suite_data(event.suite)
@@ -196,15 +201,15 @@ class ReportWriter:
 
     def on_check(self, event):
         self._add_step_entry(
-            CheckData(event.check_description, event.check_outcome, event.check_details), event
+            CheckData(event.check_description, event.check_outcome, event.check_details, event.time), event
         )
 
     def on_log_attachment(self, event):
         self._add_step_entry(
-            AttachmentData(event.attachment_description, event.attachment_path, event.as_image), event
+            AttachmentData(event.attachment_description, event.attachment_path, event.as_image, event.time), event
         )
 
     def on_log_url(self, event):
         self._add_step_entry(
-            UrlData(event.url_description, event.url), event
+            UrlData(event.url_description, event.url, event.time), event
         )

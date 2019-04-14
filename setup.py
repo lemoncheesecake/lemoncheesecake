@@ -42,7 +42,7 @@ setup(
 
     packages=find_packages(),
     include_package_data=True,
-    install_requires=["colorama", "termcolor", "terminaltables", "six"],
+    install_requires=["colorama", "termcolor", "terminaltables", "six", "typing"],
     extras_require={
         "xml": "lxml",
         "junit": "lxml",

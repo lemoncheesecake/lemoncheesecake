@@ -1,18 +1,21 @@
 from __future__ import print_function
 
 import os
+import os.path as osp
 import sys
 import traceback
 import mimetypes
 
 try:
-    from reportportal_client import ReportPortalServiceAsync
+    from reportportal_client import ReportPortalServiceAsync, ReportPortalService
     REPORT_PORTAL_CLIENT_IS_AVAILABLE = True
 except ImportError:
     REPORT_PORTAL_CLIENT_IS_AVAILABLE = False
 
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
 from lemoncheesecake.exceptions import UserError
+from lemoncheesecake.events import SyncEventManager
+from lemoncheesecake.reporting.replay import replay_report_events
 
 
 def make_time(t):
@@ -262,7 +265,7 @@ class ReportPortalReportingSession(ReportingSession):
         abspath = os.path.join(self.report_dir, event.attachment_path)
         with open(abspath, "rb") as fh:
             self.service.log(make_time(event.time), event.attachment_description, "INFO", attachment={
-                "name": event.attachment_filename,
+                "name": osp.basename(event.attachment_path),
                 "data": fh.read(),
                 "mime": mimetypes.guess_type(abspath)[0] or "application/octet-stream"
             })
@@ -278,16 +281,23 @@ class ReportPortalReportingSession(ReportingSession):
         self.service.log(make_time(event.time), message, "INFO")
 
 
+class ReportPortalReportingSessionParallelized(ReportingSession):
+    def __init__(self, *args):
+        self._session = ReportPortalReportingSession(*args)
+
+    def on_test_session_end(self, _):
+        event_manager = SyncEventManager.load()
+        event_manager.add_listener(self._session)
+        replay_report_events(self._session.report, event_manager)
+
+
 class ReportPortalBackend(ReportingBackend):
     name = "reportportal"
 
     def is_available(self):
         return REPORT_PORTAL_CLIENT_IS_AVAILABLE
 
-    def create_reporting_session(self, report_dir, report, parallel, saving_strategy):
-        if parallel:
-            raise UserError("Parallel testing mode is not supported by ReportPortal reporting backend")
-
+    def create_reporting_session(self, report_dir, report, parallel, _):
         try:
             url = os.environ["RP_URL"]
             auth_token = os.environ["RP_AUTH_TOKEN"]
@@ -297,6 +307,16 @@ class ReportPortalBackend(ReportingBackend):
         except KeyError as excp:
             raise UserError("ReportPortal reporting backend, cannot get environment variable %s" % excp)
 
-        return ReportPortalReportingSession(
-            url, auth_token, project, launch_name, launch_description, report_dir, report
-        )
+        # the ReportPortal REST API allows working on multiple test item at a time,
+        # unfortunately reportportal_client module does not support it because test item ids are not exposed and
+        # the API make it impossible to work on multiple test item in parallel.
+        # When lemoncheesecake tests are run in parallel, we must then wait the end of the test session to
+        # replay the events from the report as the tests would have been run sequentially.
+        if parallel:
+            return ReportPortalReportingSessionParallelized(
+                url, auth_token, project, launch_name, launch_description, report_dir, report
+            )
+        else:
+            return ReportPortalReportingSession(
+                url, auth_token, project, launch_name, launch_description, report_dir, report
+            )
