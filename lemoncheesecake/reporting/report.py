@@ -16,8 +16,8 @@ from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten
 from lemoncheesecake.suite.core import Test
 
 __all__ = (
-    "LogData", "CheckData", "AttachmentData", "UrlData", "StepData", "TestData",
-    "SuiteData", "HookData", "Report"
+    "Log", "Check", "Attachment", "Url", "Step", "TestResult",
+    "SuiteResult", "SetupResult", "Report"
 )
 
 TEST_STATUSES = "passed", "failed", "skipped", "disabled"
@@ -58,7 +58,7 @@ def _get_duration(start_time, end_time):
         return None
 
 
-class LogData:
+class Log(object):
     def __init__(self, level, message, ts):
         # type: (str, str, float) -> None
         self.level = level
@@ -69,7 +69,7 @@ class LogData:
         return self.level != LOG_LEVEL_ERROR
 
 
-class CheckData:
+class Check(object):
     def __init__(self, description, outcome, details, ts):
         # type: (str, bool, Union[None, str], float) -> None
         self.description = description
@@ -81,7 +81,7 @@ class CheckData:
         return self.outcome
 
 
-class AttachmentData:
+class Attachment(object):
     def __init__(self, description, filename, as_image, ts):
         # type: (str, str, bool, float) -> None
         self.description = description
@@ -93,7 +93,7 @@ class AttachmentData:
         return True
 
 
-class UrlData:
+class Url(object):
     def __init__(self, description, url, ts):
         # type: (str, str, float) -> None
         self.description = description
@@ -104,12 +104,12 @@ class UrlData:
         return True
 
 
-class StepData:
+class Step(object):
     def __init__(self, description, detached=False):
         # type: (str, bool) -> None
         self.description = description
         self._detached = detached  # this attribute is runtime only is not intended to be serialized
-        self.entries = []  # type: List[Union[LogData, CheckData, AttachmentData, UrlData]]
+        self.entries = []  # type: List[Union[Log, Check, Attachment, Url]]
         self.start_time = None  # type: Union[None, float]
         self.end_time = None  # type: Union[None, float]
 
@@ -123,9 +123,9 @@ class StepData:
         return _get_duration(self.start_time, self.end_time)
 
 
-class ResultData(object):
+class Result(object):
     def __init__(self):
-        self.steps = []  # type: List[StepData]
+        self.steps = []  # type: List[Step]
         self.start_time = None  # type: Union[None, float]
         self.end_time = None  # type: Union[None, float]
 
@@ -139,10 +139,10 @@ class ResultData(object):
         return _get_duration(self.start_time, self.end_time)
 
 
-class TestData(BaseTest, ResultData):
+class TestResult(BaseTest, Result):
     def __init__(self, name, description):
         BaseTest.__init__(self, name, description)
-        ResultData.__init__(self)
+        Result.__init__(self)
         self.status = None  # type: Union[None, str]
         self.status_details = None  # type: Union[None, str]
         # non-serialized attributes (only set in-memory during test execution)
@@ -150,7 +150,7 @@ class TestData(BaseTest, ResultData):
 
     @classmethod
     def from_test(cls, test):
-        # type: (Test) -> TestData
+        # type: (Test) -> TestResult
         test_data = cls(test.name, test.description)
         test_data.tags.extend(test.tags)
         test_data.properties.update(test.properties)
@@ -159,9 +159,12 @@ class TestData(BaseTest, ResultData):
         return test_data
 
 
-class HookData(ResultData):
+class SetupResult(Result):
+    """
+    This class hold both the results of setup and teardown functions.
+    """
     def __init__(self):
-        ResultData.__init__(self)
+        Result.__init__(self)
         self.outcome = None
 
     @property
@@ -179,13 +182,13 @@ class HookData(ResultData):
         return len(self.steps) == 0
 
 
-class SuiteData(BaseSuite):
+class SuiteResult(BaseSuite):
     def __init__(self, name, description):
         BaseSuite.__init__(self, name, description)
         self.start_time = None  # type: Union[None, float]
         self.end_time = None  # type: Union[None, float]
-        self.suite_setup = None  # type: Union[None, HookData]
-        self.suite_teardown = None  # type: Union[None, HookData]
+        self.suite_setup = None  # type: Union[None, SetupResult]
+        self.suite_teardown = None  # type: Union[None, SetupResult]
         # non-serialized attributes (only set in-memory during test execution)
         self.rank = 0
 
@@ -200,13 +203,13 @@ class SuiteData(BaseSuite):
         )
 
     def get_tests(self):
-        # type: () -> List[TestData]
-        tests = super(SuiteData, self).get_tests()
+        # type: () -> List[TestResult]
+        tests = super(SuiteResult, self).get_tests()
         return sorted(tests, key=lambda t: t.rank)
 
     def get_suites(self, include_empty_suites=False):
-        # type: (bool) -> List[SuiteData]
-        suites = super(SuiteData, self).get_suites(include_empty_suites)
+        # type: (bool) -> List[SuiteResult]
+        suites = super(SuiteResult, self).get_suites(include_empty_suites)
         return sorted(suites, key=lambda s: s.rank)
 
 
@@ -245,13 +248,13 @@ def _update_stats_from_results(stats, results):
             stats.duration_cumulative += result.duration
         for step in result.steps:
             for entry in step.entries:
-                if isinstance(entry, CheckData):
+                if isinstance(entry, Check):
                     stats.checks += 1
                     if entry.outcome == True:
                         stats.check_successes += 1
                     elif entry.outcome == False:
                         stats.check_failures += 1
-                if isinstance(entry, LogData):
+                if isinstance(entry, Log):
                     if entry.level == LOG_LEVEL_WARN:
                         stats.warning_logs += 1
                     elif entry.level == LOG_LEVEL_ERROR:
@@ -283,9 +286,9 @@ def get_stats_from_suites(suites, parallelized):
 class Report:
     def __init__(self):
         self.info = []
-        self.test_session_setup = None  # type: Union[None, HookData]
-        self.test_session_teardown = None  # type: Union[None, HookData]
-        self._suites = []  # type: List[SuiteData]
+        self.test_session_setup = None  # type: Union[None, SetupResult]
+        self.test_session_teardown = None  # type: Union[None, SetupResult]
+        self._suites = []  # type: List[SuiteResult]
         self.start_time = None  # type: Union[None, float]
         self.end_time = None  # type: Union[None, float]
         self.report_generation_time = None  # type: Union[None, float]
@@ -312,23 +315,23 @@ class Report:
         self.info.append([name, value])
     
     def add_suite(self, suite):
-        # type: (SuiteData) -> None
+        # type: (SuiteResult) -> None
         self._suites.append(suite)
     
     def get_suites(self):
-        # type: () -> List[SuiteData]
+        # type: () -> List[SuiteResult]
         return sorted(self._suites, key=lambda s: s.rank)
 
     def get_suite(self, hierarchy):
-        # type: (List[str]) -> SuiteData
+        # type: (List[str]) -> SuiteResult
         return find_suite(self._suites, hierarchy)
 
     def get_test(self, hierarchy):
-        # type: (List[str]) -> TestData
+        # type: (List[str]) -> TestResult
         return find_test(self._suites, hierarchy)
 
     def get(self, location):
-        # type: (TreeLocation) -> Union[HookData, SuiteData, TestData]
+        # type: (TreeLocation) -> Union[SetupResult, SuiteResult, TestResult]
         if location.node_type == TreeLocation.TEST_SESSION_SETUP:
             return self.test_session_setup
         elif location.node_type == TreeLocation.TEST_SESSION_TEARDOWN:
@@ -384,15 +387,15 @@ class Report:
         return serialized
 
     def all_suites(self):
-        # type: () -> Generator[SuiteData]
+        # type: () -> Generator[SuiteResult]
         return flatten_suites(self._suites)
 
     def all_tests(self):
-        # type: () -> Generator[TestData]
+        # type: () -> Generator[TestResult]
         return flatten_tests(self._suites)
 
     def all_results(self):
-        # type: () -> Generator[ResultData]
+        # type: () -> Generator[Result]
         if self.test_session_setup:
             yield self.test_session_setup
         for result in flatten_results_from_suites(self.get_suites()):
@@ -402,14 +405,14 @@ class Report:
 
 
 def flatten_steps(suites):
-    # type: (Iterable[SuiteData]) -> Generator[StepData]
+    # type: (Iterable[SuiteResult]) -> Generator[Step]
     for test in flatten_tests(suites):
         for step in test.steps:
             yield step
 
 
 def flatten_results_from_suites(suites):
-    # type: (Iterable[SuiteData]) -> Generator[ResultData]
+    # type: (Iterable[SuiteResult]) -> Generator[Result]
     for suite in flatten_suites(suites):
         if suite.suite_setup:
             yield suite.suite_setup

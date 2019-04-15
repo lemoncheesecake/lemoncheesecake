@@ -8,7 +8,7 @@ import six
 from lemoncheesecake.helpers.text import wrap_text
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.helpers import terminalsize
-from lemoncheesecake.reporting import LogData, CheckData, UrlData, AttachmentData
+from lemoncheesecake.reporting import Log, Check, Url, Attachment
 from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.filter import filter_suites
 
@@ -96,23 +96,23 @@ class Renderer(object):
                     if step.duration is not None else "-"
             ])
             for entry in step.entries:
-                if isinstance(entry, LogData):
+                if isinstance(entry, Log):
                     rows.append([
                         colored(entry.level.upper(), color=log_level_to_color(entry.level), attrs=["bold"]),
                         self.wrap_description_col(entry.message)
                     ])
-                if isinstance(entry, CheckData):
+                if isinstance(entry, Check):
                     rows.append([
                         self.render_check_outcome(entry.outcome),
                         self.wrap_description_col(entry.description),
                         self.wrap_details_col(entry.details)
                     ])
-                if isinstance(entry, UrlData):
+                if isinstance(entry, Url):
                     rows.append([
                         colored("URL", color="cyan", attrs=["bold"]),
                         self.wrap_description_col("%s (%s)" % (entry.url, entry.description))
                     ])
-                if isinstance(entry, AttachmentData):
+                if isinstance(entry, Attachment):
                     rows.append([
                         colored("ATTACH", color="cyan", attrs=["bold"]),
                         self.wrap_description_col(entry.description),

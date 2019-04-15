@@ -1,6 +1,6 @@
 import time
 
-from lemoncheesecake.reporting import Report, HookData, SuiteData, TestData, StepData, LogData, CheckData
+from lemoncheesecake.reporting import Report, SetupResult, SuiteResult, TestResult, Step, Log, Check
 
 NOW = time.time()
 
@@ -28,11 +28,11 @@ class StepMockup:
         return self._entries
 
     def add_check(self, outcome):
-        self._entries.append(CheckData("check description", outcome=outcome, details=None, ts=NOW))
+        self._entries.append(Check("check description", outcome=outcome, details=None, ts=NOW))
         return self
 
     def _add_log(self, level, message):
-        self._entries.append(LogData(level, message, NOW))
+        self._entries.append(Log(level, message, NOW))
         return self
 
     def add_info_log(self, message="info log"):
@@ -47,7 +47,7 @@ def step_mockup(description="step", start_time=None, end_time=None):
 
 
 def make_step_data_from_mockup(mockup):
-    data = StepData(mockup.description)
+    data = Step(mockup.description)
     data.start_time = mockup.start_time
     data.end_time = mockup.end_time
     for entry in mockup.entries:
@@ -112,7 +112,7 @@ def make_hook_data_from_mockup(mockup):
     if mockup is None:
         return None
 
-    data = HookData()
+    data = SetupResult()
     data.start_time = mockup.start_time if mockup.start_time is not None else NOW
     data.end_time = mockup.end_time if mockup.end_time is not None else NOW
     for step_mockup in mockup.steps:
@@ -172,7 +172,7 @@ def report_mockup():
 
 
 def make_test_data_from_mockup(mockup):
-    data = TestData(mockup.name, mockup.description)
+    data = TestResult(mockup.name, mockup.description)
     data.status = mockup.status
     data.start_time = mockup.start_time if mockup.start_time is not None else NOW
     data.end_time = mockup.end_time if mockup.end_time is not None else NOW
@@ -182,7 +182,7 @@ def make_test_data_from_mockup(mockup):
 
 
 def make_suite_data_from_mockup(mockup):
-    data = SuiteData(mockup.name, mockup.description)
+    data = SuiteResult(mockup.name, mockup.description)
     data.start_time = mockup.start_time if mockup.start_time is not None else NOW
     data.end_time = mockup.end_time if mockup.end_time is not None else NOW
     data.suite_setup = make_hook_data_from_mockup(mockup.setup)

@@ -13,7 +13,7 @@ import pytest
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
-from lemoncheesecake.reporting import Report, HookData, SuiteData, TestData, StepData, LogData, JsonBackend
+from lemoncheesecake.reporting import Report, SetupResult, SuiteResult, TestResult, Step, Log, JsonBackend
 
 
 def make_report_in_progress():
@@ -22,38 +22,38 @@ def make_report_in_progress():
     now = time.time()
     report = Report()
     report.start_time = now
-    report.test_session_setup = HookData()
+    report.test_session_setup = SetupResult()
     report.test_session_setup.start_time = now
-    report.test_session_teardown = HookData()
+    report.test_session_teardown = SetupResult()
     report.test_session_teardown.start_time = now
-    suite = SuiteData("suite", "suite")
+    suite = SuiteResult("suite", "suite")
     suite.start_time = now
     report.add_suite(suite)
     
-    suite.suite_setup = HookData()
+    suite.suite_setup = SetupResult()
     suite.suite_setup.start_time = now
-    suite.suite_teardown = HookData()
+    suite.suite_teardown = SetupResult()
     suite.suite_teardown.start_time = now
     
-    test = TestData("test_1", "test_1")
+    test = TestResult("test_1", "test_1")
     suite.add_test(test)
     test.start_time = now
-    step = StepData("step")
+    step = Step("step")
     test.steps.append(step)
     step.start_time = now
-    log = LogData("info", "message", now)
+    log = Log("info", "message", now)
     step.entries.append(log)
 
-    test = TestData("test_2", "test_2")
+    test = TestResult("test_2", "test_2")
     suite.add_test(test)
     test.start_time = now
     test.end_time = now + 1
     test.status = "passed"
-    step = StepData("step")
+    step = Step("step")
     test.steps.append(step)
     step.start_time = now
     step.end_time = now + 1
-    log = LogData("info", "message", now)
+    log = Log("info", "message", now)
     step.entries.append(log)
 
     return report
@@ -121,12 +121,12 @@ def assert_last_test_status(report, status):
 
 def get_last_logged_check(report):
     test = get_last_test(report)
-    return next(entry for entry in reversed(test.steps[-1].entries) if isinstance(entry, reporting.CheckData))
+    return next(entry for entry in reversed(test.steps[-1].entries) if isinstance(entry, reporting.Check))
 
 
 def get_last_attachment(report):
     test = get_last_test(report)
-    return next(entry for entry in reversed(test.steps[-1].entries) if isinstance(entry, reporting.AttachmentData))
+    return next(entry for entry in reversed(test.steps[-1].entries) if isinstance(entry, reporting.Attachment))
 
 
 def assert_time(actual, expected):
@@ -145,7 +145,7 @@ def get_last_test_checks(report):
     checks = []
     for step in test.steps:
         for entry in step.entries:
-            if isinstance(entry, reporting.CheckData):
+            if isinstance(entry, reporting.Check):
                 checks.append(entry)
     return checks
 
@@ -155,7 +155,7 @@ def count_logs(report, log_level):
     for test in report.all_tests():
         for step in test.steps:
             for entry in step.entries:
-                if isinstance(entry, reporting.LogData) and entry.level == log_level:
+                if isinstance(entry, reporting.Log) and entry.level == log_level:
                     count += 1
     return count
 
@@ -166,7 +166,7 @@ def assert_test_checks(test, expected_successes=0, expected_failures=0):
 
     for step in test.steps:
         for entry in step.entries:
-            if isinstance(entry, reporting.CheckData):
+            if isinstance(entry, reporting.Check):
                 if entry.outcome:
                     successes += 1
                 else:
@@ -216,13 +216,13 @@ def assert_step_data(actual, expected):
     assert len(actual.entries) == len(expected.entries)
     for actual_entry, expected_entry in zip(actual.entries, expected.entries):
         assert actual_entry.__class__ == expected_entry.__class__
-        if isinstance(actual_entry, reporting.LogData):
+        if isinstance(actual_entry, reporting.Log):
             assert_log_data(actual_entry, expected_entry)
-        elif isinstance(actual_entry, reporting.CheckData):
+        elif isinstance(actual_entry, reporting.Check):
             assert_check_data(actual_entry, expected_entry)
-        elif isinstance(actual_entry, reporting.AttachmentData):
+        elif isinstance(actual_entry, reporting.Attachment):
             assert_attachment_data(actual_entry, expected_entry)
-        elif isinstance(actual_entry, reporting.UrlData):
+        elif isinstance(actual_entry, reporting.Url):
             assert_url_data(actual_entry, expected_entry)
         else:
             raise Exception("Unknown class '%s'" % actual.__class__.__name__)

@@ -31,7 +31,7 @@ class ReportWriter:
 
     @staticmethod
     def _start_hook(ts):
-        hook_data = HookData()
+        hook_data = SetupResult()
         hook_data.start_time = ts
         return hook_data
 
@@ -102,7 +102,7 @@ class ReportWriter:
 
     def on_suite_start(self, event):
         suite = event.suite
-        suite_data = SuiteData(suite.name, suite.description)
+        suite_data = SuiteResult(suite.name, suite.description)
         suite_data.start_time = event.time
         suite_data.tags.extend(suite.tags)
         suite_data.properties.update(suite.properties)
@@ -148,7 +148,7 @@ class ReportWriter:
     def on_test_start(self, event):
         test = event.test
 
-        test_data = TestData.from_test(test)
+        test_data = TestResult.from_test(test)
         test_data.start_time = event.time
 
         suite_data = self._get_suite_data(event.test.parent_suite)
@@ -162,7 +162,7 @@ class ReportWriter:
         test_data.end_time = event.time
 
     def _bypass_test(self, test, status, status_details, time):
-        test_data = TestData.from_test(test)
+        test_data = TestResult.from_test(test)
         test_data.end_time = test_data.start_time = time
         test_data.status = status
         test_data.status_details = status_details
@@ -182,7 +182,7 @@ class ReportWriter:
         if current_step:
             current_step.end_time = event.time
 
-        new_step = StepData(event.step_description, detached=event.detached)
+        new_step = Step(event.step_description, detached=event.detached)
         new_step.start_time = event.time
         report_node_data.steps.append(new_step)
 
@@ -196,20 +196,20 @@ class ReportWriter:
 
     def on_log(self, event):
         self._add_step_entry(
-            LogData(event.log_level, event.log_message, event.time), event
+            Log(event.log_level, event.log_message, event.time), event
         )
 
     def on_check(self, event):
         self._add_step_entry(
-            CheckData(event.check_description, event.check_outcome, event.check_details, event.time), event
+            Check(event.check_description, event.check_outcome, event.check_details, event.time), event
         )
 
     def on_log_attachment(self, event):
         self._add_step_entry(
-            AttachmentData(event.attachment_description, event.attachment_path, event.as_image, event.time), event
+            Attachment(event.attachment_description, event.attachment_path, event.as_image, event.time), event
         )
 
     def on_log_url(self, event):
         self._add_step_entry(
-            UrlData(event.url_description, event.url, event.time), event
+            Url(event.url_description, event.url, event.time), event
         )

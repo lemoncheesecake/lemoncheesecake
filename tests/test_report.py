@@ -1,7 +1,7 @@
 import time
 
 from lemoncheesecake.reporting.report import format_timestamp, parse_timestamp, \
-    TestData as TstData, StepData
+    TestResult as TstData, Step
 
 from helpers.testtreemockup import tst_mockup, suite_mockup, step_mockup, report_mockup, hook_mockup, \
     make_suite_data_from_mockup, make_report_from_mockup
@@ -84,13 +84,13 @@ def test_test_duration_finished():
 
 
 def test_step_duration_unfinished():
-    step = StepData("step")
+    step = Step("step")
     step.start_time = NOW
     assert step.duration is None
 
 
 def test_step_duration_finished():
-    step = StepData("step")
+    step = Step("step")
     step.start_time = NOW
     step.end_time = NOW + 1.0
     assert step.duration == 1.0

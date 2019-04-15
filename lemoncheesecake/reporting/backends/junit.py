@@ -22,7 +22,7 @@ except ImportError:
     LXML_IS_AVAILABLE = False
 
 from lemoncheesecake.reporting.backend import FileReportBackend
-from lemoncheesecake.reporting.report import LogData, CheckData, format_timestamp_as_iso_8601
+from lemoncheesecake.reporting.report import Log, Check, format_timestamp_as_iso_8601
 from lemoncheesecake.consts import LOG_LEVEL_ERROR
 from lemoncheesecake.reporting.backends.xml import make_xml_child, make_xml_node, indent_xml, set_node_attr, \
     DEFAULT_INDENT_LEVEL
@@ -44,9 +44,9 @@ def _serialize_test_data(test):
     else:
         for step in test.steps:
             for step_entry in step.entries:
-                if isinstance(step_entry, CheckData) and step_entry.outcome is False:
+                if isinstance(step_entry, Check) and step_entry.outcome is False:
                     make_xml_child(junit_test, "failure", "message", "failed check in step '%s'" % step.description)
-                elif isinstance(step_entry, LogData) and step_entry.level == LOG_LEVEL_ERROR:
+                elif isinstance(step_entry, Log) and step_entry.level == LOG_LEVEL_ERROR:
                     make_xml_child(junit_test, "error", "message", "error log in step '%s'" % step.description)
 
     return junit_test

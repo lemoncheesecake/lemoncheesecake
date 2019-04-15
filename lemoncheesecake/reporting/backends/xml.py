@@ -16,7 +16,7 @@ import six
 import lemoncheesecake
 from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend
 from lemoncheesecake.reporting.report import (
-    LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, SuiteData,
+    Log, Check, Attachment, Url, Step, TestResult, SetupResult, SuiteResult,
     format_timestamp, parse_timestamp
 )
 from lemoncheesecake.exceptions import ProgrammingError, InvalidReportFile
@@ -94,14 +94,14 @@ def _serialize_steps(steps, parent_node):
         _add_time_attr(step_node, "start-time", step.start_time)
         _add_time_attr(step_node, "end-time", step.end_time)
         for entry in step.entries:
-            if isinstance(entry, LogData):
+            if isinstance(entry, Log):
                 log_node = make_xml_child(
                     step_node, "log",
                     "level", entry.level,
                     "time", format_timestamp(entry.time)
                 )
                 log_node.text = entry.message
-            elif isinstance(entry, AttachmentData):
+            elif isinstance(entry, Attachment):
                 attachment_node = make_xml_child(
                     step_node, "attachment",
                     "description", entry.description,
@@ -109,7 +109,7 @@ def _serialize_steps(steps, parent_node):
                     "time", format_timestamp(entry.time)
                 )
                 attachment_node.text = entry.filename
-            elif isinstance(entry, UrlData):
+            elif isinstance(entry, Url):
                 url_node = make_xml_child(
                     step_node, "url",
                     "description", entry.description,
@@ -263,26 +263,26 @@ def _unserialize_bool(value):
 
 
 def _unserialize_step_data(xml):
-    step = StepData(xml.attrib["description"])
+    step = Step(xml.attrib["description"])
     step.start_time = _unserialize_datetime(xml.attrib["start-time"])
     step.end_time = _unserialize_datetime(xml.attrib["end-time"]) if "end-time" in xml.attrib else None
     for xml_entry in xml:
         if xml_entry.tag == "log":
-            entry = LogData(
+            entry = Log(
                 xml_entry.attrib["level"], xml_entry.text, _unserialize_datetime(xml_entry.attrib["time"])
             )
         elif xml_entry.tag == "attachment":
-            entry = AttachmentData(
+            entry = Attachment(
                 xml_entry.attrib["description"], xml_entry.text,
                 _unserialize_bool(xml_entry.attrib["as-image"]),
                 _unserialize_datetime(xml_entry.attrib["time"])
             )
         elif xml_entry.tag == "url":
-            entry = UrlData(
+            entry = Url(
                 xml_entry.attrib["description"], xml_entry.text, _unserialize_datetime(xml_entry.attrib["time"])
             )
         elif xml_entry.tag == "check":
-            entry = CheckData(
+            entry = Check(
                 xml_entry.attrib["description"], _unserialize_outcome(xml_entry.attrib["outcome"]),
                 xml_entry.text, _unserialize_datetime(xml_entry.attrib["time"])
             )
@@ -293,7 +293,7 @@ def _unserialize_step_data(xml):
 
 
 def _unserialize_test_data(xml):
-    test = TestData(xml.attrib["name"], xml.attrib["description"])
+    test = TestResult(xml.attrib["name"], xml.attrib["description"])
     test.status = xml.attrib.get("status", None)
     test.status_details = xml.attrib.get("status-details", None)
     test.start_time = _unserialize_datetime(xml.attrib["start-time"])
@@ -306,7 +306,7 @@ def _unserialize_test_data(xml):
 
 
 def _unserialize_hook_data(xml):
-    data = HookData()
+    data = SetupResult()
     data.outcome = _unserialize_outcome(xml.attrib["outcome"])
     data.start_time = _unserialize_datetime(xml.attrib["start-time"])
     data.end_time = _unserialize_datetime(xml.attrib["end-time"]) if "end-time" in xml.attrib else None
@@ -315,7 +315,7 @@ def _unserialize_hook_data(xml):
 
 
 def _unserialize_suite_data(xml):
-    suite = SuiteData(xml.attrib["name"], xml.attrib["description"])
+    suite = SuiteResult(xml.attrib["name"], xml.attrib["description"])
     suite.start_time = _unserialize_datetime(xml.attrib["start-time"])
     suite.end_time = _unserialize_datetime(xml.attrib["end-time"]) if "end-time" in xml.attrib else None
     suite.tags = [node.text for node in xml.xpath("tag")]

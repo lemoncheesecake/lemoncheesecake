@@ -3,35 +3,35 @@ from __future__ import print_function
 from typing import Iterable
 
 from lemoncheesecake.testtree import TreeLocation
-from lemoncheesecake.reporting import Report, StepData, TestData, SuiteData, LogData, AttachmentData, UrlData, CheckData
+from lemoncheesecake.reporting import Report, Step, TestResult, SuiteResult, Log, Attachment, Url, Check
 from lemoncheesecake import events
 from lemoncheesecake.events import BaseEventManager
 from lemoncheesecake.exceptions import LemonCheesecakeInternalError
 
 
 def _replay_step(location, step, eventmgr):
-    # type: (TreeLocation, StepData, BaseEventManager) -> None
+    # type: (TreeLocation, Step, BaseEventManager) -> None
     eventmgr.fire(events.StepEvent(location, step.description, event_time=step.start_time))
     for entry in step.entries:
-        if isinstance(entry, LogData):
+        if isinstance(entry, Log):
             eventmgr.fire(
                 events.LogEvent(
                     location, step.description, entry.level, entry.message, entry.time
                 )
             )
-        elif isinstance(entry, AttachmentData):
+        elif isinstance(entry, Attachment):
             eventmgr.fire(
                 events.LogAttachmentEvent(
                     location, step.description, entry.filename, entry.description, entry.as_image, entry.time
                 )
             )
-        elif isinstance(entry, UrlData):
+        elif isinstance(entry, Url):
             eventmgr.fire(
                 events.LogUrlEvent(
                     location, step.description, entry.url, entry.description, entry.time
                 )
             )
-        elif isinstance(entry, CheckData):
+        elif isinstance(entry, Check):
             eventmgr.fire(
                 events.CheckEvent(
                     location, step.description, entry.description, entry.outcome, entry.details, entry.time
@@ -42,13 +42,13 @@ def _replay_step(location, step, eventmgr):
 
 
 def _replay_steps_events(location, steps, eventmgr):
-    # type: (TreeLocation, Iterable[StepData], BaseEventManager) -> None
+    # type: (TreeLocation, Iterable[Step], BaseEventManager) -> None
     for step in steps:
         _replay_step(location, step, eventmgr)
 
 
 def _replay_test_events(test, eventmgr):
-    # type: (TestData, BaseEventManager) -> None
+    # type: (TestResult, BaseEventManager) -> None
     if test.status in ("passed", "failed", None):  # None means "in progress"
         eventmgr.fire(events.TestStartEvent(test, test.start_time))
         _replay_steps_events(TreeLocation.in_test(test), test.steps, eventmgr)
@@ -63,7 +63,7 @@ def _replay_test_events(test, eventmgr):
 
 
 def _replay_suite_events(suite, eventmgr):
-    # type: (SuiteData, BaseEventManager) -> None
+    # type: (SuiteResult, BaseEventManager) -> None
 
     eventmgr.fire(events.SuiteStartEvent(suite, suite.start_time))
 

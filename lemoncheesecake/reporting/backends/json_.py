@@ -11,7 +11,7 @@ from collections import OrderedDict
 import lemoncheesecake
 from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend
 from lemoncheesecake.reporting.report import (
-    LogData, CheckData, AttachmentData, UrlData, StepData, TestData, HookData, SuiteData,
+    Log, Check, Attachment, Url, Step, TestResult, SetupResult, SuiteResult,
     format_timestamp, parse_timestamp
 )
 from lemoncheesecake.exceptions import InvalidReportFile, ProgrammingError
@@ -43,14 +43,14 @@ def _serialize_steps(steps):
         )
         json_steps.append(json_step)
         for entry in step.entries:
-            if isinstance(entry, LogData):
+            if isinstance(entry, Log):
                 entry = _dict(
                     "type", "log",
                     "level", entry.level,
                     "message", entry.message,
                     "time", _serialize_time(entry.time)
                 )
-            elif isinstance(entry, AttachmentData):
+            elif isinstance(entry, Attachment):
                 entry = _dict(
                     "type", "attachment",
                     "description", entry.description,
@@ -58,7 +58,7 @@ def _serialize_steps(steps):
                     "as_image", entry.as_image,
                     "time", _serialize_time(entry.time)
                 )
-            elif isinstance(entry, UrlData):
+            elif isinstance(entry, Url):
                 entry = _dict(
                     "type", "url",
                     "description", entry.description,
@@ -159,24 +159,24 @@ def save_report_into_file(data, filename, javascript_compatibility=True, pretty_
 
 
 def _unserialize_step_data(js):
-    step = StepData(js["description"])
+    step = Step(js["description"])
     step.start_time = parse_timestamp(js["start_time"])
     step.end_time = parse_timestamp(js["end_time"]) if js["end_time"] else None
     for js_entry in js["entries"]:
         if js_entry["type"] == "log":
-            entry = LogData(
+            entry = Log(
                 js_entry["level"], js_entry["message"], parse_timestamp(js_entry["time"])
             )
         elif js_entry["type"] == "attachment":
-            entry = AttachmentData(
+            entry = Attachment(
                 js_entry["description"], js_entry["filename"], js_entry["as_image"], parse_timestamp(js_entry["time"])
             )
         elif js_entry["type"] == "url":
-            entry = UrlData(
+            entry = Url(
                 js_entry["description"], js_entry["url"], parse_timestamp(js_entry["time"])
             )
         elif js_entry["type"] == "check":
-            entry = CheckData(
+            entry = Check(
                 js_entry["description"], js_entry["outcome"], js_entry["details"], parse_timestamp(js_entry["time"])
             )
         else:
@@ -186,7 +186,7 @@ def _unserialize_step_data(js):
 
 
 def _unserialize_test_data(js):
-    test = TestData(js["name"], js["description"])
+    test = TestResult(js["name"], js["description"])
     test.status = js["status"]
     test.status_details = js["status_details"]
     test.start_time = parse_timestamp(js["start_time"])
@@ -199,7 +199,7 @@ def _unserialize_test_data(js):
 
 
 def _unserialize_hook_data(js):
-    data = HookData()
+    data = SetupResult()
     data.outcome = js["outcome"]
     data.start_time = parse_timestamp(js["start_time"])
     data.end_time = parse_timestamp(js["end_time"]) if js["end_time"] else None
@@ -209,7 +209,7 @@ def _unserialize_hook_data(js):
 
 
 def _unserialize_suite_data(js):
-    suite = SuiteData(js["name"], js["description"])
+    suite = SuiteResult(js["name"], js["description"])
     suite.start_time = parse_timestamp(js["start_time"])
     suite.end_time = parse_timestamp(js["end_time"]) if js["end_time"] else None
     suite.tags = js["tags"]
