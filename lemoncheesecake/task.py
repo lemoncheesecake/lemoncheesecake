@@ -12,11 +12,27 @@ def _debug(msg):
         print(msg)
 
 
+class TaskResultSuccess(object):
+    pass
+
+
+class TaskResultSkipped(object):
+    pass
+
+
+class TaskResultFailure(object):
+    def __init__(self, reason):
+        self.reason = reason
+
+
+class TaskResultException(object):
+    def __init__(self, stacktrace):
+        self.stacktrace = stacktrace
+
+
 class BaseTask(object):
     def __init__(self):
-        self.successful = None
-        self.exception = None
-        self.skipped = False
+        self.result = None
 
     def get_all_dependencies(self):
         return self.get_on_completion_dependencies() + self.get_on_success_dependencies()
@@ -49,13 +65,12 @@ def run_task(task, context, completed_task_queue):
     _debug("run task %s" % task)
     try:
         task.run(context)
-    except TaskFailure:
-        task.successful = False
+    except TaskFailure as excp:
+        task.result = TaskResultFailure(str(excp))
     except Exception:
-        task.successful = False
-        task.exception = serialize_current_exception()
+        task.result = TaskResultException(serialize_current_exception())
     else:
-        task.successful = True
+        task.result = TaskResultSuccess()
 
     completed_task_queue.put(task)
 
@@ -63,7 +78,7 @@ def run_task(task, context, completed_task_queue):
 def handle_task(task, watchdogs, context, completed_task_queue):
     _debug("handle task %s" % task)
     for dep_task in task.get_on_success_dependencies():
-        if not dep_task.successful or dep_task.skipped:
+        if not isinstance(dep_task.result, TaskResultSuccess):
             skip_task(task, context, completed_task_queue)
             return
 
@@ -86,12 +101,9 @@ def skip_task(task, context, completed_task_queue, reason=""):
     try:
         task.skip(context, reason)
     except Exception:
-        task.successful = False
-        task.exception = serialize_current_exception()
+        task.result = TaskResultException(serialize_current_exception())
     else:
-        task.successful = True
-    finally:
-        task.skipped = True
+        task.result = TaskResultSkipped()
 
     completed_task_queue.put(task)
 
@@ -148,7 +160,7 @@ def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
     finally:
         pool.close()
 
-    exceptions = [task.exception for task in tasks if task.exception]
+    exceptions = [task.result.stacktrace for task in tasks if isinstance(task.result, TaskResultException)]
     if exceptions:
         raise TasksExecutionFailure("Caught exceptions:\n%s" % "\n".join(exceptions))
 
