@@ -1,3 +1,7 @@
+# 0.22.9 (2019-04-28)
+
+- **Report**: provide more information about why a test has been skipped
+
 # 0.22.8 (2019-04-14)
 
 - **ReportPortal**: the reporting backend now supports parallelized tests
