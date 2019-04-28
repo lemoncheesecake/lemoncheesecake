@@ -59,13 +59,13 @@ def match_values_lists(lsts, patterns):
 
 
 class Filter(object):
-    def is_empty(self):
+    def __bool__(self):
         raise NotImplemented()
 
-    def is_test_disabled(self, test):
-        raise NotImplemented()
+    def __nonzero__(self):
+        return self.__bool__()
 
-    def match_test(self, test):
+    def __call__(self, test):
         raise NotImplemented()
 
 
@@ -79,16 +79,16 @@ class BaseFilter(Filter):
         self.enabled = enabled
         self.disabled = disabled
 
-    def is_empty(self):
-        return not any([
+    def __bool__(self):
+        return any((
             self.paths, self.descriptions, self.tags, self.properties, self.links, self.enabled, self.disabled
-        ])
+        ))
 
     def is_test_disabled(self, test):
         return test.is_disabled()
 
-    def match_test(self, test):
-        funcs = [
+    def __call__(self, test):
+        funcs = (
             lambda: self.is_test_disabled(test) if self.disabled else True,
             lambda: not self.is_test_disabled(test) if self.enabled else True,
             lambda: match_values(test.hierarchy_paths, self.paths),
@@ -96,7 +96,7 @@ class BaseFilter(Filter):
             lambda: all(match_values(test.hierarchy_tags, tags) for tags in self.tags),
             lambda: all(match_keyvalues(test.hierarchy_properties, props) for props in self.properties),
             lambda: all(match_values_lists(test.hierarchy_links, links) for links in self.links)
-        ]
+        )
         return all(func() for func in funcs)
 
 
@@ -109,17 +109,17 @@ class ReportFilter(RunFilter):
         RunFilter.__init__(self, **kwargs)
         self.statuses = statuses if statuses is not None else set()
 
-    def is_empty(self):
-        if not RunFilter.is_empty(self):
-            return False
+    def __bool__(self):
+        if RunFilter.__bool__(self):
+            return True
 
-        return len(self.statuses) == 0
+        return len(self.statuses) > 0
 
     def is_test_disabled(self, test):
         return test.status == "disabled"
 
-    def match_test(self, test):
-        if not RunFilter.match_test(self, test):
+    def __call__(self, test):
+        if not RunFilter.__call__(self, test):
             return False
 
         if len(self.statuses) == 0:
@@ -132,13 +132,10 @@ class FromTestsFilter(Filter):
     def __init__(self, tests):
         self.tests = [test.path for test in tests]
 
-    def is_empty(self):
-        return False
+    def __bool__(self):
+        return True
 
-    def is_test_disabled(self, test):
-        return test.status == "disabled"
-
-    def match_test(self, test):
+    def __call__(self, test):
         return test.path in self.tests
 
 
@@ -146,7 +143,7 @@ def filter_suite(suite, filtr):
     filtered_suite = suite.pull_node()
 
     for test in suite.get_tests():
-        if filtr.match_test(test):
+        if filtr(test):
             filtered_suite.add_test(test.pull_node())
 
     for filtered_sub_suite in filter_suites(suite.get_suites(), filtr):
@@ -288,7 +285,7 @@ def _make_from_report_filter(cli_args, only_executed_tests=False):
 
 
 def make_run_filter(cli_args):
-    if any([cli_args.from_report, cli_args.passed, cli_args.failed, cli_args.skipped]):
+    if any((cli_args.from_report, cli_args.passed, cli_args.failed, cli_args.skipped)):
         return _make_from_report_filter(cli_args)
     else:
         return _make_run_filter(cli_args)

@@ -284,10 +284,10 @@ def print_report_as_test_run(report, filtr):
     # Display summary
     ###
     if suite_idx > 0:
-        if filtr.is_empty():
-            stats = report.stats()
-        else:
+        if filtr:
             stats = get_stats_from_suites(suites, report.parallelized)
+        else:
+            stats = report.stats()
         _print_summary(stats, report.parallelized)
     else:
         print("No test found in report")

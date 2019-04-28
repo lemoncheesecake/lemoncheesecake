@@ -47,6 +47,26 @@ def test_filter_full_path_on_test():
     )
 
 
+def test_filter_simple_func():
+    @lcc.suite("mysuite")
+    class mysuite:
+        @lcc.suite("subsuite")
+        class subsuite:
+            @lcc.test("test1")
+            def baz(self):
+                pass
+
+            @lcc.test("test2")
+            def test2(self):
+                pass
+
+    _test_run_filter(
+        [mysuite],
+        lambda test: test.path == "mysuite.subsuite.baz",
+        ["mysuite.subsuite.baz"]
+    )
+
+
 def test_filter_full_path_on_test_negative():
     @lcc.suite("mysuite")
     class mysuite:
@@ -713,17 +733,17 @@ def test_filter_path_and_negative_tag_on_test():
     )
 
 
-def test_is_empty_true():
+def test_empty_filter():
     filt = RunFilter()
-    assert filt.is_empty() == True
+    assert not filt
 
 
-def test_is_empty_false():
+def test_non_empty_filter():
     def do_test(attr, val):
-        filt = RunFilter()
-        assert hasattr(filt, attr)
-        setattr(filt, attr, val)
-        assert filt.is_empty() is False
+        filtr = RunFilter()
+        assert hasattr(filtr, attr)
+        setattr(filtr, attr, val)
+        assert filtr
 
     do_test("paths", ["foo"])
     do_test("descriptions", [["foo"]])
@@ -881,7 +901,7 @@ def test_make_run_filter():
     add_run_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=[])
     filtr = make_run_filter(cli_args)
-    assert filtr.is_empty()
+    assert not filtr
 
 
 def test_run_filter_from_report(tmpdir):
@@ -899,7 +919,7 @@ def test_run_filter_from_report(tmpdir):
     add_run_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=["--from-report", tmpdir.strpath])
     filtr = make_report_filter(cli_args)
-    assert filtr.match_test(suite.get_tests()[0])
+    assert filtr(suite.get_tests()[0])
 
 
 def test_make_report_filter():
@@ -907,7 +927,7 @@ def test_make_report_filter():
     add_report_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=[])
     filtr = make_report_filter(cli_args)
-    assert filtr.is_empty()
+    assert not filtr
 
 
 def test_add_report_filter_cli_args():

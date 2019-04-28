@@ -218,7 +218,7 @@ def print_report(report, filtr=None, max_width=None, explicit=False):
     # Get a generator over data to be printed on the console
     ###
     renderer = Renderer(max_width=max_width, explicit=explicit)
-    if not filtr or filtr.is_empty():
+    if not filtr:
         if report.nb_tests == 0:
             print("No tests found in report")
             return

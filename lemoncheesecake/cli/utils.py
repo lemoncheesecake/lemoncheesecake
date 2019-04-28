@@ -24,7 +24,7 @@ LEMONCHEESECAKE_VERSION = "lemoncheesecake version %s (using Python %s - %s)" % 
 
 def filter_suites_from_cli_args(suites, cli_args):
     filtr = make_run_filter(cli_args)
-    if filtr.is_empty():
+    if not filtr:
         return suites
 
     suites = filter_suites(suites, filtr)
