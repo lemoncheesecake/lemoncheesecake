@@ -592,8 +592,8 @@ def test_teardown_test_session_after_test_failure_and_test_success():
     assert marker == ["test_session_setup", "test_1", "test_2", "test_session_teardown"]
 
 
-def test_session_prerun_fixture_exception():
-    @lcc.fixture(scope="session_prerun")
+def test_pre_run_fixture_exception():
+    @lcc.fixture(scope="pre_run")
     def fix():
         1 / 0
 
@@ -609,8 +609,8 @@ def test_session_prerun_fixture_exception():
         assert_test_skipped(report)
 
 
-def test_session_prerun_fixture_user_error():
-    @lcc.fixture(scope="session_prerun")
+def test_pre_run_fixture_user_error():
+    @lcc.fixture(scope="pre_run")
     def fix():
         raise lcc.UserError("some error")
 
@@ -626,8 +626,8 @@ def test_session_prerun_fixture_user_error():
         assert_test_skipped(report)
 
 
-def test_session_prerun_fixture_teardown_exception():
-    @lcc.fixture(scope="session_prerun")
+def test_pre_run_fixture_teardown_exception():
+    @lcc.fixture(scope="pre_run")
     def fix():
         yield
         1 / 0
@@ -644,8 +644,8 @@ def test_session_prerun_fixture_teardown_exception():
         assert_test_passed(report)
 
 
-def test_session_prerun_fixture_teardown_user_error():
-    @lcc.fixture(scope="session_prerun")
+def test_pre_run_fixture_teardown_user_error():
+    @lcc.fixture(scope="pre_run")
     def fix():
         yield
         raise lcc.UserError("some error")
@@ -729,7 +729,7 @@ def test_run_with_fixture_with_logs():
 def test_run_with_fixtures_using_yield_and_dependencies():
     marker = []
 
-    @lcc.fixture(scope="session_prerun")
+    @lcc.fixture(scope="pre_run")
     def session_fixture_prerun():
         retval = 2
         marker.append(retval)
@@ -783,21 +783,21 @@ def test_run_with_fixtures_using_yield_and_dependencies():
     assert report.get_suites()[0].get_tests()[0].steps[1].entries[0].message == "test_fixture_teardown"
 
 
-def test_run_with_fixtures_dependencies_in_test_session_prerun_scope():
+def test_run_with_fixtures_dependencies_in_test_pre_run_scope():
     # in this test, fixture dependency is set on fixture alphabetical inverse
     # order to highlight a bad dependency check implementation that use set data type
 
     marker = []
 
-    @lcc.fixture(names=["fixt_3"], scope="session_prerun")
+    @lcc.fixture(names=["fixt_3"], scope="pre_run")
     def fixt3():
         return 2
 
-    @lcc.fixture(names=["fixt_2"], scope="session_prerun")
+    @lcc.fixture(names=["fixt_2"], scope="pre_run")
     def fixt2(fixt_3):
         return fixt_3 * 3
 
-    @lcc.fixture(names=["fixt_1"], scope="session_prerun")
+    @lcc.fixture(names=["fixt_1"], scope="pre_run")
     def fixt1(fixt_2):
         return fixt_2 * 4
 
@@ -1038,11 +1038,11 @@ def test_fixture_name_scopes():
     fixts = []
 
     @lcc.fixture(scope="session")
-    def fixt_session_prerun(fixture_name):
+    def fixt_pre_run(fixture_name):
         fixts.append(fixture_name)
 
     @lcc.fixture(scope="session")
-    def fixt_session(fixture_name, fixt_session_prerun):
+    def fixt_session(fixture_name, fixt_pre_run):
         fixts.append(fixture_name)
 
     @lcc.fixture(scope="suite")
@@ -1059,9 +1059,9 @@ def test_fixture_name_scopes():
         def test(self, fixt_test):
             pass
 
-    run_suite_class(suite, fixtures=[fixt_session_prerun, fixt_session, fixt_suite, fixt_test])
+    run_suite_class(suite, fixtures=[fixt_pre_run, fixt_session, fixt_suite, fixt_test])
 
-    assert fixts == ["fixt_session_prerun", "fixt_session", "fixt_suite", "fixt_test"]
+    assert fixts == ["fixt_pre_run", "fixt_session", "fixt_suite", "fixt_test"]
 
 
 def test_fixture_name_multiple_names():
@@ -1186,7 +1186,7 @@ def test_disabled_suite():
 def test_get_fixture():
     marker = []
 
-    @lcc.fixture(scope="session_prerun")
+    @lcc.fixture(scope="pre_run")
     def fixt():
         return 42
 
@@ -1242,7 +1242,7 @@ def test_get_fixture_unknown():
 def test_get_fixture_not_executed():
     marker = []
 
-    @lcc.fixture(scope="session_prerun")
+    @lcc.fixture(scope="pre_run")
     def fixt():
         return 42
 

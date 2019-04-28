@@ -24,7 +24,7 @@ SCOPE_LEVELS = {
     "test": 1,
     "suite": 2,
     "session": 3,
-    "session_prerun": 4
+    "pre_run": 4
 }
 
 
@@ -78,7 +78,7 @@ class BaseFixture(object):
             "test": 1,
             "suite": 2,
             "session": 3,
-            "session_prerun": 4
+            "pre_run": 4
         }[self.scope]
 
 
@@ -99,7 +99,7 @@ class Fixture(BaseFixture):
 class BuiltinFixture(BaseFixture):
     def __init__(self, name, value):
         self.name = name
-        self.scope = "session_prerun"
+        self.scope = "pre_run"
         self.params = []
         self._value = value
 
@@ -280,11 +280,11 @@ class FixtureRegistry:
             parent_scheduled_fixtures=parent_scheduled_fixtures
         )
 
-    def get_fixtures_scheduled_for_session_prerun(self, suites):
+    def get_fixtures_scheduled_for_pre_run(self, suites):
         fixtures = OrderedSet()
         for suite in suites:
             fixtures.update(FixtureRegistry.get_fixtures_used_in_suite_recursively(suite))
-        return self.get_scheduled_fixtures_for_scope(fixtures, "session_prerun")
+        return self.get_scheduled_fixtures_for_scope(fixtures, "pre_run")
 
     def get_fixtures_scheduled_for_session(self, suites, prerun_session_scheduled_fixtures):
         fixtures = OrderedSet()

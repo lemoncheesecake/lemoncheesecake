@@ -559,7 +559,7 @@ def run_suites(suites, fixture_registry, event_manager, force_disabled=False, st
 
     # setup pre_session fixtures
     errors = []
-    scheduled_fixtures = fixture_registry.get_fixtures_scheduled_for_session_prerun(suites)
+    scheduled_fixtures = fixture_registry.get_fixtures_scheduled_for_pre_run(suites)
     initialize_fixtures_cache(scheduled_fixtures)
     for setup, teardown in scheduled_fixtures.get_setup_teardown_pairs():
         try:
@@ -567,7 +567,7 @@ def run_suites(suites, fixture_registry, event_manager, force_disabled=False, st
         except UserError:
             raise
         except Exception:
-            errors.append("Got the following exception when executing fixture (scope 'session_prerun')%s" % (
+            errors.append("Got the following exception when executing fixture (scope 'pre_run')%s" % (
                 serialize_current_exception(show_stacktrace=True)
             ))
             break
@@ -588,7 +588,7 @@ def run_suites(suites, fixture_registry, event_manager, force_disabled=False, st
         except UserError:
             raise
         except Exception:
-            errors.append("Got the following exception on fixture teardown (scope 'session_prerun')%s" % (
+            errors.append("Got the following exception on fixture teardown (scope 'pre_run')%s" % (
                 serialize_current_exception(show_stacktrace=True)
             ))
 

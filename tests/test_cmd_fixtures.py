@@ -6,7 +6,7 @@ from helpers.cli import cmdout
 
 FIXTURES_MODULE = """import lemoncheesecake.api as lcc
 
-@lcc.fixture(scope="session_prerun")
+@lcc.fixture(scope="pre_run")
 def qux():
     pass
 
@@ -76,7 +76,7 @@ def test_fixtures(project, cmdout):
 def test_fixtures_empty_project(notest_project, cmdout):
     assert run_main(["fixtures"]) == 0
 
-    cmdout.assert_lines_match(".*session_prerun.*:.*none.*")
+    cmdout.assert_lines_match(".*pre_run.*:.*none.*")
     cmdout.assert_lines_match(".*session.*:.*none.*")
     cmdout.assert_lines_match(".*suite.*:.*none.*")
     cmdout.assert_lines_match(".*test.*:.*none.*")

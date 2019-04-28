@@ -261,7 +261,7 @@ def log_url(url, description=None, step=None):
 
 def get_fixture(name):
     """
-    Return the corresponding fixture value. Only fixtures whose scope is session_prerun can be retrieved.
+    Return the corresponding fixture value. Only fixtures whose scope is pre_run can be retrieved.
     """
     global _scheduled_fixtures
 

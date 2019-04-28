@@ -63,7 +63,7 @@ class FixturesCommand(Command):
             for param in fixt.params:
                 used_by_fixtures[param] = used_by_fixtures.get(param, 0) + 1
 
-        for scope in "session_prerun", "session", "suite", "test":
+        for scope in "pre_run", "session", "suite", "test":
             self.show_fixtures(scope, fixtures_by_scope.get(scope, []), used_by_tests, used_by_fixtures)
             print()
 

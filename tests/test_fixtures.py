@@ -358,7 +358,7 @@ def test_registry_forbidden_fixture_name():
 
 
 def build_registry():
-    @lcc.fixture(scope="session_prerun")
+    @lcc.fixture(scope="pre_run")
     def fix0():
         pass
 
@@ -463,8 +463,8 @@ def test_check_fixtures_in_suites_incompatible_fixture_in_inject():
 
 @pytest.fixture()
 def fixture_registry_sample():
-    @lcc.fixture(scope="session_prerun")
-    def fixt_for_session_prerun1():
+    @lcc.fixture(scope="pre_run")
+    def fixt_for_pre_run1():
         pass
 
     @lcc.fixture(scope="session")
@@ -472,7 +472,7 @@ def fixture_registry_sample():
         pass
 
     @lcc.fixture(scope="session")
-    def fixt_for_session2(fixt_for_session_prerun1):
+    def fixt_for_session2(fixt_for_pre_run1):
         pass
 
     @lcc.fixture(scope="session")
@@ -500,7 +500,7 @@ def fixture_registry_sample():
         pass
 
     return build_fixture_registry(
-        fixt_for_session_prerun1, fixt_for_session1, fixt_for_session2, fixt_for_session3,
+        fixt_for_pre_run1, fixt_for_session1, fixt_for_session2, fixt_for_session3,
         fixt_for_suite1, fixt_for_suite2,
         fixt_for_test1, fixt_for_test2, fixt_for_test3
     )
@@ -527,9 +527,9 @@ def suites_sample():
     return load_suites_from_classes([suite1, suite2])
 
 
-def test_get_fixtures_scheduled_for_session_prerun(fixture_registry_sample, suites_sample):
-    scheduled = fixture_registry_sample.get_fixtures_scheduled_for_session_prerun(suites_sample)
-    assert sorted(scheduled.get_fixture_names()) == ["fixt_for_session_prerun1"]
+def test_get_fixtures_scheduled_for_pre_run(fixture_registry_sample, suites_sample):
+    scheduled = fixture_registry_sample.get_fixtures_scheduled_for_pre_run(suites_sample)
+    assert sorted(scheduled.get_fixture_names()) == ["fixt_for_pre_run1"]
 
 
 def test_get_fixtures_scheduled_for_session(fixture_registry_sample, suites_sample):
