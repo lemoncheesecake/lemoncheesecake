@@ -117,7 +117,7 @@ class TestTask(BaseTask):
         return self.dependencies
 
     def skip(self, context, reason=""):
-        context.event_manager.fire(events.TestSkippedEvent(self.test, reason))
+        context.event_manager.fire(events.TestSkippedEvent(self.test, "Test skipped because %s" % reason))
         mark_location_as_failed(TreeLocation.in_test(self.test))
 
     def run(self, context):
@@ -191,7 +191,7 @@ class TestTask(BaseTask):
         context.event_manager.fire(events.TestEndEvent(self.test))
 
         if not is_location_successful(TreeLocation.in_test(self.test)):
-            raise TaskFailure()
+            raise TaskFailure("test '%s' failed" % self.test.path)
 
     def __str__(self):
         return "<%s %s>" % (self.__class__.__name__, self.test.path)
@@ -314,7 +314,7 @@ class SuiteInitializationTask(BaseTask):
             # after actual initialization
             context.event_manager.fire(events.SuiteSetupEndEvent(self.suite))
             if not is_location_successful(TreeLocation.in_suite_setup(self.suite)):
-                raise TaskFailure()
+                raise TaskFailure("suite '%s' setup failed" % self.suite.path)
         else:
             self.teardown_funcs = [teardown for _, teardown in self.setup_teardown_funcs if teardown]
 
@@ -430,7 +430,7 @@ class TestSessionSetupTask(BaseTask):
             # after actual setup
             context.event_manager.fire(events.TestSessionSetupEndEvent())
             if not is_location_successful(TreeLocation.in_test_session_setup()):
-                raise TaskFailure()
+                raise TaskFailure("test session setup failed")
         else:
             self.teardown_funcs = [teardown for _, teardown in setup_teardown_funcs if teardown]
 

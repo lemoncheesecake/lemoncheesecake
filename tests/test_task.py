@@ -3,7 +3,8 @@ from functools import reduce
 
 import pytest
 
-from lemoncheesecake.task import BaseTask, TasksExecutionFailure, run_tasks, check_task_dependencies
+from lemoncheesecake.task import BaseTask, TasksExecutionFailure, run_tasks, check_task_dependencies, \
+    TaskResultSuccess, TaskResultFailure
 from lemoncheesecake.exceptions import TaskFailure, CircularDependencyError
 
 
@@ -39,7 +40,7 @@ class ExceptionTask(BaseTestTask):
         BaseTestTask.__init__(self, name, on_success_dependencies, on_completion_dependencies)
         self._exception = exception
         self.skipped = False
-        self.result = 0
+        self.output = 0
 
     def run(self, context):
         raise self._exception
@@ -48,15 +49,15 @@ class ExceptionTask(BaseTestTask):
 class DummyTask(BaseTestTask):
     def __init__(self, name, value, on_success_dependencies=None, on_completion_dependencies=None):
         BaseTestTask.__init__(self, name, on_success_dependencies, on_completion_dependencies)
-        self.value = value
-        self.result = None
+        self.input = value
+        self.output = None
 
     def run(self, context):
         time.sleep(0.001)
-        self.result = reduce(
+        self.output = reduce(
             lambda x, y: x + y,
-            (dep.result for dep in self.on_success_dependencies + self.on_completion_dependencies),
-            self.value
+            (dep.output for dep in self.on_success_dependencies + self.on_completion_dependencies),
+            self.input
         )
 
 
@@ -68,7 +69,7 @@ def test_run_tasks_success():
 
     run_tasks((a, b, c, d), nb_threads=1)
 
-    assert d.result == 11
+    assert d.output == 11
 
 
 def test_run_tasks_failure_1():
@@ -141,7 +142,7 @@ def test_run_tasks_using_on_completion_dependency_1():
     run_tasks((a, b))
 
     assert not a.skipped
-    assert b.result == 1
+    assert b.output == 1
 
 
 def test_run_tasks_using_on_completion_dependency_2():
@@ -150,8 +151,8 @@ def test_run_tasks_using_on_completion_dependency_2():
 
     run_tasks((a, b))
 
-    assert a.successful and b.successful
-    assert b.result == 2
+    assert isinstance(a.result, TaskResultSuccess) and isinstance(b.result, TaskResultSuccess)
+    assert b.output == 2
 
 
 def test_run_tasks_using_on_completion_dependency_3():
@@ -162,8 +163,8 @@ def test_run_tasks_using_on_completion_dependency_3():
     run_tasks((a, b, c))
 
     assert not a.skipped
-    assert b.successful
-    assert c.result == 2
+    assert isinstance(b.result, TaskResultSuccess)
+    assert c.output == 2
 
 
 def test_run_tasks_using_on_completion_dependency_4():
@@ -173,7 +174,7 @@ def test_run_tasks_using_on_completion_dependency_4():
 
     run_tasks((a, b, c))
 
-    assert a.successful is False and b.successful is False
+    assert isinstance(a.result, TaskResultFailure) and isinstance(b.result, TaskResultFailure)
     assert c.skipped
 
 
@@ -184,7 +185,7 @@ def test_run_tasks_using_on_completion_dependency_5():
 
     run_tasks((a, b, c))
 
-    assert a.successful is False and b.successful is False
+    assert isinstance(a.result, TaskResultFailure) and isinstance(b.result, TaskResultFailure)
     assert c.skipped
 
 
