@@ -18,3 +18,4 @@ Table of content
     parallelism
     cli
     project
+    v1-migration-guide

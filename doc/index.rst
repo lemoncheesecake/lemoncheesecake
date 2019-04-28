@@ -120,6 +120,8 @@ Writing tests
 
 - :ref:`Project customization <project>`
 
+- :ref:`Migrating from to 0.22.x to 1.x <v1 migration guide>`
+
 Contact
 -------
 

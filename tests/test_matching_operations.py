@@ -36,17 +36,6 @@ def test_check_that_failure(runtime_mock):
     assert "bar" in details
 
 
-def test_check_that_entry(runtime_mock):
-    ret = check_that_entry("foo", equal_to("bar"), in_={"foo": "bar"})
-    assert ret
-    
-    description, outcome, details = get_last_mocked_logged_check()
-
-    assert "foo" in description and "bar" in description
-    assert outcome is True
-    assert "bar" in details
-
-
 def test_check_that_in(runtime_mock):
     results = check_that_in({"foo": 1, "bar": 2}, "foo", equal_to(1), "bar", equal_to(2))
 
@@ -99,7 +88,16 @@ def test_check_that_in_with_tuple_and_base_key(runtime_mock):
     assert "baz" in details
 
 
-def test_require_that_in(runtime_mock):
+def test_require_that_in_success(runtime_mock):
+    require_that_in({"foo": 1, "bar": 2}, "foo", equal_to(1), "bar", equal_to(2))
+
+    mock_results = get_mocked_logged_checks()
+
+    assert len(mock_results) == 2
+    assert all(mock_results)
+
+
+def test_require_that_in_failure(runtime_mock):
     with pytest.raises(lcc.AbortTest):
         require_that_in({"foo": 2, "bar": 2}, "foo", equal_to(1), "bar", equal_to(2))
 
@@ -114,11 +112,22 @@ def test_require_that_in(runtime_mock):
     assert "2" in details
 
 
-def test_assert_that_in(runtime_mock):
+def test_assert_that_in_success(runtime_mock):
     results = assert_that_in({"foo": 1, "bar": 2}, "foo", equal_to(1), "bar", equal_to(2))
 
     assert all(results)
     assert len(get_mocked_logged_checks()) == 0
+
+
+def test_assert_that_in_failure(runtime_mock):
+    with pytest.raises(lcc.AbortTest):
+        assert_that_in({"foo": "baz"}, "foo", equal_to("bar"))
+
+    description, outcome, details = get_last_mocked_logged_check()
+
+    assert "foo" in description and "bar" in description
+    assert outcome is False
+    assert "baz" in details
 
 
 def test_require_that_success(runtime_mock):
@@ -143,17 +152,6 @@ def test_require_that_failure(runtime_mock):
     assert "bar" in details
 
 
-def test_require_that_entry(runtime_mock):
-    result = require_that_entry("foo", equal_to("bar"), in_={"foo": "bar"})
-    assert result
-
-    description, outcome, details = get_last_mocked_logged_check()
-
-    assert "foo" in description and "bar" in description
-    assert outcome is True
-    assert "bar" in details
-
-
 def test_assert_that_success(runtime_mock):
     result = assert_that("value", "foo", equal_to("foo"))
     assert result
@@ -170,90 +168,6 @@ def test_assert_that_failure(runtime_mock):
     assert "value" in description and "foo" in description
     assert outcome is False
     assert "bar" in details
-
-
-def test_assert_that_entry_success(runtime_mock):
-    result = assert_that_entry("foo", equal_to("bar"), in_={"foo": "bar"})
-    assert result
-
-    assert len(get_mocked_logged_checks()) == 0
-
-
-def test_assert_that_entry_failure(runtime_mock):
-    with pytest.raises(lcc.AbortTest):
-        assert_that_entry("foo", equal_to("bar"), in_={"foo": "baz"})
-
-    description, outcome, details = get_last_mocked_logged_check()
-
-    assert "foo" in description and "bar" in description
-    assert outcome is False
-    assert "baz" in details
-
-
-def test_this_dict(runtime_mock):
-    with this_dict({"foo": "bar"}):
-        result = check_that_entry("foo", equal_to("bar"))
-    assert result
-    
-    description, outcome, details = get_last_mocked_logged_check()
-
-    assert "foo" in description and "bar" in description
-    assert outcome is True
-    assert "bar" in details
-
-
-def test_this_dict_multiple(runtime_mock):
-    with this_dict({"foo": "bar"}):
-        result = check_that_entry("foo", equal_to("bar"))
-    assert result
-    with this_dict({"foo": "baz"}):
-        result = check_that_entry("foo", equal_to("baz"))
-    assert result
-
-    description, outcome, details = get_mocked_logged_checks()[0]
-    assert "foo" in description and "bar" in description
-    assert outcome is True
-    assert "bar" in details
-
-    description, outcome, details = get_mocked_logged_checks()[1]
-    assert "foo" in description and "baz" in description
-    assert outcome is True
-    assert "baz" in details
-
-
-def test_this_dict_imbricated(runtime_mock):
-    with this_dict({"foo": "bar"}):
-        check_that_entry("foo", equal_to("bar"))
-        with this_dict({"foo": "baz"}):
-            check_that_entry("foo", equal_to("baz"))
-    with this_dict({"foo": "foo"}):
-        check_that_entry("foo", equal_to("foo"))
-
-    assert all(outcome for _, outcome, _ in get_mocked_logged_checks())
-
-
-def test_this_dict_using_base_key(runtime_mock):
-    with this_dict({"foo": {"bar": "baz"}}).using_base_key("foo"):
-        result = check_that_entry("bar", equal_to("baz"))
-    assert result
-
-    description, outcome, details = get_last_mocked_logged_check()
-
-    assert "foo" in description and "bar" in description
-    assert outcome is True
-    assert "baz" in details
-
-
-def test_this_dict_using_base_key_as_list(runtime_mock):
-    with this_dict({"foo": {"bar": "baz"}}).using_base_key(["foo"]):
-        result = check_that_entry("bar", equal_to("baz"))
-    assert result
-
-    description, outcome, details = get_last_mocked_logged_check()
-
-    assert "foo" in description and "bar" in description
-    assert outcome is True
-    assert "baz" in details
 
 
 def test_unicode(runtime_mock):
