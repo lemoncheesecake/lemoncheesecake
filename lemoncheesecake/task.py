@@ -79,7 +79,10 @@ def handle_task(task, watchdogs, context, completed_task_queue):
     _debug("handle task %s" % task)
     for dep_task in task.get_on_success_dependencies():
         if not isinstance(dep_task.result, TaskResultSuccess):
-            skip_task(task, context, completed_task_queue)
+            reason = None
+            if isinstance(dep_task.result, TaskResultFailure):
+                reason = dep_task.result.reason
+            skip_task(task, context, completed_task_queue, reason)
             return
 
     for watchdog in watchdogs:
