@@ -270,28 +270,6 @@ def test_multiple_steps():
     assert test.steps[1].entries[0].message == "do something else"
 
 
-def test_concurrent_steps():
-    @lcc.suite("MySuite")
-    class mysuite:
-        @lcc.test("Some test")
-        def sometest(self):
-            lcc.set_step("step 1", detached=True)
-            lcc.set_step("step 2", detached=True)
-            lcc.log_info("do something else", step="step 2")
-            lcc.log_info("do something", step="step 1")
-
-    report = run_suite_class(mysuite)
-
-    test = get_last_test(report)
-    assert test.status == "passed"
-    assert test.steps[0].description == "step 1"
-    assert test.steps[0].entries[0].level == "info"
-    assert test.steps[0].entries[0].message == "do something"
-    assert test.steps[1].description == "step 2"
-    assert test.steps[1].entries[0].level == "info"
-    assert test.steps[1].entries[0].message == "do something else"
-
-
 def test_multiple_steps_on_different_threads():
     def thread_func(i):
         lcc.set_step(str(i), detached=True)

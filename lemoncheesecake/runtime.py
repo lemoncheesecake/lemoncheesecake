@@ -79,24 +79,21 @@ class _Runtime(object):
     def end_step(self, step):
         self.event_manager.fire(events.StepEndEvent(self._local.location, step))
 
-    def _get_step(self, step):
-        return step if step is not None else self._local.step
-
-    def log(self, level, content, step=None):
+    def log(self, level, content):
         if level == LOG_LEVEL_ERROR:
             self.mark_location_as_failed(self.location)
-        self.event_manager.fire(events.LogEvent(self._local.location, self._get_step(step), level, content))
+        self.event_manager.fire(events.LogEvent(self._local.location, self._local.step, level, content))
 
-    def log_check(self, description, outcome, details, step=None):
+    def log_check(self, description, outcome, details):
         if outcome is False:
             self.mark_location_as_failed(self.location)
-        self.event_manager.fire(events.CheckEvent(self._local.location, self._get_step(step), description, outcome, details))
+        self.event_manager.fire(events.CheckEvent(self._local.location, self._local.step, description, outcome, details))
 
-    def log_url(self, url, description, step=None):
-        self.event_manager.fire(events.LogUrlEvent(self._local.location, self._get_step(step), url, description))
+    def log_url(self, url, description):
+        self.event_manager.fire(events.LogUrlEvent(self._local.location, self._local.step, url, description))
 
     @contextmanager
-    def prepare_attachment(self, filename, description, as_image=False, step=None):
+    def prepare_attachment(self, filename, description, as_image=False):
         with self._attachment_lock:
             attachment_filename = "%04d_%s" % (self.attachment_count + 1, filename)
             self.attachment_count += 1
@@ -106,7 +103,7 @@ class _Runtime(object):
         yield os.path.join(self.attachments_dir, attachment_filename)
 
         self.event_manager.fire(events.LogAttachmentEvent(
-            self._local.location, self._get_step(step), "%s/%s" % (ATTACHEMENT_DIR, attachment_filename),
+            self._local.location, self._local.step, "%s/%s" % (ATTACHEMENT_DIR, attachment_filename),
             description, as_image
         ))
 
@@ -154,85 +151,85 @@ def detached_step(description):
     end_step(description)
 
 
-def log_debug(content, step=None):
+def log_debug(content):
     """
     Log a debug level message.
     """
-    get_runtime().log(LOG_LEVEL_DEBUG, content, step=step)
+    get_runtime().log(LOG_LEVEL_DEBUG, content)
 
 
-def log_info(content, step=None):
+def log_info(content):
     """
     Log a info level message.
     """
-    get_runtime().log(LOG_LEVEL_INFO, content, step=step)
+    get_runtime().log(LOG_LEVEL_INFO, content)
 
 
-def log_warning(content, step=None):
+def log_warning(content):
     """
     Log a warning level message.
     """
-    get_runtime().log(LOG_LEVEL_WARN, content, step=step)
+    get_runtime().log(LOG_LEVEL_WARN, content)
 
 
 log_warn = log_warning
 
 
-def log_error(content, step=None):
+def log_error(content):
     """
     Log an error level message.
     """
-    get_runtime().log(LOG_LEVEL_ERROR, content, step=step)
+    get_runtime().log(LOG_LEVEL_ERROR, content)
 
 
-def log_check(description, outcome, details=None, step=None):
-    get_runtime().log_check(description, outcome, details, step=step)
+def log_check(description, outcome, details=None):
+    get_runtime().log_check(description, outcome, details)
 
 
-def _prepare_attachment(filename, description=None, as_image=False, step=None):
-    return get_runtime().prepare_attachment(filename, description or filename, as_image=as_image, step=step)
+def _prepare_attachment(filename, description=None, as_image=False):
+    return get_runtime().prepare_attachment(filename, description or filename, as_image=as_image)
 
 
-def prepare_attachment(filename, description=None, step=None):
+def prepare_attachment(filename, description=None):
     """
     Prepare a attachment using a pseudo filename and an optional description.
     The function returns the real filename on disk that will be used by the caller
     to write the attachment content.
     """
-    return _prepare_attachment(filename, description, step=step)
+    return _prepare_attachment(filename, description)
 
 
-def prepare_image_attachment(filename, description=None, step=None):
+def prepare_image_attachment(filename, description=None):
     """
     Prepare an image attachment using a pseudo filename and an optional description.
     The function returns the real filename on disk that will be used by the caller
     to write the attachment content.
     """
-    return _prepare_attachment(filename, description, as_image=True, step=step)
+    return _prepare_attachment(filename, description, as_image=True)
 
 
-def _save_attachment_file(filename, description=None, as_image=False, step=None):
-    with _prepare_attachment(os.path.basename(filename), description, as_image=as_image, step=step) as report_attachment_path:
+def _save_attachment_file(filename, description=None, as_image=False):
+    with _prepare_attachment(os.path.basename(filename), description, as_image=as_image) as report_attachment_path:
         shutil.copy(filename, report_attachment_path)
 
 
-def save_attachment_file(filename, description=None, step=None):
+def save_attachment_file(filename, description=None):
     """
     Save an attachment using an existing file (identified by filename) and an optional
     description. The given file will be copied.
     """
-    return _save_attachment_file(filename, description, step=step)
+    return _save_attachment_file(filename, description)
 
 
-def save_image_file(filename, description=None, step=None):
+def save_image_file(filename, description=None):
     """
     Save an image using an existing file (identified by filename) and an optional
     description. The given file will be copied.
     """
-    return _save_attachment_file(filename, description, as_image=True, step=step)
+    return _save_attachment_file(filename, description, as_image=True)
 
 
-def _save_attachment_content(content, filename, description=None, as_image=False, step=None):
+def _save_attachment_content(content, filename, description=None, as_image=False):
     if type(content) is six.text_type:
         opening_mode = "w"
         if six.PY2:
@@ -240,30 +237,30 @@ def _save_attachment_content(content, filename, description=None, as_image=False
     else:
         opening_mode = "wb"
 
-    with _prepare_attachment(filename, description, as_image=as_image, step=step) as path:
+    with _prepare_attachment(filename, description, as_image=as_image) as path:
         with open(path, opening_mode) as fh:
             fh.write(content)
 
 
-def save_attachment_content(content, filename, description=None, step=None):
+def save_attachment_content(content, filename, description=None):
     """
     Save a given content as attachment using pseudo filename and optional description.
     """
-    return _save_attachment_content(content, filename, description, as_image=False, step=step)
+    return _save_attachment_content(content, filename, description, as_image=False)
 
 
-def save_image_content(content, filename, description=None, step=None):
+def save_image_content(content, filename, description=None):
     """
     Save a given image content as attachment using pseudo filename and optional description.
     """
-    return _save_attachment_content(content, filename, description, as_image=True, step=step)
+    return _save_attachment_content(content, filename, description, as_image=True)
 
 
-def log_url(url, description=None, step=None):
+def log_url(url, description=None):
     """
     Log an URL.
     """
-    get_runtime().log_url(url, description or url, step=step)
+    get_runtime().log_url(url, description or url)
 
 
 def get_fixture(name):
