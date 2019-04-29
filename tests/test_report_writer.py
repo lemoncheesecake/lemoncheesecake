@@ -472,9 +472,9 @@ def test_save_image_file(tmpdir):
     )
 
 
-def _test_save_attachment_content(tmpdir, file_name, file_content, binary_mode, file_reader):
+def _test_save_attachment_content(tmpdir, file_name, file_content, file_reader):
     def do():
-        lcc.save_attachment_content(file_content, file_name, binary_mode=binary_mode)
+        lcc.save_attachment_content(file_content, file_name)
 
     report = run_func_in_test(do, tmpdir=tmpdir)
 
@@ -482,15 +482,15 @@ def _test_save_attachment_content(tmpdir, file_name, file_content, binary_mode, 
 
 
 def test_save_attachment_text_ascii(tmpdir):
-    _test_save_attachment_content(tmpdir, "foobar.txt", "foobar", False, make_file_reader())
+    _test_save_attachment_content(tmpdir, "foobar.txt", "foobar", make_file_reader())
 
 
 def test_save_attachment_text_utf8(tmpdir):
-    _test_save_attachment_content(tmpdir, "foobar.txt", u"éééçççààà", False, make_file_reader(encoding="utf-8"))
+    _test_save_attachment_content(tmpdir, "foobar.txt", u"éééçççààà", make_file_reader(encoding="utf-8"))
 
 
 def test_save_attachment_binary(tmpdir):
-    _test_save_attachment_content(tmpdir, "foobar.png", SAMPLE_IMAGE_CONTENT, True, make_file_reader(binary=True))
+    _test_save_attachment_content(tmpdir, "foobar.png", SAMPLE_IMAGE_CONTENT, make_file_reader(binary=True))
 
 
 def test_save_image_content(tmpdir):

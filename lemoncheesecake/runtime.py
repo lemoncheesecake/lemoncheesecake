@@ -232,24 +232,31 @@ def save_image_file(filename, description=None, step=None):
     return _save_attachment_file(filename, description, as_image=True, step=step)
 
 
-def _save_attachment_content(content, filename, description=None, as_image=False, binary_mode=False, step=None):
-    with _prepare_attachment(filename, description, as_image=as_image, step=step) as report_attachment_path:
-        with open(report_attachment_path, "wb") as fh:
-            fh.write(content if binary_mode else content.encode("utf-8"))
+def _save_attachment_content(content, filename, description=None, as_image=False, step=None):
+    if type(content) is six.text_type:
+        opening_mode = "w"
+        if six.PY2:
+            content = content.encode("utf-8")
+    else:
+        opening_mode = "wb"
+
+    with _prepare_attachment(filename, description, as_image=as_image, step=step) as path:
+        with open(path, opening_mode) as fh:
+            fh.write(content)
 
 
-def save_attachment_content(content, filename, description=None, binary_mode=False, step=None):
+def save_attachment_content(content, filename, description=None, step=None):
     """
     Save a given content as attachment using pseudo filename and optional description.
     """
-    return _save_attachment_content(content, filename, description, binary_mode=binary_mode, as_image=False, step=step)
+    return _save_attachment_content(content, filename, description, as_image=False, step=step)
 
 
 def save_image_content(content, filename, description=None, step=None):
     """
     Save a given image content as attachment using pseudo filename and optional description.
     """
-    return _save_attachment_content(content, filename, description, binary_mode=True, as_image=True, step=step)
+    return _save_attachment_content(content, filename, description, as_image=True, step=step)
 
 
 def log_url(url, description=None, step=None):
