@@ -1,7 +1,5 @@
 import pytest
 
-from lemoncheesecake.reporting.backends.json_ import JsonBackend, load_report_from_file
-from lemoncheesecake.exceptions import InvalidReportFile
 from lemoncheesecake.events import SyncEventManager
 from lemoncheesecake.reporting.replay import replay_report_events
 from lemoncheesecake.reporting import ReportWriter
@@ -29,7 +27,7 @@ def _test_serialization(suites_or_report, _, __, fixtures=(), report_saving_stra
 
     replay_report_events(report, event_manager)
 
-    assert_report(new_report, report)
+    assert_report(new_report, report, is_persisted=False)
 
 
 @pytest.fixture(scope="function")

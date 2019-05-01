@@ -4,6 +4,8 @@ Created on Mar 27, 2016
 @author: nicolas
 '''
 
+import time
+
 try:
     from lxml import etree as ET
     from lxml.builder import E
@@ -198,7 +200,7 @@ def serialize_report_as_tree(report):
     report_version_node.text = str("1.0")
     _add_time_attr(xml, "start-time", report.start_time)
     _add_time_attr(xml, "end-time", report.end_time)
-    _add_time_attr(xml, "generation-time", report.report_generation_time)
+    _add_time_attr(xml, "generation-time", time.time())
 
     title_node = make_xml_child(xml, "title")
     title_node.text = report.title

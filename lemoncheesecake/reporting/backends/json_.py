@@ -7,6 +7,7 @@ Created on Mar 27, 2016
 import re
 import json
 from collections import OrderedDict
+import time
 
 import lemoncheesecake
 from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend
@@ -129,7 +130,7 @@ def serialize_report_into_json(report):
         "lemoncheesecake_report_version", 1.0,
         "start_time", _serialize_time(report.start_time),
         "end_time", _serialize_time(report.end_time),
-        "generation_time", _serialize_time(report.report_generation_time),
+        "generation_time", _serialize_time(time.time()),
         "nb_threads", report.nb_threads,
         "title", report.title,
         "info", [[n, v] for n, v in report.info],

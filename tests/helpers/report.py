@@ -290,7 +290,7 @@ def assert_suite_data(actual, expected):
     assert_hook_data(actual.suite_teardown, expected.suite_teardown)
 
 
-def assert_report(actual, expected):
+def assert_report(actual, expected, is_persisted=True):
     assert actual.title == expected.title
     assert actual.info == expected.info
     assert_time(actual.start_time, expected.start_time)
@@ -298,10 +298,10 @@ def assert_report(actual, expected):
         assert actual.end_time is None
     else:
         assert_time(actual.end_time, expected.end_time)
-    if expected.report_generation_time is None:
-        assert actual.report_generation_time is None
+    if is_persisted:
+        assert actual.report_generation_time is not None
     else:
-        assert_time(actual.report_generation_time, expected.report_generation_time)
+        assert actual.report_generation_time is None
     assert actual.nb_threads == expected.nb_threads
     assert len(actual.get_suites()) == len(expected.get_suites())
 
@@ -360,7 +360,6 @@ def assert_suite_data_from_suite(suite_data, suite):
 def assert_report_from_suites(report, suite_classes):
     assert report.start_time is not None
     assert report.end_time is not None
-    assert report.report_generation_time is not None
     assert len(report.get_suites()) == len(suite_classes)
     for suite_data, suite_class in zip(report.get_suites(), suite_classes):
         suite = load_suite_from_class(suite_class)

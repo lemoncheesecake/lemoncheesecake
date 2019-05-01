@@ -76,7 +76,6 @@ class ReportWriter:
 
     def on_test_session_end(self, event):
         self.report.end_time = event.time
-        self.report.report_generation_time = self.report.end_time
 
     def on_test_session_setup_start(self, event):
         self.report.test_session_setup = self._start_hook(event.time)
