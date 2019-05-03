@@ -21,6 +21,11 @@ results of your tests during test execution.
 
 - ``RP_LAUNCH_DESCRIPTION``: the ReportPortal launch description (optional)
 
+If the ReportPortal instance uses https over plain http, you'll need to explicitly trust the remote server certificate
+(unless this certificate has been signed by a trusted CA). This is done by pointing the ``REQUEST_CA_BUNDLE`` environment
+variable to a file that contains the remote server certificate chain. It will be the server certificate itself if it's a
+self-signed certificate.
+
 Slack
 -----
 
