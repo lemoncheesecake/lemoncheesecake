@@ -13,7 +13,7 @@ import lemoncheesecake
 from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend
 from lemoncheesecake.reporting.report import (
     Log, Check, Attachment, Url, Step, TestResult, SetupResult, SuiteResult,
-    format_timestamp, parse_timestamp
+    format_time_as_iso8601, parse_iso8601_time
 )
 from lemoncheesecake.exceptions import InvalidReportFile, ProgrammingError
 
@@ -21,7 +21,7 @@ JS_PREFIX = "var reporting_data = "
 
 
 def _serialize_time(ts):
-    return format_timestamp(ts) if ts else None
+    return format_time_as_iso8601(ts) if ts else None
 
 
 def _dict(*args):
@@ -161,24 +161,24 @@ def save_report_into_file(data, filename, javascript_compatibility=True, pretty_
 
 def _unserialize_step_data(js):
     step = Step(js["description"])
-    step.start_time = parse_timestamp(js["start_time"])
-    step.end_time = parse_timestamp(js["end_time"]) if js["end_time"] else None
+    step.start_time = parse_iso8601_time(js["start_time"])
+    step.end_time = parse_iso8601_time(js["end_time"]) if js["end_time"] else None
     for js_entry in js["entries"]:
         if js_entry["type"] == "log":
             entry = Log(
-                js_entry["level"], js_entry["message"], parse_timestamp(js_entry["time"])
+                js_entry["level"], js_entry["message"], parse_iso8601_time(js_entry["time"])
             )
         elif js_entry["type"] == "attachment":
             entry = Attachment(
-                js_entry["description"], js_entry["filename"], js_entry["as_image"], parse_timestamp(js_entry["time"])
+                js_entry["description"], js_entry["filename"], js_entry["as_image"], parse_iso8601_time(js_entry["time"])
             )
         elif js_entry["type"] == "url":
             entry = Url(
-                js_entry["description"], js_entry["url"], parse_timestamp(js_entry["time"])
+                js_entry["description"], js_entry["url"], parse_iso8601_time(js_entry["time"])
             )
         elif js_entry["type"] == "check":
             entry = Check(
-                js_entry["description"], js_entry["outcome"], js_entry["details"], parse_timestamp(js_entry["time"])
+                js_entry["description"], js_entry["outcome"], js_entry["details"], parse_iso8601_time(js_entry["time"])
             )
         else:
             raise ProgrammingError("Unknown entry type '%s'" % js_entry["type"])
@@ -190,8 +190,8 @@ def _unserialize_test_data(js):
     test = TestResult(js["name"], js["description"])
     test.status = js["status"]
     test.status_details = js["status_details"]
-    test.start_time = parse_timestamp(js["start_time"])
-    test.end_time = parse_timestamp(js["end_time"]) if js["end_time"] else None
+    test.start_time = parse_iso8601_time(js["start_time"])
+    test.end_time = parse_iso8601_time(js["end_time"]) if js["end_time"] else None
     test.tags = js["tags"]
     test.properties = js["properties"]
     test.links = [(link["url"], link["name"]) for link in js["links"]]
@@ -202,8 +202,8 @@ def _unserialize_test_data(js):
 def _unserialize_hook_data(js):
     data = SetupResult()
     data.outcome = js["outcome"]
-    data.start_time = parse_timestamp(js["start_time"])
-    data.end_time = parse_timestamp(js["end_time"]) if js["end_time"] else None
+    data.start_time = parse_iso8601_time(js["start_time"])
+    data.end_time = parse_iso8601_time(js["end_time"]) if js["end_time"] else None
     data.steps = [_unserialize_step_data(s) for s in js["steps"]]
 
     return data
@@ -211,8 +211,8 @@ def _unserialize_hook_data(js):
 
 def _unserialize_suite_data(js):
     suite = SuiteResult(js["name"], js["description"])
-    suite.start_time = parse_timestamp(js["start_time"])
-    suite.end_time = parse_timestamp(js["end_time"]) if js["end_time"] else None
+    suite.start_time = parse_iso8601_time(js["start_time"])
+    suite.end_time = parse_iso8601_time(js["end_time"]) if js["end_time"] else None
     suite.tags = js["tags"]
     suite.properties = js["properties"]
     suite.links = [(link["url"], link["name"]) for link in js["links"]]
@@ -254,9 +254,9 @@ def load_report_from_file(filename):
 
     report.title = js["title"]
     report.info = js["info"]
-    report.start_time = parse_timestamp(js["start_time"])
-    report.end_time = parse_timestamp(js["end_time"]) if js["end_time"] else None
-    report.report_generation_time = parse_timestamp(js["generation_time"]) if js["generation_time"] else None
+    report.start_time = parse_iso8601_time(js["start_time"])
+    report.end_time = parse_iso8601_time(js["end_time"]) if js["end_time"] else None
+    report.report_generation_time = parse_iso8601_time(js["generation_time"]) if js["generation_time"] else None
     report.nb_threads = js["nb_threads"]
 
     if "test_session_setup" in js:

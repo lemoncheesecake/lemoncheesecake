@@ -19,7 +19,7 @@ import lemoncheesecake
 from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend
 from lemoncheesecake.reporting.report import (
     Log, Check, Attachment, Url, Step, TestResult, SetupResult, SuiteResult,
-    format_timestamp, parse_timestamp
+    format_time_as_iso8601, parse_iso8601_time
 )
 from lemoncheesecake.exceptions import ProgrammingError, InvalidReportFile
 
@@ -74,7 +74,7 @@ def make_xml_child(parent_node, name, *args):
 def _add_time_attr(node, name, value):
     if not value:
         return
-    node.attrib[name] = format_timestamp(value)
+    node.attrib[name] = format_time_as_iso8601(value)
 
 
 def _serialize_outcome(outcome):
@@ -100,7 +100,7 @@ def _serialize_steps(steps, parent_node):
                 log_node = make_xml_child(
                     step_node, "log",
                     "level", entry.level,
-                    "time", format_timestamp(entry.time)
+                    "time", format_time_as_iso8601(entry.time)
                 )
                 log_node.text = entry.message
             elif isinstance(entry, Attachment):
@@ -108,14 +108,14 @@ def _serialize_steps(steps, parent_node):
                     step_node, "attachment",
                     "description", entry.description,
                     "as-image", _serialize_bool(entry.as_image),
-                    "time", format_timestamp(entry.time)
+                    "time", format_time_as_iso8601(entry.time)
                 )
                 attachment_node.text = entry.filename
             elif isinstance(entry, Url):
                 url_node = make_xml_child(
                     step_node, "url",
                     "description", entry.description,
-                    "time", format_timestamp(entry.time)
+                    "time", format_time_as_iso8601(entry.time)
                 )
                 url_node.text = entry.url
             else:  # TestCheck
@@ -123,7 +123,7 @@ def _serialize_steps(steps, parent_node):
                     step_node, "check",
                     "description", entry.description,
                     "outcome", _serialize_outcome(entry.outcome),
-                    "time", format_timestamp(entry.time)
+                    "time", format_time_as_iso8601(entry.time)
                 )
                 check_node.text = entry.details
 
@@ -241,7 +241,7 @@ def save_report_into_file(report, filename, indent_level=DEFAULT_INDENT_LEVEL):
 
 
 def _unserialize_datetime(value):
-    return parse_timestamp(value)
+    return parse_iso8601_time(value)
 
 
 def _unserialize_outcome(value):
