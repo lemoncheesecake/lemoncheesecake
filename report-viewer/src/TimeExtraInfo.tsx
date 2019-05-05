@@ -2,8 +2,8 @@ import * as React from 'react';
 import {get_time_from_datetime, get_duration_between_datetimes} from './utils';
 
 interface Props {
-    start: DateTime,
-    end?: DateTime | null
+    start: string,
+    end?: string | null
 }
 
 class TimeExtraInfo extends React.Component<Props, {}> {
