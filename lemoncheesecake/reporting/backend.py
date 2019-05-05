@@ -10,7 +10,6 @@ import os.path as osp
 from lemoncheesecake.exceptions import InvalidReportFile, ProgrammingError
 from lemoncheesecake.helpers.introspection import object_has_method
 from lemoncheesecake.reporting.report import Report
-from lemoncheesecake import events
 
 __all__ = (
     "get_available_backends", "ReportingBackend", "ReportingSession",
@@ -43,13 +42,13 @@ class ReportingBackend(object):
         return capabilities
 
 #     def create_reporting_session(self, dir, report):
-#         method_not_implemented("create_reporting_session", self)
+#         raise NotImplemented()
 #
 #     def save_report(self, filename, report):
-#         method_not_implemented("serialize_report", self)
+#         raise NotImplemented()
 #
 #     def load_report(self, filename):
-#         method_not_implemented("unserialize_report", self)
+#         raise NotImplemented()
 
 
 class FileReportSession(ReportingSession):
