@@ -1,3 +1,30 @@
+# 1.0.0 (2019-MM-DD)
+
+Major release with breaking changes, see http://docs.lemoncheesecake.io/en/latest/v1-migration-guide.html
+to know to migrate from 0.22.x release.
+
+## API
+
+- In `lemoncheesecake.matching`, the following functions have been removed:
+  - `this_dict`
+  - `check_that_entry`
+  - `require_that_entry`
+  - `assert_that_entry`
+- The fixture scope `session_prerun` has been renamed into `pre_run`
+- The `binary_mode` argument of the `save_attachment_content` function has been removed
+  (the file opening is determined upon data argument type)
+
+## Report
+
+- The `generation_time` of the report is now computed by the reporting backends
+- JSON/XML: dates are now stored in plain ISO8601 format in UTC
+- HTML: dates are now localized in the browser's timezone
+
+## Under the hood
+
+- fix Python warnings
+- Make the `lemoncheesecake.filter` API more Pythonic
+
 # 0.22.9 (2019-04-28)
 
 - **Report**: provide more information about why a test has been skipped
