@@ -7,7 +7,6 @@ Created on Mar 27, 2017
 import json
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
-from lemoncheesecake.exceptions import method_not_implemented
 
 
 class MatchResult(object):
@@ -17,7 +16,9 @@ class MatchResult(object):
 
     def __bool__(self):
         return self.is_success()
-    __nonzero__ = __bool__
+
+    def __nonzero__(self):
+        return self.__bool__()
 
     def is_success(self):
         return self.outcome is True
@@ -38,15 +39,15 @@ def match_result(outcome, description=None):
     return MatchResult(outcome, description)
 
 
-class Matcher:
-    def description(self, conjugate=False):
-        method_not_implemented("description", self)
+class Matcher(object):
+    def build_description(self, conjugate=False):
+        raise NotImplemented()
 
-    def short_description(self, conjugate=False):
-        return self.description(conjugate=conjugate)
+    def build_short_description(self, conjugate=False):
+        return self.build_description(conjugate=conjugate)
 
     def matches(self, actual):
-        method_not_implemented("match", self)
+        raise NotImplemented()
 
 
 class MatchExpected(Matcher):

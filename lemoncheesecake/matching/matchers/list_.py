@@ -26,11 +26,11 @@ class HasItemMatchResult(MatchResult):
 
 
 class HasItem(MatchExpected):
-    def description(self, conjugate=False):
-        return "%s an item whose value %s" % (to_have(conjugate), self.expected.description(conjugate=True))
+    def build_description(self, conjugate=False):
+        return "%s an item whose value %s" % (to_have(conjugate), self.expected.build_description(conjugate=True))
 
-    def short_description(self, conjugate=False):
-        return "%s an item whose value %s" % (to_have(conjugate), self.expected.short_description(conjugate=True))
+    def build_short_description(self, conjugate=False):
+        return "%s an item whose value %s" % (to_have(conjugate), self.expected.build_short_description(conjugate=True))
 
     def matches(self, actual):
         for index, item in enumerate(actual):
@@ -46,7 +46,7 @@ def has_item(expected):
 
 
 class HasValues(MatchExpected):
-    def description(self, conjugate=False):
+    def build_description(self, conjugate=False):
         return "%s values %s" % (to_have(conjugate), serialize_values(self.expected))
 
     def matches(self, actual):
@@ -67,7 +67,7 @@ def has_values(values):
 
 
 class HasOnlyValues(MatchExpected):
-    def description(self, conjugate=False):
+    def build_description(self, conjugate=False):
         return "%s only values %s" % (to_have(conjugate), serialize_values(self.expected))
 
     def matches(self, actual):
@@ -96,7 +96,7 @@ def has_only_values(values):
 
 
 class IsIn(MatchExpected):
-    def description(self, conjugate=False):
+    def build_description(self, conjugate=False):
         return "%s in %s" % (to_be(conjugate), serialize_values(self.expected))
 
     def matches(self, actual):

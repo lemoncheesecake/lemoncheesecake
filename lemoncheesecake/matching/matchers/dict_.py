@@ -4,7 +4,6 @@ Created on Apr 1, 2017
 @author: nicolas
 '''
 
-from lemoncheesecake.exceptions import method_not_implemented
 from lemoncheesecake.matching.base import Matcher, match_failure, match_success, got_value, to_have, serialize_value
 from lemoncheesecake.matching.matchers.composites import is_
 
@@ -14,12 +13,12 @@ __all__ = (
 
 
 class EntryMatcher(object):
-    def description(self):
-        method_not_implemented("description", self)
+    def build_description(self):
+        raise NotImplemented()
 
     def get_entry(self, actual):
         """Return the value of dict corresponding to entry matching or raise KeyError if entry is not found"""
-        method_not_implemented("get_entry", self)
+        raise NotImplemented()
 
 
 class KeyPathMatcher(EntryMatcher):
@@ -27,7 +26,7 @@ class KeyPathMatcher(EntryMatcher):
     def __init__(self, path):
         self.path = path
 
-    def description(self):
+    def build_description(self):
         return " -> ".join(map(serialize_value, self.path))
 
     def get_entry(self, actual):
@@ -50,26 +49,27 @@ def wrap_key_matcher(key_matcher, base_key=()):
 
 class HasEntry(Matcher):
     def __init__(self, key_matcher, value_matcher):
+        # type: (EntryMatcher, Matcher) -> None
         self.key_matcher = key_matcher
         self.value_matcher = value_matcher
 
-    def short_description(self, conjugate=False):
-        ret = '%s entry %s' % (to_have(conjugate), self.key_matcher.description())
+    def build_short_description(self, conjugate=False):
+        ret = '%s entry %s' % (to_have(conjugate), self.key_matcher.build_description())
         if self.value_matcher:
-            ret += " that " + self.value_matcher.short_description(conjugate=True)
+            ret += " that " + self.value_matcher.build_short_description(conjugate=True)
         return ret
 
-    def description(self, conjugate=False):
-        ret = '%s entry %s' % (to_have(conjugate), self.key_matcher.description())
+    def build_description(self, conjugate=False):
+        ret = '%s entry %s' % (to_have(conjugate), self.key_matcher.build_description())
         if self.value_matcher:
-            ret += " that " + self.value_matcher.description(conjugate=True)
+            ret += " that " + self.value_matcher.build_description(conjugate=True)
         return ret
 
     def matches(self, actual):
         try:
             value = self.key_matcher.get_entry(actual)
         except KeyError:
-            return match_failure('No entry %s' % self.key_matcher.description())
+            return match_failure('No entry %s' % self.key_matcher.build_description())
 
         if self.value_matcher:
             return self.value_matcher.matches(value)

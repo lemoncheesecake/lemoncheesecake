@@ -20,7 +20,7 @@ _REGEXP_TYPE = type(re.compile("dummy"))
 
 
 class StartsWith(MatchExpected):
-    def description(self, conjugate=False):
+    def build_description(self, conjugate=False):
         return '%s with "%s"' % ("starts" if conjugate else "to start", self.expected)
 
     def matches(self, actual):
@@ -33,7 +33,7 @@ def starts_with(s):
 
 
 class EndsWith(MatchExpected):
-    def description(self, conjugate=False):
+    def build_description(self, conjugate=False):
         return '%s with "%s"' % ("ends" if conjugate else "to end", self.expected)
 
     def matches(self, actual):
@@ -46,7 +46,7 @@ def ends_with(s):
 
 
 class ContainsString(MatchExpected):
-    def description(self, conjugate=False):
+    def build_description(self, conjugate=False):
         return '%s "%s"' % ("contains" if conjugate else "to contain", self.expected)
 
     def matches(self, actual):
@@ -65,7 +65,7 @@ class MatchPattern(MatchExpected):
         self._description = description
         self._mention_regexp = mention_regexp
 
-    def description(self, conjugate=False):
+    def build_description(self, conjugate=False):
         if self._description:
             desc = "%s %s" % (to_be(conjugate), self._description)
             if self._mention_regexp:
@@ -108,7 +108,7 @@ class IsText(MatchExpected):
         MatchExpected.__init__(self, expected)
         self.linesep = linesep
 
-    def description(self, conjugate=False):
+    def build_description(self, conjugate=False):
         return "%s the text:\n<<<\n%s\n>>>\n" % (to_be(conjugate), self.expected)
 
     def matches(self, actual):
@@ -129,7 +129,7 @@ def _format_json(data):
 
 
 class IsJson(MatchExpected):
-    def description(self, conjugate=False):
+    def build_description(self, conjugate=False):
         return "%s JSON:\n%s\n" % (to_be(conjugate), _format_json(self.expected))
 
     def matches(self, actual):

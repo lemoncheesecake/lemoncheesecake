@@ -14,10 +14,10 @@ from lemoncheesecake.matching.matchers.composites import is_
 
 
 class _HasEntry(HasEntry):
-    def description(self):
-        ret = self.key_matcher.description()
+    def build_description(self, _=False):
+        ret = self.key_matcher.build_description()
         if self.value_matcher:
-            ret += " " + self.value_matcher.description()
+            ret += " " + self.value_matcher.build_description()
         return ret
 
 
@@ -48,9 +48,9 @@ def _log_match_result(hint, matcher, result, quiet=False):
     If quiet is set to True, the check details won't appear in the check log.
     """
     if hint is not None:
-        description = "Expect %s %s" % (hint, matcher.description())
+        description = "Expect %s %s" % (hint, matcher.build_description())
     else:
-        description = "Expect %s" % matcher.description()
+        description = "Expect %s" % matcher.build_description()
 
     return log_check(
         description, result.outcome, _format_result_details(result.description) if not quiet else None

@@ -4,6 +4,8 @@ Created on Mar 28, 2017
 @author: nicolas
 '''
 
+from typing import List
+
 from lemoncheesecake.matching.base import Matcher, match_success, match_failure, match_result, \
     got, got_value, to_be, merge_match_result_descriptions
 
@@ -28,7 +30,7 @@ def _make_items(items, prefix="- ", relationship="and"):
 
 
 def _serialize_sub_matcher_result(matcher, result):
-    content = "%s => %s" % (matcher.short_description(conjugate=True), "OK" if result.is_success() else "KO")
+    content = "%s => %s" % (matcher.build_short_description(conjugate=True), "OK" if result.is_success() else "KO")
     if result.description is not None:
         content += ", %s" % result.description
     return content
@@ -36,16 +38,17 @@ def _serialize_sub_matcher_result(matcher, result):
 
 class AllOf(Matcher):
     def __init__(self, matchers):
+        # type: (List[Matcher]) -> None
         self.matchers = matchers
 
-    def short_description(self, conjugate=False):
+    def build_short_description(self, conjugate=False):
         return ":"
 
-    def description(self, conjugate=False):
+    def build_description(self, conjugate=False):
         return "\n".join(
             [":"] +
             [
-                _make_item(matcher.description(conjugate=conjugate), prefix="- and " if i > 0 else "- ")
+                _make_item(matcher.build_description(conjugate=conjugate), prefix="- and " if i > 0 else "- ")
                     for i, matcher in enumerate(self.matchers)
             ]
         )
@@ -77,16 +80,17 @@ def all_of(*matchers):
 
 class AnyOf(Matcher):
     def __init__(self, matchers):
+        # type: (List[Matcher]) -> None
         self.matchers = matchers
 
-    def short_description(self, conjugate=False):
+    def build_short_description(self, conjugate=False):
         return ":"
 
-    def description(self, conjugate=False):
+    def build_description(self, conjugate=False):
         return "\n".join(
             [":"] +
             [
-                _make_item(matcher.description(conjugate=conjugate), prefix="- or " if i > 0 else "- ")
+                _make_item(matcher.build_description(conjugate=conjugate), prefix="- or " if i > 0 else "- ")
                     for i, matcher in enumerate(self.matchers)
             ]
         )
@@ -111,7 +115,7 @@ class Anything(Matcher):
     def __init__(self, wording="anything"):
         self.wording = wording
 
-    def description(self, conjugate=False):
+    def build_description(self, conjugate=False):
         return "%s %s" % (to_be(conjugate), self.wording)
 
     def matches(self, actual):
@@ -147,10 +151,11 @@ def is_(matcher):
 
 class Not(Matcher):
     def __init__(self, matcher):
+        # type: (Matcher) -> None
         self.matcher = matcher
 
-    def description(self, conjugate=False):
-        return "not %s" % self.matcher.description(conjugate)
+    def build_description(self, conjugate=False):
+        return "not %s" % self.matcher.build_description(conjugate)
 
     def matches(self, actual):
         result = self.matcher.matches(actual)

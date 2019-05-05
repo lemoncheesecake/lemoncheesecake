@@ -38,7 +38,7 @@ class IsValueOfType(Matcher):
         self.type_name = type_name
         self.value_matcher = value_matcher
 
-    def description(self, conjugate=False):
+    def build_description(self, conjugate=False):
         ret = "%s %s" % (to_be(conjugate), self.type_name)
         if self.value_matcher:
             ret += " that %s" % self.value_matcher.description(conjugate=True)

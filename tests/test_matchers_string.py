@@ -42,40 +42,40 @@ def test_match_pattern_search_success():
 
 
 def test_match_pattern_with_pattern_success():
-    assert_match_success(match_pattern(re.compile("^foo", re.IGNORECASE)), "FOOBAR", "FOOBAR")
+    assert_match_success(match_pattern(re.compile(r"^foo", re.IGNORECASE)), "FOOBAR", "FOOBAR")
 
 
 def test_match_pattern_description_default():
-    description = match_pattern("^\d+$").description()
-    assert "^\d+$" in description
+    description = match_pattern(r"^\d+$").build_description()
+    assert r"^\d+$" in description
 
 
 def test_match_pattern_description_description():
-    description = match_pattern("^\d+$", "a number").description()
+    description = match_pattern(r"^\d+$", "a number").build_description()
     assert "a number" in description
-    assert "^\d+$" not in description
+    assert r"^\d+$" not in description
 
 
 def test_match_pattern_description_description_and_mention_regexp():
-    description = match_pattern("^\d+$", "a number", mention_regexp=True).description()
+    description = match_pattern(r"^\d+$", "a number", mention_regexp=True).build_description()
     assert "a number" in description
-    assert "^\d+$" in description
+    assert r"^\d+$" in description
 
 
 def test_make_pattern_matcher():
-    matcher = make_pattern_matcher("^\d+$", "a number", mention_regexp=True)
-    description = matcher().description()
+    matcher = make_pattern_matcher(r"^\d+$", "a number", mention_regexp=True)
+    description = matcher().build_description()
     assert "a number" in description
-    assert "^\d+$" in description
+    assert r"^\d+$" in description
     assert_match_success(matcher(), "42", "42")
 
 
 def test_match_pattern_failure():
-    assert_match_failure(match_pattern("^f"), "bar", "bar")
+    assert_match_failure(match_pattern(r"^f"), "bar", "bar")
 
 
 def test_match_pattern_failure_invalid_type():
-    assert_match_failure(match_pattern("^f"), None, "Invalid value")
+    assert_match_failure(match_pattern(r"^f"), None, "Invalid value")
 
 
 def test_is_text_success():

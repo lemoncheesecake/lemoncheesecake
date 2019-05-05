@@ -13,6 +13,9 @@ to know to migrate from 0.22.x release.
 - The fixture scope `session_prerun` has been renamed into `pre_run`
 - The `binary_mode` argument of the `save_attachment_content` function has been removed
   (the file opening is determined upon data argument type)
+- In `Matcher` class:
+  - the `description` method has been renamed into `build_description`
+  - the `short_description` method has been renamed into `build_short_description`
 
 ## Report
 
