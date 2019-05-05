@@ -5,7 +5,6 @@ Created on Mar 26, 2016
 '''
 
 import time
-import re
 from decimal import Decimal
 from functools import reduce
 from typing import Union, List, Tuple, Generator, Iterable
@@ -295,6 +294,11 @@ class Report:
         self.title = DEFAULT_REPORT_TITLE
         self.nb_threads = 1
 
+    @staticmethod
+    def _format_time(t):
+        lt = time.localtime(t)
+        return time.asctime(lt) + " " + time.strftime("%Z", lt)
+
     @property
     def duration(self):
         # type: () -> float
@@ -367,8 +371,8 @@ class Report:
         stats = self.stats()
 
         serialized = (
-            ("Start time", time.asctime(time.localtime(self.start_time))),
-            ("End time", time.asctime(time.localtime(self.end_time)) if self.end_time else "n/a"),
+            ("Start time", self._format_time(self.start_time)),
+            ("End time", self._format_time(self.end_time) if self.end_time else "n/a"),
             ("Duration", humanize_duration(stats.duration) if stats.duration is not None else "n/a")
         )
 
