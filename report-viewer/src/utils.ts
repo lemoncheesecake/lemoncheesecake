@@ -1,13 +1,11 @@
+import * as moment from 'moment';
+
 export function humanize_duration(duration: number): string {
     return (duration / 1000) + "s";
 }
 
-export function normalize_datetime(dt: string): string {
-    return dt.replace(" ", "T");
-}
-
 export function get_timestamp_from_datetime(dt: string): number {
-    return new Date(normalize_datetime(dt)).getTime();
+    return new Date(dt).getTime();
 }
 
 export function get_duration_between_datetimes(dt1: string, dt2: string): string {
@@ -16,5 +14,5 @@ export function get_duration_between_datetimes(dt1: string, dt2: string): string
 }
 
 export function get_time_from_datetime(dt: string) {
-    return dt.split(" ")[1];
+    return moment(dt).format("HH:mm:ss.SSS");
 }
