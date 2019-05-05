@@ -1,12 +1,10 @@
-type DateTime = string;
-
 type LogLevel = string;
 
 declare interface LogData {
     type: "log",
     message: string,
     level: LogLevel,
-    time: DateTime
+    time: string
 }
 
 declare interface CheckData {
@@ -32,8 +30,8 @@ declare interface UrlData {
 type StepEntryData = LogData | CheckData | AttachmentData | UrlData;
 
 declare interface TimeInterval {
-    start_time: DateTime,
-    end_time: DateTime | null,
+    start_time: string,
+    end_time: string | null,
 }
 
 declare interface StepData extends TimeInterval {
@@ -76,9 +74,9 @@ declare interface SuiteData extends BaseTestData {
 
 declare interface ReportData {
     title: string,
-    start_time: DateTime,
-    end_time: DateTime,
-    generation_time: DateTime,
+    start_time: string,
+    end_time: string,
+    generation_time: string,
     info: Array<Array<string>>,
     stats: Array<Array<string>>,
     test_session_setup: HookData,

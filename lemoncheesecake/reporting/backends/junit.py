@@ -22,7 +22,7 @@ except ImportError:
     LXML_IS_AVAILABLE = False
 
 from lemoncheesecake.reporting.backend import FileReportBackend
-from lemoncheesecake.reporting.report import Log, Check, format_timestamp_as_iso_8601
+from lemoncheesecake.reporting.report import Log, Check, format_time_as_iso8601
 from lemoncheesecake.consts import LOG_LEVEL_ERROR
 from lemoncheesecake.reporting.backends.xml import make_xml_child, make_xml_node, indent_xml, set_node_attr, \
     DEFAULT_INDENT_LEVEL
@@ -63,7 +63,7 @@ def _serialize_suite_data(suite):
             "failures", str(len(list(filter(lambda t: t.status == "failed", tests)))),
             "skipped", str(len(list(filter(lambda t: t.status == "skipped", tests)))),
             "time", format_duration(reduce(lambda x, y: x + y, (t.duration for t in tests if t.end_time), 0)),
-            "timestamp", format_timestamp_as_iso_8601(min(t.start_time for t in tests))
+            "timestamp", format_time_as_iso8601(min(t.start_time for t in tests))
         )
         junit_testsuites.append(junit_testsuite)
         for test in tests:
