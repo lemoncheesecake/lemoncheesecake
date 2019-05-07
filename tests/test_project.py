@@ -75,12 +75,12 @@ def test_get_all_reporting_backends(tmpdir):
     except ImportError:
         pass
 
-    assert sorted([p.name for p in project.get_all_reporting_backends()]) == sorted(expected_reporting_backends)
+    assert sorted([p.get_name() for p in project.get_all_reporting_backends()]) == sorted(expected_reporting_backends)
 
 
 def test_get_default_reporting_backends_for_test_run(tmpdir):
     project = make_test_project(tmpdir)
-    assert [p.name for p in project.get_default_reporting_backends_for_test_run()] == ["console", "json", "html"]
+    assert [b.get_name() for b in project.get_default_reporting_backends_for_test_run()] == ["console", "json", "html"]
 
 
 def test_with_custom_cli_args(tmpdir):

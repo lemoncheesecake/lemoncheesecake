@@ -37,10 +37,11 @@ class HtmlReportWriter(ReportingSession):
 
 
 class HtmlBackend(ReportingBackend, ReportingSessionBuilderMixin):
-    name = "html"
-
     def __init__(self, offline_mode=False):
         self.offline_mode = offline_mode
+
+    def get_name(self):
+        return "html"
 
     def create_reporting_session(self, report_dir, report, parallel, saving_strategy):
         return HtmlReportWriter(report_dir, self.offline_mode)

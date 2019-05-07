@@ -42,6 +42,9 @@ class ReportUnserializerMixin(object):
 
 
 class ReportingBackend(object):
+    def get_name(self):
+        raise NotImplemented()
+
     def is_available(self):
         return True
 
@@ -153,5 +156,5 @@ def load_report(path, backends=None):
 
 def save_report(filename, report, backend):
     if not isinstance(backend, ReportSerializerMixin):
-        raise ProgrammingError("Reporting backend '%s' does not support report saving" % backend.name)
+        raise ProgrammingError("Reporting backend '%s' does not support report saving" % backend.get_name())
     backend.save_report(filename, report)

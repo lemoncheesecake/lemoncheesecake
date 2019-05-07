@@ -112,16 +112,17 @@ def save_report_into_file(report, filename, indent_level=DEFAULT_INDENT_LEVEL):
 
 
 class JunitBackend(FileReportBackend):
-    name = "junit"
-
     def __init__(self):
         self.indent_level = DEFAULT_INDENT_LEVEL
 
-    def get_report_filename(self):
-        return "report-junit.xml"
+    def get_name(self):
+        return "junit"
 
     def is_available(self):
         return LXML_IS_AVAILABLE
+
+    def get_report_filename(self):
+        return "report-junit.xml"
 
     def save_report(self, filename, report):
         save_report_into_file(report, filename, self.indent_level)

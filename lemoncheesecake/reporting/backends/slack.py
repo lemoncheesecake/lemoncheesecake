@@ -135,7 +135,8 @@ def get_only_notify_on_failure():
 
 
 class SlackReportingBackend(ReportingBackend, ReportingSessionBuilderMixin):
-    name = "slack"
+    def get_name(self):
+        return "slack"
 
     def is_available(self):
         return SLACKER_IS_AVAILABLE

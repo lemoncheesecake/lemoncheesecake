@@ -384,16 +384,17 @@ def load_report_from_file(filename):
 
 
 class XmlBackend(FileReportBackend, ReportUnserializerMixin):
-    name = "xml"
-
     def __init__(self):
         self.indent_level = DEFAULT_INDENT_LEVEL
 
-    def get_report_filename(self):
-        return "report.xml"
+    def get_name(self):
+        return "xml"
 
     def is_available(self):
         return LXML_IS_AVAILABLE
+
+    def get_report_filename(self):
+        return "report.xml"
 
     def save_report(self, filename, report):
         save_report_into_file(report, filename, self.indent_level)

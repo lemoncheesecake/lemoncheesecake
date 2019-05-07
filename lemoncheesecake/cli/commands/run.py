@@ -64,7 +64,7 @@ def run_project(project, cli_args):
 
     # Set active reporting backends
     available_reporting_backends = {
-        backend.name: backend for backend in project.get_all_reporting_backends()
+        backend.get_name(): backend for backend in project.get_all_reporting_backends()
             if isinstance(backend, ReportingSessionBuilderMixin)
     }
     active_reporting_backends = set()
@@ -154,7 +154,9 @@ class RunCommand(Command):
         default_reporting_backend_names = []
         if project_file:
             project = load_project_from_file(project_file)
-            default_reporting_backend_names = [backend.name for backend in project.get_default_reporting_backends_for_test_run()]
+            default_reporting_backend_names = [
+                backend.get_name() for backend in project.get_default_reporting_backends_for_test_run()
+            ]
 
         add_run_filter_cli_args(cli_parser)
 

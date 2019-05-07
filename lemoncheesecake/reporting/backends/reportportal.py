@@ -292,7 +292,8 @@ class ReportPortalReportingSessionParallelized(ReportingSession):
 
 
 class ReportPortalBackend(ReportingBackend, ReportingSessionBuilderMixin):
-    name = "reportportal"
+    def get_name(self):
+        return "reportportal"
 
     def is_available(self):
         return REPORT_PORTAL_CLIENT_IS_AVAILABLE

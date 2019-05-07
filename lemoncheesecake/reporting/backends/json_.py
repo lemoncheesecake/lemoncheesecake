@@ -273,11 +273,12 @@ def load_report_from_file(filename):
 
 
 class JsonBackend(FileReportBackend, ReportUnserializerMixin):
-    name = "json"
-
     def __init__(self, javascript_compatibility=True, pretty_formatting=False):
         self.javascript_compatibility = javascript_compatibility
         self.pretty_formatting = pretty_formatting
+
+    def get_name(self):
+        return "json"
 
     def get_report_filename(self):
         return "report.js"
