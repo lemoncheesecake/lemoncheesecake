@@ -13,7 +13,7 @@ from lemoncheesecake.exceptions import LemonCheesecakeException, ProgrammingErro
 from lemoncheesecake.filter import add_run_filter_cli_args
 from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture
 from lemoncheesecake.project import find_project_file, load_project_from_file, load_project
-from lemoncheesecake.reporting import filter_reporting_backends_by_capabilities, CAPABILITY_REPORTING_SESSION
+from lemoncheesecake.reporting.backend import ReportingSessionBuilderMixin
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy
 from lemoncheesecake.runner import initialize_event_manager, run_suites
 
@@ -64,10 +64,8 @@ def run_project(project, cli_args):
 
     # Set active reporting backends
     available_reporting_backends = {
-        backend.name: backend for backend in
-        filter_reporting_backends_by_capabilities(
-            project.get_all_reporting_backends(), CAPABILITY_REPORTING_SESSION
-        )
+        backend.name: backend for backend in project.get_all_reporting_backends()
+            if isinstance(backend, ReportingSessionBuilderMixin)
     }
     active_reporting_backends = set()
     for backend_name in cli_args.reporting + cli_args.enable_reporting:

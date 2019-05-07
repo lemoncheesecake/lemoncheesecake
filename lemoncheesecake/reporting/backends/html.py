@@ -9,7 +9,7 @@ import os.path as p
 from shutil import copy, copytree
 
 from lemoncheesecake.helpers.resources import get_resource_path
-from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
+from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession, ReportingSessionBuilderMixin
 
 
 class HtmlReportWriter(ReportingSession):
@@ -36,7 +36,7 @@ class HtmlReportWriter(ReportingSession):
             copy(p.join(html_resource_dir, "report.html"), self.report_dir)
 
 
-class HtmlBackend(ReportingBackend):
+class HtmlBackend(ReportingBackend, ReportingSessionBuilderMixin):
     name = "html"
 
     def __init__(self, offline_mode=False):

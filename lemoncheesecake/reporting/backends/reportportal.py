@@ -12,7 +12,7 @@ try:
 except ImportError:
     REPORT_PORTAL_CLIENT_IS_AVAILABLE = False
 
-from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
+from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession, ReportingSessionBuilderMixin
 from lemoncheesecake.exceptions import UserError
 from lemoncheesecake.events import SyncEventManager
 from lemoncheesecake.reporting.replay import replay_report_events
@@ -291,7 +291,7 @@ class ReportPortalReportingSessionParallelized(ReportingSession):
         replay_report_events(self._session.report, event_manager)
 
 
-class ReportPortalBackend(ReportingBackend):
+class ReportPortalBackend(ReportingBackend, ReportingSessionBuilderMixin):
     name = "reportportal"
 
     def is_available(self):

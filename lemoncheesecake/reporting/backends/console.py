@@ -12,7 +12,7 @@ import colorama
 from termcolor import colored
 import six
 
-from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
+from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession, ReportingSessionBuilderMixin
 from lemoncheesecake.reporting.report import get_stats_from_suites
 from lemoncheesecake.filter import filter_suites
 from lemoncheesecake.helpers.time import humanize_duration
@@ -241,7 +241,7 @@ class ParallelConsoleReportingSession(ReportingSession):
         _print_summary(self.report.stats(), self.report.parallelized)
 
 
-class ConsoleBackend(ReportingBackend):
+class ConsoleBackend(ReportingBackend, ReportingSessionBuilderMixin):
     name = "console"
 
     def __init__(self):

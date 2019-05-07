@@ -10,7 +10,7 @@ from collections import OrderedDict
 import time
 
 import lemoncheesecake
-from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend
+from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend, ReportUnserializerMixin
 from lemoncheesecake.reporting.report import (
     Log, Check, Attachment, Url, Step, TestResult, SetupResult, SuiteResult,
     format_time_as_iso8601, parse_iso8601_time
@@ -272,7 +272,7 @@ def load_report_from_file(filename):
     return report
 
 
-class JsonBackend(FileReportBackend):
+class JsonBackend(FileReportBackend, ReportUnserializerMixin):
     name = "json"
 
     def __init__(self, javascript_compatibility=True, pretty_formatting=False):

@@ -9,11 +9,14 @@ import os.path as osp
 import sys
 import shutil
 
+from typing import List
+
 from lemoncheesecake.suite import load_suites_from_directory
 from lemoncheesecake.fixtures import load_fixtures_from_directory
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.reporting import ConsoleBackend, HtmlBackend, JsonBackend, XmlBackend, JunitBackend, \
     ReportPortalBackend, SlackReportingBackend, filter_available_reporting_backends
+from lemoncheesecake.reporting.backend import ReportingBackend
 from lemoncheesecake.reporting.reportdir import create_report_dir_with_rotation
 from lemoncheesecake.exceptions import ProjectError, UserError, serialize_current_exception
 from lemoncheesecake.helpers.resources import get_resource_path
@@ -161,6 +164,7 @@ class Project:
         return self._config.get_fixtures()
 
     def get_all_reporting_backends(self):
+        # type: () -> List[ReportingBackend]
         return filter_available_reporting_backends(self._config.get_all_reporting_backends())
 
     def get_default_reporting_backends_for_test_run(self):

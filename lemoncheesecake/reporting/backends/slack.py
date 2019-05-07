@@ -10,7 +10,7 @@ try:
 except ImportError:
     SLACKER_IS_AVAILABLE = False
 
-from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
+from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession, ReportingSessionBuilderMixin
 from lemoncheesecake.exceptions import UserError
 from lemoncheesecake.helpers.time import humanize_duration
 
@@ -134,7 +134,7 @@ def get_only_notify_on_failure():
     return "SLACK_ONLY_NOTIFY_FAILURE" in os.environ
 
 
-class SlackReportingBackend(ReportingBackend):
+class SlackReportingBackend(ReportingBackend, ReportingSessionBuilderMixin):
     name = "slack"
 
     def is_available(self):
