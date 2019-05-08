@@ -16,13 +16,8 @@ from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, TreeLocation
 from lemoncheesecake.suite.core import Test
 
-__all__ = (
-    "Log", "Check", "Attachment", "Url", "Step", "TestResult",
-    "SuiteResult", "SetupResult", "Report"
-)
-
-TEST_STATUSES = "passed", "failed", "skipped", "disabled"
-DEFAULT_REPORT_TITLE = "Test Report"
+_TEST_STATUSES = "passed", "failed", "skipped", "disabled"
+_DEFAULT_REPORT_TITLE = "Test Report"
 
 
 # NB: it would be nicer to use:
@@ -215,7 +210,7 @@ class SuiteResult(BaseSuite):
 class _Stats(object):
     def __init__(self):
         self.tests = 0
-        self.test_statuses = {s: 0 for s in TEST_STATUSES}
+        self.test_statuses = {s: 0 for s in _TEST_STATUSES}
         self.errors = 0
         self.checks = 0
         self.check_successes = 0
@@ -291,7 +286,7 @@ class Report:
         self.start_time = None  # type: Union[None, float]
         self.end_time = None  # type: Union[None, float]
         self.report_generation_time = None  # type: Union[None, float]
-        self.title = DEFAULT_REPORT_TITLE
+        self.title = _DEFAULT_REPORT_TITLE
         self.nb_threads = 1
 
     @staticmethod

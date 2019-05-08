@@ -7,8 +7,6 @@ Created on Sep 8, 2016
 from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError
 from lemoncheesecake.testtree import flatten_suites
 
-__all__ = ("MetadataPolicy",)
-
 
 class MetadataPolicy:
     def __init__(self):

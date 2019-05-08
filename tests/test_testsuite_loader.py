@@ -4,8 +4,8 @@ import six
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite.loader import load_suites_from_directory, load_suite_from_file, \
-    load_suite_from_class, load_suites_from_files, load_suites_from_classes, load_test_from_function, \
-    load_test_from_method
+    load_suite_from_class, load_suites_from_files, load_suites_from_classes, _load_test_from_function, \
+    _load_test_from_method
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.exceptions import *
 
@@ -294,7 +294,7 @@ def test_load_test_from_function():
     def func():
         return 1
 
-    test = load_test_from_function(func)
+    test = _load_test_from_function(func)
     assert test.name == "func"
     assert test.description == "mytest"
     assert test.callback() == 1
@@ -308,7 +308,7 @@ def test_load_test_from_method():
             return 1
 
     suite = Suite()
-    test = load_test_from_method(suite.meth)
+    test = _load_test_from_method(suite.meth)
     assert test.name == "meth"
     assert test.description == "mytest"
     assert test.callback() == 1

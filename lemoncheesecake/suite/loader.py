@@ -13,30 +13,27 @@ from lemoncheesecake.exceptions import UserError, ProgrammingError, ModuleImport
     InvalidSuiteError, VisibilityConditionNotMet, serialize_current_exception
 from lemoncheesecake.suite.core import Test, Suite, SUITE_HOOKS
 
-__all__ = "load_suite_from_file", "load_suites_from_files", "load_suites_from_directory", \
-    "load_suite_from_class", "load_suites_from_classes"
 
-
-def is_suite_class(obj):
+def _is_suite_class(obj):
     return inspect.isclass(obj) and hasattr(obj, "_lccmetadata") and obj._lccmetadata.is_suite
 
 
-def is_test_method(obj):
+def _is_test_method(obj):
     return inspect.ismethod(obj) and hasattr(obj, "_lccmetadata") and obj._lccmetadata.is_test
 
 
-def is_test_function(obj):
+def _is_test_function(obj):
     return inspect.isfunction(obj) and hasattr(obj, "_lccmetadata") and obj._lccmetadata.is_test
 
 
-def ensure_node_is_visible(obj, metadata):
+def _ensure_node_is_visible(obj, metadata):
     if metadata.condition is not None and not metadata.condition(obj):
         raise VisibilityConditionNotMet()
 
 
 def load_test(obj):
     md = obj._lccmetadata
-    ensure_node_is_visible(obj, md)
+    _ensure_node_is_visible(obj, md)
 
     test = Test(md.name, md.description, obj)
     test.tags.extend(md.tags)
@@ -48,15 +45,15 @@ def load_test(obj):
     return test
 
 
-def load_test_from_method(method):
+def _load_test_from_method(method):
     return load_test(method)
 
 
-def load_test_from_function(func):
+def _load_test_from_function(func):
     return load_test(func)
 
 
-def load_tests(objs):
+def _load_tests(objs):
     for obj in objs:
         try:
             yield load_test(obj)
@@ -64,12 +61,12 @@ def load_tests(objs):
             pass
 
 
-def load_tests_from_methods(methods):
-    return load_tests(methods)
+def _load_tests_from_methods(methods):
+    return _load_tests(methods)
 
 
-def load_tests_from_functions(funcs):
-    return load_tests(funcs)
+def _load_tests_from_functions(funcs):
+    return _load_tests(funcs)
 
 
 def _get_test_symbols(obj, filter_func):
@@ -80,23 +77,23 @@ def _get_test_symbols(obj, filter_func):
         key=lambda sym: sym._lccmetadata.rank)
 
 
-def get_test_methods_from_class(obj):
-    return _get_test_symbols(obj, is_test_method)
+def _get_test_methods_from_class(obj):
+    return _get_test_symbols(obj, _is_test_method)
 
 
-def get_sub_suites_from_class(obj):
-    return _get_test_symbols(obj, is_suite_class)
+def _get_sub_suites_from_class(obj):
+    return _get_test_symbols(obj, _is_suite_class)
 
 
-def get_test_functions_from_module(mod):
-    return _get_test_symbols(mod, is_test_function)
+def _get_test_functions_from_module(mod):
+    return _get_test_symbols(mod, _is_test_function)
 
 
-def get_suite_classes_from_module(mod):
-    return _get_test_symbols(mod, is_suite_class)
+def _get_suite_classes_from_module(mod):
+    return _get_test_symbols(mod, _is_suite_class)
 
 
-def get_generated_tests(obj):
+def _get_generated_tests(obj):
     return getattr(obj, "_lccgeneratedtests", [])
 
 
@@ -114,7 +111,7 @@ def load_suite_from_class(class_):
         raise ProgrammingError("Got an unexpected error while instantiating suite class '%s':%s" % (
             class_.__name__, serialize_current_exception()
         ))
-    ensure_node_is_visible(suite_obj, md)
+    _ensure_node_is_visible(suite_obj, md)
 
     suite = Suite(suite_obj, md.name, md.description)
     suite.tags.extend(md.tags)
@@ -127,13 +124,13 @@ def load_suite_from_class(class_):
         if hasattr(suite_obj, hook_name):
             suite.add_hook(hook_name, getattr(suite_obj, hook_name))
 
-    for test in load_tests_from_methods(get_test_methods_from_class(suite_obj)):
+    for test in _load_tests_from_methods(_get_test_methods_from_class(suite_obj)):
         suite.add_test(test)
 
-    for test in get_generated_tests(suite_obj):
+    for test in _get_generated_tests(suite_obj):
         suite.add_test(test)
 
-    for sub_suite in load_suites_from_classes(get_sub_suites_from_class(suite_obj)):
+    for sub_suite in load_suites_from_classes(_get_sub_suites_from_class(suite_obj)):
         suite.add_suite(sub_suite)
 
     return suite
@@ -151,7 +148,7 @@ def load_suites_from_classes(classes):
 
 def load_suite_from_module(mod):
     # TODO: find a better way to workaround circular import
-    from lemoncheesecake.suite.definition import get_metadata_next_rank
+    from lemoncheesecake.suite.definition import _get_metadata_next_rank
 
     suite_info = getattr(mod, "SUITE")
     suite_condition = suite_info.get("conditional")
@@ -169,19 +166,19 @@ def load_suite_from_module(mod):
     suite.tags.extend(suite_info.get("tags", []))
     suite.properties.update(suite_info.get("properties", []))
     suite.links.extend(suite_info.get("links", []))
-    suite.rank = suite_info.get("rank", get_metadata_next_rank())
+    suite.rank = suite_info.get("rank", _get_metadata_next_rank())
 
     for hook_name in SUITE_HOOKS:
         if hasattr(mod, hook_name):
             suite.add_hook(hook_name, getattr(mod, hook_name))
 
-    for test in load_tests_from_functions(get_test_functions_from_module(mod)):
+    for test in _load_tests_from_functions(_get_test_functions_from_module(mod)):
         suite.add_test(test)
 
-    for test in get_generated_tests(mod):
+    for test in _get_generated_tests(mod):
         suite.add_test(test)
 
-    for sub_suite in load_suites_from_classes(get_suite_classes_from_module(mod)):
+    for sub_suite in load_suites_from_classes(_get_suite_classes_from_module(mod)):
         suite.add_suite(sub_suite)
 
     return suite

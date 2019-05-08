@@ -10,9 +10,6 @@ import copy
 from lemoncheesecake.suite.core import InjectedFixture
 from lemoncheesecake.exceptions import ProgrammingError
 
-__all__ = "add_test_into_suite", "add_test_in_suite", "add_tests_in_suite", "get_metadata", \
-    "suite", "test", "tags", "prop", "link", "disabled", "conditional", "hidden", "depends_on", "inject_fixture"
-
 
 class Metadata(object):
     _next_rank = 1
@@ -31,7 +28,7 @@ class Metadata(object):
         self.condition = None
 
 
-def get_metadata_next_rank():
+def _get_metadata_next_rank():
     rank = Metadata._next_rank
     Metadata._next_rank += 1
     return rank
@@ -49,7 +46,7 @@ def add_test_in_suite(test, suite, before_test=None, after_test=None):
     before_test and after_test arguments are simply ignored
     """
     if not test.rank:
-        test.rank = get_metadata_next_rank()
+        test.rank = _get_metadata_next_rank()
     add_test_into_suite(test, suite)
 
 
@@ -85,7 +82,7 @@ def suite(description, name=None, rank=None):
         if md.dependencies:
             raise ProgrammingError("'depends_on' can not be used on a suite class")
         md.is_suite = True
-        md.rank = rank if rank is not None else get_metadata_next_rank()
+        md.rank = rank if rank is not None else _get_metadata_next_rank()
         md.name = name or klass.__name__
         md.description = description
         return klass
@@ -99,7 +96,7 @@ def test(description, name=None):
             raise ProgrammingError("%s is not a function (test decorator can only be used on a function)" % func)
         md = get_metadata(func)
         md.is_test = True
-        md.rank = get_metadata_next_rank()
+        md.rank = _get_metadata_next_rank()
         md.name = name or func.__name__
         md.description = description
         return func

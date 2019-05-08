@@ -7,8 +7,6 @@ Created on Jan 24, 2016
 from lemoncheesecake.reporting.report import *
 from lemoncheesecake.exceptions import ProgrammingError
 
-__all__ = "ReportWriter",
-
 
 class ReportWriter:
     def __init__(self, report):

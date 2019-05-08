@@ -12,57 +12,14 @@ from lemoncheesecake.reporting.reportdir import DEFAULT_REPORT_DIR_NAME
 from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.exceptions import UserError
 
-__all__ = (
-    "RunFilter", "ReportFilter", "filter_suites",
-    "add_run_filter_cli_args", "make_run_filter", "add_report_filter_cli_args", "make_report_filter"
-)
-
 NEGATIVE_FILTER_CHARS = "-^~"
-
-
-def match_values(values, patterns):
-    if not patterns:
-        return True
-
-    values = [value or "" for value in values]  # convert None to ""
-
-    for pattern in patterns:
-        if pattern[0] in NEGATIVE_FILTER_CHARS:
-            if not fnmatch.filter(values, pattern[1:]):
-                return True
-        else:
-            if fnmatch.filter(values, pattern):
-                return True
-    return False
-
-
-def match_keyvalues(keyvalues, patterns):
-    if not patterns:
-        return True
-
-    for key, value in patterns:
-        if key in keyvalues:
-            if value[0] in NEGATIVE_FILTER_CHARS:
-                if not fnmatch.fnmatch(keyvalues[key], value[1:]):
-                    return True
-            else:
-                if fnmatch.fnmatch(keyvalues[key], value):
-                    return True
-    return False
-
-
-def match_values_lists(lsts, patterns):
-    return match_values(
-        reduce(lambda x, y: list(x) + list(y), lsts, []),  # make a flat list
-        patterns
-    )
 
 
 class Filter(object):
     def __bool__(self):
         raise NotImplemented()
 
-    def __nonzero__(self):
+    def __nonzero__(self):  # for Python 2 compatibility
         return self.__bool__()
 
     def __call__(self, test):
@@ -87,15 +44,53 @@ class BaseFilter(Filter):
     def is_test_disabled(self, test):
         return test.is_disabled()
 
+    @staticmethod
+    def _match_values(values, patterns):
+        if not patterns:
+            return True
+
+        values = [value or "" for value in values]  # convert None to ""
+
+        for pattern in patterns:
+            if pattern[0] in NEGATIVE_FILTER_CHARS:
+                if not fnmatch.filter(values, pattern[1:]):
+                    return True
+            else:
+                if fnmatch.filter(values, pattern):
+                    return True
+        return False
+
+    @staticmethod
+    def _match_key_values(key_values, patterns):
+        if not patterns:
+            return True
+
+        for key, value in patterns:
+            if key in key_values:
+                if value[0] in NEGATIVE_FILTER_CHARS:
+                    if not fnmatch.fnmatch(key_values[key], value[1:]):
+                        return True
+                else:
+                    if fnmatch.fnmatch(key_values[key], value):
+                        return True
+        return False
+
+    @staticmethod
+    def _match_values_lists(lsts, patterns):
+        return BaseFilter._match_values(
+            reduce(lambda x, y: list(x) + list(y), lsts, []),  # make a flat list
+            patterns
+        )
+
     def __call__(self, test):
         funcs = (
             lambda: self.is_test_disabled(test) if self.disabled else True,
             lambda: not self.is_test_disabled(test) if self.enabled else True,
-            lambda: match_values(test.hierarchy_paths, self.paths),
-            lambda: all(match_values(test.hierarchy_descriptions, descs) for descs in self.descriptions),
-            lambda: all(match_values(test.hierarchy_tags, tags) for tags in self.tags),
-            lambda: all(match_keyvalues(test.hierarchy_properties, props) for props in self.properties),
-            lambda: all(match_values_lists(test.hierarchy_links, links) for links in self.links)
+            lambda: self._match_values(test.hierarchy_paths, self.paths),
+            lambda: all(self._match_values(test.hierarchy_descriptions, descs) for descs in self.descriptions),
+            lambda: all(self._match_values(test.hierarchy_tags, tags) for tags in self.tags),
+            lambda: all(self._match_key_values(test.hierarchy_properties, props) for props in self.properties),
+            lambda: all(self._match_values_lists(test.hierarchy_links, links) for links in self.links)
         )
         return all(func() for func in funcs)
 

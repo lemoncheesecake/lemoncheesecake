@@ -7,8 +7,6 @@ Created on May 2, 2017
 from lemoncheesecake.matching.base import MatchExpected, MatchResult, match_failure, match_success, match_result, got_value, to_have, to_be, serialize_values
 from lemoncheesecake.matching.matchers.composites import is_
 
-__all__ = ("has_item", "has_values", "has_only_values", "is_in")
-
 
 class HasItemMatchResult(MatchResult):
     def __init__(self, outcome, description, index, item):

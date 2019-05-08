@@ -9,10 +9,6 @@ from typing import List
 from lemoncheesecake.matching.base import Matcher, match_success, match_failure, match_result, \
     got, got_value, to_be, merge_match_result_descriptions
 
-__all__ = (
-    "all_of", "any_of", "anything", "something", "existing", "present", "is_", "not_"
-)
-
 
 def _make_item(content, prefix="- "):
     lines = content.split("\n")

@@ -12,10 +12,6 @@ import json
 
 from lemoncheesecake.matching.base import MatchExpected, match_result, match_success, match_failure, got_value, to_be
 
-__all__ = (
-    "starts_with", "ends_with", "contains_string", "match_pattern", "is_text", "is_json"
-)
-
 _REGEXP_TYPE = type(re.compile("dummy"))
 
 

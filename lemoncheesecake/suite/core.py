@@ -11,10 +11,6 @@ from lemoncheesecake.testtree import BaseTest, BaseSuite
 
 SUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
 
-__all__ = (
-    "Test", "Suite"
-)
-
 
 class Test(BaseTest):
     def __init__(self, name, description, callback):

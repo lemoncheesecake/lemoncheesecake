@@ -7,10 +7,6 @@ Created on Apr 1, 2017
 from lemoncheesecake.matching.base import Matcher, match_failure, match_success, got_value, to_have, serialize_value
 from lemoncheesecake.matching.matchers.composites import is_
 
-__all__ = (
-    "has_entry",
-)
-
 
 class EntryMatcher(object):
     def build_description(self):

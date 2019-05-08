@@ -11,13 +11,6 @@ from lemoncheesecake.matching.base import (
 from lemoncheesecake.matching.matchers.composites import is_
 from lemoncheesecake.matching.matchers.types_ import is_bool
 
-__all__ = (
-    "equal_to", "not_equal_to", "greater_than", "greater_than_or_equal_to",
-    "less_than", "less_than_or_equal_to",
-    "is_between", "is_none", "is_not_none", "has_length",
-    "is_true", "is_false"
-)
-
 
 class EqualTo(MatchExpected):
     def build_description(self, conjugate=False):

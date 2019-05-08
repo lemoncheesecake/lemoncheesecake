@@ -12,15 +12,9 @@ from lemoncheesecake.exceptions import FixtureError, ProgrammingError
 from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.helpers.introspection import get_callable_args
 
-__all__ = (
-    "fixture",
-    "load_fixtures_from_func", "load_fixtures_from_file",
-    "load_fixtures_from_files", "load_fixtures_from_directory",
-    "inject_fixture"
-)
 
-FORBIDDEN_FIXTURE_NAMES = ("fixture_name", )
-SCOPE_LEVELS = {
+_FORBIDDEN_FIXTURE_NAMES = ("fixture_name",)
+_SCOPE_LEVELS = {
     "test": 1,
     "suite": 2,
     "session": 3,
@@ -28,7 +22,7 @@ SCOPE_LEVELS = {
 }
 
 
-class FixtureInfo:
+class _FixtureInfo:
     def __init__(self, names, scope):
         self.names = names
         self.scope = scope
@@ -36,16 +30,16 @@ class FixtureInfo:
 
 def fixture(names=None, scope="test"):
     def wrapper(func):
-        if scope not in SCOPE_LEVELS.keys():
+        if scope not in _SCOPE_LEVELS.keys():
             raise ProgrammingError("Invalid fixture scope '%s' in fixture function '%s'" % (scope, func.__name__))
 
-        setattr(func, "_lccfixtureinfo", FixtureInfo(names, scope))
+        setattr(func, "_lccfixtureinfo", _FixtureInfo(names, scope))
         return func
 
     return wrapper
 
 
-class FixtureResult(object):
+class _FixtureResult(object):
     def __init__(self, result):
         if inspect.isgenerator(result):
             self._generator = result
@@ -69,7 +63,7 @@ class FixtureResult(object):
             raise FixtureError("The fixture yields more than once, only one yield is supported")
 
 
-class BaseFixture(object):
+class _BaseFixture(object):
     def is_builtin(self):
         return False
 
@@ -82,7 +76,7 @@ class BaseFixture(object):
         }[self.scope]
 
 
-class Fixture(BaseFixture):
+class _Fixture(_BaseFixture):
     def __init__(self, name, func, scope, params):
         self.name = name
         self.func = func
@@ -93,10 +87,10 @@ class Fixture(BaseFixture):
         for param_name in params.keys():
             assert param_name in self.params
 
-        return FixtureResult(self.func(**params))
+        return _FixtureResult(self.func(**params))
 
 
-class BuiltinFixture(BaseFixture):
+class BuiltinFixture(_BaseFixture):
     def __init__(self, name, value):
         self.name = name
         self.scope = "pre_run"
@@ -107,7 +101,7 @@ class BuiltinFixture(BaseFixture):
         return True
 
     def execute(self, params={}):
-        return FixtureResult(self._value() if callable(self._value) else self._value)
+        return _FixtureResult(self._value() if callable(self._value) else self._value)
 
 
 class ScheduledFixtures(object):
@@ -209,7 +203,7 @@ class FixtureRegistry:
         """
         # first, check for forbidden fixture name
         for fixture_name in self._fixtures.keys():
-            if fixture_name in FORBIDDEN_FIXTURE_NAMES:
+            if fixture_name in _FORBIDDEN_FIXTURE_NAMES:
                 raise FixtureError("Fixture name '%s' is forbidden" % fixture_name)
 
         # second, check for missing & circular dependencies
@@ -234,7 +228,7 @@ class FixtureRegistry:
         for fixture in suite.get_fixtures():
             if fixture not in self._fixtures:
                 raise FixtureError("Suite '%s' uses an unknown fixture '%s'" % (suite.path, fixture))
-            if self._fixtures[fixture].get_scope_level() < SCOPE_LEVELS["suite"]:
+            if self._fixtures[fixture].get_scope_level() < _SCOPE_LEVELS["suite"]:
                 raise FixtureError("Suite '%s' uses fixture '%s' which has an incompatible scope" % (
                     suite.path, fixture
                 ))
@@ -310,7 +304,7 @@ def load_fixtures_from_func(func):
         names = [func.__name__]
     scope = func._lccfixtureinfo.scope
     args = get_callable_args(func)
-    return [Fixture(name, func, scope, args) for name in names]
+    return [_Fixture(name, func, scope, args) for name in names]
 
 
 def load_fixtures_from_file(filename):
