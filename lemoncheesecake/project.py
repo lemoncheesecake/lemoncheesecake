@@ -170,6 +170,7 @@ class Project:
     def get_default_reporting_backends_for_test_run(self):
         return filter_available_reporting_backends(self._config.get_default_reporting_backends_for_test_run())
 
+    @property
     def is_threaded(self):
         return self._config.is_threaded()
 

@@ -53,7 +53,7 @@ def get_report_saving_strategy(cli_args):
 
 def run_project(project, cli_args):
     nb_threads = get_nb_threads(cli_args)
-    if nb_threads > 1 and not project.is_threaded():
+    if nb_threads > 1 and not project.is_threaded:
         raise LemonCheesecakeException("Project does not support multi-threading")
 
     suites = get_suites_from_project(project, cli_args)
