@@ -35,7 +35,7 @@ def filter_suites_from_cli_args(suites, cli_args):
 
 
 def get_suites_from_project(project, cli_args):
-    suites = project.get_suites()
+    suites = project.get_suites_strict()
     if all(suite.is_empty() for suite in suites):
         raise UserError("No test is defined in your lemoncheesecake project.")
 

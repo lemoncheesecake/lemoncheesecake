@@ -150,9 +150,12 @@ class Project:
     def create_report_dir(self):
         return self._config.create_report_dir(self.dir)
 
-    def get_suites(self, check_metadata_policy=True):
-        suites = self._config.get_suites()
-        if check_metadata_policy and isinstance(self._config, HasMetadataPolicy):
+    def get_suites(self):
+        return self._config.get_suites()
+
+    def get_suites_strict(self):
+        suites = self.get_suites()
+        if isinstance(self._config, HasMetadataPolicy):
             policy = self._config.get_metadata_policy()
             policy.check_suites_compliance(suites)
         return suites

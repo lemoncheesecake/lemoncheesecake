@@ -153,7 +153,7 @@ def test_get_suites_with_metadatapolicy_check(tmpdir):
 
     project = Project(MyProject(tmpdir.strpath), tmpdir.strpath)
     with pytest.raises(InvalidMetadataError):
-        project.get_suites(check_metadata_policy=True)
+        project.get_suites_strict()
 
 
 def test_get_suites_without_metadatapolicy_check(tmpdir):
@@ -174,7 +174,7 @@ def test_get_suites_without_metadatapolicy_check(tmpdir):
             return [load_suite_from_class(mysuite)]
 
     project = Project(MyProject(tmpdir.strpath), tmpdir.strpath)
-    project.get_suites(check_metadata_policy=False)
+    project.get_suites()
 
 
 def test_project_creation(tmpdir):
@@ -239,5 +239,3 @@ def test_find_project_file_env_var_found(tmpdir):
         assert actual == tmpdir.join("project.py").strpath
     finally:
         del os.environ["LCC_PROJECT_FILE"]
-
-# TODO: add tests on get_capabilities arguments
