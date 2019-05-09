@@ -174,11 +174,11 @@ class Project:
     def is_threaded(self):
         return self._config.is_threaded()
 
-    def run_pre_session_hook(self, cli_args, report_dir):
+    def pre_run(self, cli_args, report_dir):
         if isinstance(self._config, HasPreRunHook):
             self._config.pre_run(cli_args, report_dir)
 
-    def run_post_session_hook(self, cli_args, report_dir):
+    def post_run(self, cli_args, report_dir):
         if isinstance(self._config, HasPostRunHook):
             self._config.post_run(cli_args, report_dir)
 

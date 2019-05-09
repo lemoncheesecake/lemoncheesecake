@@ -102,7 +102,7 @@ def run_project(project, cli_args):
 
     # Handle before run hook
     try:
-        project.run_pre_session_hook(cli_args, report_dir)
+        project.pre_run(cli_args, report_dir)
     except UserError as e:
         raise e
     except Exception:
@@ -126,7 +126,7 @@ def run_project(project, cli_args):
 
     # Handle after run hook
     try:
-        project.run_post_session_hook(cli_args, report_dir)
+        project.post_run(cli_args, report_dir)
     except UserError as e:
         raise e
     except Exception:

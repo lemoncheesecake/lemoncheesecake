@@ -108,13 +108,13 @@ def test_with_pre_run_hook(tmpdir):
             marker.append(1)
 
     project = Project(MyProject(tmpdir.strpath), tmpdir.strpath)
-    project.run_pre_session_hook(object(), tmpdir.strpath)
+    project.pre_run(object(), tmpdir.strpath)
     assert len(marker) == 1
 
 
 def test_without_pre_run_hook(tmpdir):
     project = make_test_project(tmpdir)
-    project.run_pre_session_hook(object(), tmpdir.strpath)
+    project.pre_run(object(), tmpdir.strpath)
 
 
 def test_with_post_run_hook(tmpdir):
@@ -125,13 +125,13 @@ def test_with_post_run_hook(tmpdir):
             marker.append(1)
 
     project = Project(MyProject(tmpdir.strpath), tmpdir.strpath)
-    project.run_post_session_hook(object(), tmpdir.strpath)
+    project.post_run(object(), tmpdir.strpath)
     assert len(marker) == 1
 
 
 def test_without_post_run_hook(tmpdir):
     project = make_test_project(tmpdir)
-    project.run_post_session_hook(object(), tmpdir.strpath)
+    project.post_run(object(), tmpdir.strpath)
 
 
 def test_get_suites_with_metadatapolicy_check(tmpdir):
@@ -184,8 +184,8 @@ def test_project_creation(tmpdir):
     assert len(project.get_fixtures()) == 0
     assert len(project.get_default_reporting_backends_for_test_run()) > 0
 
-    project.run_pre_session_hook(object(), tmpdir.strpath)
-    project.run_post_session_hook(object(), tmpdir.strpath)
+    project.pre_run(object(), tmpdir.strpath)
+    project.post_run(object(), tmpdir.strpath)
 
 
 def test_find_project_file_not_found(tmpdir):
