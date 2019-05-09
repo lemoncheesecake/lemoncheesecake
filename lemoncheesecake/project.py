@@ -8,11 +8,12 @@ import os
 import os.path as osp
 import sys
 import shutil
+import argparse
 
-from typing import List
+from typing import List, Any
 
-from lemoncheesecake.suite import load_suites_from_directory
-from lemoncheesecake.fixtures import load_fixtures_from_directory
+from lemoncheesecake.suite import load_suites_from_directory, Suite
+from lemoncheesecake.fixtures import load_fixtures_from_directory, Fixture
 from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.reporting import ConsoleBackend, HtmlBackend, JsonBackend, XmlBackend, JunitBackend, \
     ReportPortalBackend, SlackReportingBackend, filter_available_reporting_backends
@@ -25,78 +26,12 @@ from lemoncheesecake.helpers.moduleimport import import_module
 PROJECT_CONFIG_FILE = "project.py"
 
 
-class HasCustomCliArgs:
-    """"Mixin class for project configuration with custom CLI args"""
-    def add_custom_cli_args(self, cli_parser):
-        """Setup custom CLI args in cli_parser"""
-        pass
-
-
-class HasPreRunHook:
-    """Mixin class for project configuration that requires code to be executed before tests"""
-    def pre_run(self, cli_args, report_dir):
-        """Pre-run hook"""
-        pass
-
-
-class HasPostRunHook:
-    """Mixin class for project configuration that requires code to be executed after tests"""
-    def post_run(self, cli_args, report_dir):
-        """Post-run hook"""
-        pass
-
-
-class HasMetadataPolicy:
-    """Mixin class project configuration that a metadata policy"""
-    def get_metadata_policy(self):
-        """Return a `lemoncheesecake.validators.MetadataPolicy` instance"""
-        return MetadataPolicy()
-
-
-class ProjectConfiguration:
-    """Abstract class for project configuration"""
-
-    def get_suites(self):
-        """Return a list of `lemoncheesecake.suite.Suite` instances"""
-        raise NotImplementedError()
-    
-    def get_fixtures(self):
-        """Return a list of `lemoncheesecake.fixtures.Fixture` instances"""
-        return []
-    
-    def get_all_reporting_backends(self):
-        """Return a list of `lemoncheesecake.reporting.ReportingBackend` instances supported by the project"""
-        raise NotImplementedError()
-    
-    def get_default_reporting_backends_for_test_run(self):
-        """Return a list of `lemoncheesecake.reporting.ReportingBackend` that will used by default by lcc run"""
-        raise NotImplementedError()
-
-    def create_report_dir(self, top_dir):
-        """Create a new report directory within `top_dir` (in case the user does not provide a custom report directory)"""
-        raise NotImplementedError()
-
-    def get_report_title(self):
-        """Return the report title"""
-        return None
-
-    def get_report_info(self):
-        """Return a list of key/value tuple to be added to report info"""
-        return []
-
-    def is_threaded(self):
-        """Indicate, whether or not if the project can be ran on multiple threads"""
-        return True
-
-
-class SimpleProjectConfiguration(ProjectConfiguration):
-    def __init__(self, suites_dir, fixtures_dir=None, report_title=None,
-                 threaded=True, hide_command_line_in_report=False):
-        self._suites_dir = suites_dir
-        self._fixtures_dir = fixtures_dir
-        self._report_title = report_title
-        self._threaded = threaded
-        self._hide_command_line_in_report = hide_command_line_in_report
+class Project(object):
+    def __init__(self, project_dir):
+        self.dir = project_dir
+        self.report_title = None
+        self.is_threaded = True
+        self.hide_command_line_in_report = False
         self.console_backend = ConsoleBackend()
         self.json_backend = JsonBackend()
         self.xml_backend = XmlBackend()
@@ -104,90 +39,73 @@ class SimpleProjectConfiguration(ProjectConfiguration):
         self.html_backend = HtmlBackend()
         self.reportportal_backend = ReportPortalBackend()
         self.slack_backend = SlackReportingBackend()
-    
-    def get_suites(self):
-        return load_suites_from_directory(self._suites_dir)
-    
-    def get_fixtures(self):
-        return load_fixtures_from_directory(self._fixtures_dir) if self._fixtures_dir else []
 
-    def get_report_title(self):
-        return self._report_title
-    
-    def get_all_reporting_backends(self):
-        return [
-            self.console_backend, self.json_backend, self.html_backend,
-            self.xml_backend, self.junit_backend, self.reportportal_backend,
-            self.slack_backend
-        ]
-
-    def get_default_reporting_backends_for_test_run(self):
-        return [self.console_backend, self.json_backend, self.html_backend]
-    
-    def create_report_dir(self, top_dir):
-        return create_report_dir_with_rotation(top_dir)
-
-    def is_threaded(self):
-        return self._threaded
-
-    def get_report_info(self):
-        info = []
-        if not self._hide_command_line_in_report:
-            info.append(("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:])))
-        return info
-
-
-class Project:
-    def __init__(self, project_config, project_dir):
-        self._config = project_config
-        self.dir = project_dir
-
-    def add_custom_cli_args(self, cli_args_parser):
-        if isinstance(self._config, HasCustomCliArgs):
-            cli_group = cli_args_parser.add_argument_group("Project custom arguments")
-            self._config.add_custom_cli_args(cli_group)
+    def add_custom_cli_args(self, cli_parser):
+        # type: (argparse.ArgumentParser) -> None
+        pass
 
     def create_report_dir(self):
-        return self._config.create_report_dir(self.dir)
+        # type: () -> str
+        return create_report_dir_with_rotation(self.dir)
 
     def get_suites(self):
-        return self._config.get_suites()
+        # type: () -> List[Suite]
+        return load_suites_from_directory(osp.join(self.dir, "suites"))
+
+    def get_metadata_policy(self):
+        # type: () -> MetadataPolicy
+        return MetadataPolicy()
 
     def get_suites_strict(self):
+        # type: () -> List[Suite]
         suites = self.get_suites()
-        if isinstance(self._config, HasMetadataPolicy):
-            policy = self._config.get_metadata_policy()
-            policy.check_suites_compliance(suites)
+        policy = self.get_metadata_policy()
+        policy.check_suites_compliance(suites)
         return suites
 
     def get_fixtures(self):
-        return self._config.get_fixtures()
+        # type: () -> List[Fixture]
+        fixtures_dir = osp.join(self.dir, "fixtures")
+        if osp.exists(fixtures_dir):
+            return load_fixtures_from_directory(fixtures_dir)
+        else:
+            return []
 
     def get_all_reporting_backends(self):
         # type: () -> List[ReportingBackend]
-        return filter_available_reporting_backends(self._config.get_all_reporting_backends())
+        return filter_available_reporting_backends((
+            self.console_backend, self.json_backend, self.html_backend,
+            self.xml_backend, self.junit_backend, self.reportportal_backend,
+            self.slack_backend
+        ))
 
     def get_default_reporting_backends_for_test_run(self):
-        return filter_available_reporting_backends(self._config.get_default_reporting_backends_for_test_run())
-
-    @property
-    def is_threaded(self):
-        return self._config.is_threaded()
+        # type: () -> List[ReportingBackend]
+        return filter_available_reporting_backends((
+            self.console_backend, self.json_backend, self.html_backend
+        ))
 
     def pre_run(self, cli_args, report_dir):
-        if isinstance(self._config, HasPreRunHook):
-            self._config.pre_run(cli_args, report_dir)
+        # type: (Any, str) -> None
+        pass
 
     def post_run(self, cli_args, report_dir):
-        if isinstance(self._config, HasPostRunHook):
-            self._config.post_run(cli_args, report_dir)
+        # type: (Any, str) -> None
+        pass
+
+    def get_report_info(self):
+        # type: () -> List
+        info = []
+        if not self.hide_command_line_in_report:
+            info.append(("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:])))
+        return info
 
     def on_test_session_start(self, event):
-        title = self._config.get_report_title()
+        title = self.report_title
         if title is not None:
-            event.report.title = self._config.get_report_title()
+            event.report.title = self.report_title
 
-        for key, value in self._config.get_report_info():
+        for key, value in self.get_report_info():
             event.report.add_info(key, value)
 
 
@@ -229,7 +147,7 @@ def load_project_from_file(project_filename):
 
     # load project module
     try:
-        project_config_module = import_module(project_filename)
+        project_module = import_module(project_filename)
     except UserError as e:
         raise e  # propagate UserError
     except Exception:
@@ -239,13 +157,13 @@ def load_project_from_file(project_filename):
     
     # get project config instance
     try:
-        project_config = project_config_module.project
+        project = project_module.project
     except AttributeError:
         raise ProjectError("Cannot find symbol 'project' in module '%s'" % project_filename)
-    if not isinstance(project_config, ProjectConfiguration):
-        raise ProjectError("Symbol 'project' in module '%s' does not inherit lemoncheesecake.project.ProjectConfiguration" % project_filename)
+    if not isinstance(project, Project):
+        raise ProjectError("Symbol 'project' in module '%s' does not inherit lemoncheesecake.project.Project" % project_filename)
     
-    return Project(project_config, project_dir)
+    return project
 
 
 def load_project_from_dir(project_dir):
