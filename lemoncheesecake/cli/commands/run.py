@@ -21,7 +21,7 @@ from lemoncheesecake.runner import initialize_event_manager, run_suites
 def build_fixture_registry(project, cli_args):
     registry = FixtureRegistry()
     registry.add_fixture(BuiltinFixture("cli_args", lambda: cli_args))
-    registry.add_fixture(BuiltinFixture("project_dir", lambda: project.get_project_dir()))
+    registry.add_fixture(BuiltinFixture("project_dir", lambda: project.dir))
     for fixture in project.get_fixtures():
         registry.add_fixture(fixture)
     registry.check_dependencies()

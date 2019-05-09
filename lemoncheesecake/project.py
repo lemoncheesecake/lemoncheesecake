@@ -140,10 +140,7 @@ class SimpleProjectConfiguration(ProjectConfiguration):
 class Project:
     def __init__(self, project_config, project_dir):
         self._config = project_config
-        self._project_dir = project_dir
-
-    def get_project_dir(self):
-        return self._project_dir
+        self.dir = project_dir
 
     def add_custom_args_to_run_cli(self, cli_args_parser):
         if isinstance(self._config, HasCustomCliArgs):
@@ -151,7 +148,7 @@ class Project:
             self._config.add_custom_cli_args(cli_group)
 
     def create_report_dir(self):
-        return self._config.create_report_dir(self._project_dir)
+        return self._config.create_report_dir(self.dir)
 
     def get_suites(self, check_metadata_policy=True):
         suites = self._config.get_suites()

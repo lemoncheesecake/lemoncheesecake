@@ -20,11 +20,11 @@ def make_test_project(project_dir):
     )
 
 
-def test_get_project_dir(tmpdir):
+def test_project_dir(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(build_test_module())
     project = make_test_project(tmpdir)
-    assert project.get_project_dir() == tmpdir
+    assert project.dir == tmpdir
 
 
 def test_get_suites(tmpdir):
