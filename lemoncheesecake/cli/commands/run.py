@@ -203,7 +203,7 @@ class RunCommand(Command):
         )
 
         if project:
-            project.add_custom_args_to_run_cli(cli_parser)
+            project.add_custom_cli_args(cli_parser)
 
     def run_cmd(self, cli_args):
         return run_project(load_project(), cli_args)

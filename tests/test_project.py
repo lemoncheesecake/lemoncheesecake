@@ -90,14 +90,14 @@ def test_with_custom_cli_args(tmpdir):
 
     project = Project(MyProject(tmpdir.strpath), tmpdir.strpath)
     cli_parser = argparse.ArgumentParser()
-    project.add_custom_args_to_run_cli(cli_parser)
+    project.add_custom_cli_args(cli_parser)
     assert "foobar" in [a.dest for a in cli_parser._actions]
 
 
 def test_without_custom_cli_args(tmpdir):
     project = make_test_project(tmpdir)
     cli_parser = argparse.ArgumentParser()
-    project.add_custom_args_to_run_cli(cli_parser)
+    project.add_custom_cli_args(cli_parser)
 
 
 def test_with_pre_run_hook(tmpdir):
