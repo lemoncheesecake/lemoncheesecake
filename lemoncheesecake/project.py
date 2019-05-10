@@ -31,7 +31,6 @@ class Project(object):
         self.dir = project_dir
         self.report_title = None
         self.is_threaded = True
-        self.hide_command_line_in_report = False
         self.console_backend = ConsoleBackend()
         self.json_backend = JsonBackend()
         self.xml_backend = XmlBackend()
@@ -95,10 +94,7 @@ class Project(object):
 
     def get_report_info(self):
         # type: () -> List
-        info = []
-        if not self.hide_command_line_in_report:
-            info.append(("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:])))
-        return info
+        return []
 
     def on_test_session_start(self, event):
         title = self.report_title

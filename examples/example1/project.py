@@ -18,4 +18,3 @@ class MyProject(Project):
 
 project = MyProject(project_dir)
 project.report_title = "Awesome report"
-project.hide_command_line_in_report = True
