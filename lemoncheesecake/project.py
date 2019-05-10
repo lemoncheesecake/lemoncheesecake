@@ -6,7 +6,6 @@ Created on Dec 10, 2016
 
 import os
 import os.path as osp
-import sys
 import shutil
 import argparse
 
@@ -139,8 +138,6 @@ def create_project(project_dir):
 
 
 def load_project_from_file(project_filename):
-    project_dir = osp.dirname(project_filename)
-
     # load project module
     try:
         project_module = import_module(project_filename)
