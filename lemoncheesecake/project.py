@@ -29,7 +29,7 @@ class Project(object):
     def __init__(self, project_dir):
         self.dir = project_dir
         self.report_title = None
-        self.is_threaded = True
+        self.threaded = True
         self.console_backend = ConsoleBackend()
         self.json_backend = JsonBackend()
         self.xml_backend = XmlBackend()
