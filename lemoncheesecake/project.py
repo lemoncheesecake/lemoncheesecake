@@ -28,7 +28,6 @@ PROJECT_CONFIG_FILE = "project.py"
 class Project(object):
     def __init__(self, project_dir):
         self.dir = project_dir
-        self.report_title = None
         self.threaded = True
         self.console_backend = ConsoleBackend()
         self.json_backend = JsonBackend()
@@ -91,14 +90,18 @@ class Project(object):
         # type: (Any, str) -> None
         pass
 
+    def get_report_title(self):
+        # type: () -> Any[str, None]
+        return None
+
     def get_report_info(self):
         # type: () -> List
         return []
 
     def on_test_session_start(self, event):
-        title = self.report_title
-        if title is not None:
-            event.report.title = self.report_title
+        title = self.get_report_title()
+        if title:
+            event.report.title = title
 
         for key, value in self.get_report_info():
             event.report.add_info(key, value)

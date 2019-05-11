@@ -12,9 +12,11 @@ project_dir = os.path.dirname(__file__)
 # Project
 ###
 class MyProject(Project):
+    def get_report_title(self):
+        return "Awesome report"
+
     def get_report_info(self):
         return Project.get_report_info(self) + [["foo", "bar"]]
 
 
 project = MyProject(project_dir)
-project.report_title = "Awesome report"
