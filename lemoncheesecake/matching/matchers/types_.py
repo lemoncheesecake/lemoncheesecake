@@ -5,6 +5,7 @@ Created on Apr 3, 2017
 '''
 
 import six
+from typing import List, Any
 
 from lemoncheesecake.matching.base import Matcher, match_success, match_failure, got, serialize_value, got_value, to_be
 from lemoncheesecake.matching.matchers.value import is_
@@ -22,6 +23,7 @@ if six.PY2:
 
 class IsValueOfType(Matcher):
     def __init__(self, types, type_name, value_matcher):
+        # type: (List[Any], str, Matcher) -> None
         self.types = types
         self.type_name = type_name
         self.value_matcher = value_matcher
@@ -29,7 +31,7 @@ class IsValueOfType(Matcher):
     def build_description(self, conjugate=False):
         ret = "%s %s" % (to_be(conjugate), self.type_name)
         if self.value_matcher:
-            ret += " that %s" % self.value_matcher.description(conjugate=True)
+            ret += " that %s" % self.value_matcher.build_description(conjugate=True)
 
         return ret
 

@@ -12,7 +12,7 @@ import json
 
 from lemoncheesecake.matching.base import MatchExpected, match_result, match_success, match_failure, got_value, to_be
 
-_REGEXP_TYPE = type(re.compile("dummy"))
+_REGEXP_TYPE = type(re.compile(r"dummy"))
 
 
 class StartsWith(MatchExpected):
