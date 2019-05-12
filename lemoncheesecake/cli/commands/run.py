@@ -51,6 +51,19 @@ def get_report_saving_strategy(cli_args):
         raise LemonCheesecakeException("Invalid expression '%s' for report saving strategy" % saving_strategy_expression)
 
 
+class ReportSetupHandler(object):
+    def __init__(self, project):
+        self.project = project
+
+    def __call__(self, event):
+        title = self.project.get_report_title()
+        if title:
+            event.report.title = title
+
+        for key, value in self.project.get_report_info():
+            event.report.add_info(key, value)
+
+
 def run_project(project, cli_args):
     nb_threads = get_nb_threads(cli_args)
     if nb_threads > 1 and not project.threaded:
@@ -115,7 +128,7 @@ def run_project(project, cli_args):
     event_manager = initialize_event_manager(
         suites, active_reporting_backends, report_dir, report_saving_strategy, nb_threads
     )
-    event_manager.add_listener(project)
+    event_manager.subscribe_to_event("test_session_start", ReportSetupHandler(project))
 
     # Run tests
     is_successful = run_suites(

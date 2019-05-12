@@ -73,14 +73,6 @@ class Project(object):
         # type: () -> List
         return []
 
-    def on_test_session_start(self, event):
-        title = self.get_report_title()
-        if title:
-            event.report.title = title
-
-        for key, value in self.get_report_info():
-            event.report.add_info(key, value)
-
 
 def _find_file_in_parent_directories(filename, dirname):
     if osp.exists(osp.join(dirname, filename)):
