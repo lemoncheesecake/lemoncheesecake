@@ -76,19 +76,19 @@ def test_default_reporting_backend_names(tmpdir):
 
 def test_with_custom_cli_args(tmpdir):
     class MyProject(Project):
-        def add_custom_cli_args(self, cli_parser):
+        def add_cli_args(self, cli_parser):
             cli_parser.add_argument("foobar")
 
     project = MyProject(tmpdir.strpath)
     cli_parser = argparse.ArgumentParser()
-    project.add_custom_cli_args(cli_parser)
+    project.add_cli_args(cli_parser)
     assert "foobar" in [a.dest for a in cli_parser._actions]
 
 
 def test_without_custom_cli_args(tmpdir):
     project = Project(tmpdir.strpath)
     cli_parser = argparse.ArgumentParser()
-    project.add_custom_cli_args(cli_parser)
+    project.add_cli_args(cli_parser)
 
 
 def test_with_pre_run_hook(tmpdir):

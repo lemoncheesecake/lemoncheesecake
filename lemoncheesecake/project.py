@@ -31,7 +31,7 @@ class Project(object):
         self.reporting_backends = {b.get_name(): b for b in get_reporting_backends()}  # type: Dict[str, ReportingBackend]
         self.default_reporting_backend_names = ["console", "json", "html"]
 
-    def add_custom_cli_args(self, cli_parser):
+    def add_cli_args(self, cli_parser):
         # type: (argparse.ArgumentParser) -> None
         pass
 

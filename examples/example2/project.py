@@ -49,7 +49,7 @@ class MyProject(Project):
     def get_fixtures(self):
         return load_fixtures_from_func(omdb)
 
-    def add_custom_cli_args(self, cli_parser):
+    def add_cli_args(self, cli_parser):
         cli_parser.add_argument("--host", default="www.omdbapi.com", help="omdb API host")
 
 
