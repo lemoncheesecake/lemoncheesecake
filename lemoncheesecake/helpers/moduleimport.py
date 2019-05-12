@@ -17,7 +17,7 @@ from lemoncheesecake.exceptions import serialize_current_exception, ModuleImport
 
 
 def strip_py_ext(filename):
-    return re.sub("\.py$", "", filename)
+    return re.sub(r"\.py$", "", filename)
 
 
 def get_py_files_from_dir(dir):

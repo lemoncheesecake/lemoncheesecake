@@ -62,8 +62,8 @@ def test_url():
         r"",
         r"Some test",
         r"",
-        "URL.+http://www.example.com \(A link\)",
-        ""
+        r"URL.+http://www.example.com \(A link\)",
+        r""
     )
 
 
@@ -78,8 +78,8 @@ def test_attachment():
         r"",
         r"Some test",
         r"",
-        "ATTACH.+My file.+data\.txt",
-        ""
+        r"ATTACH.+My file.+data\.txt",
+        r""
     )
 
 
@@ -95,8 +95,8 @@ def test_log_checks_success():
         r"",
         r"Some test",
         r"",
-        "CHECK.+foo",
-        ""
+        r"CHECK.+foo",
+        r""
     )
 
 
@@ -111,8 +111,8 @@ def test_log_checks_failure():
         r"",
         r"Some test",
         r"",
-        "CHECK.+foo.+bar",
-        ""
+        r"CHECK.+foo.+bar",
+        r""
     )
 
 
