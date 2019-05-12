@@ -16,6 +16,7 @@ to know to migrate from 0.22.x release.
 - In `Matcher` class:
   - the `description` method has been renamed into `build_description`
   - the `short_description` method has been renamed into `build_short_description`
+- Major overhaul of `lemoncheesecake.project`, see the migration guide for more information
 
 ## Report
 
