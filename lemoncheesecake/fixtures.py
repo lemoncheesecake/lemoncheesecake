@@ -76,7 +76,7 @@ class _BaseFixture(object):
         }[self.scope]
 
 
-class _Fixture(_BaseFixture):
+class Fixture(_BaseFixture):
     def __init__(self, name, func, scope, params):
         self.name = name
         self.func = func
@@ -304,7 +304,7 @@ def load_fixtures_from_func(func):
         names = [func.__name__]
     scope = func._lccfixtureinfo.scope
     args = get_callable_args(func)
-    return [_Fixture(name, func, scope, args) for name in names]
+    return [Fixture(name, func, scope, args) for name in names]
 
 
 def load_fixtures_from_file(filename):

@@ -12,7 +12,7 @@ import platform
 
 import lemoncheesecake
 from lemoncheesecake.project import find_project_dir, find_project_file, load_project_from_file
-from lemoncheesecake.reporting import get_available_backends
+from lemoncheesecake.reporting import get_reporting_backends
 from lemoncheesecake.reporting.reportdir import DEFAULT_REPORT_DIR_NAME
 from lemoncheesecake.filter import make_run_filter, filter_suites
 from lemoncheesecake.exceptions import UserError, ProjectError
@@ -35,7 +35,7 @@ def filter_suites_from_cli_args(suites, cli_args):
 
 
 def get_suites_from_project(project, cli_args):
-    suites = project.get_suites()
+    suites = project.get_suites_strict()
     if all(suite.is_empty() for suite in suites):
         raise UserError("No test is defined in your lemoncheesecake project.")
 
@@ -45,13 +45,13 @@ def get_suites_from_project(project, cli_args):
 def auto_detect_reporting_backends():
     project_filename = find_project_file()
     if project_filename is None:
-        return get_available_backends()
+        return get_reporting_backends()
 
     try:
         project = load_project_from_file(project_filename)
-        return project.get_all_reporting_backends()
+        return project.reporting_backends
     except ProjectError:
-        return get_available_backends()
+        return get_reporting_backends()
 
 
 def add_report_path_cli_arg(cli_parser):

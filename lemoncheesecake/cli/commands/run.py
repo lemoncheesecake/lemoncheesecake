@@ -21,7 +21,7 @@ from lemoncheesecake.runner import initialize_event_manager, run_suites
 def build_fixture_registry(project, cli_args):
     registry = FixtureRegistry()
     registry.add_fixture(BuiltinFixture("cli_args", lambda: cli_args))
-    registry.add_fixture(BuiltinFixture("project_dir", lambda: project.get_project_dir()))
+    registry.add_fixture(BuiltinFixture("project_dir", lambda: project.dir))
     for fixture in project.get_fixtures():
         registry.add_fixture(fixture)
     registry.check_dependencies()
@@ -51,9 +51,22 @@ def get_report_saving_strategy(cli_args):
         raise LemonCheesecakeException("Invalid expression '%s' for report saving strategy" % saving_strategy_expression)
 
 
+class ReportSetupHandler(object):
+    def __init__(self, project):
+        self.project = project
+
+    def __call__(self, event):
+        title = self.project.get_report_title()
+        if title:
+            event.report.title = title
+
+        for key, value in self.project.get_report_info():
+            event.report.add_info(key, value)
+
+
 def run_project(project, cli_args):
     nb_threads = get_nb_threads(cli_args)
-    if nb_threads > 1 and not project.is_threaded():
+    if nb_threads > 1 and not project.threaded:
         raise LemonCheesecakeException("Project does not support multi-threading")
 
     suites = get_suites_from_project(project, cli_args)
@@ -64,7 +77,7 @@ def run_project(project, cli_args):
 
     # Set active reporting backends
     available_reporting_backends = {
-        backend.get_name(): backend for backend in project.get_all_reporting_backends()
+        backend.get_name(): backend for backend in project.reporting_backends.values()
             if isinstance(backend, ReportingSessionBuilderMixin)
     }
     active_reporting_backends = set()
@@ -102,7 +115,7 @@ def run_project(project, cli_args):
 
     # Handle before run hook
     try:
-        project.run_pre_session_hook(cli_args, report_dir)
+        project.pre_run(cli_args, report_dir)
     except UserError as e:
         raise e
     except Exception:
@@ -115,7 +128,7 @@ def run_project(project, cli_args):
     event_manager = initialize_event_manager(
         suites, active_reporting_backends, report_dir, report_saving_strategy, nb_threads
     )
-    event_manager.add_listener(project)
+    event_manager.subscribe_to_event("test_session_start", ReportSetupHandler(project))
 
     # Run tests
     is_successful = run_suites(
@@ -126,7 +139,7 @@ def run_project(project, cli_args):
 
     # Handle after run hook
     try:
-        project.run_post_session_hook(cli_args, report_dir)
+        project.post_run(cli_args, report_dir)
     except UserError as e:
         raise e
     except Exception:
@@ -154,9 +167,7 @@ class RunCommand(Command):
         default_reporting_backend_names = []
         if project_file:
             project = load_project_from_file(project_file)
-            default_reporting_backend_names = [
-                backend.get_name() for backend in project.get_default_reporting_backends_for_test_run()
-            ]
+            default_reporting_backend_names = project.default_reporting_backend_names
 
         add_run_filter_cli_args(cli_parser)
 
@@ -203,7 +214,8 @@ class RunCommand(Command):
         )
 
         if project:
-            project.add_custom_args_to_run_cli(cli_parser)
+            cli_group = cli_parser.add_argument_group("Project custom arguments")
+            project.add_cli_args(cli_group)
 
     def run_cmd(self, cli_args):
         return run_project(load_project(), cli_args)

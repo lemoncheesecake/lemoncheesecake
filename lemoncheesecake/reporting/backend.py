@@ -84,10 +84,14 @@ def filter_available_reporting_backends(backends):
     return list(filter(lambda backend: backend.is_available(), backends))
 
 
-def get_available_backends():
-    from lemoncheesecake.reporting.backends import ConsoleBackend, XmlBackend, JsonBackend, HtmlBackend, JunitBackend
-    backends = ConsoleBackend(), XmlBackend(), JsonBackend(), HtmlBackend(), JunitBackend()
-    return list(filter(lambda b: b.is_available(), backends))
+def get_reporting_backends():
+    from lemoncheesecake.reporting.backends import REPORTING_BACKENDS
+    return list(
+        filter(
+            lambda backend: backend.is_available(),
+            (backend_class() for backend_class in REPORTING_BACKENDS)
+        )
+    )
 
 
 class BoundReport(Report):
@@ -112,7 +116,7 @@ class BoundReport(Report):
 
 def load_report_from_file(filename, backends=None):
     if backends is None:
-        backends = get_available_backends()
+        backends = get_reporting_backends()
     for backend in backends:
         if isinstance(backend, ReportUnserializerMixin):
             try:

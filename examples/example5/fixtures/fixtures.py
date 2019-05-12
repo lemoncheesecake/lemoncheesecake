@@ -1,6 +1,6 @@
 import lemoncheesecake.api as lcc
 
-@lcc.fixture(scope="session_prerun")
+@lcc.fixture(scope="pre_run")
 def fixt_1():
     pass
 

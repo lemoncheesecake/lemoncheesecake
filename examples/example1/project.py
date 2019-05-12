@@ -1,6 +1,6 @@
 import os.path
 
-from lemoncheesecake.project import SimpleProjectConfiguration
+from lemoncheesecake.project import Project
 
 ###
 # Variables
@@ -11,14 +11,12 @@ project_dir = os.path.dirname(__file__)
 ###
 # Project
 ###
-class MyProjectConfiguration(SimpleProjectConfiguration):
+class MyProject(Project):
+    def get_report_title(self):
+        return "Awesome report"
+
     def get_report_info(self):
-        return SimpleProjectConfiguration.get_report_info(self) + [["foo", "bar"]]
+        return Project.get_report_info(self) + [["foo", "bar"]]
 
 
-project = MyProjectConfiguration(
-    suites_dir=os.path.join(project_dir, "suites"),
-    fixtures_dir=os.path.join(project_dir, "fixtures"),
-    report_title="Awesome report",
-    hide_command_line_in_report=True
-)
+project = MyProject(project_dir)
