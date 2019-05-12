@@ -46,7 +46,7 @@ def test_create_report_dir(tmpdir):
     assert os.path.isdir(report_dir)
 
 
-def test_get_all_reporting_backends(tmpdir):
+def test_reporting_backends(tmpdir):
     project = Project(tmpdir.strpath)
 
     expected_reporting_backends = ["console", "html", "json"]
@@ -66,12 +66,12 @@ def test_get_all_reporting_backends(tmpdir):
     except ImportError:
         pass
 
-    assert sorted([p.get_name() for p in project.get_all_reporting_backends()]) == sorted(expected_reporting_backends)
+    assert sorted(project.reporting_backends.keys()) == sorted(expected_reporting_backends)
 
 
-def test_get_default_reporting_backends_for_test_run(tmpdir):
+def test_default_reporting_backend_names(tmpdir):
     project = Project(tmpdir.strpath)
-    assert [b.get_name() for b in project.get_default_reporting_backends_for_test_run()] == ["console", "json", "html"]
+    assert project.default_reporting_backend_names == ["console", "json", "html"]
 
 
 def test_with_custom_cli_args(tmpdir):
@@ -173,7 +173,7 @@ def test_project_creation(tmpdir):
     project = load_project_from_dir(tmpdir.strpath)
     assert len(project.get_suites()) == 0
     assert len(project.get_fixtures()) == 0
-    assert len(project.get_default_reporting_backends_for_test_run()) > 0
+    assert len(project.default_reporting_backend_names) > 0
 
     project.pre_run(object(), tmpdir.strpath)
     project.post_run(object(), tmpdir.strpath)

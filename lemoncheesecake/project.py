@@ -9,14 +9,12 @@ import os.path as osp
 import shutil
 import argparse
 
-from typing import List, Any
+from typing import List, Any, Dict
 
 from lemoncheesecake.suite import load_suites_from_directory, Suite
 from lemoncheesecake.fixtures import load_fixtures_from_directory, Fixture
 from lemoncheesecake.validators import MetadataPolicy
-from lemoncheesecake.reporting import ConsoleBackend, HtmlBackend, JsonBackend, XmlBackend, JunitBackend, \
-    ReportPortalBackend, SlackReportingBackend, filter_available_reporting_backends
-from lemoncheesecake.reporting.backend import ReportingBackend
+from lemoncheesecake.reporting import get_reporting_backends, ReportingBackend
 from lemoncheesecake.reporting.reportdir import create_report_dir_with_rotation
 from lemoncheesecake.exceptions import ProjectError, UserError, serialize_current_exception
 from lemoncheesecake.helpers.resources import get_resource_path
@@ -27,15 +25,10 @@ PROJECT_CONFIG_FILE = "project.py"
 
 class Project(object):
     def __init__(self, project_dir):
-        self.dir = project_dir
-        self.threaded = True
-        self.console_backend = ConsoleBackend()
-        self.json_backend = JsonBackend()
-        self.xml_backend = XmlBackend()
-        self.junit_backend = JunitBackend()
-        self.html_backend = HtmlBackend()
-        self.reportportal_backend = ReportPortalBackend()
-        self.slack_backend = SlackReportingBackend()
+        self.dir = project_dir  # type: str
+        self.threaded = True  # type: bool
+        self.reporting_backends = {b.get_name(): b for b in get_reporting_backends()}  # type: Dict[str, ReportingBackend]
+        self.default_reporting_backend_names = ["console", "json", "html"]
 
     def add_custom_cli_args(self, cli_parser):
         # type: (argparse.ArgumentParser) -> None
@@ -67,20 +60,6 @@ class Project(object):
             return load_fixtures_from_directory(fixtures_dir)
         else:
             return []
-
-    def get_all_reporting_backends(self):
-        # type: () -> List[ReportingBackend]
-        return filter_available_reporting_backends((
-            self.console_backend, self.json_backend, self.html_backend,
-            self.xml_backend, self.junit_backend, self.reportportal_backend,
-            self.slack_backend
-        ))
-
-    def get_default_reporting_backends_for_test_run(self):
-        # type: () -> List[ReportingBackend]
-        return filter_available_reporting_backends((
-            self.console_backend, self.json_backend, self.html_backend
-        ))
 
     def pre_run(self, cli_args, report_dir):
         # type: (Any, str) -> None
@@ -119,6 +98,7 @@ def _find_file_in_parent_directories(filename, dirname):
 
 
 def find_project_file():
+    # type: () -> Any[str, None]
     filename = os.environ.get("LCC_PROJECT_FILE")
     if filename is not None:
         return filename if osp.exists(filename) else None
@@ -128,6 +108,7 @@ def find_project_file():
 
 
 def find_project_dir():
+    # type: () -> Any[str, None]
     project_filename = find_project_file()
     if project_filename is None:
         return None
@@ -135,12 +116,15 @@ def find_project_dir():
 
 
 def create_project(project_dir):
+    # type: (str) -> None
     shutil.copyfile(get_resource_path(("project", "template.py")), osp.join(project_dir, PROJECT_CONFIG_FILE))
     os.mkdir(osp.join(project_dir, "suites"))
     os.mkdir(osp.join(project_dir, "fixtures"))
 
 
 def load_project_from_file(project_filename):
+    # type: (str) -> Project
+
     # load project module
     try:
         project_module = import_module(project_filename)
@@ -163,10 +147,12 @@ def load_project_from_file(project_filename):
 
 
 def load_project_from_dir(project_dir):
+    # type: (str) -> Project
     return load_project_from_file(osp.join(project_dir, PROJECT_CONFIG_FILE))
 
 
 def load_project():
+    # type: () -> Project
     project_filename = find_project_file()
     if project_filename is None:
         raise ProjectError("Cannot find project file")
