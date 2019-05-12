@@ -134,10 +134,9 @@ def test_get_suites_with_metadatapolicy_check(tmpdir):
             pass
 
     class MyProject(Project):
-        def get_metadata_policy(self):
-            mp = MetadataPolicy()
-            mp.disallow_unknown_tags()
-            return mp
+        def __init__(self, project_dir):
+            Project.__init__(self, project_dir)
+            self.metadata_policy.disallow_unknown_tags()
 
         def get_suites(self):
             return [load_suite_from_class(mysuite)]
@@ -156,10 +155,9 @@ def test_get_suites_without_metadatapolicy_check(tmpdir):
             pass
 
     class MyProject(Project):
-        def get_metadata_policy(self):
-            mp = MetadataPolicy()
-            mp.disallow_unknown_tags()
-            return mp
+        def __init__(self, project_dir):
+            Project.__init__(self, project_dir)
+            self.metadata_policy.disallow_unknown_tags()
 
         def get_suites(self):
             return [load_suite_from_class(mysuite)]
