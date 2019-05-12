@@ -75,22 +75,16 @@ def run_project(project, cli_args):
     fixture_registry = build_fixture_registry(project, cli_args)
     fixture_registry.check_fixtures_in_suites(suites)
 
-    # Set active reporting backends
-    available_reporting_backends = {
-        backend.get_name(): backend for backend in project.reporting_backends.values()
-            if isinstance(backend, ReportingSessionBuilderMixin)
-    }
-    active_reporting_backends = set()
-    for backend_name in cli_args.reporting + cli_args.enable_reporting:
+    # Get reporting backends
+    reporting_backends = []
+    for backend_name in cli_args.reporting:
         try:
-            active_reporting_backends.add(available_reporting_backends[backend_name])
+            backend = project.reporting_backends[backend_name]
         except KeyError:
             raise LemonCheesecakeException("Unknown reporting backend '%s'" % backend_name)
-    for backend_name in cli_args.disable_reporting:
-        try:
-            active_reporting_backends.discard(available_reporting_backends[backend_name])
-        except KeyError:
-            raise LemonCheesecakeException("Unknown reporting backend '%s'" % backend_name)
+        if not isinstance(backend, ReportingSessionBuilderMixin):
+            raise LemonCheesecakeException("Reporting backend '%s' is not suitable for test run" % backend_name)
+        reporting_backends.append(backend)
 
     # Get report save mode
     report_saving_strategy = get_report_saving_strategy(cli_args)
@@ -126,7 +120,7 @@ def run_project(project, cli_args):
 
     # Initialize event manager
     event_manager = initialize_event_manager(
-        suites, active_reporting_backends, report_dir, report_saving_strategy, nb_threads
+        suites, reporting_backends, report_dir, report_saving_strategy, nb_threads
     )
     event_manager.subscribe_to_event("test_session_start", ReportSetupHandler(project))
 
@@ -197,14 +191,6 @@ class RunCommand(Command):
         reporting_group.add_argument(
             "--reporting", nargs="+", default=default_reporting_backend_names,
             help="The list of reporting backends to use"
-        )
-        reporting_group.add_argument(
-            "--enable-reporting", nargs="+", default=[],
-            help="The list of reporting backends to add (to base backends)"
-        )
-        reporting_group.add_argument(
-            "--disable-reporting", nargs="+", default=[],
-            help="The list of reporting backends to remove (from base backends)"
         )
         reporting_group.add_argument(
             "--save-report", required=False,

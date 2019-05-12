@@ -86,3 +86,10 @@ Attachment logs
 
 The ``binary_mode`` argument of the ``save_attachment_content`` function has been removed. The file opening mode
 is now automatically determined upon the type of data passed as argument.
+
+
+CLI
+---
+
+The ``--enable-reporting`` and ``--disable-reporting`` arguments have been removed from ``lcc run``.
+Use the ``--reporting`` absolute reporting backend list instead.

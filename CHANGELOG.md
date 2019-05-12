@@ -18,6 +18,10 @@ to know to migrate from 0.22.x release.
   - the `short_description` method has been renamed into `build_short_description`
 - Major overhaul of `lemoncheesecake.project`, see the migration guide for more information
 
+## CLI
+
+- `lcc run`: the `--enable-reporting` and `--disable-reporting` arguments have been removed
+
 ## Report
 
 - The `generation_time` of the report is now computed by the reporting backends
