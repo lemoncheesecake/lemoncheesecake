@@ -1,10 +1,8 @@
 import os
 import pytest
 
-from lemoncheesecake.project import Project
 from lemoncheesecake.cli import build_cli_args
 from lemoncheesecake.cli.commands.run import run_project
-from lemoncheesecake import events
 
 from helpers.runner import generate_project, run_main
 from helpers.cli import assert_run_output, cmdout
@@ -105,7 +103,12 @@ def test_pre_run(tmpdir):
             marker.append(cli_args.command)
 
     project = MyProject(tmpdir.strpath, [DUMMY_SUITE])
-    run_project(project, build_cli_args(["run"]))
+
+    # force the --reporting arguments to what the project really supports
+    args = build_cli_args(["run"])
+    args.reporting = project.reporting_backends
+
+    run_project(project, args)
 
     assert marker == ["run"]
 
@@ -118,6 +121,11 @@ def test_post_run(tmpdir):
             marker.append(cli_args.command)
 
     project = MyProject(tmpdir.strpath, [DUMMY_SUITE])
-    run_project(project, build_cli_args(["run"]))
+
+    # force the --reporting arguments to what the project really supports
+    args = build_cli_args(["run"])
+    args.reporting = project.reporting_backends
+
+    run_project(project, args)
 
     assert marker == ["run"]

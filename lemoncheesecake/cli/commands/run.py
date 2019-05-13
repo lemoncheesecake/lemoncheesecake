@@ -12,7 +12,7 @@ from lemoncheesecake.exceptions import LemonCheesecakeException, ProgrammingErro
     serialize_current_exception
 from lemoncheesecake.filter import add_run_filter_cli_args
 from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture
-from lemoncheesecake.project import find_project_file, load_project_from_file, load_project
+from lemoncheesecake.project import find_project_file, load_project_from_file, load_project, DEFAULT_REPORTING_BACKENDS
 from lemoncheesecake.reporting.backend import ReportingSessionBuilderMixin
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy
 from lemoncheesecake.runner import initialize_event_manager, run_suites
@@ -157,11 +157,12 @@ class RunCommand(Command):
 
     def add_cli_args(self, cli_parser):
         project_file = find_project_file()
-        project = None
-        default_reporting_backend_names = []
         if project_file:
             project = load_project_from_file(project_file)
             default_reporting_backend_names = project.default_reporting_backend_names
+        else:
+            project = None
+            default_reporting_backend_names = DEFAULT_REPORTING_BACKENDS
 
         add_run_filter_cli_args(cli_parser)
 
@@ -190,7 +191,7 @@ class RunCommand(Command):
         )
         reporting_group.add_argument(
             "--reporting", nargs="+", default=default_reporting_backend_names,
-            help="The list of reporting backends to use"
+            help="The list of reporting backends to use (default: %s)" % ", ".join(default_reporting_backend_names)
         )
         reporting_group.add_argument(
             "--save-report", required=False,

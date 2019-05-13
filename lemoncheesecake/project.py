@@ -21,6 +21,7 @@ from lemoncheesecake.helpers.resources import get_resource_path
 from lemoncheesecake.helpers.moduleimport import import_module
 
 PROJECT_CONFIG_FILE = "project.py"
+DEFAULT_REPORTING_BACKENDS = ("console", "json", "html")
 
 
 class Project(object):
@@ -29,7 +30,7 @@ class Project(object):
         self.metadata_policy = MetadataPolicy()
         self.threaded = True  # type: bool
         self.reporting_backends = {b.get_name(): b for b in get_reporting_backends()}  # type: Dict[str, ReportingBackend]
-        self.default_reporting_backend_names = ["console", "json", "html"]
+        self.default_reporting_backend_names = list(DEFAULT_REPORTING_BACKENDS)
 
     def add_cli_args(self, cli_parser):
         # type: (argparse.ArgumentParser) -> None
