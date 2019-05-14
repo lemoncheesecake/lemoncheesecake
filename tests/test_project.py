@@ -125,47 +125,6 @@ def test_without_post_run_hook(tmpdir):
     project.post_run(object(), tmpdir.strpath)
 
 
-def test_get_suites_with_metadatapolicy_check(tmpdir):
-    @lcc.suite("My Suite")
-    class mysuite:
-        @lcc.test("My Test")
-        @lcc.tags("mytag")
-        def test(self):
-            pass
-
-    class MyProject(Project):
-        def __init__(self, project_dir):
-            Project.__init__(self, project_dir)
-            self.metadata_policy.disallow_unknown_tags()
-
-        def get_suites(self):
-            return [load_suite_from_class(mysuite)]
-
-    project = MyProject(tmpdir.strpath)
-    with pytest.raises(InvalidMetadataError):
-        project.get_suites_strict()
-
-
-def test_get_suites_without_metadatapolicy_check(tmpdir):
-    @lcc.suite("My Suite")
-    class mysuite:
-        @lcc.test("My Test")
-        @lcc.tags("mytag")
-        def test(self):
-            pass
-
-    class MyProject(Project):
-        def __init__(self, project_dir):
-            Project.__init__(self, project_dir)
-            self.metadata_policy.disallow_unknown_tags()
-
-        def get_suites(self):
-            return [load_suite_from_class(mysuite)]
-
-    project = MyProject(tmpdir.strpath)
-    project.get_suites()
-
-
 def test_project_creation(tmpdir):
     create_project(tmpdir.strpath)
     project = load_project_from_dir(tmpdir.strpath)
