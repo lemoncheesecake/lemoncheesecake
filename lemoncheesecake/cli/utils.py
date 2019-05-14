@@ -14,7 +14,7 @@ import lemoncheesecake
 from lemoncheesecake.project import find_project_dir, find_project_file, load_project_from_file
 from lemoncheesecake.reporting import get_reporting_backends
 from lemoncheesecake.reporting.reportdir import DEFAULT_REPORT_DIR_NAME
-from lemoncheesecake.filter import make_run_filter, filter_suites
+from lemoncheesecake.filter import filter_suites
 from lemoncheesecake.exceptions import UserError, ProjectError
 
 LEMONCHEESECAKE_VERSION = "lemoncheesecake version %s (using Python %s - %s)" % (
@@ -22,24 +22,17 @@ LEMONCHEESECAKE_VERSION = "lemoncheesecake version %s (using Python %s - %s)" % 
 )
 
 
-def filter_suites_from_cli_args(suites, cli_args):
-    filtr = make_run_filter(cli_args)
-    if not filtr:
-        return suites
-
-    suites = filter_suites(suites, filtr)
-    if len(suites) == 0:
-        raise UserError("The filter does not match any test")
-
-    return suites
-
-
-def get_suites_from_project(project, cli_args):
+def get_suites_from_project(project, filtr):
     suites = project.get_suites_strict()
     if all(suite.is_empty() for suite in suites):
         raise UserError("No test is defined in your lemoncheesecake project.")
 
-    return filter_suites_from_cli_args(suites, cli_args)
+    if filtr:
+        suites = filter_suites(suites, filtr)
+        if len(suites) == 0:
+            raise UserError("The filter does not match any test")
+
+    return suites
 
 
 def auto_detect_reporting_backends():

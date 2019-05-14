@@ -6,7 +6,6 @@ from lemoncheesecake.reporting.backend import get_reporting_backends
 from lemoncheesecake.project import Project
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake.exceptions import InvalidMetadataError
-from lemoncheesecake.cli.main import build_cli_args
 
 from helpers.runner import build_project_module
 from helpers.utils import env_var
@@ -60,7 +59,7 @@ def test_get_suites_from_project_with_metadata_policy_ko(tmpdir):
 
     project = MyProject(tmpdir.strpath)
     with pytest.raises(InvalidMetadataError):
-        get_suites_from_project(project, build_cli_args(["show"]))
+        get_suites_from_project(project, filtr=None)
 
 
 def test_get_suites_from_project_with_metadata_policy_ok(tmpdir):
@@ -79,4 +78,4 @@ def test_get_suites_from_project_with_metadata_policy_ok(tmpdir):
             return [load_suite_from_class(mysuite)]
 
     project = MyProject(tmpdir.strpath)
-    get_suites_from_project(project, build_cli_args(["show"]))
+    get_suites_from_project(project, filtr=None)
