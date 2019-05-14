@@ -59,7 +59,7 @@ def test_get_suites_from_project_with_metadata_policy_ko(tmpdir):
 
     project = MyProject(tmpdir.strpath)
     with pytest.raises(InvalidMetadataError):
-        get_suites_from_project(project, filtr=None)
+        get_suites_from_project(project)
 
 
 def test_get_suites_from_project_with_metadata_policy_ok(tmpdir):
@@ -78,4 +78,4 @@ def test_get_suites_from_project_with_metadata_policy_ok(tmpdir):
             return [load_suite_from_class(mysuite)]
 
     project = MyProject(tmpdir.strpath)
-    get_suites_from_project(project, filtr=None)
+    get_suites_from_project(project)
