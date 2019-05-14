@@ -49,7 +49,7 @@ def auto_detect_reporting_backends():
 
     try:
         project = load_project_from_file(project_filename)
-        return project.reporting_backends
+        return project.reporting_backends.values()
     except ProjectError:
         return get_reporting_backends()
 

@@ -5,10 +5,10 @@ import pytest
 import lemoncheesecake.api as lcc
 from lemoncheesecake.project import Project, create_project, load_project_from_dir, find_project_file
 from lemoncheesecake.suite import load_suite_from_class
-from lemoncheesecake.validators import MetadataPolicy
 from lemoncheesecake.exceptions import InvalidMetadataError
 
 from helpers.runner import build_test_module, build_fixture_module
+from helpers.utils import env_var
 
 
 def test_project_dir(tmpdir):
@@ -211,20 +211,14 @@ def test_find_project_file_in_parent_dir(tmpdir):
 
 
 def test_find_project_file_env_var_not_found(tmpdir):
-    os.environ["LCC_PROJECT_FILE"] = tmpdir.join("project.py").strpath
-    try:
+    with env_var("LCC_PROJECT_FILE", tmpdir.join("project.py").strpath):
         actual = find_project_file()
         assert actual is None
-    finally:
-        del os.environ["LCC_PROJECT_FILE"]
 
 
 def test_find_project_file_env_var_found(tmpdir):
     tmpdir.join("project.py").write("")
-    os.environ["LCC_PROJECT_FILE"] = tmpdir.join("project.py").strpath
 
-    try:
+    with env_var("LCC_PROJECT_FILE", tmpdir.join("project.py").strpath):
         actual = find_project_file()
         assert actual == tmpdir.join("project.py").strpath
-    finally:
-        del os.environ["LCC_PROJECT_FILE"]
