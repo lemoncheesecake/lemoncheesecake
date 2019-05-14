@@ -44,12 +44,6 @@ class Project(object):
         # type: () -> List[Suite]
         return load_suites_from_directory(osp.join(self.dir, "suites"))
 
-    def get_suites_strict(self):
-        # type: () -> List[Suite]
-        suites = self.get_suites()
-        self.metadata_policy.check_suites_compliance(suites)
-        return suites
-
     def get_fixtures(self):
         # type: () -> List[Fixture]
         fixtures_dir = osp.join(self.dir, "fixtures")
