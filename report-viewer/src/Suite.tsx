@@ -2,7 +2,7 @@ import * as React from 'react';
 import Test from './Test';
 import Hook from './Hook';
 import ResultTable from './ResultTable';
-import {get_timestamp_from_datetime, humanize_duration} from './utils';
+import {get_time_from_iso8601, humanize_duration} from './utils';
 
 interface SuiteProps {
     suite: SuiteData,
@@ -11,7 +11,7 @@ interface SuiteProps {
 
 function get_duration_from_time_interval(interval: TimeInterval) {
     if (interval.end_time) {
-        return get_timestamp_from_datetime(interval.end_time) - get_timestamp_from_datetime(interval.start_time);
+        return get_time_from_iso8601(interval.end_time) - get_time_from_iso8601(interval.start_time);
     } else {
         return 0;
     }
@@ -71,7 +71,7 @@ class Suite extends React.Component<SuiteProps, {}> {
         return (
             <ResultTable
                 heading={<Heading/>}
-                extra_info={<span className='extra-info'>{humanize_duration(get_suite_duration(suite))}</span>}>
+                extra_info={<span className='extra-info'>{humanize_duration(get_suite_duration(suite), true)}</span>}>
                 {
                     suite.suite_setup && <Hook hook={suite.suite_setup} description="- Setup suite -" id={suite_id + ".setup_suite"}/>
                 }

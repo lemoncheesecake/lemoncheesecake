@@ -1,10 +1,12 @@
 import * as React from 'react';
+import {sprintf} from 'sprintf-js';
 import KeyValueTable from './KeyValueTable';
 import Suite from './Suite';
 import { HookProps, Hook } from './Hook';
 import ResultTable from './ResultTable';
 import { get_result_row_by_id } from './ResultRow';
 import TimeExtraInfo from './TimeExtraInfo';
+import { get_time_from_iso8601, humanize_datetime_from_iso8601, humanize_duration } from './utils';
 
 class ReportHook extends React.Component<HookProps, {}> {
     render() {
@@ -53,6 +55,135 @@ function walk_suites(suites: Array<SuiteData>, callback: (index: number, suite: 
     return ret_values;
 }
 
+function walk_tests(suites: Array<SuiteData>, callback: (index: number, suite: TestData, parent_suites: Array<SuiteData>) => any) {
+    let ret_values: Array<any> = [];
+    let current_index = 0;
+
+    walk_suites(
+        suites,
+        (suite_index: number, suite: SuiteData, parent_suites: Array<SuiteData>) => {
+            for (let test of suite.tests) {
+                const ret_value = callback(current_index++, test, Array.of(suite).concat(parent_suites));
+                ret_values.push(ret_value);
+            }
+        }
+    );
+
+    return ret_values;
+}
+
+function walk_results(report: ReportData, callback: (result: TestData | HookData) => any) {
+    let ret_values: Array<any> = [];
+
+    if (report.test_session_setup) {
+        ret_values.push(callback(report.test_session_setup));
+    }
+
+    walk_suites(
+        report.suites,
+        (suite_index: number, suite: SuiteData, parent_suites: Array<SuiteData>) => {
+            if (suite.suite_setup) {
+                ret_values.push(callback(suite.suite_setup));
+            }
+            for (let test of suite.tests) {
+                ret_values.push(callback(test));
+            }
+            if (suite.suite_teardown) {
+                ret_values.push(callback(suite.suite_teardown));
+            }
+        }
+    );
+
+    if (report.test_session_teardown) {
+        ret_values.push(callback(report.test_session_teardown));
+    }
+}
+
+function build_report_stats(report: ReportData): Array<Array<string>> {
+    let stats: Array<Array<string>> = [];
+
+    ////
+    // Start time
+    ////
+    stats.push(Array.of("Start time", humanize_datetime_from_iso8601(report.start_time)));
+
+    ////
+    // Duration
+    ////
+    let duration = null;
+    if (report.end_time) {
+        stats.push(Array.of("End time", humanize_datetime_from_iso8601(report.end_time)));
+        duration = get_time_from_iso8601(report.end_time) - get_time_from_iso8601(report.start_time);
+        stats.push(Array.of("Duration", humanize_duration(duration)));
+    } else {
+        stats.push(Array.of("End time", "n/a"));
+        stats.push(Array.of("Duration", "n/a"));
+    }
+
+    /////
+    // Cumulative duration
+    ////
+    if (report.nb_threads > 1) {
+        let duration_cumulative = 0;
+        walk_results(report, (result: TestData | HookData) => {
+            if (result.end_time) {
+                duration_cumulative += get_time_from_iso8601(result.end_time) - get_time_from_iso8601(result.start_time);
+            }
+        });
+        let duration_cumulative_description = humanize_duration(duration_cumulative);
+        if (duration) {
+            duration_cumulative_description += sprintf(" (parallelization speedup factor is %.1f)", duration_cumulative / duration);
+        }
+        stats.push(Array.of("Cumulative duration", duration_cumulative_description));
+    }
+
+    ////
+    // Tests by status
+    ////
+    let tests_nb = 0;
+    let successful_tests_nb = 0;
+    let failed_tests_nb = 0;
+    let skipped_tests_nb = 0;
+    let disabled_tests_nb = 0;
+
+    walk_tests(
+        report.suites,
+        (index: number, test: TestData, suites: Array<SuiteData>) => {
+            tests_nb++;
+            switch (test.status) {
+                case 'passed':
+                    successful_tests_nb++;
+                    break;
+                case 'failed':
+                    failed_tests_nb++;
+                    break;
+                case 'skipped':
+                    skipped_tests_nb++;
+                    break;
+                case 'disabled':
+                    disabled_tests_nb++;
+                    break;
+            }
+        }
+    );
+
+    stats.push(Array.of("Tests", tests_nb.toString()));
+
+    stats.push(Array.of("Successful tests", successful_tests_nb.toString()));
+
+    let enabled_tests = tests_nb - disabled_tests_nb;
+    let successful_tests_pct = enabled_tests ? (successful_tests_nb / enabled_tests * 100) : 0;
+    stats.push(Array.of("Successful tests in %", sprintf("%d%%", successful_tests_pct)));
+
+    stats.push(Array.of("Failed tests", failed_tests_nb.toString()));
+
+    stats.push(Array.of("Skipped tests", skipped_tests_nb.toString()));
+
+    stats.push(Array.of("Disabled tests", disabled_tests_nb.toString()));
+
+    return stats;
+}
+
 class Report extends React.Component<ReportProps, {}> {
     render() {
         let report = this.props.report;
@@ -63,7 +194,7 @@ class Report extends React.Component<ReportProps, {}> {
 
                 <KeyValueTable title="Information" rows={report.info}/>
 
-                <KeyValueTable title="Statistics" rows={report.stats}/>
+                <KeyValueTable title="Statistics" rows={build_report_stats(report)}/>
 
                 <p style={{textAlign: 'right'}}><a href="report.js" download="report.js">Download raw report data</a></p>
 

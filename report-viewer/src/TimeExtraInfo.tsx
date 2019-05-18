@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {get_time_from_datetime, get_duration_between_datetimes} from './utils';
+import {humanize_time_from_iso8601, humanize_duration, get_time_from_iso8601} from './utils';
 
 interface Props {
     start: string,
@@ -8,10 +8,10 @@ interface Props {
 
 class TimeExtraInfo extends React.Component<Props, {}> {
     render() {
-        const start_time = get_time_from_datetime(this.props.start);
+        const start_time = humanize_time_from_iso8601(this.props.start);
         
         if (this.props.end) {
-            const duration = get_duration_between_datetimes(this.props.start, this.props.end);
+            const duration = humanize_duration(get_time_from_iso8601(this.props.end) - get_time_from_iso8601(this.props.start), true);
             return <span className='extra-info'>{start_time} &rarr; {duration}</span>;
         } else {
             return <span className='extra-info'>{start_time}</span>;

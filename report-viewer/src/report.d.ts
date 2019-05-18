@@ -77,8 +77,8 @@ declare interface ReportData {
     start_time: string,
     end_time: string,
     generation_time: string,
+    nb_threads: number,
     info: Array<Array<string>>,
-    stats: Array<Array<string>>,
     test_session_setup: HookData,
     test_session_teardown: HookData,
     suites: Array<SuiteData>
