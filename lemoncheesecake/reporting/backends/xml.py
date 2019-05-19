@@ -207,9 +207,6 @@ def serialize_report_as_tree(report):
     for name, value in report.info:
         info_node = make_xml_child(xml, "info", "name", name)
         info_node.text = value
-    for name, value in report.serialize_stats():
-        stat_node = make_xml_child(xml, "stat", "name", name)
-        stat_node.text = value
 
     if report.test_session_setup:
         _serialize_hook_data(report.test_session_setup, make_xml_child(xml, "test-session-setup"))
