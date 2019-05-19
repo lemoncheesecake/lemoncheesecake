@@ -4,7 +4,7 @@ from lemoncheesecake.exceptions import TaskFailure, TasksExecutionFailure, Circu
     serialize_current_exception
 
 DEBUG = 0
-_KEYBOARD_INTERRUPT_ERROR_MESSAGE = "all tests have been interrupted by the user"
+_KEYBOARD_INTERRUPT_ERROR_MESSAGE = "tests have been interrupted by the user"
 
 
 def _debug(msg):
