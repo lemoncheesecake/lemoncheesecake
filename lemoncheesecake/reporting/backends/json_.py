@@ -133,8 +133,7 @@ def serialize_report_into_json(report):
         "generation_time", _serialize_time(time.time()),
         "nb_threads", report.nb_threads,
         "title", report.title,
-        "info", [[n, v] for n, v in report.info],
-        "stats", [[n, v] for n, v in report.serialize_stats()]
+        "info", [[n, v] for n, v in report.info]
     )
 
     if report.test_session_setup:

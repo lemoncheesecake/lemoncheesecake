@@ -7,7 +7,7 @@ Created on Mar 26, 2016
 import time
 from decimal import Decimal
 from functools import reduce
-from typing import Union, List, Tuple, Generator, Iterable
+from typing import Union, List, Generator, Iterable
 import datetime
 import calendar
 
@@ -139,7 +139,7 @@ class TestResult(BaseTest, Result):
         Result.__init__(self)
         self.status = None  # type: Union[None, str]
         self.status_details = None  # type: Union[None, str]
-        # non-serialized attributes (only set in-memory during test execution)
+        # non-serialized attributes (only set in-memory during test execution):
         self.rank = 0
 
     @classmethod
@@ -360,30 +360,6 @@ class Report:
         _update_stats_from_tests(stats, list(self.all_tests()))
 
         return stats
-
-    def serialize_stats(self):
-        # type: () -> Tuple
-        stats = self.stats()
-
-        serialized = (
-            ("Start time", self._format_time(self.start_time)),
-            ("End time", self._format_time(self.end_time) if self.end_time else "n/a"),
-            ("Duration", humanize_duration(stats.duration) if stats.duration is not None else "n/a")
-        )
-
-        if self.nb_threads > 1:
-            serialized += (("Cumulative duration", stats.duration_cumulative_description),)
-
-        serialized += (
-            ("Tests", str(stats.tests)),
-            ("Successful tests", str(stats.test_statuses["passed"])),
-            ("Successful tests in %", "%d%%" % stats.successful_tests_percentage),
-            ("Failed tests", str(stats.test_statuses["failed"])),
-            ("Skipped tests", str(stats.test_statuses["skipped"])),
-            ("Disabled tests", str(stats.test_statuses["disabled"]))
-        )
-
-        return serialized
 
     def all_suites(self):
         # type: () -> Generator[SuiteResult]
