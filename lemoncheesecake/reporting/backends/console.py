@@ -72,7 +72,7 @@ def _make_suite_header_line(suite, terminal_width):
 def _make_test_status_label(status):
     if status == "passed":
         label = "OK"
-    elif status == "disabled":
+    elif status in ("skipped", "disabled"):
         label = "--"
     else:
         label = "KO"

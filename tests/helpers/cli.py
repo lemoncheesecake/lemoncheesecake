@@ -70,8 +70,10 @@ def assert_run_output(cmdout, suite_name, successful_tests=[], failed_tests=[], 
     cmdout.assert_lines_match("= %s =" % suite_name)
     for test in successful_tests:
         cmdout.assert_lines_match("OK.+%s" % test)
-    for test in failed_tests + skipped_tests:
+    for test in failed_tests:
         cmdout.assert_lines_match("KO.+%s" % test)
+    for test in skipped_tests:
+        cmdout.assert_lines_match("--.+%s" % test)
     cmdout.assert_lines_match("Tests: %d" % (len(successful_tests + failed_tests + skipped_tests)))
     cmdout.assert_lines_match("Successes: %d" % len(successful_tests))
     cmdout.assert_lines_match("Failures: %d" % len(failed_tests))
