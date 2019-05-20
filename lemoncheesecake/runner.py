@@ -5,7 +5,6 @@ Created on Jan 24, 2016
 '''
 
 import traceback
-import threading
 import itertools
 
 import six
@@ -92,7 +91,7 @@ class RunContext(object):
 
         # check for test session abort
         if self.is_session_aborted():
-            return "all tests have been aborted"
+            return "tests have been aborted"
 
         # check for suite abort
         if isinstance(task, TestTask):

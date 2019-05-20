@@ -34,6 +34,10 @@ to know to migrate from 0.22.x release.
 - fix Python warnings
 - Make the `lemoncheesecake.filter` API more Pythonic
 
+# 0.22.10 (2019-05-19)
+
+- **lcc run**: display skipped tests as '--' instead of 'KO'
+
 # 0.22.9 (2019-04-28)
 
 - **Report**: provide more information about why a test has been skipped
