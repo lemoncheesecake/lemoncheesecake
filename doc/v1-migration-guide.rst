@@ -88,6 +88,13 @@ The ``binary_mode`` argument of the ``save_attachment_content`` function has bee
 is now automatically determined upon the type of data passed as argument.
 
 
+Reporting
+---------
+
+The HTML report now use static resources (also named "fat") by default, meaning the report can be be read offline
+for instance. In other words: the ``offline_mode`` attribute of the class ``lemoncheesecake.reporting.backends.HtmlBackend``
+has been renamed into ``fat_html`` and is now set to ``True`` by default.
+
 CLI
 ---
 

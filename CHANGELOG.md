@@ -28,6 +28,7 @@ to know to migrate from 0.22.x release.
 - JSON/XML: dates are now stored in plain ISO8601 format in UTC
 - HTML: dates are now localized in the browser's timezone
 - HTML: statistics are computed in Javascript
+- HTML: the report now uses static resources instead of external resources by default
 
 ## Under the hood
 
