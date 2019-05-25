@@ -59,9 +59,6 @@ class Log(object):
         self.message = message
         self.time = ts
 
-    def is_successful(self):
-        return self.level != LOG_LEVEL_ERROR
-
 
 class Check(object):
     def __init__(self, description, outcome, details, ts):
@@ -70,9 +67,6 @@ class Check(object):
         self.outcome = outcome
         self.details = details
         self.time = ts
-
-    def is_successful(self):
-        return self.outcome
 
 
 class Attachment(object):
@@ -83,9 +77,6 @@ class Attachment(object):
         self.as_image = as_image
         self.time = ts
 
-    def is_successful(self):
-        return True
-
 
 class Url(object):
     def __init__(self, description, url, ts):
@@ -93,9 +84,6 @@ class Url(object):
         self.description = description
         self.url = url
         self.time = ts
-
-    def is_successful(self):
-        return True
 
 
 class Step(object):
@@ -107,9 +95,17 @@ class Step(object):
         self.start_time = None  # type: Union[None, float]
         self.end_time = None  # type: Union[None, float]
 
+    @staticmethod
+    def _is_entry_successful(entry):
+        if isinstance(entry, Check):
+            return entry.outcome
+        elif isinstance(entry, Log):
+            return entry.level != LOG_LEVEL_ERROR
+        return True
+
     def is_successful(self):
         # type: () -> bool
-        return all(entry.is_successful() for entry in self.entries)
+        return all(map(Step._is_entry_successful, self.entries))
 
     @property
     def duration(self):
