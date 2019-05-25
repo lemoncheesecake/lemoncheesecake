@@ -12,7 +12,7 @@ import time
 import lemoncheesecake
 from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend, ReportUnserializerMixin
 from lemoncheesecake.reporting.report import (
-    Log, Check, Attachment, Url, Step, TestResult, SetupResult, SuiteResult,
+    Log, Check, Attachment, Url, Step, Result, TestResult, SuiteResult,
     format_time_as_iso8601, parse_iso8601_time
 )
 from lemoncheesecake.exceptions import InvalidReportFile, ProgrammingError
@@ -199,7 +199,7 @@ def _unserialize_test_data(js):
 
 
 def _unserialize_hook_data(js):
-    data = SetupResult()
+    data = Result()
     data.status = js["status"]
     data.start_time = parse_iso8601_time(js["start_time"])
     data.end_time = parse_iso8601_time(js["end_time"]) if js["end_time"] else None

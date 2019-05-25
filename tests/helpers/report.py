@@ -13,7 +13,7 @@ import pytest
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
-from lemoncheesecake.reporting import Report, SetupResult, SuiteResult, TestResult, Step, Log, JsonBackend
+from lemoncheesecake.reporting import Report, Result, SuiteResult, TestResult, Step, Log, JsonBackend
 
 
 def make_report_in_progress():
@@ -22,17 +22,17 @@ def make_report_in_progress():
     now = time.time()
     report = Report()
     report.start_time = now
-    report.test_session_setup = SetupResult()
+    report.test_session_setup = Result()
     report.test_session_setup.start_time = now
-    report.test_session_teardown = SetupResult()
+    report.test_session_teardown = Result()
     report.test_session_teardown.start_time = now
     suite = SuiteResult("suite", "suite")
     suite.start_time = now
     report.add_suite(suite)
     
-    suite.suite_setup = SetupResult()
+    suite.suite_setup = Result()
     suite.suite_setup.start_time = now
-    suite.suite_teardown = SetupResult()
+    suite.suite_teardown = Result()
     suite.suite_teardown.start_time = now
     
     test = TestResult("test_1", "test_1")

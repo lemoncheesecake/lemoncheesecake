@@ -18,7 +18,7 @@ import six
 import lemoncheesecake
 from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend, ReportUnserializerMixin
 from lemoncheesecake.reporting.report import (
-    Log, Check, Attachment, Url, Step, TestResult, SetupResult, SuiteResult,
+    Log, Check, Attachment, Url, Step, Result, TestResult, SuiteResult,
     format_time_as_iso8601, parse_iso8601_time
 )
 from lemoncheesecake.exceptions import ProgrammingError, InvalidReportFile
@@ -305,7 +305,7 @@ def _unserialize_test_data(xml):
 
 
 def _unserialize_hook_data(xml):
-    data = SetupResult()
+    data = Result()
     data.status = xml.attrib["status"] or None
     data.start_time = _unserialize_datetime(xml.attrib["start-time"])
     data.end_time = _unserialize_datetime(xml.attrib["end-time"]) if "end-time" in xml.attrib else None

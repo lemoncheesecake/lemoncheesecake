@@ -29,7 +29,7 @@ class ReportWriter:
 
     @staticmethod
     def _start_hook(ts):
-        hook_data = SetupResult()
+        hook_data = Result()
         hook_data.start_time = ts
         return hook_data
 

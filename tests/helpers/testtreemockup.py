@@ -1,6 +1,6 @@
 import time
 
-from lemoncheesecake.reporting import Report, SetupResult, SuiteResult, TestResult, Step, Log, Check
+from lemoncheesecake.reporting import Report, Result, SuiteResult, TestResult, Step, Log, Check
 
 NOW = time.time()
 
@@ -112,7 +112,7 @@ def make_hook_data_from_mockup(mockup):
     if mockup is None:
         return None
 
-    data = SetupResult()
+    data = Result()
     data.start_time = mockup.start_time if mockup.start_time is not None else NOW
     data.end_time = mockup.end_time if mockup.end_time is not None else NOW
     for step_mockup in mockup.steps:
