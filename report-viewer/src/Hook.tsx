@@ -13,7 +13,7 @@ export class Hook extends React.Component<HookProps, {}> {
         const hook = this.props.hook;
 
         return (
-            <ResultRow id={this.props.id} status={hook.outcome ? "passed" : "failed"} steps={hook.steps}>
+            <ResultRow id={this.props.id} status={hook.status} steps={hook.steps}>
                 <td>
                     <div className="extra-info-container">
                         <h5 className="special">

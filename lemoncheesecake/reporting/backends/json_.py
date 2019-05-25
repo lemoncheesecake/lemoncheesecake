@@ -104,7 +104,7 @@ def _serialize_hook_data(hook_data):
         "start_time", _serialize_time(hook_data.start_time),
         "end_time", _serialize_time(hook_data.end_time),
         "steps", _serialize_steps(hook_data.steps),
-        "outcome", hook_data.outcome
+        "status", hook_data.status
     )
 
 
@@ -200,7 +200,7 @@ def _unserialize_test_data(js):
 
 def _unserialize_hook_data(js):
     data = SetupResult()
-    data.outcome = js["outcome"]
+    data.status = js["status"]
     data.start_time = parse_iso8601_time(js["start_time"])
     data.end_time = parse_iso8601_time(js["end_time"]) if js["end_time"] else None
     data.steps = [_unserialize_step_data(s) for s in js["steps"]]

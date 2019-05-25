@@ -40,7 +40,7 @@ declare interface StepData extends TimeInterval {
 }
 
 declare interface HookData extends TimeInterval {
-    outcome: Boolean | null,
+    status: string | null,
     steps: Array<StepData>
 }
 

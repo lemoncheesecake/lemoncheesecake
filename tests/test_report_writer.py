@@ -532,7 +532,7 @@ def test_setup_suite_success():
     report = run_suite_class(mysuite)
 
     setup = _get_suite_setup(report)
-    assert setup.outcome is True
+    assert setup.status == "passed"
     assert setup.start_time is not None
     assert setup.end_time is not None
     assert setup.steps[0].entries[0].message == "some log"
@@ -552,7 +552,7 @@ def test_setup_suite_failure():
     report = run_suite_class(mysuite)
 
     setup = _get_suite_setup(report)
-    assert setup.outcome is False
+    assert setup.status == "failed"
     assert setup.start_time is not None
     assert setup.end_time is not None
     assert setup.steps[0].entries[0].message == "something bad happened"
@@ -587,7 +587,7 @@ def test_teardown_suite_success():
     report = run_suite_class(mysuite)
 
     teardown = _get_suite_teardown(report)
-    assert teardown.outcome is True
+    assert teardown.status == "passed"
     assert teardown.start_time is not None
     assert teardown.end_time is not None
     assert teardown.steps[0].entries[0].message == "some log"
@@ -607,7 +607,7 @@ def test_teardown_suite_failure():
     report = run_suite_class(mysuite)
 
     teardown = _get_suite_teardown(report)
-    assert teardown.outcome is False
+    assert teardown.status == "failed"
     assert teardown.start_time is not None
     assert teardown.end_time is not None
     assert teardown.steps[0].entries[0].outcome is False
@@ -643,7 +643,7 @@ def test_setup_test_session_success():
     report = run_suite_class(mysuite, fixtures=[fixt])
 
     setup = report.test_session_setup
-    assert setup.outcome is True
+    assert setup.status == "passed"
     assert setup.start_time is not None
     assert setup.end_time is not None
     assert setup.steps[0].entries[0].message == "some log"
@@ -664,7 +664,7 @@ def test_setup_test_session_failure():
     report = run_suite_class(mysuite, fixtures=[fixt])
 
     setup = report.test_session_setup
-    assert setup.outcome is False
+    assert setup.status == "failed"
     assert setup.start_time is not None
     assert setup.end_time is not None
     assert setup.steps[0].entries[0].message == "something bad happened"
@@ -702,7 +702,7 @@ def test_teardown_test_session_success():
     report = run_suite_class(mysuite, fixtures=[fixt])
 
     teardown = report.test_session_teardown
-    assert teardown.outcome is True
+    assert teardown.status == "passed"
     assert teardown.start_time is not None
     assert teardown.end_time is not None
     assert teardown.steps[0].entries[0].message == "some log"
@@ -724,7 +724,7 @@ def test_teardown_test_session_failure():
     report = run_suite_class(mysuite, fixtures=[fixt])
 
     teardown = report.test_session_teardown
-    assert teardown.outcome is False
+    assert teardown.status == "failed"
     assert teardown.start_time is not None
     assert teardown.end_time is not None
     assert teardown.steps[0].entries[0].outcome is False

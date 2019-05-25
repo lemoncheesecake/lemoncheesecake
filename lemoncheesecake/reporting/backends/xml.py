@@ -150,7 +150,7 @@ def _serialize_test_data(test):
 
 
 def _serialize_hook_data(data, node):
-    node.attrib["outcome"] = _serialize_outcome(data.outcome)
+    node.attrib["status"] = data.status or ""
     _add_time_attr(node, "start-time", data.start_time)
     _add_time_attr(node, "end-time", data.end_time)
     _serialize_steps(data.steps, node)
@@ -306,7 +306,7 @@ def _unserialize_test_data(xml):
 
 def _unserialize_hook_data(xml):
     data = SetupResult()
-    data.outcome = _unserialize_outcome(xml.attrib["outcome"])
+    data.status = xml.attrib["status"] or None
     data.start_time = _unserialize_datetime(xml.attrib["start-time"])
     data.end_time = _unserialize_datetime(xml.attrib["end-time"]) if "end-time" in xml.attrib else None
     data.steps = [_unserialize_step_data(step) for step in xml.xpath("step")]

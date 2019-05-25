@@ -250,7 +250,7 @@ def assert_hook_data(actual, expected):
     if expected is None:
         assert actual is None
     else:
-        assert actual.outcome == expected.outcome
+        assert actual.status == expected.status
         assert_time(actual.start_time, expected.start_time)
         if expected.end_time is None:
             assert actual.end_time is None

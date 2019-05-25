@@ -155,17 +155,7 @@ class SetupResult(Result):
     """
     def __init__(self):
         Result.__init__(self)
-        self.outcome = None
-
-    @property
-    def status(self):
-        # type: () -> Union[None, str]
-        if self.outcome is None:
-            return None
-        elif self.outcome:
-            return "passed"
-        else:
-            return "failed"
+        self.status = None
 
     def is_empty(self):
         # type () -> bool

@@ -37,7 +37,7 @@ class ReportWriter:
     def _end_hook(hook_data, ts):
         if hook_data:
             hook_data.end_time = ts
-            hook_data.outcome = hook_data.is_successful()
+            hook_data.status = "passed" if hook_data.is_successful() else "failed"
 
     @staticmethod
     def _lookup_step(steps, step):
