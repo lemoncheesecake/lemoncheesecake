@@ -123,7 +123,10 @@ class Result(object):
 
     def is_successful(self):
         # type: () -> bool
-        return all(step.is_successful() for step in self.steps)
+        if self.status:  # test is finished
+            return self.status in ("passed", "disabled")
+        else:  # check if the test is successful "so far"
+            return all(step.is_successful() for step in self.steps)
 
     @property
     def duration(self):
@@ -131,7 +134,7 @@ class Result(object):
         return _get_duration(self.start_time, self.end_time)
 
     def is_empty(self):
-        # type () -> bool
+        # type: () -> bool
         return len(self.steps) == 0
 
 
