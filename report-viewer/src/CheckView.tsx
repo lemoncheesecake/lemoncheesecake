@@ -1,11 +1,11 @@
 import * as React from 'react';
 
 interface Props {
-    check: CheckData
+    check: Check
     expanded: boolean
 }
 
-class Step extends React.Component<Props, {}> {
+class StepView extends React.Component<Props, {}> {
     render() {
         const check = this.props.check;
 
@@ -19,4 +19,4 @@ class Step extends React.Component<Props, {}> {
     }
 }
 
-export default Step;
+export default StepView;

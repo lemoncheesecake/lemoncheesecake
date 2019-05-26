@@ -5,7 +5,7 @@ interface Props {
     extra_info?: any
 }
 
-class ResultTable extends React.Component<Props, {}> {
+class ResultTableView extends React.Component<Props, {}> {
     render() {
         return (
             <div className='panel panel-default'>
@@ -27,4 +27,4 @@ class ResultTable extends React.Component<Props, {}> {
     }
 }
 
-export default ResultTable;
+export default ResultTableView;
