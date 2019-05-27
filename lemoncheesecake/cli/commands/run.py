@@ -60,7 +60,7 @@ class ReportSetupHandler(object):
         if title:
             event.report.title = title
 
-        for key, value in self.project.get_report_info():
+        for key, value in self.project.build_report_info():
             event.report.add_info(key, value)
 
 

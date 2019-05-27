@@ -9,7 +9,7 @@ import os.path as osp
 import shutil
 import argparse
 
-from typing import List, Any, Dict, Optional
+from typing import List, Any, Dict, Optional, Sequence, Tuple
 
 from lemoncheesecake.suite import load_suites_from_directory, Suite
 from lemoncheesecake.fixtures import load_fixtures_from_directory, Fixture
@@ -64,8 +64,8 @@ class Project(object):
         # type: () -> Optional[str]
         return None
 
-    def get_report_info(self):
-        # type: () -> List
+    def build_report_info(self):
+        # type: () -> Sequence[Tuple[str, str]]
         return []
 
 
