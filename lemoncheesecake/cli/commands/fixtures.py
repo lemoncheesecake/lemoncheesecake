@@ -43,8 +43,8 @@ class FixturesCommand(Command):
         colorama.init()
 
         project = load_project()
-        suites = project.get_suites()
-        fixtures = project.get_fixtures()
+        suites = project.load_suites()
+        fixtures = project.load_fixtures()
 
         fixtures_by_scope = {}
         for fixt in fixtures:

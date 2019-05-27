@@ -22,8 +22,8 @@ LEMONCHEESECAKE_VERSION = "lemoncheesecake version %s (using Python %s - %s)" % 
 )
 
 
-def get_suites_from_project(project, filtr=None):
-    suites = project.get_suites()
+def load_suites_from_project(project, filtr=None):
+    suites = project.load_suites()
     if all(suite.is_empty() for suite in suites):
         raise UserError("No test is defined in your lemoncheesecake project.")
 

@@ -9,7 +9,7 @@ import os.path as osp
 import shutil
 import argparse
 
-from typing import List, Any, Dict
+from typing import Any, Dict, Optional, Sequence, Tuple
 
 from lemoncheesecake.suite import load_suites_from_directory, Suite
 from lemoncheesecake.fixtures import load_fixtures_from_directory, Fixture
@@ -40,12 +40,12 @@ class Project(object):
         # type: () -> str
         return create_report_dir_with_rotation(self.dir)
 
-    def get_suites(self):
-        # type: () -> List[Suite]
+    def load_suites(self):
+        # type: () -> Sequence[Suite]
         return load_suites_from_directory(osp.join(self.dir, "suites"))
 
-    def get_fixtures(self):
-        # type: () -> List[Fixture]
+    def load_fixtures(self):
+        # type: () -> Sequence[Fixture]
         fixtures_dir = osp.join(self.dir, "fixtures")
         if osp.exists(fixtures_dir):
             return load_fixtures_from_directory(fixtures_dir)
@@ -60,12 +60,12 @@ class Project(object):
         # type: (Any, str) -> None
         pass
 
-    def get_report_title(self):
-        # type: () -> Any[str, None]
+    def build_report_title(self):
+        # type: () -> Optional[str]
         return None
 
-    def get_report_info(self):
-        # type: () -> List
+    def build_report_info(self):
+        # type: () -> Sequence[Tuple[str, str]]
         return []
 
 
@@ -91,7 +91,7 @@ def find_project_file():
 
 
 def find_project_dir():
-    # type: () -> Any[str, None]
+    # type: () -> Optional[str]
     project_filename = find_project_file()
     if project_filename is None:
         return None

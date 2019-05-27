@@ -43,10 +43,10 @@ def omdb(cli_args):
 
 
 class MyProject(Project):
-    def get_suites(self):
+    def load_suites(self):
         return load_suites_from_directory(osp.join(self.dir, "tests"))
 
-    def get_fixtures(self):
+    def load_fixtures(self):
         return load_fixtures_from_func(omdb)
 
     def add_cli_args(self, cli_parser):

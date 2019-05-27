@@ -1,7 +1,7 @@
 import pytest
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.cli.utils import auto_detect_reporting_backends, get_suites_from_project
+from lemoncheesecake.cli.utils import auto_detect_reporting_backends, load_suites_from_project
 from lemoncheesecake.reporting.backend import get_reporting_backends
 from lemoncheesecake.project import Project
 from lemoncheesecake.suite import load_suite_from_class
@@ -41,7 +41,7 @@ class MyProject(Project):
     assert [b.get_name() for b in backends] == ["console"]
 
 
-def test_get_suites_from_project_with_metadata_policy_ko(tmpdir):
+def test_load_suites_from_project_with_metadata_policy_ko(tmpdir):
     @lcc.suite("My Suite")
     class mysuite:
         @lcc.test("My Test")
@@ -54,15 +54,15 @@ def test_get_suites_from_project_with_metadata_policy_ko(tmpdir):
             Project.__init__(self, project_dir)
             self.metadata_policy.disallow_unknown_tags()
 
-        def get_suites(self):
+        def load_suites(self):
             return [load_suite_from_class(mysuite)]
 
     project = MyProject(tmpdir.strpath)
     with pytest.raises(InvalidMetadataError):
-        get_suites_from_project(project)
+        load_suites_from_project(project)
 
 
-def test_get_suites_from_project_with_metadata_policy_ok(tmpdir):
+def test_load_suites_from_project_with_metadata_policy_ok(tmpdir):
     @lcc.suite("My Suite")
     class mysuite:
         @lcc.test("My Test")
@@ -74,8 +74,8 @@ def test_get_suites_from_project_with_metadata_policy_ok(tmpdir):
             Project.__init__(self, project_dir)
             self.metadata_policy.disallow_unknown_tags()
 
-        def get_suites(self):
+        def load_suites(self):
             return [load_suite_from_class(mysuite)]
 
     project = MyProject(tmpdir.strpath)
-    get_suites_from_project(project)
+    load_suites_from_project(project)
