@@ -22,17 +22,17 @@ def test_load_suites(tmpdir):
     assert len(suites) == 1 and suites[0].name == "mysuite"
 
 
-def test_get_fixtures_without_fixtures(tmpdir):
+def test_load_fixtures_without_fixtures(tmpdir):
     project = Project(tmpdir.strpath)
-    fixtures = project.get_fixtures()
+    fixtures = project.load_fixtures()
     assert len(fixtures) == 0
 
 
-def test_get_fixtures_with_fixtures(tmpdir):
+def test_load_fixtures_with_fixtures(tmpdir):
     file = tmpdir.mkdir("fixtures").join("myfixtures.py")
     file.write(build_fixture_module("fixt"))
     project = Project(tmpdir.strpath)
-    fixtures = project.get_fixtures()
+    fixtures = project.load_fixtures()
     assert len(fixtures) == 1 and fixtures[0].name == "fixt"
 
 
@@ -125,7 +125,7 @@ def test_project_creation(tmpdir):
     create_project(tmpdir.strpath)
     project = load_project_from_dir(tmpdir.strpath)
     assert len(project.load_suites()) == 0
-    assert len(project.get_fixtures()) == 0
+    assert len(project.load_fixtures()) == 0
     assert len(project.default_reporting_backend_names) > 0
 
     project.pre_run(object(), tmpdir.strpath)

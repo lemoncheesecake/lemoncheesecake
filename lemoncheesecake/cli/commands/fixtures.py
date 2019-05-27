@@ -44,7 +44,7 @@ class FixturesCommand(Command):
 
         project = load_project()
         suites = project.load_suites()
-        fixtures = project.get_fixtures()
+        fixtures = project.load_fixtures()
 
         fixtures_by_scope = {}
         for fixt in fixtures:
