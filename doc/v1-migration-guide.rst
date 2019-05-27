@@ -37,6 +37,7 @@ Here is how it looks in version 1.x::
     project_dir = os.path.dirname(__file__)
     project = Project(project_dir)
 
+Here is what have been changed:
 
 - to add custom CLI arguments to ``lcc run``:
 
@@ -44,11 +45,20 @@ Here is how it looks in version 1.x::
 
   - the ``add_custom_cli_args`` method has been renamed into ``add_cli_args``
 
+- the ``get_suites`` method has been renamed into ``load_suites``
+
+- the ``get_fixtures`` method has been renamed into ``load_fixtures``
+
+- the ``get_report_title`` method has been renamed into ``build_report_title``
+
+- the ``get_report_info`` method has been renamed into ``build_report_info``
+
 - to run code before and/or after test session: the ``pre_run`` and ``post_run`` methods remain while
   there are no longer extra ``HasPreRunHook`` and ``HasPostRunHook`` extra mixin classes to extend
 
 - the overridable ``get_metadata_policy`` has been turned into a ``metadata_policy`` that it is set to a
-  vanilla ``MetadataPolicy`` instance and that can be changed at will
+  vanilla ``MetadataPolicy`` instance and that can be changed at will; there is no longer a ``HasMetadataPolicy``
+  mixin class to extend
 
 Also see :ref:`Project customization <project>` for more information.
 

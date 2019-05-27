@@ -7,8 +7,8 @@ The project file allows the customization of several behaviors of lemoncheesecak
 
 .. _`add CLI args`:
 
-Add custom CLI arguments
-------------------------
+Add custom CLI arguments to lcc run
+-----------------------------------
 
 Custom command line arguments are can be added to ``lcc run``::
 
@@ -85,7 +85,7 @@ Extra key/value pairs can be added to the "Information" section of the report::
 
 
     class MyProject(Project):
-        def get_report_info(self):
+        def build_report_info(self):
             return [
                 ("info1", "value1"),
                 ("info2", "value2")
@@ -94,6 +94,67 @@ Extra key/value pairs can be added to the "Information" section of the report::
 
     project_dir = os.path.dirname(__file__)
     project = MyProject(project_dir)
+
+.. _reporttitle:
+
+Setting a custom report tile
+----------------------------
+
+A custom report title can also be set::
+
+    # project.py:
+
+    import os.path
+    import time
+
+    from lemoncheesecake.project import Project
+
+
+    class MyProject(Project):
+        def build_report_title(self):
+            return "This is my test report for %s" % time.asctime()
+
+
+    project_dir = os.path.dirname(__file__)
+    project = MyProject(project_dir)
+
+.. _loadsuitesandfixtures:
+
+Customize suites and fixtures loading
+-------------------------------------
+
+The ``Project`` class loads the suites and fixtures respectively from "suites" and "fixtures" directories relative to
+the project directory.
+
+Here is an example of project that loads suites and fixtures from alternate directories by overriding the
+``load_suites``  and ``load_fixtures`` methods::
+
+    # project.py:
+
+    import os.path
+
+    from lemoncheesecake.project import Project
+    from lemoncheesecake.suite import load_suites_from_directory
+    from lemoncheesecake.fixtures import load_fixtures_from_directory
+
+
+    class MyProject(Project):
+        def load_suites(self):
+            return load_suites_from_directory(osp.join(self.dir, "my_suites"))
+
+        def load_fixtures(self):
+            return load_fixtures_from_directory(osp.join(self.dir, "my_fixtures"))
+
+
+    project_dir = os.path.dirname(__file__)
+    project = MyProject(project_dir)
+
+
+For more information, see:
+
+- ``load_suite*`` functions from ``lemoncheesecake.suite`` module
+
+- ``load_fixture*`` functions from ``lemoncheesecake.suite`` module
 
 .. _metadatapolicy:
 
