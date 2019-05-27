@@ -8,7 +8,7 @@ import shutil
 
 from lemoncheesecake.suite.loader import load_suites_from_classes, load_suite_from_file
 from lemoncheesecake import runner
-from lemoncheesecake.runtime import get_runtime
+from lemoncheesecake.session import get_session
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 from lemoncheesecake.fixture import FixtureRegistry, load_fixtures_from_func
 from lemoncheesecake.project import create_project
@@ -124,7 +124,7 @@ def run_suites(suites, fixtures=None, backends=None, tmpdir=None, force_disabled
         finally:
             shutil.rmtree(report_dir)
 
-    report = get_runtime().report
+    report = get_session().report
     dump_report(report)
 
     return report

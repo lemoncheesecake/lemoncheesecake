@@ -9,7 +9,7 @@ import itertools
 
 import six
 
-from lemoncheesecake.runtime import initialize_runtime, initialize_fixtures_cache, set_runtime_location,\
+from lemoncheesecake.session import initialize_session, initialize_fixtures_cache, set_session_location,\
     is_location_successful, is_everything_successful, mark_location_as_failed, get_report,\
     log_error, set_step
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
@@ -133,7 +133,7 @@ class TestTask(BaseTask):
         # Begin test
         ###
         context.event_manager.fire(events.TestStartEvent(self.test))
-        set_runtime_location(TreeLocation.in_test(self.test))
+        set_session_location(TreeLocation.in_test(self.test))
 
         ###
         # Setup test (setup and fixtures)
@@ -304,7 +304,7 @@ class SuiteInitializationTask(BaseTask):
         if any(setup for setup, _ in self.setup_teardown_funcs):
             # before actual initialization
             context.event_manager.fire(events.SuiteSetupStartEvent(self.suite))
-            set_runtime_location(TreeLocation.in_suite_setup(self.suite))
+            set_session_location(TreeLocation.in_suite_setup(self.suite))
             set_step("Setup suite")
             # actual initialization
             self.teardown_funcs = context.run_setup_funcs(
@@ -392,7 +392,7 @@ class SuiteTeardownTask(BaseTask):
         if any(self.suite_setup_task.teardown_funcs):
             # before actual teardown
             context.event_manager.fire(events.SuiteTeardownStartEvent(self.suite))
-            set_runtime_location(TreeLocation.in_suite_teardown(self.suite))
+            set_session_location(TreeLocation.in_suite_teardown(self.suite))
             set_step("Teardown suite")
             # actual teardown
             context.run_teardown_funcs(self.suite_setup_task.teardown_funcs)
@@ -422,7 +422,7 @@ class TestSessionSetupTask(BaseTask):
         if any(setup for setup, _ in setup_teardown_funcs):
             # before actual setup
             context.event_manager.fire(events.TestSessionSetupStartEvent())
-            set_runtime_location(TreeLocation.in_test_session_setup())
+            set_session_location(TreeLocation.in_test_session_setup())
             set_step("Setup test session")
             # actual setup
             self.teardown_funcs = context.run_setup_funcs(setup_teardown_funcs, TreeLocation.in_test_session_setup())
@@ -451,7 +451,7 @@ class TestSessionTeardownTask(BaseTask):
         if any(self.test_session_setup_task.teardown_funcs):
             # before actual teardown
             context.event_manager.fire(events.TestSessionTeardownStartEvent())
-            set_runtime_location(TreeLocation.in_test_session_teardown())
+            set_session_location(TreeLocation.in_test_session_teardown())
             set_step("Teardown test session")
             # actual teardown
             context.run_teardown_funcs(self.test_session_setup_task.teardown_funcs)
@@ -605,7 +605,7 @@ def initialize_event_manager(suites, reporting_backends, report_dir, report_savi
     writer = ReportWriter(report)
     event_manager.add_listener(writer)
 
-    initialize_runtime(event_manager, report_dir, report)
+    initialize_session(event_manager, report_dir, report)
 
     nb_tests = len(list(flatten_tests(suites)))
     parallelized = nb_threads > 1 and nb_tests > 1
