@@ -33,7 +33,7 @@ def initialize_session(event_manager, report_dir, report):
     event_manager.add_listener(_session)
 
 
-def initialize_fixtures_cache(scheduled_fixtures):
+def initialize_fixture_cache(scheduled_fixtures):
     global _scheduled_fixtures
     _scheduled_fixtures = scheduled_fixtures
 

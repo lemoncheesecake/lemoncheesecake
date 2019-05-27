@@ -9,7 +9,7 @@ import itertools
 
 import six
 
-from lemoncheesecake.session import initialize_session, initialize_fixtures_cache, set_session_location,\
+from lemoncheesecake.session import initialize_session, initialize_fixture_cache, set_session_location,\
     is_location_successful, is_everything_successful, mark_location_as_failed, get_report,\
     log_error, set_step
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
@@ -559,7 +559,7 @@ def run_suites(suites, fixture_registry, event_manager, force_disabled=False, st
     # setup pre_session fixtures
     errors = []
     scheduled_fixtures = fixture_registry.get_fixtures_scheduled_for_pre_run(suites)
-    initialize_fixtures_cache(scheduled_fixtures)
+    initialize_fixture_cache(scheduled_fixtures)
     for setup, teardown in scheduled_fixtures.get_setup_teardown_pairs():
         try:
             setup()
