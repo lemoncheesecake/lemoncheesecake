@@ -10,7 +10,7 @@ from lemoncheesecake.suite.loader import load_suites_from_classes, load_suite_fr
 from lemoncheesecake import runner
 from lemoncheesecake.runtime import get_runtime
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
-from lemoncheesecake.fixtures import FixtureRegistry, load_fixtures_from_func
+from lemoncheesecake.fixture import FixtureRegistry, load_fixtures_from_func
 from lemoncheesecake.project import create_project
 from lemoncheesecake.cli import main
 from lemoncheesecake.suite import load_suite_from_class

@@ -6,7 +6,7 @@ import urllib2
 import json
 
 from lemoncheesecake.project import Project
-from lemoncheesecake.fixtures import load_fixtures_from_func
+from lemoncheesecake.fixture import load_fixtures_from_func
 from lemoncheesecake.suite import load_suites_from_directory
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import *

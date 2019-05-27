@@ -2,7 +2,7 @@ import os.path
 
 import pytest
 
-from lemoncheesecake.fixtures import load_fixtures_from_file, load_fixtures_from_files, load_fixtures_from_directory
+from lemoncheesecake.fixture import load_fixtures_from_file, load_fixtures_from_files, load_fixtures_from_directory
 
 @pytest.fixture()
 def dir_with_fixtures(tmpdir):

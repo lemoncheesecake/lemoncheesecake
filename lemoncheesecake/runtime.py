@@ -18,7 +18,7 @@ from lemoncheesecake.consts import ATTACHEMENT_DIR, \
 from lemoncheesecake.reporting import *
 from lemoncheesecake import events
 from lemoncheesecake.exceptions import ProgrammingError
-from lemoncheesecake.fixtures import ScheduledFixtures
+from lemoncheesecake.fixture import ScheduledFixtures
 
 
 _runtime = None  # type: _Runtime

@@ -135,7 +135,7 @@ Here is an example of project that loads suites and fixtures from alternate dire
 
     from lemoncheesecake.project import Project
     from lemoncheesecake.suite import load_suites_from_directory
-    from lemoncheesecake.fixtures import load_fixtures_from_directory
+    from lemoncheesecake.fixture import load_fixtures_from_directory
 
 
     class MyProject(Project):

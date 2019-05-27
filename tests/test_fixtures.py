@@ -1,7 +1,7 @@
 import pytest
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.fixtures import load_fixtures_from_func, FixtureRegistry, BuiltinFixture
+from lemoncheesecake.fixture import load_fixtures_from_func, FixtureRegistry, BuiltinFixture
 from lemoncheesecake.suite import load_suite_from_class, load_suites_from_classes
 
 from lemoncheesecake import exceptions

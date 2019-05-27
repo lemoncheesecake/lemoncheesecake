@@ -90,6 +90,8 @@ Fixtures
 
 The fixture scope ``session_prerun`` has been renamed into ``pre_run``.
 
+The ``lemoncheesecake.fixtures`` module has been renamed into ``lemoncheesecake.fixture``.
+
 
 Attachment logs
 ^^^^^^^^^^^^^^^
