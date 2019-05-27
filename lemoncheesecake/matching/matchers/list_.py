@@ -9,8 +9,8 @@ from lemoncheesecake.matching.matchers.composites import is_
 
 
 class HasItemMatchResult(MatchResult):
-    def __init__(self, outcome, description, index, item):
-        MatchResult.__init__(self, outcome, description)
+    def __init__(self, is_successful, description, index, item):
+        MatchResult.__init__(self, is_successful, description)
         self.item = item
         self.index = index
 

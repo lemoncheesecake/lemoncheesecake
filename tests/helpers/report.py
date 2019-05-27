@@ -167,7 +167,7 @@ def assert_test_checks(test, expected_successes=0, expected_failures=0):
     for step in test.steps:
         for entry in step.entries:
             if isinstance(entry, reporting.Check):
-                if entry.outcome:
+                if entry.is_successful:
                     successes += 1
                 else:
                     failures += 1
@@ -182,7 +182,7 @@ def assert_test_checks(test, expected_successes=0, expected_failures=0):
 
 def assert_check_data(actual, expected):
     assert actual.description == expected.description
-    assert actual.outcome == expected.outcome
+    assert actual.is_successful == expected.is_successful
     assert actual.details == expected.details
     assert_time(actual.time, expected.time)
 

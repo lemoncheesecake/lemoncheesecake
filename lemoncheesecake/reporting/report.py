@@ -61,10 +61,10 @@ class Log(object):
 
 
 class Check(object):
-    def __init__(self, description, outcome, details, ts):
+    def __init__(self, description, is_successful, details, ts):
         # type: (str, bool, Optional[str], float) -> None
         self.description = description
-        self.outcome = outcome
+        self.is_successful = is_successful
         self.details = details
         self.time = ts
 
@@ -98,7 +98,7 @@ class Step(object):
     @staticmethod
     def _is_entry_successful(entry):
         if isinstance(entry, Check):
-            return entry.outcome
+            return entry.is_successful
         elif isinstance(entry, Log):
             return entry.level != LOG_LEVEL_ERROR
         return True
@@ -224,9 +224,9 @@ def _update_stats_from_results(stats, results):
             for entry in step.entries:
                 if isinstance(entry, Check):
                     stats.checks += 1
-                    if entry.outcome == True:
+                    if entry.is_successful is True:
                         stats.check_successes += 1
-                    elif entry.outcome == False:
+                    elif entry.is_successful is False:
                         stats.check_failures += 1
                 if isinstance(entry, Log):
                     if entry.level == LOG_LEVEL_WARN:

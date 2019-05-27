@@ -44,7 +44,7 @@ def _serialize_test_data(test):
     else:
         for step in test.steps:
             for step_entry in step.entries:
-                if isinstance(step_entry, Check) and step_entry.outcome is False:
+                if isinstance(step_entry, Check) and step_entry.is_successful is False:
                     make_xml_child(junit_test, "failure", "message", "failed check in step '%s'" % step.description)
                 elif isinstance(step_entry, Log) and step_entry.level == LOG_LEVEL_ERROR:
                     make_xml_child(junit_test, "error", "message", "error log in step '%s'" % step.description)

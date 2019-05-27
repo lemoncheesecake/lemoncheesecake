@@ -198,7 +198,7 @@ class ReportWriter:
 
     def on_check(self, event):
         self._add_step_entry(
-            Check(event.check_description, event.check_outcome, event.check_details, event.time), event
+            Check(event.check_description, event.check_is_successful, event.check_details, event.time), event
         )
 
     def on_log_attachment(self, event):

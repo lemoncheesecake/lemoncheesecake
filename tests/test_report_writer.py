@@ -159,7 +159,7 @@ def test_check_success():
     step = test.steps[0]
     assert "somevalue" in step.entries[0].description
     assert "foo" in step.entries[0].description
-    assert step.entries[0].outcome is True
+    assert step.entries[0].is_successful is True
     assert "foo" in step.entries[0].details
 
 
@@ -177,7 +177,7 @@ def test_check_failure():
     step = test.steps[0]
     assert "somevalue" in step.entries[0].description
     assert "bar" in step.entries[0].description
-    assert step.entries[0].outcome is False
+    assert step.entries[0].is_successful is False
     assert "foo" in step.entries[0].details
 
 
@@ -195,7 +195,7 @@ def test_require_success():
     step = test.steps[0]
     assert "somevalue" in step.entries[0].description
     assert "foo" in step.entries[0].description
-    assert step.entries[0].outcome is True
+    assert step.entries[0].is_successful is True
     assert "foo" in step.entries[0].details
 
 
@@ -213,7 +213,7 @@ def test_require_failure():
     step = test.steps[0]
     assert "somevalue" in step.entries[0].description
     assert "bar" in step.entries[0].description
-    assert step.entries[0].outcome is False
+    assert step.entries[0].is_successful is False
     assert "foo" in step.entries[0].details
 
 
@@ -610,7 +610,7 @@ def test_teardown_suite_failure():
     assert teardown.status == "failed"
     assert teardown.start_time is not None
     assert teardown.end_time is not None
-    assert teardown.steps[0].entries[0].outcome is False
+    assert teardown.steps[0].entries[0].is_successful is False
     assert not teardown.is_successful()
 
 
@@ -727,7 +727,7 @@ def test_teardown_test_session_failure():
     assert teardown.status == "failed"
     assert teardown.start_time is not None
     assert teardown.end_time is not None
-    assert teardown.steps[0].entries[0].outcome is False
+    assert teardown.steps[0].entries[0].is_successful is False
     assert not teardown.is_successful()
 
 

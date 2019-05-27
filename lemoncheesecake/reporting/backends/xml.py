@@ -23,10 +23,6 @@ from lemoncheesecake.reporting.report import (
 )
 from lemoncheesecake.exceptions import ProgrammingError, InvalidReportFile
 
-OUTCOME_NOT_AVAILABLE = "n/a"
-OUTCOME_FAILURE = "failure"
-OUTCOME_SUCCESS = "success"
-
 DEFAULT_INDENT_LEVEL = 4
 
 
@@ -77,15 +73,6 @@ def _add_time_attr(node, name, value):
     node.attrib[name] = format_time_as_iso8601(value)
 
 
-def _serialize_outcome(outcome):
-    if outcome is True:
-        return OUTCOME_SUCCESS
-    elif outcome is False:
-        return OUTCOME_FAILURE
-    else:
-        return OUTCOME_NOT_AVAILABLE
-
-
 def _serialize_bool(value):
     return "true" if value else "false"
 
@@ -122,7 +109,7 @@ def _serialize_steps(steps, parent_node):
                 check_node = make_xml_child(
                     step_node, "check",
                     "description", entry.description,
-                    "outcome", _serialize_outcome(entry.outcome),
+                    "is-successful", _serialize_bool(entry.is_successful),
                     "time", format_time_as_iso8601(entry.time)
                 )
                 check_node.text = entry.details
@@ -241,17 +228,6 @@ def _unserialize_datetime(value):
     return parse_iso8601_time(value)
 
 
-def _unserialize_outcome(value):
-    if value == OUTCOME_SUCCESS:
-        return True
-    elif value == OUTCOME_FAILURE:
-        return False
-    elif value == OUTCOME_NOT_AVAILABLE:
-        return None
-    else:
-        raise ProgrammingError("Unknown value '%s' for outcome" % value)
-
-
 def _unserialize_bool(value):
     if value == "true":
         return True
@@ -282,7 +258,7 @@ def _unserialize_step_data(xml):
             )
         elif xml_entry.tag == "check":
             entry = Check(
-                xml_entry.attrib["description"], _unserialize_outcome(xml_entry.attrib["outcome"]),
+                xml_entry.attrib["description"], _unserialize_bool(xml_entry.attrib["is-successful"]),
                 xml_entry.text, _unserialize_datetime(xml_entry.attrib["time"])
             )
         else:

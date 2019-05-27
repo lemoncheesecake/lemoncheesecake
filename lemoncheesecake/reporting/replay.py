@@ -34,7 +34,7 @@ def _replay_step(location, step, eventmgr):
         elif isinstance(entry, Check):
             eventmgr.fire(
                 events.CheckEvent(
-                    location, step.description, entry.description, entry.outcome, entry.details, entry.time
+                    location, step.description, entry.description, entry.is_successful, entry.details, entry.time
                 )
             )
         else:

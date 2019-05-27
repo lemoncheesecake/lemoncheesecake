@@ -78,10 +78,10 @@ class _Runtime(object):
             self.mark_location_as_failed(self.location)
         self.event_manager.fire(events.LogEvent(self._local.location, self._local.step, level, content))
 
-    def log_check(self, description, outcome, details):
-        if outcome is False:
+    def log_check(self, description, is_successful, details):
+        if is_successful is False:
             self.mark_location_as_failed(self.location)
-        self.event_manager.fire(events.CheckEvent(self._local.location, self._local.step, description, outcome, details))
+        self.event_manager.fire(events.CheckEvent(self._local.location, self._local.step, description, is_successful, details))
 
     def log_url(self, url, description):
         self.event_manager.fire(events.LogUrlEvent(self._local.location, self._local.step, url, description))
@@ -176,8 +176,8 @@ def log_error(content):
     get_runtime().log(LOG_LEVEL_ERROR, content)
 
 
-def log_check(description, outcome, details=None):
-    get_runtime().log_check(description, outcome, details)
+def log_check(description, is_successful, details=None):
+    get_runtime().log_check(description, is_successful, details)
 
 
 def _prepare_attachment(filename, description=None, as_image=False):

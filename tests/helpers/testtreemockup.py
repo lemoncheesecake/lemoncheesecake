@@ -27,8 +27,8 @@ class StepMockup:
     def entries(self):
         return self._entries
 
-    def add_check(self, outcome):
-        self._entries.append(Check("check description", outcome=outcome, details=None, ts=NOW))
+    def add_check(self, is_successful):
+        self._entries.append(Check("check description", is_successful=is_successful, details=None, ts=NOW))
         return self
 
     def _add_log(self, level, message):

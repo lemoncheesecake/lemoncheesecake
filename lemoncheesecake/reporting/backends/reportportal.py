@@ -253,10 +253,10 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        message = "%s => %s" % (event.check_description, "OK" if event.check_outcome else "NOT OK")
+        message = "%s => %s" % (event.check_description, "OK" if event.check_is_successful else "NOT OK")
         if event.check_details is not None:
             message += "\nDetails: %s" % event.check_details
-        self.service.log(make_time(event.time), message, "INFO" if event.check_outcome else "ERROR")
+        self.service.log(make_time(event.time), message, "INFO" if event.check_is_successful else "ERROR")
 
     def on_log_attachment(self, event):
         if self._has_rp_error():

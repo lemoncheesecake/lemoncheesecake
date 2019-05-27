@@ -74,13 +74,13 @@ class Renderer(object):
     def wrap_details_col(self, details):
         return wrap_text(details, int((self.max_width - self._table_overhead) * 0.25))
 
-    def render_check_outcome(self, outcome):
+    def render_check_outcome(self, is_successful):
         if self.explicit:
-            check_label = "CHECK %s" % ("OK" if outcome else "KO")
+            check_label = "CHECK %s" % ("OK" if is_successful else "KO")
         else:
             check_label = "CHECK"
 
-        return colored(check_label, color=outcome_to_color(outcome), attrs=["bold"])
+        return colored(check_label, color=outcome_to_color(is_successful), attrs=["bold"])
 
     def render_steps(self, steps):
         rows = []
@@ -103,7 +103,7 @@ class Renderer(object):
                     ])
                 if isinstance(entry, Check):
                     rows.append([
-                        self.render_check_outcome(entry.outcome),
+                        self.render_check_outcome(entry.is_successful),
                         self.wrap_description_col(entry.description),
                         self.wrap_details_col(entry.details)
                     ])

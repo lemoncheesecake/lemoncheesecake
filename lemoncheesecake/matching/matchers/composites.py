@@ -155,7 +155,7 @@ class Not(Matcher):
 
     def matches(self, actual):
         result = self.matcher.matches(actual)
-        return match_result(not result.outcome, result.description)
+        return match_result(not result.is_successful, result.description)
 
 
 def not_(matcher):

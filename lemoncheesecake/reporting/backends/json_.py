@@ -66,11 +66,11 @@ def _serialize_steps(steps):
                     "url", entry.url,
                     "time", _serialize_time(entry.time)
                 )
-            else:  # TestCheck
+            elif isinstance(entry, Check):
                 entry = _dict(
                     "type", "check",
                     "description", entry.description,
-                    "outcome", entry.outcome,
+                    "is_successful", entry.is_successful,
                     "details", entry.details,
                     "time", _serialize_time(entry.time)
                 )
@@ -177,7 +177,7 @@ def _unserialize_step_data(js):
             )
         elif js_entry["type"] == "check":
             entry = Check(
-                js_entry["description"], js_entry["outcome"], js_entry["details"], parse_iso8601_time(js_entry["time"])
+                js_entry["description"], js_entry["is_successful"], js_entry["details"], parse_iso8601_time(js_entry["time"])
             )
         else:
             raise ProgrammingError("Unknown entry type '%s'" % js_entry["type"])

@@ -10,7 +10,7 @@ declare interface LogData {
 declare interface CheckData {
     type: "check",
     description: string,
-    outcome: Boolean,
+    is_successful: Boolean,
     details: string | null
 }
 
