@@ -56,7 +56,7 @@ class ReportSetupHandler(object):
         self.project = project
 
     def __call__(self, event):
-        title = self.project.get_report_title()
+        title = self.project.build_report_title()
         if title:
             event.report.title = title
 

@@ -9,7 +9,7 @@ import os.path as osp
 import shutil
 import argparse
 
-from typing import List, Any, Dict
+from typing import List, Any, Dict, Optional
 
 from lemoncheesecake.suite import load_suites_from_directory, Suite
 from lemoncheesecake.fixtures import load_fixtures_from_directory, Fixture
@@ -60,8 +60,8 @@ class Project(object):
         # type: (Any, str) -> None
         pass
 
-    def get_report_title(self):
-        # type: () -> Any[str, None]
+    def build_report_title(self):
+        # type: () -> Optional[str]
         return None
 
     def get_report_info(self):
