@@ -7,7 +7,7 @@ Created on Dec 31, 2016
 import os
 
 from lemoncheesecake.cli.command import Command
-from lemoncheesecake.cli.utils import get_suites_from_project
+from lemoncheesecake.cli.utils import load_suites_from_project
 from lemoncheesecake.exceptions import LemonCheesecakeException, ProgrammingError, UserError, \
     serialize_current_exception
 from lemoncheesecake.filter import add_run_filter_cli_args, make_run_filter
@@ -69,7 +69,7 @@ def run_project(project, cli_args):
     if nb_threads > 1 and not project.threaded:
         raise LemonCheesecakeException("Project does not support multi-threading")
 
-    suites = get_suites_from_project(project, make_run_filter(cli_args))
+    suites = load_suites_from_project(project, make_run_filter(cli_args))
 
     # Build fixture registry
     fixture_registry = build_fixture_registry(project, cli_args)

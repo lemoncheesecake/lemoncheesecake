@@ -10,7 +10,7 @@ class DummyProject(Project):
         self.reporting_backends = {}
         self.default_reporting_backend_names = []
 
-    def get_suites(self):
+    def load_suites(self):
         return self.suites
 
     def create_report_dir(self):

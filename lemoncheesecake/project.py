@@ -40,8 +40,8 @@ class Project(object):
         # type: () -> str
         return create_report_dir_with_rotation(self.dir)
 
-    def get_suites(self):
-        # type: () -> List[Suite]
+    def load_suites(self):
+        # type: () -> Sequence[Suite]
         return load_suites_from_directory(osp.join(self.dir, "suites"))
 
     def get_fixtures(self):

@@ -1,11 +1,7 @@
 import os
 import argparse
-import pytest
 
-import lemoncheesecake.api as lcc
 from lemoncheesecake.project import Project, create_project, load_project_from_dir, find_project_file
-from lemoncheesecake.suite import load_suite_from_class
-from lemoncheesecake.exceptions import InvalidMetadataError
 
 from helpers.runner import build_test_module, build_fixture_module
 from helpers.utils import env_var
@@ -18,11 +14,11 @@ def test_project_dir(tmpdir):
     assert project.dir == tmpdir
 
 
-def test_get_suites(tmpdir):
+def test_load_suites(tmpdir):
     file = tmpdir.mkdir("suites").join("mysuite.py")
     file.write(build_test_module())
     project = Project(tmpdir.strpath)
-    suites = project.get_suites()
+    suites = project.load_suites()
     assert len(suites) == 1 and suites[0].name == "mysuite"
 
 
@@ -128,7 +124,7 @@ def test_without_post_run_hook(tmpdir):
 def test_project_creation(tmpdir):
     create_project(tmpdir.strpath)
     project = load_project_from_dir(tmpdir.strpath)
-    assert len(project.get_suites()) == 0
+    assert len(project.load_suites()) == 0
     assert len(project.get_fixtures()) == 0
     assert len(project.default_reporting_backend_names) > 0
 
