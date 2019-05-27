@@ -16,7 +16,7 @@ import six
 from lemoncheesecake.exceptions import LemonCheesecakeInternalError
 from lemoncheesecake.consts import ATTACHEMENT_DIR, \
     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
-from lemoncheesecake.reporting import *
+from lemoncheesecake.reporting import Report
 from lemoncheesecake import events
 from lemoncheesecake.exceptions import ProgrammingError
 from lemoncheesecake.fixture import ScheduledFixtures
@@ -61,11 +61,11 @@ class Session(object):
     def mark_location_as_failed(self, location):
         self._failures.add(location)
 
-    def is_successful(self, location):
-        return location not in self._failures
-
-    def is_everything_successful(self):
-        return len(self._failures) == 0
+    def is_successful(self, location=None):
+        if location:
+            return location not in self._failures
+        else:
+            return len(self._failures) == 0
 
     def set_step(self, description, detached=False):
         self._local.step = description
@@ -293,8 +293,8 @@ def is_location_successful(location):
     return get_session().is_successful(location)
 
 
-def is_everything_successful():
-    return get_session().is_everything_successful()
+def is_session_successful():
+    return get_session().is_successful()
 
 
 class Thread(threading.Thread):

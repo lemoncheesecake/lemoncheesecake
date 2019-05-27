@@ -10,7 +10,7 @@ import itertools
 import six
 
 from lemoncheesecake.session import initialize_session, initialize_fixture_cache, set_session_location,\
-    is_location_successful, is_everything_successful, mark_location_as_failed, get_report,\
+    is_location_successful, is_session_successful, mark_location_as_failed, get_report,\
     log_error, set_step
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
     UserError, TaskFailure, serialize_current_exception
@@ -99,7 +99,7 @@ class RunContext(object):
                 return "the tests of this test suite have been aborted"
 
         # check for --stop-on-failure
-        if self.stop_on_failure and not is_everything_successful():
+        if self.stop_on_failure and not is_session_successful():
             return "tests have been aborted on --stop-on-failure"
 
         return None
