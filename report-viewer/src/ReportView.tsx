@@ -1,14 +1,14 @@
 import * as React from 'react';
 import {sprintf} from 'sprintf-js';
-import KeyValueTable from './KeyValueTable';
-import Suite from './Suite';
-import { HookProps, Hook } from './Hook';
-import ResultTable from './ResultTable';
-import { get_result_row_by_id } from './ResultRow';
-import TimeExtraInfo from './TimeExtraInfo';
+import KeyValueTableView from './KeyValueTableView';
+import SuiteView from './SuiteView';
+import { SetupProps, SetupView } from './SetupView';
+import ResultTableView from './ResultTableView';
+import { get_result_row_by_id } from './ResultRowView';
+import TimeExtraInfoView from './TimeExtraInfoView';
 import { get_time_from_iso8601, humanize_datetime_from_iso8601, humanize_duration } from './utils';
 
-class ReportHook extends React.Component<HookProps, {}> {
+class ReportHook extends React.Component<SetupProps, {}> {
     render() {
         function Heading(props: {desc: string}) {
             return (
@@ -21,24 +21,24 @@ class ReportHook extends React.Component<HookProps, {}> {
         }
 
         return (
-            <ResultTable
+            <ResultTableView
                 heading={<Heading desc={this.props.description}/>}
-                extra_info={<TimeExtraInfo start={this.props.hook.start_time} end={this.props.hook.end_time}/>}>
-                <Hook {...this.props}/>
-            </ResultTable>
+                extra_info={<TimeExtraInfoView start={this.props.result.start_time} end={this.props.result.end_time}/>}>
+                <SetupView {...this.props}/>
+            </ResultTableView>
         );
     }
 }
 
 interface ReportProps {
-    report: ReportData;
+    report: Report;
 }
 
-function walk_suites(suites: Array<SuiteData>, callback: (index: number, suite: SuiteData, parent_suites: Array<SuiteData>) => any) {
+function walk_suites(suites: Array<Suite>, callback: (index: number, suite: Suite, parent_suites: Array<Suite>) => any) {
     let ret_values: Array<any> = [];
     let current_index = 0;
 
-    function do_walk(suite: SuiteData, parent_suites: Array<SuiteData>): any {
+    function do_walk(suite: Suite, parent_suites: Array<Suite>): any {
         if (suite.tests.length > 0) {
             const ret_value = callback(current_index++, suite, parent_suites);
             ret_values.push(ret_value);
@@ -55,13 +55,13 @@ function walk_suites(suites: Array<SuiteData>, callback: (index: number, suite: 
     return ret_values;
 }
 
-function walk_tests(suites: Array<SuiteData>, callback: (index: number, suite: TestData, parent_suites: Array<SuiteData>) => any) {
+function walk_tests(suites: Array<Suite>, callback: (index: number, suite: Test, parent_suites: Array<Suite>) => any) {
     let ret_values: Array<any> = [];
     let current_index = 0;
 
     walk_suites(
         suites,
-        (suite_index: number, suite: SuiteData, parent_suites: Array<SuiteData>) => {
+        (suite_index: number, suite: Suite, parent_suites: Array<Suite>) => {
             for (let test of suite.tests) {
                 const ret_value = callback(current_index++, test, Array.of(suite).concat(parent_suites));
                 ret_values.push(ret_value);
@@ -72,7 +72,7 @@ function walk_tests(suites: Array<SuiteData>, callback: (index: number, suite: T
     return ret_values;
 }
 
-function walk_results(report: ReportData, callback: (result: TestData | HookData) => any) {
+function walk_results(report: Report, callback: (result: Test | Result) => any) {
     let ret_values: Array<any> = [];
 
     if (report.test_session_setup) {
@@ -81,7 +81,7 @@ function walk_results(report: ReportData, callback: (result: TestData | HookData
 
     walk_suites(
         report.suites,
-        (suite_index: number, suite: SuiteData, parent_suites: Array<SuiteData>) => {
+        (suite_index: number, suite: Suite, parent_suites: Array<Suite>) => {
             if (suite.suite_setup) {
                 ret_values.push(callback(suite.suite_setup));
             }
@@ -99,7 +99,7 @@ function walk_results(report: ReportData, callback: (result: TestData | HookData
     }
 }
 
-function build_report_stats(report: ReportData): Array<Array<string>> {
+function build_report_stats(report: Report): Array<Array<string>> {
     let stats: Array<Array<string>> = [];
 
     ////
@@ -125,7 +125,7 @@ function build_report_stats(report: ReportData): Array<Array<string>> {
     ////
     if (report.nb_threads > 1) {
         let duration_cumulative = 0;
-        walk_results(report, (result: TestData | HookData) => {
+        walk_results(report, (result: Test | Result) => {
             if (result.end_time) {
                 duration_cumulative += get_time_from_iso8601(result.end_time) - get_time_from_iso8601(result.start_time);
             }
@@ -148,7 +148,7 @@ function build_report_stats(report: ReportData): Array<Array<string>> {
 
     walk_tests(
         report.suites,
-        (index: number, test: TestData, suites: Array<SuiteData>) => {
+        (index: number, test: Test, suites: Array<Suite>) => {
             tests_nb++;
             switch (test.status) {
                 case 'passed':
@@ -184,7 +184,7 @@ function build_report_stats(report: ReportData): Array<Array<string>> {
     return stats;
 }
 
-class Report extends React.Component<ReportProps, {}> {
+class ReportView extends React.Component<ReportProps, {}> {
     render() {
         let report = this.props.report;
 
@@ -192,19 +192,19 @@ class Report extends React.Component<ReportProps, {}> {
             <div>
                 <h1>{report.title}</h1>
 
-                <KeyValueTable title="Information" rows={report.info}/>
+                <KeyValueTableView title="Information" rows={report.info}/>
 
-                <KeyValueTable title="Statistics" rows={build_report_stats(report)}/>
+                <KeyValueTableView title="Statistics" rows={build_report_stats(report)}/>
 
                 <p style={{textAlign: 'right'}}><a href="report.js" download="report.js">Download raw report data</a></p>
 
                 {report.test_session_setup &&
-                    <ReportHook hook={report.test_session_setup} description="- Setup test session -" id="setup_test_session"/>}
+                    <ReportHook result={report.test_session_setup} description="- Setup test session -" id="setup_test_session"/>}
 
-                {walk_suites(report.suites, ((index, suite, parent_suites) => <Suite suite={suite} parent_suites={parent_suites} key={index}/>))}
+                {walk_suites(report.suites, ((index, suite, parent_suites) => <SuiteView suite={suite} parent_suites={parent_suites} key={index}/>))}
 
                 {report.test_session_teardown &&
-                    <ReportHook hook={report.test_session_teardown} description="- Teardown test session -" id="teardown_test_session"/>}
+                    <ReportHook result={report.test_session_teardown} description="- Teardown test session -" id="teardown_test_session"/>}
             </div>
         );
     }
@@ -225,4 +225,4 @@ class Report extends React.Component<ReportProps, {}> {
     }
 }
 
-export default Report;
+export default ReportView;

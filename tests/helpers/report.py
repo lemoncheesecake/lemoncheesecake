@@ -13,7 +13,7 @@ import pytest
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake import reporting
 from lemoncheesecake.runtime import get_runtime
-from lemoncheesecake.reporting import Report, SetupResult, SuiteResult, TestResult, Step, Log, JsonBackend
+from lemoncheesecake.reporting import Report, Result, SuiteResult, TestResult, Step, Log, JsonBackend
 
 
 def make_report_in_progress():
@@ -22,17 +22,17 @@ def make_report_in_progress():
     now = time.time()
     report = Report()
     report.start_time = now
-    report.test_session_setup = SetupResult()
+    report.test_session_setup = Result()
     report.test_session_setup.start_time = now
-    report.test_session_teardown = SetupResult()
+    report.test_session_teardown = Result()
     report.test_session_teardown.start_time = now
     suite = SuiteResult("suite", "suite")
     suite.start_time = now
     report.add_suite(suite)
     
-    suite.suite_setup = SetupResult()
+    suite.suite_setup = Result()
     suite.suite_setup.start_time = now
-    suite.suite_teardown = SetupResult()
+    suite.suite_teardown = Result()
     suite.suite_teardown.start_time = now
     
     test = TestResult("test_1", "test_1")
@@ -167,7 +167,7 @@ def assert_test_checks(test, expected_successes=0, expected_failures=0):
     for step in test.steps:
         for entry in step.entries:
             if isinstance(entry, reporting.Check):
-                if entry.outcome:
+                if entry.is_successful:
                     successes += 1
                 else:
                     failures += 1
@@ -182,7 +182,7 @@ def assert_test_checks(test, expected_successes=0, expected_failures=0):
 
 def assert_check_data(actual, expected):
     assert actual.description == expected.description
-    assert actual.outcome == expected.outcome
+    assert actual.is_successful == expected.is_successful
     assert actual.details == expected.details
     assert_time(actual.time, expected.time)
 
@@ -250,7 +250,7 @@ def assert_hook_data(actual, expected):
     if expected is None:
         assert actual is None
     else:
-        assert actual.outcome == expected.outcome
+        assert actual.status == expected.status
         assert_time(actual.start_time, expected.start_time)
         if expected.end_time is None:
             assert actual.end_time is None

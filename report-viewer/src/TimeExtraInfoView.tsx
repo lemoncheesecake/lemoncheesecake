@@ -6,7 +6,7 @@ interface Props {
     end?: string | null
 }
 
-class TimeExtraInfo extends React.Component<Props, {}> {
+class TimeExtraInfoView extends React.Component<Props, {}> {
     render() {
         const start_time = humanize_time_from_iso8601(this.props.start);
         
@@ -19,4 +19,4 @@ class TimeExtraInfo extends React.Component<Props, {}> {
     }
 }
 
-export default TimeExtraInfo;
+export default TimeExtraInfoView;

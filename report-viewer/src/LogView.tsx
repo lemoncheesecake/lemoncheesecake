@@ -1,8 +1,8 @@
 import * as React from 'react';
-import TimeExtraInfo from './TimeExtraInfo';
+import TimeExtraInfoView from './TimeExtraInfoView';
 
 interface Props {
-    log: LogData,
+    log: Log,
     expanded: boolean
 }
 
@@ -17,7 +17,7 @@ function get_log_level_text_class(level: LogLevel) {
     }
 }
 
-class Step extends React.Component<Props, {}> {
+class LogView extends React.Component<Props, {}> {
     render() {
         const log = this.props.log;
 
@@ -27,7 +27,7 @@ class Step extends React.Component<Props, {}> {
                 <td colSpan={3}>
                     <div className="extra-info-container">
                         <samp>{log.message}</samp>
-                        <TimeExtraInfo start={log.time}/>
+                        <TimeExtraInfoView start={log.time}/>
                     </div>
                 </td>
             </tr>
@@ -35,4 +35,4 @@ class Step extends React.Component<Props, {}> {
     }
 }
 
-export default Step;
+export default LogView;

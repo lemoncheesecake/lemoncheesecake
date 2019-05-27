@@ -7,7 +7,7 @@ Created on Mar 26, 2016
 import time
 from decimal import Decimal
 from functools import reduce
-from typing import Union, List, Generator, Iterable
+from typing import Union, List, Generator, Iterable, Optional
 import datetime
 import calendar
 
@@ -45,7 +45,7 @@ def parse_iso8601_time(s):
 
 
 def _get_duration(start_time, end_time):
-    # type: (Union[None, float], Union[None, float]) -> Union[None, float]
+    # type: (Optional[float], Optional[float]) -> Optional[float]
     if start_time is not None and end_time is not None:
         return end_time - start_time
     else:
@@ -59,20 +59,14 @@ class Log(object):
         self.message = message
         self.time = ts
 
-    def is_successful(self):
-        return self.level != LOG_LEVEL_ERROR
-
 
 class Check(object):
-    def __init__(self, description, outcome, details, ts):
-        # type: (str, bool, Union[None, str], float) -> None
+    def __init__(self, description, is_successful, details, ts):
+        # type: (str, bool, Optional[str], float) -> None
         self.description = description
-        self.outcome = outcome
+        self.is_successful = is_successful
         self.details = details
         self.time = ts
-
-    def is_successful(self):
-        return self.outcome
 
 
 class Attachment(object):
@@ -83,9 +77,6 @@ class Attachment(object):
         self.as_image = as_image
         self.time = ts
 
-    def is_successful(self):
-        return True
-
 
 class Url(object):
     def __init__(self, description, url, ts):
@@ -94,9 +85,6 @@ class Url(object):
         self.url = url
         self.time = ts
 
-    def is_successful(self):
-        return True
-
 
 class Step(object):
     def __init__(self, description, detached=False):
@@ -104,41 +92,56 @@ class Step(object):
         self.description = description
         self._detached = detached  # this attribute is runtime only is not intended to be serialized
         self.entries = []  # type: List[Union[Log, Check, Attachment, Url]]
-        self.start_time = None  # type: Union[None, float]
-        self.end_time = None  # type: Union[None, float]
+        self.start_time = None  # type: Optional[float]
+        self.end_time = None  # type: Optional[float]
+
+    @staticmethod
+    def _is_entry_successful(entry):
+        if isinstance(entry, Check):
+            return entry.is_successful
+        elif isinstance(entry, Log):
+            return entry.level != LOG_LEVEL_ERROR
+        return True
 
     def is_successful(self):
         # type: () -> bool
-        return all(entry.is_successful() for entry in self.entries)
+        return all(map(Step._is_entry_successful, self.entries))
 
     @property
     def duration(self):
-        # type: () -> Union[None, float]
+        # type: () -> Optional[float]
         return _get_duration(self.start_time, self.end_time)
 
 
 class Result(object):
     def __init__(self):
         self.steps = []  # type: List[Step]
-        self.start_time = None  # type: Union[None, float]
-        self.end_time = None  # type: Union[None, float]
+        self.start_time = None  # type: Optional[float]
+        self.end_time = None  # type: Optional[float]
+        self.status = None  # type: Optional[str]
+        self.status_details = None  # type: Optional[str]
 
     def is_successful(self):
         # type: () -> bool
-        return all(step.is_successful() for step in self.steps)
+        if self.status:  # test is finished
+            return self.status in ("passed", "disabled")
+        else:  # check if the test is successful "so far"
+            return all(step.is_successful() for step in self.steps)
 
     @property
     def duration(self):
-        # type: () -> Union[None, float]
+        # type: () -> Optional[float]
         return _get_duration(self.start_time, self.end_time)
+
+    def is_empty(self):
+        # type: () -> bool
+        return len(self.steps) == 0
 
 
 class TestResult(BaseTest, Result):
     def __init__(self, name, description):
         BaseTest.__init__(self, name, description)
         Result.__init__(self)
-        self.status = None  # type: Union[None, str]
-        self.status_details = None  # type: Union[None, str]
         # non-serialized attributes (only set in-memory during test execution):
         self.rank = 0
 
@@ -153,42 +156,19 @@ class TestResult(BaseTest, Result):
         return test_data
 
 
-class SetupResult(Result):
-    """
-    This class hold both the results of setup and teardown functions.
-    """
-    def __init__(self):
-        Result.__init__(self)
-        self.outcome = None
-
-    @property
-    def status(self):
-        # type: () -> Union[None, str]
-        if self.outcome is None:
-            return None
-        elif self.outcome:
-            return "passed"
-        else:
-            return "failed"
-
-    def is_empty(self):
-        # type () -> bool
-        return len(self.steps) == 0
-
-
 class SuiteResult(BaseSuite):
     def __init__(self, name, description):
         BaseSuite.__init__(self, name, description)
-        self.start_time = None  # type: Union[None, float]
-        self.end_time = None  # type: Union[None, float]
-        self.suite_setup = None  # type: Union[None, SetupResult]
-        self.suite_teardown = None  # type: Union[None, SetupResult]
+        self.start_time = None  # type: Optional[float]
+        self.end_time = None  # type: Optional[float]
+        self.suite_setup = None  # type: Optional[Result]
+        self.suite_teardown = None  # type: Optional[Result]
         # non-serialized attributes (only set in-memory during test execution)
         self.rank = 0
 
     @property
     def duration(self):
-        # type: () -> Union[None, float]
+        # type: () -> Optional[float]
         return reduce(
             lambda x, y: x + y,
             # result.duration is None if the corresponding testish is in progress
@@ -244,9 +224,9 @@ def _update_stats_from_results(stats, results):
             for entry in step.entries:
                 if isinstance(entry, Check):
                     stats.checks += 1
-                    if entry.outcome == True:
+                    if entry.is_successful is True:
                         stats.check_successes += 1
-                    elif entry.outcome == False:
+                    elif entry.is_successful is False:
                         stats.check_failures += 1
                 if isinstance(entry, Log):
                     if entry.level == LOG_LEVEL_WARN:
@@ -280,12 +260,12 @@ def get_stats_from_suites(suites, parallelized):
 class Report:
     def __init__(self):
         self.info = []
-        self.test_session_setup = None  # type: Union[None, SetupResult]
-        self.test_session_teardown = None  # type: Union[None, SetupResult]
+        self.test_session_setup = None  # type: Optional[Result]
+        self.test_session_teardown = None  # type: Optional[Result]
         self._suites = []  # type: List[SuiteResult]
-        self.start_time = None  # type: Union[None, float]
-        self.end_time = None  # type: Union[None, float]
-        self.report_generation_time = None  # type: Union[None, float]
+        self.start_time = None  # type: Optional[float]
+        self.end_time = None  # type: Optional[float]
+        self.report_generation_time = None  # type: Optional[float]
         self.title = _DEFAULT_REPORT_TITLE
         self.nb_threads = 1
 
@@ -330,7 +310,7 @@ class Report:
         return find_test(self._suites, hierarchy)
 
     def get(self, location):
-        # type: (TreeLocation) -> Union[SetupResult, SuiteResult, TestResult]
+        # type: (TreeLocation) -> Union[Result, SuiteResult, TestResult]
         if location.node_type == TreeLocation.TEST_SESSION_SETUP:
             return self.test_session_setup
         elif location.node_type == TreeLocation.TEST_SESSION_TEARDOWN:

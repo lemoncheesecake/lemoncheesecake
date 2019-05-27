@@ -10,21 +10,21 @@ from lemoncheesecake.helpers.orderedset import OrderedSet
 
 
 class MatchResult(object):
-    def __init__(self, outcome, description):
-        self.outcome = outcome
+    def __init__(self, is_successful, description):
+        self.is_successful = is_successful
         self.description = description
 
     def __bool__(self):
-        return self.is_success()
+        return self.is_successful
 
     def __nonzero__(self):
         return self.__bool__()
 
     def is_success(self):
-        return self.outcome is True
+        return self.is_successful is True
 
     def is_failure(self):
-        return self.outcome is False
+        return self.is_successful is False
 
 
 def match_success(description=None):
@@ -35,8 +35,8 @@ def match_failure(description):
     return MatchResult(False, description)
 
 
-def match_result(outcome, description=None):
-    return MatchResult(outcome, description)
+def match_result(is_successful, description=None):
+    return MatchResult(is_successful, description)
 
 
 class Matcher(object):

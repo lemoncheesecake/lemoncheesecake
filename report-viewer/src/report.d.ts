@@ -1,47 +1,48 @@
 type LogLevel = string;
 
-declare interface LogData {
+declare interface Log {
     type: "log",
     message: string,
     level: LogLevel,
     time: string
 }
 
-declare interface CheckData {
+declare interface Check {
     type: "check",
     description: string,
-    outcome: Boolean,
+    is_successful: Boolean,
     details: string | null
 }
 
-declare interface AttachmentData {
+declare interface Attachment {
     type: "attachment",
     filename: string,
     description: string,
     as_image: boolean
 }
 
-declare interface UrlData {
+declare interface Url {
     type: "url",
     url: string,
     description: string,
 }
 
-type StepEntryData = LogData | CheckData | AttachmentData | UrlData;
+type StepEntry = Log | Check | Attachment | Url;
 
 declare interface TimeInterval {
     start_time: string,
     end_time: string | null,
 }
 
-declare interface StepData extends TimeInterval {
+declare interface Step extends TimeInterval {
     description: string,
-    entries: Array<StepEntryData>;
+    entries: Array<StepEntry>;
 }
 
-declare interface HookData extends TimeInterval {
-    outcome: Boolean | null,
-    steps: Array<StepData>
+declare interface Result extends TimeInterval {
+    steps: Array<Step>,
+    status: string | null,
+    status_details: string | null
 }
 
 type Status = string;
@@ -51,7 +52,7 @@ declare interface Link {
     url: string
 }
 
-declare interface BaseTestData {
+declare interface Metadata {
     name: string,
     description: string,
     tags: Array<string>,
@@ -59,27 +60,24 @@ declare interface BaseTestData {
     links: Array<Link>
 }
 
-declare interface TestData extends BaseTestData, TimeInterval {
-    steps: Array<StepData>,
-    status: Status | null,
-    status_details: string | null
+declare interface Test extends Result, Metadata {
 }
 
-declare interface SuiteData extends BaseTestData {
-    tests: Array<TestData>,
-    suites: Array<SuiteData>,
-    suite_setup: HookData | undefined,
-    suite_teardown: HookData | undefined
+declare interface Suite extends Metadata {
+    tests: Array<Test>,
+    suites: Array<Suite>,
+    suite_setup: Result | undefined,
+    suite_teardown: Result | undefined
 }
 
-declare interface ReportData {
+declare interface Report {
     title: string,
     start_time: string,
     end_time: string,
     generation_time: string,
     nb_threads: number,
     info: Array<Array<string>>,
-    test_session_setup: HookData,
-    test_session_teardown: HookData,
-    suites: Array<SuiteData>
+    test_session_setup: Result,
+    test_session_teardown: Result,
+    suites: Array<Suite>
 }

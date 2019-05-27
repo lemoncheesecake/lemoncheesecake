@@ -12,7 +12,7 @@ import time
 import lemoncheesecake
 from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend, ReportUnserializerMixin
 from lemoncheesecake.reporting.report import (
-    Log, Check, Attachment, Url, Step, TestResult, SetupResult, SuiteResult,
+    Log, Check, Attachment, Url, Step, Result, TestResult, SuiteResult,
     format_time_as_iso8601, parse_iso8601_time
 )
 from lemoncheesecake.exceptions import InvalidReportFile, ProgrammingError
@@ -66,11 +66,11 @@ def _serialize_steps(steps):
                     "url", entry.url,
                     "time", _serialize_time(entry.time)
                 )
-            else:  # TestCheck
+            elif isinstance(entry, Check):
                 entry = _dict(
                     "type", "check",
                     "description", entry.description,
-                    "outcome", entry.outcome,
+                    "is_successful", entry.is_successful,
                     "details", entry.details,
                     "time", _serialize_time(entry.time)
                 )
@@ -104,7 +104,7 @@ def _serialize_hook_data(hook_data):
         "start_time", _serialize_time(hook_data.start_time),
         "end_time", _serialize_time(hook_data.end_time),
         "steps", _serialize_steps(hook_data.steps),
-        "outcome", hook_data.outcome
+        "status", hook_data.status
     )
 
 
@@ -177,7 +177,7 @@ def _unserialize_step_data(js):
             )
         elif js_entry["type"] == "check":
             entry = Check(
-                js_entry["description"], js_entry["outcome"], js_entry["details"], parse_iso8601_time(js_entry["time"])
+                js_entry["description"], js_entry["is_successful"], js_entry["details"], parse_iso8601_time(js_entry["time"])
             )
         else:
             raise ProgrammingError("Unknown entry type '%s'" % js_entry["type"])
@@ -199,8 +199,8 @@ def _unserialize_test_data(js):
 
 
 def _unserialize_hook_data(js):
-    data = SetupResult()
-    data.outcome = js["outcome"]
+    data = Result()
+    data.status = js["status"]
     data.start_time = parse_iso8601_time(js["start_time"])
     data.end_time = parse_iso8601_time(js["end_time"]) if js["end_time"] else None
     data.steps = [_unserialize_step_data(s) for s in js["steps"]]

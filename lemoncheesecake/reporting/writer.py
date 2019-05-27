@@ -29,7 +29,7 @@ class ReportWriter:
 
     @staticmethod
     def _start_hook(ts):
-        hook_data = SetupResult()
+        hook_data = Result()
         hook_data.start_time = ts
         return hook_data
 
@@ -37,7 +37,7 @@ class ReportWriter:
     def _end_hook(hook_data, ts):
         if hook_data:
             hook_data.end_time = ts
-            hook_data.outcome = hook_data.is_successful()
+            hook_data.status = "passed" if hook_data.is_successful() else "failed"
 
     @staticmethod
     def _lookup_step(steps, step):
@@ -198,7 +198,7 @@ class ReportWriter:
 
     def on_check(self, event):
         self._add_step_entry(
-            Check(event.check_description, event.check_outcome, event.check_details, event.time), event
+            Check(event.check_description, event.check_is_successful, event.check_details, event.time), event
         )
 
     def on_log_attachment(self, event):

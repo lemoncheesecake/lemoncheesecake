@@ -53,7 +53,7 @@ def _log_match_result(hint, matcher, result, quiet=False):
         description = "Expect %s" % matcher.build_description()
 
     return log_check(
-        description, result.outcome, _format_result_details(result.description) if not quiet else None
+        description, result.is_successful, _format_result_details(result.description) if not quiet else None
     )
 
 

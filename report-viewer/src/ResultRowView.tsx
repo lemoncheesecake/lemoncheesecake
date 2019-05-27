@@ -1,10 +1,10 @@
 import * as React from 'react';
-import {render_steps} from './Step';
+import {render_steps} from './StepView';
 import { scroller } from 'react-scroll';
 
 let all_rows = {};
 
-export function get_result_row_by_id(id: string): ResultRow {
+export function get_result_row_by_id(id: string): ResultRowView {
     return all_rows[id];
 }
 
@@ -26,7 +26,7 @@ interface Props {
     id: string,
     status: Status | null,
     status_details?: string | null,
-    steps: Array<StepData>
+    steps: Array<Step>
 }
 
 function get_text_class_from_test_status(status: Status | null) {
@@ -45,7 +45,7 @@ function get_text_class_from_test_status(status: Status | null) {
     return "text-warning";
 }
 
-class ResultRow extends React.Component<Props, State> {
+class ResultRowView extends React.Component<Props, State> {
     domRef: any;
 
     constructor() {
@@ -109,4 +109,4 @@ class ResultRow extends React.Component<Props, State> {
     }
 }
 
-export default ResultRow;
+export default ResultRowView;
