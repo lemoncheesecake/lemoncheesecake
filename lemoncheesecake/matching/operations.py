@@ -6,7 +6,7 @@ Created on Mar 27, 2017
 
 import six
 
-from lemoncheesecake.runtime import log_check
+from lemoncheesecake.session import log_check
 from lemoncheesecake.exceptions import AbortTest
 from lemoncheesecake.matching.base import Matcher
 from lemoncheesecake.matching.matchers.dict_ import HasEntry, wrap_key_matcher

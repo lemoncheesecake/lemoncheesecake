@@ -9,35 +9,36 @@ from contextlib import contextmanager
 import shutil
 import threading
 import traceback
+from typing import Optional
 
 import six
 
 from lemoncheesecake.exceptions import LemonCheesecakeInternalError
 from lemoncheesecake.consts import ATTACHEMENT_DIR, \
     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
-from lemoncheesecake.reporting import *
+from lemoncheesecake.reporting import Report
 from lemoncheesecake import events
 from lemoncheesecake.exceptions import ProgrammingError
 from lemoncheesecake.fixture import ScheduledFixtures
 
 
-_runtime = None  # type: _Runtime
+_session = None  # type: Optional[Session]
 
-_scheduled_fixtures = None  # type: ScheduledFixtures
-
-
-def initialize_runtime(event_manager, report_dir, report):
-    global _runtime
-    _runtime = _Runtime(event_manager, report_dir, report)
-    event_manager.add_listener(_runtime)
+_scheduled_fixtures = None  # type: Optional[ScheduledFixtures]
 
 
-def initialize_fixtures_cache(scheduled_fixtures):
+def initialize_session(event_manager, report_dir, report):
+    global _session
+    _session = Session(event_manager, report_dir, report)
+    event_manager.add_listener(_session)
+
+
+def initialize_fixture_cache(scheduled_fixtures):
     global _scheduled_fixtures
     _scheduled_fixtures = scheduled_fixtures
 
 
-class _Runtime(object):
+class Session(object):
     def __init__(self, event_manager, report_dir, report):
         self.event_manager = event_manager
         self.report_dir = report_dir
@@ -60,11 +61,11 @@ class _Runtime(object):
     def mark_location_as_failed(self, location):
         self._failures.add(location)
 
-    def is_successful(self, location):
-        return location not in self._failures
-
-    def is_everything_successful(self):
-        return len(self._failures) == 0
+    def is_successful(self, location=None):
+        if location:
+            return location not in self._failures
+        else:
+            return len(self._failures) == 0
 
     def set_step(self, description, detached=False):
         self._local.step = description
@@ -102,16 +103,16 @@ class _Runtime(object):
         ))
 
 
-def get_runtime():
-    # type: () -> _Runtime
-    if not _runtime:
+def get_session():
+    # type: () -> Session
+    if not _session:
         raise LemonCheesecakeInternalError("Runtime is not initialized")
-    return _runtime
+    return _session
 
 
 def get_report():
     # type: () -> Report
-    report = get_runtime().report
+    report = get_session().report
     if not report:
         raise LemonCheesecakeInternalError("Report is not (yet) accessible")
     return report
@@ -121,14 +122,14 @@ def set_step(description, detached=False):
     """
     Set a new step.
     """
-    get_runtime().set_step(description, detached=detached)
+    get_session().set_step(description, detached=detached)
 
 
 def end_step(step):
     """
     End a detached step.
     """
-    get_runtime().end_step(step)
+    get_session().end_step(step)
 
 
 @contextmanager
@@ -149,21 +150,21 @@ def log_debug(content):
     """
     Log a debug level message.
     """
-    get_runtime().log(LOG_LEVEL_DEBUG, content)
+    get_session().log(LOG_LEVEL_DEBUG, content)
 
 
 def log_info(content):
     """
     Log a info level message.
     """
-    get_runtime().log(LOG_LEVEL_INFO, content)
+    get_session().log(LOG_LEVEL_INFO, content)
 
 
 def log_warning(content):
     """
     Log a warning level message.
     """
-    get_runtime().log(LOG_LEVEL_WARN, content)
+    get_session().log(LOG_LEVEL_WARN, content)
 
 
 log_warn = log_warning
@@ -173,15 +174,15 @@ def log_error(content):
     """
     Log an error level message.
     """
-    get_runtime().log(LOG_LEVEL_ERROR, content)
+    get_session().log(LOG_LEVEL_ERROR, content)
 
 
 def log_check(description, is_successful, details=None):
-    get_runtime().log_check(description, is_successful, details)
+    get_session().log_check(description, is_successful, details)
 
 
 def _prepare_attachment(filename, description=None, as_image=False):
-    return get_runtime().prepare_attachment(filename, description or filename, as_image=as_image)
+    return get_session().prepare_attachment(filename, description or filename, as_image=as_image)
 
 
 def prepare_attachment(filename, description=None):
@@ -254,7 +255,7 @@ def log_url(url, description=None):
     """
     Log an URL.
     """
-    get_runtime().log_url(url, description or url)
+    get_session().log_url(url, description or url)
 
 
 def get_fixture(name):
@@ -280,27 +281,27 @@ def add_report_info(name, value):
     report.add_info(name, value)
 
 
-def set_runtime_location(location):
-    get_runtime().set_location(location)
+def set_session_location(location):
+    get_session().set_location(location)
 
 
 def mark_location_as_failed(location):
-    get_runtime().mark_location_as_failed(location)
+    get_session().mark_location_as_failed(location)
 
 
 def is_location_successful(location):
-    return get_runtime().is_successful(location)
+    return get_session().is_successful(location)
 
 
-def is_everything_successful():
-    return get_runtime().is_everything_successful()
+def is_session_successful():
+    return get_session().is_successful()
 
 
 class Thread(threading.Thread):
     def __init__(self, *args, **kwargs):
         super(Thread, self).__init__(*args, **kwargs)
-        self.location = get_runtime().location
+        self.location = get_session().location
 
     def run(self):
-        set_runtime_location(self.location)
+        set_session_location(self.location)
         return super(Thread, self).run()
