@@ -4,6 +4,7 @@ Created on Jun 16, 2017
 @author: nicolas
 '''
 
+from typing import Union, Tuple, List
 import copy
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
@@ -72,13 +73,19 @@ class BaseTreeNode(object):
         return self.path
 
 
-def _normalize_node_hierarchy(value):
-    if isinstance(value, BaseTreeNode):
-        return tuple(p.name for p in value.hierarchy)
-    elif type(value) in (list, tuple):
-        return tuple(value)
+TreeNodeHierarchy = Union[Tuple[str, ...], List, BaseTreeNode, str]
+
+
+def _normalize_node_hierarchy(hierarchy):
+    # type: (TreeNodeHierarchy) -> Tuple[str, ...]
+    if type(hierarchy) is tuple:
+        return hierarchy
+    elif type(hierarchy) is list:
+        return tuple(hierarchy)
+    elif isinstance(hierarchy, BaseTreeNode):
+        return tuple(p.name for p in hierarchy.hierarchy)
     else:  # assume str
-        return tuple(value.split("."))
+        return tuple(hierarchy.split("."))
 
 
 class TreeLocation(object):
