@@ -4,7 +4,7 @@ Created on Jun 16, 2017
 @author: nicolas
 '''
 
-from typing import Union, Tuple, List
+from typing import Union, Tuple, List, Sequence
 import copy
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
@@ -194,29 +194,23 @@ def flatten_tests(suites):
             yield test
 
 
-def get_suite_by_name(suites, suite_name):
-    try:
-        return next(s for s in suites if s.name == suite_name)
-    except StopIteration:
-        raise CannotFindTreeNode("Cannot find suite named '%s' within %s" % (
-            suite_name, [s.name for s in suites]
-        ))
+def find_suite(suites, hierarchy):
+    # type: (Sequence[BaseSuite], TreeNodeHierarchy) -> BaseSuite
+    hierarchy = _normalize_node_hierarchy(hierarchy)
 
-
-def _find_suite(suites, hierarchy):
     lookup_suites = suites
     lookup_suite = None
     for lookup_suite_name in hierarchy:
-        lookup_suite = get_suite_by_name(lookup_suites, lookup_suite_name)
+        try:
+            lookup_suite = next(s for s in lookup_suites if s.name == lookup_suite_name)
+        except StopIteration:
+            raise CannotFindTreeNode("Cannot find suite named '%s' within %s" % (
+                lookup_suite_name, [s.name for s in lookup_suites]
+            ))
+
         lookup_suites = lookup_suite.get_suites(include_empty_suites=True)
-    if lookup_suite is None:
-        raise CannotFindTreeNode("Cannot find suite %s" % hierarchy)
 
     return lookup_suite
-
-
-def find_suite(suites, hierarchy):
-    return _find_suite(suites, _normalize_node_hierarchy(hierarchy))
 
 
 def get_test_by_name(suite, test_name):
@@ -227,7 +221,7 @@ def get_test_by_name(suite, test_name):
 
 
 def _find_test(suites, hierarchy):
-    lookup_suite = _find_suite(suites, hierarchy[:-1])
+    lookup_suite = find_suite(suites, hierarchy[:-1])
     return get_test_by_name(lookup_suite, hierarchy[-1])
 
 
