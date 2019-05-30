@@ -12,6 +12,7 @@ import time
 import six
 
 import lemoncheesecake.api as lcc
+from lemoncheesecake.matching import *
 
 from helpers.runner import run_suite_class, run_suite_classes, run_func_in_test
 from helpers.report import assert_report_from_suite, assert_report_from_suites, get_last_test, get_last_attachment, \
@@ -150,7 +151,7 @@ def test_check_success():
     class mysuite:
         @lcc.test("Test 1")
         def test_1(self):
-            lcc.check_that("somevalue", "foo", lcc.equal_to("foo"))
+            check_that("somevalue", "foo", equal_to("foo"))
 
     report = run_suite_class(mysuite)
 
@@ -168,7 +169,7 @@ def test_check_failure():
     class mysuite:
         @lcc.test("Test 1")
         def test_1(self):
-            lcc.check_that("somevalue", "foo", lcc.equal_to("bar"))
+            check_that("somevalue", "foo", equal_to("bar"))
 
     report = run_suite_class(mysuite)
 
@@ -186,7 +187,7 @@ def test_require_success():
     class mysuite:
         @lcc.test("Test 1")
         def test_1(self):
-            lcc.require_that("somevalue", "foo", lcc.equal_to("foo"))
+            require_that("somevalue", "foo", equal_to("foo"))
 
     report = run_suite_class(mysuite)
 
@@ -204,7 +205,7 @@ def test_require_failure():
     class mysuite:
         @lcc.test("Test 1")
         def test_1(self):
-            lcc.require_that("somevalue", "foo", lcc.equal_to("bar"))
+            require_that("somevalue", "foo", equal_to("bar"))
 
     report = run_suite_class(mysuite)
 
@@ -503,7 +504,7 @@ def test_unicode(tmpdir):
         @lcc.test("some test")
         def sometest(self):
             lcc.set_step(u"éééààà")
-            lcc.check_that(u"éééààà", 1, lcc.equal_to(1))
+            check_that(u"éééààà", 1, equal_to(1))
             lcc.log_info(u"éééààà")
             lcc.save_attachment_content("A" * 1024, u"somefileààà", u"éééààà")
 
@@ -602,7 +603,7 @@ def test_teardown_suite_failure():
             pass
 
         def teardown_suite(self):
-            lcc.check_that("val", 1, lcc.equal_to(2))
+            check_that("val", 1, equal_to(2))
 
     report = run_suite_class(mysuite)
 
@@ -719,7 +720,7 @@ def test_teardown_test_session_failure():
     @lcc.fixture(scope="session")
     def fixt():
         yield
-        lcc.check_that("val", 1, lcc.equal_to(2))
+        check_that("val", 1, equal_to(2))
 
     report = run_suite_class(mysuite, fixtures=[fixt])
 

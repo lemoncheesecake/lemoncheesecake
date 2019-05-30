@@ -78,7 +78,7 @@ else:
         class suite():
             @lcc.test("Test")
             def test(self):
-                lcc.check_that("value", 1, is_(1))
+                check_that("value", 1, is_(1))
         
         junit_xml = get_junit_xml_from_suite(suite, tmpdir)
         assert_testsuites(junit_xml, tests=1, failures=0)

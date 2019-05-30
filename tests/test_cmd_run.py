@@ -30,12 +30,13 @@ def fixt():
 """
 
 TEST_MODULE_USING_FIXTURES = """import lemoncheesecake.api as lcc
+from lemoncheesecake.matching import *
 
 @lcc.suite("My Suite")
 class mysuite:
     @lcc.test("My Test 1")
     def mytest1(self, fixt):
-        lcc.check_that("val", fixt, lcc.equal_to(42))
+        check_that("val", fixt, equal_to(42))
 """
 
 

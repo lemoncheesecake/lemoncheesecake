@@ -84,6 +84,8 @@ In ``Matcher`` class:
 
 - the ``short_description`` method has been renamed into ``build_short_description``
 
+The ``lemoncheesecake.api`` module no longer exports the matching API, use ``from lemoncheesecake.matching import *`` as
+it was/is documented.
 
 Fixtures
 ^^^^^^^^
