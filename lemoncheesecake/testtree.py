@@ -76,7 +76,7 @@ class BaseTreeNode(object):
 TreeNodeHierarchy = Union[Tuple[str, ...], List, BaseTreeNode, str]
 
 
-def _normalize_node_hierarchy(hierarchy):
+def normalize_node_hierarchy(hierarchy):
     # type: (TreeNodeHierarchy) -> Tuple[str, ...]
     if type(hierarchy) is tuple:
         return hierarchy
@@ -86,55 +86,6 @@ def _normalize_node_hierarchy(hierarchy):
         return tuple(p.name for p in hierarchy.hierarchy)
     else:  # assume str
         return tuple(hierarchy.split("."))
-
-
-class TreeLocation(object):
-    TEST_SESSION_SETUP = 0
-    TEST_SESSION_TEARDOWN = 1
-    SUITE_SETUP = 2
-    SUITE_TEARDOWN = 3
-    TEST = 4
-
-    def __init__(self, node_type, node_hierarchy=None):
-        self.node_type = node_type
-        self.node_hierarchy = node_hierarchy
-
-    @classmethod
-    def in_test_session_setup(cls):
-        return cls(cls.TEST_SESSION_SETUP)
-
-    @classmethod
-    def in_test_session_teardown(cls):
-        return cls(cls.TEST_SESSION_TEARDOWN)
-
-    @classmethod
-    def in_suite_setup(cls, suite):
-        return cls(cls.SUITE_SETUP, _normalize_node_hierarchy(suite))
-
-    @classmethod
-    def in_suite_teardown(cls, suite):
-        return cls(cls.SUITE_TEARDOWN, _normalize_node_hierarchy(suite))
-
-    @classmethod
-    def in_test(cls, test):
-        return cls(cls.TEST, _normalize_node_hierarchy(test))
-
-    def __eq__(self, other):
-        return all((
-            isinstance(other, TreeLocation),
-            self.node_type == other.node_type,
-            self.node_hierarchy == other.node_hierarchy
-        ))
-
-    def __hash__(self):
-        return hash((self.node_type, self.node_hierarchy))
-
-    def __str__(self):
-        ret = ""
-        if self.node_hierarchy:
-            ret += ".".join(self.node_hierarchy) + " "
-        ret += ("session setup", "session teardown", "suite setup", "suite teardown", "test")[self.node_type]
-        return "<%s>" % ret
 
 
 class BaseTest(BaseTreeNode):
@@ -203,7 +154,7 @@ def flatten_tests(suites):
 def find_suite(suites, hierarchy):
     # type: (Sequence[S], TreeNodeHierarchy) -> S
 
-    hierarchy = _normalize_node_hierarchy(hierarchy)
+    hierarchy = normalize_node_hierarchy(hierarchy)
 
     lookup_suites = suites
     lookup_suite = None
@@ -223,7 +174,7 @@ def find_suite(suites, hierarchy):
 def find_test(suites, hierarchy):
     # type: (Sequence[BaseSuite], TreeNodeHierarchy) -> T
 
-    hierarchy = _normalize_node_hierarchy(hierarchy)
+    hierarchy = normalize_node_hierarchy(hierarchy)
 
     suite = find_suite(suites, hierarchy[:-1])
 

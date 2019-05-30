@@ -2,15 +2,14 @@ from __future__ import print_function
 
 from typing import Iterable
 
-from lemoncheesecake.testtree import TreeLocation
-from lemoncheesecake.reporting import Report, Step, TestResult, SuiteResult, Log, Attachment, Url, Check
+from lemoncheesecake.reporting import Report, Step, TestResult, SuiteResult, Log, Attachment, Url, Check, ReportLocation
 from lemoncheesecake import events
 from lemoncheesecake.events import BaseEventManager
 from lemoncheesecake.exceptions import LemonCheesecakeInternalError
 
 
 def _replay_step(location, step, eventmgr):
-    # type: (TreeLocation, Step, BaseEventManager) -> None
+    # type: (ReportLocation, Step, BaseEventManager) -> None
     eventmgr.fire(events.StepEvent(location, step.description, event_time=step.start_time))
     for entry in step.entries:
         if isinstance(entry, Log):
@@ -42,7 +41,7 @@ def _replay_step(location, step, eventmgr):
 
 
 def _replay_steps_events(location, steps, eventmgr):
-    # type: (TreeLocation, Iterable[Step], BaseEventManager) -> None
+    # type: (ReportLocation, Iterable[Step], BaseEventManager) -> None
     for step in steps:
         _replay_step(location, step, eventmgr)
 
@@ -51,7 +50,7 @@ def _replay_test_events(test, eventmgr):
     # type: (TestResult, BaseEventManager) -> None
     if test.status in ("passed", "failed", None):  # None means "in progress"
         eventmgr.fire(events.TestStartEvent(test, test.start_time))
-        _replay_steps_events(TreeLocation.in_test(test), test.steps, eventmgr)
+        _replay_steps_events(ReportLocation.in_test(test), test.steps, eventmgr)
         if test.end_time:
             eventmgr.fire(events.TestEndEvent(test, test.end_time))
     elif test.status == "skipped":
@@ -69,7 +68,7 @@ def _replay_suite_events(suite, eventmgr):
 
     if suite.suite_setup:
         eventmgr.fire(events.SuiteSetupStartEvent(suite, suite.suite_setup.start_time))
-        _replay_steps_events(TreeLocation.in_suite_setup(suite), suite.suite_setup.steps, eventmgr)
+        _replay_steps_events(ReportLocation.in_suite_setup(suite), suite.suite_setup.steps, eventmgr)
         if suite.suite_setup.end_time:
             eventmgr.fire(events.SuiteSetupEndEvent(suite, suite.suite_setup.end_time))
 
@@ -81,7 +80,7 @@ def _replay_suite_events(suite, eventmgr):
 
     if suite.suite_teardown:
         eventmgr.fire(events.SuiteTeardownStartEvent(suite, suite.suite_teardown.start_time))
-        _replay_steps_events(TreeLocation.in_suite_teardown(suite), suite.suite_teardown.steps, eventmgr)
+        _replay_steps_events(ReportLocation.in_suite_teardown(suite), suite.suite_teardown.steps, eventmgr)
         if suite.suite_teardown.end_time:
             eventmgr.fire(events.SuiteTeardownEndEvent(suite, suite.suite_teardown.end_time))
 
@@ -96,7 +95,7 @@ def replay_report_events(report, eventmgr):
 
     if report.test_session_setup:
         eventmgr.fire(events.TestSessionSetupStartEvent(report.test_session_setup.start_time))
-        _replay_steps_events(TreeLocation.in_test_session_setup(), report.test_session_setup.steps, eventmgr)
+        _replay_steps_events(ReportLocation.in_test_session_setup(), report.test_session_setup.steps, eventmgr)
         if report.test_session_setup.end_time:
             eventmgr.fire(events.TestSessionSetupEndEvent(report.test_session_setup.end_time))
 
@@ -105,7 +104,7 @@ def replay_report_events(report, eventmgr):
 
     if report.test_session_teardown:
         eventmgr.fire(events.TestSessionTeardownStartEvent(report.test_session_teardown.start_time))
-        _replay_steps_events(TreeLocation.in_test_session_teardown(), report.test_session_teardown.steps, eventmgr)
+        _replay_steps_events(ReportLocation.in_test_session_teardown(), report.test_session_teardown.steps, eventmgr)
         if report.test_session_teardown.end_time:
             eventmgr.fire(events.TestSessionTeardownEndEvent(report.test_session_teardown.end_time))
 
