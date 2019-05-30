@@ -4,6 +4,7 @@ Created on Jun 16, 2017
 @author: nicolas
 '''
 
+from typing import Union, Tuple, List, Sequence, TypeVar
 import copy
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
@@ -72,66 +73,26 @@ class BaseTreeNode(object):
         return self.path
 
 
-def _normalize_node_hierarchy(value):
-    if isinstance(value, BaseTreeNode):
-        return tuple(p.name for p in value.hierarchy)
-    elif type(value) in (list, tuple):
-        return tuple(value)
+TreeNodeHierarchy = Union[Tuple[str, ...], List, BaseTreeNode, str]
+
+
+def normalize_node_hierarchy(hierarchy):
+    # type: (TreeNodeHierarchy) -> Tuple[str, ...]
+    if type(hierarchy) is tuple:
+        return hierarchy
+    elif type(hierarchy) is list:
+        return tuple(hierarchy)
+    elif isinstance(hierarchy, BaseTreeNode):
+        return tuple(p.name for p in hierarchy.hierarchy)
     else:  # assume str
-        return tuple(value.split("."))
-
-
-class TreeLocation(object):
-    TEST_SESSION_SETUP = 0
-    TEST_SESSION_TEARDOWN = 1
-    SUITE_SETUP = 2
-    SUITE_TEARDOWN = 3
-    TEST = 4
-
-    def __init__(self, node_type, node_hierarchy=None):
-        self.node_type = node_type
-        self.node_hierarchy = node_hierarchy
-
-    @classmethod
-    def in_test_session_setup(cls):
-        return cls(cls.TEST_SESSION_SETUP)
-
-    @classmethod
-    def in_test_session_teardown(cls):
-        return cls(cls.TEST_SESSION_TEARDOWN)
-
-    @classmethod
-    def in_suite_setup(cls, suite):
-        return cls(cls.SUITE_SETUP, _normalize_node_hierarchy(suite))
-
-    @classmethod
-    def in_suite_teardown(cls, suite):
-        return cls(cls.SUITE_TEARDOWN, _normalize_node_hierarchy(suite))
-
-    @classmethod
-    def in_test(cls, test):
-        return cls(cls.TEST, _normalize_node_hierarchy(test))
-
-    def __eq__(self, other):
-        return all((
-            isinstance(other, TreeLocation),
-            self.node_type == other.node_type,
-            self.node_hierarchy == other.node_hierarchy
-        ))
-
-    def __hash__(self):
-        return hash((self.node_type, self.node_hierarchy))
-
-    def __str__(self):
-        ret = ""
-        if self.node_hierarchy:
-            ret += ".".join(self.node_hierarchy) + " "
-        ret += ("session setup", "session teardown", "suite setup", "suite teardown", "test")[self.node_type]
-        return "<%s>" % ret
+        return tuple(hierarchy.split("."))
 
 
 class BaseTest(BaseTreeNode):
     pass
+
+
+T = TypeVar("T", bound=BaseTest)
 
 
 class BaseSuite(BaseTreeNode):
@@ -174,6 +135,9 @@ class BaseSuite(BaseTreeNode):
         return node
 
 
+S = TypeVar("S", bound=BaseSuite)
+
+
 def flatten_suites(suites):
     for suite in suites:
         yield suite
@@ -187,42 +151,34 @@ def flatten_tests(suites):
             yield test
 
 
-def get_suite_by_name(suites, suite_name):
-    try:
-        return next(s for s in suites if s.name == suite_name)
-    except StopIteration:
-        raise CannotFindTreeNode("Cannot find suite named '%s' within %s" % (
-            suite_name, [s.name for s in suites]
-        ))
+def find_suite(suites, hierarchy):
+    # type: (Sequence[S], TreeNodeHierarchy) -> S
 
+    hierarchy = normalize_node_hierarchy(hierarchy)
 
-def _find_suite(suites, hierarchy):
     lookup_suites = suites
     lookup_suite = None
     for lookup_suite_name in hierarchy:
-        lookup_suite = get_suite_by_name(lookup_suites, lookup_suite_name)
+        try:
+            lookup_suite = next(s for s in lookup_suites if s.name == lookup_suite_name)
+        except StopIteration:
+            raise CannotFindTreeNode("Cannot find suite named '%s' within %s" % (
+                lookup_suite_name, [s.name for s in lookup_suites]
+            ))
+
         lookup_suites = lookup_suite.get_suites(include_empty_suites=True)
-    if lookup_suite is None:
-        raise CannotFindTreeNode("Cannot find suite %s" % hierarchy)
 
     return lookup_suite
 
 
-def find_suite(suites, hierarchy):
-    return _find_suite(suites, _normalize_node_hierarchy(hierarchy))
-
-
-def get_test_by_name(suite, test_name):
-    try:
-        return next(t for t in suite.get_tests() if t.name == test_name)
-    except StopIteration:
-        raise CannotFindTreeNode("Cannot find test named '%s'" % test_name)
-
-
-def _find_test(suites, hierarchy):
-    lookup_suite = _find_suite(suites, hierarchy[:-1])
-    return get_test_by_name(lookup_suite, hierarchy[-1])
-
-
 def find_test(suites, hierarchy):
-    return _find_test(suites, _normalize_node_hierarchy(hierarchy))
+    # type: (Sequence[BaseSuite], TreeNodeHierarchy) -> T
+
+    hierarchy = normalize_node_hierarchy(hierarchy)
+
+    suite = find_suite(suites, hierarchy[:-1])
+
+    try:
+        return next(t for t in suite.get_tests() if t.name == hierarchy[-1])
+    except StopIteration:
+        raise CannotFindTreeNode("Cannot find test named '%s'" % hierarchy[-1])

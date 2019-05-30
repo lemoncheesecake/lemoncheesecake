@@ -13,7 +13,8 @@ import calendar
 
 from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 from lemoncheesecake.helpers.time import humanize_duration
-from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, TreeLocation
+from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, \
+    normalize_node_hierarchy
 from lemoncheesecake.suite.core import Test
 
 _TEST_STATUSES = "passed", "failed", "skipped", "disabled"
@@ -257,6 +258,77 @@ def get_stats_from_suites(suites, parallelized):
     return stats
 
 
+class ReportLocation(object):
+    _TEST_SESSION_SETUP = 0
+    _TEST_SESSION_TEARDOWN = 1
+    _SUITE_SETUP = 2
+    _SUITE_TEARDOWN = 3
+    _TEST = 4
+
+    def __init__(self, node_type, node_hierarchy=None):
+        self.node_type = node_type
+        self.node_hierarchy = node_hierarchy
+
+    @classmethod
+    def in_test_session_setup(cls):
+        # type: () -> ReportLocation
+        return cls(cls._TEST_SESSION_SETUP)
+
+    @classmethod
+    def in_test_session_teardown(cls):
+        # type: () -> ReportLocation
+        return cls(cls._TEST_SESSION_TEARDOWN)
+
+    @classmethod
+    def in_suite_setup(cls, suite):
+        # type: (SuiteResult) -> ReportLocation
+        return cls(cls._SUITE_SETUP, normalize_node_hierarchy(suite))
+
+    @classmethod
+    def in_suite_teardown(cls, suite):
+        # type: (SuiteResult) -> ReportLocation
+        return cls(cls._SUITE_TEARDOWN, normalize_node_hierarchy(suite))
+
+    @classmethod
+    def in_test(cls, test):
+        # type: (TestResult) -> ReportLocation
+        return cls(cls._TEST, normalize_node_hierarchy(test))
+
+    def get(self, report):
+        # type: (Report) -> Union[Result, SuiteResult, TestResult]
+        if self.node_type == self._TEST_SESSION_SETUP:
+            return report.test_session_setup
+        elif self.node_type == self._TEST_SESSION_TEARDOWN:
+            return report.test_session_teardown
+        elif self.node_type == self._SUITE_SETUP:
+            suite = report.get_suite(self.node_hierarchy)
+            return suite.suite_setup
+        elif self.node_type == self._SUITE_TEARDOWN:
+            suite = report.get_suite(self.node_hierarchy)
+            return suite.suite_teardown
+        elif self.node_type == self._TEST:
+            return report.get_test(self.node_hierarchy)
+        else:
+            raise Exception("Unknown self type %s" % self.node_type)
+
+    def __eq__(self, other):
+        return all((
+            isinstance(other, ReportLocation),
+            self.node_type == other.node_type,
+            self.node_hierarchy == other.node_hierarchy
+        ))
+
+    def __hash__(self):
+        return hash((self.node_type, self.node_hierarchy))
+
+    def __str__(self):
+        ret = ""
+        if self.node_hierarchy:
+            ret += ".".join(self.node_hierarchy) + " "
+        ret += ("session setup", "session teardown", "suite setup", "suite teardown", "test")[self.node_type]
+        return "<%s>" % ret
+
+
 class Report:
     def __init__(self):
         self.info = []
@@ -268,11 +340,6 @@ class Report:
         self.report_generation_time = None  # type: Optional[float]
         self.title = _DEFAULT_REPORT_TITLE
         self.nb_threads = 1
-
-    @staticmethod
-    def _format_time(t):
-        lt = time.localtime(t)
-        return time.asctime(lt) + " " + time.strftime("%Z", lt)
 
     @property
     def duration(self):
@@ -310,21 +377,8 @@ class Report:
         return find_test(self._suites, hierarchy)
 
     def get(self, location):
-        # type: (TreeLocation) -> Union[Result, SuiteResult, TestResult]
-        if location.node_type == TreeLocation.TEST_SESSION_SETUP:
-            return self.test_session_setup
-        elif location.node_type == TreeLocation.TEST_SESSION_TEARDOWN:
-            return self.test_session_teardown
-        elif location.node_type == TreeLocation.SUITE_SETUP:
-            suite = self.get_suite(location.node_hierarchy)
-            return suite.suite_setup
-        elif location.node_type == TreeLocation.SUITE_TEARDOWN:
-            suite = self.get_suite(location.node_hierarchy)
-            return suite.suite_teardown
-        elif location.node_type == TreeLocation.TEST:
-            return self.get_test(location.node_hierarchy)
-        else:
-            raise Exception("Unknown location type %s" % location.node_type)
+        # type: (ReportLocation) -> Union[Result, SuiteResult, TestResult]
+        return location.get(self)
 
     def is_successful(self):
         # type: () -> bool

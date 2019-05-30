@@ -9,7 +9,7 @@ import pytest
 from lemoncheesecake.exceptions import *
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite import add_test_into_suite
-from lemoncheesecake.testtree import TreeLocation
+from lemoncheesecake.reporting.report import ReportLocation
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
 
 from helpers.runner import run_suite_class, run_suite_classes, run_suite, build_suite_from_module
@@ -439,7 +439,7 @@ def test_teardown_suite_error_because_of_exception():
     report = run_suite_class(MySuite)
 
     assert_test_passed(report)
-    assert_report_node_success(report, TreeLocation.in_suite_teardown("MySuite"), expected=False)
+    assert_report_node_success(report, ReportLocation.in_suite_teardown("MySuite"), expected=False)
 
 
 def test_teardown_suite_error_because_of_error_log():
@@ -455,7 +455,7 @@ def test_teardown_suite_error_because_of_error_log():
     report = run_suite_class(MySuite)
 
     assert_test_passed(report)
-    assert_report_node_success(report, TreeLocation.in_suite_teardown("MySuite"), expected=False)
+    assert_report_node_success(report, ReportLocation.in_suite_teardown("MySuite"), expected=False)
 
 
 def test_teardown_suite_error_because_of_fixture():
@@ -478,7 +478,7 @@ def test_teardown_suite_error_because_of_fixture():
     report = run_suite_class(MySuite, fixtures=[fix])
 
     assert_test_passed(report)
-    assert_report_node_success(report, TreeLocation.in_suite_teardown("MySuite"), expected=False)
+    assert_report_node_success(report, ReportLocation.in_suite_teardown("MySuite"), expected=False)
     assert len(marker) == 1
 
 
@@ -500,7 +500,7 @@ def test_setup_test_session_error_because_of_exception():
     report = run_suite_class(MySuite, fixtures=[fixt])
 
     assert_test_statuses(report, skipped=["MySuite.sometest", "MySuite.sometest_bis"])
-    assert_report_node_success(report, TreeLocation.in_test_session_setup(), expected=False)
+    assert_report_node_success(report, ReportLocation.in_test_session_setup(), expected=False)
 
 
 def test_setup_test_session_error_and_setup_suite():
@@ -522,7 +522,7 @@ def test_setup_test_session_error_and_setup_suite():
     report = run_suite_class(MySuite, fixtures=[fixt])
 
     assert_test_skipped(report)
-    assert_report_node_success(report, TreeLocation.in_test_session_setup(), expected=False)
+    assert_report_node_success(report, ReportLocation.in_test_session_setup(), expected=False)
     assert not marker
 
 
@@ -545,7 +545,7 @@ def test_teardown_test_session_error_because_of_exception():
     report = run_suite_class(MySuite, fixtures=[fix])
 
     assert_test_statuses(report, passed=["MySuite.sometest", "MySuite.sometest_bis"])
-    assert_report_node_success(report, TreeLocation.in_test_session_teardown(), expected=False)
+    assert_report_node_success(report, ReportLocation.in_test_session_teardown(), expected=False)
 
 
 def test_teardown_test_session_after_test_failure():
