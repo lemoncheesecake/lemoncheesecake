@@ -341,11 +341,6 @@ class Report:
         self.title = _DEFAULT_REPORT_TITLE
         self.nb_threads = 1
 
-    @staticmethod
-    def _format_time(t):
-        lt = time.localtime(t)
-        return time.asctime(lt) + " " + time.strftime("%Z", lt)
-
     @property
     def duration(self):
         # type: () -> float
