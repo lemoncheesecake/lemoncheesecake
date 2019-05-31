@@ -67,6 +67,7 @@ class IsBetween(Matcher):
 
 
 def is_between(min, max):
+    # type: (float, float) -> IsBetween
     """Test if value is between min and max"""
     return IsBetween(min, max)
 
@@ -94,6 +95,7 @@ class HasLength(Matcher):
 
 
 def has_length(length):
+    # type: (int) -> HasLength
     """Test if value has a length of"""
     return HasLength(is_(length))
 

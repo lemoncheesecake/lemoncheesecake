@@ -4,6 +4,8 @@ Created on Apr 1, 2017
 @author: nicolas
 '''
 
+from typing import Sequence, Any
+
 from lemoncheesecake.matching.base import Matcher, match_failure, match_success, got_value, to_have, serialize_value
 from lemoncheesecake.matching.matchers.composites import is_
 
@@ -13,6 +15,7 @@ class EntryMatcher(object):
         raise NotImplemented()
 
     def get_entry(self, actual):
+        # type: (dict) -> Any
         """Return the value of dict corresponding to entry matching or raise KeyError if entry is not found"""
         raise NotImplemented()
 
@@ -20,6 +23,7 @@ class EntryMatcher(object):
 class KeyPathMatcher(EntryMatcher):
     """Dict lookup through a list of key, each key represent a level of depth of the dict"""
     def __init__(self, path):
+        # type: (Sequence[str]) -> None
         self.path = path
 
     def build_description(self):

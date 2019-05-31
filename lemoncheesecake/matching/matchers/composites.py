@@ -4,7 +4,7 @@ Created on Mar 28, 2017
 @author: nicolas
 '''
 
-from typing import List
+from typing import List, Any
 
 from lemoncheesecake.matching.base import Matcher, match_success, match_failure, match_result, \
     got, got_value, to_be, merge_match_result_descriptions
@@ -70,6 +70,7 @@ class AllOf(Matcher):
 
 
 def all_of(*matchers):
+    # type: (Any) -> AllOf
     """Test if all matchers match (logical AND between matchers)."""
     return AllOf(list(map(is_, matchers)))
 
@@ -103,6 +104,7 @@ class AnyOf(Matcher):
 
 
 def any_of(*matchers):
+    # type: (Any) -> AnyOf
     """Test if at least one of the matcher match (logical OR between matchers)"""
     return AnyOf(list(map(is_, matchers)))
 
@@ -139,6 +141,7 @@ def present():
 
 
 def is_(matcher):
+    # type: (Any) -> Matcher
     """If the function argument is not an instance of Matcher, wrap it into
     a matcher using equal_to, otherwise return the matcher argument as-is"""
     from lemoncheesecake.matching.matchers.value import equal_to
@@ -159,5 +162,6 @@ class Not(Matcher):
 
 
 def not_(matcher):
+    # type: (Any) -> Matcher
     """Negates the matcher in argument"""
     return Not(is_(matcher))

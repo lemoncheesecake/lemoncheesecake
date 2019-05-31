@@ -4,11 +4,12 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
+from typing import Any
 import six
 
 from lemoncheesecake.session import log_check
 from lemoncheesecake.exceptions import AbortTest
-from lemoncheesecake.matching.base import Matcher
+from lemoncheesecake.matching.base import Matcher, MatchResult
 from lemoncheesecake.matching.matchers.dict_ import HasEntry, wrap_key_matcher
 from lemoncheesecake.matching.matchers.composites import is_
 
@@ -54,6 +55,8 @@ def _log_match_result(hint, matcher, result, quiet=False):
 
 
 def check_that(hint, actual, matcher, quiet=False):
+    # type: (str, Any, Matcher, bool) -> MatchResult
+
     """Check that actual matches given matcher.
 
     A check log is added to the report.
@@ -103,6 +106,8 @@ def assert_that_in(actual, *args, **kwargs):
 
 
 def require_that(hint, actual, matcher, quiet=False):
+    # type: (str, Any, Matcher, bool) -> MatchResult
+
     """Require that actual matches given matcher.
 
     A check log is added to the report. An AbortTest exception is raised if the check does not succeed.
@@ -120,6 +125,8 @@ def require_that(hint, actual, matcher, quiet=False):
 
 
 def assert_that(hint, actual, matcher, quiet=False):
+    # type: (str, Any, Matcher, bool) -> MatchResult
+
     """Assert that actual matches given matcher.
 
     If assertion fail, a check log is added to the report and an AbortTest exception is raised.

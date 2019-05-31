@@ -4,15 +4,18 @@ Created on May 2, 2017
 @author: nicolas
 '''
 
-from lemoncheesecake.matching.base import MatchExpected, MatchResult, match_failure, match_success, match_result, got_value, to_have, to_be, serialize_values
+from typing import Sequence, Any
+
+from lemoncheesecake.matching.base import MatchExpected, MatchResult, match_failure, match_success, match_result, \
+    got_value, to_have, to_be, serialize_values
 from lemoncheesecake.matching.matchers.composites import is_
 
 
 class HasItemMatchResult(MatchResult):
     def __init__(self, is_successful, description, index, item):
         MatchResult.__init__(self, is_successful, description)
-        self.item = item
-        self.index = index
+        self.item = item  # type: Any
+        self.index = index  # type: int
 
     @classmethod
     def success(cls, index, item):
@@ -39,7 +42,8 @@ class HasItem(MatchExpected):
 
 
 def has_item(expected):
-    "Test if iterable has item matching expected"
+    # type: (Any) -> HasItem
+    """Test if iterable has item matching expected"""
     return HasItem(is_(expected))
 
 
@@ -60,7 +64,8 @@ class HasValues(MatchExpected):
 
 
 def has_values(values):
-    "Test if iterable contains at least the given values"
+    # type: (Sequence) -> HasValues
+    """Test if iterable contains at least the given values"""
     return HasValues(values)
 
 
@@ -88,9 +93,10 @@ class HasOnlyValues(MatchExpected):
             return match_failure("; ".join(details))
 
 
-def has_only_values(values):
-    "Test if iterable only contains the given values"
-    return HasOnlyValues(values)
+def has_only_values(expected):
+    # type: (Sequence) -> HasOnlyValues
+    """Test if iterable only contains the given values"""
+    return HasOnlyValues(expected)
 
 
 class IsIn(MatchExpected):
@@ -102,4 +108,5 @@ class IsIn(MatchExpected):
 
 
 def is_in(expected):
+    # type: (Sequence) -> IsIn
     return IsIn(expected)

@@ -9,6 +9,7 @@ import re
 import difflib
 import json
 
+from typing import Any, Pattern, Union, Callable
 
 from lemoncheesecake.matching.base import MatchExpected, match_result, match_success, match_failure, got_value, to_be
 
@@ -23,9 +24,10 @@ class StartsWith(MatchExpected):
         return match_result(actual.startswith(self.expected), got_value(actual))
 
 
-def starts_with(s):
+def starts_with(expected):
+    # type: (str) -> StartsWith
     """Test if string begins with given prefix"""
-    return StartsWith(s)
+    return StartsWith(expected)
 
 
 class EndsWith(MatchExpected):
@@ -36,9 +38,10 @@ class EndsWith(MatchExpected):
         return match_result(actual.endswith(self.expected), got_value(actual))
 
 
-def ends_with(s):
+def ends_with(expected):
+    # type: (str) -> EndsWith
     """Test if string ends with given suffix"""
-    return EndsWith(s)
+    return EndsWith(expected)
 
 
 class ContainsString(MatchExpected):
@@ -49,9 +52,10 @@ class ContainsString(MatchExpected):
         return match_result(self.expected in actual, got_value(actual))
 
 
-def contains_string(s):
+def contains_string(expected):
+    # type: (str) -> ContainsString
     """Test if string contains sub string"""
-    return ContainsString(s)
+    return ContainsString(expected)
 
 
 class MatchPattern(MatchExpected):
@@ -79,6 +83,7 @@ class MatchPattern(MatchExpected):
 
 
 def match_pattern(pattern, description=None, mention_regexp=False):
+    # type: (Union[str, Pattern], str, bool) -> MatchPattern
     """Test if string matches given pattern (using the `search` method of the `re` module)"""
     return MatchPattern(
         pattern if type(pattern) == _REGEXP_TYPE else re.compile(pattern), description, mention_regexp
@@ -86,6 +91,7 @@ def match_pattern(pattern, description=None, mention_regexp=False):
 
 
 def make_pattern_matcher(pattern, description=None, mention_regexp=False):
+    # type: (Union[str, Pattern], str, bool) -> Callable[[], MatchPattern]
     def matcher():
         return match_pattern(pattern, description, mention_regexp)
     return matcher
@@ -117,6 +123,7 @@ class IsText(MatchExpected):
 
 
 def is_text(expected, linesep=os.linesep):
+    # type: (str, str) -> IsText
     return IsText(expected, linesep)
 
 
@@ -138,4 +145,5 @@ class IsJson(MatchExpected):
 
 
 def is_json(expected):
+    # type: (Any) -> IsJson
     return IsJson(expected)
