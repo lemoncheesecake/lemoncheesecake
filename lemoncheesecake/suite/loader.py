@@ -1,9 +1,3 @@
-'''
-Created on Feb 5, 2017
-
-@author: nicolas
-'''
-
 import os.path as osp
 import inspect
 
@@ -160,7 +154,7 @@ def load_suites_from_classes(classes):
 def load_suite_from_module(mod):
     # type: (Any) -> Suite
     """
-    Load a suite from a module.
+    Load a suite from a module object.
     """
     # TODO: find a better way to workaround circular import
     from lemoncheesecake.suite.definition import _get_metadata_next_rank
@@ -202,18 +196,37 @@ def load_suite_from_module(mod):
 def load_suite_from_file(filename):
     # type: (str) -> Suite
 
-    """Load a suite from a Python module indicated by a filename.
+    """
+    Load a suite from a Python module indicated by a filename.
 
     A valid module is either:
-    - a module containing a dict name 'SUITE' with keys:
-      - description (mandatory)
-      - tags (optional)
-      - properties (optional)
-      - links (optional)
-      - rank (optional)
-    - a module that contains a suite class with the same name as the module name
+      - a module containing a dict name 'SUITE' with keys:
+            - description (mandatory)
+            - tags (optional)
+            - properties (optional)
+            - links (optional)
+            - rank (optional)
 
-    Raise a ModuleImportError if the suite class cannot be imported.
+            Example::
+
+                SUITE = {
+                    "description": "Such a great test suite"
+                }
+                @lcc.test("Such a great test")
+                def my_test():
+                    pass
+
+      - a module that contains a suite class with the same name as the module name
+
+            Example::
+
+                @lcc.suite("Such a great test suite")
+                class my_suite:
+                    @lcc.test("Such a great test")
+                    def my_test():
+                        pass
+
+    Raise ModuleImportError if the suite class cannot be imported.
     """
     mod = import_module(filename)
 
@@ -234,12 +247,16 @@ def load_suites_from_files(patterns, excluding=()):
     # type: (Sequence[str], Sequence[str]) -> List[Suite]
 
     """
-    Load a list of suites from a list of files:
+    Load a list of suites from a list of files.
+
     :param patterns: a mandatory list (a simple string can also be used instead of a single element list)
       of files to import; the wildcard '*' character can be used
     :param exclude: an optional list (a simple string can also be used instead of a single element list)
       of elements to exclude from the expanded list of files to import
-    Example: load_suites_from_files("test_*.py")
+
+    Example::
+
+        load_suites_from_files("test_*.py")
     """
     suites = []
     for filename in get_matching_files(patterns, excluding):
@@ -253,12 +270,14 @@ def load_suites_from_files(patterns, excluding=()):
 def load_suites_from_directory(dir, recursive=True):
     # type: (str, bool) -> List[Suite]
 
-    """Load a list of suites from a directory.
+    """
+    Load a list of suites from a directory.
 
     The function expect that:
-    - each module (.py file) contains a class that inherits Suite
-    - the class name must have the same name as the module name (if the module is foo.py
-      the class must be named foo)
+      - each module (.py file) contains a class that inherits Suite
+      - the class name must have the same name as the module name (if the module is foo.py
+        the class must be named foo)
+
     If the recursive argument is set to True, sub suites will be searched in a directory named
     from the suite module: if the suite module is "foo.py" then the sub suites directory must be "foo".
 

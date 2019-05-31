@@ -18,4 +18,5 @@ Table of content
     parallelism
     cli
     project
+    api
     v1-migration-guide

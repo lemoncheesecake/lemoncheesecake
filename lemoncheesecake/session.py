@@ -118,8 +118,12 @@ def get_report():
 
 
 def set_step(description, detached=False):
+    # type: (str, bool) -> None
     """
     Set a new step.
+
+    :param description: the step description
+    :param detached: whether or not the step is "detached"
     """
     get_session().set_step(description, detached=detached)
 
@@ -133,6 +137,10 @@ def end_step(step):
 
 @contextmanager
 def detached_step(description):
+    """
+    Context manager. Like set_step, but ends the step at the end of the "with" block.
+    Intended to be use with code run through lcc.Thread.
+    """
     set_step(description, detached=True)
     try:
         yield
@@ -186,8 +194,8 @@ def _prepare_attachment(filename, description=None, as_image=False):
 
 def prepare_attachment(filename, description=None):
     """
-    Prepare a attachment using a pseudo filename and an optional description.
-    The function returns the real filename on disk that will be used by the caller
+    Context manager. Prepare a attachment using a pseudo filename and an optional description.
+    It returns the real filename on disk that will be used by the caller
     to write the attachment content.
     """
     return _prepare_attachment(filename, description)
@@ -195,7 +203,7 @@ def prepare_attachment(filename, description=None):
 
 def prepare_image_attachment(filename, description=None):
     """
-    Prepare an image attachment using a pseudo filename and an optional description.
+    Context manager. Prepare an image attachment using a pseudo filename and an optional description.
     The function returns the real filename on disk that will be used by the caller
     to write the attachment content.
     """
@@ -297,6 +305,10 @@ def is_session_successful():
 
 
 class Thread(threading.Thread):
+    """
+    Acts exactly as the standard threading.Thread class and must be used instead when running threads
+    within a test.
+    """
     def __init__(self, *args, **kwargs):
         super(Thread, self).__init__(*args, **kwargs)
         self.location = get_session().location

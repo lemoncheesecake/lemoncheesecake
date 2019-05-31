@@ -1,9 +1,3 @@
-'''
-Created on Sep 8, 2016
-
-@author: nicolas
-'''
-
 from typing import Optional
 
 import sys
@@ -53,6 +47,10 @@ class UnknownReportBackendError(LemoncheesecakeException):
 
 
 class AbortTest(LemoncheesecakeException):
+    """
+    Raising this exception will stop the currently running test.
+    """
+
     message_prefix = "The test has been aborted"
 
     def __init__(self, reason):
@@ -60,6 +58,9 @@ class AbortTest(LemoncheesecakeException):
 
 
 class AbortSuite(LemoncheesecakeException):
+    """
+    Raising this exception will stop the currently running suite.
+    """
     message_prefix = "The suite has been aborted"
 
     def __init__(self, reason):
@@ -67,6 +68,9 @@ class AbortSuite(LemoncheesecakeException):
 
 
 class AbortAllTests(LemoncheesecakeException):
+    """
+    Raising this exception will stop the currently running test and all the tests waiting to be run.
+    """
     message_prefix = "All tests have been aborted"
 
     def __init__(self, reason):
@@ -74,7 +78,13 @@ class AbortAllTests(LemoncheesecakeException):
 
 
 class UserError(LemoncheesecakeException):
-    pass
+    """
+    This exception is intended to be raised in pre-run and post-run phases of the project
+    to indicate that a required state has not been fulfilled.
+    """
+    # NB: sphinx requires the constructor to be overriden, otherwise it raises an error
+    def __init__(self, reason):
+        LemoncheesecakeException.__init__(self, reason)
 
 
 class InvalidReportFile(LemoncheesecakeException):

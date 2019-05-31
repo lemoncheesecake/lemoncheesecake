@@ -12,5 +12,5 @@ from lemoncheesecake.session import set_step, detached_step, end_step, log_debug
 from lemoncheesecake.fixture import fixture
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, UserError
 
-# for pydoc
+# for pydoc & sphinx
 __all__ = dir()

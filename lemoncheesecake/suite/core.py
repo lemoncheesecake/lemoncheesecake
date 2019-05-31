@@ -13,6 +13,9 @@ SUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
 
 
 class Test(BaseTest):
+    """
+    Internal representation of a test.
+    """
     def __init__(self, name, description, callback):
         BaseTest.__init__(self, name, description)
         self.callback = callback
@@ -38,6 +41,9 @@ class InjectedFixture:
 
 
 class Suite(BaseSuite):
+    """
+    Internal representation of a suite.
+    """
     def __init__(self, obj, name, description):
         BaseSuite.__init__(self, name, description)
         self.obj = obj

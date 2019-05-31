@@ -41,9 +41,10 @@ def add_test_into_suite(test, suite):
     """
     Add test into suite
 
-    :param test: a :py:class:`Test <lemoncheesecake.suite.core.Test` instance
-    :param suite: a suite decorated class instance (in that case the function must be called when the class is
-    instantiated) or a module marked as a suite (in that case the function must be called when the module is loaded)
+    :param test: a :py:class:`Test <lemoncheesecake.suite.core.Test>` instance
+    :param suite: a suite decorated class instance (in that case the function must be
+        called when the class is instantiated) or a module marked as a suite (in that case the function
+        must be called when the module is loaded)
     """
     if not hasattr(suite, "_lccgeneratedtests"):
         suite._lccgeneratedtests = []
@@ -149,7 +150,7 @@ def conditional(condition):
     Decorator, the test or suite will only appear if the given callable return a true value.
 
     :param condition: a callable that will take the test object if applied to a test or the suite class
-    instance if applied to a suite.
+        instance if applied to a suite.
     """
     def wrapper(obj):
         md = get_metadata(obj)

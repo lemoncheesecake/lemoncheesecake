@@ -1,11 +1,6 @@
-'''
-Created on Jan 7, 2017
-
-@author: nicolas
-'''
-
 import inspect
 from collections import OrderedDict
+from typing import List, Any, Sequence, Callable
 
 from lemoncheesecake.helpers.moduleimport import import_module, get_matching_files, get_py_files_from_dir
 from lemoncheesecake.exceptions import FixtureError, ProgrammingError
@@ -29,6 +24,12 @@ class _FixtureInfo:
 
 
 def fixture(names=None, scope="test"):
+    """
+    Decorator. Declare a function as a fixture.
+    :param names: an optional list of names that can be used to access the fixture value,
+        if no names are provided the decorated function name will be used
+    :param scope: the fixture scope, available scopes are: "test", "suite", "session", "pre_run"; default is "test"
+    """
     def wrapper(func):
         if scope not in _SCOPE_LEVELS.keys():
             raise ProgrammingError("Invalid fixture scope '%s' in fixture function '%s'" % (scope, func.__name__))
@@ -298,6 +299,10 @@ class FixtureRegistry:
 
 
 def load_fixtures_from_func(func):
+    # type: (Callable) -> List[Fixture]
+    """
+    Load a fixture from a function.
+    """
     assert hasattr(func, "_lccfixtureinfo")
     names = func._lccfixtureinfo.names
     if not names:
@@ -308,6 +313,10 @@ def load_fixtures_from_func(func):
 
 
 def load_fixtures_from_file(filename):
+    # type: (str) -> List[Fixture]
+    """
+    Load fixtures from a given file.
+    """
     mod = import_module(filename)
 
     fixtures = []
@@ -320,13 +329,18 @@ def load_fixtures_from_file(filename):
 
 
 def load_fixtures_from_files(patterns, excluding=[]):
+    # type: (Any[str, Sequence[str]], Any[str, Sequence[str]]) -> List[Fixture]
     """
-    Import fixtures from a list of files:
-    - patterns: a mandatory list (a simple string can also be used instead of a single element list)
-      of files to import; the wildcard '*' character can be used
-    - exclude: an optional list (a simple string can also be used instead of a single element list)
+    Load fixtures from files.
+
+    :param patterns: a mandatory list (a simple string can also be used instead of a single element list)
+        of files to import; the wildcard '*' character can be used
+    :param exclude: an optional list (a simple string can also be used instead of a single element list)
       of elements to exclude from the expanded list of files to import
-    Example: load_suites_from_files("test_*.py")
+
+    Example::
+
+        load_suites_from_files("test_*.py")
     """
     fixtures = []
     for file in get_matching_files(patterns, excluding):
@@ -335,6 +349,10 @@ def load_fixtures_from_files(patterns, excluding=[]):
 
 
 def load_fixtures_from_directory(dir):
+    # type: (str) -> List[Fixture]
+    """
+    Load fixtures from a given directory (not recursive).
+    """
     fixtures = []
     for file in get_py_files_from_dir(dir):
         fixtures.extend(load_fixtures_from_file(file))

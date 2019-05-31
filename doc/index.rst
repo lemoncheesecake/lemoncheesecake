@@ -122,6 +122,8 @@ Writing tests
 
 - :ref:`Migrating from to 0.22.x to 1.x <v1 migration guide>`
 
+- :ref:`API reference <api>`
+
 Contact
 -------
 

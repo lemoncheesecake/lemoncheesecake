@@ -26,26 +26,43 @@ DEFAULT_REPORTING_BACKENDS = ("console", "json", "html")
 
 class Project(object):
     def __init__(self, project_dir):
+        #: The project's directory path
         self.dir = project_dir  # type: str
+        #: The project's metadata policy
         self.metadata_policy = MetadataPolicy()
+        #: Indicates whether or not the project supports parallel execution of tests
         self.threaded = True  # type: bool
+        #: The reporting backends of the project as a dict (whose key is the reporting backend name)
         self.reporting_backends = {b.get_name(): b for b in get_reporting_backends()}  # type: Dict[str, ReportingBackend]
+        #: The list of default reporting backend (indicated by their name) that will be used by "lcc run"
         self.default_reporting_backend_names = list(DEFAULT_REPORTING_BACKENDS)
 
     def add_cli_args(self, cli_parser):
         # type: (argparse.ArgumentParser) -> None
+        """
+        Overridable. This method can be used to add extra CLI arguments to "lcc run".
+        """
         pass
 
     def create_report_dir(self):
         # type: () -> str
+        """
+        Overridable. Create the report directory when no report directory is specified to "lcc run".
+        """
         return create_report_dir_with_rotation(self.dir)
 
     def load_suites(self):
         # type: () -> Sequence[Suite]
+        """
+        Overridable. Load the project's suites.
+        """
         return load_suites_from_directory(osp.join(self.dir, "suites"))
 
     def load_fixtures(self):
         # type: () -> Sequence[Fixture]
+        """
+        Overridable. Load the project's fixtures.
+        """
         fixtures_dir = osp.join(self.dir, "fixtures")
         if osp.exists(fixtures_dir):
             return load_fixtures_from_directory(fixtures_dir)
@@ -54,18 +71,38 @@ class Project(object):
 
     def pre_run(self, cli_args, report_dir):
         # type: (Any, str) -> None
+        """
+        Overridable. This hook is called before running the tests.
+        """
         pass
 
     def post_run(self, cli_args, report_dir):
         # type: (Any, str) -> None
+        """
+        Overridable. This hook is called after running the tests.
+        """
         pass
 
     def build_report_title(self):
         # type: () -> Optional[str]
+        """
+        Overridable. Build a custom report title as a string.
+        """
         return None
 
     def build_report_info(self):
         # type: () -> Sequence[Tuple[str, str]]
+        """
+        Overridable. Build a list key/value pairs (expressed as a two items tuple)
+        that will be available in the report.
+
+        Example::
+
+            [
+                ("key1", "value1"),
+                ("key2", "value2")
+            ]
+        """
         return []
 
 

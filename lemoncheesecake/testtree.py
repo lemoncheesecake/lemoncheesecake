@@ -11,13 +11,22 @@ from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.exceptions import CannotFindTreeNode
 
 
+# Please note that attributes from base classes do not appear
+# in generated api documentation
+# (see https://github.com/sphinx-doc/sphinx/issues/741)
+
 class BaseTreeNode(object):
     def __init__(self, name, description):
         self.parent_suite = None
+        #: name
         self.name = name
+        #: description
         self.description = description
+        #: tags, as a list
         self.tags = []
+        #: properties, as a dict
         self.properties = {}
+        #: links, as a list
         self.links = []
 
     @property
@@ -33,7 +42,7 @@ class BaseTreeNode(object):
 
     @property
     def path(self):
-        return ".".join(s.name for s in self.hierarchy)
+        return ".".join(node.name for node in self.hierarchy)
 
     @property
     def hierarchy_paths(self):
