@@ -21,10 +21,6 @@ class _HasEntry(HasEntry):
         return ret
 
 
-def _is_matcher(obj):
-    return isinstance(obj, Matcher)
-
-
 def _build_matcher_for_dict_operation(key_matcher, value_matcher, base_key):
     return _HasEntry(
         wrap_key_matcher(key_matcher, base_key=base_key),
@@ -64,7 +60,7 @@ def check_that(hint, actual, matcher, quiet=False):
 
     If quiet is set to True, the check details won't appear in the check log.
     """
-    assert _is_matcher(matcher)
+    assert isinstance(matcher, Matcher)
 
     result = matcher.matches(actual)
     _log_match_result(hint, matcher, result, quiet=quiet)
@@ -76,7 +72,7 @@ def _do_that_in(func, actual, *args, **kwargs):
         raise TypeError("function expects an even number of *args")
 
     for value_matcher in args[1::2]:  # iterate over each odd element
-        assert value_matcher is None or _is_matcher(value_matcher)
+        assert value_matcher is None or isinstance(value_matcher, Matcher)
 
     base_key = kwargs.get("base_key", [])
     quiet = kwargs.get("quiet", False)
@@ -113,7 +109,7 @@ def require_that(hint, actual, matcher, quiet=False):
 
     If quiet is set to True, the check details won't appear in the check log.
     """
-    assert _is_matcher(matcher)
+    assert isinstance(matcher, Matcher)
 
     result = matcher.matches(actual)
     _log_match_result(hint, matcher, result, quiet=quiet)
@@ -130,7 +126,7 @@ def assert_that(hint, actual, matcher, quiet=False):
 
     If quiet is set to True, the check details won't appear in the check log.
     """
-    assert _is_matcher(matcher)
+    assert isinstance(matcher, Matcher)
 
     result = matcher.matches(actual)
     if result:
