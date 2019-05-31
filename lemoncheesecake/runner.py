@@ -531,11 +531,11 @@ def build_tasks(suites, fixture_registry, session_scheduled_fixtures):
     return tasks
 
 
-def run_session(suites, fixture_registry, prerun_session_scheduled_fixtures, event_manager,
+def run_session(suites, fixture_registry, pre_run_scheduled_fixtures, event_manager,
                 force_disabled=False, stop_on_failure=False, nb_threads=1):
     # build tasks and run context
     session_scheduled_fixtures = fixture_registry.get_fixtures_scheduled_for_session(
-        suites, prerun_session_scheduled_fixtures
+        suites, pre_run_scheduled_fixtures
     )
     tasks = build_tasks(suites, fixture_registry, session_scheduled_fixtures)
     context = RunContext(event_manager, fixture_registry, force_disabled, stop_on_failure)
