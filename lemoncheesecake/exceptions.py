@@ -4,12 +4,14 @@ Created on Sep 8, 2016
 @author: nicolas
 '''
 
+from typing import Optional
+
 import sys
 import traceback
 
 
 class LemonCheesecakeException(Exception):
-    message_prefix = None
+    message_prefix = None  # type: Optional[str]
 
     def __str__(self):
         s = Exception.__str__(self)

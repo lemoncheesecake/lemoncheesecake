@@ -295,7 +295,7 @@ class ReportLocation(object):
         return cls(cls._TEST, normalize_node_hierarchy(test))
 
     def get(self, report):
-        # type: (Report) -> Union[Result, SuiteResult, TestResult]
+        # type: (Report) -> Union[Result, SuiteResult, TestResult, None]
         if self.node_type == self._TEST_SESSION_SETUP:
             return report.test_session_setup
         elif self.node_type == self._TEST_SESSION_TEARDOWN:
@@ -343,7 +343,7 @@ class Report:
 
     @property
     def duration(self):
-        # type: () -> float
+        # type: () -> Optional[float]
         return _get_duration(self.start_time, self.end_time)
 
     @property
@@ -377,7 +377,7 @@ class Report:
         return find_test(self._suites, hierarchy)
 
     def get(self, location):
-        # type: (ReportLocation) -> Union[Result, SuiteResult, TestResult]
+        # type: (ReportLocation) -> Union[Result, SuiteResult, TestResult, None]
         return location.get(self)
 
     def is_successful(self):

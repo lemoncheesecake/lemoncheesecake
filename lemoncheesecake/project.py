@@ -81,13 +81,12 @@ def _find_file_in_parent_directories(filename, dirname):
 
 
 def find_project_file():
-    # type: () -> Any[str, None]
+    # type: () -> Optional[str]
     filename = os.environ.get("LCC_PROJECT_FILE")
     if filename is not None:
         return filename if osp.exists(filename) else None
 
-    filename = _find_file_in_parent_directories(PROJECT_CONFIG_FILE, os.getcwd())
-    return filename  # filename can be None
+    return _find_file_in_parent_directories(PROJECT_CONFIG_FILE, os.getcwd())
 
 
 def find_project_dir():
