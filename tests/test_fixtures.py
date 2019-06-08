@@ -186,7 +186,7 @@ def test_registry_fixture_missing_dependency():
 
     registry = FixtureRegistry()
     registry.add_fixtures(load_fixtures_from_func(bar))
-    with pytest.raises(exceptions.LemonCheesecakeException) as excinfo:
+    with pytest.raises(exceptions.LemoncheesecakeException) as excinfo:
         registry.check_dependencies()
     assert "does not exist" in str(excinfo.value)
 
@@ -203,7 +203,7 @@ def test_registry_fixture_circular_dependency_direct():
     registry = FixtureRegistry()
     registry.add_fixtures(load_fixtures_from_func(foo))
     registry.add_fixtures(load_fixtures_from_func(bar))
-    with pytest.raises(exceptions.LemonCheesecakeException) as excinfo:
+    with pytest.raises(exceptions.LemoncheesecakeException) as excinfo:
         registry.get_fixture_dependencies("foo")
     assert 'circular' in str(excinfo.value)
 
@@ -225,7 +225,7 @@ def test_registry_fixture_circular_dependency_indirect():
     registry.add_fixtures(load_fixtures_from_func(foo))
     registry.add_fixtures(load_fixtures_from_func(bar))
     registry.add_fixtures(load_fixtures_from_func(baz))
-    with pytest.raises(exceptions.LemonCheesecakeException) as excinfo:
+    with pytest.raises(exceptions.LemoncheesecakeException) as excinfo:
         registry.get_fixture_dependencies("foo")
     assert 'circular' in str(excinfo.value)
 
@@ -248,7 +248,7 @@ def test_registry_fixture_circular_dependency_indirect_2():
     registry.add_fixtures(load_fixtures_from_func(bar))
     registry.add_fixtures(load_fixtures_from_func(baz))
 
-    with pytest.raises(exceptions.LemonCheesecakeException) as excinfo:
+    with pytest.raises(exceptions.LemoncheesecakeException) as excinfo:
         registry.get_fixture_dependencies("foo")
     assert 'circular' in str(excinfo.value)
 
@@ -340,7 +340,7 @@ def test_registry_incompatible_scope():
     registry = FixtureRegistry()
     registry.add_fixtures(load_fixtures_from_func(foo))
     registry.add_fixtures(load_fixtures_from_func(bar))
-    with pytest.raises(exceptions.LemonCheesecakeException) as excinfo:
+    with pytest.raises(exceptions.LemoncheesecakeException) as excinfo:
         registry.check_dependencies()
     assert 'incompatible' in str(excinfo.value)
 

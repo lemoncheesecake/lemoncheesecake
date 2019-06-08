@@ -5,7 +5,7 @@ from typing import Iterable
 from lemoncheesecake.reporting import Report, Step, TestResult, SuiteResult, Log, Attachment, Url, Check, ReportLocation
 from lemoncheesecake import events
 from lemoncheesecake.events import BaseEventManager
-from lemoncheesecake.exceptions import LemonCheesecakeInternalError
+from lemoncheesecake.exceptions import LemoncheesecakeInternalError
 
 
 def _replay_step(location, step, eventmgr):
@@ -37,7 +37,7 @@ def _replay_step(location, step, eventmgr):
                 )
             )
         else:
-            raise LemonCheesecakeInternalError("Unknown step entry %s" % entry)
+            raise LemoncheesecakeInternalError("Unknown step entry %s" % entry)
 
 
 def _replay_steps_events(location, steps, eventmgr):
@@ -58,7 +58,7 @@ def _replay_test_events(test, eventmgr):
     elif test.status == "disabled":
         eventmgr.fire(events.TestDisabledEvent(test, test.status_details, test.start_time))
     else:
-        raise LemonCheesecakeInternalError("Unknown test status '%s'" % test.status)
+        raise LemoncheesecakeInternalError("Unknown test status '%s'" % test.status)
 
 
 def _replay_suite_events(suite, eventmgr):

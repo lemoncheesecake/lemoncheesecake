@@ -603,7 +603,7 @@ def test_pre_run_fixture_exception():
         def sometest(self, fix):
             pass
 
-    with pytest.raises(LemonCheesecakeException) as excinfo:
+    with pytest.raises(LemoncheesecakeException) as excinfo:
         report = run_suite_class(MySuite, fixtures=[fix])
         assert "Got an unexpected" in str(excinfo.value)
         assert_test_skipped(report)
@@ -620,7 +620,7 @@ def test_pre_run_fixture_user_error():
         def sometest(self, fix):
             pass
 
-    with pytest.raises(LemonCheesecakeException) as excinfo:
+    with pytest.raises(LemoncheesecakeException) as excinfo:
         report = run_suite_class(MySuite, fixtures=[fix])
         assert str(excinfo.value) == "some error"
         assert_test_skipped(report)
@@ -638,7 +638,7 @@ def test_pre_run_fixture_teardown_exception():
         def sometest(self, fix):
             pass
 
-    with pytest.raises(LemonCheesecakeException) as excinfo:
+    with pytest.raises(LemoncheesecakeException) as excinfo:
         report = run_suite_class(MySuite, fixtures=[fix])
         assert "Got an unexpected" in str(excinfo.value)
         assert_test_passed(report)
@@ -656,7 +656,7 @@ def test_pre_run_fixture_teardown_user_error():
         def sometest(self, fix):
             pass
 
-    with pytest.raises(LemonCheesecakeException) as excinfo:
+    with pytest.raises(LemoncheesecakeException) as excinfo:
         report = run_suite_class(MySuite, fixtures=[fix])
         assert str(excinfo.value) == "some error"
         assert_test_passed(report)

@@ -10,7 +10,7 @@ import sys
 import traceback
 
 
-class LemonCheesecakeException(Exception):
+class LemoncheesecakeException(Exception):
     message_prefix = None  # type: Optional[str]
 
     def __str__(self):
@@ -20,28 +20,28 @@ class LemonCheesecakeException(Exception):
         return s
 
 
-class LemonCheesecakeInternalError(LemonCheesecakeException):
+class LemoncheesecakeInternalError(LemoncheesecakeException):
     pass
-InternalError = LemonCheesecakeInternalError
+InternalError = LemoncheesecakeInternalError
 
 
-class ProgrammingError(LemonCheesecakeException):
-    pass
-
-
-class ProjectError(LemonCheesecakeException):
+class ProgrammingError(LemoncheesecakeException):
     pass
 
 
-class ModuleImportError(LemonCheesecakeException):
+class ProjectError(LemoncheesecakeException):
     pass
 
 
-class FixtureError(LemonCheesecakeException):
+class ModuleImportError(LemoncheesecakeException):
     pass
 
 
-class InvalidSuiteError(LemonCheesecakeException):
+class FixtureError(LemoncheesecakeException):
+    pass
+
+
+class InvalidSuiteError(LemoncheesecakeException):
     pass
 
 
@@ -49,56 +49,56 @@ class InvalidMetadataError(ProgrammingError):
     pass
 
 
-class VisibilityConditionNotMet(LemonCheesecakeException):
+class VisibilityConditionNotMet(LemoncheesecakeException):
     pass
 
 
-class UnknownReportBackendError(LemonCheesecakeException):
+class UnknownReportBackendError(LemoncheesecakeException):
     pass
 
 
-class AbortTest(LemonCheesecakeException):
+class AbortTest(LemoncheesecakeException):
     message_prefix = "The test has been aborted"
 
     def __init__(self, reason):
-        LemonCheesecakeException.__init__(self, reason)
+        LemoncheesecakeException.__init__(self, reason)
 
 
-class AbortSuite(LemonCheesecakeException):
+class AbortSuite(LemoncheesecakeException):
     message_prefix = "The suite has been aborted"
 
     def __init__(self, reason):
-        LemonCheesecakeException.__init__(self, reason)
+        LemoncheesecakeException.__init__(self, reason)
 
 
-class AbortAllTests(LemonCheesecakeException):
+class AbortAllTests(LemoncheesecakeException):
     message_prefix = "All tests have been aborted"
 
     def __init__(self, reason):
-        LemonCheesecakeException.__init__(self, reason)
+        LemoncheesecakeException.__init__(self, reason)
 
 
-class UserError(LemonCheesecakeException):
+class UserError(LemoncheesecakeException):
     pass
 
 
-class InvalidReportFile(LemonCheesecakeException):
+class InvalidReportFile(LemoncheesecakeException):
     pass
 
 
-class CannotFindTreeNode(LemonCheesecakeException):
+class CannotFindTreeNode(LemoncheesecakeException):
     pass
 
 
-class TaskFailure(LemonCheesecakeException):
+class TaskFailure(LemoncheesecakeException):
     pass
 
 
-class TasksExecutionFailure(LemonCheesecakeException):
+class TasksExecutionFailure(LemoncheesecakeException):
     pass
 
 
-class CircularDependencyError(LemonCheesecakeException):
+class CircularDependencyError(LemoncheesecakeException):
     pass
 
 

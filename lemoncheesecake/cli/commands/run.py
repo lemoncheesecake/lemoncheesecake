@@ -8,7 +8,7 @@ import os
 
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import load_suites_from_project
-from lemoncheesecake.exceptions import LemonCheesecakeException, ProgrammingError, UserError, \
+from lemoncheesecake.exceptions import LemoncheesecakeException, ProgrammingError, UserError, \
     serialize_current_exception
 from lemoncheesecake.filter import add_run_filter_cli_args, make_run_filter
 from lemoncheesecake.fixture import FixtureRegistry, BuiltinFixture
@@ -35,7 +35,7 @@ def get_nb_threads(cli_args):
         try:
             return max(int(os.environ["LCC_THREADS"]), 1)
         except ValueError:
-            raise LemonCheesecakeException(
+            raise LemoncheesecakeException(
                 "Invalid value '%s' for $LCC_THREADS environment variable (expect integer)" % os.environ["LCC_THREADS"]
             )
     else:
@@ -48,7 +48,7 @@ def get_report_saving_strategy(cli_args):
     try:
         return make_report_saving_strategy(saving_strategy_expression)
     except ValueError:
-        raise LemonCheesecakeException("Invalid expression '%s' for report saving strategy" % saving_strategy_expression)
+        raise LemoncheesecakeException("Invalid expression '%s' for report saving strategy" % saving_strategy_expression)
 
 
 class ReportSetupHandler(object):
@@ -67,7 +67,7 @@ class ReportSetupHandler(object):
 def run_project(project, cli_args):
     nb_threads = get_nb_threads(cli_args)
     if nb_threads > 1 and not project.threaded:
-        raise LemonCheesecakeException("Project does not support multi-threading")
+        raise LemoncheesecakeException("Project does not support multi-threading")
 
     suites = load_suites_from_project(project, make_run_filter(cli_args))
 
@@ -81,9 +81,9 @@ def run_project(project, cli_args):
         try:
             backend = project.reporting_backends[backend_name]
         except KeyError:
-            raise LemonCheesecakeException("Unknown reporting backend '%s'" % backend_name)
+            raise LemoncheesecakeException("Unknown reporting backend '%s'" % backend_name)
         if not isinstance(backend, ReportingSessionBuilderMixin):
-            raise LemonCheesecakeException("Reporting backend '%s' is not suitable for test run" % backend_name)
+            raise LemoncheesecakeException("Reporting backend '%s' is not suitable for test run" % backend_name)
         reporting_backends.append(backend)
 
     # Get report save mode
@@ -95,14 +95,14 @@ def run_project(project, cli_args):
         try:
             os.mkdir(report_dir)
         except Exception as e:
-            return LemonCheesecakeException("Cannot create report directory: %s" % e)
+            return LemoncheesecakeException("Cannot create report directory: %s" % e)
     else:
         try:
             report_dir = project.create_report_dir()
         except UserError as e:
             raise e
         except Exception:
-            raise LemonCheesecakeException(
+            raise LemoncheesecakeException(
                 "Got an unexpected exception while creating report directory:%s" % \
                 serialize_current_exception(show_stacktrace=True)
             )
