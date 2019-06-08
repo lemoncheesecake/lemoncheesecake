@@ -7,6 +7,8 @@ Created on Feb 5, 2017
 import os.path as osp
 import inspect
 
+from typing import Sequence, Any, List
+
 from lemoncheesecake.helpers.moduleimport import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
 from lemoncheesecake.helpers.introspection import get_object_attributes
 from lemoncheesecake.exceptions import UserError, ProgrammingError, ModuleImportError, InvalidMetadataError, \
@@ -74,7 +76,8 @@ def _get_test_symbols(obj, filter_func):
         filter(
             filter_func, (attr for _, attr in get_object_attributes(obj))
         ),
-        key=lambda sym: sym._lccmetadata.rank)
+        key=lambda sym: sym._lccmetadata.rank
+    )
 
 
 def _get_test_methods_from_class(obj):
@@ -98,6 +101,10 @@ def _get_generated_tests(obj):
 
 
 def load_suite_from_class(class_):
+    # type: (Any) -> Suite
+    """
+    Load a suite from a class.
+    """
     try:
         md = class_._lccmetadata
     except AttributeError:
@@ -137,6 +144,10 @@ def load_suite_from_class(class_):
 
 
 def load_suites_from_classes(classes):
+    # type: (Sequence[Any]) -> List[Suite]
+    """
+    Load a list of suites from a list of classes.
+    """
     suites = []
     for class_ in classes:
         try:
@@ -147,6 +158,10 @@ def load_suites_from_classes(classes):
 
 
 def load_suite_from_module(mod):
+    # type: (Any) -> Suite
+    """
+    Load a suite from a module.
+    """
     # TODO: find a better way to workaround circular import
     from lemoncheesecake.suite.definition import _get_metadata_next_rank
 
@@ -185,7 +200,9 @@ def load_suite_from_module(mod):
 
 
 def load_suite_from_file(filename):
-    """Get suite from Python module.
+    # type: (str) -> Suite
+
+    """Load a suite from a Python module indicated by a filename.
 
     A valid module is either:
     - a module containing a dict name 'SUITE' with keys:
@@ -213,12 +230,14 @@ def load_suite_from_file(filename):
     return suite
 
 
-def load_suites_from_files(patterns, excluding=[]):
+def load_suites_from_files(patterns, excluding=()):
+    # type: (Sequence[str], Sequence[str]) -> List[Suite]
+
     """
-    Import suites from a list of files:
-    - patterns: a mandatory list (a simple string can also be used instead of a single element list)
+    Load a list of suites from a list of files:
+    :param patterns: a mandatory list (a simple string can also be used instead of a single element list)
       of files to import; the wildcard '*' character can be used
-    - exclude: an optional list (a simple string can also be used instead of a single element list)
+    :param exclude: an optional list (a simple string can also be used instead of a single element list)
       of elements to exclude from the expanded list of files to import
     Example: load_suites_from_files("test_*.py")
     """
@@ -232,7 +251,9 @@ def load_suites_from_files(patterns, excluding=[]):
 
 
 def load_suites_from_directory(dir, recursive=True):
-    """Find suite classes in modules found in dir.
+    # type: (str, bool) -> List[Suite]
+
+    """Load a list of suites from a directory.
 
     The function expect that:
     - each module (.py file) contains a class that inherits Suite
