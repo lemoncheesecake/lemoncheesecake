@@ -87,6 +87,7 @@ In ``Matcher`` class:
 The ``lemoncheesecake.api`` module no longer exports the matching API, use ``from lemoncheesecake.matching import *`` as
 it was/is documented.
 
+
 Fixtures
 ^^^^^^^^
 
@@ -102,12 +103,20 @@ The ``binary_mode`` argument of the ``save_attachment_content`` function has bee
 is now automatically determined upon the type of data passed as argument.
 
 
+Misc
+^^^^
+
+The ``add_test_in_suite`` and ``add_tests_in_suite`` functions have been removed.
+Use ``add_test_into_suite`` instead.
+
+
 Reporting
 ---------
 
 The HTML report now use static resources (also named "fat") by default, meaning the report can be be read offline
 for instance. In other words: the ``offline_mode`` attribute of the class ``lemoncheesecake.reporting.backends.HtmlBackend``
 has been renamed into ``fat_html`` and is now set to ``True`` by default.
+
 
 CLI
 ---

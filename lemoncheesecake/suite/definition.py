@@ -37,7 +37,7 @@ def _get_metadata_next_rank():
 
 
 def add_test_into_suite(test, suite):
-    # type: (Test, Suite) -> None
+    # type: (Test, Any) -> None
     """
     Add test into suite
 
@@ -47,26 +47,9 @@ def add_test_into_suite(test, suite):
     """
     if not hasattr(suite, "_lccgeneratedtests"):
         suite._lccgeneratedtests = []
-    suite._lccgeneratedtests.append(test)
-
-
-def add_test_in_suite(test, suite, before_test=None, after_test=None):
-    """
-    backward-compatibility function: use add_test_into_suite instead
-    before_test and after_test arguments are simply ignored
-    """
-    if not test.rank:
+    if test.rank is None:
         test.rank = _get_metadata_next_rank()
-    add_test_into_suite(test, suite)
-
-
-def add_tests_in_suite(tests, suite, before_test=None, after_test=None):
-    """
-    backward-compatibility function: loop over tests and use add_test_into_suite instead
-    before_test and after_test arguments are simply ignored
-    """
-    for test in tests:
-        add_test_into_suite(test, suite)
+    suite._lccgeneratedtests.append(test)
 
 
 _objects_with_metadata = []
