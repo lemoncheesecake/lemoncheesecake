@@ -20,11 +20,6 @@ class LemoncheesecakeException(Exception):
         return s
 
 
-class LemoncheesecakeInternalError(LemoncheesecakeException):
-    pass
-InternalError = LemoncheesecakeInternalError
-
-
 class ProgrammingError(LemoncheesecakeException):
     pass
 

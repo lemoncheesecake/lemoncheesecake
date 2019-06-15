@@ -13,7 +13,6 @@ from typing import Optional
 
 import six
 
-from lemoncheesecake.exceptions import LemoncheesecakeInternalError
 from lemoncheesecake.consts import ATTACHEMENT_DIR, \
     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
 from lemoncheesecake.reporting import Report
@@ -106,7 +105,7 @@ class Session(object):
 def get_session():
     # type: () -> Session
     if not _session:
-        raise LemoncheesecakeInternalError("Runtime is not initialized")
+        raise ProgrammingError("Runtime is not initialized")
     return _session
 
 
@@ -114,7 +113,7 @@ def get_report():
     # type: () -> Report
     report = get_session().report
     if not report:
-        raise LemoncheesecakeInternalError("Report is not (yet) accessible")
+        raise ProgrammingError("Report is not available")
     return report
 
 
