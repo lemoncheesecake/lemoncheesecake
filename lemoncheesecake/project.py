@@ -13,7 +13,7 @@ from typing import Any, Dict, Optional, Sequence, Tuple
 
 from lemoncheesecake.suite import load_suites_from_directory, Suite
 from lemoncheesecake.fixture import load_fixtures_from_directory, Fixture
-from lemoncheesecake.validators import MetadataPolicy
+from lemoncheesecake.metadatapolicy import MetadataPolicy
 from lemoncheesecake.reporting import get_reporting_backends, ReportingBackend
 from lemoncheesecake.reporting.reportdir import create_report_dir_with_rotation
 from lemoncheesecake.exceptions import ProjectError, UserError, serialize_current_exception

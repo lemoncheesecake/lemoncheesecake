@@ -8,7 +8,7 @@ import pytest
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite import load_suite_from_class
-from lemoncheesecake.validators import MetadataPolicy
+from lemoncheesecake.metadatapolicy import MetadataPolicy
 from lemoncheesecake.exceptions import InvalidMetadataError
 
 

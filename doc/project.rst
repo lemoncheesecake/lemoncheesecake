@@ -191,4 +191,4 @@ and suites while forbidding the usage of any other tag::
     )
     project.disallow_unknown_tags()
 
-See ``lemoncheesecake.validators.MetadataPolicy`` for more information.
+See ``lemoncheesecake.metadatapolicy.MetadataPolicy`` for more information.

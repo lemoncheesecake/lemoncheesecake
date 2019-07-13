@@ -6,7 +6,7 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.suite.loader import load_suites_from_directory, load_suite_from_file, \
     load_suite_from_class, load_suites_from_files, load_suites_from_classes, _load_test_from_function, \
     _load_test_from_method
-from lemoncheesecake.validators import MetadataPolicy
+from lemoncheesecake.metadatapolicy import MetadataPolicy
 from lemoncheesecake.exceptions import *
 
 from helpers.runner import build_test_module
