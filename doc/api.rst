@@ -24,6 +24,7 @@ Tests and suites declaration
     :members:
     :inherited-members:
 
+
 Logging
 -------
 
@@ -116,6 +117,7 @@ This is the class that must be used / inherited in your ``project.py`` file
         add_cli_args, create_report_dir, load_suites, load_fixtures, pre_run, post_run, build_report_title,
         build_report_info
 
+
 All the functions that can be used to load suites within a project file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -128,6 +130,7 @@ All the functions that can be used to load suites within a project file
 .. autofunction:: load_suites_from_classes
 .. autofunction:: load_suite_from_class
 
+
 All the functions that can be used to load fixtures within a project file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -138,6 +141,14 @@ All the functions that can be used to load fixtures within a project file
 .. autofunction:: load_fixtures_from_file
 .. autofunction:: load_fixtures_from_func
 
+
+Metadata Policy
+~~~~~~~~~~~~~~~
+
+.. module:: lemoncheesecake.metadatapolicy
+
+.. autoclass:: MetadataPolicy
+    :members: add_property_rule, disallow_unknown_properties, add_tag_rule, disallow_unknown_tags
 
 Exceptions
 ----------
