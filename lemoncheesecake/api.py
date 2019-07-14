@@ -13,4 +13,4 @@ from lemoncheesecake.fixture import fixture
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, UserError
 
 # for pydoc & sphinx
-__all__ = dir()
+__all__ = [sym_name for sym_name in dir() if not sym_name.startswith("_")]

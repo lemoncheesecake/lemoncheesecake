@@ -4,4 +4,4 @@ from .operations import check_that, require_that, assert_that, check_that_in, re
 DISPLAY_DETAILS_WHEN_EQUAL = True
 
 # for pydoc & sphinx
-__all__ = dir()
+__all__ = [sym_name for sym_name in dir() if not sym_name.startswith("_")]
