@@ -14,7 +14,7 @@ Tests and suites declaration
 .. autofunction:: prop
 .. autofunction:: link
 .. autofunction:: disabled
-.. autofunction:: conditional
+.. autofunction:: visible_if
 .. autofunction:: hidden
 .. autofunction:: depends_on
 .. autofunction:: inject_fixture

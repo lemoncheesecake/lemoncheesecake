@@ -145,7 +145,7 @@ def disabled():
     return wrapper
 
 
-def conditional(condition):
+def visible_if(condition):
     """
     Decorator, the test or suite will only appear if the given callable return a true value.
 
@@ -161,7 +161,7 @@ def conditional(condition):
 
 def hidden():
     """Decorator, the test or suite won't be visible in the resulting test tree."""
-    return conditional(lambda _: False)
+    return visible_if(lambda _: False)
 
 
 def depends_on(*deps):

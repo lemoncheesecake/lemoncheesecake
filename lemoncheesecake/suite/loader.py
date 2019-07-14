@@ -160,7 +160,7 @@ def load_suite_from_module(mod):
     from lemoncheesecake.suite.definition import _get_metadata_next_rank
 
     suite_info = getattr(mod, "SUITE")
-    suite_condition = suite_info.get("conditional")
+    suite_condition = suite_info.get("visible_if")
     if suite_condition is not None and not suite_condition(mod):
         raise VisibilityConditionNotMet()
 

@@ -179,11 +179,11 @@ If you want to completely hide a test or a suite from the test tree and the repo
 Conditional tests and suites
 ----------------------------
 
-A test or an entire suite can included or excluded from the test tree using the ``@lcc.conditional(condition)`` decorator.
+A test or an entire suite can included or excluded from the test tree using the ``@lcc.visible_if(condition)`` decorator.
 
-This decorator can be associated to both tests and suites, it takes a callback as argument. This callback will
+This decorator can be associated to both tests and suites, it takes a callable as argument. This callable will
 be called with the object to which it is associated (a module, a class or a function).
-If the callback return a non-true value, then the test/suite
+If the callable return a non-true value, then the test/suite
 won't be included in the test tree, meaning it won't be executed, it won't be present in the test report nor in the
 ``lcc show`` command output.
 
@@ -194,7 +194,7 @@ Usage::
         some_feature_enabled = True
 
         @lcc.test("Test something")
-        @lcc.conditional(lambda test: mysuite.some_feature_enabled)
+        @lcc.visible_if(lambda test: mysuite.some_feature_enabled)
         def test_something(self):
             pass
 

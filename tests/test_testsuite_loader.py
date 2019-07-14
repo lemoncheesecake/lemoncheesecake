@@ -226,7 +226,7 @@ def test_metadata_policy():
 
 def test_load_suites_from_classes_with_condition_on_suite_met():
     @lcc.suite("My Suite")
-    @lcc.conditional(lambda suite_arg: suite_arg.__class__ == MySuite)
+    @lcc.visible_if(lambda suite_arg: suite_arg.__class__ == MySuite)
     class MySuite:
         @lcc.test("My Test")
         def mytest(self):
@@ -239,7 +239,7 @@ def test_load_suites_from_classes_with_condition_on_suite_met():
 
 def test_load_suites_from_classes_with_condition_on_suite_not_met():
     @lcc.suite("My Suite")
-    @lcc.conditional(lambda suite_arg: suite_arg.__class__ != MySuite)
+    @lcc.visible_if(lambda suite_arg: suite_arg.__class__ != MySuite)
     class MySuite:
         @lcc.test("My Test")
         def mytest(self):
@@ -254,7 +254,7 @@ def test_load_suites_from_classes_with_condition_on_test_met():
     @lcc.suite("My Suite")
     class MySuite:
         @lcc.test("My Test")
-        @lcc.conditional(lambda test_arg: six.get_method_function(test_arg) == six.get_unbound_function((MySuite.mytest)))
+        @lcc.visible_if(lambda test_arg: six.get_method_function(test_arg) == six.get_unbound_function((MySuite.mytest)))
         def mytest(self):
             pass
 
@@ -267,7 +267,7 @@ def test_load_suites_from_classes_with_condition_on_test_not_met():
     @lcc.suite("My Suite")
     class MySuite:
         @lcc.test("My Test")
-        @lcc.conditional(lambda test_arg: six.get_method_function(test_arg) != six.get_unbound_function(MySuite.mytest))
+        @lcc.visible_if(lambda test_arg: six.get_method_function(test_arg) != six.get_unbound_function(MySuite.mytest))
         def mytest(self):
             pass
 
@@ -514,7 +514,7 @@ import sys
 
 SUITE = {
     "description": "My Suite",
-    "conditional": lambda mod: mod == sys.modules[__name__]
+    "visible_if": lambda mod: mod == sys.modules[__name__]
 }
 
 @lcc.test('My Test')
@@ -533,7 +533,7 @@ import sys
 
 SUITE = {
     "description": "My Suite",
-    "conditional": lambda mod: mod != sys.modules[__name__]
+    "visible_if": lambda mod: mod != sys.modules[__name__]
 }
 
 @lcc.test('My Test')
@@ -554,7 +554,7 @@ SUITE = {
 }
 
 @lcc.test('My Test')
-@lcc.conditional(lambda test_arg: test_arg == mytest)
+@lcc.visible_if(lambda test_arg: test_arg == mytest)
 def mytest():
     pass
 """)
@@ -572,7 +572,7 @@ SUITE = {
 }
 
 @lcc.test('My Test')
-@lcc.conditional(lambda test_arg: test_arg != mytest)
+@lcc.visible_if(lambda test_arg: test_arg != mytest)
 def mytest():
     pass
 """)

@@ -63,6 +63,14 @@ Here is what have been changed:
 Also see :ref:`Project customization <project>` for more information.
 
 
+Test and suite declaration
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``add_test_in_suite`` and ``add_tests_in_suite`` functions have been removed.
+Use ``add_test_into_suite`` instead.
+
+The ``@lcc.conditional(...)`` decorator has been renamed into ``@lcc.visible_if(...)``.
+
 Matchers
 ^^^^^^^^
 
@@ -105,9 +113,6 @@ is now automatically determined upon the type of data passed as argument.
 
 Misc
 ^^^^
-
-The ``add_test_in_suite`` and ``add_tests_in_suite`` functions have been removed.
-Use ``add_test_into_suite`` instead.
 
 The ``lemoncheesecake.validators`` module, that holds the ``MetadataPolicy`` class, has been renamed into
 ``lemoncheesecake.metadatapolicy``.
