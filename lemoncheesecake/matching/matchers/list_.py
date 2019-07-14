@@ -43,7 +43,7 @@ class HasItem(MatchExpected):
 
 def has_item(expected):
     # type: (Any) -> HasItem
-    """Test if iterable has item matching expected"""
+    """Test if the sequence has item matching expected"""
     return HasItem(is_(expected))
 
 
@@ -65,7 +65,7 @@ class HasValues(MatchExpected):
 
 def has_values(values):
     # type: (Sequence) -> HasValues
-    """Test if iterable contains at least the given values"""
+    """Test if the sequence contains at least the given values"""
     return HasValues(values)
 
 
@@ -95,7 +95,7 @@ class HasOnlyValues(MatchExpected):
 
 def has_only_values(expected):
     # type: (Sequence) -> HasOnlyValues
-    """Test if iterable only contains the given values"""
+    """Test if the sequence only contains the given values"""
     return HasOnlyValues(expected)
 
 
@@ -109,4 +109,5 @@ class IsIn(MatchExpected):
 
 def is_in(expected):
     # type: (Sequence) -> IsIn
+    """Test if the sequence contains the expected item"""
     return IsIn(expected)

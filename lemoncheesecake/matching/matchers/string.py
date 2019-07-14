@@ -124,6 +124,11 @@ class IsText(MatchExpected):
 
 def is_text(expected, linesep=os.linesep):
     # type: (str, str) -> IsText
+    """
+    Test if the two multi-lines texts match.
+
+    If the two values do not match, the match result description will be a diff between the two texts.
+    """
     return IsText(expected, linesep)
 
 
@@ -146,4 +151,10 @@ class IsJson(MatchExpected):
 
 def is_json(expected):
     # type: (Any) -> IsJson
+    """
+    Test if the two data structures (that can be represented as JSON) match.
+
+    If the two values do not match, the match result description will be a textual diff between the two JSON
+    representations.
+    """
     return IsJson(expected)
