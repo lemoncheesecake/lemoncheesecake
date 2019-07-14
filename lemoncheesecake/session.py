@@ -174,9 +174,6 @@ def log_warning(content):
     get_session().log(LOG_LEVEL_WARN, content)
 
 
-log_warn = log_warning
-
-
 def log_error(content):
     """
     Log an error level message.

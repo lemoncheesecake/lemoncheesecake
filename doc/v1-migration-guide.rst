@@ -71,6 +71,13 @@ Use ``add_test_into_suite`` instead.
 
 The ``@lcc.conditional(...)`` decorator has been renamed into ``@lcc.visible_if(...)``.
 
+
+Logging
+^^^^^^^
+
+The ``log_warn`` function from ``lemoncheesecake.api`` has been removed, use ``log_warning`` instead.
+
+
 Matchers
 ^^^^^^^^
 

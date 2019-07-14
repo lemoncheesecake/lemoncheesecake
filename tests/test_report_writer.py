@@ -225,7 +225,7 @@ def test_all_types_of_logs():
         def test_1(self):
             lcc.log_debug("some debug message")
             lcc.log_info("some info message")
-            lcc.log_warn("some warning message")
+            lcc.log_warning("some warning message")
 
         @lcc.test("Test 2")
         def test_2(self):
