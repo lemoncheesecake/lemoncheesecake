@@ -89,7 +89,7 @@ class A:
         @lcc.test("<h1>html escaping</h1>")
         def html_escaping(self):
             lcc.set_step("<h1>step description</h1>")
-            lcc.check_that("<h1>value</h1>", "<h1>actual</h1>", equal_to("<h1>expected</h1>"))
+            check_that("<h1>value</h1>", "<h1>actual</h1>", equal_to("<h1>expected</h1>"))
             lcc.log_info("<h1>some log</h1>")
             lcc.save_attachment_content("content", "filename", "<h1>attachment</h1>")
     
