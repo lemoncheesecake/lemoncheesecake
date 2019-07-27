@@ -135,9 +135,3 @@ def got_value(value):
 
 def got_values(values):
     return got(serialize_values(values))
-
-
-def merge_match_result_descriptions(results):
-    return ", ".join(
-        OrderedSet([result.description for result in results if result.description])
-    )

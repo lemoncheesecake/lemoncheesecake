@@ -6,8 +6,9 @@ Created on Mar 28, 2017
 
 from typing import List, Any
 
+from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.matching.base import Matcher, match_success, match_failure, match_result, \
-    got, got_value, merge_match_result_descriptions, VerbTransformation
+    got, got_value, VerbTransformation
 
 
 def _make_item(content, prefix="- "):
@@ -100,7 +101,11 @@ class AnyOf(Matcher):
                 return match
             results.append(match)
 
-        return match_failure(merge_match_result_descriptions(results))
+        return match_failure(
+            ", ".join(
+                OrderedSet(result.description for result in results if result.description)
+            )
+        )
 
 
 def any_of(*matchers):
