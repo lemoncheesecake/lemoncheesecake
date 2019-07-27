@@ -84,8 +84,8 @@ Matchers
 .. autofunction:: is_text
 .. autofunction:: is_json
 .. autofunction:: has_item
-.. autofunction:: has_values
-.. autofunction:: has_only_values
+.. autofunction:: has_items
+.. autofunction:: has_only_items
 .. autofunction:: is_in
 .. autofunction:: has_entry
 .. autofunction:: is_integer

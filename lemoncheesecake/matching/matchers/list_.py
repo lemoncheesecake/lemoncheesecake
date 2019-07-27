@@ -51,9 +51,9 @@ def has_item(expected):
     return HasItem(is_(expected))
 
 
-class HasValues(MatchExpected):
+class HasItems(MatchExpected):
     def build_description(self, transformation):
-        return transformation("to have values %s" % serialize_values(self.expected))
+        return transformation("to have items %s" % serialize_values(self.expected))
 
     def matches(self, actual):
         missing = []
@@ -62,20 +62,20 @@ class HasValues(MatchExpected):
                 missing.append(expected)
 
         if missing:
-            return match_failure("Missing values: %s" % serialize_values(missing))
+            return match_failure("Missing items: %s" % serialize_values(missing))
         else:
             return match_success(got_value(actual))
 
 
-def has_values(values):
-    # type: (Sequence) -> HasValues
+def has_items(values):
+    # type: (Sequence) -> HasItems
     """Test if the sequence contains at least the given values"""
-    return HasValues(values)
+    return HasItems(values)
 
 
-class HasOnlyValues(MatchExpected):
+class HasOnlyItems(MatchExpected):
     def build_description(self, transformation):
-        return transformation("to have only values %s" % serialize_values(self.expected))
+        return transformation("to have only items %s" % serialize_values(self.expected))
 
     def matches(self, actual):
         expected = list(self.expected)
@@ -91,16 +91,16 @@ class HasOnlyValues(MatchExpected):
         else:
             details = []
             if len(expected) > 0:
-                details.append("Missing values: %s" % serialize_values(expected))
+                details.append("Missing items: %s" % serialize_values(expected))
             if len(extra) > 0:
-                details.append("Extra values: %s" % serialize_values(extra))
+                details.append("Extra items: %s" % serialize_values(extra))
             return match_failure("; ".join(details))
 
 
-def has_only_values(expected):
-    # type: (Sequence) -> HasOnlyValues
+def has_only_items(expected):
+    # type: (Sequence) -> HasOnlyItems
     """Test if the sequence only contains the given values"""
-    return HasOnlyValues(expected)
+    return HasOnlyItems(expected)
 
 
 class IsIn(MatchExpected):

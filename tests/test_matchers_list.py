@@ -15,24 +15,24 @@ def test_has_item_failure():
     assert result.item is None
 
 
-def test_has_values_success():
-    assert_match_success(has_values([1, 2]), [1, 2, 3], "got")
+def test_has_items_success():
+    assert_match_success(has_items([1, 2]), [1, 2, 3], "got")
 
 
-def test_has_values_failure():
-    assert_match_failure(has_values([1, 2]), [1, 3], ["Missing", "2"])
+def test_has_items_failure():
+    assert_match_failure(has_items([1, 2]), [1, 3], ["Missing", "2"])
 
 
-def test_has_only_values_success():
-    assert_match_success(has_only_values([3, 1, 2]), [1, 2, 3], "got")
+def test_has_only_items_success():
+    assert_match_success(has_only_items([3, 1, 2]), [1, 2, 3], "got")
 
 
-def test_has_only_values_failure_missing():
-    assert_match_failure(has_only_values([1, 2, 3]), [1, 3], ["Missing", "2"])
+def test_has_only_items_failure_missing():
+    assert_match_failure(has_only_items([1, 2, 3]), [1, 3], ["Missing", "2"])
 
 
-def test_has_only_values_extra_missing():
-    assert_match_failure(has_only_values([1, 2, 3]), [4, 1, 2, 3], ["Extra", "4"])
+def test_has_only_items_extra_missing():
+    assert_match_failure(has_only_items([1, 2, 3]), [4, 1, 2, 3], ["Extra", "4"])
 
 
 def test_is_in_success():

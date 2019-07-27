@@ -3,7 +3,7 @@
 V1 migration guide
 ==================
 
-This page lists all the non-compatible changes between 0.22.x and 1.x versions of lemoncheesecake and how
+This page lists all the non-compatible changes between 0.22.x and 1.x versions of lemoncheesecake and tell how
 to migrate.
 
 API
@@ -92,6 +92,12 @@ The following functions have been removed:
 - ``assert_that_entry``
 
 The corresponding ``check_that_in``, ``require_that_in`` and ``assert_that_in`` functions must be used instead.
+
+The following matchers have been renamed:
+
+- ``has_values`` => ``has_items``
+
+- ``has_only_values`` => ``has_only_items``
 
 In ``Matcher`` class:
 

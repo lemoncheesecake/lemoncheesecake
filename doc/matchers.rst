@@ -66,14 +66,14 @@ The following stock matchers are available:
 
 - Iterable:
 
-  - ``has_item(expected)``: check is actual iterable has an element that matches expected (expected can be a value
+  - ``has_item(expected)``: check if the actual iterable has an item that matches expected (expected can be a value
     or a Matcher)
 
-  - ``has_values(expected)``: check is actual iterable contains **at least** the expected values
+  - ``has_items(expected)``: check if the actual iterable contains **at least** the expected items
 
-  - ``has_only_values(expected)``: check if actual iterable **only contains** the expected values
+  - ``has_only_items(expected)``: check if the actual iterable **only contains** the expected items
 
-  - ``is_in(expected)``: check if actual value **is among** the expected values
+  - ``is_in(expected)``: check if actual is **among** the expected items
 
 - Dict:
 

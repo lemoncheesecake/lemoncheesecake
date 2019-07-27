@@ -25,8 +25,8 @@ class A:
     def this_is_a_test(self, fixt1, fixt9):
         lcc.set_step("Test list matchers")
         check_that("my list", [1, 2], has_length(3))
-        check_that("my other list", [1, 2, 3], has_values((1, 4)))
-        check_that("param", ("foo", "baz"), has_values(("bar", )))
+        check_that("my other list", [1, 2, 3], has_items((1, 4)))
+        check_that("param", ("foo", "baz"), has_items(("bar",)))
         check_that("param", "foo", is_in(("foo", "bar")))
         check_that("param", "baz", is_in(("foo", "bar")))
 

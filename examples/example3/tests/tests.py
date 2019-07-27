@@ -35,9 +35,9 @@ def test():
 
     check_that("value", 1, is_integer(not_(equal_to(0))))
 
-    check_that("list", [3, 1, 2], has_values([1, 2 ,3, 4]))
+    check_that("list", [3, 1, 2], has_items([1, 2 , 3, 4]))
 
-    check_that("list", [3, 1, 2], has_only_values([1, 2]))
+    check_that("list", [3, 1, 2], has_only_items([1, 2]))
 
     check_that("list", [3, 1, 2], has_length(equal_to(3)))
 
