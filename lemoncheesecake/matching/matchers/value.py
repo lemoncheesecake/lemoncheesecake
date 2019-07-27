@@ -5,8 +5,7 @@ Created on Mar 27, 2017
 '''
 
 from lemoncheesecake.matching.base import (
-    MatchExpected, Matcher, match_result, match_success, match_failure,
-    got_value, serialize_value, VerbTransformation
+    MatchExpected, Matcher, MatchResult, got_value, serialize_value, VerbTransformation
 )
 from lemoncheesecake.matching.matchers.composites import is_
 from lemoncheesecake.matching.matchers.types_ import is_bool
@@ -20,9 +19,9 @@ class EqualTo(MatchExpected):
         from lemoncheesecake.matching import DISPLAY_DETAILS_WHEN_EQUAL
 
         if actual == self.expected:
-            return match_success(got_value(actual)) if DISPLAY_DETAILS_WHEN_EQUAL else match_success()
+            return MatchResult.success(got_value(actual)) if DISPLAY_DETAILS_WHEN_EQUAL else MatchResult.success()
         else:
-            return match_failure(got_value(actual))
+            return MatchResult.failure(got_value(actual))
 
 
 def equal_to(expected):
@@ -37,7 +36,7 @@ def _comparator(comparison_description, comparison_func):
                 return transformation("to be %s %s" % (comparison_description, serialize_value(self.expected)))
 
             def matches(self, actual):
-                return match_result(comparison_func(actual, self.expected), got_value(actual))
+                return MatchResult(comparison_func(actual, self.expected), got_value(actual))
 
         return _Comparator(expected)
 
@@ -63,7 +62,7 @@ class IsBetween(Matcher):
         return transformation("to be between %s and %s" % (self.min, self.max))
 
     def matches(self, actual):
-        return match_result(self.min <= actual <= self.max, got_value(actual))
+        return MatchResult(self.min <= actual <= self.max, got_value(actual))
 
 
 def is_between(min, max):

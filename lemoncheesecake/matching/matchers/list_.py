@@ -6,7 +6,7 @@ Created on May 2, 2017
 
 from typing import Sequence, Any
 
-from lemoncheesecake.matching.base import MatchExpected, MatchResult, match_failure, match_success, match_result, \
+from lemoncheesecake.matching.base import MatchExpected, MatchResult, \
     got_value, serialize_values, VerbTransformation
 from lemoncheesecake.matching.matchers.composites import is_
 
@@ -18,11 +18,11 @@ class HasItemMatchResult(MatchResult):
         self.index = index  # type: int
 
     @classmethod
-    def success(cls, index, item):
+    def found(cls, index, item):
         return cls(True, "found matching item at index %d" % index, index, item)
 
     @classmethod
-    def failure(cls):
+    def not_found(cls):
         return cls(False, "no matching item", -1, None)
 
 
@@ -40,9 +40,9 @@ class HasItem(MatchExpected):
     def matches(self, actual):
         for index, item in enumerate(actual):
             result = self.expected.matches(item)
-            if result.is_success():
-                return HasItemMatchResult.success(index, item)
-        return HasItemMatchResult.failure()
+            if result:
+                return HasItemMatchResult.found(index, item)
+        return HasItemMatchResult.not_found()
 
 
 def has_item(expected):
@@ -62,9 +62,9 @@ class HasItems(MatchExpected):
                 missing.append(expected)
 
         if missing:
-            return match_failure("Missing items: %s" % serialize_values(missing))
+            return MatchResult.failure("Missing items: %s" % serialize_values(missing))
         else:
-            return match_success(got_value(actual))
+            return MatchResult.success(got_value(actual))
 
 
 def has_items(values):
@@ -87,14 +87,14 @@ class HasOnlyItems(MatchExpected):
                 extra.append(value)
 
         if len(expected) == 0 and len(extra) == 0:
-            return match_success(got_value(actual))
+            return MatchResult.success(got_value(actual))
         else:
             details = []
             if len(expected) > 0:
                 details.append("Missing items: %s" % serialize_values(expected))
             if len(extra) > 0:
                 details.append("Extra items: %s" % serialize_values(extra))
-            return match_failure("; ".join(details))
+            return MatchResult.failure("; ".join(details))
 
 
 def has_only_items(expected):
@@ -108,7 +108,7 @@ class IsIn(MatchExpected):
         return transformation("to be in %s" % serialize_values(self.expected))
 
     def matches(self, actual):
-        return match_result(actual in self.expected, got_value(actual))
+        return MatchResult(actual in self.expected, got_value(actual))
 
 
 def is_in(expected):

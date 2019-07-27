@@ -11,7 +11,7 @@ import json
 
 from typing import Any, Pattern, Union, Callable
 
-from lemoncheesecake.matching.base import MatchExpected, match_result, match_success, match_failure, got_value
+from lemoncheesecake.matching.base import MatchExpected, MatchResult, got_value
 
 _REGEXP_TYPE = type(re.compile(r"dummy"))
 
@@ -21,7 +21,7 @@ class StartsWith(MatchExpected):
         return transformation('to start with "%s"' % self.expected)
 
     def matches(self, actual):
-        return match_result(actual.startswith(self.expected), got_value(actual))
+        return MatchResult(actual.startswith(self.expected), got_value(actual))
 
 
 def starts_with(expected):
@@ -35,7 +35,7 @@ class EndsWith(MatchExpected):
         return transformation('to end with "%s"' % self.expected)
 
     def matches(self, actual):
-        return match_result(actual.endswith(self.expected), got_value(actual))
+        return MatchResult(actual.endswith(self.expected), got_value(actual))
 
 
 def ends_with(expected):
@@ -49,7 +49,7 @@ class ContainsString(MatchExpected):
         return transformation('to contain "%s"' % self.expected)
 
     def matches(self, actual):
-        return match_result(self.expected in actual, got_value(actual))
+        return MatchResult(self.expected in actual, got_value(actual))
 
 
 def contains_string(expected):
@@ -78,8 +78,8 @@ class MatchPattern(MatchExpected):
         try:
             match = self.expected.search(actual)
         except TypeError:
-            return match_failure("Invalid value %s (%s)" % (repr(actual), type(actual)))
-        return match_result(match is not None, got_value(actual))
+            return MatchResult.failure("Invalid value %s (%s)" % (repr(actual), type(actual)))
+        return MatchResult(match is not None, got_value(actual))
 
 
 def match_pattern(pattern, description=None, mention_regexp=False):
@@ -115,9 +115,9 @@ class IsText(MatchExpected):
 
     def matches(self, actual):
         if actual == self.expected:
-            return match_success()
+            return MatchResult.success()
         else:
-            return match_failure(
+            return MatchResult.failure(
                 "Text does not match:\n%s" % _diff_text(self.expected, actual, self.linesep)
             )
 
@@ -142,9 +142,9 @@ class IsJson(MatchExpected):
 
     def matches(self, actual):
         if actual == self.expected:
-            return match_success()
+            return MatchResult.success()
         else:
-            return match_failure(
+            return MatchResult.failure(
                 "JSON does not match:\n%s" % _diff_text(_format_json(self.expected), _format_json(actual), "\n")
             )
 

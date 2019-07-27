@@ -6,8 +6,7 @@ Created on Apr 1, 2017
 
 from typing import Sequence, Any
 
-from lemoncheesecake.matching.base import Matcher, match_failure, match_success, got_value, serialize_value, \
-    VerbTransformation
+from lemoncheesecake.matching.base import Matcher, MatchResult, got_value, serialize_value, VerbTransformation
 from lemoncheesecake.matching.matchers.composites import is_
 
 
@@ -70,12 +69,12 @@ class HasEntry(Matcher):
         try:
             value = self.key_matcher.get_entry(actual)
         except KeyError:
-            return match_failure('No entry %s' % self.key_matcher.build_description())
+            return MatchResult.failure('No entry %s' % self.key_matcher.build_description())
 
         if self.value_matcher:
             return self.value_matcher.matches(value)
         else:
-            return match_success(got_value(value))
+            return MatchResult.success(got_value(value))
 
 
 def has_entry(key_matcher, value_matcher=None):

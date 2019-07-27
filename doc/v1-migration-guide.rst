@@ -112,6 +112,17 @@ In ``Matcher`` class:
     def build_description(self, transformation):
         return transformation("to be equal to 42")
 
+In the ``Matcher.matches`` method from ``lemoncheesecake.matching.base``, three functions could be used to build
+the match result: ``match_result``, ``match_success``, ``match_failure``.
+It has been changed to use the ``MatchResult`` class directly:
+
+- ``match_result`` => ``MatchResult``
+
+- ``match_success`` => ``MatchResult.success``
+
+- ``match_failure`` => ``MatchResult.failure``
+
+
 The ``lemoncheesecake.api`` module no longer exports the matching API, use ``from lemoncheesecake.matching import *`` as
 it was/is documented.
 

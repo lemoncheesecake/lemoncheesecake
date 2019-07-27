@@ -7,9 +7,6 @@ Created on Mar 27, 2017
 import json
 import re
 
-from lemoncheesecake.helpers.orderedset import OrderedSet
-
-
 CONJUGATION_FORMS = {
     re.compile(r"^(to be)"): ("is", "is not", "to not be"),
     re.compile(r"^(to have)"): ("has", "has not", "to have no"),
@@ -69,33 +66,23 @@ class VerbTransformation(object):
 
 
 class MatchResult(object):
-    def __init__(self, is_successful, description):
+    def __init__(self, is_successful, description=None):
         self.is_successful = is_successful
         self.description = description
+
+    @classmethod
+    def success(cls, description=None):
+        return cls(True, description)
+
+    @classmethod
+    def failure(cls, description=None):
+        return cls(False, description)
 
     def __bool__(self):
         return self.is_successful
 
     def __nonzero__(self):
         return self.__bool__()
-
-    def is_success(self):
-        return self.is_successful is True
-
-    def is_failure(self):
-        return self.is_successful is False
-
-
-def match_success(description=None):
-    return MatchResult(True, description)
-
-
-def match_failure(description):
-    return MatchResult(False, description)
-
-
-def match_result(is_successful, description=None):
-    return MatchResult(is_successful, description)
 
 
 class Matcher(object):

@@ -7,8 +7,7 @@ Created on Mar 28, 2017
 from typing import List, Any
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
-from lemoncheesecake.matching.base import Matcher, match_success, match_failure, match_result, \
-    got, got_value, VerbTransformation
+from lemoncheesecake.matching.base import Matcher, MatchResult, got, got_value, VerbTransformation
 
 
 def _make_item(content, prefix="- "):
@@ -27,7 +26,7 @@ def _make_items(items, prefix="- ", relationship="and"):
 
 
 def _serialize_sub_matcher_result(matcher, result):
-    content = "%s => %s" % (matcher.build_short_description(VerbTransformation()), "OK" if result.is_success() else "KO")
+    content = "%s => %s" % (matcher.build_short_description(VerbTransformation()), "OK" if result else "KO")
     if result.description is not None:
         content += ", %s" % result.description
     return content
@@ -56,7 +55,7 @@ class AllOf(Matcher):
         for matcher in self.matchers:
             result = matcher.matches(actual)
             results.append((matcher, result))
-            if result.is_failure():
+            if not result:
                 is_success = False
                 break
 
@@ -67,7 +66,7 @@ class AllOf(Matcher):
             ], relationship="and")
         )
 
-        return match_result(is_success, match_details)
+        return MatchResult(is_success, match_details)
 
 
 def all_of(*matchers):
@@ -97,11 +96,11 @@ class AnyOf(Matcher):
         results = []
         for matcher in self.matchers:
             match = matcher.matches(actual)
-            if match.is_success():
+            if match:
                 return match
             results.append(match)
 
-        return match_failure(
+        return MatchResult.failure(
             ", ".join(
                 OrderedSet(result.description for result in results if result.description)
             )
@@ -115,14 +114,14 @@ def any_of(*matchers):
 
 
 class Anything(Matcher):
-    def __init__(self, wording="anything"):
+    def __init__(self, wording="to be anything"):
         self.wording = wording
 
     def build_description(self, transformation):
         return transformation(self.wording)
 
     def matches(self, actual):
-        return match_success(got_value(actual))
+        return MatchResult.success(got_value(actual))
 
 
 def anything():
@@ -164,7 +163,7 @@ class Not(Matcher):
 
     def matches(self, actual):
         result = self.matcher.matches(actual)
-        return match_result(not result.is_successful, result.description)
+        return MatchResult(not result, result.description)
 
 
 def not_(matcher):
