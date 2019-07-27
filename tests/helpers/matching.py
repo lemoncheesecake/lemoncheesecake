@@ -1,8 +1,11 @@
+from lemoncheesecake.matching.base import VerbTransformation
+
+
 def assert_match_result(matcher, actual, expected_is_successful, expected_details):
     result_details_lst = expected_details if type(expected_details) in (list, tuple) else [expected_details]
 
     # for now, do nothing with the result, but at least make sure that the function does not raise:
-    description = matcher.build_description()
+    description = matcher.build_description(VerbTransformation())
 
     result = matcher.matches(actual)
 

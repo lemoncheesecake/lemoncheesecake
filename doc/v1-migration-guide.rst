@@ -99,6 +99,13 @@ In ``Matcher`` class:
 
 - the ``short_description`` method has been renamed into ``build_short_description``
 
+- the ``conjugate`` argument of the ``build_description`` and ``build_short_description`` methods has been replaced by
+  a ``transformation`` argument which is callable that will transform the verb used in the matcher description depending
+  on the context, example::
+
+    def build_description(self, transformation):
+        return transformation("to be equal to 42")
+
 The ``lemoncheesecake.api`` module no longer exports the matching API, use ``from lemoncheesecake.matching import *`` as
 it was/is documented.
 

@@ -4,6 +4,7 @@ import re
 
 from helpers.matching import assert_match_success, assert_match_failure
 
+from lemoncheesecake.matching.base import VerbTransformation
 from lemoncheesecake.matching.matchers import *
 from lemoncheesecake.matching.matchers.string import make_pattern_matcher
 
@@ -46,25 +47,25 @@ def test_match_pattern_with_pattern_success():
 
 
 def test_match_pattern_description_default():
-    description = match_pattern(r"^\d+$").build_description()
+    description = match_pattern(r"^\d+$").build_description(VerbTransformation())
     assert r"^\d+$" in description
 
 
 def test_match_pattern_description_description():
-    description = match_pattern(r"^\d+$", "a number").build_description()
+    description = match_pattern(r"^\d+$", "a number").build_description(VerbTransformation())
     assert "a number" in description
     assert r"^\d+$" not in description
 
 
 def test_match_pattern_description_description_and_mention_regexp():
-    description = match_pattern(r"^\d+$", "a number", mention_regexp=True).build_description()
+    description = match_pattern(r"^\d+$", "a number", mention_regexp=True).build_description(VerbTransformation())
     assert "a number" in description
     assert r"^\d+$" in description
 
 
 def test_make_pattern_matcher():
     matcher = make_pattern_matcher(r"^\d+$", "a number", mention_regexp=True)
-    description = matcher().build_description()
+    description = matcher().build_description(VerbTransformation())
     assert "a number" in description
     assert r"^\d+$" in description
     assert_match_success(matcher(), "42", "42")

@@ -11,14 +11,14 @@ import json
 
 from typing import Any, Pattern, Union, Callable
 
-from lemoncheesecake.matching.base import MatchExpected, match_result, match_success, match_failure, got_value, to_be
+from lemoncheesecake.matching.base import MatchExpected, match_result, match_success, match_failure, got_value
 
 _REGEXP_TYPE = type(re.compile(r"dummy"))
 
 
 class StartsWith(MatchExpected):
-    def build_description(self, conjugate=False):
-        return '%s with "%s"' % ("starts" if conjugate else "to start", self.expected)
+    def build_description(self, transformation):
+        return transformation('to start with "%s"' % self.expected)
 
     def matches(self, actual):
         return match_result(actual.startswith(self.expected), got_value(actual))
@@ -31,8 +31,8 @@ def starts_with(expected):
 
 
 class EndsWith(MatchExpected):
-    def build_description(self, conjugate=False):
-        return '%s with "%s"' % ("ends" if conjugate else "to end", self.expected)
+    def build_description(self, transformation):
+        return transformation('to end with "%s"' % self.expected)
 
     def matches(self, actual):
         return match_result(actual.endswith(self.expected), got_value(actual))
@@ -45,8 +45,8 @@ def ends_with(expected):
 
 
 class ContainsString(MatchExpected):
-    def build_description(self, conjugate=False):
-        return '%s "%s"' % ("contains" if conjugate else "to contain", self.expected)
+    def build_description(self, transformation):
+        return transformation('to contain "%s"' % self.expected)
 
     def matches(self, actual):
         return match_result(self.expected in actual, got_value(actual))
@@ -65,14 +65,14 @@ class MatchPattern(MatchExpected):
         self._description = description
         self._mention_regexp = mention_regexp
 
-    def build_description(self, conjugate=False):
+    def build_description(self, transformation):
         if self._description:
-            desc = "%s %s" % (to_be(conjugate), self._description)
+            desc = transformation("to be %s" % self._description)
             if self._mention_regexp:
                 desc += ' (pattern: "%s")' % self.expected.pattern
             return desc
         else:
-            return '%s "%s"' % ("matches pattern" if conjugate else "to match pattern", self.expected.pattern)
+            return transformation('to match pattern "%s"' % self.expected.pattern)
 
     def matches(self, actual):
         try:
@@ -110,8 +110,8 @@ class IsText(MatchExpected):
         MatchExpected.__init__(self, expected)
         self.linesep = linesep
 
-    def build_description(self, conjugate=False):
-        return "%s the text:\n<<<\n%s\n>>>\n" % (to_be(conjugate), self.expected)
+    def build_description(self, transformation):
+        return transformation("to be the text:\n<<<\n%s\n>>>\n" % self.expected)
 
     def matches(self, actual):
         if actual == self.expected:
@@ -137,8 +137,8 @@ def _format_json(data):
 
 
 class IsJson(MatchExpected):
-    def build_description(self, conjugate=False):
-        return "%s JSON:\n%s\n" % (to_be(conjugate), _format_json(self.expected))
+    def build_description(self, transformation):
+        return transformation("to be the JSON:\n%s\n" % _format_json(self.expected))
 
     def matches(self, actual):
         if actual == self.expected:

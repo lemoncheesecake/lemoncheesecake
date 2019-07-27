@@ -7,7 +7,8 @@ Created on Apr 3, 2017
 import six
 from typing import List, Any
 
-from lemoncheesecake.matching.base import Matcher, match_success, match_failure, got, serialize_value, got_value, to_be
+from lemoncheesecake.matching.base import Matcher, match_success, match_failure, got, serialize_value, got_value, \
+    VerbTransformation
 from lemoncheesecake.matching.matchers.value import is_
 
 _TYPE_NAMES = {
@@ -28,10 +29,10 @@ class IsValueOfType(Matcher):
         self.type_name = type_name
         self.value_matcher = value_matcher
 
-    def build_description(self, conjugate=False):
-        ret = "%s %s" % (to_be(conjugate), self.type_name)
+    def build_description(self, transformation):
+        ret = transformation("to be %s" % self.type_name)
         if self.value_matcher:
-            ret += " that %s" % self.value_matcher.build_description(conjugate=True)
+            ret += " that %s" % self.value_matcher.build_description(VerbTransformation(conjugate=True))
 
         return ret
 

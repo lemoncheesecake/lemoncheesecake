@@ -6,15 +6,15 @@ Created on Mar 27, 2017
 
 from lemoncheesecake.matching.base import (
     MatchExpected, Matcher, match_result, match_success, match_failure,
-    got_value, serialize_value, to_be, to_have
+    got_value, serialize_value, VerbTransformation
 )
 from lemoncheesecake.matching.matchers.composites import is_
 from lemoncheesecake.matching.matchers.types_ import is_bool
 
 
 class EqualTo(MatchExpected):
-    def build_description(self, conjugate=False):
-        return "%s equal to %s" % (to_be(conjugate), serialize_value(self.expected))
+    def build_description(self, transformation):
+        return transformation("to be equal to %s" % serialize_value(self.expected))
 
     def matches(self, actual):
         from lemoncheesecake.matching import DISPLAY_DETAILS_WHEN_EQUAL
@@ -33,8 +33,8 @@ def equal_to(expected):
 def _comparator(comparison_description, comparison_func):
     def wrapper(expected):
         class _Comparator(MatchExpected):
-            def build_description(self, conjugate=False):
-                return "%s %s %s" % (to_be(conjugate), comparison_description, serialize_value(self.expected))
+            def build_description(self, transformation):
+                return transformation("to be %s %s" % (comparison_description, serialize_value(self.expected)))
 
             def matches(self, actual):
                 return match_result(comparison_func(actual, self.expected), got_value(actual))
@@ -59,8 +59,8 @@ class IsBetween(Matcher):
         self.min = min
         self.max = max
 
-    def build_description(self, conjugate=False):
-        return "%s between %s and %s" % (to_be(conjugate), self.min, self.max)
+    def build_description(self, transformation):
+        return transformation("to be between %s and %s" % (self.min, self.max))
 
     def matches(self, actual):
         return match_result(self.min <= actual <= self.max, got_value(actual))
@@ -87,8 +87,10 @@ class HasLength(Matcher):
         # type: (Matcher) -> None
         self.matcher = matcher
 
-    def build_description(self, conjugate=False):
-        return "%s a length that %s" % (to_have(conjugate), self.matcher.build_description(conjugate=True))
+    def build_description(self, transformation):
+        return transformation(
+            "to have a length that %s" % (self.matcher.build_description(VerbTransformation(conjugate=True)))
+        )
 
     def matches(self, actual):
         return self.matcher.matches(len(actual))

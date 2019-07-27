@@ -9,16 +9,16 @@ import six
 
 from lemoncheesecake.session import log_check
 from lemoncheesecake.exceptions import AbortTest
-from lemoncheesecake.matching.base import Matcher, MatchResult
+from lemoncheesecake.matching.base import Matcher, MatchResult, VerbTransformation
 from lemoncheesecake.matching.matchers.dict_ import HasEntry, wrap_key_matcher
 from lemoncheesecake.matching.matchers.composites import is_
 
 
 class _HasEntry(HasEntry):
-    def build_description(self, _=False):
+    def build_description(self, _):
         ret = self.key_matcher.build_description()
         if self.value_matcher:
-            ret += " " + self.value_matcher.build_description()
+            ret += " " + self.value_matcher.build_description(VerbTransformation())
         return ret
 
 
@@ -45,9 +45,9 @@ def _log_match_result(hint, matcher, result, quiet=False):
     If quiet is set to True, the check details won't appear in the check log.
     """
     if hint is not None:
-        description = "Expect %s %s" % (hint, matcher.build_description())
+        description = "Expect %s %s" % (hint, matcher.build_description(VerbTransformation()))
     else:
-        description = "Expect %s" % matcher.build_description()
+        description = "Expect %s" % matcher.build_description(VerbTransformation())
 
     return log_check(
         description, result.is_successful, _format_result_details(result.description) if not quiet else None

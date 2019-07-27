@@ -7,7 +7,7 @@ Created on Mar 28, 2017
 from typing import List, Any
 
 from lemoncheesecake.matching.base import Matcher, match_success, match_failure, match_result, \
-    got, got_value, to_be, merge_match_result_descriptions
+    got, got_value, merge_match_result_descriptions, VerbTransformation
 
 
 def _make_item(content, prefix="- "):
@@ -26,7 +26,7 @@ def _make_items(items, prefix="- ", relationship="and"):
 
 
 def _serialize_sub_matcher_result(matcher, result):
-    content = "%s => %s" % (matcher.build_short_description(conjugate=True), "OK" if result.is_success() else "KO")
+    content = "%s => %s" % (matcher.build_short_description(VerbTransformation()), "OK" if result.is_success() else "KO")
     if result.description is not None:
         content += ", %s" % result.description
     return content
@@ -37,14 +37,14 @@ class AllOf(Matcher):
         # type: (List[Matcher]) -> None
         self.matchers = matchers
 
-    def build_short_description(self, conjugate=False):
+    def build_short_description(self, transformation):
         return ":"
 
-    def build_description(self, conjugate=False):
+    def build_description(self, transformation):
         return "\n".join(
             [":"] +
             [
-                _make_item(matcher.build_description(conjugate=conjugate), prefix="- and " if i > 0 else "- ")
+                _make_item(matcher.build_description(transformation), prefix="- and " if i > 0 else "- ")
                     for i, matcher in enumerate(self.matchers)
             ]
         )
@@ -80,14 +80,14 @@ class AnyOf(Matcher):
         # type: (List[Matcher]) -> None
         self.matchers = matchers
 
-    def build_short_description(self, conjugate=False):
+    def build_short_description(self, transformation):
         return ":"
 
-    def build_description(self, conjugate=False):
+    def build_description(self, transformation):
         return "\n".join(
             [":"] +
             [
-                _make_item(matcher.build_description(conjugate=conjugate), prefix="- or " if i > 0 else "- ")
+                _make_item(matcher.build_description(transformation), prefix="- or " if i > 0 else "- ")
                     for i, matcher in enumerate(self.matchers)
             ]
         )
@@ -113,8 +113,8 @@ class Anything(Matcher):
     def __init__(self, wording="anything"):
         self.wording = wording
 
-    def build_description(self, conjugate=False):
-        return "%s %s" % (to_be(conjugate), self.wording)
+    def build_description(self, transformation):
+        return transformation(self.wording)
 
     def matches(self, actual):
         return match_success(got_value(actual))
@@ -126,18 +126,18 @@ def anything():
 
 
 def something():
-    """Same thing as the 'anything' matcher but use 'something' in the matcher description"""
-    return Anything(wording="something")
+    """Same thing as the 'anything' matcher but use 'to be something' in the matcher description"""
+    return Anything(wording="to be something")
 
 
 def existing():
-    """Same thing as the 'anything' matcher but use 'existing' in the matcher description"""
-    return Anything(wording="existing")
+    """Same thing as the 'anything' matcher but use 'to exist' in the matcher description"""
+    return Anything(wording="to exist")
 
 
 def present():
-    """Same thing as the 'anything' matcher but use 'present' in the matcher description"""
-    return Anything(wording="present")
+    """Same thing as the 'anything' matcher but use 'to be present' in the matcher description"""
+    return Anything(wording="to be present")
 
 
 def is_(matcher):
@@ -153,8 +153,9 @@ class Not(Matcher):
         # type: (Matcher) -> None
         self.matcher = matcher
 
-    def build_description(self, conjugate=False):
-        return "not %s" % self.matcher.build_description(conjugate)
+    def build_description(self, transformation):
+        transformation.negative = True
+        return self.matcher.build_description(transformation)
 
     def matches(self, actual):
         result = self.matcher.matches(actual)

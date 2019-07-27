@@ -5,8 +5,67 @@ Created on Mar 27, 2017
 '''
 
 import json
+import re
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
+
+
+CONJUGATION_FORMS = {
+    re.compile(r"^(to be)"): ("is", "is not", "to not be"),
+    re.compile(r"^(to have)"): ("has", "has not", "to have no"),
+    re.compile(r"^(to match)"): ("matches", "does not match", "to not match"),
+    re.compile(r"^(can)"): ("can", "cannot", "to cannot")
+}
+
+
+class VerbTransformation(object):
+    def __init__(self, conjugate=False, negative=False):
+        self.conjugate = conjugate
+        self.negative = negative
+
+    def __call__(self, sentence):
+        ###
+        # No transformation to do
+        ###
+        if not self.conjugate and not self.negative:
+            return sentence
+
+        ###
+        # Transformation of irregular verb
+        ###
+        for pattern, forms in CONJUGATION_FORMS.items():
+            conjugated, conjugated_negative, infinitive_negative = forms
+            if self.conjugate and self.negative:
+                substitution = conjugated_negative
+            elif self.conjugate:
+                substitution = conjugated
+            else:  # self.negative
+                substitution = infinitive_negative
+
+            if pattern.match(sentence):
+                return pattern.sub(substitution, sentence)
+
+        ###
+        # Transformation of regular verb
+        ###
+        pattern = re.compile(r"^to (\w+)")
+        m = pattern.match(sentence)
+        if m:
+            if self.conjugate and self.negative:
+                substitution = "does not " + m.group(1)
+            elif self.conjugate:
+                substitution = m.group(1) + "s"
+            elif self.negative:
+                substitution = "to not " + m.group(1)
+            else:
+                substitution = "not " + m.group(1)
+
+            return pattern.sub(substitution, sentence)
+
+        ###
+        # No verb detected
+        ###
+        return sentence
 
 
 class MatchResult(object):
@@ -40,11 +99,11 @@ def match_result(is_successful, description=None):
 
 
 class Matcher(object):
-    def build_description(self, conjugate=False):
+    def build_description(self, transformation):
         raise NotImplemented()
 
-    def build_short_description(self, conjugate=False):
-        return self.build_description(conjugate=conjugate)
+    def build_short_description(self, transformation):
+        return self.build_description(transformation)
 
     def matches(self, actual):
         raise NotImplemented()
@@ -82,26 +141,3 @@ def merge_match_result_descriptions(results):
     return ", ".join(
         OrderedSet([result.description for result in results if result.description])
     )
-
-
-def to_be(conjugate=False, negation=False):
-    negative_form = " not" if negation else ""
-    return "is%s" % negative_form if conjugate else "to%s be" % negative_form
-
-
-def to_have(conjugate=False, negation=False):
-    negative_form = " not" if negation else ""
-    return "has%s" % negative_form if conjugate else "to%s have" % negative_form
-
-
-def to_meet(conjugate=False, negation=False):
-    if conjugate:
-        if negation:
-            return "does not meet"
-        else:
-            return "meets"
-    else:
-        if negation:
-            return "to not meet"
-        else:
-            return "to meet"

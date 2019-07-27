@@ -7,7 +7,7 @@ Created on May 2, 2017
 from typing import Sequence, Any
 
 from lemoncheesecake.matching.base import MatchExpected, MatchResult, match_failure, match_success, match_result, \
-    got_value, to_have, to_be, serialize_values
+    got_value, serialize_values, VerbTransformation
 from lemoncheesecake.matching.matchers.composites import is_
 
 
@@ -27,11 +27,15 @@ class HasItemMatchResult(MatchResult):
 
 
 class HasItem(MatchExpected):
-    def build_description(self, conjugate=False):
-        return "%s an item whose value %s" % (to_have(conjugate), self.expected.build_description(conjugate=True))
+    def build_description(self, transformation):
+        return transformation(
+            "to have an item whose value %s" % self.expected.build_description(VerbTransformation(conjugate=True))
+        )
 
-    def build_short_description(self, conjugate=False):
-        return "%s an item whose value %s" % (to_have(conjugate), self.expected.build_short_description(conjugate=True))
+    def build_short_description(self, transformation):
+        return transformation(
+            "to have an item whose value %s" % self.expected.build_short_description(VerbTransformation(conjugate=True))
+        )
 
     def matches(self, actual):
         for index, item in enumerate(actual):
@@ -48,8 +52,8 @@ def has_item(expected):
 
 
 class HasValues(MatchExpected):
-    def build_description(self, conjugate=False):
-        return "%s values %s" % (to_have(conjugate), serialize_values(self.expected))
+    def build_description(self, transformation):
+        return transformation("to have values %s" % serialize_values(self.expected))
 
     def matches(self, actual):
         missing = []
@@ -70,8 +74,8 @@ def has_values(values):
 
 
 class HasOnlyValues(MatchExpected):
-    def build_description(self, conjugate=False):
-        return "%s only values %s" % (to_have(conjugate), serialize_values(self.expected))
+    def build_description(self, transformation):
+        return transformation("to have only values %s" % serialize_values(self.expected))
 
     def matches(self, actual):
         expected = list(self.expected)
@@ -100,8 +104,8 @@ def has_only_values(expected):
 
 
 class IsIn(MatchExpected):
-    def build_description(self, conjugate=False):
-        return "%s in %s" % (to_be(conjugate), serialize_values(self.expected))
+    def build_description(self, transformation):
+        return transformation("to be in %s" % serialize_values(self.expected))
 
     def matches(self, actual):
         return match_result(actual in self.expected, got_value(actual))

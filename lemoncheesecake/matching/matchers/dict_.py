@@ -6,7 +6,8 @@ Created on Apr 1, 2017
 
 from typing import Sequence, Any
 
-from lemoncheesecake.matching.base import Matcher, match_failure, match_success, got_value, to_have, serialize_value
+from lemoncheesecake.matching.base import Matcher, match_failure, match_success, got_value, serialize_value, \
+    VerbTransformation
 from lemoncheesecake.matching.matchers.composites import is_
 
 
@@ -53,16 +54,16 @@ class HasEntry(Matcher):
         self.key_matcher = key_matcher
         self.value_matcher = value_matcher
 
-    def build_short_description(self, conjugate=False):
-        ret = '%s entry %s' % (to_have(conjugate), self.key_matcher.build_description())
+    def build_short_description(self, transformation):
+        ret = transformation('to have entry %s' % self.key_matcher.build_description())
         if self.value_matcher:
-            ret += " that " + self.value_matcher.build_short_description(conjugate=True)
+            ret += " that " + self.value_matcher.build_short_description(VerbTransformation(conjugate=True))
         return ret
 
-    def build_description(self, conjugate=False):
-        ret = '%s entry %s' % (to_have(conjugate), self.key_matcher.build_description())
+    def build_description(self, transformation):
+        ret = transformation('to have entry %s' % self.key_matcher.build_description())
         if self.value_matcher:
-            ret += " that " + self.value_matcher.build_description(conjugate=True)
+            ret += " that " + self.value_matcher.build_description(VerbTransformation(conjugate=True))
         return ret
 
     def matches(self, actual):
