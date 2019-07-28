@@ -7,7 +7,7 @@ Created on May 2, 2017
 from typing import Sequence, Any
 
 from lemoncheesecake.helpers.text import jsonify
-from lemoncheesecake.matching.base import Matcher, MatchResult, VerbTransformation
+from lemoncheesecake.matching.base import Matcher, MatchResult, MatchDescriptionTransformer
 from lemoncheesecake.matching.matchers.composites import is_
 
 
@@ -36,12 +36,12 @@ class HasItem(Matcher):
 
     def build_description(self, transformation):
         return transformation(
-            "to have an item whose value %s" % self.expected.build_description(VerbTransformation(conjugate=True))
+            "to have an item whose value %s" % self.expected.build_description(MatchDescriptionTransformer(conjugate=True))
         )
 
     def build_short_description(self, transformation):
         return transformation(
-            "to have an item whose value %s" % self.expected.build_short_description(VerbTransformation(conjugate=True))
+            "to have an item whose value %s" % self.expected.build_short_description(MatchDescriptionTransformer(conjugate=True))
         )
 
     def matches(self, actual):

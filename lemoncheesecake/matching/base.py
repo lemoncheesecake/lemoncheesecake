@@ -14,7 +14,7 @@ CONJUGATION_FORMS = {
 }
 
 
-class VerbTransformation(object):
+class MatchDescriptionTransformer(object):
     def __init__(self, conjugate=False, negative=False):
         self.conjugate = conjugate
         self.negative = negative

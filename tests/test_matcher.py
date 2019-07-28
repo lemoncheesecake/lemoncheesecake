@@ -1,8 +1,8 @@
-from lemoncheesecake.matching.base import VerbTransformation
+from lemoncheesecake.matching.base import MatchDescriptionTransformer
 
 
 def _test_transformation(actual, conjugate, negative, expected):
-    assert VerbTransformation(conjugate, negative)(actual) == expected
+    assert MatchDescriptionTransformer(conjugate, negative)(actual) == expected
 
 
 def test_to_be():

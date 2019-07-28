@@ -8,7 +8,7 @@ import six
 from typing import List, Any
 
 from lemoncheesecake.helpers.text import jsonify
-from lemoncheesecake.matching.base import Matcher, MatchResult, VerbTransformation
+from lemoncheesecake.matching.base import Matcher, MatchResult, MatchDescriptionTransformer
 from lemoncheesecake.matching.matchers.value import is_
 
 _TYPE_NAMES = {
@@ -32,7 +32,7 @@ class IsValueOfType(Matcher):
     def build_description(self, transformation):
         ret = transformation("to be %s" % self.type_name)
         if self.value_matcher:
-            ret += " that %s" % self.value_matcher.build_description(VerbTransformation(conjugate=True))
+            ret += " that %s" % self.value_matcher.build_description(MatchDescriptionTransformer(conjugate=True))
 
         return ret
 

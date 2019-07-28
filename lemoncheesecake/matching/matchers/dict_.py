@@ -7,7 +7,7 @@ Created on Apr 1, 2017
 from typing import Sequence, Any
 
 from lemoncheesecake.helpers.text import jsonify
-from lemoncheesecake.matching.base import Matcher, MatchResult, VerbTransformation
+from lemoncheesecake.matching.base import Matcher, MatchResult, MatchDescriptionTransformer
 from lemoncheesecake.matching.matchers.composites import is_
 
 
@@ -57,13 +57,13 @@ class HasEntry(Matcher):
     def build_short_description(self, transformation):
         ret = transformation('to have entry %s' % self.key_matcher.build_description())
         if self.value_matcher:
-            ret += " that " + self.value_matcher.build_short_description(VerbTransformation(conjugate=True))
+            ret += " that " + self.value_matcher.build_short_description(MatchDescriptionTransformer(conjugate=True))
         return ret
 
     def build_description(self, transformation):
         ret = transformation('to have entry %s' % self.key_matcher.build_description())
         if self.value_matcher:
-            ret += " that " + self.value_matcher.build_description(VerbTransformation(conjugate=True))
+            ret += " that " + self.value_matcher.build_description(MatchDescriptionTransformer(conjugate=True))
         return ret
 
     def matches(self, actual):
