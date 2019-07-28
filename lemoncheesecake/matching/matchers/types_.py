@@ -8,7 +8,7 @@ import six
 from typing import List, Any
 
 from lemoncheesecake.helpers.text import jsonify
-from lemoncheesecake.matching.base import Matcher, MatchResult, MatchDescriptionTransformer
+from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatchDescriptionTransformer
 from lemoncheesecake.matching.matchers.value import is_
 
 _TYPE_NAMES = {

@@ -4,7 +4,7 @@ import re
 
 from helpers.matching import assert_match_success, assert_match_failure
 
-from lemoncheesecake.matching.base import MatchDescriptionTransformer
+from lemoncheesecake.matching.matcher import MatchDescriptionTransformer
 from lemoncheesecake.matching.matchers import *
 from lemoncheesecake.matching.matchers.string import make_pattern_matcher
 

@@ -9,7 +9,7 @@ import six
 
 from lemoncheesecake.session import log_check
 from lemoncheesecake.exceptions import AbortTest
-from lemoncheesecake.matching.base import Matcher, MatchResult, MatchDescriptionTransformer
+from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatchDescriptionTransformer
 from lemoncheesecake.matching.matchers.dict_ import HasEntry, wrap_key_matcher
 from lemoncheesecake.matching.matchers.composites import is_
 

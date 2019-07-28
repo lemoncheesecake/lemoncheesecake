@@ -8,7 +8,7 @@ from typing import List, Any
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.helpers.text import jsonify
-from lemoncheesecake.matching.base import Matcher, MatchResult, MatchDescriptionTransformer
+from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatchDescriptionTransformer
 
 
 def _make_item(content, prefix="- "):

@@ -122,6 +122,7 @@ It has been changed to use the ``MatchResult`` class directly:
 
 - ``match_failure`` => ``MatchResult.failure``
 
+The ``lemoncheesecake.matching.base`` module has been renamed into ``lemoncheesecake.matching.matcher``.
 
 The ``lemoncheesecake.api`` module no longer exports the matching API, use ``from lemoncheesecake.matching import *`` as
 it was/is documented.

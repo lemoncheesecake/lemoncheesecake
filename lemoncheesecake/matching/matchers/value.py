@@ -5,7 +5,7 @@ Created on Mar 27, 2017
 '''
 
 from lemoncheesecake.helpers.text import jsonify
-from lemoncheesecake.matching.base import Matcher, MatchResult, MatchDescriptionTransformer
+from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatchDescriptionTransformer
 from lemoncheesecake.matching.matchers.composites import is_
 from lemoncheesecake.matching.matchers.types_ import is_bool
 

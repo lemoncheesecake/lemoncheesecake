@@ -1,4 +1,4 @@
-from lemoncheesecake.matching.base import MatchDescriptionTransformer
+from lemoncheesecake.matching.matcher import MatchDescriptionTransformer
 
 
 def _test_transformation(actual, conjugate, negative, expected):

@@ -1,4 +1,4 @@
-from lemoncheesecake.matching.base import MatchDescriptionTransformer
+from lemoncheesecake.matching.matcher import MatchDescriptionTransformer
 
 
 def assert_match_result(matcher, actual, expected_is_successful, expected_details):

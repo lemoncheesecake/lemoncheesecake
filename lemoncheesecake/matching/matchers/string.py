@@ -12,7 +12,7 @@ import json
 from typing import Any, Pattern, Union, Callable
 
 from lemoncheesecake.helpers.text import jsonify
-from lemoncheesecake.matching.base import Matcher, MatchResult
+from lemoncheesecake.matching.matcher import Matcher, MatchResult
 
 
 _REGEXP_TYPE = type(re.compile(r"dummy"))

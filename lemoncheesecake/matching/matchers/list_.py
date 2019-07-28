@@ -7,7 +7,7 @@ Created on May 2, 2017
 from typing import Sequence, Any
 
 from lemoncheesecake.helpers.text import jsonify
-from lemoncheesecake.matching.base import Matcher, MatchResult, MatchDescriptionTransformer
+from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatchDescriptionTransformer
 from lemoncheesecake.matching.matchers.composites import is_
 
 
