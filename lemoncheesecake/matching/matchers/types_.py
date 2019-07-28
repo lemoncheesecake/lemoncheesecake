@@ -7,7 +7,8 @@ Created on Apr 3, 2017
 import six
 from typing import List, Any
 
-from lemoncheesecake.matching.base import Matcher, MatchResult, got, serialize_value, got_value, VerbTransformation
+from lemoncheesecake.helpers.text import jsonify
+from lemoncheesecake.matching.base import Matcher, MatchResult, VerbTransformation
 from lemoncheesecake.matching.matchers.value import is_
 
 _TYPE_NAMES = {
@@ -47,9 +48,9 @@ class IsValueOfType(Matcher):
             if self.value_matcher:
                 return self.value_matcher.matches(actual)
             else:
-                return MatchResult.success(got_value(actual))
+                return MatchResult.success("got %s" % jsonify(actual))
         else:
-            return MatchResult.failure(got("%s (%s)" % (serialize_value(actual), self._get_value_type_name(actual))))
+            return MatchResult.failure("got %s (%s)" % (jsonify(actual), self._get_value_type_name(actual)))
 
 
 def _is_type(types, type_name):

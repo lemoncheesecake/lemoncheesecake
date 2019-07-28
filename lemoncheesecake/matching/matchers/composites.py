@@ -7,7 +7,8 @@ Created on Mar 28, 2017
 from typing import List, Any
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
-from lemoncheesecake.matching.base import Matcher, MatchResult, got, got_value, VerbTransformation
+from lemoncheesecake.helpers.text import jsonify
+from lemoncheesecake.matching.base import Matcher, MatchResult, VerbTransformation
 
 
 def _make_item(content, prefix="- "):
@@ -60,7 +61,7 @@ class AllOf(Matcher):
                 break
 
         match_details = "\n".join(
-            [got() + ":"] +
+            ["got:"] +
             _make_items([
                 _serialize_sub_matcher_result(matcher, result) for matcher, result in results
             ], relationship="and")
@@ -121,7 +122,7 @@ class Anything(Matcher):
         return transformation(self.wording)
 
     def matches(self, actual):
-        return MatchResult.success(got_value(actual))
+        return MatchResult.success("got %s" % jsonify(actual))
 
 
 def anything():

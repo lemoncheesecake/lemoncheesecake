@@ -6,7 +6,8 @@ Created on Apr 1, 2017
 
 from typing import Sequence, Any
 
-from lemoncheesecake.matching.base import Matcher, MatchResult, got_value, serialize_value, VerbTransformation
+from lemoncheesecake.helpers.text import jsonify
+from lemoncheesecake.matching.base import Matcher, MatchResult, VerbTransformation
 from lemoncheesecake.matching.matchers.composites import is_
 
 
@@ -27,7 +28,7 @@ class KeyPathMatcher(EntryMatcher):
         self.path = path
 
     def build_description(self):
-        return " -> ".join(map(serialize_value, self.path))
+        return " -> ".join(map(jsonify, self.path))
 
     def get_entry(self, actual):
         d = actual
@@ -74,7 +75,7 @@ class HasEntry(Matcher):
         if self.value_matcher:
             return self.value_matcher.matches(value)
         else:
-            return MatchResult.success(got_value(value))
+            return MatchResult.success("got %s" % jsonify(value))
 
 
 def has_entry(key_matcher, value_matcher=None):

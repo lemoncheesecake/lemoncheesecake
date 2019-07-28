@@ -4,24 +4,26 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
-from lemoncheesecake.matching.base import (
-    MatchExpected, Matcher, MatchResult, got_value, serialize_value, VerbTransformation
-)
+from lemoncheesecake.helpers.text import jsonify
+from lemoncheesecake.matching.base import MatchExpected, Matcher, MatchResult, VerbTransformation
 from lemoncheesecake.matching.matchers.composites import is_
 from lemoncheesecake.matching.matchers.types_ import is_bool
 
 
 class EqualTo(MatchExpected):
     def build_description(self, transformation):
-        return transformation("to be equal to %s" % serialize_value(self.expected))
+        return transformation("to be equal to %s" % jsonify(self.expected))
 
     def matches(self, actual):
         from lemoncheesecake.matching import DISPLAY_DETAILS_WHEN_EQUAL
 
         if actual == self.expected:
-            return MatchResult.success(got_value(actual)) if DISPLAY_DETAILS_WHEN_EQUAL else MatchResult.success()
+            if DISPLAY_DETAILS_WHEN_EQUAL:
+                return MatchResult.success("got %s" % jsonify(actual))
+            else:
+                return MatchResult.success()
         else:
-            return MatchResult.failure(got_value(actual))
+            return MatchResult.failure("got %s" % jsonify(actual))
 
 
 def equal_to(expected):
@@ -33,10 +35,10 @@ def _comparator(comparison_description, comparison_func):
     def wrapper(expected):
         class _Comparator(MatchExpected):
             def build_description(self, transformation):
-                return transformation("to be %s %s" % (comparison_description, serialize_value(self.expected)))
+                return transformation("to be %s %s" % (comparison_description, jsonify(self.expected)))
 
             def matches(self, actual):
-                return MatchResult(comparison_func(actual, self.expected), got_value(actual))
+                return MatchResult(comparison_func(actual, self.expected), "got %s" % jsonify(actual))
 
         return _Comparator(expected)
 
@@ -62,7 +64,7 @@ class IsBetween(Matcher):
         return transformation("to be between %s and %s" % (self.min, self.max))
 
     def matches(self, actual):
-        return MatchResult(self.min <= actual <= self.max, got_value(actual))
+        return MatchResult(self.min <= actual <= self.max, "got %s" % jsonify(actual))
 
 
 def is_between(min, max):

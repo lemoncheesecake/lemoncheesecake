@@ -4,7 +4,6 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
-import json
 import re
 
 CONJUGATION_FORMS = {
@@ -99,26 +98,3 @@ class Matcher(object):
 class MatchExpected(Matcher):
     def __init__(self, expected):
         self.expected = expected
-
-
-def serialize_value(value):
-    return json.dumps(value, ensure_ascii=False)
-
-
-def serialize_values(values):
-    return ", ".join(map(serialize_value, values))
-
-
-def got(value=None):
-    ret = "got"
-    if value is not None:
-        ret += " " + value
-    return ret
-
-
-def got_value(value):
-    return got(serialize_value(value))
-
-
-def got_values(values):
-    return got(serialize_values(values))

@@ -11,7 +11,9 @@ import json
 
 from typing import Any, Pattern, Union, Callable
 
-from lemoncheesecake.matching.base import MatchExpected, MatchResult, got_value
+from lemoncheesecake.helpers.text import jsonify
+from lemoncheesecake.matching.base import MatchExpected, MatchResult
+
 
 _REGEXP_TYPE = type(re.compile(r"dummy"))
 
@@ -21,7 +23,7 @@ class StartsWith(MatchExpected):
         return transformation('to start with "%s"' % self.expected)
 
     def matches(self, actual):
-        return MatchResult(actual.startswith(self.expected), got_value(actual))
+        return MatchResult(actual.startswith(self.expected), "got %s" % jsonify(actual))
 
 
 def starts_with(expected):
@@ -35,7 +37,7 @@ class EndsWith(MatchExpected):
         return transformation('to end with "%s"' % self.expected)
 
     def matches(self, actual):
-        return MatchResult(actual.endswith(self.expected), got_value(actual))
+        return MatchResult(actual.endswith(self.expected), "got %s" % jsonify(actual))
 
 
 def ends_with(expected):
@@ -49,7 +51,7 @@ class ContainsString(MatchExpected):
         return transformation('to contain "%s"' % self.expected)
 
     def matches(self, actual):
-        return MatchResult(self.expected in actual, got_value(actual))
+        return MatchResult(self.expected in actual, "got %s" % jsonify(actual))
 
 
 def contains_string(expected):
@@ -79,7 +81,7 @@ class MatchPattern(MatchExpected):
             match = self.expected.search(actual)
         except TypeError:
             return MatchResult.failure("Invalid value %s (%s)" % (repr(actual), type(actual)))
-        return MatchResult(match is not None, got_value(actual))
+        return MatchResult(match is not None, "got %s" % jsonify(actual))
 
 
 def match_pattern(pattern, description=None, mention_regexp=False):
@@ -132,20 +134,22 @@ def is_text(expected, linesep=os.linesep):
     return IsText(expected, linesep)
 
 
-def _format_json(data):
-    return json.dumps(data, ensure_ascii=False, sort_keys=True, indent=4)
-
-
 class IsJson(MatchExpected):
+    @staticmethod
+    def _format_json(data):
+        return json.dumps(data, ensure_ascii=False, sort_keys=True, indent=4)
+
     def build_description(self, transformation):
-        return transformation("to be the JSON:\n%s\n" % _format_json(self.expected))
+        return transformation("to be the JSON:\n%s\n" % self._format_json(self.expected))
 
     def matches(self, actual):
         if actual == self.expected:
             return MatchResult.success()
         else:
             return MatchResult.failure(
-                "JSON does not match:\n%s" % _diff_text(_format_json(self.expected), _format_json(actual), "\n")
+                "JSON does not match:\n%s" % _diff_text(
+                    self._format_json(self.expected), self._format_json(actual), "\n"
+                )
             )
 
 

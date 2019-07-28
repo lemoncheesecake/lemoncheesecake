@@ -6,9 +6,13 @@ Created on May 2, 2017
 
 from typing import Sequence, Any
 
-from lemoncheesecake.matching.base import MatchExpected, MatchResult, \
-    got_value, serialize_values, VerbTransformation
+from lemoncheesecake.helpers.text import jsonify
+from lemoncheesecake.matching.base import MatchExpected, MatchResult, VerbTransformation
 from lemoncheesecake.matching.matchers.composites import is_
+
+
+def _jsonify_items(items):
+    return ", ".join(map(jsonify, items))
 
 
 class HasItemMatchResult(MatchResult):
@@ -53,7 +57,7 @@ def has_item(expected):
 
 class HasItems(MatchExpected):
     def build_description(self, transformation):
-        return transformation("to have items %s" % serialize_values(self.expected))
+        return transformation("to have items %s" % _jsonify_items(self.expected))
 
     def matches(self, actual):
         missing = []
@@ -62,9 +66,9 @@ class HasItems(MatchExpected):
                 missing.append(expected)
 
         if missing:
-            return MatchResult.failure("Missing items: %s" % serialize_values(missing))
+            return MatchResult.failure("Missing items: %s" % _jsonify_items(missing))
         else:
-            return MatchResult.success(got_value(actual))
+            return MatchResult.success("got %s" % jsonify(actual))
 
 
 def has_items(values):
@@ -75,7 +79,7 @@ def has_items(values):
 
 class HasOnlyItems(MatchExpected):
     def build_description(self, transformation):
-        return transformation("to have only items %s" % serialize_values(self.expected))
+        return transformation("to have only items %s" % _jsonify_items(self.expected))
 
     def matches(self, actual):
         expected = list(self.expected)
@@ -87,13 +91,13 @@ class HasOnlyItems(MatchExpected):
                 extra.append(value)
 
         if len(expected) == 0 and len(extra) == 0:
-            return MatchResult.success(got_value(actual))
+            return MatchResult.success("got %s" % jsonify(actual))
         else:
             details = []
             if len(expected) > 0:
-                details.append("Missing items: %s" % serialize_values(expected))
+                details.append("Missing items: %s" % _jsonify_items(expected))
             if len(extra) > 0:
-                details.append("Extra items: %s" % serialize_values(extra))
+                details.append("Extra items: %s" % _jsonify_items(extra))
             return MatchResult.failure("; ".join(details))
 
 
@@ -105,10 +109,10 @@ def has_only_items(expected):
 
 class IsIn(MatchExpected):
     def build_description(self, transformation):
-        return transformation("to be in %s" % serialize_values(self.expected))
+        return transformation("to be in %s" % _jsonify_items(self.expected))
 
     def matches(self, actual):
-        return MatchResult(actual in self.expected, got_value(actual))
+        return MatchResult(actual in self.expected, "got %s" % jsonify(actual))
 
 
 def is_in(expected):
