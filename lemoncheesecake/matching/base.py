@@ -93,8 +93,3 @@ class Matcher(object):
 
     def matches(self, actual):
         raise NotImplemented()
-
-
-class MatchExpected(Matcher):
-    def __init__(self, expected):
-        self.expected = expected

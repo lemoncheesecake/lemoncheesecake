@@ -12,13 +12,16 @@ import json
 from typing import Any, Pattern, Union, Callable
 
 from lemoncheesecake.helpers.text import jsonify
-from lemoncheesecake.matching.base import MatchExpected, MatchResult
+from lemoncheesecake.matching.base import Matcher, MatchResult
 
 
 _REGEXP_TYPE = type(re.compile(r"dummy"))
 
 
-class StartsWith(MatchExpected):
+class StartsWith(Matcher):
+    def __init__(self, expected):
+        self.expected = expected
+
     def build_description(self, transformation):
         return transformation('to start with "%s"' % self.expected)
 
@@ -32,7 +35,10 @@ def starts_with(expected):
     return StartsWith(expected)
 
 
-class EndsWith(MatchExpected):
+class EndsWith(Matcher):
+    def __init__(self, expected):
+        self.expected = expected
+
     def build_description(self, transformation):
         return transformation('to end with "%s"' % self.expected)
 
@@ -46,7 +52,10 @@ def ends_with(expected):
     return EndsWith(expected)
 
 
-class ContainsString(MatchExpected):
+class ContainsString(Matcher):
+    def __init__(self, expected):
+        self.expected = expected
+
     def build_description(self, transformation):
         return transformation('to contain "%s"' % self.expected)
 
@@ -60,17 +69,17 @@ def contains_string(expected):
     return ContainsString(expected)
 
 
-class MatchPattern(MatchExpected):
+class MatchPattern(Matcher):
     def __init__(self, expected, description=None, mention_regexp=False):
-        MatchExpected.__init__(self, expected)
         assert not (mention_regexp and description is None)
-        self._description = description
-        self._mention_regexp = mention_regexp
+        self.expected = expected
+        self.description = description
+        self.mention_regexp = mention_regexp
 
     def build_description(self, transformation):
-        if self._description:
-            desc = transformation("to be %s" % self._description)
-            if self._mention_regexp:
+        if self.description:
+            desc = transformation("to be %s" % self.description)
+            if self.mention_regexp:
                 desc += ' (pattern: "%s")' % self.expected.pattern
             return desc
         else:
@@ -107,9 +116,9 @@ def _diff_text(text1, text2, linesep):
     )
 
 
-class IsText(MatchExpected):
+class IsText(Matcher):
     def __init__(self, expected, linesep):
-        MatchExpected.__init__(self, expected)
+        self.expected = expected
         self.linesep = linesep
 
     def build_description(self, transformation):
@@ -134,7 +143,10 @@ def is_text(expected, linesep=os.linesep):
     return IsText(expected, linesep)
 
 
-class IsJson(MatchExpected):
+class IsJson(Matcher):
+    def __init__(self, expected):
+        self.expected = expected
+
     @staticmethod
     def _format_json(data):
         return json.dumps(data, ensure_ascii=False, sort_keys=True, indent=4)

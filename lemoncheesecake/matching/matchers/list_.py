@@ -7,7 +7,7 @@ Created on May 2, 2017
 from typing import Sequence, Any
 
 from lemoncheesecake.helpers.text import jsonify
-from lemoncheesecake.matching.base import MatchExpected, MatchResult, VerbTransformation
+from lemoncheesecake.matching.base import Matcher, MatchResult, VerbTransformation
 from lemoncheesecake.matching.matchers.composites import is_
 
 
@@ -30,7 +30,10 @@ class HasItemMatchResult(MatchResult):
         return cls(False, "no matching item", -1, None)
 
 
-class HasItem(MatchExpected):
+class HasItem(Matcher):
+    def __init__(self, expected):
+        self.expected = expected
+
     def build_description(self, transformation):
         return transformation(
             "to have an item whose value %s" % self.expected.build_description(VerbTransformation(conjugate=True))
@@ -55,7 +58,10 @@ def has_item(expected):
     return HasItem(is_(expected))
 
 
-class HasItems(MatchExpected):
+class HasItems(Matcher):
+    def __init__(self, expected):
+        self.expected = expected
+
     def build_description(self, transformation):
         return transformation("to have items %s" % _jsonify_items(self.expected))
 
@@ -77,7 +83,10 @@ def has_items(values):
     return HasItems(values)
 
 
-class HasOnlyItems(MatchExpected):
+class HasOnlyItems(Matcher):
+    def __init__(self, expected):
+        self.expected = expected
+
     def build_description(self, transformation):
         return transformation("to have only items %s" % _jsonify_items(self.expected))
 
@@ -107,7 +116,10 @@ def has_only_items(expected):
     return HasOnlyItems(expected)
 
 
-class IsIn(MatchExpected):
+class IsIn(Matcher):
+    def __init__(self, expected):
+        self.expected = expected
+
     def build_description(self, transformation):
         return transformation("to be in %s" % _jsonify_items(self.expected))
 

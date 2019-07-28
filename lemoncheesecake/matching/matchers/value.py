@@ -5,12 +5,15 @@ Created on Mar 27, 2017
 '''
 
 from lemoncheesecake.helpers.text import jsonify
-from lemoncheesecake.matching.base import MatchExpected, Matcher, MatchResult, VerbTransformation
+from lemoncheesecake.matching.base import Matcher, MatchResult, VerbTransformation
 from lemoncheesecake.matching.matchers.composites import is_
 from lemoncheesecake.matching.matchers.types_ import is_bool
 
 
-class EqualTo(MatchExpected):
+class EqualTo(Matcher):
+    def __init__(self, expected):
+        self.expected = expected
+
     def build_description(self, transformation):
         return transformation("to be equal to %s" % jsonify(self.expected))
 
@@ -33,7 +36,10 @@ def equal_to(expected):
 
 def _comparator(comparison_description, comparison_func):
     def wrapper(expected):
-        class _Comparator(MatchExpected):
+        class _Comparator(Matcher):
+            def __init__(self, expected):
+                self.expected = expected
+
             def build_description(self, transformation):
                 return transformation("to be %s %s" % (comparison_description, jsonify(self.expected)))
 
