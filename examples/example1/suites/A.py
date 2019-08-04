@@ -1,10 +1,25 @@
-import re
 import time
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import *
+from lemoncheesecake.matching.matcher import Matcher, MatchResult
 
 MULTI_LINE_TEXT = "- first line\n- second line\n- third line"
+
+
+class MultipleOf(Matcher):
+    def __init__(self, value):
+        self.value = value
+
+    def build_description(self, transformation):
+        return transformation("to be a multiple of %s" % self.value)
+
+    def matches(self, actual):
+        return MatchResult(actual % self.value == 0, "got %s" % actual)
+
+
+def multiple_of(value):
+    return MultipleOf(value)
 
 
 @lcc.suite("A")

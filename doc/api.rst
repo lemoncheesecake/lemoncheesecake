@@ -103,6 +103,16 @@ Matchers
 .. autofunction:: is_
 .. autofunction:: not_
 
+Matcher
+~~~~~~~
+
+.. module:: lemoncheesecake.matching.matcher
+
+.. autoclass:: Matcher
+    :members: build_description, matches
+
+.. autoclass:: MatchResult
+    :members: is_successful, description, success, failure, __bool__
 
 Project
 -------
