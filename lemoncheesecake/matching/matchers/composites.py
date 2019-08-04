@@ -171,3 +171,6 @@ def not_(matcher):
     # type: (Any) -> Matcher
     """Negates the matcher in argument"""
     return Not(is_(matcher))
+
+
+is_not = not_

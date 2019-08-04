@@ -66,6 +66,7 @@ Operations
 Matchers
 ~~~~~~~~
 
+.. autofunction:: equal_to
 .. autofunction:: not_equal_to
 .. autofunction:: greater_than
 .. autofunction:: greater_than_or_equal_to
@@ -77,31 +78,32 @@ Matchers
 .. autofunction:: has_length
 .. autofunction:: is_true
 .. autofunction:: is_false
+.. autofunction:: is_json
 .. autofunction:: starts_with
 .. autofunction:: ends_with
 .. autofunction:: contains_string
 .. autofunction:: match_pattern
 .. autofunction:: is_text
-.. autofunction:: is_json
+.. autofunction:: is_integer
+.. autofunction:: is_float
+.. autofunction:: is_bool
+.. autofunction:: is_str
+.. autofunction:: is_list
+.. autofunction:: is_dict
 .. autofunction:: has_item
 .. autofunction:: has_items
 .. autofunction:: has_only_items
 .. autofunction:: is_in
 .. autofunction:: has_entry
-.. autofunction:: is_integer
-.. autofunction:: is_float
-.. autofunction:: is_bool
-.. autofunction:: is_str
-.. autofunction:: is_dict
-.. autofunction:: is_list
+.. autofunction:: is_
+.. autofunction:: not_
+.. autofunction:: is_not
 .. autofunction:: all_of
 .. autofunction:: any_of
 .. autofunction:: anything
 .. autofunction:: something
 .. autofunction:: existing
 .. autofunction:: present
-.. autofunction:: is_
-.. autofunction:: not_
 
 Matcher
 ~~~~~~~

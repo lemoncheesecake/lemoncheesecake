@@ -46,6 +46,8 @@ The following stock matchers are available:
 
   - ``ends_with(expected)``: check if the actual string ends with ``expected``
 
+  - ``contains_string(expected)``: check if the actual contains ``expected``
+
   - ``match_pattern(expected)``: check if the actual string match ``expected`` regexp (expected can be a raw string or an object
     returned by ``re.compile()``)
 
@@ -59,13 +61,13 @@ The following stock matchers are available:
 
   - ``is_float([expected])``: check if actual is of type ``float``
 
-  - ``is_str([expected])``: check if actual is of type ``str`` (or ``unicode`` if Python 2.7)
+  - ``is_bool([expected])``: check if actual is of type ``bool``
 
-  - ``is_dict([expected])``: check if actual is of type ``dict``
+  - ``is_str([expected])``: check if actual is of type ``str`` (or ``unicode`` if Python 2.7)
 
   - ``is_list([expected])``: check if actual is of type ``list`` or ``tuple``
 
-  - ``is_bool([expected])``: check if actual is of type ``bool``
+  - ``is_dict([expected])``: check if actual is of type ``dict``
 
 - Iterable:
 
@@ -88,7 +90,7 @@ The following stock matchers are available:
   - ``is_(expected)``: return the matcher if ``expected`` is a matcher, otherwise wraps ``expected`` in the
     ``equal_to`` matcher
 
-  - ``is_not(expected)``: make the negation of the ``expected`` matcher (or ``equal_to`` if the argument is
+  - ``is_not(expected)``, ``not_(expected)``: make the negation of the ``expected`` matcher (or ``equal_to`` if the argument is
     not a matcher)
 
   - ``all_of(matcher1, [matcher2, [...]])``: check if all the matchers succeed (logical **AND** between all the
@@ -97,7 +99,7 @@ The following stock matchers are available:
   - ``any_of(matcher1, [matcher2, [...]])``: check if any of the matchers succeed (logical **OR** between all the
     matchers)
 
-  - ``anything()``, ``something()``, ``existing()``: these matchers always succeed whatever the actual value is (only
+  - ``anything()``, ``something()``, ``existing()``, ``present()``: these matchers always succeed whatever the actual value is (only
     the matcher description changes to fit the matcher's name)
 
 The matching operations

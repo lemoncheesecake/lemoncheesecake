@@ -4,4 +4,4 @@ from .string import starts_with, ends_with, contains_string, match_pattern, is_t
 from .list_ import has_item, has_items, has_only_items, is_in
 from .dict_ import has_entry
 from .types_ import is_integer, is_float, is_bool, is_str, is_dict, is_list
-from .composites import all_of, any_of, anything, something, existing, present, is_, not_
+from .composites import all_of, any_of, anything, something, existing, present, is_, not_, is_not
