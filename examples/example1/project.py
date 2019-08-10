@@ -20,4 +20,4 @@ class MyProject(Project):
 
 
 project = MyProject(project_dir)
-project.hide_command_line_in_report = True
+project.show_command_line_in_report = False

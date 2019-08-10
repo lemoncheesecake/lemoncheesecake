@@ -33,7 +33,8 @@ class Project(object):
         self.metadata_policy = MetadataPolicy()
         #: Indicates whether or not the project supports parallel execution of tests
         self.threaded = True  # type: bool
-        self.hide_command_line_in_report = False
+        #: Indicated whether or not the command line ("lcc run...") will be displayed in the report
+        self.show_command_line_in_report = True  # type: bool
         #: The reporting backends of the project as a dict (whose key is the reporting backend name)
         self.reporting_backends = {b.get_name(): b for b in get_reporting_backends()}  # type: Dict[str, ReportingBackend]
         #: The list of default reporting backend (indicated by their name) that will be used by "lcc run"
@@ -106,7 +107,7 @@ class Project(object):
             ]
         """
         info = []
-        if not self.hide_command_line_in_report:
+        if self.show_command_line_in_report:
             info.append(("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:])))
         return info
 

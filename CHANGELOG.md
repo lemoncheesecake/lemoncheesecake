@@ -34,7 +34,6 @@ to know to migrate from 0.22.x release.
 - HTML: dates are now localized in the browser's timezone
 - HTML: statistics are computed in Javascript
 - HTML: the report now uses static resources instead of external resources by default
-- The `lcc run` full command line is no longer available in the report
 
 ## Documentation
 
