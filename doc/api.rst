@@ -125,7 +125,8 @@ This is the class that must be used / inherited in your ``project.py`` file
 .. module:: lemoncheesecake.project
 
 .. autoclass:: Project
-    :members: dir, metadata_policy, threaded, reporting_backends, default_reporting_backend_names,
+    :members: dir, metadata_policy, threaded, show_command_line_in_report, reporting_backends,
+        default_reporting_backend_names,
         add_cli_args, create_report_dir, load_suites, load_fixtures, pre_run, post_run, build_report_title,
         build_report_info
 
