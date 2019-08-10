@@ -4,8 +4,9 @@ Created on Jun 16, 2017
 @author: nicolas
 '''
 
-from typing import Union, Tuple, List, Sequence, TypeVar
 import copy
+
+from typing import Union, Tuple, List, Sequence, TypeVar
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.exceptions import CannotFindTreeNode
