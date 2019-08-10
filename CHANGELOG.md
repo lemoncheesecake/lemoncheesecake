@@ -5,18 +5,23 @@ to know to migrate from 0.22.x release.
 
 ## API
 
+- Major overhaul of `lemoncheesecake.project`, see the migration guide for more information
+- Major overhaul of the `Matcher` class, see the migration guide for more information
+- Add a `is_not` alias for the `not_` matcher
 - In `lemoncheesecake.matching`, the following functions have been removed:
   - `this_dict`
   - `check_that_entry`
   - `require_that_entry`
   - `assert_that_entry`
+- Remove the `log_warn` alias for `log_warning`
+- Remove `add_test_in_suite` and `add_tests_in_suite functions`
+- Matcher renamings:
+  - `has_values` => `has_items`
+  - `has_only_values` => `has_only_items`
+- Rename `@lcc.conditional()` decorator into `@lcc.visible_if()`
 - The fixture scope `session_prerun` has been renamed into `pre_run`
 - The `binary_mode` argument of the `save_attachment_content` function has been removed
   (the file opening is determined upon data argument type)
-- In `Matcher` class:
-  - the `description` method has been renamed into `build_description`
-  - the `short_description` method has been renamed into `build_short_description`
-- Major overhaul of `lemoncheesecake.project`, see the migration guide for more information
 
 ## CLI
 
@@ -29,11 +34,27 @@ to know to migrate from 0.22.x release.
 - HTML: dates are now localized in the browser's timezone
 - HTML: statistics are computed in Javascript
 - HTML: the report now uses static resources instead of external resources by default
+- The `lcc run` full command line is no longer available in the report
+
+## Documentation
+
+- Add type annotations in major part of the public API
+- Website: add a API reference chapter
+- Website: add a new chapter on how to create a custom matcher
 
 ## Under the hood
 
-- fix Python warnings
-- Make the `lemoncheesecake.filter` API more Pythonic
+- Many code refactoring, among which:
+  - Make the `lemoncheesecake.filter` API more Pythonic
+  - Rename `runtime` into `session`
+  - Improve class and attribute naming in `lemoncheesecake.reporting.report`,
+    results of setup/teardown code now have a "status" attribute, also note the `TreeLocation`
+    has been renamed into `ReportLocation` and moved into that module
+- Fix Python warnings
+- HTML report: all "data" class names have been renamed to remove the trailing "Data" and
+  all component names have been updated to add a trailing "View", example:
+  - `Test` => `TestView`
+  - `TestData` => `Test`
 
 # 0.22.10 (2019-05-19)
 
