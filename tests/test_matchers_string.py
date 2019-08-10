@@ -80,11 +80,11 @@ def test_match_pattern_failure_invalid_type():
 
 
 def test_is_text_success():
-    assert_match_success(is_text("foo\nbar"), "foo\nbar")
+    assert_match_success(is_text("foo\nbar", "\n"), "foo\nbar")
 
 
 def test_is_text_failure():
-    assert_match_failure(is_text("foo\nbar"), "foo\nbar\nbaz", "+baz")
+    assert_match_failure(is_text("foo\nbar", "\n"), "foo\nbar\nbaz", "+baz")
 
 
 def test_is_json_success():
