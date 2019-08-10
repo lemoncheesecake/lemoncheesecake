@@ -21,7 +21,7 @@ from lemoncheesecake.reporting.report import (
     Log, Check, Attachment, Url, Step, Result, TestResult, SuiteResult,
     format_time_as_iso8601, parse_iso8601_time
 )
-from lemoncheesecake.exceptions import ProgrammingError, InvalidReportFile
+from lemoncheesecake.exceptions import ProgrammingError, InvalidReportFile, IncompatibleReportFile
 
 DEFAULT_INDENT_LEVEL = 4
 
@@ -180,14 +180,12 @@ def _serialize_suite_data(suite):
 
 def serialize_report_as_tree(report):
     xml = E("lemoncheesecake-report")
-    xml.attrib["nb-threads"] = str(report.nb_threads)
-    report_version_node = make_xml_child(xml, "lemoncheesecake-version")
-    report_version_node.text = lemoncheesecake.__version__
-    report_version_node = make_xml_child(xml, "lemoncheesecake-report-version")
-    report_version_node.text = str("1.0")
+    xml.attrib["lemoncheesecake-version"] = lemoncheesecake.__version__
+    xml.attrib["report-version"] = "1.0"
     _add_time_attr(xml, "start-time", report.start_time)
     _add_time_attr(xml, "end-time", report.end_time)
     _add_time_attr(xml, "generation-time", time.time())
+    xml.attrib["nb-threads"] = str(report.nb_threads)
 
     title_node = make_xml_child(xml, "title")
     title_node.text = report.title
@@ -209,13 +207,13 @@ def serialize_report_as_tree(report):
 
 
 def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
-    report = serialize_report_as_tree(report)
-    indent_xml(report, indent_level=indent_level)
+    xml_report = serialize_report_as_tree(report)
+    indent_xml(xml_report, indent_level=indent_level)
 
     if six.PY3:
-        return ET.tostring(report, pretty_print=True, encoding="unicode")
+        return ET.tostring(xml_report, pretty_print=True, encoding="unicode")
     else:
-        return ET.tostring(report, pretty_print=True, xml_declaration=True, encoding="utf-8")
+        return ET.tostring(xml_report, pretty_print=True, xml_declaration=True, encoding="utf-8")
 
 
 def save_report_into_file(report, filename, indent_level=DEFAULT_INDENT_LEVEL):
@@ -330,7 +328,11 @@ def load_report_from_file(filename):
     try:
         root = xml.getroot().xpath("/lemoncheesecake-report")[0]
     except IndexError:
-        raise InvalidReportFile("Cannot lemoncheesecake-report element in XML")
+        raise InvalidReportFile("Cannot find lemoncheesecake-report element in XML")
+
+    report_version = float(root.attrib["report-version"])
+    if report_version >= 2.0:
+        raise IncompatibleReportFile("Incompatible report version: got %s while 1.x is supported" % report_version)
 
     report.start_time = _unserialize_datetime(root.attrib["start-time"]) if "start-time" in root.attrib else None
     report.end_time = _unserialize_datetime(root.attrib["end-time"]) if "end-time" in root.attrib else None

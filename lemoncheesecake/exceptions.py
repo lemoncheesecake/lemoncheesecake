@@ -91,6 +91,10 @@ class InvalidReportFile(LemoncheesecakeException):
     pass
 
 
+class IncompatibleReportFile(LemoncheesecakeException):
+    pass
+
+
 class CannotFindTreeNode(LemoncheesecakeException):
     pass
 

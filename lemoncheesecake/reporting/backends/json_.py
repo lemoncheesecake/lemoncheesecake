@@ -15,7 +15,7 @@ from lemoncheesecake.reporting.report import (
     Log, Check, Attachment, Url, Step, Result, TestResult, SuiteResult,
     format_time_as_iso8601, parse_iso8601_time
 )
-from lemoncheesecake.exceptions import InvalidReportFile, ProgrammingError
+from lemoncheesecake.exceptions import InvalidReportFile, IncompatibleReportFile, ProgrammingError
 
 JS_PREFIX = "var reporting_data = "
 
@@ -127,7 +127,7 @@ def _serialize_suite_data(suite):
 def serialize_report_into_json(report):
     serialized = _dict(
         "lemoncheesecake_version", lemoncheesecake.__version__,
-        "lemoncheesecake_report_version", 1.0,
+        "report_version", 1.0,
         "start_time", _serialize_time(report.start_time),
         "end_time", _serialize_time(report.end_time),
         "generation_time", _serialize_time(time.time()),
@@ -147,15 +147,15 @@ def serialize_report_into_json(report):
     return serialized
 
 
-def save_report_into_file(data, filename, javascript_compatibility=True, pretty_formatting=False):
-    report = serialize_report_into_json(data)
+def save_report_into_file(report, filename, javascript_compatibility=True, pretty_formatting=False):
+    js_report = serialize_report_into_json(report)
     with open(filename, "w") as fh:
         if javascript_compatibility:
             fh.write(JS_PREFIX)
         if pretty_formatting:
-            fh.write(json.dumps(report, indent=4))
+            fh.write(json.dumps(js_report, indent=4))
         else:
-            fh.write(json.dumps(report))
+            fh.write(json.dumps(js_report))
 
 
 def _unserialize_step_data(js):
@@ -248,8 +248,11 @@ def load_report_from_file(filename):
     except ValueError as e:
         raise InvalidReportFile(str(e))
 
-    if "lemoncheesecake_report_version" not in js:
-        raise InvalidReportFile("Cannot find 'lemoncheesecake_report_version' in JSON")
+    report_version = js.get("report_version")
+    if report_version is None:
+        raise InvalidReportFile("Cannot find 'report_version' in JSON")
+    if report_version >= 2.0:
+        raise IncompatibleReportFile("Incompatible report version: got %s while 1.x is supported" % report_version)
 
     report.title = js["title"]
     report.info = js["info"]
