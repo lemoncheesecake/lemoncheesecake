@@ -159,6 +159,8 @@ The HTML report now use static resources (also named "fat") by default, meaning 
 for instance. In other words: the ``offline_mode`` attribute of the class ``lemoncheesecake.reporting.backends.HtmlBackend``
 has been renamed into ``fat_html`` and is now set to ``True`` by default.
 
+In Slack & ReportPortal reporting backends, all environment variables used for configuration are now prefixed by
+``LCC_``, example: ``RP_URL`` => ``LCC_RP_URL``
 
 CLI
 ---

@@ -300,11 +300,11 @@ class ReportPortalBackend(ReportingBackend, ReportingSessionBuilderMixin):
 
     def create_reporting_session(self, report_dir, report, parallel, _):
         try:
-            url = os.environ["RP_URL"]
-            auth_token = os.environ["RP_AUTH_TOKEN"]
-            project = os.environ["RP_PROJECT"]
-            launch_name = os.environ.get("RP_LAUNCH_NAME", "Test Run")
-            launch_description = os.environ.get("RP_LAUNCH_DESCRIPTION", None)
+            url = os.environ["LCC_RP_URL"]
+            auth_token = os.environ["LCC_RP_AUTH_TOKEN"]
+            project = os.environ["LCC_RP_PROJECT"]
+            launch_name = os.environ.get("LCC_RP_LAUNCH_NAME", "Test Run")
+            launch_description = os.environ.get("LCC_RP_LAUNCH_DESCRIPTION", None)
         except KeyError as excp:
             raise UserError("ReportPortal reporting backend, cannot get environment variable %s" % excp)
 

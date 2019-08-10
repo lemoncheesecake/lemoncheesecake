@@ -35,6 +35,11 @@ to know to migrate from 0.22.x release.
 - HTML: statistics are computed in Javascript
 - HTML: the report now uses static resources instead of external resources by default
 
+## Reporting backends
+
+- Slack & ReportPortal: all environment variables used for configuration are now prefixed by ``LCC_``,
+  example: `RP_URL` => `LCC_RP_URL`
+
 ## Documentation
 
 - Add type annotations in major part of the public API
