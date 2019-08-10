@@ -16,7 +16,8 @@ class MyProject(Project):
         return "Awesome report"
 
     def build_report_info(self):
-        return Project.build_report_info(self) + [["foo", "bar"]]
+        return Project.build_report_info(self) + [("foo", "bar")]
 
 
 project = MyProject(project_dir)
+project.hide_command_line_in_report = True

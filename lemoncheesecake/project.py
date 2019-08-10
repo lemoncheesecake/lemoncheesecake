@@ -4,12 +4,13 @@ Created on Dec 10, 2016
 @author: nicolas
 '''
 
+import sys
 import os
 import os.path as osp
 import shutil
 import argparse
 
-from typing import Any, Dict, Optional, Sequence, Tuple
+from typing import Any, Dict, Optional, Sequence, Tuple, List
 
 from lemoncheesecake.suite import load_suites_from_directory, Suite
 from lemoncheesecake.fixture import load_fixtures_from_directory, Fixture
@@ -32,6 +33,7 @@ class Project(object):
         self.metadata_policy = MetadataPolicy()
         #: Indicates whether or not the project supports parallel execution of tests
         self.threaded = True  # type: bool
+        self.hide_command_line_in_report = False
         #: The reporting backends of the project as a dict (whose key is the reporting backend name)
         self.reporting_backends = {b.get_name(): b for b in get_reporting_backends()}  # type: Dict[str, ReportingBackend]
         #: The list of default reporting backend (indicated by their name) that will be used by "lcc run"
@@ -91,7 +93,7 @@ class Project(object):
         return None
 
     def build_report_info(self):
-        # type: () -> Sequence[Tuple[str, str]]
+        # type: () -> List[Tuple[str, str]]
         """
         Overridable. Build a list key/value pairs (expressed as a two items tuple)
         that will be available in the report.
@@ -103,7 +105,10 @@ class Project(object):
                 ("key2", "value2")
             ]
         """
-        return []
+        info = []
+        if not self.hide_command_line_in_report:
+            info.append(("Command line", " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:])))
+        return info
 
 
 def _find_file_in_parent_directories(filename, dirname):
