@@ -19,4 +19,4 @@ Table of content
     cli
     project
     api
-    v1-migration-guide
+    migrating-to-v1

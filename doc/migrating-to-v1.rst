@@ -1,7 +1,7 @@
-.. _`v1 migration guide`:
+.. _`migrating to 1.x`:
 
-V1 migration guide
-==================
+Migrating to 1.x
+=================
 
 This page lists all the non-compatible changes between 0.22.x and 1.x versions of lemoncheesecake and tell how
 to migrate.
