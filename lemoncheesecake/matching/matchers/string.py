@@ -133,7 +133,7 @@ class IsText(Matcher):
             )
 
 
-def is_text(expected, linesep=os.linesep):
+def is_text(expected, linesep="\n"):
     # type: (str, str) -> IsText
     """
     Test if the two multi-lines texts match.

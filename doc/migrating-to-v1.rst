@@ -104,6 +104,8 @@ The following matchers have been renamed:
 
 - ``has_only_values`` => ``has_only_items``
 
+In ``is_text`` matcher: the second argument (``linesep``) default value is now ``"\n"`` instead of ``os.linesep``.
+
 In ``Matcher`` class:
 
 - the ``description`` method has been renamed into ``build_description``
