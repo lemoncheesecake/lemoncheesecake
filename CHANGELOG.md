@@ -1,6 +1,6 @@
-# 1.0.0 (2019-MM-DD)
+# 1.0.0 (2019-08-11)
 
-Major release with breaking changes, see http://docs.lemoncheesecake.io/en/latest/v1-migration-guide.html
+Major release with API breaking changes, see http://docs.lemoncheesecake.io/en/latest/migrating-to-v1.html
 to know to migrate from 0.22.x release.
 
 ## API
