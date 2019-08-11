@@ -64,7 +64,8 @@ On August 11th, 2019, lemoncheesecake 1.0.0 has been released. This major releas
 
 - a new API reference documentation
 
-The full changelog is available `here <https://github.com/lemoncheesecake/lemoncheesecake/blob/master/CHANGELOG.md#100-2019-08-11>`_.
+See the full `changelog <https://github.com/lemoncheesecake/lemoncheesecake/blob/master/CHANGELOG.md#100-2019-08-11>`_
+for more information.
 
 This version is not compatible with prior 0.22.x releases. The migration process is documented in
 `Migrating from to 0.22.x to 1.x <http://docs.lemoncheesecake.io/en/latest/migrating-to-v1.html>`_.
