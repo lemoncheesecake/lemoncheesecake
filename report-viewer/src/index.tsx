@@ -13,3 +13,12 @@ window.addEventListener('load', () => {
     );
     registerServiceWorker();
 });
+
+// IE11 does not provide Array.of
+// Create a polyfill as indicated in
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of#Polyfill
+if (!Array.of) {
+  Array.of = function() {
+      return Array.prototype.slice.call(arguments);
+  };
+}
