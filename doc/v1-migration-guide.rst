@@ -37,6 +37,8 @@ Here is how it looks in version 1.x::
     project_dir = os.path.dirname(__file__)
     project = Project(project_dir)
 
+If you did not change the initial ``project.py`` file, you can simply replace the existing content by this new content.
+
 Here is what have been changed:
 
 - to add custom CLI arguments to ``lcc run``:
