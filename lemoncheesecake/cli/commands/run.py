@@ -7,13 +7,13 @@ Created on Dec 31, 2016
 import os
 
 from lemoncheesecake.cli.command import Command
-from lemoncheesecake.cli.utils import get_suites_from_project
-from lemoncheesecake.exceptions import LemonCheesecakeException, ProgrammingError, UserError, \
+from lemoncheesecake.cli.utils import load_suites_from_project
+from lemoncheesecake.exceptions import LemoncheesecakeException, ProgrammingError, UserError, \
     serialize_current_exception
-from lemoncheesecake.filter import add_run_filter_cli_args
-from lemoncheesecake.fixtures import FixtureRegistry, BuiltinFixture
-from lemoncheesecake.project import find_project_file, load_project_from_file, load_project
-from lemoncheesecake.reporting import filter_reporting_backends_by_capabilities, CAPABILITY_REPORTING_SESSION
+from lemoncheesecake.filter import add_run_filter_cli_args, make_run_filter
+from lemoncheesecake.fixture import FixtureRegistry, BuiltinFixture
+from lemoncheesecake.project import find_project_file, load_project_from_file, load_project, DEFAULT_REPORTING_BACKENDS
+from lemoncheesecake.reporting.backend import ReportingSessionBuilderMixin
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy
 from lemoncheesecake.runner import initialize_event_manager, run_suites
 
@@ -21,8 +21,8 @@ from lemoncheesecake.runner import initialize_event_manager, run_suites
 def build_fixture_registry(project, cli_args):
     registry = FixtureRegistry()
     registry.add_fixture(BuiltinFixture("cli_args", lambda: cli_args))
-    registry.add_fixture(BuiltinFixture("project_dir", lambda: project.get_project_dir()))
-    for fixture in project.get_fixtures():
+    registry.add_fixture(BuiltinFixture("project_dir", lambda: project.dir))
+    for fixture in project.load_fixtures():
         registry.add_fixture(fixture)
     registry.check_dependencies()
     return registry
@@ -35,7 +35,7 @@ def get_nb_threads(cli_args):
         try:
             return max(int(os.environ["LCC_THREADS"]), 1)
         except ValueError:
-            raise LemonCheesecakeException(
+            raise LemoncheesecakeException(
                 "Invalid value '%s' for $LCC_THREADS environment variable (expect integer)" % os.environ["LCC_THREADS"]
             )
     else:
@@ -48,38 +48,43 @@ def get_report_saving_strategy(cli_args):
     try:
         return make_report_saving_strategy(saving_strategy_expression)
     except ValueError:
-        raise LemonCheesecakeException("Invalid expression '%s' for report saving strategy" % saving_strategy_expression)
+        raise LemoncheesecakeException("Invalid expression '%s' for report saving strategy" % saving_strategy_expression)
+
+
+class ReportSetupHandler(object):
+    def __init__(self, project):
+        self.project = project
+
+    def __call__(self, event):
+        title = self.project.build_report_title()
+        if title:
+            event.report.title = title
+
+        for key, value in self.project.build_report_info():
+            event.report.add_info(key, value)
 
 
 def run_project(project, cli_args):
     nb_threads = get_nb_threads(cli_args)
-    if nb_threads > 1 and not project.is_threaded():
-        raise LemonCheesecakeException("Project does not support multi-threading")
+    if nb_threads > 1 and not project.threaded:
+        raise LemoncheesecakeException("Project does not support multi-threading")
 
-    suites = get_suites_from_project(project, cli_args)
+    suites = load_suites_from_project(project, make_run_filter(cli_args))
 
     # Build fixture registry
     fixture_registry = build_fixture_registry(project, cli_args)
     fixture_registry.check_fixtures_in_suites(suites)
 
-    # Set active reporting backends
-    available_reporting_backends = {
-        backend.name: backend for backend in
-        filter_reporting_backends_by_capabilities(
-            project.get_all_reporting_backends(), CAPABILITY_REPORTING_SESSION
-        )
-    }
-    active_reporting_backends = set()
-    for backend_name in cli_args.reporting + cli_args.enable_reporting:
+    # Get reporting backends
+    reporting_backends = []
+    for backend_name in cli_args.reporting:
         try:
-            active_reporting_backends.add(available_reporting_backends[backend_name])
+            backend = project.reporting_backends[backend_name]
         except KeyError:
-            raise LemonCheesecakeException("Unknown reporting backend '%s'" % backend_name)
-    for backend_name in cli_args.disable_reporting:
-        try:
-            active_reporting_backends.discard(available_reporting_backends[backend_name])
-        except KeyError:
-            raise LemonCheesecakeException("Unknown reporting backend '%s'" % backend_name)
+            raise LemoncheesecakeException("Unknown reporting backend '%s'" % backend_name)
+        if not isinstance(backend, ReportingSessionBuilderMixin):
+            raise LemoncheesecakeException("Reporting backend '%s' is not suitable for test run" % backend_name)
+        reporting_backends.append(backend)
 
     # Get report save mode
     report_saving_strategy = get_report_saving_strategy(cli_args)
@@ -90,21 +95,21 @@ def run_project(project, cli_args):
         try:
             os.mkdir(report_dir)
         except Exception as e:
-            return LemonCheesecakeException("Cannot create report directory: %s" % e)
+            return LemoncheesecakeException("Cannot create report directory: %s" % e)
     else:
         try:
             report_dir = project.create_report_dir()
         except UserError as e:
             raise e
         except Exception:
-            raise LemonCheesecakeException(
+            raise LemoncheesecakeException(
                 "Got an unexpected exception while creating report directory:%s" % \
                 serialize_current_exception(show_stacktrace=True)
             )
 
     # Handle before run hook
     try:
-        project.run_pre_session_hook(cli_args, report_dir)
+        project.pre_run(cli_args, report_dir)
     except UserError as e:
         raise e
     except Exception:
@@ -115,9 +120,9 @@ def run_project(project, cli_args):
 
     # Initialize event manager
     event_manager = initialize_event_manager(
-        suites, active_reporting_backends, report_dir, report_saving_strategy, nb_threads
+        suites, reporting_backends, report_dir, report_saving_strategy, nb_threads
     )
-    event_manager.add_listener(project)
+    event_manager.subscribe_to_event("test_session_start", ReportSetupHandler(project))
 
     # Run tests
     is_successful = run_suites(
@@ -128,7 +133,7 @@ def run_project(project, cli_args):
 
     # Handle after run hook
     try:
-        project.run_post_session_hook(cli_args, report_dir)
+        project.post_run(cli_args, report_dir)
     except UserError as e:
         raise e
     except Exception:
@@ -152,11 +157,12 @@ class RunCommand(Command):
 
     def add_cli_args(self, cli_parser):
         project_file = find_project_file()
-        project = None
-        default_reporting_backend_names = []
         if project_file:
             project = load_project_from_file(project_file)
-            default_reporting_backend_names = [backend.name for backend in project.get_default_reporting_backends_for_test_run()]
+            default_reporting_backend_names = project.default_reporting_backend_names
+        else:
+            project = None
+            default_reporting_backend_names = DEFAULT_REPORTING_BACKENDS
 
         add_run_filter_cli_args(cli_parser)
 
@@ -185,15 +191,7 @@ class RunCommand(Command):
         )
         reporting_group.add_argument(
             "--reporting", nargs="+", default=default_reporting_backend_names,
-            help="The list of reporting backends to use"
-        )
-        reporting_group.add_argument(
-            "--enable-reporting", nargs="+", default=[],
-            help="The list of reporting backends to add (to base backends)"
-        )
-        reporting_group.add_argument(
-            "--disable-reporting", nargs="+", default=[],
-            help="The list of reporting backends to remove (from base backends)"
+            help="The list of reporting backends to use (default: %s)" % ", ".join(default_reporting_backend_names)
         )
         reporting_group.add_argument(
             "--save-report", required=False,
@@ -203,7 +201,8 @@ class RunCommand(Command):
         )
 
         if project:
-            project.add_custom_args_to_run_cli(cli_parser)
+            cli_group = cli_parser.add_argument_group("Project custom arguments")
+            project.add_cli_args(cli_group)
 
     def run_cmd(self, cli_args):
         return run_project(load_project(), cli_args)

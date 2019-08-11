@@ -4,19 +4,18 @@ Created on Sep 8, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.exceptions import InvalidMetadataError, InternalError
+from lemoncheesecake.exceptions import InvalidMetadataError
 from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.helpers.introspection import get_callable_args, get_object_attributes
 from lemoncheesecake.testtree import BaseTest, BaseSuite
 
 SUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
 
-__all__ = (
-    "Test", "Suite"
-)
-
 
 class Test(BaseTest):
+    """
+    Internal representation of a test.
+    """
     def __init__(self, name, description, callback):
         BaseTest.__init__(self, name, description)
         self.callback = callback
@@ -36,43 +35,45 @@ class Test(BaseTest):
         return get_callable_args(self.callback)
 
 
-def _assert_valid_hook_name(hook_name):
-    if hook_name not in SUITE_HOOKS:
-        raise InternalError("Invalid hook name '%s'" % hook_name)
-
-
 class InjectedFixture:
     def __init__(self, fixture_name):
         self.fixture_name = fixture_name
 
 
-def _load_injected_fixtures(obj):
-    fixtures = {}
-    for attr_name, attr in get_object_attributes(obj):
-        if isinstance(attr, InjectedFixture):
-            fixtures[attr.fixture_name or attr_name] = attr_name
-    return fixtures
-
-
 class Suite(BaseSuite):
+    """
+    Internal representation of a suite.
+    """
     def __init__(self, obj, name, description):
         BaseSuite.__init__(self, name, description)
         self.obj = obj
         self.rank = 0
         self._hooks = {}
-        self._injected_fixtures = _load_injected_fixtures(obj)
+        self._injected_fixtures = self._load_injected_fixtures(obj)
         self.disabled = False
 
+    @staticmethod
+    def _assert_hook_name(hook_name):
+        assert hook_name in SUITE_HOOKS, "Invalid hook name '%s'" % hook_name
+
+    @staticmethod
+    def _load_injected_fixtures(obj):
+        fixtures = {}
+        for attr_name, attr in get_object_attributes(obj):
+            if isinstance(attr, InjectedFixture):
+                fixtures[attr.fixture_name or attr_name] = attr_name
+        return fixtures
+
     def add_hook(self, hook_name, func):
-        _assert_valid_hook_name(hook_name)
+        self._assert_hook_name(hook_name)
         self._hooks[hook_name] = func
 
     def has_hook(self, hook_name):
-        _assert_valid_hook_name(hook_name)
+        self._assert_hook_name(hook_name)
         return hook_name in self._hooks
 
     def get_hook(self, hook_name):
-        _assert_valid_hook_name(hook_name)
+        self._assert_hook_name(hook_name)
         return self._hooks.get(hook_name)
 
     def get_hook_params(self, hook_name):

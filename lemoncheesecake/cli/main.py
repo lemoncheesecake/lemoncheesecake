@@ -8,7 +8,7 @@ from __future__ import print_function
 import argparse
 import sys
 
-from lemoncheesecake.exceptions import LemonCheesecakeException
+from lemoncheesecake.exceptions import LemoncheesecakeException
 from lemoncheesecake.cli.commands import get_commands
 from lemoncheesecake.cli.utils import LEMONCHEESECAKE_VERSION
 
@@ -41,11 +41,11 @@ def build_cli_args(args=None):
 def main(args=None):
     try:
         cli_args = build_cli_args(args)
-    except LemonCheesecakeException as excp:
+    except LemoncheesecakeException as excp:
         return str(excp)
 
     command = next(cmd for cmd in get_commands() if cmd.get_name() == cli_args.command)
     try:
         return command.run_cmd(cli_args)
-    except LemonCheesecakeException as excp:
+    except LemoncheesecakeException as excp:
         return str(excp)

@@ -74,6 +74,10 @@ If the file you want to save is loaded in memory:
 
     lcc.save_attachment_content(data, "file.pdf", "PDF file")
 
+``save_attachment_content`` looks for the type of the ``data`` argument to know whether or not the file must be opened
+in binary mode. In Python3, the file will opened in binary mode if the type is ``bytes``, while it will be ``str``
+in Python 2.
+
 If you need the effective file path to write into:
 
 .. code-block:: python
@@ -86,7 +90,7 @@ Each of these three functions as a corresponding function for image attachment:
 
 - ``save_image_file``
 
-- ``save_attachment_content``
+- ``save_image_content``
 
 - ``prepare_image_attachment``
 

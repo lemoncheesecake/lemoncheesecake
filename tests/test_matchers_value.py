@@ -16,7 +16,7 @@ def test_equal_to_success_with_details():
 
     try:
         check = get_last_logged_check(run_func_in_test(lambda: check_that("value", 1, equal_to(1))))
-        assert check.outcome is True
+        assert check.is_successful is True
         assert check.details is None
     finally:
         matching.DISPLAY_DETAILS_WHEN_EQUAL = True

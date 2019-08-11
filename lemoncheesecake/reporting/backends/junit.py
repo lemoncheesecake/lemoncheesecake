@@ -22,7 +22,7 @@ except ImportError:
     LXML_IS_AVAILABLE = False
 
 from lemoncheesecake.reporting.backend import FileReportBackend
-from lemoncheesecake.reporting.report import Log, Check, format_timestamp_as_iso_8601
+from lemoncheesecake.reporting.report import Log, Check, format_time_as_iso8601
 from lemoncheesecake.consts import LOG_LEVEL_ERROR
 from lemoncheesecake.reporting.backends.xml import make_xml_child, make_xml_node, indent_xml, set_node_attr, \
     DEFAULT_INDENT_LEVEL
@@ -44,7 +44,7 @@ def _serialize_test_data(test):
     else:
         for step in test.steps:
             for step_entry in step.entries:
-                if isinstance(step_entry, Check) and step_entry.outcome is False:
+                if isinstance(step_entry, Check) and step_entry.is_successful is False:
                     make_xml_child(junit_test, "failure", "message", "failed check in step '%s'" % step.description)
                 elif isinstance(step_entry, Log) and step_entry.level == LOG_LEVEL_ERROR:
                     make_xml_child(junit_test, "error", "message", "error log in step '%s'" % step.description)
@@ -63,7 +63,7 @@ def _serialize_suite_data(suite):
             "failures", str(len(list(filter(lambda t: t.status == "failed", tests)))),
             "skipped", str(len(list(filter(lambda t: t.status == "skipped", tests)))),
             "time", format_duration(reduce(lambda x, y: x + y, (t.duration for t in tests if t.end_time), 0)),
-            "timestamp", format_timestamp_as_iso_8601(min(t.start_time for t in tests))
+            "timestamp", format_time_as_iso8601(min(t.start_time for t in tests))
         )
         junit_testsuites.append(junit_testsuite)
         for test in tests:
@@ -112,16 +112,17 @@ def save_report_into_file(report, filename, indent_level=DEFAULT_INDENT_LEVEL):
 
 
 class JunitBackend(FileReportBackend):
-    name = "junit"
-
     def __init__(self):
         self.indent_level = DEFAULT_INDENT_LEVEL
 
-    def get_report_filename(self):
-        return "report-junit.xml"
+    def get_name(self):
+        return "junit"
 
     def is_available(self):
         return LXML_IS_AVAILABLE
+
+    def get_report_filename(self):
+        return "report-junit.xml"
 
     def save_report(self, filename, report):
         save_report_into_file(report, filename, self.indent_level)

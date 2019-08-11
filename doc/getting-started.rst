@@ -72,8 +72,6 @@ to set the reporting backends that will be used.
                       [--exit-error-on-failure] [--stop-on-failure]
                       [--report-dir REPORT_DIR]
                       [--reporting REPORTING [REPORTING ...]]
-                      [--enable-reporting ENABLE_REPORTING [ENABLE_REPORTING ...]]
-                      [--disable-reporting DISABLE_REPORTING [DISABLE_REPORTING ...]]
                       [path [path ...]]
 
     optional arguments:
@@ -110,12 +108,13 @@ to set the reporting backends that will be used.
                             Directory where report data will be stored
       --reporting REPORTING [REPORTING ...]
                             The list of reporting backends to use
-      --enable-reporting ENABLE_REPORTING [ENABLE_REPORTING ...]
-                            The list of reporting backends to add (to base
-                            backends)
-      --disable-reporting DISABLE_REPORTING [DISABLE_REPORTING ...]
-                            The list of reporting backends to remove (from base
-                            backends)
+      --save-report SAVE_REPORT
+                            At what frequency the reporting backends such as json
+                            or xml must save reporting data to disk. (default:
+                            $LCC_SAVE_REPORT_AT or at_each_failed_test, possible
+                            values are: at_end_of_tests, at_each_suite,
+                            at_each_test, at_each_failed_test, at_each_event,
+                            every_${N}s)
 
 Tests are run like this:
 

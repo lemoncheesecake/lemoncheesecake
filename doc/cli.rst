@@ -67,7 +67,7 @@ Shows available project fixtures.
 
       $ lcc fixtures
 
-      Fixture with scope session_prerun:
+      Fixture with scope pre_run:
       +---------+--------------+------------------+---------------+
       | Fixture | Dependencies | Used by fixtures | Used by tests |
       +---------+--------------+------------------+---------------+

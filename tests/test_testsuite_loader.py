@@ -4,9 +4,9 @@ import six
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite.loader import load_suites_from_directory, load_suite_from_file, \
-    load_suite_from_class, load_suites_from_files, load_suites_from_classes, load_test_from_function, \
-    load_test_from_method
-from lemoncheesecake.validators import MetadataPolicy
+    load_suite_from_class, load_suites_from_files, load_suites_from_classes, _load_test_from_function, \
+    _load_test_from_method
+from lemoncheesecake.metadatapolicy import MetadataPolicy
 from lemoncheesecake.exceptions import *
 
 from helpers.runner import build_test_module
@@ -226,7 +226,7 @@ def test_metadata_policy():
 
 def test_load_suites_from_classes_with_condition_on_suite_met():
     @lcc.suite("My Suite")
-    @lcc.conditional(lambda suite_arg: suite_arg.__class__ == MySuite)
+    @lcc.visible_if(lambda suite_arg: suite_arg.__class__ == MySuite)
     class MySuite:
         @lcc.test("My Test")
         def mytest(self):
@@ -239,7 +239,7 @@ def test_load_suites_from_classes_with_condition_on_suite_met():
 
 def test_load_suites_from_classes_with_condition_on_suite_not_met():
     @lcc.suite("My Suite")
-    @lcc.conditional(lambda suite_arg: suite_arg.__class__ != MySuite)
+    @lcc.visible_if(lambda suite_arg: suite_arg.__class__ != MySuite)
     class MySuite:
         @lcc.test("My Test")
         def mytest(self):
@@ -254,7 +254,7 @@ def test_load_suites_from_classes_with_condition_on_test_met():
     @lcc.suite("My Suite")
     class MySuite:
         @lcc.test("My Test")
-        @lcc.conditional(lambda test_arg: six.get_method_function(test_arg) == six.get_unbound_function((MySuite.mytest)))
+        @lcc.visible_if(lambda test_arg: six.get_method_function(test_arg) == six.get_unbound_function((MySuite.mytest)))
         def mytest(self):
             pass
 
@@ -267,7 +267,7 @@ def test_load_suites_from_classes_with_condition_on_test_not_met():
     @lcc.suite("My Suite")
     class MySuite:
         @lcc.test("My Test")
-        @lcc.conditional(lambda test_arg: six.get_method_function(test_arg) != six.get_unbound_function(MySuite.mytest))
+        @lcc.visible_if(lambda test_arg: six.get_method_function(test_arg) != six.get_unbound_function(MySuite.mytest))
         def mytest(self):
             pass
 
@@ -294,7 +294,7 @@ def test_load_test_from_function():
     def func():
         return 1
 
-    test = load_test_from_function(func)
+    test = _load_test_from_function(func)
     assert test.name == "func"
     assert test.description == "mytest"
     assert test.callback() == 1
@@ -308,7 +308,7 @@ def test_load_test_from_method():
             return 1
 
     suite = Suite()
-    test = load_test_from_method(suite.meth)
+    test = _load_test_from_method(suite.meth)
     assert test.name == "meth"
     assert test.description == "mytest"
     assert test.callback() == 1
@@ -514,7 +514,7 @@ import sys
 
 SUITE = {
     "description": "My Suite",
-    "conditional": lambda mod: mod == sys.modules[__name__]
+    "visible_if": lambda mod: mod == sys.modules[__name__]
 }
 
 @lcc.test('My Test')
@@ -533,7 +533,7 @@ import sys
 
 SUITE = {
     "description": "My Suite",
-    "conditional": lambda mod: mod != sys.modules[__name__]
+    "visible_if": lambda mod: mod != sys.modules[__name__]
 }
 
 @lcc.test('My Test')
@@ -554,7 +554,7 @@ SUITE = {
 }
 
 @lcc.test('My Test')
-@lcc.conditional(lambda test_arg: test_arg == mytest)
+@lcc.visible_if(lambda test_arg: test_arg == mytest)
 def mytest():
     pass
 """)
@@ -572,7 +572,7 @@ SUITE = {
 }
 
 @lcc.test('My Test')
-@lcc.conditional(lambda test_arg: test_arg != mytest)
+@lcc.visible_if(lambda test_arg: test_arg != mytest)
 def mytest():
     pass
 """)

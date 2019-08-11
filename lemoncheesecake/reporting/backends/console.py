@@ -12,7 +12,7 @@ import colorama
 from termcolor import colored
 import six
 
-from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
+from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession, ReportingSessionBuilderMixin
 from lemoncheesecake.reporting.report import get_stats_from_suites
 from lemoncheesecake.filter import filter_suites
 from lemoncheesecake.helpers.time import humanize_duration
@@ -241,13 +241,14 @@ class ParallelConsoleReportingSession(ReportingSession):
         _print_summary(self.report.stats(), self.report.parallelized)
 
 
-class ConsoleBackend(ReportingBackend):
-    name = "console"
-
+class ConsoleBackend(ReportingBackend, ReportingSessionBuilderMixin):
     def __init__(self):
         width, height = terminalsize.get_terminal_size()
         self.terminal_width = width
         self.show_test_full_path = True
+
+    def get_name(self):
+        return "console"
 
     def create_reporting_session(self, report_dir, report, parallel, saving_strategy):
         return \
@@ -284,10 +285,10 @@ def print_report_as_test_run(report, filtr):
     # Display summary
     ###
     if suite_idx > 0:
-        if filtr.is_empty():
-            stats = report.stats()
-        else:
+        if filtr:
             stats = get_stats_from_suites(suites, report.parallelized)
+        else:
+            stats = report.stats()
         _print_summary(stats, report.parallelized)
     else:
         print("No test found in report")

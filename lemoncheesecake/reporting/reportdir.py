@@ -52,7 +52,7 @@ def report_dir_with_archiving(top_dir, archive_dirname_callback):
 def _list_directories_for_rotation(top_dir, dir_prefix):
     dirs = {}
     for dirname in glob.glob(os.path.join(top_dir, "%s*" % dir_prefix)):
-        m = re.compile("^%s(\d+)$" % dir_prefix).search(os.path.basename(dirname))
+        m = re.compile(r"^%s(\d+)$" % dir_prefix).search(os.path.basename(dirname))
         if m is not None:
             dirs[int(m.group(1))] = dirname
     return dirs
@@ -77,7 +77,7 @@ def _remove_obsolete_directories(directories, limit):
 
 def _rotate_directory(num, dirname):
     next_num = num + 1
-    next_dirname = re.sub("\d+$", str(next_num), dirname)
+    next_dirname = re.sub(r"\d+$", str(next_num), dirname)
     if os.path.exists(next_dirname):
         _rotate_directory(next_num, next_dirname)
     os.rename(dirname, next_dirname)

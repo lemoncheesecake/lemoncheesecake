@@ -5,9 +5,11 @@ import urllib
 import urllib2
 import json
 
-from lemoncheesecake.project import SimpleProjectConfiguration, HasCustomCliArgs
-from lemoncheesecake.fixtures import load_fixtures_from_func
+from lemoncheesecake.project import Project
+from lemoncheesecake.fixture import load_fixtures_from_func
+from lemoncheesecake.suite import load_suites_from_directory
 import lemoncheesecake.api as lcc
+from lemoncheesecake.matching import *
 
 
 project_dir = osp.dirname(__file__)
@@ -25,7 +27,7 @@ class OmdbAPI:
         )
         lcc.log_info("GET %s" % url)
         req = urllib2.urlopen(url)
-        lcc.assert_eq("HTTP status code", req.code, 200)
+        check_that("HTTP status code", req.code, equal_to(200))
          
         content = req.read()
         lcc.log_info("Response body: %s" % content)
@@ -40,12 +42,15 @@ def omdb(cli_args):
     return OmdbAPI(cli_args.host)
 
 
-class MyProject(SimpleProjectConfiguration, HasCustomCliArgs):
-    def get_fixtures(self):
+class MyProject(Project):
+    def load_suites(self):
+        return load_suites_from_directory(osp.join(self.dir, "tests"))
+
+    def load_fixtures(self):
         return load_fixtures_from_func(omdb)
 
-    def add_custom_cli_args(self, cli_parser):
+    def add_cli_args(self, cli_parser):
         cli_parser.add_argument("--host", default="www.omdbapi.com", help="omdb API host")
 
 
-project = MyProject(suites_dir="tests")
+project = MyProject(project_dir)

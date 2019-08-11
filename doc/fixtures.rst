@@ -64,13 +64,13 @@ Fixtures can be injected into suites through parameters passed to ``setup_suite`
 
     api = lcc.inject_fixture()
 
-Fixtures with scope ``session_prerun`` that have been previously executed through a dependency can get be retrieved
+Fixtures with scope ``pre_run`` that have been previously executed through a dependency can get be retrieved
 using ``lcc.get_fixture(name)``.
 
 
 Four fixture scopes are available (higher to lower scope):
 
-- ``session_prerun``: fixtures with this scope will be called before the test session is started, meaning that the
+- ``pre_run``: fixtures with this scope will be called before the test session is started, meaning that the
   fixture cannot use any of the ``log_*``, ``check_*``, etc... functions. If a fixture with this scope
   raises an exception, it will prevent the tests to be executed. This behavior can be used in conjunction with
   the ``UserError`` exception and the ``cli_args`` fixture to handle bad CLI arguments
@@ -110,12 +110,12 @@ Please note that:
 
 Lemoncheesecake provides several special builtin fixtures:
 
-- ``cli_args`` (scope: ``session_prerun``) is the object returned by ``parse_args`` of the
+- ``cli_args`` (scope: ``pre_run``) is the object returned by ``parse_args`` of the
   `argparse <https://docs.python.org/2/library/argparse.html>`_ module and that contains the actual CLI arguments;
   this fixture can be used to access custom command line arguments previously setup by the method ``add_custom_cli_args``
   of the project class declared in the lemoncheesecake project file
 
-- ``project_dir`` (scope: ``session_prerun``) is the path of the project, meaning the directory of the project file
+- ``project_dir`` (scope: ``pre_run``) is the path of the project, meaning the directory of the project file
 
 - ``fixture_name`` is the name of the called fixture and can only be used by a fixture. A typical use case is a
   fixture with multiple names, ``fixture_name`` can be used to identify through which name the fixture has been called

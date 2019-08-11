@@ -4,6 +4,8 @@ Created on Mar 27, 2016
 @author: nicolas
 '''
 
+import time
+
 try:
     from lxml import etree as ET
     from lxml.builder import E
@@ -14,16 +16,12 @@ except ImportError:
 import six
 
 import lemoncheesecake
-from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend
+from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend, ReportUnserializerMixin
 from lemoncheesecake.reporting.report import (
-    Log, Check, Attachment, Url, Step, TestResult, SetupResult, SuiteResult,
-    format_timestamp, parse_timestamp
+    Log, Check, Attachment, Url, Step, Result, TestResult, SuiteResult,
+    format_time_as_iso8601, parse_iso8601_time
 )
-from lemoncheesecake.exceptions import ProgrammingError, InvalidReportFile
-
-OUTCOME_NOT_AVAILABLE = "n/a"
-OUTCOME_FAILURE = "failure"
-OUTCOME_SUCCESS = "success"
+from lemoncheesecake.exceptions import ProgrammingError, InvalidReportFile, IncompatibleReportFile
 
 DEFAULT_INDENT_LEVEL = 4
 
@@ -72,16 +70,7 @@ def make_xml_child(parent_node, name, *args):
 def _add_time_attr(node, name, value):
     if not value:
         return
-    node.attrib[name] = format_timestamp(value)
-
-
-def _serialize_outcome(outcome):
-    if outcome is True:
-        return OUTCOME_SUCCESS
-    elif outcome is False:
-        return OUTCOME_FAILURE
-    else:
-        return OUTCOME_NOT_AVAILABLE
+    node.attrib[name] = format_time_as_iso8601(value)
 
 
 def _serialize_bool(value):
@@ -98,7 +87,7 @@ def _serialize_steps(steps, parent_node):
                 log_node = make_xml_child(
                     step_node, "log",
                     "level", entry.level,
-                    "time", format_timestamp(entry.time)
+                    "time", format_time_as_iso8601(entry.time)
                 )
                 log_node.text = entry.message
             elif isinstance(entry, Attachment):
@@ -106,22 +95,22 @@ def _serialize_steps(steps, parent_node):
                     step_node, "attachment",
                     "description", entry.description,
                     "as-image", _serialize_bool(entry.as_image),
-                    "time", format_timestamp(entry.time)
+                    "time", format_time_as_iso8601(entry.time)
                 )
                 attachment_node.text = entry.filename
             elif isinstance(entry, Url):
                 url_node = make_xml_child(
                     step_node, "url",
                     "description", entry.description,
-                    "time", format_timestamp(entry.time)
+                    "time", format_time_as_iso8601(entry.time)
                 )
                 url_node.text = entry.url
             else:  # TestCheck
                 check_node = make_xml_child(
                     step_node, "check",
                     "description", entry.description,
-                    "outcome", _serialize_outcome(entry.outcome),
-                    "time", format_timestamp(entry.time)
+                    "is-successful", _serialize_bool(entry.is_successful),
+                    "time", format_time_as_iso8601(entry.time)
                 )
                 check_node.text = entry.details
 
@@ -148,7 +137,7 @@ def _serialize_test_data(test):
 
 
 def _serialize_hook_data(data, node):
-    node.attrib["outcome"] = _serialize_outcome(data.outcome)
+    node.attrib["status"] = data.status or ""
     _add_time_attr(node, "start-time", data.start_time)
     _add_time_attr(node, "end-time", data.end_time)
     _serialize_steps(data.steps, node)
@@ -191,23 +180,18 @@ def _serialize_suite_data(suite):
 
 def serialize_report_as_tree(report):
     xml = E("lemoncheesecake-report")
-    xml.attrib["nb-threads"] = str(report.nb_threads)
-    report_version_node = make_xml_child(xml, "lemoncheesecake-version")
-    report_version_node.text = lemoncheesecake.__version__
-    report_version_node = make_xml_child(xml, "lemoncheesecake-report-version")
-    report_version_node.text = str("1.0")
+    xml.attrib["lemoncheesecake-version"] = lemoncheesecake.__version__
+    xml.attrib["report-version"] = "1.0"
     _add_time_attr(xml, "start-time", report.start_time)
     _add_time_attr(xml, "end-time", report.end_time)
-    _add_time_attr(xml, "generation-time", report.report_generation_time)
+    _add_time_attr(xml, "generation-time", time.time())
+    xml.attrib["nb-threads"] = str(report.nb_threads)
 
     title_node = make_xml_child(xml, "title")
     title_node.text = report.title
     for name, value in report.info:
         info_node = make_xml_child(xml, "info", "name", name)
         info_node.text = value
-    for name, value in report.serialize_stats():
-        stat_node = make_xml_child(xml, "stat", "name", name)
-        stat_node.text = value
 
     if report.test_session_setup:
         _serialize_hook_data(report.test_session_setup, make_xml_child(xml, "test-session-setup"))
@@ -223,13 +207,13 @@ def serialize_report_as_tree(report):
 
 
 def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
-    report = serialize_report_as_tree(report)
-    indent_xml(report, indent_level=indent_level)
+    xml_report = serialize_report_as_tree(report)
+    indent_xml(xml_report, indent_level=indent_level)
 
     if six.PY3:
-        return ET.tostring(report, pretty_print=True, encoding="unicode")
+        return ET.tostring(xml_report, pretty_print=True, encoding="unicode")
     else:
-        return ET.tostring(report, pretty_print=True, xml_declaration=True, encoding="utf-8")
+        return ET.tostring(xml_report, pretty_print=True, xml_declaration=True, encoding="utf-8")
 
 
 def save_report_into_file(report, filename, indent_level=DEFAULT_INDENT_LEVEL):
@@ -239,18 +223,7 @@ def save_report_into_file(report, filename, indent_level=DEFAULT_INDENT_LEVEL):
 
 
 def _unserialize_datetime(value):
-    return parse_timestamp(value)
-
-
-def _unserialize_outcome(value):
-    if value == OUTCOME_SUCCESS:
-        return True
-    elif value == OUTCOME_FAILURE:
-        return False
-    elif value == OUTCOME_NOT_AVAILABLE:
-        return None
-    else:
-        raise ProgrammingError("Unknown value '%s' for outcome" % value)
+    return parse_iso8601_time(value)
 
 
 def _unserialize_bool(value):
@@ -283,7 +256,7 @@ def _unserialize_step_data(xml):
             )
         elif xml_entry.tag == "check":
             entry = Check(
-                xml_entry.attrib["description"], _unserialize_outcome(xml_entry.attrib["outcome"]),
+                xml_entry.attrib["description"], _unserialize_bool(xml_entry.attrib["is-successful"]),
                 xml_entry.text, _unserialize_datetime(xml_entry.attrib["time"])
             )
         else:
@@ -306,8 +279,8 @@ def _unserialize_test_data(xml):
 
 
 def _unserialize_hook_data(xml):
-    data = SetupResult()
-    data.outcome = _unserialize_outcome(xml.attrib["outcome"])
+    data = Result()
+    data.status = xml.attrib["status"] or None
     data.start_time = _unserialize_datetime(xml.attrib["start-time"])
     data.end_time = _unserialize_datetime(xml.attrib["end-time"]) if "end-time" in xml.attrib else None
     data.steps = [_unserialize_step_data(step) for step in xml.xpath("step")]
@@ -355,7 +328,11 @@ def load_report_from_file(filename):
     try:
         root = xml.getroot().xpath("/lemoncheesecake-report")[0]
     except IndexError:
-        raise InvalidReportFile("Cannot lemoncheesecake-report element in XML")
+        raise InvalidReportFile("Cannot find lemoncheesecake-report element in XML")
+
+    report_version = float(root.attrib["report-version"])
+    if report_version >= 2.0:
+        raise IncompatibleReportFile("Incompatible report version: got %s while 1.x is supported" % report_version)
 
     report.start_time = _unserialize_datetime(root.attrib["start-time"]) if "start-time" in root.attrib else None
     report.end_time = _unserialize_datetime(root.attrib["end-time"]) if "end-time" in root.attrib else None
@@ -381,17 +358,18 @@ def load_report_from_file(filename):
     return report
 
 
-class XmlBackend(FileReportBackend):
-    name = "xml"
-
+class XmlBackend(FileReportBackend, ReportUnserializerMixin):
     def __init__(self):
         self.indent_level = DEFAULT_INDENT_LEVEL
 
-    def get_report_filename(self):
-        return "report.xml"
+    def get_name(self):
+        return "xml"
 
     def is_available(self):
         return LXML_IS_AVAILABLE
+
+    def get_report_filename(self):
+        return "report.xml"
 
     def save_report(self, filename, report):
         save_report_into_file(report, filename, self.indent_level)

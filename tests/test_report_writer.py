@@ -12,6 +12,7 @@ import time
 import six
 
 import lemoncheesecake.api as lcc
+from lemoncheesecake.matching import *
 
 from helpers.runner import run_suite_class, run_suite_classes, run_func_in_test
 from helpers.report import assert_report_from_suite, assert_report_from_suites, get_last_test, get_last_attachment, \
@@ -150,7 +151,7 @@ def test_check_success():
     class mysuite:
         @lcc.test("Test 1")
         def test_1(self):
-            lcc.check_that("somevalue", "foo", lcc.equal_to("foo"))
+            check_that("somevalue", "foo", equal_to("foo"))
 
     report = run_suite_class(mysuite)
 
@@ -159,7 +160,7 @@ def test_check_success():
     step = test.steps[0]
     assert "somevalue" in step.entries[0].description
     assert "foo" in step.entries[0].description
-    assert step.entries[0].outcome is True
+    assert step.entries[0].is_successful is True
     assert "foo" in step.entries[0].details
 
 
@@ -168,7 +169,7 @@ def test_check_failure():
     class mysuite:
         @lcc.test("Test 1")
         def test_1(self):
-            lcc.check_that("somevalue", "foo", lcc.equal_to("bar"))
+            check_that("somevalue", "foo", equal_to("bar"))
 
     report = run_suite_class(mysuite)
 
@@ -177,7 +178,7 @@ def test_check_failure():
     step = test.steps[0]
     assert "somevalue" in step.entries[0].description
     assert "bar" in step.entries[0].description
-    assert step.entries[0].outcome is False
+    assert step.entries[0].is_successful is False
     assert "foo" in step.entries[0].details
 
 
@@ -186,7 +187,7 @@ def test_require_success():
     class mysuite:
         @lcc.test("Test 1")
         def test_1(self):
-            lcc.require_that("somevalue", "foo", lcc.equal_to("foo"))
+            require_that("somevalue", "foo", equal_to("foo"))
 
     report = run_suite_class(mysuite)
 
@@ -195,7 +196,7 @@ def test_require_success():
     step = test.steps[0]
     assert "somevalue" in step.entries[0].description
     assert "foo" in step.entries[0].description
-    assert step.entries[0].outcome is True
+    assert step.entries[0].is_successful is True
     assert "foo" in step.entries[0].details
 
 
@@ -204,7 +205,7 @@ def test_require_failure():
     class mysuite:
         @lcc.test("Test 1")
         def test_1(self):
-            lcc.require_that("somevalue", "foo", lcc.equal_to("bar"))
+            require_that("somevalue", "foo", equal_to("bar"))
 
     report = run_suite_class(mysuite)
 
@@ -213,7 +214,7 @@ def test_require_failure():
     step = test.steps[0]
     assert "somevalue" in step.entries[0].description
     assert "bar" in step.entries[0].description
-    assert step.entries[0].outcome is False
+    assert step.entries[0].is_successful is False
     assert "foo" in step.entries[0].details
 
 
@@ -224,7 +225,7 @@ def test_all_types_of_logs():
         def test_1(self):
             lcc.log_debug("some debug message")
             lcc.log_info("some info message")
-            lcc.log_warn("some warning message")
+            lcc.log_warning("some warning message")
 
         @lcc.test("Test 2")
         def test_2(self):
@@ -257,28 +258,6 @@ def test_multiple_steps():
             lcc.log_info("do something")
             lcc.set_step("step 2")
             lcc.log_info("do something else")
-
-    report = run_suite_class(mysuite)
-
-    test = get_last_test(report)
-    assert test.status == "passed"
-    assert test.steps[0].description == "step 1"
-    assert test.steps[0].entries[0].level == "info"
-    assert test.steps[0].entries[0].message == "do something"
-    assert test.steps[1].description == "step 2"
-    assert test.steps[1].entries[0].level == "info"
-    assert test.steps[1].entries[0].message == "do something else"
-
-
-def test_concurrent_steps():
-    @lcc.suite("MySuite")
-    class mysuite:
-        @lcc.test("Some test")
-        def sometest(self):
-            lcc.set_step("step 1", detached=True)
-            lcc.set_step("step 2", detached=True)
-            lcc.log_info("do something else", step="step 2")
-            lcc.log_info("do something", step="step 1")
 
     report = run_suite_class(mysuite)
 
@@ -472,9 +451,9 @@ def test_save_image_file(tmpdir):
     )
 
 
-def _test_save_attachment_content(tmpdir, file_name, file_content, binary_mode, file_reader):
+def _test_save_attachment_content(tmpdir, file_name, file_content, file_reader):
     def do():
-        lcc.save_attachment_content(file_content, file_name, binary_mode=binary_mode)
+        lcc.save_attachment_content(file_content, file_name)
 
     report = run_func_in_test(do, tmpdir=tmpdir)
 
@@ -482,15 +461,15 @@ def _test_save_attachment_content(tmpdir, file_name, file_content, binary_mode, 
 
 
 def test_save_attachment_text_ascii(tmpdir):
-    _test_save_attachment_content(tmpdir, "foobar.txt", "foobar", False, make_file_reader())
+    _test_save_attachment_content(tmpdir, "foobar.txt", "foobar", make_file_reader())
 
 
 def test_save_attachment_text_utf8(tmpdir):
-    _test_save_attachment_content(tmpdir, "foobar.txt", u"éééçççààà", False, make_file_reader(encoding="utf-8"))
+    _test_save_attachment_content(tmpdir, "foobar.txt", u"éééçççààà", make_file_reader(encoding="utf-8"))
 
 
 def test_save_attachment_binary(tmpdir):
-    _test_save_attachment_content(tmpdir, "foobar.png", SAMPLE_IMAGE_CONTENT, True, make_file_reader(binary=True))
+    _test_save_attachment_content(tmpdir, "foobar.png", SAMPLE_IMAGE_CONTENT, make_file_reader(binary=True))
 
 
 def test_save_image_content(tmpdir):
@@ -525,7 +504,7 @@ def test_unicode(tmpdir):
         @lcc.test("some test")
         def sometest(self):
             lcc.set_step(u"éééààà")
-            lcc.check_that(u"éééààà", 1, lcc.equal_to(1))
+            check_that(u"éééààà", 1, equal_to(1))
             lcc.log_info(u"éééààà")
             lcc.save_attachment_content("A" * 1024, u"somefileààà", u"éééààà")
 
@@ -554,7 +533,7 @@ def test_setup_suite_success():
     report = run_suite_class(mysuite)
 
     setup = _get_suite_setup(report)
-    assert setup.outcome is True
+    assert setup.status == "passed"
     assert setup.start_time is not None
     assert setup.end_time is not None
     assert setup.steps[0].entries[0].message == "some log"
@@ -574,7 +553,7 @@ def test_setup_suite_failure():
     report = run_suite_class(mysuite)
 
     setup = _get_suite_setup(report)
-    assert setup.outcome is False
+    assert setup.status == "failed"
     assert setup.start_time is not None
     assert setup.end_time is not None
     assert setup.steps[0].entries[0].message == "something bad happened"
@@ -609,7 +588,7 @@ def test_teardown_suite_success():
     report = run_suite_class(mysuite)
 
     teardown = _get_suite_teardown(report)
-    assert teardown.outcome is True
+    assert teardown.status == "passed"
     assert teardown.start_time is not None
     assert teardown.end_time is not None
     assert teardown.steps[0].entries[0].message == "some log"
@@ -624,15 +603,15 @@ def test_teardown_suite_failure():
             pass
 
         def teardown_suite(self):
-            lcc.check_that("val", 1, lcc.equal_to(2))
+            check_that("val", 1, equal_to(2))
 
     report = run_suite_class(mysuite)
 
     teardown = _get_suite_teardown(report)
-    assert teardown.outcome is False
+    assert teardown.status == "failed"
     assert teardown.start_time is not None
     assert teardown.end_time is not None
-    assert teardown.steps[0].entries[0].outcome is False
+    assert teardown.steps[0].entries[0].is_successful is False
     assert not teardown.is_successful()
 
 
@@ -665,7 +644,7 @@ def test_setup_test_session_success():
     report = run_suite_class(mysuite, fixtures=[fixt])
 
     setup = report.test_session_setup
-    assert setup.outcome is True
+    assert setup.status == "passed"
     assert setup.start_time is not None
     assert setup.end_time is not None
     assert setup.steps[0].entries[0].message == "some log"
@@ -686,7 +665,7 @@ def test_setup_test_session_failure():
     report = run_suite_class(mysuite, fixtures=[fixt])
 
     setup = report.test_session_setup
-    assert setup.outcome is False
+    assert setup.status == "failed"
     assert setup.start_time is not None
     assert setup.end_time is not None
     assert setup.steps[0].entries[0].message == "something bad happened"
@@ -724,7 +703,7 @@ def test_teardown_test_session_success():
     report = run_suite_class(mysuite, fixtures=[fixt])
 
     teardown = report.test_session_teardown
-    assert teardown.outcome is True
+    assert teardown.status == "passed"
     assert teardown.start_time is not None
     assert teardown.end_time is not None
     assert teardown.steps[0].entries[0].message == "some log"
@@ -741,15 +720,15 @@ def test_teardown_test_session_failure():
     @lcc.fixture(scope="session")
     def fixt():
         yield
-        lcc.check_that("val", 1, lcc.equal_to(2))
+        check_that("val", 1, equal_to(2))
 
     report = run_suite_class(mysuite, fixtures=[fixt])
 
     teardown = report.test_session_teardown
-    assert teardown.outcome is False
+    assert teardown.status == "failed"
     assert teardown.start_time is not None
     assert teardown.end_time is not None
-    assert teardown.steps[0].entries[0].outcome is False
+    assert teardown.steps[0].entries[0].is_successful is False
     assert not teardown.is_successful()
 
 

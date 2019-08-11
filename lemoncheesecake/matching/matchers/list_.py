@@ -4,50 +4,66 @@ Created on May 2, 2017
 @author: nicolas
 '''
 
-from lemoncheesecake.matching.base import MatchExpected, MatchResult, match_failure, match_success, match_result, got_value, to_have, to_be, serialize_values
+from typing import Sequence, Any
+
+from lemoncheesecake.helpers.text import jsonify
+from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatchDescriptionTransformer
 from lemoncheesecake.matching.matchers.composites import is_
 
-__all__ = ("has_item", "has_values", "has_only_values", "is_in")
+
+def _jsonify_items(items):
+    return ", ".join(map(jsonify, items))
 
 
 class HasItemMatchResult(MatchResult):
-    def __init__(self, outcome, description, index, item):
-        MatchResult.__init__(self, outcome, description)
-        self.item = item
-        self.index = index
+    def __init__(self, is_successful, description, index, item):
+        MatchResult.__init__(self, is_successful, description)
+        self.item = item  # type: Any
+        self.index = index  # type: int
 
     @classmethod
-    def success(cls, index, item):
+    def found(cls, index, item):
         return cls(True, "found matching item at index %d" % index, index, item)
 
     @classmethod
-    def failure(cls):
+    def not_found(cls):
         return cls(False, "no matching item", -1, None)
 
 
-class HasItem(MatchExpected):
-    def description(self, conjugate=False):
-        return "%s an item whose value %s" % (to_have(conjugate), self.expected.description(conjugate=True))
+class HasItem(Matcher):
+    def __init__(self, expected):
+        self.expected = expected
 
-    def short_description(self, conjugate=False):
-        return "%s an item whose value %s" % (to_have(conjugate), self.expected.short_description(conjugate=True))
+    def build_description(self, transformation):
+        return transformation(
+            "to have an item whose value %s" % self.expected.build_description(MatchDescriptionTransformer(conjugate=True))
+        )
+
+    def build_short_description(self, transformation):
+        return transformation(
+            "to have an item whose value %s" % self.expected.build_short_description(MatchDescriptionTransformer(conjugate=True))
+        )
 
     def matches(self, actual):
         for index, item in enumerate(actual):
             result = self.expected.matches(item)
-            if result.is_success():
-                return HasItemMatchResult.success(index, item)
-        return HasItemMatchResult.failure()
+            if result:
+                return HasItemMatchResult.found(index, item)
+        return HasItemMatchResult.not_found()
 
 
 def has_item(expected):
-    "Test if iterable has item matching expected"
+    # type: (Any) -> HasItem
+    """Test if the sequence has item matching expected"""
     return HasItem(is_(expected))
 
 
-class HasValues(MatchExpected):
-    def description(self, conjugate=False):
-        return "%s values %s" % (to_have(conjugate), serialize_values(self.expected))
+class HasItems(Matcher):
+    def __init__(self, expected):
+        self.expected = expected
+
+    def build_description(self, transformation):
+        return transformation("to have items %s" % _jsonify_items(self.expected))
 
     def matches(self, actual):
         missing = []
@@ -56,19 +72,23 @@ class HasValues(MatchExpected):
                 missing.append(expected)
 
         if missing:
-            return match_failure("Missing values: %s" % serialize_values(missing))
+            return MatchResult.failure("Missing items: %s" % _jsonify_items(missing))
         else:
-            return match_success(got_value(actual))
+            return MatchResult.success("got %s" % jsonify(actual))
 
 
-def has_values(values):
-    "Test if iterable contains at least the given values"
-    return HasValues(values)
+def has_items(values):
+    # type: (Sequence) -> HasItems
+    """Test if the sequence contains at least the given values"""
+    return HasItems(values)
 
 
-class HasOnlyValues(MatchExpected):
-    def description(self, conjugate=False):
-        return "%s only values %s" % (to_have(conjugate), serialize_values(self.expected))
+class HasOnlyItems(Matcher):
+    def __init__(self, expected):
+        self.expected = expected
+
+    def build_description(self, transformation):
+        return transformation("to have only items %s" % _jsonify_items(self.expected))
 
     def matches(self, actual):
         expected = list(self.expected)
@@ -80,28 +100,34 @@ class HasOnlyValues(MatchExpected):
                 extra.append(value)
 
         if len(expected) == 0 and len(extra) == 0:
-            return match_success(got_value(actual))
+            return MatchResult.success("got %s" % jsonify(actual))
         else:
             details = []
             if len(expected) > 0:
-                details.append("Missing values: %s" % serialize_values(expected))
+                details.append("Missing items: %s" % _jsonify_items(expected))
             if len(extra) > 0:
-                details.append("Extra values: %s" % serialize_values(extra))
-            return match_failure("; ".join(details))
+                details.append("Extra items: %s" % _jsonify_items(extra))
+            return MatchResult.failure("; ".join(details))
 
 
-def has_only_values(values):
-    "Test if iterable only contains the given values"
-    return HasOnlyValues(values)
+def has_only_items(expected):
+    # type: (Sequence) -> HasOnlyItems
+    """Test if the sequence only contains the given values"""
+    return HasOnlyItems(expected)
 
 
-class IsIn(MatchExpected):
-    def description(self, conjugate=False):
-        return "%s in %s" % (to_be(conjugate), serialize_values(self.expected))
+class IsIn(Matcher):
+    def __init__(self, expected):
+        self.expected = expected
+
+    def build_description(self, transformation):
+        return transformation("to be in %s" % _jsonify_items(self.expected))
 
     def matches(self, actual):
-        return match_result(actual in self.expected, got_value(actual))
+        return MatchResult(actual in self.expected, "got %s" % jsonify(actual))
 
 
 def is_in(expected):
+    # type: (Sequence) -> IsIn
+    """Test if the sequence contains the expected item"""
     return IsIn(expected)

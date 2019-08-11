@@ -31,11 +31,11 @@ def get_junit_xml_from_suite(suite, tmpdir, stop_on_failure=False):
 
 
 def assert_duration_format(value):
-    assert re.compile("^\d.\d{3}").match(value)
+    assert re.compile(r"^\d.\d{3}").match(value)
 
 
 def assert_timestamp_format(value):
-    assert re.compile("^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$").match(value)
+    assert re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$").match(value)
 
 
 def assert_testsuites(junit_xml, tests, failures=0):
@@ -78,7 +78,7 @@ else:
         class suite():
             @lcc.test("Test")
             def test(self):
-                lcc.check_that("value", 1, is_(1))
+                check_that("value", 1, is_(1))
         
         junit_xml = get_junit_xml_from_suite(suite, tmpdir)
         assert_testsuites(junit_xml, tests=1, failures=0)

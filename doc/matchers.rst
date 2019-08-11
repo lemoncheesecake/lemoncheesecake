@@ -6,6 +6,9 @@ Matchers
 Lemoncheesecake comes with support of matchers, a feature inspired by
 `Hamcrest <http://hamcrest.org/>`_ / `PyHamcrest <https://github.com/hamcrest/PyHamcrest>`_.
 
+The matchers
+------------
+
 The following stock matchers are available:
 
 - Values:
@@ -43,6 +46,8 @@ The following stock matchers are available:
 
   - ``ends_with(expected)``: check if the actual string ends with ``expected``
 
+  - ``contains_string(expected)``: check if the actual contains ``expected``
+
   - ``match_pattern(expected)``: check if the actual string match ``expected`` regexp (expected can be a raw string or an object
     returned by ``re.compile()``)
 
@@ -56,24 +61,24 @@ The following stock matchers are available:
 
   - ``is_float([expected])``: check if actual is of type ``float``
 
-  - ``is_str([expected])``: check if actual is of type ``str`` (or ``unicode`` if Python 2.7)
+  - ``is_bool([expected])``: check if actual is of type ``bool``
 
-  - ``is_dict([expected])``: check if actual is of type ``dict``
+  - ``is_str([expected])``: check if actual is of type ``str`` (or ``unicode`` if Python 2.7)
 
   - ``is_list([expected])``: check if actual is of type ``list`` or ``tuple``
 
-  - ``is_bool([expected])``: check if actual is of type ``bool``
+  - ``is_dict([expected])``: check if actual is of type ``dict``
 
 - Iterable:
 
-  - ``has_item(expected)``: check is actual iterable has an element that matches expected (expected can be a value
+  - ``has_item(expected)``: check if the actual iterable has an item that matches expected (expected can be a value
     or a Matcher)
 
-  - ``has_values(expected)``: check is actual iterable contains **at least** the expected values
+  - ``has_items(expected)``: check if the actual iterable contains **at least** the expected items
 
-  - ``has_only_values(expected)``: check if actual iterable **only contains** the expected values
+  - ``has_only_items(expected)``: check if the actual iterable **only contains** the expected items
 
-  - ``is_in(expected)``: check if actual value **is among** the expected values
+  - ``is_in(expected)``: check if actual is **among** the expected items
 
 - Dict:
 
@@ -85,7 +90,7 @@ The following stock matchers are available:
   - ``is_(expected)``: return the matcher if ``expected`` is a matcher, otherwise wraps ``expected`` in the
     ``equal_to`` matcher
 
-  - ``is_not(expected)``: make the negation of the ``expected`` matcher (or ``equal_to`` if the argument is
+  - ``is_not(expected)``, ``not_(expected)``: make the negation of the ``expected`` matcher (or ``equal_to`` if the argument is
     not a matcher)
 
   - ``all_of(matcher1, [matcher2, [...]])``: check if all the matchers succeed (logical **AND** between all the
@@ -94,9 +99,11 @@ The following stock matchers are available:
   - ``any_of(matcher1, [matcher2, [...]])``: check if any of the matchers succeed (logical **OR** between all the
     matchers)
 
-  - ``anything()``, ``something()``, ``existing()``: these matchers always succeed whatever the actual value is (only
+  - ``anything()``, ``something()``, ``existing()``, ``present()``: these matchers always succeed whatever the actual value is (only
     the matcher description changes to fit the matcher's name)
 
+The matching operations
+-----------------------
 
 Those matcher are used by a matching function:
 
@@ -125,33 +132,60 @@ Can be shortened like this:
 
 .. code-block:: python
 
-    data = {"foo": 1, "bar": 2}
-    check_that_entry("foo", equal_to(1), in_=data)
-    check_that_entry("bar", equal_to(2), in_=data)
-
-``check_that_entry`` can also be used with the context manager ``this_dict``:
-
-.. code-block:: python
-
-    with this_dict({"foo": 1, "bar": 2}):
-        check_that_entry("foo", equal_to(1))
-        check_that_entry("bar", equal_to(2))
-
-``check_that_in`` can conveniently be used instead of ``this_dict`` + ``check_that_entry`` when the context manager
-block is only composed of calls to ``check_that_entry``:
-
-.. code-block:: python
-
     check_that_in(
         {"foo": 1, "bar": 2},
         "foo", equal_to(1),
         "bar", equal_to(2)
     )
 
-The same dict helper counter parts are available for ``require_that`` and ``assert_that``:
+The same dict helper counter parts are available for:
 
-- ``require_that_entry`` and ``require_that_in``
+- ``require_that`` => ``require_that_in``
 
-- ``assert_that_entry`` and ``assert_that_in``
+- ``assert_that`` => ``assert_that_in``
 
 If one match fails in a test, this test will be marked as failed.
+
+Creating custom matchers
+------------------------
+
+A custom matcher example::
+
+    from lemoncheesecake.matching.matcher import Matcher, MatchResult
+
+    class MultipleOf(Matcher):
+        def __init__(self, value):
+            self.value = value
+
+        def build_description(self, transformation):
+            return transformation("to be a multiple of %s" % self.value)
+
+        def matches(self, actual):
+            return MatchResult(actual % self.value == 0, "got %s" % actual)
+
+    def multiple_of(value):
+        return MultipleOf(value)
+
+And how to use it::
+
+    check_that("value", 42, is_(multiple_of(2))
+
+A matcher must inherit the :class:`Matcher <lemoncheesecake.matching.matcher.Matcher>` class and implements two methods:
+``build_description`` and ``matches``.
+
+- the ``build_description`` method will build the description part of the matcher in the check description using the ``transformation`` function
+  passed as argument. This function will do a transformation of the description such as conjugating the verb or turn it into its negative
+  form depending on the calling context.
+  The former example will produce this description for instance: ``Expect value to be a multiple of 2``.
+
+  Here are two examples of transformations depending on the context::
+
+      check_that("value", 42, is_(not_(multiple_of(2)))
+      # => "Expect value to not be a multiple of 2"
+
+      check_that("value", 42, is_integer(multiple_of(2)))
+      # => "Expect value to be an integer that is a multiple of 2"
+
+- the ``matches`` method tests if passed argument fulfills the matcher requirements. The method must return an instance of
+  :class:`MatchResult <lemoncheesecake.matching.matcher.MatchResult>` that will indicate whether or not the
+  match succeed and an optional match description.

@@ -75,5 +75,5 @@ else:
         reports = list(load_reports_from_dir(tmpdir.strpath))
         assert_report(reports[0], sample_report)
         assert_report(reports[1], sample_report)
-        assert "json" in [r.backend.name for r in reports]
-        assert "xml" in [r.backend.name for r in reports]
+        assert "json" in [r.backend.get_name() for r in reports]
+        assert "xml" in [r.backend.get_name() for r in reports]

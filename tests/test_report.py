@@ -1,6 +1,6 @@
 import time
 
-from lemoncheesecake.reporting.report import format_timestamp, parse_timestamp, \
+from lemoncheesecake.reporting.report import format_time_as_iso8601, parse_iso8601_time, \
     TestResult as TstData, Step
 
 from helpers.testtreemockup import tst_mockup, suite_mockup, step_mockup, report_mockup, hook_mockup, \
@@ -11,26 +11,26 @@ NOW = time.time()
 
 
 def _test_timestamp_round(raw, rounded):
-    assert parse_timestamp(format_timestamp(raw)) == rounded
+    assert parse_iso8601_time(format_time_as_iso8601(raw)) == rounded
 
 
-def test_format_and_parse_timestamp_1():
+def test_format_and_parse_iso8601_time_1():
     _test_timestamp_round(1485093460.874194, 1485093460.874)
 
 
-def test_format_and_parse_timestamp_2():
+def test_format_and_parse_iso8601_time_2():
     _test_timestamp_round(1485093460.874794, 1485093460.875)
 
 
-def test_format_and_parse_timestamp_3():
+def test_format_and_parse_iso8601_time_3():
     _test_timestamp_round(1485093460.999001, 1485093460.999)
 
 
-def test_format_and_parse_timestamp_4():
+def test_format_and_parse_iso8601_time_4():
     _test_timestamp_round(1485093460.999999, 1485093461.0)
 
 
-def test_format_and_parse_timestamp_5():
+def test_format_and_parse_iso8601_time_5():
     _test_timestamp_round(1485105524.353112, 1485105524.353)
 
 

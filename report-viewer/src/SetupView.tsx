@@ -1,35 +1,35 @@
 import * as React from 'react';
-import TimeExtraInfo from './TimeExtraInfo';
-import ResultRow from './ResultRow';
+import TimeExtraInfoView from './TimeExtraInfoView';
+import ResultRowView from './ResultRowView';
 
-export interface HookProps {
-    hook: HookData,
+export interface SetupProps {
+    result: Result,
     id: string,
     description: string
 }
 
-export class Hook extends React.Component<HookProps, {}> {
+export class SetupView extends React.Component<SetupProps, {}> {
     render() {
-        const hook = this.props.hook;
+        const result = this.props.result;
 
         return (
-            <ResultRow id={this.props.id} status={hook.outcome ? "passed" : "failed"} steps={hook.steps}>
+            <ResultRowView id={this.props.id} status={result.status} steps={result.steps}>
                 <td>
                     <div className="extra-info-container">
                         <h5 className="special">
                             {this.props.description}&nbsp;
                             <a href={"#" + this.props.id} className="glyphicon glyphicon-link extra-info anchorlink" style={{fontSize: "90%"}}/>
                         </h5>
-                        <TimeExtraInfo start={hook.start_time} end={hook.end_time}/>
+                        <TimeExtraInfoView start={result.start_time} end={result.end_time}/>
                     </div>
                 </td>
                 <td>
                 </td>
                 <td>
                 </td>
-            </ResultRow>
+            </ResultRowView>
         )
     }
 }
 
-export default Hook;
+export default SetupView;

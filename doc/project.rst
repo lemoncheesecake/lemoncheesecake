@@ -7,8 +7,8 @@ The project file allows the customization of several behaviors of lemoncheesecak
 
 .. _`add CLI args`:
 
-Add custom CLI arguments
-------------------------
+Add custom CLI arguments to lcc run
+-----------------------------------
 
 Custom command line arguments are can be added to ``lcc run``::
 
@@ -16,20 +16,17 @@ Custom command line arguments are can be added to ``lcc run``::
 
     import os.path
 
-    from lemoncheesecake.project import SimpleProjectConfiguration, HasCustomCliArgs
+    from lemoncheesecake.project import Project
 
 
-    class MyProjectConfiguration(SimpleProjectConfiguration, HasCustomCliArgs):
-        def add_custom_cli_args(self, cli_parser):
+    class MyProject(Project):
+        def add_cli_args(self, cli_parser):
             cli_parser.add_argument("--host", required=True, help="Target host")
             cli_parser.add_argument("--port", type=int, default=443, help="Target port")
 
 
     project_dir = os.path.dirname(__file__)
-    project = MyProjectConfiguration(
-        suites_dir=os.path.join(project_dir, "suites"),
-        fixtures_dir=os.path.join(project_dir, "fixtures"),
-    )
+    project = MyProject(project_dir)
 
 And then accessed through the ``cli_args`` fixture::
 
@@ -53,10 +50,10 @@ into the report won't be available (they will raise an exception)::
 
     import os.path
 
-    from lemoncheesecake.project import SimpleProjectConfiguration, HasPreRunHook, HasPostRunHook
+    from lemoncheesecake.project import Project
 
 
-    class MyProjectConfiguration(SimpleProjectConfiguration, HasPreRunHook, HasPostRunHook):
+    class MyProject(Project):
         def pre_run(self, cli_args, report_dir):
             # do something before the tests are run
 
@@ -65,10 +62,7 @@ into the report won't be available (they will raise an exception)::
 
 
     project_dir = os.path.dirname(__file__)
-    project = MyProjectConfiguration(
-        suites_dir=os.path.join(project_dir, "suites"),
-        fixtures_dir=os.path.join(project_dir, "fixtures"),
-    )
+    project = MyProject(project_dir)
 
 An exception raised within the ``pre_run`` method will prevent the tests from being run. The ``lcc.UserError`` exception class
 can be used to show the user an error message. Any other exception will be considered as an unexpected error and a
@@ -87,23 +81,80 @@ Extra key/value pairs can be added to the "Information" section of the report::
 
     import os.path
 
-    from lemoncheesecake.project import SimpleProjectConfiguration
+    from lemoncheesecake.project import Project
 
 
-    class MyProjectConfiguration(SimpleProjectConfiguration):
-        def get_report_info(self):
-            return SimpleProjectConfiguration.get_report_info(self) + \
-                [
-                    ["info1", "value1"],
-                    ["info2", "value2"]
-                ]
+    class MyProject(Project):
+        def build_report_info(self):
+            return [
+                ("info1", "value1"),
+                ("info2", "value2")
+            ]
 
 
     project_dir = os.path.dirname(__file__)
-    project = MyProjectConfiguration(
-        suites_dir=os.path.join(project_dir, "suites"),
-        fixtures_dir=os.path.join(project_dir, "fixtures"),
-    )
+    project = MyProject(project_dir)
+
+.. _reporttitle:
+
+Setting a custom report tile
+----------------------------
+
+A custom report title can also be set::
+
+    # project.py:
+
+    import os.path
+    import time
+
+    from lemoncheesecake.project import Project
+
+
+    class MyProject(Project):
+        def build_report_title(self):
+            return "This is my test report for %s" % time.asctime()
+
+
+    project_dir = os.path.dirname(__file__)
+    project = MyProject(project_dir)
+
+.. _loadsuitesandfixtures:
+
+Customize suites and fixtures loading
+-------------------------------------
+
+The ``Project`` class loads the suites and fixtures respectively from "suites" and "fixtures" directories relative to
+the project directory.
+
+Here is an example of project that loads suites and fixtures from alternate directories by overriding the
+``load_suites``  and ``load_fixtures`` methods::
+
+    # project.py:
+
+    import os.path
+
+    from lemoncheesecake.project import Project
+    from lemoncheesecake.suite import load_suites_from_directory
+    from lemoncheesecake.fixture import load_fixtures_from_directory
+
+
+    class MyProject(Project):
+        def load_suites(self):
+            return load_suites_from_directory(osp.join(self.dir, "my_suites"))
+
+        def load_fixtures(self):
+            return load_fixtures_from_directory(osp.join(self.dir, "my_fixtures"))
+
+
+    project_dir = os.path.dirname(__file__)
+    project = MyProject(project_dir)
+
+
+For more information, see:
+
+- ``load_suite*`` functions from ``lemoncheesecake.suite`` module
+
+- ``load_fixture*`` functions from ``lemoncheesecake.suite`` module
 
 .. _metadatapolicy:
 
@@ -119,37 +170,25 @@ The following example requires that every tests provide a property "priority" wh
 
     import os.path
 
-    from lemoncheesecake.project import SimpleProjectConfiguration, HasMetadataPolicy
-    from lemoncheesecake.validators import MetadataPolicy
-
-
-    class MyProjectConfiguration(SimpleProjectConfiguration, HasMetadataPolicy):
-        def get_metadata_policy(self):
-            policy = MetadataPolicy()
-            policy.add_property_rule(
-                "priority", ("low", "medium", "high"), required=True
-            )
-            return policy
+    from lemoncheesecake.project import Project
 
 
     project_dir = os.path.dirname(__file__)
-    project = MyProjectConfiguration(
-        suites_dir=os.path.join(project_dir, "suites"),
-        fixtures_dir=os.path.join(project_dir, "fixtures")
+    project = Project(project_dir)
+    project.metadata_policy.add_property_rule(
+        "priority", ("low", "medium", "high"), required=True
     )
 
 In this other example set, the metadata policy makes two tags available ("todo" and "known_defect") for both tests
 and suites while forbidding the usage of any other tag::
 
     # project.py:
+    [...]
 
-    class MyProjectConfiguration(SimpleProjectConfiguration, HasMetadataPolicy):
-        def get_metadata_policy(self):
-            policy = MetadataPolicy()
-            policy.add_tag_rule(
-                ("todo", "known_defect"), on_test=True, on_suite=True
-            )
-            policy.disallow_unknown_tags()
-            return policy
+    project = Project(project_dir)
+    project.metadata_policy.add_tag_rule(
+        ("todo", "known_defect"), on_test=True, on_suite=True
+    )
+    project.disallow_unknown_tags()
 
-See ``lemoncheesecake.validators.MetadataPolicy`` for more information.
+See ``lemoncheesecake.metadatapolicy.MetadataPolicy`` for more information.

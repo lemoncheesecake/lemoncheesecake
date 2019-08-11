@@ -4,32 +4,29 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
-from lemoncheesecake.matching.base import (
-    MatchExpected, Matcher, match_result, match_success, match_failure,
-    got_value, serialize_value, to_be, to_have
-)
+from lemoncheesecake.helpers.text import jsonify
+from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatchDescriptionTransformer
 from lemoncheesecake.matching.matchers.composites import is_
 from lemoncheesecake.matching.matchers.types_ import is_bool
 
-__all__ = (
-    "equal_to", "not_equal_to", "greater_than", "greater_than_or_equal_to",
-    "less_than", "less_than_or_equal_to",
-    "is_between", "is_none", "is_not_none", "has_length",
-    "is_true", "is_false"
-)
 
+class EqualTo(Matcher):
+    def __init__(self, expected):
+        self.expected = expected
 
-class EqualTo(MatchExpected):
-    def description(self, conjugate=False):
-        return "%s equal to %s" % (to_be(conjugate), serialize_value(self.expected))
+    def build_description(self, transformation):
+        return transformation("to be equal to %s" % jsonify(self.expected))
 
     def matches(self, actual):
         from lemoncheesecake.matching import DISPLAY_DETAILS_WHEN_EQUAL
 
         if actual == self.expected:
-            return match_success(got_value(actual)) if DISPLAY_DETAILS_WHEN_EQUAL else match_success()
+            if DISPLAY_DETAILS_WHEN_EQUAL:
+                return MatchResult.success("got %s" % jsonify(actual))
+            else:
+                return MatchResult.success()
         else:
-            return match_failure(got_value(actual))
+            return MatchResult.failure("got %s" % jsonify(actual))
 
 
 def equal_to(expected):
@@ -39,12 +36,15 @@ def equal_to(expected):
 
 def _comparator(comparison_description, comparison_func):
     def wrapper(expected):
-        class _Comparator(MatchExpected):
-            def description(self, conjugate=False):
-                return "%s %s %s" % (to_be(conjugate), comparison_description, serialize_value(self.expected))
+        class _Comparator(Matcher):
+            def __init__(self, expected):
+                self.expected = expected
+
+            def build_description(self, transformation):
+                return transformation("to be %s %s" % (comparison_description, jsonify(self.expected)))
 
             def matches(self, actual):
-                return match_result(comparison_func(actual, self.expected), got_value(actual))
+                return MatchResult(comparison_func(actual, self.expected), "got %s" % jsonify(actual))
 
         return _Comparator(expected)
 
@@ -66,14 +66,15 @@ class IsBetween(Matcher):
         self.min = min
         self.max = max
 
-    def description(self, conjugate=False):
-        return "%s between %s and %s" % (to_be(conjugate), self.min, self.max)
+    def build_description(self, transformation):
+        return transformation("to be between %s and %s" % (self.min, self.max))
 
     def matches(self, actual):
-        return match_result(self.min <= actual <= self.max, got_value(actual))
+        return MatchResult(self.min <= actual <= self.max, "got %s" % jsonify(actual))
 
 
 def is_between(min, max):
+    # type: (float, float) -> IsBetween
     """Test if value is between min and max"""
     return IsBetween(min, max)
 
@@ -90,16 +91,20 @@ def is_not_none():
 
 class HasLength(Matcher):
     def __init__(self, matcher):
+        # type: (Matcher) -> None
         self.matcher = matcher
 
-    def description(self, conjugate=False):
-        return "%s a length that %s" % (to_have(conjugate), self.matcher.description(conjugate=True))
+    def build_description(self, transformation):
+        return transformation(
+            "to have a length that %s" % (self.matcher.build_description(MatchDescriptionTransformer(conjugate=True)))
+        )
 
     def matches(self, actual):
         return self.matcher.matches(len(actual))
 
 
 def has_length(length):
+    # type: (int) -> HasLength
     """Test if value has a length of"""
     return HasLength(is_(length))
 

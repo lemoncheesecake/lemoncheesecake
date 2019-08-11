@@ -1,15 +1,11 @@
-'''
-Created on Sep 8, 2016
-
-@author: nicolas
-'''
+from typing import Optional
 
 import sys
 import traceback
 
 
-class LemonCheesecakeException(Exception):
-    message_prefix = None
+class LemoncheesecakeException(Exception):
+    message_prefix = None  # type: Optional[str]
 
     def __str__(self):
         s = Exception.__str__(self)
@@ -18,37 +14,23 @@ class LemonCheesecakeException(Exception):
         return s
 
 
-class LemonCheesecakeInternalError(LemonCheesecakeException):
-    pass
-InternalError = LemonCheesecakeInternalError
-
-
-class ProgrammingError(LemonCheesecakeException):
+class ProgrammingError(LemoncheesecakeException):
     pass
 
 
-class ProjectError(LemonCheesecakeException):
+class ProjectError(LemoncheesecakeException):
     pass
 
 
-class MethodNotImplemented(ProgrammingError):
-    def __init__(self, obj, method_name):
-        ProgrammingError.__init__(self, "Class '%s' must implement the method '%s'" % (obj.__class__.__name__, method_name))
-
-
-def method_not_implemented(method_name, obj):
-    raise MethodNotImplemented(obj, method_name)
-
-
-class ModuleImportError(LemonCheesecakeException):
+class ModuleImportError(LemoncheesecakeException):
     pass
 
 
-class FixtureError(LemonCheesecakeException):
+class FixtureError(LemoncheesecakeException):
     pass
 
 
-class InvalidSuiteError(LemonCheesecakeException):
+class InvalidSuiteError(LemoncheesecakeException):
     pass
 
 
@@ -56,56 +38,76 @@ class InvalidMetadataError(ProgrammingError):
     pass
 
 
-class VisibilityConditionNotMet(LemonCheesecakeException):
+class VisibilityConditionNotMet(LemoncheesecakeException):
     pass
 
 
-class UnknownReportBackendError(LemonCheesecakeException):
+class UnknownReportBackendError(LemoncheesecakeException):
     pass
 
 
-class AbortTest(LemonCheesecakeException):
+class AbortTest(LemoncheesecakeException):
+    """
+    Raising this exception will stop the currently running test.
+    """
+
     message_prefix = "The test has been aborted"
 
     def __init__(self, reason):
-        LemonCheesecakeException.__init__(self, reason)
+        LemoncheesecakeException.__init__(self, reason)
 
 
-class AbortSuite(LemonCheesecakeException):
+class AbortSuite(LemoncheesecakeException):
+    """
+    Raising this exception will stop the currently running suite.
+    """
     message_prefix = "The suite has been aborted"
 
     def __init__(self, reason):
-        LemonCheesecakeException.__init__(self, reason)
+        LemoncheesecakeException.__init__(self, reason)
 
 
-class AbortAllTests(LemonCheesecakeException):
+class AbortAllTests(LemoncheesecakeException):
+    """
+    Raising this exception will stop the currently running test and all the tests waiting to be run.
+    """
     message_prefix = "All tests have been aborted"
 
     def __init__(self, reason):
-        LemonCheesecakeException.__init__(self, reason)
+        LemoncheesecakeException.__init__(self, reason)
 
 
-class UserError(LemonCheesecakeException):
+class UserError(LemoncheesecakeException):
+    """
+    This exception is intended to be raised in pre-run and post-run phases of the project
+    to indicate that a required state has not been fulfilled.
+    """
+    # NB: sphinx requires the constructor to be overriden, otherwise it raises an error
+    def __init__(self, reason):
+        LemoncheesecakeException.__init__(self, reason)
+
+
+class InvalidReportFile(LemoncheesecakeException):
     pass
 
 
-class InvalidReportFile(LemonCheesecakeException):
+class IncompatibleReportFile(LemoncheesecakeException):
     pass
 
 
-class CannotFindTreeNode(LemonCheesecakeException):
+class CannotFindTreeNode(LemoncheesecakeException):
     pass
 
 
-class TaskFailure(LemonCheesecakeException):
+class TaskFailure(LemoncheesecakeException):
     pass
 
 
-class TasksExecutionFailure(LemonCheesecakeException):
+class TasksExecutionFailure(LemoncheesecakeException):
     pass
 
 
-class CircularDependencyError(LemonCheesecakeException):
+class CircularDependencyError(LemoncheesecakeException):
     pass
 
 

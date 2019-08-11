@@ -12,7 +12,7 @@ try:
 except ImportError:
     REPORT_PORTAL_CLIENT_IS_AVAILABLE = False
 
-from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
+from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession, ReportingSessionBuilderMixin
 from lemoncheesecake.exceptions import UserError
 from lemoncheesecake.events import SyncEventManager
 from lemoncheesecake.reporting.replay import replay_report_events
@@ -253,10 +253,10 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        message = "%s => %s" % (event.check_description, "OK" if event.check_outcome else "NOT OK")
+        message = "%s => %s" % (event.check_description, "OK" if event.check_is_successful else "NOT OK")
         if event.check_details is not None:
             message += "\nDetails: %s" % event.check_details
-        self.service.log(make_time(event.time), message, "INFO" if event.check_outcome else "ERROR")
+        self.service.log(make_time(event.time), message, "INFO" if event.check_is_successful else "ERROR")
 
     def on_log_attachment(self, event):
         if self._has_rp_error():
@@ -291,19 +291,20 @@ class ReportPortalReportingSessionParallelized(ReportingSession):
         replay_report_events(self._session.report, event_manager)
 
 
-class ReportPortalBackend(ReportingBackend):
-    name = "reportportal"
+class ReportPortalBackend(ReportingBackend, ReportingSessionBuilderMixin):
+    def get_name(self):
+        return "reportportal"
 
     def is_available(self):
         return REPORT_PORTAL_CLIENT_IS_AVAILABLE
 
     def create_reporting_session(self, report_dir, report, parallel, _):
         try:
-            url = os.environ["RP_URL"]
-            auth_token = os.environ["RP_AUTH_TOKEN"]
-            project = os.environ["RP_PROJECT"]
-            launch_name = os.environ.get("RP_LAUNCH_NAME", "Test Run")
-            launch_description = os.environ.get("RP_LAUNCH_DESCRIPTION", None)
+            url = os.environ["LCC_RP_URL"]
+            auth_token = os.environ["LCC_RP_AUTH_TOKEN"]
+            project = os.environ["LCC_RP_PROJECT"]
+            launch_name = os.environ.get("LCC_RP_LAUNCH_NAME", "Test Run")
+            launch_description = os.environ.get("LCC_RP_LAUNCH_DESCRIPTION", None)
         except KeyError as excp:
             raise UserError("ReportPortal reporting backend, cannot get environment variable %s" % excp)
 

@@ -12,8 +12,8 @@ import pytest
 
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake import reporting
-from lemoncheesecake.runtime import get_runtime
-from lemoncheesecake.reporting import Report, SetupResult, SuiteResult, TestResult, Step, Log, JsonBackend
+from lemoncheesecake.session import get_session
+from lemoncheesecake.reporting import Report, Result, SuiteResult, TestResult, Step, Log, JsonBackend
 
 
 def make_report_in_progress():
@@ -22,17 +22,17 @@ def make_report_in_progress():
     now = time.time()
     report = Report()
     report.start_time = now
-    report.test_session_setup = SetupResult()
+    report.test_session_setup = Result()
     report.test_session_setup.start_time = now
-    report.test_session_teardown = SetupResult()
+    report.test_session_teardown = Result()
     report.test_session_teardown.start_time = now
     suite = SuiteResult("suite", "suite")
     suite.start_time = now
     report.add_suite(suite)
     
-    suite.suite_setup = SetupResult()
+    suite.suite_setup = Result()
     suite.suite_setup.start_time = now
-    suite.suite_teardown = SetupResult()
+    suite.suite_teardown = Result()
     suite.suite_teardown.start_time = now
     
     test = TestResult("test_1", "test_1")
@@ -137,7 +137,7 @@ def assert_attachment(attachment, filename, description, as_image, content, file
     assert attachment.filename.endswith(filename)
     assert attachment.description == description
     assert attachment.as_image is as_image
-    assert file_reader(os.path.join(get_runtime().report_dir, attachment.filename)) == content
+    assert file_reader(os.path.join(get_session().report_dir, attachment.filename)) == content
 
 
 def get_last_test_checks(report):
@@ -167,7 +167,7 @@ def assert_test_checks(test, expected_successes=0, expected_failures=0):
     for step in test.steps:
         for entry in step.entries:
             if isinstance(entry, reporting.Check):
-                if entry.outcome:
+                if entry.is_successful:
                     successes += 1
                 else:
                     failures += 1
@@ -182,7 +182,7 @@ def assert_test_checks(test, expected_successes=0, expected_failures=0):
 
 def assert_check_data(actual, expected):
     assert actual.description == expected.description
-    assert actual.outcome == expected.outcome
+    assert actual.is_successful == expected.is_successful
     assert actual.details == expected.details
     assert_time(actual.time, expected.time)
 
@@ -250,7 +250,7 @@ def assert_hook_data(actual, expected):
     if expected is None:
         assert actual is None
     else:
-        assert actual.outcome == expected.outcome
+        assert actual.status == expected.status
         assert_time(actual.start_time, expected.start_time)
         if expected.end_time is None:
             assert actual.end_time is None
@@ -290,7 +290,7 @@ def assert_suite_data(actual, expected):
     assert_hook_data(actual.suite_teardown, expected.suite_teardown)
 
 
-def assert_report(actual, expected):
+def assert_report(actual, expected, is_persisted=True):
     assert actual.title == expected.title
     assert actual.info == expected.info
     assert_time(actual.start_time, expected.start_time)
@@ -298,10 +298,10 @@ def assert_report(actual, expected):
         assert actual.end_time is None
     else:
         assert_time(actual.end_time, expected.end_time)
-    if expected.report_generation_time is None:
-        assert actual.report_generation_time is None
+    if is_persisted:
+        assert actual.report_generation_time is not None
     else:
-        assert_time(actual.report_generation_time, expected.report_generation_time)
+        assert actual.report_generation_time is None
     assert actual.nb_threads == expected.nb_threads
     assert len(actual.get_suites()) == len(expected.get_suites())
 
@@ -360,7 +360,6 @@ def assert_suite_data_from_suite(suite_data, suite):
 def assert_report_from_suites(report, suite_classes):
     assert report.start_time is not None
     assert report.end_time is not None
-    assert report.report_generation_time is not None
     assert len(report.get_suites()) == len(suite_classes)
     for suite_data, suite_class in zip(report.get_suites(), suite_classes):
         suite = load_suite_from_class(suite_class)

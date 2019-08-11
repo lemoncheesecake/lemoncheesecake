@@ -5,7 +5,7 @@ interface KeyValueTableProps {
     rows: Array<Array<String>>;
 }
 
-class KeyValueTable extends React.Component<KeyValueTableProps, {}> {
+class KeyValueTableView extends React.Component<KeyValueTableProps, {}> {
     render() {
         if (this.props.rows.length == 0) {
             return (null);
@@ -33,4 +33,4 @@ class KeyValueTable extends React.Component<KeyValueTableProps, {}> {
     }
 }
 
-export default KeyValueTable;
+export default KeyValueTableView;

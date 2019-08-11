@@ -1,51 +1,46 @@
-'''
-Created on Jan 7, 2017
-
-@author: nicolas
-'''
-
 import inspect
 from collections import OrderedDict
+from typing import List, Any, Sequence, Callable
 
 from lemoncheesecake.helpers.moduleimport import import_module, get_matching_files, get_py_files_from_dir
 from lemoncheesecake.exceptions import FixtureError, ProgrammingError
 from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.helpers.introspection import get_callable_args
 
-__all__ = (
-    "fixture",
-    "load_fixtures_from_func", "load_fixtures_from_file",
-    "load_fixtures_from_files", "load_fixtures_from_directory",
-    "inject_fixture"
-)
 
-FORBIDDEN_FIXTURE_NAMES = ("fixture_name", )
-SCOPE_LEVELS = {
+_FORBIDDEN_FIXTURE_NAMES = ("fixture_name",)
+_SCOPE_LEVELS = {
     "test": 1,
     "suite": 2,
     "session": 3,
-    "session_prerun": 4
+    "pre_run": 4
 }
 
 
-class FixtureInfo:
+class _FixtureInfo:
     def __init__(self, names, scope):
         self.names = names
         self.scope = scope
 
 
 def fixture(names=None, scope="test"):
+    """
+    Decorator. Declare a function as a fixture.
+    :param names: an optional list of names that can be used to access the fixture value,
+        if no names are provided the decorated function name will be used
+    :param scope: the fixture scope, available scopes are: "test", "suite", "session", "pre_run"; default is "test"
+    """
     def wrapper(func):
-        if scope not in SCOPE_LEVELS.keys():
+        if scope not in _SCOPE_LEVELS.keys():
             raise ProgrammingError("Invalid fixture scope '%s' in fixture function '%s'" % (scope, func.__name__))
 
-        setattr(func, "_lccfixtureinfo", FixtureInfo(names, scope))
+        setattr(func, "_lccfixtureinfo", _FixtureInfo(names, scope))
         return func
 
     return wrapper
 
 
-class FixtureResult(object):
+class _FixtureResult(object):
     def __init__(self, result):
         if inspect.isgenerator(result):
             self._generator = result
@@ -69,7 +64,7 @@ class FixtureResult(object):
             raise FixtureError("The fixture yields more than once, only one yield is supported")
 
 
-class BaseFixture(object):
+class _BaseFixture(object):
     def is_builtin(self):
         return False
 
@@ -78,11 +73,11 @@ class BaseFixture(object):
             "test": 1,
             "suite": 2,
             "session": 3,
-            "session_prerun": 4
+            "pre_run": 4
         }[self.scope]
 
 
-class Fixture(BaseFixture):
+class Fixture(_BaseFixture):
     def __init__(self, name, func, scope, params):
         self.name = name
         self.func = func
@@ -93,13 +88,13 @@ class Fixture(BaseFixture):
         for param_name in params.keys():
             assert param_name in self.params
 
-        return FixtureResult(self.func(**params))
+        return _FixtureResult(self.func(**params))
 
 
-class BuiltinFixture(BaseFixture):
+class BuiltinFixture(_BaseFixture):
     def __init__(self, name, value):
         self.name = name
-        self.scope = "session_prerun"
+        self.scope = "pre_run"
         self.params = []
         self._value = value
 
@@ -107,7 +102,7 @@ class BuiltinFixture(BaseFixture):
         return True
 
     def execute(self, params={}):
-        return FixtureResult(self._value() if callable(self._value) else self._value)
+        return _FixtureResult(self._value() if callable(self._value) else self._value)
 
 
 class ScheduledFixtures(object):
@@ -209,7 +204,7 @@ class FixtureRegistry:
         """
         # first, check for forbidden fixture name
         for fixture_name in self._fixtures.keys():
-            if fixture_name in FORBIDDEN_FIXTURE_NAMES:
+            if fixture_name in _FORBIDDEN_FIXTURE_NAMES:
                 raise FixtureError("Fixture name '%s' is forbidden" % fixture_name)
 
         # second, check for missing & circular dependencies
@@ -234,7 +229,7 @@ class FixtureRegistry:
         for fixture in suite.get_fixtures():
             if fixture not in self._fixtures:
                 raise FixtureError("Suite '%s' uses an unknown fixture '%s'" % (suite.path, fixture))
-            if self._fixtures[fixture].get_scope_level() < SCOPE_LEVELS["suite"]:
+            if self._fixtures[fixture].get_scope_level() < _SCOPE_LEVELS["suite"]:
                 raise FixtureError("Suite '%s' uses fixture '%s' which has an incompatible scope" % (
                     suite.path, fixture
                 ))
@@ -280,11 +275,11 @@ class FixtureRegistry:
             parent_scheduled_fixtures=parent_scheduled_fixtures
         )
 
-    def get_fixtures_scheduled_for_session_prerun(self, suites):
+    def get_fixtures_scheduled_for_pre_run(self, suites):
         fixtures = OrderedSet()
         for suite in suites:
             fixtures.update(FixtureRegistry.get_fixtures_used_in_suite_recursively(suite))
-        return self.get_scheduled_fixtures_for_scope(fixtures, "session_prerun")
+        return self.get_scheduled_fixtures_for_scope(fixtures, "pre_run")
 
     def get_fixtures_scheduled_for_session(self, suites, prerun_session_scheduled_fixtures):
         fixtures = OrderedSet()
@@ -304,6 +299,10 @@ class FixtureRegistry:
 
 
 def load_fixtures_from_func(func):
+    # type: (Callable) -> List[Fixture]
+    """
+    Load a fixture from a function.
+    """
     assert hasattr(func, "_lccfixtureinfo")
     names = func._lccfixtureinfo.names
     if not names:
@@ -314,6 +313,10 @@ def load_fixtures_from_func(func):
 
 
 def load_fixtures_from_file(filename):
+    # type: (str) -> List[Fixture]
+    """
+    Load fixtures from a given file.
+    """
     mod = import_module(filename)
 
     fixtures = []
@@ -326,13 +329,18 @@ def load_fixtures_from_file(filename):
 
 
 def load_fixtures_from_files(patterns, excluding=[]):
+    # type: (Any[str, Sequence[str]], Any[str, Sequence[str]]) -> List[Fixture]
     """
-    Import fixtures from a list of files:
-    - patterns: a mandatory list (a simple string can also be used instead of a single element list)
-      of files to import; the wildcard '*' character can be used
-    - exclude: an optional list (a simple string can also be used instead of a single element list)
+    Load fixtures from files.
+
+    :param patterns: a mandatory list (a simple string can also be used instead of a single element list)
+        of files to import; the wildcard '*' character can be used
+    :param exclude: an optional list (a simple string can also be used instead of a single element list)
       of elements to exclude from the expanded list of files to import
-    Example: load_suites_from_files("test_*.py")
+
+    Example::
+
+        load_suites_from_files("test_*.py")
     """
     fixtures = []
     for file in get_matching_files(patterns, excluding):
@@ -341,6 +349,10 @@ def load_fixtures_from_files(patterns, excluding=[]):
 
 
 def load_fixtures_from_directory(dir):
+    # type: (str) -> List[Fixture]
+    """
+    Load fixtures from a given directory (not recursive).
+    """
     fixtures = []
     for file in get_py_files_from_dir(dir):
         fixtures.extend(load_fixtures_from_file(file))

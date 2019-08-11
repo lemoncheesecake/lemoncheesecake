@@ -7,11 +7,10 @@ Created on Sep 8, 2016
 import inspect
 import copy
 
-from lemoncheesecake.suite.core import InjectedFixture
-from lemoncheesecake.exceptions import ProgrammingError
+from typing import Any
 
-__all__ = "add_test_into_suite", "add_test_in_suite", "add_tests_in_suite", "get_metadata", \
-    "suite", "test", "tags", "prop", "link", "disabled", "conditional", "hidden", "depends_on", "inject_fixture"
+from lemoncheesecake.suite.core import InjectedFixture, Test, Suite
+from lemoncheesecake.exceptions import ProgrammingError
 
 
 class Metadata(object):
@@ -31,35 +30,27 @@ class Metadata(object):
         self.condition = None
 
 
-def get_metadata_next_rank():
+def _get_metadata_next_rank():
     rank = Metadata._next_rank
     Metadata._next_rank += 1
     return rank
 
 
 def add_test_into_suite(test, suite):
+    # type: (Test, Any) -> None
+    """
+    Add test into suite
+
+    :param test: a :py:class:`Test <lemoncheesecake.suite.core.Test>` instance
+    :param suite: a suite decorated class instance (in that case the function must be
+        called when the class is instantiated) or a module marked as a suite (in that case the function
+        must be called when the module is loaded)
+    """
     if not hasattr(suite, "_lccgeneratedtests"):
         suite._lccgeneratedtests = []
+    if test.rank is None:
+        test.rank = _get_metadata_next_rank()
     suite._lccgeneratedtests.append(test)
-
-
-def add_test_in_suite(test, suite, before_test=None, after_test=None):
-    """
-    backward-compatibility function: use add_test_into_suite instead
-    before_test and after_test arguments are simply ignored
-    """
-    if not test.rank:
-        test.rank = get_metadata_next_rank()
-    add_test_into_suite(test, suite)
-
-
-def add_tests_in_suite(tests, suite, before_test=None, after_test=None):
-    """
-    backward-compatibility function: loop over tests and use add_test_into_suite instead
-    before_test and after_test arguments are simply ignored
-    """
-    for test in tests:
-        add_test_into_suite(test, suite)
 
 
 _objects_with_metadata = []
@@ -77,7 +68,13 @@ def get_metadata(obj):
 
 
 def suite(description, name=None, rank=None):
-    """Decorator, mark a class as a suite class"""
+    """
+    Decorator, mark a class as a suite class.
+
+    :param description: suite's description
+    :param name: suite's name (by default, the suite's name is taken from the class's name)
+    :param rank: this value is used to order suites of the same hierarchy level
+    """
     def wrapper(klass):
         if not inspect.isclass(klass):
             raise ProgrammingError("%s is not a class (suite decorator can only be used on a class)" % klass)
@@ -85,7 +82,7 @@ def suite(description, name=None, rank=None):
         if md.dependencies:
             raise ProgrammingError("'depends_on' can not be used on a suite class")
         md.is_suite = True
-        md.rank = rank if rank is not None else get_metadata_next_rank()
+        md.rank = rank if rank is not None else _get_metadata_next_rank()
         md.name = name or klass.__name__
         md.description = description
         return klass
@@ -93,13 +90,18 @@ def suite(description, name=None, rank=None):
 
 
 def test(description, name=None):
-    """Decorator, make a method as a test method"""
+    """
+    Decorator, make a method as a test method.
+
+    :param description: test's description
+    :param name: test's name (by default, the suite's name is taken from the class's name)
+    """
     def wrapper(func):
         if not inspect.isfunction(func):
             raise ProgrammingError("%s is not a function (test decorator can only be used on a function)" % func)
         md = get_metadata(func)
         md.is_test = True
-        md.rank = get_metadata_next_rank()
+        md.rank = _get_metadata_next_rank()
         md.name = name or func.__name__
         md.description = description
         return func
@@ -107,7 +109,7 @@ def test(description, name=None):
 
 
 def tags(*tag_names):
-    """Decorator, add tags to a test or a suite"""
+    """Decorator, add tags to a test or a suite."""
     def wrapper(obj):
         md = get_metadata(obj)
         md.tags.extend(tag_names)
@@ -116,7 +118,7 @@ def tags(*tag_names):
 
 
 def prop(key, value):
-    """Decorator, add a property (key/value) to a test or a suite"""
+    """Decorator, add a property (key/value) to a test or a suite."""
     def wrapper(obj):
         md = get_metadata(obj)
         md.properties[key] = value
@@ -125,7 +127,7 @@ def prop(key, value):
 
 
 def link(url, name=None):
-    """Decorator, set a link (with an optional friendly name) to a test or a suite"""
+    """Decorator, set a link (with an optional friendly name) to a test or a suite."""
     def wrapper(obj):
         md = get_metadata(obj)
         md.links.append((url, name))
@@ -134,7 +136,8 @@ def link(url, name=None):
 
 
 def disabled():
-    """Decorator, disable a test or a suite"""
+    """Decorator, mark a test or a suite as disabled, meaning it won't be executed but will be visible
+    in report."""
     def wrapper(obj):
         md = get_metadata(obj)
         md.disabled = True
@@ -142,8 +145,13 @@ def disabled():
     return wrapper
 
 
-def conditional(condition):
-    """Decorator, the test or suite will only appear if the given condition callback return a true value"""
+def visible_if(condition):
+    """
+    Decorator, the test or suite will only appear if the given callable return a true value.
+
+    :param condition: a callable that will take the test object if applied to a test or the suite class
+        instance if applied to a suite.
+    """
     def wrapper(obj):
         md = get_metadata(obj)
         md.condition = condition
@@ -152,14 +160,16 @@ def conditional(condition):
 
 
 def hidden():
-    return conditional(lambda _: False)
+    """Decorator, the test or suite won't be visible in the resulting test tree."""
+    return visible_if(lambda _: False)
 
 
 def depends_on(*deps):
+    # type: (*str) -> Any
     """
     Decorator, only applicable to a test. Add dependencies to a test.
 
-    :param deps: the list of test paths that the current is depending on.
+    :param deps: the test paths that the decorated test is depending on.
     """
     def wrapper(obj):
         md = get_metadata(obj)
@@ -171,4 +181,8 @@ def depends_on(*deps):
 
 
 def inject_fixture(fixture_name=None):
+    """
+    Inject a fixture into a suite. If no fixture name is specified then the name of the variable holding
+    the injected fixture will be used.
+    """
     return InjectedFixture(fixture_name)

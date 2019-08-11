@@ -4,12 +4,11 @@ Created on Mar 28, 2017
 @author: nicolas
 '''
 
-from lemoncheesecake.matching.base import Matcher, match_success, match_failure, match_result, \
-    got, got_value, to_be, merge_match_result_descriptions
+from typing import List, Any
 
-__all__ = (
-    "all_of", "any_of", "anything", "something", "existing", "present", "is_", "not_"
-)
+from lemoncheesecake.helpers.orderedset import OrderedSet
+from lemoncheesecake.helpers.text import jsonify
+from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatchDescriptionTransformer
 
 
 def _make_item(content, prefix="- "):
@@ -28,7 +27,7 @@ def _make_items(items, prefix="- ", relationship="and"):
 
 
 def _serialize_sub_matcher_result(matcher, result):
-    content = "%s => %s" % (matcher.short_description(conjugate=True), "OK" if result.is_success() else "KO")
+    content = "%s => %s" % (matcher.build_short_description(MatchDescriptionTransformer()), "OK" if result else "KO")
     if result.description is not None:
         content += ", %s" % result.description
     return content
@@ -36,16 +35,17 @@ def _serialize_sub_matcher_result(matcher, result):
 
 class AllOf(Matcher):
     def __init__(self, matchers):
+        # type: (List[Matcher]) -> None
         self.matchers = matchers
 
-    def short_description(self, conjugate=False):
+    def build_short_description(self, transformation):
         return ":"
 
-    def description(self, conjugate=False):
+    def build_description(self, transformation):
         return "\n".join(
             [":"] +
             [
-                _make_item(matcher.description(conjugate=conjugate), prefix="- and " if i > 0 else "- ")
+                _make_item(matcher.build_description(transformation), prefix="- and " if i > 0 else "- ")
                     for i, matcher in enumerate(self.matchers)
             ]
         )
@@ -56,37 +56,39 @@ class AllOf(Matcher):
         for matcher in self.matchers:
             result = matcher.matches(actual)
             results.append((matcher, result))
-            if result.is_failure():
+            if not result:
                 is_success = False
                 break
 
         match_details = "\n".join(
-            [got() + ":"] +
+            ["got:"] +
             _make_items([
                 _serialize_sub_matcher_result(matcher, result) for matcher, result in results
             ], relationship="and")
         )
 
-        return match_result(is_success, match_details)
+        return MatchResult(is_success, match_details)
 
 
 def all_of(*matchers):
+    # type: (Any) -> AllOf
     """Test if all matchers match (logical AND between matchers)."""
     return AllOf(list(map(is_, matchers)))
 
 
 class AnyOf(Matcher):
     def __init__(self, matchers):
+        # type: (List[Matcher]) -> None
         self.matchers = matchers
 
-    def short_description(self, conjugate=False):
+    def build_short_description(self, transformation):
         return ":"
 
-    def description(self, conjugate=False):
+    def build_description(self, transformation):
         return "\n".join(
             [":"] +
             [
-                _make_item(matcher.description(conjugate=conjugate), prefix="- or " if i > 0 else "- ")
+                _make_item(matcher.build_description(transformation), prefix="- or " if i > 0 else "- ")
                     for i, matcher in enumerate(self.matchers)
             ]
         )
@@ -95,27 +97,32 @@ class AnyOf(Matcher):
         results = []
         for matcher in self.matchers:
             match = matcher.matches(actual)
-            if match.is_success():
+            if match:
                 return match
             results.append(match)
 
-        return match_failure(merge_match_result_descriptions(results))
+        return MatchResult.failure(
+            ", ".join(
+                OrderedSet(result.description for result in results if result.description)
+            )
+        )
 
 
 def any_of(*matchers):
+    # type: (Any) -> AnyOf
     """Test if at least one of the matcher match (logical OR between matchers)"""
     return AnyOf(list(map(is_, matchers)))
 
 
 class Anything(Matcher):
-    def __init__(self, wording="anything"):
+    def __init__(self, wording="to be anything"):
         self.wording = wording
 
-    def description(self, conjugate=False):
-        return "%s %s" % (to_be(conjugate), self.wording)
+    def build_description(self, transformation):
+        return transformation(self.wording)
 
     def matches(self, actual):
-        return match_success(got_value(actual))
+        return MatchResult.success("got %s" % jsonify(actual))
 
 
 def anything():
@@ -124,21 +131,22 @@ def anything():
 
 
 def something():
-    """Same thing as the 'anything' matcher but use 'something' in the matcher description"""
-    return Anything(wording="something")
+    """Same thing as the 'anything' matcher but use 'to be something' in the matcher description"""
+    return Anything(wording="to be something")
 
 
 def existing():
-    """Same thing as the 'anything' matcher but use 'existing' in the matcher description"""
-    return Anything(wording="existing")
+    """Same thing as the 'anything' matcher but use 'to exist' in the matcher description"""
+    return Anything(wording="to exist")
 
 
 def present():
-    """Same thing as the 'anything' matcher but use 'present' in the matcher description"""
-    return Anything(wording="present")
+    """Same thing as the 'anything' matcher but use 'to be present' in the matcher description"""
+    return Anything(wording="to be present")
 
 
 def is_(matcher):
+    # type: (Any) -> Matcher
     """If the function argument is not an instance of Matcher, wrap it into
     a matcher using equal_to, otherwise return the matcher argument as-is"""
     from lemoncheesecake.matching.matchers.value import equal_to
@@ -147,16 +155,22 @@ def is_(matcher):
 
 class Not(Matcher):
     def __init__(self, matcher):
+        # type: (Matcher) -> None
         self.matcher = matcher
 
-    def description(self, conjugate=False):
-        return "not %s" % self.matcher.description(conjugate)
+    def build_description(self, transformation):
+        transformation.negative = True
+        return self.matcher.build_description(transformation)
 
     def matches(self, actual):
         result = self.matcher.matches(actual)
-        return match_result(not result.outcome, result.description)
+        return MatchResult(not result, result.description)
 
 
 def not_(matcher):
+    # type: (Any) -> Matcher
     """Negates the matcher in argument"""
     return Not(is_(matcher))
+
+
+is_not = not_

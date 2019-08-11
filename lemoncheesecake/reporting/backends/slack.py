@@ -10,7 +10,7 @@ try:
 except ImportError:
     SLACKER_IS_AVAILABLE = False
 
-from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
+from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession, ReportingSessionBuilderMixin
 from lemoncheesecake.exceptions import UserError
 from lemoncheesecake.helpers.time import humanize_duration
 
@@ -113,29 +113,30 @@ def get_env_var(name, optional=False, default=None):
 
 
 def get_slack_auth_token():
-    return get_env_var("SLACK_AUTH_TOKEN")
+    return get_env_var("LCC_SLACK_AUTH_TOKEN")
 
 
 def get_slack_http_proxy():
-    return get_env_var("SLACK_HTTP_PROXY", optional=True, default=None)
+    return get_env_var("LCC_SLACK_HTTP_PROXY", optional=True, default=None)
 
 
 def get_slack_channel():
-    return get_env_var("SLACK_CHANNEL")
+    return get_env_var("LCC_SLACK_CHANNEL")
 
 
 def get_message_template():
     return get_env_var(
-        "SLACK_MESSAGE_TEMPLATE", optional=True, default="{passed} passed, {failed} failed, {skipped} skipped"
+        "LCC_SLACK_MESSAGE_TEMPLATE", optional=True, default="{passed} passed, {failed} failed, {skipped} skipped"
     )
 
 
 def get_only_notify_on_failure():
-    return "SLACK_ONLY_NOTIFY_FAILURE" in os.environ
+    return "LCC_SLACK_ONLY_NOTIFY_FAILURE" in os.environ
 
 
-class SlackReportingBackend(ReportingBackend):
-    name = "slack"
+class SlackReportingBackend(ReportingBackend, ReportingSessionBuilderMixin):
+    def get_name(self):
+        return "slack"
 
     def is_available(self):
         return SLACKER_IS_AVAILABLE

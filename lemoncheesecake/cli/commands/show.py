@@ -11,8 +11,8 @@ import colorama
 from lemoncheesecake.helpers.console import bold
 from lemoncheesecake.helpers.text import ensure_single_line_text
 from lemoncheesecake.cli.command import Command
-from lemoncheesecake.cli.utils import get_suites_from_project
-from lemoncheesecake.filter import add_run_filter_cli_args
+from lemoncheesecake.cli.utils import load_suites_from_project
+from lemoncheesecake.filter import add_run_filter_cli_args, make_run_filter
 from lemoncheesecake.project import load_project
 from lemoncheesecake.reporting.console import serialize_metadata
 
@@ -80,7 +80,7 @@ class ShowCommand(Command):
         colorama.init()
 
         project = load_project()
-        suites = get_suites_from_project(project, cli_args)
+        suites = load_suites_from_project(project, make_run_filter(cli_args))
 
         renderer = TestTreeRenderer(show_description=cli_args.show_description)
         renderer.show_suites(suites)

@@ -8,7 +8,7 @@ def test_bootstrap(tmpdir):
     assert run_main(["bootstrap", project_dir]) == 0
 
     project = load_project_from_dir(project_dir)
-    assert project.get_suites() == []
+    assert project.load_suites() == []
 
 
 def test_bootstrap_existing_directory(tmpdir):

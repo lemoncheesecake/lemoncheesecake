@@ -9,7 +9,7 @@ import pytest
 from lemoncheesecake.exceptions import *
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite import add_test_into_suite
-from lemoncheesecake.testtree import TreeLocation
+from lemoncheesecake.reporting.report import ReportLocation
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
 
 from helpers.runner import run_suite_class, run_suite_classes, run_suite, build_suite_from_module
@@ -439,7 +439,7 @@ def test_teardown_suite_error_because_of_exception():
     report = run_suite_class(MySuite)
 
     assert_test_passed(report)
-    assert_report_node_success(report, TreeLocation.in_suite_teardown("MySuite"), expected=False)
+    assert_report_node_success(report, ReportLocation.in_suite_teardown("MySuite"), expected=False)
 
 
 def test_teardown_suite_error_because_of_error_log():
@@ -455,7 +455,7 @@ def test_teardown_suite_error_because_of_error_log():
     report = run_suite_class(MySuite)
 
     assert_test_passed(report)
-    assert_report_node_success(report, TreeLocation.in_suite_teardown("MySuite"), expected=False)
+    assert_report_node_success(report, ReportLocation.in_suite_teardown("MySuite"), expected=False)
 
 
 def test_teardown_suite_error_because_of_fixture():
@@ -478,7 +478,7 @@ def test_teardown_suite_error_because_of_fixture():
     report = run_suite_class(MySuite, fixtures=[fix])
 
     assert_test_passed(report)
-    assert_report_node_success(report, TreeLocation.in_suite_teardown("MySuite"), expected=False)
+    assert_report_node_success(report, ReportLocation.in_suite_teardown("MySuite"), expected=False)
     assert len(marker) == 1
 
 
@@ -500,7 +500,7 @@ def test_setup_test_session_error_because_of_exception():
     report = run_suite_class(MySuite, fixtures=[fixt])
 
     assert_test_statuses(report, skipped=["MySuite.sometest", "MySuite.sometest_bis"])
-    assert_report_node_success(report, TreeLocation.in_test_session_setup(), expected=False)
+    assert_report_node_success(report, ReportLocation.in_test_session_setup(), expected=False)
 
 
 def test_setup_test_session_error_and_setup_suite():
@@ -522,7 +522,7 @@ def test_setup_test_session_error_and_setup_suite():
     report = run_suite_class(MySuite, fixtures=[fixt])
 
     assert_test_skipped(report)
-    assert_report_node_success(report, TreeLocation.in_test_session_setup(), expected=False)
+    assert_report_node_success(report, ReportLocation.in_test_session_setup(), expected=False)
     assert not marker
 
 
@@ -545,7 +545,7 @@ def test_teardown_test_session_error_because_of_exception():
     report = run_suite_class(MySuite, fixtures=[fix])
 
     assert_test_statuses(report, passed=["MySuite.sometest", "MySuite.sometest_bis"])
-    assert_report_node_success(report, TreeLocation.in_test_session_teardown(), expected=False)
+    assert_report_node_success(report, ReportLocation.in_test_session_teardown(), expected=False)
 
 
 def test_teardown_test_session_after_test_failure():
@@ -592,8 +592,8 @@ def test_teardown_test_session_after_test_failure_and_test_success():
     assert marker == ["test_session_setup", "test_1", "test_2", "test_session_teardown"]
 
 
-def test_session_prerun_fixture_exception():
-    @lcc.fixture(scope="session_prerun")
+def test_pre_run_fixture_exception():
+    @lcc.fixture(scope="pre_run")
     def fix():
         1 / 0
 
@@ -603,14 +603,14 @@ def test_session_prerun_fixture_exception():
         def sometest(self, fix):
             pass
 
-    with pytest.raises(LemonCheesecakeException) as excinfo:
+    with pytest.raises(LemoncheesecakeException) as excinfo:
         report = run_suite_class(MySuite, fixtures=[fix])
         assert "Got an unexpected" in str(excinfo.value)
         assert_test_skipped(report)
 
 
-def test_session_prerun_fixture_user_error():
-    @lcc.fixture(scope="session_prerun")
+def test_pre_run_fixture_user_error():
+    @lcc.fixture(scope="pre_run")
     def fix():
         raise lcc.UserError("some error")
 
@@ -620,14 +620,14 @@ def test_session_prerun_fixture_user_error():
         def sometest(self, fix):
             pass
 
-    with pytest.raises(LemonCheesecakeException) as excinfo:
+    with pytest.raises(LemoncheesecakeException) as excinfo:
         report = run_suite_class(MySuite, fixtures=[fix])
         assert str(excinfo.value) == "some error"
         assert_test_skipped(report)
 
 
-def test_session_prerun_fixture_teardown_exception():
-    @lcc.fixture(scope="session_prerun")
+def test_pre_run_fixture_teardown_exception():
+    @lcc.fixture(scope="pre_run")
     def fix():
         yield
         1 / 0
@@ -638,14 +638,14 @@ def test_session_prerun_fixture_teardown_exception():
         def sometest(self, fix):
             pass
 
-    with pytest.raises(LemonCheesecakeException) as excinfo:
+    with pytest.raises(LemoncheesecakeException) as excinfo:
         report = run_suite_class(MySuite, fixtures=[fix])
         assert "Got an unexpected" in str(excinfo.value)
         assert_test_passed(report)
 
 
-def test_session_prerun_fixture_teardown_user_error():
-    @lcc.fixture(scope="session_prerun")
+def test_pre_run_fixture_teardown_user_error():
+    @lcc.fixture(scope="pre_run")
     def fix():
         yield
         raise lcc.UserError("some error")
@@ -656,7 +656,7 @@ def test_session_prerun_fixture_teardown_user_error():
         def sometest(self, fix):
             pass
 
-    with pytest.raises(LemonCheesecakeException) as excinfo:
+    with pytest.raises(LemoncheesecakeException) as excinfo:
         report = run_suite_class(MySuite, fixtures=[fix])
         assert str(excinfo.value) == "some error"
         assert_test_passed(report)
@@ -729,7 +729,7 @@ def test_run_with_fixture_with_logs():
 def test_run_with_fixtures_using_yield_and_dependencies():
     marker = []
 
-    @lcc.fixture(scope="session_prerun")
+    @lcc.fixture(scope="pre_run")
     def session_fixture_prerun():
         retval = 2
         marker.append(retval)
@@ -783,21 +783,21 @@ def test_run_with_fixtures_using_yield_and_dependencies():
     assert report.get_suites()[0].get_tests()[0].steps[1].entries[0].message == "test_fixture_teardown"
 
 
-def test_run_with_fixtures_dependencies_in_test_session_prerun_scope():
+def test_run_with_fixtures_dependencies_in_test_pre_run_scope():
     # in this test, fixture dependency is set on fixture alphabetical inverse
     # order to highlight a bad dependency check implementation that use set data type
 
     marker = []
 
-    @lcc.fixture(names=["fixt_3"], scope="session_prerun")
+    @lcc.fixture(names=["fixt_3"], scope="pre_run")
     def fixt3():
         return 2
 
-    @lcc.fixture(names=["fixt_2"], scope="session_prerun")
+    @lcc.fixture(names=["fixt_2"], scope="pre_run")
     def fixt2(fixt_3):
         return fixt_3 * 3
 
-    @lcc.fixture(names=["fixt_1"], scope="session_prerun")
+    @lcc.fixture(names=["fixt_1"], scope="pre_run")
     def fixt1(fixt_2):
         return fixt_2 * 4
 
@@ -1038,11 +1038,11 @@ def test_fixture_name_scopes():
     fixts = []
 
     @lcc.fixture(scope="session")
-    def fixt_session_prerun(fixture_name):
+    def fixt_pre_run(fixture_name):
         fixts.append(fixture_name)
 
     @lcc.fixture(scope="session")
-    def fixt_session(fixture_name, fixt_session_prerun):
+    def fixt_session(fixture_name, fixt_pre_run):
         fixts.append(fixture_name)
 
     @lcc.fixture(scope="suite")
@@ -1059,9 +1059,9 @@ def test_fixture_name_scopes():
         def test(self, fixt_test):
             pass
 
-    run_suite_class(suite, fixtures=[fixt_session_prerun, fixt_session, fixt_suite, fixt_test])
+    run_suite_class(suite, fixtures=[fixt_pre_run, fixt_session, fixt_suite, fixt_test])
 
-    assert fixts == ["fixt_session_prerun", "fixt_session", "fixt_suite", "fixt_test"]
+    assert fixts == ["fixt_pre_run", "fixt_session", "fixt_suite", "fixt_test"]
 
 
 def test_fixture_name_multiple_names():
@@ -1186,7 +1186,7 @@ def test_disabled_suite():
 def test_get_fixture():
     marker = []
 
-    @lcc.fixture(scope="session_prerun")
+    @lcc.fixture(scope="pre_run")
     def fixt():
         return 42
 
@@ -1242,7 +1242,7 @@ def test_get_fixture_unknown():
 def test_get_fixture_not_executed():
     marker = []
 
-    @lcc.fixture(scope="session_prerun")
+    @lcc.fixture(scope="pre_run")
     def fixt():
         return 42
 

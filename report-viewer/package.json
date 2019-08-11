@@ -7,10 +7,13 @@
     "@types/react": "^16.0.2",
     "@types/react-dom": "^15.5.3",
     "@types/react-scroll": "^1.5.4",
+    "@types/sprintf-js": "^1.1.2",
+    "moment": "^2.24.0",
     "react": "^16.5.0",
     "react-dom": "^16.5.0",
     "react-scripts-ts": "2.6.0",
-    "react-scroll": "^1.7.10"
+    "react-scroll": "^1.7.10",
+    "sprintf-js": "^1.1.2"
   },
   "scripts": {
     "start": "react-scripts-ts start",

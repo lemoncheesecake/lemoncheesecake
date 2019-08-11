@@ -1,11 +1,11 @@
 import * as React from 'react';
 
 interface Props {
-    url: UrlData,
+    url: Url,
     expanded: boolean
 }
 
-class Attachment extends React.Component<Props, {}> {
+class UrlView extends React.Component<Props, {}> {
     render() {
         const url = this.props.url;
 
@@ -20,4 +20,4 @@ class Attachment extends React.Component<Props, {}> {
     }
 }
 
-export default Attachment;
+export default UrlView;

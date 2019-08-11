@@ -1,10 +1,25 @@
-import re
 import time
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import *
+from lemoncheesecake.matching.matcher import Matcher, MatchResult
 
 MULTI_LINE_TEXT = "- first line\n- second line\n- third line"
+
+
+class MultipleOf(Matcher):
+    def __init__(self, value):
+        self.value = value
+
+    def build_description(self, transformation):
+        return transformation("to be a multiple of %s" % self.value)
+
+    def matches(self, actual):
+        return MatchResult(actual % self.value == 0, "got %s" % actual)
+
+
+def multiple_of(value):
+    return MultipleOf(value)
 
 
 @lcc.suite("A")
@@ -25,8 +40,8 @@ class A:
     def this_is_a_test(self, fixt1, fixt9):
         lcc.set_step("Test list matchers")
         check_that("my list", [1, 2], has_length(3))
-        check_that("my other list", [1, 2, 3], has_values((1, 4)))
-        check_that("param", ("foo", "baz"), has_values(("bar", )))
+        check_that("my other list", [1, 2, 3], has_items((1, 4)))
+        check_that("param", ("foo", "baz"), has_items(("bar",)))
         check_that("param", "foo", is_in(("foo", "bar")))
         check_that("param", "baz", is_in(("foo", "bar")))
 
@@ -89,7 +104,7 @@ class A:
         @lcc.test("<h1>html escaping</h1>")
         def html_escaping(self):
             lcc.set_step("<h1>step description</h1>")
-            lcc.check_that("<h1>value</h1>", "<h1>actual</h1>", equal_to("<h1>expected</h1>"))
+            check_that("<h1>value</h1>", "<h1>actual</h1>", equal_to("<h1>expected</h1>"))
             lcc.log_info("<h1>some log</h1>")
             lcc.save_attachment_content("content", "filename", "<h1>attachment</h1>")
     

@@ -1,11 +1,11 @@
 import * as React from 'react';
 
 interface Props {
-    attachment: AttachmentData,
+    attachment: Attachment,
     expanded: boolean
 }
 
-class Attachment extends React.Component<Props, {}> {
+class AttachmentView extends React.Component<Props, {}> {
     render() {
         const attachment = this.props.attachment;
         let attached_file;
@@ -27,4 +27,4 @@ class Attachment extends React.Component<Props, {}> {
     }
 }
 
-export default Attachment;
+export default AttachmentView;

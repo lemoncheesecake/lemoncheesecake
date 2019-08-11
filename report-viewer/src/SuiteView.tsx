@@ -1,23 +1,23 @@
 import * as React from 'react';
-import Test from './Test';
-import Hook from './Hook';
-import ResultTable from './ResultTable';
-import {get_timestamp_from_datetime, humanize_duration} from './utils';
+import TestView from './TestView';
+import SetupView from './SetupView';
+import ResultTableView from './ResultTableView';
+import {get_time_from_iso8601, humanize_duration} from './utils';
 
 interface SuiteProps {
-    suite: SuiteData,
-    parent_suites: Array<SuiteData>
+    suite: Suite,
+    parent_suites: Array<Suite>
 }
 
 function get_duration_from_time_interval(interval: TimeInterval) {
     if (interval.end_time) {
-        return get_timestamp_from_datetime(interval.end_time) - get_timestamp_from_datetime(interval.start_time);
+        return get_time_from_iso8601(interval.end_time) - get_time_from_iso8601(interval.start_time);
     } else {
         return 0;
     }
 }
 
-function get_suite_duration(suite: SuiteData) {
+function get_suite_duration(suite: Suite) {
     let duration = suite.tests.map((t) => get_duration_from_time_interval(t)).reduce((x, y) => x + y);
 
     if (suite.suite_setup) {
@@ -31,7 +31,7 @@ function get_suite_duration(suite: SuiteData) {
     return duration;
 }
 
-class Suite extends React.Component<SuiteProps, {}> {
+class SuiteView extends React.Component<SuiteProps, {}> {
     render() {
         const suite = this.props.suite;
         const parent_suites = this.props.parent_suites;
@@ -65,23 +65,23 @@ class Suite extends React.Component<SuiteProps, {}> {
         let tests = [];
         for (let test of suite.tests) {
             let test_id = suite_id + "." + test.name;
-            tests.push(<Test test={test} test_id={test_id} key={test_id}/>);
+            tests.push(<TestView test={test} test_id={test_id} key={test_id}/>);
         }
 
         return (
-            <ResultTable
+            <ResultTableView
                 heading={<Heading/>}
-                extra_info={<span className='extra-info'>{humanize_duration(get_suite_duration(suite))}</span>}>
+                extra_info={<span className='extra-info'>{humanize_duration(get_suite_duration(suite), true)}</span>}>
                 {
-                    suite.suite_setup && <Hook hook={suite.suite_setup} description="- Setup suite -" id={suite_id + ".setup_suite"}/>
+                    suite.suite_setup && <SetupView result={suite.suite_setup} description="- Setup suite -" id={suite_id + ".setup_suite"}/>
                 }
                 { tests }
                 {
-                    suite.suite_teardown && <Hook hook={suite.suite_teardown} description="- Teardown suite -" id={suite_id + ".teardown_suite"}/>
+                    suite.suite_teardown && <SetupView result={suite.suite_teardown} description="- Teardown suite -" id={suite_id + ".teardown_suite"}/>
                 }
-            </ResultTable>
+            </ResultTableView>
         );
     }
 }
 
-export default Suite;
+export default SuiteView;

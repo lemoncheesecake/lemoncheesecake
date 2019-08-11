@@ -8,11 +8,10 @@ import shutil
 
 from lemoncheesecake.suite.loader import load_suites_from_classes, load_suite_from_file
 from lemoncheesecake import runner
-from lemoncheesecake.runtime import get_runtime
+from lemoncheesecake.session import get_session
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
-from lemoncheesecake.fixtures import FixtureRegistry, load_fixtures_from_func
+from lemoncheesecake.fixture import FixtureRegistry, load_fixtures_from_func
 from lemoncheesecake.project import create_project
-from lemoncheesecake import events
 from lemoncheesecake.cli import main
 from lemoncheesecake.suite import load_suite_from_class
 import lemoncheesecake.api as lcc
@@ -40,24 +39,16 @@ def {name}():
 """.format(name=name)
 
 
-def build_test_project(params={}, extra_imports=[], static_content=""):
+def build_project_module(myproject_content):
     return """
-from lemoncheesecake.reporting import backends
-from lemoncheesecake.fixtures import load_fixtures_from_file, load_fixtures_from_files, load_fixtures_from_directory
-from lemoncheesecake.suite.loader import *
+import os.path
+from lemoncheesecake.project import Project
 
-from lemoncheesecake import validators
+# the class MyProject that inherits Project must be declared below:
+{}
 
-{EXTRA_IMPORTS}
-
-{STATIC_CONTENT}
-
-{PARAMS}
-""".format(
-    PARAMS="\n".join(["%s = %s" % (p, v) for p, v in params.items()]),
-    EXTRA_IMPORTS="\n".join(extra_imports),
-    STATIC_CONTENT=static_content
-)
+project = MyProject(os.path.dirname(__file__))
+""".format(myproject_content)
 
 
 def _remove_py_file(filename):
@@ -133,7 +124,7 @@ def run_suites(suites, fixtures=None, backends=None, tmpdir=None, force_disabled
         finally:
             shutil.rmtree(report_dir)
 
-    report = get_runtime().report
+    report = get_session().report
     dump_report(report)
 
     return report

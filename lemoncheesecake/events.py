@@ -322,16 +322,16 @@ class LogEvent(SteppedEvent):
 
 
 class CheckEvent(SteppedEvent):
-    def __init__(self, location, step, description, outcome, details=None, event_time=None):
+    def __init__(self, location, step, description, is_successful, details=None, event_time=None):
         super(CheckEvent, self).__init__(location, step, event_time)
         self.check_description = description
-        self.check_outcome = outcome
+        self.check_is_successful = is_successful
         self.check_details = details
 
     def __str__(self):
-        return "<Event type='%s' description='%s' details='%s' outcome='%s'>" % (
+        return "<Event type='%s' description='%s' details='%s' is_successful='%s'>" % (
             self.get_name(), self.check_description, self.check_details,
-            "success" if self.check_outcome else "failure"
+            "success" if self.check_is_successful else "failure"
         )
 
 

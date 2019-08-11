@@ -1,14 +1,12 @@
 import os
 import pytest
 
-from lemoncheesecake.project import Project, HasPreRunHook, HasPostRunHook
 from lemoncheesecake.cli import build_cli_args
 from lemoncheesecake.cli.commands.run import run_project
-from lemoncheesecake import events
 
 from helpers.runner import generate_project, run_main
 from helpers.cli import assert_run_output, cmdout
-from helpers.project import DummyProjectConfiguration, DUMMY_SUITE
+from helpers.project import DummyProject, DUMMY_SUITE
 
 
 TEST_MODULE = """import lemoncheesecake.api as lcc
@@ -32,12 +30,13 @@ def fixt():
 """
 
 TEST_MODULE_USING_FIXTURES = """import lemoncheesecake.api as lcc
+from lemoncheesecake.matching import *
 
 @lcc.suite("My Suite")
 class mysuite:
     @lcc.test("My Test 1")
     def mytest1(self, fixt):
-        lcc.check_that("val", fixt, lcc.equal_to(42))
+        check_that("val", fixt, equal_to(42))
 """
 
 
@@ -100,12 +99,17 @@ def test_exit_error_on_failure_failing_suite(failing_project):
 def test_pre_run(tmpdir):
     marker = []
 
-    class ProjectConfig(DummyProjectConfiguration, HasPreRunHook):
+    class MyProject(DummyProject):
         def pre_run(self, cli_args, report_dir):
             marker.append(cli_args.command)
 
-    project = Project(ProjectConfig([DUMMY_SUITE]), tmpdir.strpath)
-    run_project(project, build_cli_args(["run"]))
+    project = MyProject(tmpdir.strpath, [DUMMY_SUITE])
+
+    # force the --reporting arguments to what the project really supports
+    args = build_cli_args(["run"])
+    args.reporting = project.reporting_backends
+
+    run_project(project, args)
 
     assert marker == ["run"]
 
@@ -113,11 +117,16 @@ def test_pre_run(tmpdir):
 def test_post_run(tmpdir):
     marker = []
 
-    class ProjectConfig(DummyProjectConfiguration, HasPostRunHook):
+    class MyProject(DummyProject):
         def post_run(self, cli_args, report_dir):
             marker.append(cli_args.command)
 
-    project = Project(ProjectConfig([DUMMY_SUITE]), tmpdir.strpath)
-    run_project(project, build_cli_args(["run"]))
+    project = MyProject(tmpdir.strpath, [DUMMY_SUITE])
+
+    # force the --reporting arguments to what the project really supports
+    args = build_cli_args(["run"])
+    args.reporting = project.reporting_backends
+
+    run_project(project, args)
 
     assert marker == ["run"]

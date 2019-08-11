@@ -7,8 +7,6 @@ Created on Sep 8, 2016
 from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError
 from lemoncheesecake.testtree import flatten_suites
 
-__all__ = ("MetadataPolicy",)
-
 
 class MetadataPolicy:
     def __init__(self):
@@ -20,7 +18,8 @@ class MetadataPolicy:
     def has_constraints(self):
         return self._properties or self._tags or self._disallow_unknown_properties or self._disallow_unknown_tags
 
-    def _get_rule_application(self, on_test, on_suite):
+    @staticmethod
+    def _get_rule_application(on_test, on_suite):
         if on_test is None and on_suite is None:
             return True, False
         if not on_test and not on_suite:
@@ -29,12 +28,14 @@ class MetadataPolicy:
 
     def add_property_rule(self, prop_name, accepted_values=None, on_test=None, on_suite=None, required=False):
         """
-        Declare a property rule with:
-        - the property name
-        - an optional list of accepted values
-        - is the property available for tests
-        - is the property available for suites
-        - if the property is required
+        Declare a property rule.
+
+        :param prop_name: the property name
+        :param accepted_values: an optional list of accepted values
+        :param on_test: whether or not the property can be used on a test
+        :param on_suite: whether or not the property can be used on a suite
+        :param required: whether or not the property is required
+
         If neither on_test or on_suite argument are set, then the property is only available for tests.
         """
         on_test, on_suite = self._get_rule_application(on_test, on_suite)
@@ -53,10 +54,12 @@ class MetadataPolicy:
 
     def add_tag_rule(self, tag_name, on_test=None, on_suite=None):
         """
-        Declare a tag constraint with:
-        - the tag name
-        - is the tag available for tests
-        - is the tag available for suites
+        Declare a tag rule.
+
+        :param tag_name: the tag name
+        :param on_test: whether or not the tag can be used on a test
+        :param on_suite: whether or not the tag can be used on a suite
+
         If neither on_test or on_suite argument are set, then the tag is only available for tests.
         """
         tag_names = tag_name if type(tag_name) in (list, tuple) else [tag_name]
