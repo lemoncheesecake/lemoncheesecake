@@ -138,7 +138,32 @@ Can be shortened like this:
         "bar", equal_to(2)
     )
 
-The same dict helper counter parts are available for:
+Nested dicts can be checked easily by expressing the nested keys as a ``tuple``::
+
+    check_that_in(
+        {"foo": {"bar": 1}},
+        ("foo", "bar"), equal_to(1),
+    )
+
+Nested lists are also supported::
+
+    check_that_in(
+        {"foo": [{"bar": 1}]},
+        ("foo", 0, "bar"), equal_to(1),
+    )
+
+The ``base_key`` keyword-argument can also be used when checking nested dicts::
+
+    check_that_in(
+        {"foo": {"bar": 1, "baz": 2}},
+        "bar", equal_to(1),
+        "baz", equal_to(2),
+        base_key=("foo",)
+    )
+
+
+
+The same dict helper counterparts are available for:
 
 - ``require_that`` => ``require_that_in``
 

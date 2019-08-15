@@ -110,6 +110,8 @@ def check_that_in(actual, *args, **kwargs):
             ("foo", "bar"), equal_to(2)
         )
 
+    The function can take a ``base_key`` keyword-arg to pass repeating nested-keys as a ``tuple``.
+
     If an extra ``quiet`` keyword-arg is set to ``True``, the check details won't appear in the check log.
 
     The function returns a list of :py:class:`MatchResult <lemoncheesecake.matching.matcher.MatchResult>`.
