@@ -58,6 +58,8 @@ Here is what have been changed:
 - the ``hide_command_line_in_report`` attribute has been turned into ``show_command_line_in_report`` which is ``True``
   by default and must be set to ``False`` so that the command line is not displayed in the report
 
+- the ``project_dir`` attribute has been renamed into ``dir``
+
 - to run code before and/or after test session: the ``pre_run`` and ``post_run`` methods remain while
   there are no longer extra ``HasPreRunHook`` and ``HasPostRunHook`` extra mixin classes to extend
 
