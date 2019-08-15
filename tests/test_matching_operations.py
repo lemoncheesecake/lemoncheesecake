@@ -36,6 +36,14 @@ def test_check_that_failure(session_mock):
     assert "bar" in details
 
 
+def test_check_that_quiet(session_mock):
+    check_that("value", "bar", equal_to("foo"), quiet=True)
+
+    _, _, details = get_last_mocked_logged_check()
+
+    assert not details
+
+
 def test_check_that_in(session_mock):
     results = check_that_in({"foo": 1, "bar": 2}, "foo", equal_to(1), "bar", equal_to(2))
 
@@ -86,6 +94,14 @@ def test_check_that_in_with_tuple_and_base_key(session_mock):
     assert "foo" in description and "bar" in description
     assert is_successful is True
     assert "baz" in details
+
+
+def test_check_that_in_quiet(session_mock):
+    check_that_in({"foo": "bar"}, "foo", equal_to("bar"), quiet=True)
+
+    _, _, details = get_last_mocked_logged_check()
+
+    assert not details
 
 
 def test_require_that_in_success(session_mock):
@@ -152,6 +168,14 @@ def test_require_that_failure(session_mock):
     assert "bar" in details
 
 
+def test_require_that_quiet(session_mock):
+    require_that("value", "foo", equal_to("foo"), quiet=True)
+
+    _, _, details = get_last_mocked_logged_check()
+
+    assert not details
+
+
 def test_assert_that_success(session_mock):
     result = assert_that("value", "foo", equal_to("foo"))
     assert result
@@ -168,6 +192,15 @@ def test_assert_that_failure(session_mock):
     assert "value" in description and "foo" in description
     assert is_successful is False
     assert "bar" in details
+
+
+def test_assert_that_quiet(session_mock):
+    with pytest.raises(lcc.AbortTest):
+        assert_that("value", "bar", equal_to("foo"), quiet=True)
+
+    _, _, details = get_last_mocked_logged_check()
+
+    assert not details
 
 
 def test_unicode(session_mock):
