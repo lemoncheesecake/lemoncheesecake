@@ -144,6 +144,8 @@ The same dict helper counter parts are available for:
 
 - ``assert_that`` => ``assert_that_in``
 
+Like their ``*_that`` counterpart, the ``*_that_in`` functions can also take a ``quiet`` keyword argument.
+
 If one match fails in a test, this test will be marked as failed.
 
 Creating custom matchers

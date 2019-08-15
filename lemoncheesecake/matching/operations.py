@@ -4,7 +4,7 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
-from typing import Any
+from typing import Any, Mapping, List
 import six
 
 from lemoncheesecake.session import log_check
@@ -40,10 +40,6 @@ def _format_result_details(details):
 
 
 def _log_match_result(hint, matcher, result, quiet=False):
-    """Add a check log to the report.
-
-    If quiet is set to True, the check details won't appear in the check log.
-    """
     if hint is not None:
         description = "Expect %s %s" % (hint, matcher.build_description(MatchDescriptionTransformer()))
     else:
@@ -61,7 +57,7 @@ def check_that(hint, actual, matcher, quiet=False):
 
     A check log is added to the report.
 
-    If quiet is set to True, the check details won't appear in the check log.
+    If ``quiet`` is set to ``True``, the check details won't appear in the check log.
     """
     assert isinstance(matcher, Matcher)
 
@@ -94,14 +90,53 @@ def _do_that_in(func, actual, *args, **kwargs):
 
 
 def check_that_in(actual, *args, **kwargs):
+    # type: (Mapping, Any, Any) -> List[MatchResult]
+
+    """
+    Equivalent of :py:func:`check_that` over items of a dict.
+
+    Example of usage::
+
+        check_that_in(
+            {"foo": 1, "bar": 2},
+            "foo", equal_to(1),
+            "bar", equal_to(2)
+        )
+
+    The key can also be a ``tuple`` when checking for a nested item::
+
+        check_that_in(
+            {"foo": {"bar": 2}},
+            ("foo", "bar"), equal_to(2)
+        )
+
+    If an extra ``quiet`` keyword-arg is set to ``True``, the check details won't appear in the check log.
+
+    The function returns a list of :py:class:`MatchResult <lemoncheesecake.matching.matcher.MatchResult>`.
+    """
+
     return _do_that_in(check_that, actual, *args, **kwargs)
 
 
 def require_that_in(actual, *args, **kwargs):
+    # type: (Mapping, Any, Any) -> List[MatchResult]
+
+    """
+    Does the same thing as :py:func:`check_that_in` except it performs a
+    :py:func:`require_that` on each key-value pair.
+    """
+
     return _do_that_in(require_that, actual, *args, **kwargs)
 
 
 def assert_that_in(actual, *args, **kwargs):
+    # type: (Mapping, Any, Any) -> List[MatchResult]
+
+    """
+    Does the same thing as :py:func:`check_that_in` except it performs a
+    :py:func:`assert_that` on each key-value pair.
+    """
+
     return _do_that_in(assert_that, actual, *args, **kwargs)
 
 
@@ -112,7 +147,7 @@ def require_that(hint, actual, matcher, quiet=False):
 
     A check log is added to the report. An AbortTest exception is raised if the check does not succeed.
 
-    If quiet is set to True, the check details won't appear in the check log.
+    If ``quiet`` is set to ``True``, the check details won't appear in the check log.
     """
     assert isinstance(matcher, Matcher)
 
@@ -131,7 +166,7 @@ def assert_that(hint, actual, matcher, quiet=False):
 
     If assertion fail, a check log is added to the report and an AbortTest exception is raised.
 
-    If quiet is set to True, the check details won't appear in the check log.
+    If ``quiet`` is set to ``True``, the check details won't appear in the check log.
     """
     assert isinstance(matcher, Matcher)
 

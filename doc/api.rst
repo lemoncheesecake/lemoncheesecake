@@ -68,6 +68,9 @@ Operations
 .. autofunction:: check_that
 .. autofunction:: require_that
 .. autofunction:: assert_that
+.. autofunction:: check_that_in
+.. autofunction:: require_that_in
+.. autofunction:: assert_that_in
 
 
 Matchers
