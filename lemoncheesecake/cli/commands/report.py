@@ -16,6 +16,8 @@ class ReportCommand(Command):
         return "Display a report"
 
     def add_cli_args(self, cli_parser):
+        add_report_filter_cli_args(cli_parser)
+
         group = cli_parser.add_argument_group("Display report")
         add_report_path_cli_arg(group)
         group.add_argument(
@@ -31,8 +33,6 @@ class ReportCommand(Command):
             "--max-width", "-w", type=int, required=False,
             help="Set a max width for tables (default is current terminal width)"
         )
-
-        add_report_filter_cli_args(cli_parser)
 
     def run_cmd(self, cli_args):
         report_path = get_report_path(cli_args)

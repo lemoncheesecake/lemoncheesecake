@@ -109,9 +109,10 @@ class DiffCommand(Command):
         return "Display differences between two reports"
 
     def add_cli_args(self, cli_parser):
-        cli_parser.add_argument("old_report_path", help="Old report path")
-        cli_parser.add_argument("new_report_path", help="New report path")
         add_report_filter_cli_args(cli_parser)
+        group = cli_parser.add_argument_group("Diff")
+        group.add_argument("old_report_path", help="Old report path")
+        group.add_argument("new_report_path", help="New report path")
 
     def run_cmd(self, cli_args):
         colorama.init()

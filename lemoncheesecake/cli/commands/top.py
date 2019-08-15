@@ -23,9 +23,9 @@ class TopTests(Command):
         return "Display tests ordered by duration"
 
     def add_cli_args(self, cli_parser):
+        add_report_filter_cli_args(cli_parser, only_executed_tests=True)
         group = cli_parser.add_argument_group("Top tests")
         add_report_path_cli_arg(group)
-        add_report_filter_cli_args(cli_parser, only_executed_tests=True)
 
     @staticmethod
     def get_tests_ordered_by_duration(tests):
@@ -71,9 +71,9 @@ class TopSuites(Command):
         return "Display suites ordered by duration"
 
     def add_cli_args(self, cli_parser):
+        add_report_filter_cli_args(cli_parser, only_executed_tests=True)
         group = cli_parser.add_argument_group("Top suites")
         add_report_path_cli_arg(group)
-        add_report_filter_cli_args(cli_parser, only_executed_tests=True)
 
     @staticmethod
     def get_suites_ordered_by_duration(suites):
@@ -124,9 +124,9 @@ class TopSteps(Command):
         return "Display steps aggregated and ordered by duration"
 
     def add_cli_args(self, cli_parser):
+        add_report_filter_cli_args(cli_parser, only_executed_tests=True)
         group = cli_parser.add_argument_group("Top steps")
         add_report_path_cli_arg(group)
-        add_report_filter_cli_args(cli_parser, only_executed_tests=True)
 
     @staticmethod
     def group_steps_by_description(steps):
