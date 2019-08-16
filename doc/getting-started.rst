@@ -131,3 +131,5 @@ Tests are run like this:
      * Failures: 0
 
 The generated HTML report is available in the file ``report/report.html``.
+
+You will find more information about ``lcc run`` options :ref:`here <lcc_run>`.
