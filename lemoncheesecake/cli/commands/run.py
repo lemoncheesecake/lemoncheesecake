@@ -6,6 +6,7 @@ Created on Dec 31, 2016
 
 import os
 
+from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import load_suites_from_project
 from lemoncheesecake.exceptions import LemoncheesecakeException, ProgrammingError, UserError, \
@@ -16,6 +17,7 @@ from lemoncheesecake.project import find_project_file, load_project_from_file, l
 from lemoncheesecake.reporting.backend import ReportingSessionBuilderMixin
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy
 from lemoncheesecake.runner import initialize_event_manager, run_suites
+from lemoncheesecake.consts import NEGATIVE_CHARS
 
 
 def build_fixture_registry(project, cli_args):
@@ -48,7 +50,37 @@ def get_report_saving_strategy(cli_args):
     try:
         return make_report_saving_strategy(saving_strategy_expression)
     except ValueError:
-        raise LemoncheesecakeException("Invalid expression '%s' for report saving strategy" % saving_strategy_expression)
+        raise LemoncheesecakeException(
+            "Invalid expression '%s' for report saving strategy" % saving_strategy_expression
+        )
+
+
+def get_reporting_backend_names(default_names, specified_names):
+    if not specified_names:
+        return default_names
+
+    elif all(name[0] not in ("+" + NEGATIVE_CHARS) for name in specified_names):  # fixed list
+        return specified_names
+
+    elif all(name[0] in ("+" + NEGATIVE_CHARS) for name in specified_names):  # turn on/off directives
+        names = OrderedSet(default_names)
+        for specified_name in specified_names:
+            if specified_name[0] == "+":  # turn on
+                names.add(specified_name[1:])
+            else:  # turn off
+                try:
+                    names.remove(specified_name[1:])
+                except KeyError:
+                    raise LemoncheesecakeException(
+                        "--reporting: backend '%s' is not among the default reporting backends" % specified_name[1:]
+                    )
+        return names
+
+    else:
+        raise LemoncheesecakeException(
+            "--reporting: either the specified reporting backends must be fixed backend list, "
+            "or a list of turn on/off (+ / ^) directives"
+        )
 
 
 class ReportSetupHandler(object):
@@ -77,7 +109,7 @@ def run_project(project, cli_args):
 
     # Get reporting backends
     reporting_backends = []
-    for backend_name in cli_args.reporting:
+    for backend_name in get_reporting_backend_names(project.default_reporting_backend_names, cli_args.reporting):
         try:
             backend = project.reporting_backends[backend_name]
         except KeyError:
@@ -190,7 +222,7 @@ class RunCommand(Command):
             help="Directory where report data will be stored"
         )
         reporting_group.add_argument(
-            "--reporting", nargs="+", default=default_reporting_backend_names,
+            "--reporting", nargs="+", default=[],
             help="The list of reporting backends to use (default: %s)" % ", ".join(default_reporting_backend_names)
         )
         reporting_group.add_argument(

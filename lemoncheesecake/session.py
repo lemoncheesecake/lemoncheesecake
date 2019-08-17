@@ -13,7 +13,7 @@ from typing import Optional
 
 import six
 
-from lemoncheesecake.consts import ATTACHEMENT_DIR, \
+from lemoncheesecake.consts import ATTACHMENTS_DIR, \
     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
 from lemoncheesecake.reporting import Report
 from lemoncheesecake import events
@@ -42,7 +42,7 @@ class Session(object):
         self.event_manager = event_manager
         self.report_dir = report_dir
         self.report = report
-        self.attachments_dir = os.path.join(self.report_dir, ATTACHEMENT_DIR)
+        self.attachments_dir = os.path.join(self.report_dir, ATTACHMENTS_DIR)
         self.attachment_count = 0
         self._attachment_lock = threading.Lock()
         self._failures = set()
@@ -97,7 +97,7 @@ class Session(object):
         yield os.path.join(self.attachments_dir, attachment_filename)
 
         self.event_manager.fire(events.LogAttachmentEvent(
-            self._local.location, self._local.step, "%s/%s" % (ATTACHEMENT_DIR, attachment_filename),
+            self._local.location, self._local.step, "%s/%s" % (ATTACHMENTS_DIR, attachment_filename),
             description, as_image
         ))
 

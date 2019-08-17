@@ -11,8 +11,7 @@ from lemoncheesecake.reporting import load_report
 from lemoncheesecake.reporting.reportdir import DEFAULT_REPORT_DIR_NAME
 from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.exceptions import UserError
-
-NEGATIVE_FILTER_CHARS = "-^~"
+from lemoncheesecake.consts import NEGATIVE_CHARS
 
 
 class Filter(object):
@@ -52,7 +51,7 @@ class BaseFilter(Filter):
         values = [value or "" for value in values]  # convert None to ""
 
         for pattern in patterns:
-            if pattern[0] in NEGATIVE_FILTER_CHARS:
+            if pattern[0] in NEGATIVE_CHARS:
                 if not fnmatch.filter(values, pattern[1:]):
                     return True
             else:
@@ -67,7 +66,7 @@ class BaseFilter(Filter):
 
         for key, value in patterns:
             if key in key_values:
-                if value[0] in NEGATIVE_FILTER_CHARS:
+                if value[0] in NEGATIVE_CHARS:
                     if not fnmatch.fnmatch(key_values[key], value[1:]):
                         return True
                 else:

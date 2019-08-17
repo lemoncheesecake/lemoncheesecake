@@ -172,4 +172,4 @@ CLI
 ---
 
 The ``--enable-reporting`` and ``--disable-reporting`` arguments have been removed from ``lcc run``.
-Use the ``--reporting`` absolute reporting backend list instead.
+Use the ``--reporting`` argument instead as documented :ref:`here <lcc_run>`.
