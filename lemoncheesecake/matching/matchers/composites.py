@@ -8,7 +8,7 @@ from typing import List, Any
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.helpers.text import jsonify
-from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatchDescriptionTransformer
+from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatcherDescriptionTransformer
 
 
 def _make_item(content, prefix="- "):
@@ -27,7 +27,7 @@ def _make_items(items, prefix="- ", relationship="and"):
 
 
 def _serialize_sub_matcher_result(matcher, result):
-    content = "%s => %s" % (matcher.build_short_description(MatchDescriptionTransformer()), "OK" if result else "KO")
+    content = "%s => %s" % (matcher.build_short_description(MatcherDescriptionTransformer()), "OK" if result else "KO")
     if result.description is not None:
         content += ", %s" % result.description
     return content

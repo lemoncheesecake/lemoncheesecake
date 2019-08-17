@@ -16,7 +16,7 @@ CONJUGATION_FORMS = {
 }
 
 
-class MatchDescriptionTransformer(object):
+class MatcherDescriptionTransformer(object):
     def __init__(self, conjugate=False, negative=False):
         self.conjugate = conjugate
         self.negative = negative
@@ -69,6 +69,11 @@ class MatchDescriptionTransformer(object):
         return sentence
 
 
+# In 1.1.0, MatchDescriptionTransformer has been renamed into MatcherDescriptionTransformer
+# keep a MatchDescriptionTransformer alias for backward-compatibility
+MatchDescriptionTransformer = MatcherDescriptionTransformer
+
+
 class MatchResult(object):
     def __init__(self, is_successful, description=None):
         # type: (bool, Optional[str]) -> None
@@ -105,7 +110,7 @@ class MatchResult(object):
 
 class Matcher(object):
     def build_description(self, transformation):
-        # type: (MatchDescriptionTransformer) -> str
+        # type: (MatcherDescriptionTransformer) -> str
         """
         Build a description for the matcher given the transformation passed in argument.
         """

@@ -9,7 +9,7 @@ import six
 
 from lemoncheesecake.session import log_check
 from lemoncheesecake.exceptions import AbortTest
-from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatchDescriptionTransformer
+from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatcherDescriptionTransformer
 from lemoncheesecake.matching.matchers.dict_ import HasEntry, wrap_key_matcher
 from lemoncheesecake.matching.matchers.composites import is_
 
@@ -18,7 +18,7 @@ class _HasEntry(HasEntry):
     def build_description(self, _):
         ret = self.key_matcher.build_description()
         if self.value_matcher:
-            ret += " " + self.value_matcher.build_description(MatchDescriptionTransformer())
+            ret += " " + self.value_matcher.build_description(MatcherDescriptionTransformer())
         return ret
 
 
@@ -41,9 +41,9 @@ def _format_result_details(details):
 
 def _log_match_result(hint, matcher, result, quiet=False):
     if hint is not None:
-        description = "Expect %s %s" % (hint, matcher.build_description(MatchDescriptionTransformer()))
+        description = "Expect %s %s" % (hint, matcher.build_description(MatcherDescriptionTransformer()))
     else:
-        description = "Expect %s" % matcher.build_description(MatchDescriptionTransformer())
+        description = "Expect %s" % matcher.build_description(MatcherDescriptionTransformer())
 
     return log_check(
         description, result.is_successful, _format_result_details(result.description) if not quiet else None

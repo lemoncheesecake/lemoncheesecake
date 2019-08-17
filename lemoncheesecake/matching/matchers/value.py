@@ -5,7 +5,7 @@ Created on Mar 27, 2017
 '''
 
 from lemoncheesecake.helpers.text import jsonify
-from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatchDescriptionTransformer
+from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatcherDescriptionTransformer
 from lemoncheesecake.matching.matchers.composites import is_
 from lemoncheesecake.matching.matchers.types_ import is_bool
 
@@ -96,7 +96,7 @@ class HasLength(Matcher):
 
     def build_description(self, transformation):
         return transformation(
-            "to have a length that %s" % (self.matcher.build_description(MatchDescriptionTransformer(conjugate=True)))
+            "to have a length that %s" % (self.matcher.build_description(MatcherDescriptionTransformer(conjugate=True)))
         )
 
     def matches(self, actual):

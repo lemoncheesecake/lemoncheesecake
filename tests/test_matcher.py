@@ -1,8 +1,8 @@
-from lemoncheesecake.matching.matcher import MatchDescriptionTransformer
+from lemoncheesecake.matching.matcher import MatcherDescriptionTransformer, MatchDescriptionTransformer
 
 
 def _test_transformation(actual, conjugate, negative, expected):
-    assert MatchDescriptionTransformer(conjugate, negative)(actual) == expected
+    assert MatcherDescriptionTransformer(conjugate, negative)(actual) == expected
 
 
 def test_to_be():
@@ -35,3 +35,7 @@ def test_contains():
 
 def test_does_not_contain():
     _test_transformation("to contain something", True, True, "does not contain something")
+
+
+def test_MatchDescriptionTransformer_backward_compatibility():
+    assert MatchDescriptionTransformer is MatcherDescriptionTransformer
