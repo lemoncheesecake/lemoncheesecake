@@ -174,6 +174,9 @@ A test or an entire suite can be disabled using the ``@lcc.disabled()`` decorato
 Disabled tests are visible in the report but they are not taken into account while computing the percentage
 of successful tests.
 
+*Since version 1.1.0*, it's possible to pass a ``reason`` (str) argument to the decorator, it will be visible
+in the generated report.
+
 If you want to completely hide a test or a suite from the test tree and the report, use ``@lcc.hidden()``.
 
 Conditional tests and suites

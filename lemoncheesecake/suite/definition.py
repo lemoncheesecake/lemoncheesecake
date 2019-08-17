@@ -9,7 +9,7 @@ import copy
 
 from typing import Any
 
-from lemoncheesecake.suite.core import InjectedFixture, Test, Suite
+from lemoncheesecake.suite.core import InjectedFixture, Test
 from lemoncheesecake.exceptions import ProgrammingError
 
 
@@ -135,12 +135,12 @@ def link(url, name=None):
     return wrapper
 
 
-def disabled():
+def disabled(reason=None):
     """Decorator, mark a test or a suite as disabled, meaning it won't be executed but will be visible
-    in report."""
+    in report. An optional reason can be passed to the decorator (*new in version 1.1.0*)."""
     def wrapper(obj):
         md = get_metadata(obj)
-        md.disabled = True
+        md.disabled = reason if reason else True
         return obj
     return wrapper
 

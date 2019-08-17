@@ -8,13 +8,14 @@ import pytest
 
 from lemoncheesecake.exceptions import *
 import lemoncheesecake.api as lcc
+from lemoncheesecake.matching import *
 from lemoncheesecake.suite import add_test_into_suite
 from lemoncheesecake.reporting.report import ReportLocation
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
 
 from helpers.runner import run_suite_class, run_suite_classes, run_suite, build_suite_from_module
 from helpers.report import assert_test_statuses, assert_test_passed, assert_test_failed, assert_test_skipped, \
-    assert_report_node_success
+    assert_report_node_success, get_last_test
 
 
 def test_test_success():
@@ -32,7 +33,7 @@ def test_test_failure():
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
-            lcc.check_that("val", 1, lcc.equal_to(2))
+            check_that("val", 1, equal_to(2))
 
     assert_test_failed(run_suite_class(MySuite))
 
@@ -1153,6 +1154,21 @@ def test_disabled_test():
     assert_test_statuses(report, disabled=["mysuite.mytest"])
 
 
+def test_disabled_test_with_reason():
+    @lcc.suite("Suite")
+    class mysuite:
+        @lcc.test("Test")
+        @lcc.disabled("some reason")
+        def mytest(self):
+            pass
+
+    report = run_suite_class(mysuite)
+
+    test = get_last_test(report)
+    assert test.status == "disabled"
+    assert test.status_details == "some reason"
+
+
 def test_disabled_test_with_force_disabled():
     @lcc.suite("Suite")
     class mysuite:
@@ -1181,6 +1197,24 @@ def test_disabled_suite():
     report = run_suite_class(mysuite)
 
     assert_test_statuses(report, disabled=["mysuite.test1", "mysuite.test2"])
+
+
+def test_disabled_suite_with_reason():
+    @lcc.suite("Suite")
+    @lcc.disabled("some reason")
+    class mysuite:
+        @lcc.test("Test 1")
+        def test1(self):
+            pass
+
+        @lcc.test("Test 2")
+        def test2(self):
+            pass
+
+    report = run_suite_class(mysuite)
+    test_1, test_2 = list(report.all_tests())
+    assert test_1.status == test_2.status == "disabled"
+    assert test_1.status_details == test_2.status_details == "some reason"
 
 
 def test_get_fixture():

@@ -27,7 +27,7 @@ class Test(BaseTest):
         node = self
         while node is not None:
             if node.disabled:
-                return True
+                return node.disabled
             node = node.parent_suite
         return False
 

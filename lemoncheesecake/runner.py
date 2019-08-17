@@ -126,9 +126,12 @@ class TestTask(BaseTask):
         ###
         # Checker whether the test must be executed or not
         ###
-        if self.test.is_disabled() and not context.force_disabled:
-            context.event_manager.fire(events.TestDisabledEvent(self.test, ""))
-            return
+        if not context.force_disabled:
+            disabled = self.test.is_disabled()
+            if disabled:
+                disabled_reason = disabled if isinstance(disabled, six.string_types) else ""
+                context.event_manager.fire(events.TestDisabledEvent(self.test, disabled_reason))
+                return
 
         ###
         # Begin test

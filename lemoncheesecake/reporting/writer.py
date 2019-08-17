@@ -171,7 +171,7 @@ class ReportWriter:
         self._bypass_test(event.test, "skipped", event.skipped_reason, event.time)
 
     def on_test_disabled(self, event):
-        self._bypass_test(event.test, "disabled", "", event.time)
+        self._bypass_test(event.test, "disabled", event.disabled_reason, event.time)
 
     def on_step(self, event):
         report_node_data = self.report.get(event.location)
