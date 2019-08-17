@@ -126,6 +126,9 @@ Matcher
 .. autoclass:: MatchResult
     :members: is_successful, description, success, failure, __bool__
 
+.. autoclass:: MatcherDescriptionTransformer
+    :members: conjugate, negative, __call__
+
 Project
 -------
 

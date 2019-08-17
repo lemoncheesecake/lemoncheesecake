@@ -200,9 +200,10 @@ And how to use it::
 A matcher must inherit the :class:`Matcher <lemoncheesecake.matching.matcher.Matcher>` class and implements two methods:
 ``build_description`` and ``matches``.
 
-- the ``build_description`` method will build the description part of the matcher in the check description using the ``transformation`` function
-  passed as argument. This function will do a transformation of the description such as conjugating the verb or turn it into its negative
-  form depending on the calling context.
+- the ``build_description`` method will build the description part of the matcher in the check description using the
+  instance of :class:`MatcherDescriptionTransformer <lemoncheesecake.matching.matcher.MatcherDescriptionTransformer>`
+  passed as argument. This callable will do a transformation of the description such as
+  conjugating the verb or turn it into its negative form depending on the calling context.
   The former example will produce this description for instance: ``Expect value to be a multiple of 2``.
 
   Here are two examples of transformations depending on the context::

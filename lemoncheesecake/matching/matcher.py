@@ -17,19 +17,26 @@ CONJUGATION_FORMS = {
 
 
 class MatcherDescriptionTransformer(object):
+    """
+    This class is used as a callable and passed to :py:meth:`Matcher.build_description`
+    to transform the leading verb in description according to the transformer settings.
+    """
     def __init__(self, conjugate=False, negative=False):
+        #: indicate whether or not the verb in the description will be conjugated
         self.conjugate = conjugate
+        #: indicate whether or not the description will be turned into the negative form
         self.negative = negative
 
-    def __call__(self, sentence):
+    def __call__(self, description):
+        # type: (str) -> str
         """
-        Transform the sentence according transformer settings.
+        Transform the description according transformer settings.
         """
         ###
         # No transformation to do
         ###
         if not self.conjugate and not self.negative:
-            return sentence
+            return description
 
         ###
         # Transformation of irregular verb
@@ -43,14 +50,14 @@ class MatcherDescriptionTransformer(object):
             else:  # self.negative
                 substitution = infinitive_negative
 
-            if pattern.match(sentence):
-                return pattern.sub(substitution, sentence)
+            if pattern.match(description):
+                return pattern.sub(substitution, description)
 
         ###
         # Transformation of regular verb
         ###
         pattern = re.compile(r"^to (\w+)")
-        m = pattern.match(sentence)
+        m = pattern.match(description)
         if m:
             if self.conjugate and self.negative:
                 substitution = "does not " + m.group(1)
@@ -61,12 +68,12 @@ class MatcherDescriptionTransformer(object):
             else:
                 substitution = "not " + m.group(1)
 
-            return pattern.sub(substitution, sentence)
+            return pattern.sub(substitution, description)
 
         ###
         # No verb detected
         ###
-        return sentence
+        return description
 
 
 # In 1.1.0, MatchDescriptionTransformer has been renamed into MatcherDescriptionTransformer
@@ -112,7 +119,8 @@ class Matcher(object):
     def build_description(self, transformation):
         # type: (MatcherDescriptionTransformer) -> str
         """
-        Build a description for the matcher given the transformation passed in argument.
+        Build a description for the matcher given the instance of :py:class:`MatcherDescriptionTransformer`
+        passed as argument.
         """
         raise NotImplemented()
 
