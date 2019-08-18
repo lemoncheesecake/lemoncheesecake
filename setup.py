@@ -39,6 +39,11 @@ setup(
         "Topic :: Software Development :: Testing",
     ],
     keywords="QA tests functional",
+    project_urls={
+        'Documentation': 'http://docs.lemoncheesecake.io/',
+        'Source': 'https://github.com/lemoncheesecake/lemoncheesecake',
+        'Tracker': 'https://github.com/lemoncheesecake/lemoncheesecake/issues',
+    },
 
     packages=find_packages(),
     include_package_data=True,
