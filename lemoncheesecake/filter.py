@@ -9,7 +9,8 @@ from functools import reduce
 
 from lemoncheesecake.reporting import load_report
 from lemoncheesecake.reporting.reportdir import DEFAULT_REPORT_DIR_NAME
-from lemoncheesecake.testtree import flatten_tests
+from lemoncheesecake.reporting.report import Result, TestResult
+from lemoncheesecake.testtree import flatten_tests, BaseTest, BaseSuite
 from lemoncheesecake.exceptions import UserError
 from lemoncheesecake.consts import NEGATIVE_CHARS
 
@@ -26,22 +27,17 @@ class Filter(object):
 
 
 class BaseFilter(Filter):
-    def __init__(self, paths=(), descriptions=(), tags=(), properties=(), links=(), enabled=False, disabled=False):
+    def __init__(self, paths=(), descriptions=(), tags=(), properties=(), links=()):
         self.paths = list(paths)
         self.descriptions = list(descriptions)
         self.tags = list(tags)
         self.properties = list(properties)
         self.links = list(links)
-        self.enabled = enabled
-        self.disabled = disabled
 
     def __bool__(self):
         return any((
-            self.paths, self.descriptions, self.tags, self.properties, self.links, self.enabled, self.disabled
+            self.paths, self.descriptions, self.tags, self.properties, self.links
         ))
-
-    def is_test_disabled(self, test):
-        return test.is_disabled()
 
     @staticmethod
     def _match_values(values, patterns):
@@ -81,56 +77,101 @@ class BaseFilter(Filter):
             patterns
         )
 
-    def __call__(self, test):
-        funcs = (
-            lambda: self.is_test_disabled(test) if self.disabled else True,
-            lambda: not self.is_test_disabled(test) if self.enabled else True,
-            lambda: self._match_values(test.hierarchy_paths, self.paths),
-            lambda: all(self._match_values(test.hierarchy_descriptions, descs) for descs in self.descriptions),
-            lambda: all(self._match_values(test.hierarchy_tags, tags) for tags in self.tags),
-            lambda: all(self._match_key_values(test.hierarchy_properties, props) for props in self.properties),
-            lambda: all(self._match_values_lists(test.hierarchy_links, links) for links in self.links)
+    def _do_paths(self, node):
+        return self._match_values(node.hierarchy_paths, self.paths)
+
+    def _do_descriptions(self, node):
+        return all(self._match_values(node.hierarchy_descriptions, descs) for descs in self.descriptions)
+
+    def _do_tags(self, node):
+        return all(self._match_values(node.hierarchy_tags, tags) for tags in self.tags)
+
+    def _do_properties(self, node):
+        return all(self._match_key_values(node.hierarchy_properties, props) for props in self.properties)
+
+    def _do_links(self, node):
+        return all(self._match_values_lists(node.hierarchy_links, links) for links in self.links)
+
+    def __call__(self, node):
+        assert isinstance(node, (BaseTest, BaseSuite))
+        criteria = (
+            self._do_paths, self._do_descriptions, self._do_tags, self._do_properties, self._do_links
         )
-        return all(func() for func in funcs)
+        return all(criterion(node) for criterion in criteria)
 
 
 class RunFilter(BaseFilter):
-    pass
-
-
-class ReportFilter(RunFilter):
-    def __init__(self, statuses=None, **kwargs):
-        RunFilter.__init__(self, **kwargs)
-        self.statuses = statuses if statuses is not None else set()
+    def __init__(self, enabled=False, disabled=False, **kwargs):
+        BaseFilter.__init__(self, **kwargs)
+        self.enabled = enabled
+        self.disabled = disabled
 
     def __bool__(self):
-        if RunFilter.__bool__(self):
-            return True
+        return BaseFilter.__bool__(self) or any((self.enabled, self.disabled))
 
-        return len(self.statuses) > 0
+    def _do_enabled(self, node):
+        return not node.is_disabled() if self.enabled else True
 
-    def is_test_disabled(self, test):
-        return test.status == "disabled"
+    def _do_disabled(self, node):
+        return node.is_disabled() if self.disabled else True
 
-    def __call__(self, test):
-        if not RunFilter.__call__(self, test):
-            return False
+    def _apply_run_criteria(self, node):
+        return self._do_enabled(node) and self._do_disabled(node)
 
-        if len(self.statuses) == 0:
-            return True
+    def __call__(self, node):
+        return BaseFilter.__call__(self, node) and self._apply_run_criteria(node)
 
-        return test.status in self.statuses
+
+class ReportFilter(BaseFilter):
+    def __init__(self, statuses=None, enabled=False, disabled=False, **kwargs):
+        BaseFilter.__init__(self, **kwargs)
+        self.statuses = set(statuses) if statuses is not None else set()
+        self.enabled = enabled
+        self.disabled = disabled
+
+    def __bool__(self):
+        return BaseFilter.__bool__(self) or any((self.statuses, self.enabled, self.disabled))
+
+    def _do_statuses(self, result):
+        return result.status in self.statuses if self.statuses else True
+
+    def _do_enabled(self, result):
+        return result.status != "disabled" if self.enabled else True
+
+    def _do_disabled(self, result):
+        return result.status == "disabled" if self.disabled else True
+
+    def _apply_report_criteria(self, result):
+        return self._do_statuses(result) and self._do_enabled(result) and self._do_disabled(result)
+
+    def __call__(self, result):
+        assert isinstance(result, Result)
+
+        # test result:
+        if isinstance(result, TestResult):
+            return BaseFilter.__call__(self, result) and self._apply_report_criteria(result)
+        # suite setup or teardown result, apply the base filter on the suite node:
+        elif result.parent_suite:
+            return BaseFilter.__call__(self, result.parent_suite) and self._apply_report_criteria(result)
+        # session setup or teardown:
+        else:
+            if BaseFilter.__bool__(self):
+                # no criteria of BaseFilter is applicable to a session setup/teardown result,
+                # meaning it's a no match
+                return False
+            else:
+                return self._apply_report_criteria(result)
 
 
 class FromTestsFilter(Filter):
     def __init__(self, tests):
-        self.tests = [test.path for test in tests]
+        self._tests = [test.path for test in tests]
 
     def __bool__(self):
         return True
 
     def __call__(self, test):
-        return test.path in self.tests
+        return test.path in self._tests
 
 
 def filter_suite(suite, filtr):
@@ -219,7 +260,7 @@ def add_report_filter_cli_args(cli_parser, only_executed_tests=False):
     return _add_filter_cli_args(cli_parser, no_positional_argument=True, only_executed_tests=only_executed_tests)
 
 
-def _set_base_filter(fltr, cli_args, only_executed_tests=False):
+def _set_common_filter_criteria(fltr, cli_args, only_executed_tests=False):
     if not only_executed_tests and (cli_args.disabled and cli_args.enabled):
         raise UserError("--disabled and --enabled arguments are mutually exclusive")
 
@@ -233,21 +274,21 @@ def _set_base_filter(fltr, cli_args, only_executed_tests=False):
         fltr.enabled = cli_args.enabled
 
 
-def _set_run_filter(filtr, cli_args):
+def _set_run_filter_criteria(filtr, cli_args):
     if cli_args.passed or cli_args.failed or cli_args.skipped:
         raise UserError("--passed, --failed and --skipped arguments can only be used on the report-based filter")
-    _set_base_filter(filtr, cli_args)
+    _set_common_filter_criteria(filtr, cli_args)
 
 
 def _make_run_filter(cli_args):
     fltr = RunFilter()
-    _set_run_filter(fltr, cli_args)
+    _set_run_filter_criteria(fltr, cli_args)
     return fltr
 
 
 def _make_report_filter(cli_args, only_executed_tests=False):
     fltr = ReportFilter()
-    _set_base_filter(fltr, cli_args, only_executed_tests=only_executed_tests)
+    _set_common_filter_criteria(fltr, cli_args, only_executed_tests=only_executed_tests)
 
     if only_executed_tests:
         if cli_args.passed:

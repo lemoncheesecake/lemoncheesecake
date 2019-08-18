@@ -14,7 +14,7 @@ import calendar
 from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, \
-    normalize_node_hierarchy
+    normalize_node_hierarchy, TreeNodeHierarchy
 from lemoncheesecake.suite.core import Test
 
 _TEST_STATUSES = "passed", "failed", "skipped", "disabled"
@@ -116,6 +116,10 @@ class Step(object):
 
 class Result(object):
     def __init__(self):
+        # please note that this attribute is also defined in TestResult through BaseTest,
+        # one will override the other
+        self.parent_suite = None  # type: Optional[SuiteResult]
+        self.type = None  # type: Optional[str]
         self.steps = []  # type: List[Step]
         self.start_time = None  # type: Optional[float]
         self.end_time = None  # type: Optional[float]
@@ -162,17 +166,39 @@ class SuiteResult(BaseSuite):
         BaseSuite.__init__(self, name, description)
         self.start_time = None  # type: Optional[float]
         self.end_time = None  # type: Optional[float]
-        self.suite_setup = None  # type: Optional[Result]
-        self.suite_teardown = None  # type: Optional[Result]
+        self._suite_setup = None  # type: Optional[Result]
+        self._suite_teardown = None  # type: Optional[Result]
         # non-serialized attributes (only set in-memory during test execution)
         self.rank = 0
+
+    @property
+    def suite_setup(self):
+        return self._suite_setup
+    
+    @suite_setup.setter
+    def suite_setup(self, setup):
+        if setup:
+            setup.parent_suite = self
+            setup.type = "suite_setup"
+        self._suite_setup = setup
+
+    @property
+    def suite_teardown(self):
+        return self._suite_teardown
+
+    @suite_teardown.setter
+    def suite_teardown(self, teardown):
+        if teardown:
+            teardown.parent_suite = self
+            teardown.type = "suite_teardown"
+        self._suite_teardown = teardown
 
     @property
     def duration(self):
         # type: () -> Optional[float]
         return reduce(
             lambda x, y: x + y,
-            # result.duration is None if the corresponding testish is in progress
+            # result.duration is None if the corresponding result is in progress
             [result.duration or 0 for result in flatten_results_from_suites([self])],
             0
         )
@@ -281,17 +307,17 @@ class ReportLocation(object):
 
     @classmethod
     def in_suite_setup(cls, suite):
-        # type: (SuiteResult) -> ReportLocation
+        # type: (TreeNodeHierarchy) -> ReportLocation
         return cls(cls._SUITE_SETUP, normalize_node_hierarchy(suite))
 
     @classmethod
     def in_suite_teardown(cls, suite):
-        # type: (SuiteResult) -> ReportLocation
+        # type: (TreeNodeHierarchy) -> ReportLocation
         return cls(cls._SUITE_TEARDOWN, normalize_node_hierarchy(suite))
 
     @classmethod
     def in_test(cls, test):
-        # type: (TestResult) -> ReportLocation
+        # type: (TreeNodeHierarchy) -> ReportLocation
         return cls(cls._TEST, normalize_node_hierarchy(test))
 
     def get(self, report):
@@ -329,17 +355,37 @@ class ReportLocation(object):
         return "<%s>" % ret
 
 
-class Report:
+class Report(object):
     def __init__(self):
         self.info = []
-        self.test_session_setup = None  # type: Optional[Result]
-        self.test_session_teardown = None  # type: Optional[Result]
+        self._test_session_setup = None  # type: Optional[Result]
+        self._test_session_teardown = None  # type: Optional[Result]
         self._suites = []  # type: List[SuiteResult]
         self.start_time = None  # type: Optional[float]
         self.end_time = None  # type: Optional[float]
         self.report_generation_time = None  # type: Optional[float]
         self.title = _DEFAULT_REPORT_TITLE
         self.nb_threads = 1
+
+    @property
+    def test_session_setup(self):
+        return self._test_session_setup
+
+    @test_session_setup.setter
+    def test_session_setup(self, setup):
+        if setup:
+            setup.type = "test_session_setup"
+        self._test_session_setup = setup
+
+    @property
+    def test_session_teardown(self):
+        return self._test_session_teardown
+
+    @test_session_teardown.setter
+    def test_session_teardown(self, teardown):
+        if teardown:
+            teardown.type = "test_session_teardown"
+        self._test_session_teardown = teardown
 
     @property
     def duration(self):

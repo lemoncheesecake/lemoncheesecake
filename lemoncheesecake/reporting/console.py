@@ -8,9 +8,7 @@ import six
 from lemoncheesecake.helpers.text import wrap_text
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.helpers import terminalsize
-from lemoncheesecake.reporting import Log, Check, Url, Attachment
-from lemoncheesecake.testtree import flatten_tests
-from lemoncheesecake.filter import filter_suites
+from lemoncheesecake.reporting import Log, Check, Url, Attachment, TestResult
 
 
 def test_status_to_color(status):
@@ -126,7 +124,7 @@ class Renderer(object):
 
         return table.table
 
-    def render_result(self, description, short_description, status, steps):
+    def render_chunk(self, description, short_description, status, steps):
         if status is None:
             status = "in_progress"
 
@@ -155,55 +153,38 @@ class Renderer(object):
         else:
             short_description = test.path
 
-        return self.render_result(test.description, short_description, test.status, test.steps)
+        return self.render_chunk(test.description, short_description, test.status, test.steps)
 
-    def render_tests(self, tests):
-        for test in tests:
-            yield self.render_test(test)
-            yield ""
+    def render_result(self, result):
+        if result.type == "suite_setup":
+            description = "- SUITE SETUP - %s" % result.parent_suite.description
+            short_description = result.parent_suite.path
+        elif result.type == "suite_teardown":
+            description = "- SUITE TEARDOWN - %s" % result.parent_suite.description
+            short_description = result.parent_suite.path
+        elif result.type == "test_session_setup":
+            description = "- TEST SESSION SETUP -"
+            short_description = None
+        elif result.type == "test_session_teardown":
+            description = "- TEST SESSION TEARDOWN -"
+            short_description = None
+        else:
+            raise ValueError("Unknown result type '%s'" % result.type)
 
-    def render_suite(self, suite):
-        if suite.suite_setup:
-            yield self.render_result(
-                "- SUITE SETUP - %s" % suite.description, suite.path,
-                suite.suite_setup.status, suite.suite_setup.steps
-            )
-            yield ""
+        return self.render_chunk(description, short_description, result.status, result.steps)
 
-        for test in suite.get_tests():
-            yield self.render_test(test)
-            yield ""
-
-        if suite.suite_teardown:
-            yield self.render_result(
-                "- SUITE TEARDOWN - %s" % suite.description, suite.path,
-                suite.suite_teardown.status, suite.suite_teardown.steps
-            )
-            yield ""
-
-    def render_report(self, report):
-        if report.test_session_setup:
-            yield self.render_result(
-                "- TEST SESSION SETUP -", None,
-                report.test_session_setup.status, report.test_session_setup.steps
-            )
-            yield ""
-
-        for suite in report.all_suites():
-            for data in self.render_suite(suite):
-                yield data
-
-        if report.test_session_teardown:
-            yield self.render_result(
-                "- TEST SESSION TEARDOWN -", None,
-                report.test_session_teardown.status, report.test_session_teardown.steps
-            )
+    def render_results(self, results):
+        for result in results:
+            if isinstance(result, TestResult):
+                yield self.render_test(result)
+            else:
+                yield self.render_result(result)
             yield ""
 
 
-def _print_data(data_it):
-    for data in data_it:
-        print(data if six.PY3 else data.encode("utf8"))
+def _print_chunks(chunks):
+    for chunk in chunks:
+        print(chunk if six.PY3 else chunk.encode("utf8"))
 
 
 def print_report(report, filtr=None, max_width=None, explicit=False):
@@ -222,15 +203,15 @@ def print_report(report, filtr=None, max_width=None, explicit=False):
         if report.nb_tests == 0:
             print("No tests found in report")
             return
-        data = renderer.render_report(report)
+        chunks = renderer.render_results(report.all_results())
     else:
-        suites = filter_suites(report.get_suites(), filtr)
-        if not suites:
-            print("The filter does not match any test in the report")
+        results = list(filter(filtr, report.all_results()))
+        if not results:
+            print("The filter does not match anything in the report")
             return
-        data = renderer.render_tests(flatten_tests(suites))
+        chunks = renderer.render_results(results)
 
     ###
     # Do the actual job
     ###
-    _print_data(data)
+    _print_chunks(chunks)

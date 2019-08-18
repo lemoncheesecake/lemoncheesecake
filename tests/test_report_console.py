@@ -13,7 +13,7 @@ from helpers.runner import run_suite_classes, wrap_func_into_suites
 def _test_render_test(suites, *expected_lines, **kwargs):
     report = run_suite_classes(suites)
     renderer = Renderer(kwargs.get("max_width", 80), kwargs.get("explicit", False))
-    actual = "\n".join(renderer.render_report(report))
+    actual = "\n".join(renderer.render_results(report.all_results()))
     print("<<<\n%s\n>>>" % actual, file=sys.stderr)
     for actual_line, expected_line in zip(actual.split("\n"), expected_lines):
         assert re.compile(expected_line).search(actual_line)
