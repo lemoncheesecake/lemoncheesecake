@@ -1,3 +1,18 @@
+# 1.1.0 (2019-08-18)
+
+- **lcc run**: the `--reporting` argument can now be used with turn on/off directives of default
+  backends (example: `+junit` to turn on junit or `^console` to turn off console)
+- **API**: `@lcc.disabled()` now takes an optional `reason` argument that will be available
+  in the generated report
+- **API**: `MatchDescriptionTransformer` has been renamed into `MatcherDescriptionTransformer`
+  (backward-compatibility with former naming is kept)
+- **PyPI**: update the "Development Status" from "Beta" to "Production/Stable" and add some extra
+  pointers to sources, documentation, and issue tracker
+- **doc (http://docs.lemoncheesecake.io)**:
+  - add a new section that deals with `lcc run` in depth
+  - improve documentation of `{check,require,assert}_that_in` functions
+  - add document for `MatcherDescriptionTransformer`
+
 # 1.0.0 (2019-08-11)
 
 Major release with API breaking changes, see http://docs.lemoncheesecake.io/en/latest/migrating-to-v1.html
