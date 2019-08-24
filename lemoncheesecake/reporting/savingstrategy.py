@@ -80,7 +80,7 @@ def make_report_saving_strategy(expression):
         pass
 
     # second, try with "every_Ns"
-    m = re.compile("^every[_ ](\d+)s$").match(expression)
+    m = re.compile(r"^every[_ ](\d+)s$").match(expression)
     if m:
         return SaveAtInterval(int(m.group(1)))
 

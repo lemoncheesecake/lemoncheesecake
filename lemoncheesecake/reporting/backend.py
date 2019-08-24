@@ -94,6 +94,13 @@ def get_reporting_backends():
     )
 
 
+def get_reporting_backend_by_name(name):
+    try:
+        return next(backend for backend in get_reporting_backends() if backend.get_name() == name)
+    except StopIteration:
+        raise KeyError()
+
+
 class BoundReport(Report):
     def __init__(self):
         Report.__init__(self)
