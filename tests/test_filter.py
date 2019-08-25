@@ -1,3 +1,4 @@
+import re
 import argparse
 
 import lemoncheesecake.api as lcc
@@ -1148,6 +1149,170 @@ def test_report_filter_with_setup_teardown_on_failed_and_skipped():
     )
 
 
+def test_report_filter_with_setup_teardown_on_grep():
+    @lcc.fixture(scope="session")
+    def fixt():
+        lcc.log_info("foobar")
+        yield
+        lcc.log_info("foobar")
+
+    @lcc.suite("suite")
+    class suite(object):
+        def setup_suite(self):
+            lcc.log_info("foobar")
+
+        def teardown_suite(self):
+            lcc.log_info("foobar")
+
+        @lcc.test("test1")
+        def test1(self, fixt):
+            lcc.log_info("foobar")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        (
+            ReportLocation.in_test_session_setup(),
+            ReportLocation.in_suite_setup("suite"),
+            "suite.test1",
+            ReportLocation.in_suite_teardown("suite"),
+            ReportLocation.in_test_session_teardown()
+        ),
+        fixtures=(fixt,)
+    )
+
+
+def test_report_filter_grep_no_result():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.set_step("some step")
+            lcc.log_info("something")
+            lcc.log_check("check", True, "1")
+            lcc.log_url("http://www.example.com")
+            lcc.save_attachment_content("A" * 100, "file.txt")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=()
+    )
+
+
+def test_report_filter_grep_step():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.set_step("foobar")
+            lcc.log_info("something")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=("suite.test",)
+    )
+
+
+def test_report_filter_grep_log():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.log_info("foobar")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=("suite.test",)
+    )
+
+
+def test_report_filter_grep_check_description():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.log_check("foobar", True)
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=("suite.test",)
+    )
+
+
+def test_report_filter_grep_check_details():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.log_check("something", True, "foobar")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=("suite.test",)
+    )
+
+
+def test_report_filter_grep_url():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.log_url("http://example.com/foobar")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=("suite.test",)
+    )
+
+
+def test_report_filter_grep_attachment_filename():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.save_attachment_content("hello world", "foobar.txt")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=("suite.test",)
+    )
+
+
+def test_report_filter_grep_attachment_description():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.save_attachment_content("hello world", "file.txt", "foobar")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=("suite.test",)
+    )
+
+
+def test_report_filter_grep_url_description():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.log_url("http://example.com", "foobar")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=("suite.test",)
+    )
+
+
 def test_make_run_filter():
     cli_parser = argparse.ArgumentParser()
     add_run_filter_cli_args(cli_parser)
@@ -1192,6 +1357,7 @@ def test_add_report_filter_cli_args():
     assert hasattr(cli_args, "enabled")
     assert hasattr(cli_args, "disabled")
     assert hasattr(cli_args, "non_passed")
+    assert hasattr(cli_args, "grep")
 
 
 def test_add_report_filter_cli_args_with_only_executed_tests():
@@ -1204,6 +1370,7 @@ def test_add_report_filter_cli_args_with_only_executed_tests():
     assert not hasattr(cli_args, "enabled")
     assert not hasattr(cli_args, "disabled")
     assert not hasattr(cli_args, "non_passed")
+    assert hasattr(cli_args, "grep")
 
 
 def test_make_report_filter_with_only_executed_tests():
@@ -1228,3 +1395,11 @@ def test_make_report_filter_non_passed():
     cli_args = cli_parser.parse_args(args=["--non-passed"])
     filtr = make_report_filter(cli_args)
     assert filtr.statuses == {"skipped", "failed"}
+
+
+def test_make_report_filter_grep():
+    cli_parser = argparse.ArgumentParser()
+    add_report_filter_cli_args(cli_parser)
+    cli_args = cli_parser.parse_args(args=["--grep", "foobar"])
+    filtr = make_report_filter(cli_args)
+    assert filtr.grep

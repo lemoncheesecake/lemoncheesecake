@@ -4,12 +4,13 @@ Created on Sep 8, 2016
 @author: nicolas
 '''
 
+import re
 import fnmatch
 from functools import reduce
 
 from lemoncheesecake.reporting import load_report
 from lemoncheesecake.reporting.reportdir import DEFAULT_REPORT_DIR_NAME
-from lemoncheesecake.reporting.report import Result, TestResult
+from lemoncheesecake.reporting.report import Result, TestResult, Log, Check, Attachment, Url
 from lemoncheesecake.testtree import flatten_tests, BaseTest, BaseSuite
 from lemoncheesecake.exceptions import UserError
 from lemoncheesecake.consts import NEGATIVE_CHARS
@@ -92,12 +93,15 @@ class BaseFilter(Filter):
     def _do_links(self, node):
         return all(self._match_values_lists(node.hierarchy_links, links) for links in self.links)
 
+    @staticmethod
+    def _apply_criteria(obj, *criteria):
+        return all(criterion(obj) for criterion in criteria)
+
     def __call__(self, node):
         assert isinstance(node, (BaseTest, BaseSuite))
-        criteria = (
-            self._do_paths, self._do_descriptions, self._do_tags, self._do_properties, self._do_links
+        return self._apply_criteria(
+            node, self._do_paths, self._do_descriptions, self._do_tags, self._do_properties, self._do_links
         )
-        return all(criterion(node) for criterion in criteria)
 
 
 class RunFilter(BaseFilter):
@@ -116,21 +120,22 @@ class RunFilter(BaseFilter):
         return node.is_disabled() if self.disabled else True
 
     def _apply_run_criteria(self, node):
-        return self._do_enabled(node) and self._do_disabled(node)
+        return self._apply_criteria(node, self._do_enabled, self._do_disabled)
 
     def __call__(self, node):
         return BaseFilter.__call__(self, node) and self._apply_run_criteria(node)
 
 
 class ReportFilter(BaseFilter):
-    def __init__(self, statuses=None, enabled=False, disabled=False, **kwargs):
+    def __init__(self, statuses=None, enabled=False, disabled=False, grep=None, **kwargs):
         BaseFilter.__init__(self, **kwargs)
         self.statuses = set(statuses) if statuses is not None else set()
         self.enabled = enabled
         self.disabled = disabled
+        self.grep = grep
 
     def __bool__(self):
-        return BaseFilter.__bool__(self) or any((self.statuses, self.enabled, self.disabled))
+        return BaseFilter.__bool__(self) or any((self.statuses, self.enabled, self.disabled, self.grep))
 
     def _do_statuses(self, result):
         return result.status in self.statuses if self.statuses else True
@@ -141,10 +146,38 @@ class ReportFilter(BaseFilter):
     def _do_disabled(self, result):
         return result.status == "disabled" if self.disabled else True
 
+    @staticmethod
+    def _iter_grepable(result):
+        for step in result.steps:
+            yield step.description
+            for entry in step.entries:
+                if isinstance(entry, Log):
+                    yield entry.message
+                elif isinstance(entry, Check):
+                    yield entry.description
+                    if entry.details:
+                        yield entry.details
+                elif isinstance(entry, Attachment):
+                    yield entry.filename
+                    yield entry.description
+                elif isinstance(entry, Url):
+                    yield entry.url
+                    yield entry.description
+
+    def _do_grep(self, result):
+        if not self.grep:
+            return True
+
+        return any(map(self.grep.search, self._iter_grepable(result)))
+
     def _apply_report_criteria(self, result):
-        return self._do_statuses(result) and self._do_enabled(result) and self._do_disabled(result)
+        return self._apply_criteria(
+            result, self._do_statuses, self._do_enabled, self._do_disabled, self._do_grep
+        )
 
     def __call__(self, result):
+        # type: (Result) -> bool
+
         assert isinstance(result, Result)
 
         # test result:
@@ -232,6 +265,9 @@ def _add_filter_cli_args(cli_parser, no_positional_argument=False, only_executed
     group.add_argument(
         "--failed", action="store_true", help="Filter on failed tests (implies/triggers --from-report)"
     )
+    group.add_argument(
+        "--grep", "-g", help="Filter result content using pattern (implies/triggers --from-report)"
+    )
     if not only_executed_tests:
         group.add_argument(
             "--skipped", action="store_true", help="Filter on skipped tests (implies/triggers --from-report)"
@@ -309,6 +345,9 @@ def _make_report_filter(cli_args, only_executed_tests=False):
         if cli_args.non_passed:
             fltr.statuses.update(("failed", "skipped"))
 
+    if cli_args.grep:
+        fltr.grep = re.compile(cli_args.grep, re.IGNORECASE | re.MULTILINE)
+
     return fltr
 
 
@@ -320,7 +359,7 @@ def _make_from_report_filter(cli_args, only_executed_tests=False):
 
 
 def make_run_filter(cli_args):
-    if any((cli_args.from_report, cli_args.passed, cli_args.failed, cli_args.skipped)):
+    if any((cli_args.from_report, cli_args.passed, cli_args.failed, cli_args.skipped, cli_args.grep)):
         return _make_from_report_filter(cli_args)
     else:
         return _make_run_filter(cli_args)
