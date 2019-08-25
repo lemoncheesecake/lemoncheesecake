@@ -8,6 +8,7 @@ import six
 from lemoncheesecake.helpers.text import wrap_text
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.helpers import terminalsize
+from lemoncheesecake.filter import ReportFilter
 from lemoncheesecake.reporting import Log, Check, Url, Attachment, TestResult
 
 
@@ -60,9 +61,10 @@ def serialize_hierarchy_metadata(obj, hide_disabled=False):
 
 
 class Renderer(object):
-    def __init__(self, max_width, explicit=False):
+    def __init__(self, max_width, explicit=False, highlight=None):
         self.max_width = max_width
         self.explicit = explicit
+        self.hightlight = highlight
         # "20" is an approximation of the maximal overhead of table border, padding, and table first cell
         self._table_overhead = 20
 
@@ -80,13 +82,21 @@ class Renderer(object):
 
         return colored(check_label, color=outcome_to_color(is_successful), attrs=["bold"])
 
+    def render_highlighted(self, content):
+        if not self.hightlight or not content:
+            return content
+
+        return self.hightlight.sub(
+            lambda m: colored(m.group(0), color="yellow", attrs=["bold", "underline"]), content
+        )
+
     def render_steps(self, steps):
         rows = []
         for step in steps:
             rows.append([
                 "",
                 colored(
-                    self.wrap_description_col(step.description),
+                    self.render_highlighted(self.wrap_description_col(step.description)),
                     color=outcome_to_color(step.is_successful()),
                     attrs=["bold"]
                 ),
@@ -97,24 +107,24 @@ class Renderer(object):
                 if isinstance(entry, Log):
                     rows.append([
                         colored(entry.level.upper(), color=log_level_to_color(entry.level), attrs=["bold"]),
-                        self.wrap_description_col(entry.message)
+                        self.render_highlighted(self.wrap_description_col(entry.message))
                     ])
                 if isinstance(entry, Check):
                     rows.append([
                         self.render_check_outcome(entry.is_successful),
-                        self.wrap_description_col(entry.description),
-                        self.wrap_details_col(entry.details)
+                        self.render_highlighted(self.wrap_description_col(entry.description)),
+                        self.render_highlighted(self.wrap_details_col(entry.details))
                     ])
                 if isinstance(entry, Url):
                     rows.append([
                         colored("URL", color="cyan", attrs=["bold"]),
-                        self.wrap_description_col("%s (%s)" % (entry.url, entry.description))
+                        self.render_highlighted(self.wrap_description_col("%s (%s)" % (entry.url, entry.description)))
                     ])
                 if isinstance(entry, Attachment):
                     rows.append([
                         colored("ATTACH", color="cyan", attrs=["bold"]),
-                        self.wrap_description_col(entry.description),
-                        entry.filename
+                        self.render_highlighted(self.wrap_description_col(entry.description)),
+                        self.render_highlighted(entry.filename)
                     ])
 
         table = AsciiTable(rows)
@@ -198,7 +208,10 @@ def print_report(report, filtr=None, max_width=None, explicit=False):
     ###
     # Get a generator over data to be printed on the console
     ###
-    renderer = Renderer(max_width=max_width, explicit=explicit)
+    renderer = Renderer(
+        max_width=max_width, explicit=explicit,
+        highlight=filtr.grep if isinstance(filtr, ReportFilter) else None
+    )
     if not filtr:
         if report.nb_tests == 0:
             print("No tests found in report")
