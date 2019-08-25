@@ -1217,6 +1217,26 @@ def test_disabled_suite_with_reason():
     assert test_1.status_details == test_2.status_details == "some reason"
 
 
+def test_disabled_in_skipped_suite():
+    @lcc.suite("Suite")
+    class mysuite:
+        def setup_suite(self):
+            lcc.log_error("something wrong happened")
+
+        @lcc.test("Test 1")
+        def test1(self):
+            pass
+
+        @lcc.test("Test 2")
+        @lcc.disabled()
+        def test2(self):
+            pass
+
+    report = run_suite_class(mysuite)
+
+    assert_test_statuses(report, skipped=["mysuite.test1"], disabled=["mysuite.test2"])
+
+
 def test_get_fixture():
     marker = []
 

@@ -116,7 +116,18 @@ class TestTask(BaseTask):
     def get_on_success_dependencies(self):
         return self.dependencies
 
+    def _handle_disabled(self, context):
+        if not context.force_disabled:
+            disabled = self.test.is_disabled()
+            if disabled:
+                disabled_reason = disabled if isinstance(disabled, six.string_types) else ""
+                context.event_manager.fire(events.TestDisabledEvent(self.test, disabled_reason))
+                return True
+        return False
+
     def skip(self, context, reason=""):
+        if self._handle_disabled(context):
+            return
         context.event_manager.fire(events.TestSkippedEvent(self.test, "Test skipped because %s" % reason))
         mark_location_as_failed(ReportLocation.in_test(self.test))
 
@@ -126,12 +137,8 @@ class TestTask(BaseTask):
         ###
         # Checker whether the test must be executed or not
         ###
-        if not context.force_disabled:
-            disabled = self.test.is_disabled()
-            if disabled:
-                disabled_reason = disabled if isinstance(disabled, six.string_types) else ""
-                context.event_manager.fire(events.TestDisabledEvent(self.test, disabled_reason))
-                return
+        if self._handle_disabled(context):
+            return
 
         ###
         # Begin test
