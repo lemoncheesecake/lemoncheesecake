@@ -8,9 +8,8 @@ import six
 from lemoncheesecake.helpers.text import wrap_text
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.helpers import terminalsize
-from lemoncheesecake.reporting import Log, Check, Url, Attachment
-from lemoncheesecake.testtree import flatten_tests
-from lemoncheesecake.filter import filter_suites
+from lemoncheesecake.filter import ReportFilter
+from lemoncheesecake.reporting import Log, Check, Url, Attachment, TestResult
 
 
 def test_status_to_color(status):
@@ -62,9 +61,10 @@ def serialize_hierarchy_metadata(obj, hide_disabled=False):
 
 
 class Renderer(object):
-    def __init__(self, max_width, explicit=False):
+    def __init__(self, max_width, explicit=False, highlight=None):
         self.max_width = max_width
         self.explicit = explicit
+        self.hightlight = highlight
         # "20" is an approximation of the maximal overhead of table border, padding, and table first cell
         self._table_overhead = 20
 
@@ -82,13 +82,21 @@ class Renderer(object):
 
         return colored(check_label, color=outcome_to_color(is_successful), attrs=["bold"])
 
+    def render_highlighted(self, content):
+        if not self.hightlight or not content:
+            return content
+
+        return self.hightlight.sub(
+            lambda m: colored(m.group(0), color="yellow", attrs=["bold", "underline"]), content
+        )
+
     def render_steps(self, steps):
         rows = []
         for step in steps:
             rows.append([
                 "",
                 colored(
-                    self.wrap_description_col(step.description),
+                    self.render_highlighted(self.wrap_description_col(step.description)),
                     color=outcome_to_color(step.is_successful()),
                     attrs=["bold"]
                 ),
@@ -99,24 +107,24 @@ class Renderer(object):
                 if isinstance(entry, Log):
                     rows.append([
                         colored(entry.level.upper(), color=log_level_to_color(entry.level), attrs=["bold"]),
-                        self.wrap_description_col(entry.message)
+                        self.render_highlighted(self.wrap_description_col(entry.message))
                     ])
                 if isinstance(entry, Check):
                     rows.append([
                         self.render_check_outcome(entry.is_successful),
-                        self.wrap_description_col(entry.description),
-                        self.wrap_details_col(entry.details)
+                        self.render_highlighted(self.wrap_description_col(entry.description)),
+                        self.render_highlighted(self.wrap_details_col(entry.details))
                     ])
                 if isinstance(entry, Url):
                     rows.append([
                         colored("URL", color="cyan", attrs=["bold"]),
-                        self.wrap_description_col("%s (%s)" % (entry.url, entry.description))
+                        self.render_highlighted(self.wrap_description_col("%s (%s)" % (entry.url, entry.description)))
                     ])
                 if isinstance(entry, Attachment):
                     rows.append([
                         colored("ATTACH", color="cyan", attrs=["bold"]),
-                        self.wrap_description_col(entry.description),
-                        entry.filename
+                        self.render_highlighted(self.wrap_description_col(entry.description)),
+                        self.render_highlighted(entry.filename)
                     ])
 
         table = AsciiTable(rows)
@@ -126,7 +134,7 @@ class Renderer(object):
 
         return table.table
 
-    def render_result(self, description, short_description, status, steps):
+    def render_chunk(self, description, short_description, status, steps):
         if status is None:
             status = "in_progress"
 
@@ -155,55 +163,38 @@ class Renderer(object):
         else:
             short_description = test.path
 
-        return self.render_result(test.description, short_description, test.status, test.steps)
+        return self.render_chunk(test.description, short_description, test.status, test.steps)
 
-    def render_tests(self, tests):
-        for test in tests:
-            yield self.render_test(test)
-            yield ""
+    def render_result(self, result):
+        if result.type == "suite_setup":
+            description = "- SUITE SETUP - %s" % result.parent_suite.description
+            short_description = result.parent_suite.path
+        elif result.type == "suite_teardown":
+            description = "- SUITE TEARDOWN - %s" % result.parent_suite.description
+            short_description = result.parent_suite.path
+        elif result.type == "test_session_setup":
+            description = "- TEST SESSION SETUP -"
+            short_description = None
+        elif result.type == "test_session_teardown":
+            description = "- TEST SESSION TEARDOWN -"
+            short_description = None
+        else:
+            raise ValueError("Unknown result type '%s'" % result.type)
 
-    def render_suite(self, suite):
-        if suite.suite_setup:
-            yield self.render_result(
-                "- SUITE SETUP - %s" % suite.description, suite.path,
-                suite.suite_setup.status, suite.suite_setup.steps
-            )
-            yield ""
+        return self.render_chunk(description, short_description, result.status, result.steps)
 
-        for test in suite.get_tests():
-            yield self.render_test(test)
-            yield ""
-
-        if suite.suite_teardown:
-            yield self.render_result(
-                "- SUITE TEARDOWN - %s" % suite.description, suite.path,
-                suite.suite_teardown.status, suite.suite_teardown.steps
-            )
-            yield ""
-
-    def render_report(self, report):
-        if report.test_session_setup:
-            yield self.render_result(
-                "- TEST SESSION SETUP -", None,
-                report.test_session_setup.status, report.test_session_setup.steps
-            )
-            yield ""
-
-        for suite in report.all_suites():
-            for data in self.render_suite(suite):
-                yield data
-
-        if report.test_session_teardown:
-            yield self.render_result(
-                "- TEST SESSION TEARDOWN -", None,
-                report.test_session_teardown.status, report.test_session_teardown.steps
-            )
+    def render_results(self, results):
+        for result in results:
+            if isinstance(result, TestResult):
+                yield self.render_test(result)
+            else:
+                yield self.render_result(result)
             yield ""
 
 
-def _print_data(data_it):
-    for data in data_it:
-        print(data if six.PY3 else data.encode("utf8"))
+def _print_chunks(chunks):
+    for chunk in chunks:
+        print(chunk if six.PY3 else chunk.encode("utf8"))
 
 
 def print_report(report, filtr=None, max_width=None, explicit=False):
@@ -217,20 +208,23 @@ def print_report(report, filtr=None, max_width=None, explicit=False):
     ###
     # Get a generator over data to be printed on the console
     ###
-    renderer = Renderer(max_width=max_width, explicit=explicit)
+    renderer = Renderer(
+        max_width=max_width, explicit=explicit,
+        highlight=filtr.grep if isinstance(filtr, ReportFilter) else None
+    )
     if not filtr:
         if report.nb_tests == 0:
             print("No tests found in report")
             return
-        data = renderer.render_report(report)
+        chunks = renderer.render_results(report.all_results())
     else:
-        suites = filter_suites(report.get_suites(), filtr)
-        if not suites:
-            print("The filter does not match any test in the report")
+        results = list(filter(filtr, report.all_results()))
+        if not results:
+            print("The filter does not match anything in the report")
             return
-        data = renderer.render_tests(flatten_tests(suites))
+        chunks = renderer.render_results(results)
 
     ###
     # Do the actual job
     ###
-    _print_data(data)
+    _print_chunks(chunks)

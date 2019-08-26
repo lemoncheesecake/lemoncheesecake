@@ -87,6 +87,19 @@ def test_report_detailed_with_filter(tmpdir, cmdout):
     cmdout.assert_lines_nb(9)
 
 
+def test_report_detailed_with_filter_grep(tmpdir, cmdout):
+    run_suite_class(mysuite, tmpdir=tmpdir, backends=[JsonBackend()])
+
+    assert main(["report", tmpdir.strpath, "--grep", "failure"]) == 0
+
+    cmdout.dump()
+    cmdout.assert_substrs_in_line(0, ["My Test 1"])
+    cmdout.assert_substrs_in_line(1, ["mysuite.mytest1"])
+    cmdout.assert_substrs_in_line(3, ["My Test 1"])
+    cmdout.assert_substrs_in_line(5, ["ERROR", "failure"])
+    cmdout.assert_lines_nb(9)
+
+
 def test_report_test_run_in_progress(report_in_progress_path, cmdout):
     assert main(["report", report_in_progress_path]) == 0
 

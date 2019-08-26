@@ -12,6 +12,14 @@ from lemoncheesecake.testtree import BaseTest, BaseSuite
 SUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
 
 
+def _is_node_disabled(node):
+    while node is not None:
+        if node.disabled:
+            return node.disabled
+        node = node.parent_suite
+    return False
+
+
 class Test(BaseTest):
     """
     Internal representation of a test.
@@ -24,12 +32,7 @@ class Test(BaseTest):
         self.dependencies = []
 
     def is_disabled(self):
-        node = self
-        while node is not None:
-            if node.disabled:
-                return node.disabled
-            node = node.parent_suite
-        return False
+        return _is_node_disabled(self)
 
     def get_fixtures(self):
         return get_callable_args(self.callback)
@@ -63,6 +66,9 @@ class Suite(BaseSuite):
             if isinstance(attr, InjectedFixture):
                 fixtures[attr.fixture_name or attr_name] = attr_name
         return fixtures
+
+    def is_disabled(self):
+        return _is_node_disabled(self)
 
     def add_hook(self, hook_name, func):
         self._assert_hook_name(hook_name)

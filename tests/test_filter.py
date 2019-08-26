@@ -1,3 +1,4 @@
+import re
 import argparse
 
 import lemoncheesecake.api as lcc
@@ -6,15 +7,16 @@ from lemoncheesecake.filter import RunFilter, ReportFilter, filter_suites, \
 from lemoncheesecake.suite import load_suites_from_classes, load_suite_from_class
 from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.reporting.backends.json_ import JsonBackend
+from lemoncheesecake.reporting import ReportLocation
 
 from helpers.testtreemockup import suite_mockup, tst_mockup, make_suite_data_from_mockup
-from helpers.runner import run_suite
+from helpers.runner import run_suite, run_suites
 
 
 def _test_filter(suites, filtr, expected_test_paths):
     filtered_suites = filter_suites(suites, filtr)
     filtered_tests = flatten_tests(filtered_suites)
-    assert sorted([t.path for t in filtered_tests]) == sorted(expected_test_paths)
+    assert sorted(t.path for t in filtered_tests) == sorted(expected_test_paths)
 
 
 def _test_run_filter(suite_classes, filtr, expected_test_paths):
@@ -22,9 +24,19 @@ def _test_run_filter(suite_classes, filtr, expected_test_paths):
     _test_filter(suites, filtr, expected_test_paths)
 
 
-def _test_report_filter(suite_mockups, filtr, expected_test_paths):
-    suites = map(make_suite_data_from_mockup, suite_mockups)
-    _test_filter(suites, filtr, expected_test_paths)
+def _test_report_filter(suites, filtr, expected, fixtures=None):
+    if not isinstance(suites, (list, tuple)):
+        suites = (suites,)
+
+    report = run_suites(load_suites_from_classes(suites), fixtures=fixtures)
+    results = list(filter(filtr, report.all_results()))
+
+    assert len(results) == len(expected)
+    for expected_result in expected:
+        if isinstance(expected_result, str):
+            expected_result = ReportLocation.in_test(expected_result)
+        expected_result = report.get(expected_result)
+        assert expected_result in results
 
 
 def test_filter_full_path_on_test():
@@ -733,6 +745,44 @@ def test_filter_path_and_negative_tag_on_test():
     )
 
 
+def test_filter_disabled():
+    @lcc.suite("mysuite")
+    class mysuite:
+        @lcc.test("test1")
+        def test1(self):
+            pass
+
+        @lcc.test("test2")
+        @lcc.disabled()
+        def test2(self):
+            pass
+
+    _test_run_filter(
+        [mysuite],
+        RunFilter(disabled=True),
+        ["mysuite.test2"]
+    )
+
+
+def test_filter_enabled():
+    @lcc.suite("mysuite")
+    class mysuite:
+        @lcc.test("test1")
+        def test1(self):
+            pass
+
+        @lcc.test("test2")
+        @lcc.disabled()
+        def test2(self):
+            pass
+
+    _test_run_filter(
+        [mysuite],
+        RunFilter(enabled=True),
+        ["mysuite.test1"]
+    )
+
+
 def test_empty_filter():
     filt = RunFilter()
     assert not filt
@@ -863,36 +913,403 @@ def test_filter_and_or():
 
 
 def test_report_filter_on_path():
-    suite = suite_mockup("mysuite").add_test(tst_mockup("mytest1")).add_test(tst_mockup("mytest2"))
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test1")
+        def test1(self):
+            pass
+
+        @lcc.test("test2")
+        def test2(self):
+            pass
 
     _test_report_filter(
-        [suite],
-        ReportFilter(paths=["mysuite.mytest2"]),
-        ["mysuite.mytest2"]
+        suite,
+        ReportFilter(paths=["suite.test2"]),
+        ["suite.test2"]
     )
 
 
 def test_report_filter_on_passed():
-    suite = suite_mockup("mysuite").\
-        add_test(tst_mockup("test1", status="failed")).\
-        add_test(tst_mockup("test2", status="passed"))
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test1")
+        def test1(self):
+            lcc.log_error("error")
+
+        @lcc.test("test2")
+        def test2(self):
+            pass
 
     _test_report_filter(
-        [suite],
+        suite,
         ReportFilter(statuses=["passed"]),
-        ["mysuite.test2"]
+        ["suite.test2"]
     )
 
 
-def test_project_filter_on_failed():
-    suite = suite_mockup("mysuite").\
-        add_test(tst_mockup("test1", status="failed")).\
-        add_test(tst_mockup("test2", status="passed"))
+def test_report_filter_on_failed():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test1")
+        def test1(self):
+            lcc.log_error("error")
+
+        @lcc.test("test2")
+        def test2(self):
+            pass
 
     _test_report_filter(
-        [suite],
+        suite,
         ReportFilter(statuses=["failed"]),
-        ["mysuite.test1"]
+        ["suite.test1"]
+    )
+
+
+def test_report_filter_with_setup_teardown_on_passed():
+    @lcc.fixture(scope="session")
+    def fixt():
+        lcc.log_info("session setup")
+        yield
+        lcc.log_info("session teardown")
+
+    @lcc.suite("suite")
+    class suite(object):
+        def setup_suite(self):
+            lcc.log_info("setup suite")
+
+        def teardown_suite(self):
+            lcc.log_info("teadown suite")
+
+        @lcc.test("test1")
+        def test1(self, fixt):
+            pass
+
+        @lcc.test("test2")
+        @lcc.disabled()
+        def test2(self):
+            pass
+
+    _test_report_filter(
+        suite,
+        ReportFilter(statuses=["passed"]),
+        (
+            ReportLocation.in_test_session_setup(),
+            ReportLocation.in_suite_setup("suite"),
+            "suite.test1",
+            ReportLocation.in_suite_teardown("suite"),
+            ReportLocation.in_test_session_teardown()
+        ),
+        fixtures=(fixt,)
+    )
+
+
+def test_report_filter_with_setup_teardown_on_disabled():
+    @lcc.fixture(scope="session")
+    def fixt():
+        lcc.log_info("session setup")
+        yield
+        lcc.log_info("session teardown")
+
+    @lcc.suite("suite")
+    class suite(object):
+        def setup_suite(self):
+            lcc.log_info("setup suite")
+
+        def teardown_suite(self):
+            lcc.log_info("teadown suite")
+
+        @lcc.test("test1")
+        def test1(self, fixt):
+            pass
+
+        @lcc.test("test2")
+        @lcc.disabled()
+        def test2(self):
+            pass
+
+    _test_report_filter(
+        suite,
+        ReportFilter(disabled=True),
+        (
+            "suite.test2",
+        ),
+        fixtures=(fixt,)
+    )
+
+
+def test_report_filter_with_setup_teardown_on_enabled():
+    @lcc.fixture(scope="session")
+    def fixt():
+        lcc.log_info("session setup")
+        yield
+        lcc.log_info("session teardown")
+
+    @lcc.suite("suite")
+    class suite(object):
+        def setup_suite(self):
+            lcc.log_info("setup suite")
+
+        def teardown_suite(self):
+            lcc.log_info("teadown suite")
+
+        @lcc.test("test1")
+        def test1(self, fixt):
+            pass
+
+        @lcc.test("test2")
+        @lcc.disabled()
+        def test2(self):
+            pass
+
+    _test_report_filter(
+        suite,
+        ReportFilter(enabled=True),
+        (
+            ReportLocation.in_test_session_setup(),
+            ReportLocation.in_suite_setup("suite"),
+            "suite.test1",
+            ReportLocation.in_suite_teardown("suite"),
+            ReportLocation.in_test_session_teardown()
+        ),
+        fixtures=(fixt,)
+    )
+
+
+def test_report_filter_with_setup_teardown_on_tags():
+    @lcc.fixture(scope="session")
+    def fixt():
+        lcc.log_info("session setup")
+        yield
+        lcc.log_info("session teardown")
+
+    @lcc.suite("suite")
+    @lcc.tags("mytag")
+    class suite(object):
+        def setup_suite(self):
+            lcc.log_info("setup suite")
+
+        def teardown_suite(self):
+            lcc.log_info("teadown suite")
+
+        @lcc.test("test1")
+        def test1(self, fixt):
+            pass
+
+        @lcc.test("test2")
+        @lcc.disabled()
+        def test2(self):
+            pass
+
+    _test_report_filter(
+        suite,
+        ReportFilter(tags=[["mytag"]]),
+        (
+            ReportLocation.in_suite_setup("suite"),
+            "suite.test1",
+            "suite.test2",
+            ReportLocation.in_suite_teardown("suite")
+        ),
+        fixtures=(fixt,)
+    )
+
+
+def test_report_filter_with_setup_teardown_on_failed_and_skipped():
+    @lcc.fixture(scope="session")
+    def fixt():
+        lcc.log_info("session setup")
+        yield
+        lcc.log_info("session teardown")
+
+    @lcc.suite("suite")
+    class suite(object):
+        def setup_suite(self):
+            lcc.log_error("some error")
+
+        def teardown_suite(self):
+            lcc.log_info("teadown suite")
+
+        @lcc.test("test1")
+        def test1(self, fixt):
+            pass
+
+        @lcc.test("test2")
+        @lcc.disabled()
+        def test2(self):
+            pass
+
+    _test_report_filter(
+        suite,
+        ReportFilter(statuses=("failed", "skipped")),
+        (
+            ReportLocation.in_suite_setup("suite"),
+            "suite.test1"
+        ),
+        fixtures=(fixt,)
+    )
+
+
+def test_report_filter_with_setup_teardown_on_grep():
+    @lcc.fixture(scope="session")
+    def fixt():
+        lcc.log_info("foobar")
+        yield
+        lcc.log_info("foobar")
+
+    @lcc.suite("suite")
+    class suite(object):
+        def setup_suite(self):
+            lcc.log_info("foobar")
+
+        def teardown_suite(self):
+            lcc.log_info("foobar")
+
+        @lcc.test("test1")
+        def test1(self, fixt):
+            lcc.log_info("foobar")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        (
+            ReportLocation.in_test_session_setup(),
+            ReportLocation.in_suite_setup("suite"),
+            "suite.test1",
+            ReportLocation.in_suite_teardown("suite"),
+            ReportLocation.in_test_session_teardown()
+        ),
+        fixtures=(fixt,)
+    )
+
+
+def test_report_filter_grep_no_result():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.set_step("some step")
+            lcc.log_info("something")
+            lcc.log_check("check", True, "1")
+            lcc.log_url("http://www.example.com")
+            lcc.save_attachment_content("A" * 100, "file.txt")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=()
+    )
+
+
+def test_report_filter_grep_step():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.set_step("foobar")
+            lcc.log_info("something")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=("suite.test",)
+    )
+
+
+def test_report_filter_grep_log():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.log_info("foobar")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=("suite.test",)
+    )
+
+
+def test_report_filter_grep_check_description():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.log_check("foobar", True)
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=("suite.test",)
+    )
+
+
+def test_report_filter_grep_check_details():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.log_check("something", True, "foobar")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=("suite.test",)
+    )
+
+
+def test_report_filter_grep_url():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.log_url("http://example.com/foobar")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=("suite.test",)
+    )
+
+
+def test_report_filter_grep_attachment_filename():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.save_attachment_content("hello world", "foobar.txt")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=("suite.test",)
+    )
+
+
+def test_report_filter_grep_attachment_description():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.save_attachment_content("hello world", "file.txt", "foobar")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=("suite.test",)
+    )
+
+
+def test_report_filter_grep_url_description():
+    @lcc.suite("suite")
+    class suite(object):
+        @lcc.test("test")
+        def test(self):
+            lcc.log_url("http://example.com", "foobar")
+
+    _test_report_filter(
+        suite,
+        ReportFilter(grep=re.compile(r"foobar")),
+        expected=("suite.test",)
     )
 
 
@@ -940,6 +1357,7 @@ def test_add_report_filter_cli_args():
     assert hasattr(cli_args, "enabled")
     assert hasattr(cli_args, "disabled")
     assert hasattr(cli_args, "non_passed")
+    assert hasattr(cli_args, "grep")
 
 
 def test_add_report_filter_cli_args_with_only_executed_tests():
@@ -952,6 +1370,7 @@ def test_add_report_filter_cli_args_with_only_executed_tests():
     assert not hasattr(cli_args, "enabled")
     assert not hasattr(cli_args, "disabled")
     assert not hasattr(cli_args, "non_passed")
+    assert hasattr(cli_args, "grep")
 
 
 def test_make_report_filter_with_only_executed_tests():
@@ -976,3 +1395,11 @@ def test_make_report_filter_non_passed():
     cli_args = cli_parser.parse_args(args=["--non-passed"])
     filtr = make_report_filter(cli_args)
     assert filtr.statuses == {"skipped", "failed"}
+
+
+def test_make_report_filter_grep():
+    cli_parser = argparse.ArgumentParser()
+    add_report_filter_cli_args(cli_parser)
+    cli_args = cli_parser.parse_args(args=["--grep", "foobar"])
+    filtr = make_report_filter(cli_args)
+    assert filtr.grep

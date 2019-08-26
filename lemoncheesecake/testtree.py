@@ -80,7 +80,7 @@ class BaseTreeNode(object):
         return node
 
     def __str__(self):
-        return self.path
+        return "<%s %s>" % (self.__class__.__name__, self.path)
 
 
 TreeNodeHierarchy = Union[Tuple[str, ...], List, BaseTreeNode, str]

@@ -291,4 +291,4 @@ def print_report_as_test_run(report, filtr):
             stats = report.stats()
         _print_summary(stats, report.parallelized)
     else:
-        print("No test found in report")
+        print("No test found or no matching test in the report")
