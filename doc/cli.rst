@@ -36,25 +36,27 @@ from extra arguments that allow a finer control over tests execution and reporti
     The list of reporting backends to use, default are: "console", "html" and "json". The backends passed as argument
     will **override** this list.
 
-    Since version 1.1.0, it's possible to add or remove reporting backends to/from the default backends using ``+``
-    and ``^`` prefixes. For instance, ``--reporting console json html junit`` to add "junit" can be simplified into
-    ``--reporting +junit``.
+    .. versionchanged:: 1.2.0
 
-    Other examples:
+        It's possible to add or remove reporting backends to/from the default backends using ``+``
+        and ``^`` prefixes. For instance, ``--reporting console json html junit`` to add "junit" can be simplified into
+        ``--reporting +junit``.
 
-      .. code-block:: console
+        Other examples:
 
-          $ lcc run --reporting ^console  # turn off console reporting
-          $ lcc run --reporting ^console +junit  # turn off console reporting and turn on junit reporting
-          $ lcc run --reporting html json  # only generate the HTML report
+          .. code-block:: console
 
-    Please note that:
+              $ lcc run --reporting ^console  # turn off console reporting
+              $ lcc run --reporting ^console +junit  # turn off console reporting and turn on junit reporting
+              $ lcc run --reporting html json  # only generate the HTML report
 
-    - turn on/off directives cannot be mixed with a fixed backend list, example: ``--reporting console +junit``
-      is invalid
+        Please note that:
 
-    - the "html" backend generates the static HTML/JS/CSS files required to read the reporting data generated
-      by the "json" backend, meaning that both reporting backends must be specified to have a readable HTML report
+        - turn on/off directives cannot be mixed with a fixed backend list, example: ``--reporting console +junit``
+          is invalid
+
+        - the "html" backend generates the static HTML/JS/CSS files required to read the reporting data generated
+          by the "json" backend, meaning that both reporting backends must be specified to have a readable HTML report
 
 
 .. option:: --report-dir
@@ -354,7 +356,7 @@ and ``diff`` take advantage of a powerful set of filtering arguments.
 
 .. option:: path
 
-    Filter on specified test/suite path. The wildcard character "*" is supported. A path can also be negated using
+    Filter on specified test/suite path. The wildcard character ``*`` is supported. A path can also be negated using
     using the ``^`` prefix. Examples:
 
     .. code-block:: console
@@ -377,7 +379,7 @@ and ``diff`` take advantage of a powerful set of filtering arguments.
 
 .. option:: --property, -m
 
-    Filter on specified test/suite properties. The value syntax is key:value. Example:
+    Filter on specified test/suite properties. The value syntax is "key:value". Example:
 
     .. code-block:: console
 
@@ -413,6 +415,15 @@ and ``diff`` take advantage of a powerful set of filtering arguments.
 
     Filter on enabled tests.
 
+.. option:: --grep, -g
+
+    Filter on report's content (either tests, test session setup, test session teardown, suite setups
+    suite teardowns). Every text content within steps is searched.
+    The argument is a `pattern <https://docs.python.org/3/library/re.html#regular-expression-syntax>`_
+    that is case insensitive and `multi-line <https://docs.python.org/3/library/re.html#re.MULTILINE>`_.
+
+    .. versionadded:: 1.2.0
+
 .. option:: --from-report
 
     Filter on specified argument. When this option is used, all the filtering option will be applied on the report.
@@ -436,14 +447,14 @@ More about ``path`` (or ``--path``), ``--desc``, ``--tag``, ``--property``, ``--
 - they accept the wilcard character ``*``
 
 - they accept a leading ``^`` character before the value (examples: ``--tag ^slow``, ``--properties priority:^low``)
-  standing for an exclusion instead of in inclusion
+  standing for an exclusion instead of an inclusion
 
 - they can take multiple values and be specified multiple times, acting as (respectively) logical OR and AND,
   examples:
 
-    - ``--tag slow fast``: will match tests/suites that have a ``slow`` OR ``fast`` associated tags
+    - ``--tag slow fast``: will match tests/suites that have a "slow" OR "fast" associated tags
 
-    - ``--tag slow --tag critical``: will match tests/suites that have a ``slow`` AND ``critical`` tags
+    - ``--tag slow --tag critical``: will match tests/suites that have a "slow" AND "critical" tags
 
     - both forms can be combined: ``--tag slow fast --tag critical``
 
@@ -452,7 +463,7 @@ More about ``path`` (or ``--path``), ``--desc``, ``--tag``, ``--property``, ``--
 - when the filter is applied, the suite hierarchy is taken into account. For instance, if a suite has a specified tag,
   then all (direct or indirect) sub-suites and tests will also match that given tag
 
-More about ``--passed``, ``--failed``, ``--skipped``, ``--non-passed``:
+More about ``--passed``, ``--failed``, ``--skipped``, ``--non-passed``, ``--grep``:
 
 - these arguments work directly with the ``lcc report`` command.
 
