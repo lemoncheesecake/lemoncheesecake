@@ -1,3 +1,15 @@
+# 1.2.0 (2019-08-27)
+
+- **CLI**: in filtering arguments, add a `--grep` option that takes a pattern as argument
+  and that can filter any text content present in steps
+- **lcc report**: when filter options are used, the command will show not only test results but
+  also results from test session setup, test session teardown, suite setups and suite teardowns
+  if they comply to the filter
+- **lcc report**: highlight anything in steps content that match `--grep` (based on filtering
+  rules)
+- **lcc run**: keep disabled tests as disabled when they are candidate to skip
+- **doc (http://docs.lemoncheesecake.io)**: improve the CLI page
+
 # 1.1.0 (2019-08-18)
 
 - **lcc run**: the `--reporting` argument can now be used with turn on/off directives of default
