@@ -36,7 +36,7 @@ from extra arguments that allow a finer control over tests execution and reporti
     The list of reporting backends to use, default are: "console", "html" and "json". The backends passed as argument
     will **override** this list.
 
-    .. versionchanged:: 1.2.0
+    .. versionchanged:: 1.1.0
 
         It's possible to add or remove reporting backends to/from the default backends using ``+``
         and ``^`` prefixes. For instance, ``--reporting console json html junit`` to add "junit" can be simplified into
