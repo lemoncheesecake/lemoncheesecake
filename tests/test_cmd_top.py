@@ -1,3 +1,5 @@
+import re
+
 from lemoncheesecake.cli import main
 from lemoncheesecake.cli.commands.top import TopSuites, TopTests, TopSteps
 from lemoncheesecake.reporting.backends.json_ import save_report_into_file
@@ -114,6 +116,26 @@ def test_get_top_steps():
     assert top_steps[1][4] == "1.000s"
     assert top_steps[1][5] == "1.000s"
     assert top_steps[1][6] == "25%"
+
+
+def test_get_top_steps_with_test_session_setup_and_grep():
+    @lcc.fixture(scope="session")
+    def fixt():
+        lcc.set_step("mystep")
+        lcc.log_info("foobar")
+
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test")
+        def test(self, fixt):
+            pass
+
+    report = run_suite_class(suite, fixtures=[fixt])
+
+    top_steps = TopSteps.get_top_steps(report, ReportFilter(grep=re.compile("foobar")))
+
+    assert len(top_steps) == 1
+    assert top_steps[0][0] == "mystep"
 
 
 def test_top_steps_cmd(tmpdir, cmdout):

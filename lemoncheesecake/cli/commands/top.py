@@ -186,9 +186,15 @@ class TopSteps(Command):
         return sorted(data, key=lambda row: row[-2], reverse=True)
 
     @staticmethod
+    def _iter_steps(results):
+        for result in results:
+            for step in result.steps:
+                yield step
+
+    @staticmethod
     def get_top_steps(report, filtr):
-        suites = filter_suites(report.get_suites(), filtr)
-        steps_aggregation = TopSteps._get_steps_aggregation(list(flatten_steps(suites)))
+        steps = list(TopSteps._iter_steps(filter(filtr, report.all_results())))
+        steps_aggregation = TopSteps._get_steps_aggregation(steps)
         return [TopSteps._format_steps_aggregation(*agg) for agg in steps_aggregation]
 
     def run_cmd(self, cli_args):
