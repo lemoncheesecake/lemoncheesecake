@@ -8,7 +8,6 @@ from lemoncheesecake.cli.utils import auto_detect_reporting_backends, add_report
 from lemoncheesecake.reporting import load_report
 from lemoncheesecake.filter import add_report_filter_cli_args, make_report_filter, filter_suites
 from lemoncheesecake.testtree import flatten_tests, flatten_suites
-from lemoncheesecake.reporting.report import flatten_steps
 
 
 def get_total_duration(elems):

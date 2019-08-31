@@ -459,13 +459,6 @@ class Report(object):
             yield self.test_session_teardown
 
 
-def flatten_steps(suites):
-    # type: (Iterable[SuiteResult]) -> Generator[Step]
-    for test in flatten_tests(suites):
-        for step in test.steps:
-            yield step
-
-
 def flatten_results(suites):
     # type: (Iterable[SuiteResult]) -> Generator[Result]
     for suite in flatten_suites(suites):
