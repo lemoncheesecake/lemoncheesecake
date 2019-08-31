@@ -6,7 +6,7 @@ Created on Jun 16, 2017
 
 import copy
 
-from typing import Union, Tuple, List, Sequence, TypeVar
+from typing import Union, Tuple, List, Sequence, TypeVar, Generator
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.exceptions import CannotFindTreeNode
@@ -149,6 +149,7 @@ S = TypeVar("S", bound=BaseSuite)
 
 
 def flatten_suites(suites):
+    # type: (Sequence[S]) -> Generator[S]
     for suite in suites:
         yield suite
         for sub_suite in flatten_suites(suite.get_suites()):
@@ -156,6 +157,7 @@ def flatten_suites(suites):
 
 
 def flatten_tests(suites):
+    # type: (Sequence[S]) -> Generator[T]
     for suite in flatten_suites(suites):
         for test in suite.get_tests():
             yield test

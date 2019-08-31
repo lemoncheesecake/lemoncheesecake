@@ -6,9 +6,7 @@ from lemoncheesecake.helpers.console import print_table
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import auto_detect_reporting_backends, add_report_path_cli_arg, get_report_path
 from lemoncheesecake.reporting import load_report
-from lemoncheesecake.filter import add_report_filter_cli_args, make_report_filter, filter_suites
-from lemoncheesecake.testtree import flatten_tests, flatten_suites
-from lemoncheesecake.reporting.report import flatten_steps
+from lemoncheesecake.filter import add_report_filter_cli_args, make_report_filter
 
 
 def get_total_duration(elems):
@@ -44,8 +42,7 @@ class TopTests(Command):
 
     @staticmethod
     def get_top_tests(report, filtr):
-        suites = filter_suites(report.get_suites(), filtr)
-        tests = TopTests._get_tests_ordered_by_duration(flatten_tests(suites))
+        tests = TopTests._get_tests_ordered_by_duration(report.all_tests(filtr))
         total_duration = get_total_duration(tests)
         return [TopTests._format_test_entry(test, total_duration) for test in tests]
 
@@ -98,8 +95,7 @@ class TopSuites(Command):
 
     @staticmethod
     def get_top_suites(report, filtr):
-        suites = filter_suites(report.get_suites(), filtr)
-        processed_suites = TopSuites._get_suites_ordered_by_duration(flatten_suites(suites))
+        processed_suites = TopSuites._get_suites_ordered_by_duration(report.all_suites(filtr))
         total_duration = get_total_duration(processed_suites)
         return [TopSuites._format_suite_entry(suite, total_duration) for suite in processed_suites]
 
@@ -193,7 +189,7 @@ class TopSteps(Command):
 
     @staticmethod
     def get_top_steps(report, filtr):
-        steps = list(TopSteps._iter_steps(filter(filtr, report.all_results())))
+        steps = list(TopSteps._iter_steps(report.all_results(filtr)))
         steps_aggregation = TopSteps._get_steps_aggregation(steps)
         return [TopSteps._format_steps_aggregation(*agg) for agg in steps_aggregation]
 

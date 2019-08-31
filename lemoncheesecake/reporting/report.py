@@ -11,6 +11,8 @@ from typing import Union, List, Generator, Iterable, Optional
 import datetime
 import calendar
 
+from typing import Callable
+
 from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, \
@@ -199,7 +201,7 @@ class SuiteResult(BaseSuite):
         return reduce(
             lambda x, y: x + y,
             # result.duration is None if the corresponding result is in progress
-            [result.duration or 0 for result in flatten_results_from_suites([self])],
+            [result.duration or 0 for result in flatten_results([self])],
             0
         )
 
@@ -273,7 +275,7 @@ def _update_stats_from_tests(stats, tests):
 def get_stats_from_suites(suites, parallelized):
     stats = _Stats()
 
-    results = list(flatten_results_from_suites(suites))
+    results = list(flatten_results(suites))
 
     if not parallelized:
         stats.duration = results[-1].end_time - results[0].start_time
@@ -441,32 +443,40 @@ class Report(object):
 
         return stats
 
-    def all_suites(self):
-        # type: () -> Generator[SuiteResult]
-        return flatten_suites(self._suites)
+    def all_suites(self, filtr=None):
+        # type: (Optional[Callable[[TestResult], bool]]) -> Iterable[SuiteResult]
+        if filtr:
+            # NB: import locally to avoid a circular dependency issue
+            from lemoncheesecake.filter import filter_suites
+            return flatten_suites(filter_suites(self._suites, filtr))
+        else:
+            return flatten_suites(self._suites)
 
-    def all_tests(self):
-        # type: () -> Generator[TestResult]
-        return flatten_tests(self._suites)
+    def all_tests(self, filtr=None):
+        # type: (Optional[Callable[[TestResult], bool]]) -> Iterable[TestResult]
+        if filtr:
+            return filter(filtr, flatten_tests(self._suites))
+        else:
+            return flatten_tests(self._suites)
 
-    def all_results(self):
-        # type: () -> Generator[Result]
+    def _all_results(self):
+        # type: () -> Iterable[Result]
         if self.test_session_setup:
             yield self.test_session_setup
-        for result in flatten_results_from_suites(self.get_suites()):
+        for result in flatten_results(self.get_suites()):
             yield result
         if self.test_session_teardown:
             yield self.test_session_teardown
 
+    def all_results(self, filtr=None):
+        # type: (Optional[Callable[[TestResult], bool]]) -> Iterable[Result]
+        if filtr:
+            return filter(filtr, self._all_results())
+        else:
+            return self._all_results()
 
-def flatten_steps(suites):
-    # type: (Iterable[SuiteResult]) -> Generator[Step]
-    for test in flatten_tests(suites):
-        for step in test.steps:
-            yield step
 
-
-def flatten_results_from_suites(suites):
+def flatten_results(suites):
     # type: (Iterable[SuiteResult]) -> Generator[Result]
     for suite in flatten_suites(suites):
         if suite.suite_setup:
