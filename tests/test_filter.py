@@ -29,7 +29,7 @@ def _test_report_filter(suites, filtr, expected, fixtures=None):
         suites = (suites,)
 
     report = run_suites(load_suites_from_classes(suites), fixtures=fixtures)
-    results = list(filter(filtr, report.all_results()))
+    results = list(report.all_results(filtr))
 
     assert len(results) == len(expected)
     for expected_result in expected:
