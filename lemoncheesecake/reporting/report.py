@@ -199,7 +199,7 @@ class SuiteResult(BaseSuite):
         return reduce(
             lambda x, y: x + y,
             # result.duration is None if the corresponding result is in progress
-            [result.duration or 0 for result in flatten_results_from_suites([self])],
+            [result.duration or 0 for result in flatten_results([self])],
             0
         )
 
@@ -273,7 +273,7 @@ def _update_stats_from_tests(stats, tests):
 def get_stats_from_suites(suites, parallelized):
     stats = _Stats()
 
-    results = list(flatten_results_from_suites(suites))
+    results = list(flatten_results(suites))
 
     if not parallelized:
         stats.duration = results[-1].end_time - results[0].start_time
@@ -453,7 +453,7 @@ class Report(object):
         # type: () -> Generator[Result]
         if self.test_session_setup:
             yield self.test_session_setup
-        for result in flatten_results_from_suites(self.get_suites()):
+        for result in flatten_results(self.get_suites()):
             yield result
         if self.test_session_teardown:
             yield self.test_session_teardown
@@ -466,7 +466,7 @@ def flatten_steps(suites):
             yield step
 
 
-def flatten_results_from_suites(suites):
+def flatten_results(suites):
     # type: (Iterable[SuiteResult]) -> Generator[Result]
     for suite in flatten_suites(suites):
         if suite.suite_setup:
