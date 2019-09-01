@@ -2,8 +2,9 @@ import re
 import argparse
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.filter import RunFilter, ReportFilter, \
-    add_report_filter_cli_args, add_run_filter_cli_args, make_report_filter, make_run_filter
+# import _TestFilter as __TestFilter to avoid the class being interpreted as a test by pytest
+from lemoncheesecake.filter import TestFilter as _TestFilter, ReportFilter, \
+    add_report_filter_cli_args, add_test_filter_cli_args, make_report_filter, make_test_filter
 from lemoncheesecake.suite import load_suites_from_classes, load_suite_from_class
 from lemoncheesecake.testtree import flatten_tests, filter_suites
 from lemoncheesecake.reporting.backends.json_ import JsonBackend
@@ -54,7 +55,7 @@ def test_filter_full_path_on_test():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.subsuite.baz"]),
+        _TestFilter(paths=["mysuite.subsuite.baz"]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -94,7 +95,7 @@ def test_filter_full_path_on_test_negative():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(paths=["-mysuite.subsuite.baz"]),
+        _TestFilter(paths=["-mysuite.subsuite.baz"]),
         ["mysuite.subsuite.test2"]
     )
 
@@ -114,7 +115,7 @@ def test_filter_full_path_on_suite():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.subsuite"]),
+        _TestFilter(paths=["mysuite.subsuite"]),
         ["mysuite.subsuite.test1", "mysuite.subsuite.test2"]
     )
 
@@ -134,7 +135,7 @@ def test_filter_path_on_suite_negative():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(paths=["-mysuite.subsuite.*"]),
+        _TestFilter(paths=["-mysuite.subsuite.*"]),
         []
     )
 
@@ -154,7 +155,7 @@ def test_filter_path_complete_on_top_suite():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(paths=["mysuite"]),
+        _TestFilter(paths=["mysuite"]),
         ["mysuite.subsuite.test1", "mysuite.subsuite.test2"]
     )
 
@@ -174,7 +175,7 @@ def test_filter_path_wildcard_on_test():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.subsuite.ba*"]),
+        _TestFilter(paths=["mysuite.subsuite.ba*"]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -194,7 +195,7 @@ def test_filter_path_wildcard_on_test_negative():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(paths=["-mysuite.subsuite.ba*"]),
+        _TestFilter(paths=["-mysuite.subsuite.ba*"]),
         ["mysuite.subsuite.test2"]
     )
 
@@ -214,7 +215,7 @@ def test_filter_path_wildcard_on_suite():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.sub*.baz"]),
+        _TestFilter(paths=["mysuite.sub*.baz"]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -234,7 +235,7 @@ def test_filter_path_wildcard_on_suite_negative():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(paths=["~mysuite.sub*.baz"]),
+        _TestFilter(paths=["~mysuite.sub*.baz"]),
         ["mysuite.subsuite.test2"]
     )
 
@@ -254,7 +255,7 @@ def test_filter_description_on_test():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(descriptions=[["desc2"]]),
+        _TestFilter(descriptions=[["desc2"]]),
         ["mysuite.subsuite.test2"]
     )
 
@@ -274,7 +275,7 @@ def test_filter_description_on_test_negative():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(descriptions=[["~desc2"]]),
+        _TestFilter(descriptions=[["~desc2"]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -296,7 +297,7 @@ def test_filter_description_on_suite():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(descriptions=[["desc2"]]),
+        _TestFilter(descriptions=[["desc2"]]),
         ["mysuite.othersuite.test2"]
     )
 
@@ -320,7 +321,7 @@ def test_filter_description_on_suite_negative():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(descriptions=[["-desc2"]]),
+        _TestFilter(descriptions=[["-desc2"]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -341,7 +342,7 @@ def test_filter_tag_on_test():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(tags=[["tag1"]]),
+        _TestFilter(tags=[["tag1"]]),
         ["mysuite.subsuite.test2"]
     )
 
@@ -362,7 +363,7 @@ def test_filter_tag_on_test_negative():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(tags=[["-tag1"]]),
+        _TestFilter(tags=[["-tag1"]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -386,7 +387,7 @@ def test_filter_tag_on_suite():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(tags=[["tag2"]]),
+        _TestFilter(tags=[["tag2"]]),
         ["mysuite.subsuite2.test2"]
     )
 
@@ -410,7 +411,7 @@ def test_filter_tag_on_suite_negative():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(tags=[["~tag2"]]),
+        _TestFilter(tags=[["~tag2"]]),
         ["mysuite.subsuite1.baz"]
     )
 
@@ -431,7 +432,7 @@ def test_filter_property_on_test():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(properties=[[("myprop", "foo")]]),
+        _TestFilter(properties=[[("myprop", "foo")]]),
         ["mysuite.subsuite.test2"]
     )
 
@@ -453,7 +454,7 @@ def test_filter_property_on_test_negative():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(properties=[[("myprop", "-foo")]]),
+        _TestFilter(properties=[[("myprop", "-foo")]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -477,7 +478,7 @@ def test_filter_property_on_suite():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(properties=[[("myprop", "bar")]]),
+        _TestFilter(properties=[[("myprop", "bar")]]),
         ["mysuite.subsuite2.test2"]
     )
 
@@ -501,7 +502,7 @@ def test_filter_property_on_suite_negative():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(properties=[[("myprop", "~bar")]]),
+        _TestFilter(properties=[[("myprop", "~bar")]]),
         ["mysuite.subsuite1.baz"]
     )
 
@@ -522,7 +523,7 @@ def test_filter_link_on_test_without_name():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(links=[["http://bug.trac.ker/1234"]]),
+        _TestFilter(links=[["http://bug.trac.ker/1234"]]),
         ["mysuite.subsuite.test2"]
     )
 
@@ -543,7 +544,7 @@ def test_filter_link_on_test_negative_with_name():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(links=[["-#1234"]]),
+        _TestFilter(links=[["-#1234"]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -567,7 +568,7 @@ def test_filter_link_on_suite():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(links=[["#1235"]]),
+        _TestFilter(links=[["#1235"]]),
         ["mysuite.subsuite2.test2"]
     )
 
@@ -591,7 +592,7 @@ def test_filter_link_on_suite_negative():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(links=[["~#1235"]]),
+        _TestFilter(links=[["~#1235"]]),
         ["mysuite.subsuite1.baz"]
     )
 
@@ -612,7 +613,7 @@ def test_filter_path_on_suite_and_tag_on_test():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.subsuite"], tags=[["tag1"]]),
+        _TestFilter(paths=["mysuite.subsuite"], tags=[["tag1"]]),
         ["mysuite.subsuite.test2"]
     )
 
@@ -633,7 +634,7 @@ def test_filter_path_on_suite_and_negative_tag_on_test():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.subsuite"], tags=[["-tag1"]]),
+        _TestFilter(paths=["mysuite.subsuite"], tags=[["-tag1"]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -660,7 +661,7 @@ def test_filter_description_on_suite_and_link_on_test():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(descriptions=[["Sub suite 2"]], links=[["#1234"]]),
+        _TestFilter(descriptions=[["Sub suite 2"]], links=[["#1234"]]),
         ["mysuite.subsuite2.test2"]
     )
 
@@ -684,7 +685,7 @@ def test_filter_path_and_tag_on_suite():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.subsuite1"], tags=[["foo"]]),
+        _TestFilter(paths=["mysuite.subsuite1"], tags=[["foo"]]),
         ["mysuite.subsuite1.test1"]
     )
 
@@ -712,7 +713,7 @@ def test_filter_path_and_tag_on_test():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.subsuite2.*"], tags=[["foo"]]),
+        _TestFilter(paths=["mysuite.subsuite2.*"], tags=[["foo"]]),
         ["mysuite.subsuite2.test2"]
     )
 
@@ -740,7 +741,7 @@ def test_filter_path_and_negative_tag_on_test():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.subsuite2.*"], tags=[["-foo"]]),
+        _TestFilter(paths=["mysuite.subsuite2.*"], tags=[["-foo"]]),
         ["mysuite.subsuite2.test3"]
     )
 
@@ -759,7 +760,7 @@ def test_filter_disabled():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(disabled=True),
+        _TestFilter(disabled=True),
         ["mysuite.test2"]
     )
 
@@ -778,19 +779,19 @@ def test_filter_enabled():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(enabled=True),
+        _TestFilter(enabled=True),
         ["mysuite.test1"]
     )
 
 
 def test_empty_filter():
-    filt = RunFilter()
+    filt = _TestFilter()
     assert not filt
 
 
 def test_non_empty_filter():
     def do_test(attr, val):
-        filtr = RunFilter()
+        filtr = _TestFilter()
         assert hasattr(filtr, attr)
         setattr(filtr, attr, val)
         assert filtr
@@ -817,7 +818,7 @@ def test_filter_description_and():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(descriptions=[["mysuite"], ["test1"]]),
+        _TestFilter(descriptions=[["mysuite"], ["test1"]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -839,7 +840,7 @@ def test_filter_tags_and():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(tags=[["foo"], ["bar"]]),
+        _TestFilter(tags=[["foo"], ["bar"]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -862,7 +863,7 @@ def test_filter_properties_and():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(properties=[[("foo", "1")], [("bar", "2")]]),
+        _TestFilter(properties=[[("foo", "1")], [("bar", "2")]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -885,7 +886,7 @@ def test_filter_links_and():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(links=[["#1234"], ["*/1235"]]),
+        _TestFilter(links=[["#1234"], ["*/1235"]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -907,7 +908,7 @@ def test_filter_and_or():
 
     _test_run_filter(
         [mysuite],
-        RunFilter(tags=[["foo"], ["bar", "baz"]]),
+        _TestFilter(tags=[["foo"], ["bar", "baz"]]),
         ["mysuite.subsuite.baz", "mysuite.subsuite.test2"]
     )
 
@@ -1349,9 +1350,9 @@ def test_filter_suites_on_suite_teardown():
 
 def test_make_run_filter():
     cli_parser = argparse.ArgumentParser()
-    add_run_filter_cli_args(cli_parser)
+    add_test_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=[])
-    filtr = make_run_filter(cli_args)
+    filtr = make_test_filter(cli_args)
     assert not filtr
 
 
@@ -1367,7 +1368,7 @@ def test_run_filter_from_report(tmpdir):
     run_suite(suite, backends=[JsonBackend()], tmpdir=tmpdir)
 
     cli_parser = argparse.ArgumentParser()
-    add_run_filter_cli_args(cli_parser)
+    add_test_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=["--from-report", tmpdir.strpath])
     filtr = make_report_filter(cli_args)
     assert filtr(suite.get_tests()[0])

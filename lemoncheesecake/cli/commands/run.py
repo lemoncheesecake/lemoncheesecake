@@ -11,7 +11,7 @@ from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import load_suites_from_project
 from lemoncheesecake.exceptions import LemoncheesecakeException, ProgrammingError, UserError, \
     serialize_current_exception
-from lemoncheesecake.filter import add_run_filter_cli_args, make_run_filter
+from lemoncheesecake.filter import add_test_filter_cli_args, make_test_filter
 from lemoncheesecake.fixture import FixtureRegistry, BuiltinFixture
 from lemoncheesecake.project import find_project_file, load_project_from_file, load_project, DEFAULT_REPORTING_BACKENDS
 from lemoncheesecake.reporting.backend import ReportingSessionBuilderMixin
@@ -101,7 +101,7 @@ def run_project(project, cli_args):
     if nb_threads > 1 and not project.threaded:
         raise LemoncheesecakeException("Project does not support multi-threading")
 
-    suites = load_suites_from_project(project, make_run_filter(cli_args))
+    suites = load_suites_from_project(project, make_test_filter(cli_args))
 
     # Build fixture registry
     fixture_registry = build_fixture_registry(project, cli_args)
@@ -196,7 +196,7 @@ class RunCommand(Command):
             project = None
             default_reporting_backend_names = DEFAULT_REPORTING_BACKENDS
 
-        add_run_filter_cli_args(cli_parser)
+        add_test_filter_cli_args(cli_parser)
 
         test_execution_group = cli_parser.add_argument_group("Test execution")
         test_execution_group.add_argument(

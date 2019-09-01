@@ -104,7 +104,7 @@ class BaseFilter(Filter):
         )
 
 
-class RunFilter(BaseFilter):
+class TestFilter(BaseFilter):
     def __init__(self, enabled=False, disabled=False, **kwargs):
         BaseFilter.__init__(self, **kwargs)
         self.enabled = enabled
@@ -119,11 +119,11 @@ class RunFilter(BaseFilter):
     def _do_disabled(self, node):
         return node.is_disabled() if self.disabled else True
 
-    def _apply_run_criteria(self, node):
+    def _apply_test_criteria(self, node):
         return self._apply_criteria(node, self._do_enabled, self._do_disabled)
 
     def __call__(self, node):
-        return BaseFilter.__call__(self, node) and self._apply_run_criteria(node)
+        return BaseFilter.__call__(self, node) and self._apply_test_criteria(node)
 
 
 class ReportFilter(BaseFilter):
@@ -264,7 +264,7 @@ def _add_filter_cli_args(cli_parser, no_positional_argument=False, only_executed
     return group
 
 
-def add_run_filter_cli_args(cli_parser):
+def add_test_filter_cli_args(cli_parser):
     return _add_filter_cli_args(cli_parser)
 
 
@@ -286,15 +286,15 @@ def _set_common_filter_criteria(fltr, cli_args, only_executed_tests=False):
         fltr.enabled = cli_args.enabled
 
 
-def _set_run_filter_criteria(filtr, cli_args):
+def _set_test_filter_criteria(filtr, cli_args):
     if cli_args.passed or cli_args.failed or cli_args.skipped:
         raise UserError("--passed, --failed and --skipped arguments can only be used on the report-based filter")
     _set_common_filter_criteria(filtr, cli_args)
 
 
-def _make_run_filter(cli_args):
-    fltr = RunFilter()
-    _set_run_filter_criteria(fltr, cli_args)
+def _make_test_filter(cli_args):
+    fltr = TestFilter()
+    _set_test_filter_criteria(fltr, cli_args)
     return fltr
 
 
@@ -334,11 +334,11 @@ def _make_from_report_filter(cli_args, only_executed_tests=False):
     return FromTestsFilter(flatten_tests(suites))
 
 
-def make_run_filter(cli_args):
+def make_test_filter(cli_args):
     if any((cli_args.from_report, cli_args.passed, cli_args.failed, cli_args.skipped, cli_args.grep)):
         return _make_from_report_filter(cli_args)
     else:
-        return _make_run_filter(cli_args)
+        return _make_test_filter(cli_args)
 
 
 def make_report_filter(cli_args, only_executed_tests=False):
