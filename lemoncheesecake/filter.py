@@ -236,17 +236,17 @@ def _add_filter_cli_args(cli_parser, no_positional_argument=False, only_executed
         "--link", "-l", nargs="+", action="append", default=[], help="Filter on links (names and URLs)"
     )
     group.add_argument(
-        "--passed", action="store_true", help="Filter on passed tests (implies/triggers --from-report)"
+        "--passed", action="store_true", help="Filter on passed tests"
     )
     group.add_argument(
-        "--failed", action="store_true", help="Filter on failed tests (implies/triggers --from-report)"
+        "--failed", action="store_true", help="Filter on failed tests"
     )
     group.add_argument(
-        "--grep", "-g", help="Filter result content using pattern (implies/triggers --from-report)"
+        "--grep", "-g", help="Filter result content using pattern"
     )
     if not only_executed_tests:
         group.add_argument(
-            "--skipped", action="store_true", help="Filter on skipped tests (implies/triggers --from-report)"
+            "--skipped", action="store_true", help="Filter on skipped tests"
         )
         group.add_argument(
             "--non-passed", action="store_true", help="Alias for --failed --skipped"
@@ -257,15 +257,16 @@ def _add_filter_cli_args(cli_parser, no_positional_argument=False, only_executed
         group.add_argument(
             "--enabled", action="store_true", help="Filter on enabled (non-disabled) tests"
         )
-    group.add_argument(
-        "--from-report", required=False, help="When enabled, the filtering is based on the given report"
-    )
 
     return group
 
 
 def add_test_filter_cli_args(cli_parser):
-    return _add_filter_cli_args(cli_parser)
+    group = _add_filter_cli_args(cli_parser)
+    group.add_argument(
+        "--from-report", required=False, help="When enabled, the filtering is based on the given report"
+    )
+    return group
 
 
 def add_result_filter_cli_args(cli_parser, only_executed_tests=False):
@@ -298,7 +299,7 @@ def _make_test_filter(cli_args):
     return fltr
 
 
-def _make_result_filter(cli_args, only_executed_tests=False):
+def make_result_filter(cli_args, only_executed_tests=False):
     fltr = ResultFilter()
     _set_common_filter_criteria(fltr, cli_args, only_executed_tests=only_executed_tests)
 
@@ -329,9 +330,8 @@ def _make_result_filter(cli_args, only_executed_tests=False):
 
 def _make_from_report_filter(cli_args, only_executed_tests=False):
     report = load_report(cli_args.from_report or DEFAULT_REPORT_DIR_NAME)
-    filtr = _make_result_filter(cli_args, only_executed_tests=only_executed_tests)
-    suites = filter_suites(report.get_suites(), filtr)
-    return FromTestsFilter(flatten_tests(suites))
+    filtr = make_result_filter(cli_args, only_executed_tests=only_executed_tests)
+    return FromTestsFilter(report.all_tests(filtr))
 
 
 def make_test_filter(cli_args):
@@ -339,10 +339,3 @@ def make_test_filter(cli_args):
         return _make_from_report_filter(cli_args)
     else:
         return _make_test_filter(cli_args)
-
-
-def make_result_filter(cli_args, only_executed_tests=False):
-    if cli_args.from_report:
-        return _make_from_report_filter(cli_args, only_executed_tests=only_executed_tests)
-    else:
-        return _make_result_filter(cli_args, only_executed_tests=only_executed_tests)
