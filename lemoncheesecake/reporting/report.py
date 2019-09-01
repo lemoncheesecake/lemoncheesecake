@@ -94,6 +94,7 @@ class Step(object):
         # type: (str, bool) -> None
         self.description = description
         self._detached = detached  # this attribute is runtime only is not intended to be serialized
+        self.parent_result = None
         self.entries = []  # type: List[Union[Log, Check, Attachment, Url]]
         self.start_time = None  # type: Optional[float]
         self.end_time = None  # type: Optional[float]
@@ -122,18 +123,27 @@ class Result(object):
         # one will override the other
         self.parent_suite = None  # type: Optional[SuiteResult]
         self.type = None  # type: Optional[str]
-        self.steps = []  # type: List[Step]
+        self._steps = []  # type: List[Step]
         self.start_time = None  # type: Optional[float]
         self.end_time = None  # type: Optional[float]
         self.status = None  # type: Optional[str]
         self.status_details = None  # type: Optional[str]
+
+    def add_step(self, step):
+        # type: (Step) -> None
+        step.parent_result = self
+        self._steps.append(step)
+
+    def get_steps(self):
+        # type: () -> List[Step]
+        return self._steps
 
     def is_successful(self):
         # type: () -> bool
         if self.status:  # test is finished
             return self.status in ("passed", "disabled")
         else:  # check if the test is successful "so far"
-            return all(step.is_successful() for step in self.steps)
+            return all(step.is_successful() for step in self._steps)
 
     @property
     def duration(self):
@@ -142,7 +152,7 @@ class Result(object):
 
     def is_empty(self):
         # type: () -> bool
-        return len(self.steps) == 0
+        return len(self._steps) == 0
 
 
 class TestResult(BaseTest, Result):
@@ -266,7 +276,7 @@ def _update_stats_from_results(stats, results):
     for result in results:
         if result.duration is not None:
             stats.duration_cumulative += result.duration
-        for step in result.steps:
+        for step in result.get_steps():
             for entry in step.entries:
                 if isinstance(entry, Check):
                     stats.checks += 1

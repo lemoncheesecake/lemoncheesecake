@@ -39,7 +39,7 @@ def make_report_in_progress():
     suite.add_test(test)
     test.start_time = now
     step = Step("step")
-    test.steps.append(step)
+    test.add_step(step)
     step.start_time = now
     log = Log("info", "message", now)
     step.entries.append(log)
@@ -50,7 +50,7 @@ def make_report_in_progress():
     test.end_time = now + 1
     test.status = "passed"
     step = Step("step")
-    test.steps.append(step)
+    test.add_step(step)
     step.start_time = now
     step.end_time = now + 1
     log = Log("info", "message", now)
@@ -121,12 +121,12 @@ def assert_last_test_status(report, status):
 
 def get_last_logged_check(report):
     test = get_last_test(report)
-    return next(entry for entry in reversed(test.steps[-1].entries) if isinstance(entry, reporting.Check))
+    return next(entry for entry in reversed(test.get_steps()[-1].entries) if isinstance(entry, reporting.Check))
 
 
 def get_last_attachment(report):
     test = get_last_test(report)
-    return next(entry for entry in reversed(test.steps[-1].entries) if isinstance(entry, reporting.Attachment))
+    return next(entry for entry in reversed(test.get_steps()[-1].entries) if isinstance(entry, reporting.Attachment))
 
 
 def assert_time(actual, expected):
@@ -143,7 +143,7 @@ def assert_attachment(attachment, filename, description, as_image, content, file
 def get_last_test_checks(report):
     test = get_last_test(report)
     checks = []
-    for step in test.steps:
+    for step in test.get_steps():
         for entry in step.entries:
             if isinstance(entry, reporting.Check):
                 checks.append(entry)
@@ -153,7 +153,7 @@ def get_last_test_checks(report):
 def count_logs(report, log_level):
     count = 0
     for test in report.all_tests():
-        for step in test.steps:
+        for step in test.get_steps():
             for entry in step.entries:
                 if isinstance(entry, reporting.Log) and entry.level == log_level:
                     count += 1
@@ -164,7 +164,7 @@ def assert_test_checks(test, expected_successes=0, expected_failures=0):
     successes = 0
     failures = 0
 
-    for step in test.steps:
+    for step in test.get_steps():
         for entry in step.entries:
             if isinstance(entry, reporting.Check):
                 if entry.is_successful:
@@ -241,8 +241,8 @@ def assert_test_data(actual, expected):
         assert actual.end_time is None
     else:
         assert_time(actual.end_time, expected.end_time)
-    assert len(actual.steps) == len(expected.steps)
-    for actual_step, expected_step in zip(actual.steps, expected.steps):
+    assert len(actual.get_steps()) == len(expected.get_steps())
+    for actual_step, expected_step in zip(actual.get_steps(), expected.get_steps()):
         assert_step_data(actual_step, expected_step)
 
 
@@ -256,8 +256,8 @@ def assert_hook_data(actual, expected):
             assert actual.end_time is None
         else:
             assert_time(actual.end_time, expected.end_time)
-        assert len(actual.steps) == len(expected.steps)
-        for actual_step, expected_step in zip(actual.steps, expected.steps):
+        assert len(actual.get_steps()) == len(expected.get_steps())
+        for actual_step, expected_step in zip(actual.get_steps(), expected.get_steps()):
             assert_step_data(actual_step, expected_step)
 
 
@@ -326,7 +326,7 @@ def assert_test_data_from_test(test_data, test):
     assert test_data.properties == test.properties
     assert test_data.links == test.links
 
-    assert_steps_data(test_data.steps)
+    assert_steps_data(test_data.get_steps())
 
 
 def assert_suite_data_from_suite(suite_data, suite):
@@ -340,7 +340,7 @@ def assert_suite_data_from_suite(suite_data, suite):
         assert suite_data.suite_setup is not None
         assert suite_data.suite_setup.start_time is not None
         assert suite_data.suite_setup.end_time is not None
-        assert_steps_data(suite_data.suite_setup.steps)
+        assert_steps_data(suite_data.suite_setup.get_steps())
 
     assert len(suite_data.get_tests()) == len(suite.get_tests())
     for test_data, test in zip(suite_data.get_tests(), suite.get_tests()):
@@ -354,7 +354,7 @@ def assert_suite_data_from_suite(suite_data, suite):
         assert suite_data.suite_teardown is not None
         assert suite_data.suite_teardown.start_time is not None
         assert suite_data.suite_teardown.end_time is not None
-        assert_steps_data(suite_data.suite_teardown.steps)
+        assert_steps_data(suite_data.suite_teardown.get_steps())
 
 
 def assert_report_from_suites(report, suite_classes):

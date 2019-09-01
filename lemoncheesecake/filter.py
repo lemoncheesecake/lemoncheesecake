@@ -148,7 +148,7 @@ class ReportFilter(BaseFilter):
 
     @staticmethod
     def _iter_grepable(result):
-        for step in result.steps:
+        for step in result.get_steps():
             yield step.description
             for entry in step.entries:
                 if isinstance(entry, Log):

@@ -163,7 +163,7 @@ class Renderer(object):
         else:
             short_description = test.path
 
-        return self.render_chunk(test.description, short_description, test.status, test.steps)
+        return self.render_chunk(test.description, short_description, test.status, test.get_steps())
 
     def render_result(self, result):
         if result.type == "suite_setup":
@@ -181,7 +181,7 @@ class Renderer(object):
         else:
             raise ValueError("Unknown result type '%s'" % result.type)
 
-        return self.render_chunk(description, short_description, result.status, result.steps)
+        return self.render_chunk(description, short_description, result.status, result.get_steps())
 
     def render_results(self, results):
         for result in results:

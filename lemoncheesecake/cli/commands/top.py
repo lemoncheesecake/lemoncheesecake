@@ -184,7 +184,7 @@ class TopSteps(Command):
     @staticmethod
     def _iter_steps(results):
         for result in results:
-            for step in result.steps:
+            for step in result.get_steps():
                 yield step
 
     @staticmethod

@@ -42,7 +42,7 @@ def _serialize_test_data(test):
     if test.status == "skipped":
         make_xml_child(junit_test, "skipped")
     else:
-        for step in test.steps:
+        for step in test.get_steps():
             for step_entry in step.entries:
                 if isinstance(step_entry, Check) and step_entry.is_successful is False:
                     make_xml_child(junit_test, "failure", "message", "failed check in step '%s'" % step.description)
