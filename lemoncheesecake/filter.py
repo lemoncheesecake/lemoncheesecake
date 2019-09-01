@@ -126,7 +126,7 @@ class TestFilter(BaseFilter):
         return BaseFilter.__call__(self, node) and self._apply_test_criteria(node)
 
 
-class ReportFilter(BaseFilter):
+class ResultFilter(BaseFilter):
     def __init__(self, statuses=None, enabled=False, disabled=False, grep=None, **kwargs):
         BaseFilter.__init__(self, **kwargs)
         self.statuses = set(statuses) if statuses is not None else set()
@@ -170,7 +170,7 @@ class ReportFilter(BaseFilter):
 
         return any(map(self.grep.search, self._iter_grepable(result)))
 
-    def _apply_report_criteria(self, result):
+    def _apply_result_criteria(self, result):
         return self._apply_criteria(
             result, self._do_statuses, self._do_enabled, self._do_disabled, self._do_grep
         )
@@ -182,10 +182,10 @@ class ReportFilter(BaseFilter):
 
         # test result:
         if isinstance(result, TestResult):
-            return BaseFilter.__call__(self, result) and self._apply_report_criteria(result)
+            return BaseFilter.__call__(self, result) and self._apply_result_criteria(result)
         # suite setup or teardown result, apply the base filter on the suite node:
         elif result.parent_suite:
-            return BaseFilter.__call__(self, result.parent_suite) and self._apply_report_criteria(result)
+            return BaseFilter.__call__(self, result.parent_suite) and self._apply_result_criteria(result)
         # session setup or teardown:
         else:
             if BaseFilter.__bool__(self):
@@ -193,7 +193,7 @@ class ReportFilter(BaseFilter):
                 # meaning it's a no match
                 return False
             else:
-                return self._apply_report_criteria(result)
+                return self._apply_result_criteria(result)
 
 
 class FromTestsFilter(Filter):
@@ -268,7 +268,7 @@ def add_test_filter_cli_args(cli_parser):
     return _add_filter_cli_args(cli_parser)
 
 
-def add_report_filter_cli_args(cli_parser, only_executed_tests=False):
+def add_result_filter_cli_args(cli_parser, only_executed_tests=False):
     return _add_filter_cli_args(cli_parser, no_positional_argument=True, only_executed_tests=only_executed_tests)
 
 
@@ -298,8 +298,8 @@ def _make_test_filter(cli_args):
     return fltr
 
 
-def _make_report_filter(cli_args, only_executed_tests=False):
-    fltr = ReportFilter()
+def _make_result_filter(cli_args, only_executed_tests=False):
+    fltr = ResultFilter()
     _set_common_filter_criteria(fltr, cli_args, only_executed_tests=only_executed_tests)
 
     if only_executed_tests:
@@ -329,7 +329,7 @@ def _make_report_filter(cli_args, only_executed_tests=False):
 
 def _make_from_report_filter(cli_args, only_executed_tests=False):
     report = load_report(cli_args.from_report or DEFAULT_REPORT_DIR_NAME)
-    filtr = _make_report_filter(cli_args, only_executed_tests=only_executed_tests)
+    filtr = _make_result_filter(cli_args, only_executed_tests=only_executed_tests)
     suites = filter_suites(report.get_suites(), filtr)
     return FromTestsFilter(flatten_tests(suites))
 
@@ -341,8 +341,8 @@ def make_test_filter(cli_args):
         return _make_test_filter(cli_args)
 
 
-def make_report_filter(cli_args, only_executed_tests=False):
+def make_result_filter(cli_args, only_executed_tests=False):
     if cli_args.from_report:
         return _make_from_report_filter(cli_args, only_executed_tests=only_executed_tests)
     else:
-        return _make_report_filter(cli_args, only_executed_tests=only_executed_tests)
+        return _make_result_filter(cli_args, only_executed_tests=only_executed_tests)

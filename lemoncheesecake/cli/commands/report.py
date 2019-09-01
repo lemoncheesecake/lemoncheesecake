@@ -5,7 +5,7 @@ from lemoncheesecake.cli.utils import auto_detect_reporting_backends, add_report
 from lemoncheesecake.reporting import load_report
 from lemoncheesecake.reporting.backends.console import print_report_as_test_run
 from lemoncheesecake.reporting.console import print_report
-from lemoncheesecake.filter import add_report_filter_cli_args, make_report_filter
+from lemoncheesecake.filter import add_result_filter_cli_args, make_result_filter
 
 
 class ReportCommand(Command):
@@ -16,7 +16,7 @@ class ReportCommand(Command):
         return "Display a report"
 
     def add_cli_args(self, cli_parser):
-        add_report_filter_cli_args(cli_parser)
+        add_result_filter_cli_args(cli_parser)
 
         group = cli_parser.add_argument_group("Display report")
         add_report_path_cli_arg(group)
@@ -37,7 +37,7 @@ class ReportCommand(Command):
     def run_cmd(self, cli_args):
         report_path = get_report_path(cli_args)
         report = load_report(report_path, auto_detect_reporting_backends())
-        filtr = make_report_filter(cli_args)
+        filtr = make_result_filter(cli_args)
 
         if cli_args.short:
             print_report_as_test_run(report, filtr)

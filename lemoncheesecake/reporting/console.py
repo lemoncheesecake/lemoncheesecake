@@ -8,7 +8,7 @@ import six
 from lemoncheesecake.helpers.text import wrap_text
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.helpers import terminalsize
-from lemoncheesecake.filter import ReportFilter
+from lemoncheesecake.filter import ResultFilter
 from lemoncheesecake.reporting import Log, Check, Url, Attachment, TestResult
 
 
@@ -210,7 +210,7 @@ def print_report(report, filtr=None, max_width=None, explicit=False):
     ###
     renderer = Renderer(
         max_width=max_width, explicit=explicit,
-        highlight=filtr.grep if isinstance(filtr, ReportFilter) else None
+        highlight=filtr.grep if isinstance(filtr, ResultFilter) else None
     )
     if not filtr:
         if report.nb_tests == 0:

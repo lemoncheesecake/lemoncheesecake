@@ -6,7 +6,7 @@ from lemoncheesecake.helpers.console import print_table
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import auto_detect_reporting_backends, add_report_path_cli_arg, get_report_path
 from lemoncheesecake.reporting import load_report
-from lemoncheesecake.filter import add_report_filter_cli_args, make_report_filter
+from lemoncheesecake.filter import add_result_filter_cli_args, make_result_filter
 
 
 def get_total_duration(elems):
@@ -21,7 +21,7 @@ class TopTests(Command):
         return "Display tests ordered by duration"
 
     def add_cli_args(self, cli_parser):
-        add_report_filter_cli_args(cli_parser, only_executed_tests=True)
+        add_result_filter_cli_args(cli_parser, only_executed_tests=True)
         group = cli_parser.add_argument_group("Top tests")
         add_report_path_cli_arg(group)
 
@@ -50,7 +50,7 @@ class TopTests(Command):
         report_path = get_report_path(cli_args)
 
         report = load_report(report_path, auto_detect_reporting_backends())
-        filtr = make_report_filter(cli_args, only_executed_tests=True)
+        filtr = make_result_filter(cli_args, only_executed_tests=True)
 
         print_table(
             "Tests, ordered by duration",
@@ -69,7 +69,7 @@ class TopSuites(Command):
         return "Display suites ordered by duration"
 
     def add_cli_args(self, cli_parser):
-        add_report_filter_cli_args(cli_parser, only_executed_tests=True)
+        add_result_filter_cli_args(cli_parser, only_executed_tests=True)
         group = cli_parser.add_argument_group("Top suites")
         add_report_path_cli_arg(group)
 
@@ -103,7 +103,7 @@ class TopSuites(Command):
         report_path = get_report_path(cli_args)
 
         report = load_report(report_path, auto_detect_reporting_backends())
-        filtr = make_report_filter(cli_args, only_executed_tests=True)
+        filtr = make_result_filter(cli_args, only_executed_tests=True)
 
         print_table(
             "Suites, ordered by duration",
@@ -122,7 +122,7 @@ class TopSteps(Command):
         return "Display steps aggregated and ordered by duration"
 
     def add_cli_args(self, cli_parser):
-        add_report_filter_cli_args(cli_parser, only_executed_tests=True)
+        add_result_filter_cli_args(cli_parser, only_executed_tests=True)
         group = cli_parser.add_argument_group("Top steps")
         add_report_path_cli_arg(group)
 
@@ -197,7 +197,7 @@ class TopSteps(Command):
         report_path = get_report_path(cli_args)
 
         report = load_report(report_path, auto_detect_reporting_backends())
-        filtr = make_report_filter(cli_args, only_executed_tests=True)
+        filtr = make_result_filter(cli_args, only_executed_tests=True)
 
         print_table(
             "Steps, aggregated and ordered by duration",

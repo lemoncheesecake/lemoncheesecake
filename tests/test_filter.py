@@ -3,8 +3,8 @@ import argparse
 
 import lemoncheesecake.api as lcc
 # import _TestFilter as __TestFilter to avoid the class being interpreted as a test by pytest
-from lemoncheesecake.filter import TestFilter as _TestFilter, ReportFilter, \
-    add_report_filter_cli_args, add_test_filter_cli_args, make_report_filter, make_test_filter
+from lemoncheesecake.filter import TestFilter as _TestFilter, ResultFilter, \
+    add_result_filter_cli_args, add_test_filter_cli_args, make_result_filter, make_test_filter
 from lemoncheesecake.suite import load_suites_from_classes, load_suite_from_class
 from lemoncheesecake.testtree import flatten_tests, filter_suites
 from lemoncheesecake.reporting.backends.json_ import JsonBackend
@@ -926,7 +926,7 @@ def test_report_filter_on_path():
 
     _test_report_filter(
         suite,
-        ReportFilter(paths=["suite.test2"]),
+        ResultFilter(paths=["suite.test2"]),
         ["suite.test2"]
     )
 
@@ -944,7 +944,7 @@ def test_report_filter_on_passed():
 
     _test_report_filter(
         suite,
-        ReportFilter(statuses=["passed"]),
+        ResultFilter(statuses=["passed"]),
         ["suite.test2"]
     )
 
@@ -962,7 +962,7 @@ def test_report_filter_on_failed():
 
     _test_report_filter(
         suite,
-        ReportFilter(statuses=["failed"]),
+        ResultFilter(statuses=["failed"]),
         ["suite.test1"]
     )
 
@@ -993,7 +993,7 @@ def test_report_filter_with_setup_teardown_on_passed():
 
     _test_report_filter(
         suite,
-        ReportFilter(statuses=["passed"]),
+        ResultFilter(statuses=["passed"]),
         (
             ReportLocation.in_test_session_setup(),
             ReportLocation.in_suite_setup("suite"),
@@ -1031,7 +1031,7 @@ def test_report_filter_with_setup_teardown_on_disabled():
 
     _test_report_filter(
         suite,
-        ReportFilter(disabled=True),
+        ResultFilter(disabled=True),
         (
             "suite.test2",
         ),
@@ -1065,7 +1065,7 @@ def test_report_filter_with_setup_teardown_on_enabled():
 
     _test_report_filter(
         suite,
-        ReportFilter(enabled=True),
+        ResultFilter(enabled=True),
         (
             ReportLocation.in_test_session_setup(),
             ReportLocation.in_suite_setup("suite"),
@@ -1104,7 +1104,7 @@ def test_report_filter_with_setup_teardown_on_tags():
 
     _test_report_filter(
         suite,
-        ReportFilter(tags=[["mytag"]]),
+        ResultFilter(tags=[["mytag"]]),
         (
             ReportLocation.in_suite_setup("suite"),
             "suite.test1",
@@ -1141,7 +1141,7 @@ def test_report_filter_with_setup_teardown_on_failed_and_skipped():
 
     _test_report_filter(
         suite,
-        ReportFilter(statuses=("failed", "skipped")),
+        ResultFilter(statuses=("failed", "skipped")),
         (
             ReportLocation.in_suite_setup("suite"),
             "suite.test1"
@@ -1171,7 +1171,7 @@ def test_report_filter_with_setup_teardown_on_grep():
 
     _test_report_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         (
             ReportLocation.in_test_session_setup(),
             ReportLocation.in_suite_setup("suite"),
@@ -1196,7 +1196,7 @@ def test_report_filter_grep_no_result():
 
     _test_report_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=()
     )
 
@@ -1211,7 +1211,7 @@ def test_report_filter_grep_step():
 
     _test_report_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=("suite.test",)
     )
 
@@ -1225,7 +1225,7 @@ def test_report_filter_grep_log():
 
     _test_report_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=("suite.test",)
     )
 
@@ -1239,7 +1239,7 @@ def test_report_filter_grep_check_description():
 
     _test_report_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=("suite.test",)
     )
 
@@ -1253,7 +1253,7 @@ def test_report_filter_grep_check_details():
 
     _test_report_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=("suite.test",)
     )
 
@@ -1267,7 +1267,7 @@ def test_report_filter_grep_url():
 
     _test_report_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=("suite.test",)
     )
 
@@ -1281,7 +1281,7 @@ def test_report_filter_grep_attachment_filename():
 
     _test_report_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=("suite.test",)
     )
 
@@ -1295,7 +1295,7 @@ def test_report_filter_grep_attachment_description():
 
     _test_report_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=("suite.test",)
     )
 
@@ -1309,7 +1309,7 @@ def test_report_filter_grep_url_description():
 
     _test_report_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=("suite.test",)
     )
 
@@ -1326,7 +1326,7 @@ def test_filter_suites_on_suite_setup():
 
     report = run_suite_class(suite)
 
-    suites = list(report.all_suites(ReportFilter(grep=re.compile("foobar"))))
+    suites = list(report.all_suites(ResultFilter(grep=re.compile("foobar"))))
 
     assert len(suites) == 1
 
@@ -1343,7 +1343,7 @@ def test_filter_suites_on_suite_teardown():
 
     report = run_suite_class(suite)
 
-    suites = list(report.all_suites(ReportFilter(grep=re.compile("foobar"))))
+    suites = list(report.all_suites(ResultFilter(grep=re.compile("foobar"))))
 
     assert len(suites) == 1
 
@@ -1370,21 +1370,21 @@ def test_run_filter_from_report(tmpdir):
     cli_parser = argparse.ArgumentParser()
     add_test_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=["--from-report", tmpdir.strpath])
-    filtr = make_report_filter(cli_args)
+    filtr = make_result_filter(cli_args)
     assert filtr(suite.get_tests()[0])
 
 
 def test_make_report_filter():
     cli_parser = argparse.ArgumentParser()
-    add_report_filter_cli_args(cli_parser)
+    add_result_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=[])
-    filtr = make_report_filter(cli_args)
+    filtr = make_result_filter(cli_args)
     assert not filtr
 
 
-def test_add_report_filter_cli_args():
+def test_add_result_filter_cli_args():
     cli_parser = argparse.ArgumentParser()
-    add_report_filter_cli_args(cli_parser)
+    add_result_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=[])
     assert hasattr(cli_args, "passed")
     assert hasattr(cli_args, "failed")
@@ -1395,9 +1395,9 @@ def test_add_report_filter_cli_args():
     assert hasattr(cli_args, "grep")
 
 
-def test_add_report_filter_cli_args_with_only_executed_tests():
+def test_add_result_filter_cli_args_with_only_executed_tests():
     cli_parser = argparse.ArgumentParser()
-    add_report_filter_cli_args(cli_parser, only_executed_tests=True)
+    add_result_filter_cli_args(cli_parser, only_executed_tests=True)
     cli_args = cli_parser.parse_args(args=[])
     assert hasattr(cli_args, "passed")
     assert hasattr(cli_args, "failed")
@@ -1410,31 +1410,31 @@ def test_add_report_filter_cli_args_with_only_executed_tests():
 
 def test_make_report_filter_with_only_executed_tests():
     cli_parser = argparse.ArgumentParser()
-    add_report_filter_cli_args(cli_parser, only_executed_tests=True)
+    add_result_filter_cli_args(cli_parser, only_executed_tests=True)
     cli_args = cli_parser.parse_args(args=[])
-    filtr = make_report_filter(cli_args, only_executed_tests=True)
+    filtr = make_result_filter(cli_args, only_executed_tests=True)
     assert filtr.statuses == {"passed", "failed"}
 
 
 def test_make_report_filter_with_only_executed_tests_and_passed():
     cli_parser = argparse.ArgumentParser()
-    add_report_filter_cli_args(cli_parser, only_executed_tests=True)
+    add_result_filter_cli_args(cli_parser, only_executed_tests=True)
     cli_args = cli_parser.parse_args(args=["--passed"])
-    filtr = make_report_filter(cli_args, only_executed_tests=True)
+    filtr = make_result_filter(cli_args, only_executed_tests=True)
     assert filtr.statuses == {"passed"}
 
 
 def test_make_report_filter_non_passed():
     cli_parser = argparse.ArgumentParser()
-    add_report_filter_cli_args(cli_parser)
+    add_result_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=["--non-passed"])
-    filtr = make_report_filter(cli_args)
+    filtr = make_result_filter(cli_args)
     assert filtr.statuses == {"skipped", "failed"}
 
 
 def test_make_report_filter_grep():
     cli_parser = argparse.ArgumentParser()
-    add_report_filter_cli_args(cli_parser)
+    add_result_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=["--grep", "foobar"])
-    filtr = make_report_filter(cli_args)
+    filtr = make_result_filter(cli_args)
     assert filtr.grep
