@@ -75,12 +75,16 @@ class BaseTreeNode(object):
         return links
 
     def pull_node(self):
+        # type: () -> "_N"
         node = copy.copy(self)
         node.parent_suite = None
         return node
 
     def __str__(self):
         return "<%s %s>" % (self.__class__.__name__, self.path)
+
+
+_N = TypeVar("_N", bound=BaseTreeNode)
 
 
 TreeNodeHierarchy = Union[Tuple[str, ...], List, BaseTreeNode, str]
@@ -139,10 +143,31 @@ class BaseSuite(BaseTreeNode):
         return True
 
     def pull_node(self):
+        # type: () -> "BaseSuite"
         node = BaseTreeNode.pull_node(self)
         node._tests = []
         node._suites = []
         return node
+
+    def filter(self, filtr):
+        suite = self.pull_node()
+
+        for test in self.get_tests():
+            if filtr(test):
+                suite.add_test(test.pull_node())
+
+        for sub_suite in filter_suites(self.get_suites(), filtr):
+            suite.add_suite(sub_suite)
+
+        return suite
+
+
+def filter_suites(suites, filtr):
+    return list(
+        filter(
+            lambda s: not s.is_empty(), (s.filter(filtr) for s in suites)
+        )
+    )
 
 
 S = TypeVar("S", bound=BaseSuite)

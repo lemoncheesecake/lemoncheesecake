@@ -14,7 +14,7 @@ import lemoncheesecake
 from lemoncheesecake.project import find_project_dir, find_project_file, load_project_from_file
 from lemoncheesecake.reporting import get_reporting_backends
 from lemoncheesecake.reporting.reportdir import DEFAULT_REPORT_DIR_NAME
-from lemoncheesecake.filter import filter_suites
+from lemoncheesecake.testtree import filter_suites
 from lemoncheesecake.exceptions import UserError, ProjectError
 
 LEMONCHEESECAKE_VERSION = "lemoncheesecake version %s (using Python %s - %s)" % (

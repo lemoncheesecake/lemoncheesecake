@@ -2,15 +2,15 @@ import re
 import argparse
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.filter import RunFilter, ReportFilter, filter_suites, \
+from lemoncheesecake.filter import RunFilter, ReportFilter, \
     add_report_filter_cli_args, add_run_filter_cli_args, make_report_filter, make_run_filter
 from lemoncheesecake.suite import load_suites_from_classes, load_suite_from_class
-from lemoncheesecake.testtree import flatten_tests
+from lemoncheesecake.testtree import flatten_tests, filter_suites
 from lemoncheesecake.reporting.backends.json_ import JsonBackend
 from lemoncheesecake.reporting import ReportLocation
 
 from helpers.testtreemockup import suite_mockup, tst_mockup, make_suite_data_from_mockup
-from helpers.runner import run_suite, run_suites
+from helpers.runner import run_suite, run_suites, run_suite_class
 
 
 def _test_filter(suites, filtr, expected_test_paths):
@@ -1311,6 +1311,40 @@ def test_report_filter_grep_url_description():
         ReportFilter(grep=re.compile(r"foobar")),
         expected=("suite.test",)
     )
+
+
+def test_filter_suites_on_suite_setup():
+    @lcc.suite("suite")
+    class suite(object):
+        def setup_suite(self):
+            lcc.log_info("foobar")
+
+        @lcc.test("test")
+        def test(self):
+            pass
+
+    report = run_suite_class(suite)
+
+    suites = list(report.all_suites(ReportFilter(grep=re.compile("foobar"))))
+
+    assert len(suites) == 1
+
+
+def test_filter_suites_on_suite_teardown():
+    @lcc.suite("suite")
+    class suite(object):
+        def teardown_suite(self):
+            lcc.log_info("foobar")
+
+        @lcc.test("test")
+        def test(self):
+            pass
+
+    report = run_suite_class(suite)
+
+    suites = list(report.all_suites(ReportFilter(grep=re.compile("foobar"))))
+
+    assert len(suites) == 1
 
 
 def test_make_run_filter():

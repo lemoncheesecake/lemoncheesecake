@@ -11,7 +11,7 @@ from functools import reduce
 from lemoncheesecake.reporting import load_report
 from lemoncheesecake.reporting.reportdir import DEFAULT_REPORT_DIR_NAME
 from lemoncheesecake.reporting.report import Result, TestResult, Log, Check, Attachment, Url
-from lemoncheesecake.testtree import flatten_tests, BaseTest, BaseSuite
+from lemoncheesecake.testtree import flatten_tests, filter_suites, BaseTest, BaseSuite
 from lemoncheesecake.exceptions import UserError
 from lemoncheesecake.consts import NEGATIVE_CHARS
 
@@ -205,30 +205,6 @@ class FromTestsFilter(Filter):
 
     def __call__(self, test):
         return test.path in self._tests
-
-
-def filter_suite(suite, filtr):
-    filtered_suite = suite.pull_node()
-
-    for test in suite.get_tests():
-        if filtr(test):
-            filtered_suite.add_test(test.pull_node())
-
-    for filtered_sub_suite in filter_suites(suite.get_suites(), filtr):
-        filtered_suite.add_suite(filtered_sub_suite)
-
-    return filtered_suite
-
-
-def filter_suites(suites, filtr):
-    filtered_suites = []
-
-    for suite in suites:
-        filtered_suite = filter_suite(suite, filtr)
-        if not filtered_suite.is_empty():
-            filtered_suites.append(filtered_suite)
-
-    return filtered_suites
 
 
 def _add_filter_cli_args(cli_parser, no_positional_argument=False, only_executed_tests=False):

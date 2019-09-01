@@ -7,8 +7,7 @@ from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import auto_detect_reporting_backends
 from lemoncheesecake.reporting.console import test_status_to_color
 from lemoncheesecake.reporting import load_report
-from lemoncheesecake.filter import add_report_filter_cli_args, make_report_filter, \
-    filter_suites
+from lemoncheesecake.filter import add_report_filter_cli_args, make_report_filter
 from lemoncheesecake.testtree import flatten_tests, find_test
 from lemoncheesecake.exceptions import CannotFindTreeNode, UserError
 
@@ -123,8 +122,8 @@ class DiffCommand(Command):
         new_report = load_report(cli_args.new_report_path, reporting_backends)
         filtr = make_report_filter(cli_args)
 
-        old_suites = filter_suites(old_report.get_suites(), filtr)
-        new_suites = filter_suites(new_report.get_suites(), filtr)
+        old_suites = list(old_report.all_suites(filtr))
+        new_suites = list(new_report.all_suites(filtr))
 
         if len(old_suites) == 0 and len(new_suites) == 0:
             raise UserError("The filter does not match any test on both reports")

@@ -16,7 +16,7 @@ from typing import Callable
 from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, \
-    normalize_node_hierarchy, TreeNodeHierarchy
+    filter_suites, normalize_node_hierarchy, TreeNodeHierarchy
 from lemoncheesecake.suite.core import Test
 
 _TEST_STATUSES = "passed", "failed", "skipped", "disabled"
@@ -214,6 +214,23 @@ class SuiteResult(BaseSuite):
         # type: (bool) -> List[SuiteResult]
         suites = super(SuiteResult, self).get_suites(include_empty_suites)
         return sorted(suites, key=lambda s: s.rank)
+
+    def pull_node(self):
+        node = BaseSuite.pull_node(self)
+        node._suite_setup = None
+        node._suite_teardown = None
+        return node
+
+    def is_empty(self):
+        return BaseSuite.is_empty(self) and self._suite_setup is None and self._suite_teardown is None
+
+    def filter(self, filtr):
+        suite = BaseSuite.filter(self, filtr)
+        if self._suite_setup and filtr(self._suite_setup):
+            suite._suite_setup = self._suite_setup
+        if self._suite_teardown and filtr(self._suite_teardown):
+            suite._suite_teardown = self._suite_teardown
+        return suite
 
 
 class _Stats(object):
@@ -446,8 +463,6 @@ class Report(object):
     def all_suites(self, filtr=None):
         # type: (Optional[Callable[[TestResult], bool]]) -> Iterable[SuiteResult]
         if filtr:
-            # NB: import locally to avoid a circular dependency issue
-            from lemoncheesecake.filter import filter_suites
             return flatten_suites(filter_suites(self._suites, filtr))
         else:
             return flatten_suites(self._suites)
