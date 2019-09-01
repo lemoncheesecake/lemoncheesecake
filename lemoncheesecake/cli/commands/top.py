@@ -35,7 +35,7 @@ class TopTests(Command):
             return (
                 test.path,
                 humanize_duration(test.duration, show_milliseconds=True),
-                "%d%%" % (test.duration / total_time * 100)
+                "%d%%" % (test.duration / total_time * 100) if total_time else 100
             )
         else:
             return test.path, "-", "-"
@@ -88,7 +88,7 @@ class TopSuites(Command):
                 suite.path,
                 len(suite.get_tests()),
                 humanize_duration(suite.duration, show_milliseconds=True),
-                "%d%%" % (suite.duration / total_time * 100)
+                "%d%%" % (suite.duration / total_time * 100) if total_time else 100
             )
         else:
             return suite.path, len(suite.get_tests()), "-", "-"
@@ -176,7 +176,7 @@ class TopSteps(Command):
                 TopSteps._get_steps_max_duration(steps),
                 TopSteps._get_steps_average_duration(steps),
                 duration,
-                duration / total_duration * 100
+                (duration / total_duration * 100) if total_duration else 100
             ])
 
         return sorted(data, key=lambda row: row[-2], reverse=True)
