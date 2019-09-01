@@ -76,7 +76,7 @@ class TopSuites(Command):
     @staticmethod
     def _get_suites_ordered_by_duration(suites):
         return sorted(
-            filter(lambda suite: len(suite.get_tests()) > 0, suites),
+            filter(lambda s: any((s.get_tests(), s.suite_setup, s.suite_teardown)), suites),
             key=lambda suite: suite.duration,
             reverse=True
         )

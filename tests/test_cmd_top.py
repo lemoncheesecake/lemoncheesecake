@@ -30,6 +30,27 @@ def test_get_top_suites():
     assert top_suites[1][3] == "25%"
 
 
+def test_get_top_suites_with_suite_setup():
+    @lcc.suite("suite")
+    class suite:
+        def setup_suite(self):
+            lcc.log_info("foobar")
+
+        @lcc.test("test")
+        def test(self):
+            pass
+
+    report = run_suite_class(suite)
+
+    top_suites = TopSuites.get_top_suites(report, ReportFilter(grep=re.compile("foobar")))
+
+    assert len(top_suites) == 1
+
+    assert top_suites[0][0] == "suite"
+    assert top_suites[0][1] == 0
+    assert top_suites[0][3] == "100%"
+
+
 def test_top_suites_cmd(tmpdir, cmdout):
     suite1 = suite_mockup("suite1").add_test(tst_mockup("test", start_time=0.1, end_time=1.0))
     suite2 = suite_mockup("suite2").add_test(tst_mockup("test", start_time=1.0, end_time=4.0))
