@@ -11,10 +11,12 @@ from typing import Union, List, Generator, Iterable, Optional
 import datetime
 import calendar
 
+from typing import Callable
+
 from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, \
-    normalize_node_hierarchy, TreeNodeHierarchy
+    filter_suites, normalize_node_hierarchy, TreeNodeHierarchy
 from lemoncheesecake.suite.core import Test
 
 _TEST_STATUSES = "passed", "failed", "skipped", "disabled"
@@ -92,6 +94,7 @@ class Step(object):
         # type: (str, bool) -> None
         self.description = description
         self._detached = detached  # this attribute is runtime only is not intended to be serialized
+        self.parent_result = None
         self.entries = []  # type: List[Union[Log, Check, Attachment, Url]]
         self.start_time = None  # type: Optional[float]
         self.end_time = None  # type: Optional[float]
@@ -120,18 +123,27 @@ class Result(object):
         # one will override the other
         self.parent_suite = None  # type: Optional[SuiteResult]
         self.type = None  # type: Optional[str]
-        self.steps = []  # type: List[Step]
+        self._steps = []  # type: List[Step]
         self.start_time = None  # type: Optional[float]
         self.end_time = None  # type: Optional[float]
         self.status = None  # type: Optional[str]
         self.status_details = None  # type: Optional[str]
+
+    def add_step(self, step):
+        # type: (Step) -> None
+        step.parent_result = self
+        self._steps.append(step)
+
+    def get_steps(self):
+        # type: () -> List[Step]
+        return self._steps
 
     def is_successful(self):
         # type: () -> bool
         if self.status:  # test is finished
             return self.status in ("passed", "disabled")
         else:  # check if the test is successful "so far"
-            return all(step.is_successful() for step in self.steps)
+            return all(step.is_successful() for step in self._steps)
 
     @property
     def duration(self):
@@ -140,7 +152,7 @@ class Result(object):
 
     def is_empty(self):
         # type: () -> bool
-        return len(self.steps) == 0
+        return len(self._steps) == 0
 
 
 class TestResult(BaseTest, Result):
@@ -199,7 +211,7 @@ class SuiteResult(BaseSuite):
         return reduce(
             lambda x, y: x + y,
             # result.duration is None if the corresponding result is in progress
-            [result.duration or 0 for result in flatten_results_from_suites([self])],
+            [result.duration or 0 for result in flatten_results([self])],
             0
         )
 
@@ -212,6 +224,23 @@ class SuiteResult(BaseSuite):
         # type: (bool) -> List[SuiteResult]
         suites = super(SuiteResult, self).get_suites(include_empty_suites)
         return sorted(suites, key=lambda s: s.rank)
+
+    def pull_node(self):
+        node = BaseSuite.pull_node(self)
+        node._suite_setup = None
+        node._suite_teardown = None
+        return node
+
+    def is_empty(self):
+        return BaseSuite.is_empty(self) and self._suite_setup is None and self._suite_teardown is None
+
+    def filter(self, filtr):
+        suite = BaseSuite.filter(self, filtr)
+        if self._suite_setup and filtr(self._suite_setup):
+            suite._suite_setup = self._suite_setup
+        if self._suite_teardown and filtr(self._suite_teardown):
+            suite._suite_teardown = self._suite_teardown
+        return suite
 
 
 class _Stats(object):
@@ -247,7 +276,7 @@ def _update_stats_from_results(stats, results):
     for result in results:
         if result.duration is not None:
             stats.duration_cumulative += result.duration
-        for step in result.steps:
+        for step in result.get_steps():
             for entry in step.entries:
                 if isinstance(entry, Check):
                     stats.checks += 1
@@ -273,7 +302,7 @@ def _update_stats_from_tests(stats, tests):
 def get_stats_from_suites(suites, parallelized):
     stats = _Stats()
 
-    results = list(flatten_results_from_suites(suites))
+    results = list(flatten_results(suites))
 
     if not parallelized:
         stats.duration = results[-1].end_time - results[0].start_time
@@ -441,32 +470,51 @@ class Report(object):
 
         return stats
 
-    def all_suites(self):
-        # type: () -> Generator[SuiteResult]
-        return flatten_suites(self._suites)
+    def all_suites(self, filtr=None):
+        # type: (Optional[Callable[[TestResult], bool]]) -> Iterable[SuiteResult]
+        if filtr:
+            return flatten_suites(filter_suites(self._suites, filtr))
+        else:
+            return flatten_suites(self._suites)
 
-    def all_tests(self):
-        # type: () -> Generator[TestResult]
-        return flatten_tests(self._suites)
+    def all_tests(self, filtr=None):
+        # type: (Optional[Callable[[TestResult], bool]]) -> Iterable[TestResult]
+        if filtr:
+            return filter(filtr, flatten_tests(self._suites))
+        else:
+            return flatten_tests(self._suites)
 
-    def all_results(self):
-        # type: () -> Generator[Result]
+    def _all_results(self):
+        # type: () -> Iterable[Result]
         if self.test_session_setup:
             yield self.test_session_setup
-        for result in flatten_results_from_suites(self.get_suites()):
+        for result in flatten_results(self.get_suites()):
             yield result
         if self.test_session_teardown:
             yield self.test_session_teardown
 
+    def all_results(self, filtr=None):
+        # type: (Optional[Callable[[TestResult], bool]]) -> Iterable[Result]
+        if filtr:
+            return filter(filtr, self._all_results())
+        else:
+            return self._all_results()
 
-def flatten_steps(suites):
-    # type: (Iterable[SuiteResult]) -> Generator[Step]
-    for test in flatten_tests(suites):
-        for step in test.steps:
-            yield step
+    def _all_steps(self):
+        # type: () -> Iterable[Step]
+        for result in self.all_results():
+            for step in result.get_steps():
+                yield step
+
+    def all_steps(self, filtr=None):
+        # type: (Optional[Callable[[Step], bool]]) -> Iterable[Step]
+        if filtr:
+            return filter(filtr, self._all_steps())
+        else:
+            return self._all_steps()
 
 
-def flatten_results_from_suites(suites):
+def flatten_results(suites):
     # type: (Iterable[SuiteResult]) -> Generator[Result]
     for suite in flatten_suites(suites):
         if suite.suite_setup:

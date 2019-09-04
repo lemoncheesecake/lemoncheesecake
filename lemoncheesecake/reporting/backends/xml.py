@@ -131,7 +131,7 @@ def _serialize_test_data(test):
     for link in test.links:
         link_node = make_xml_child(test_node, "link", "name", link[1])
         link_node.text = link[0]
-    _serialize_steps(test.steps, test_node)
+    _serialize_steps(test.get_steps(), test_node)
 
     return test_node
 
@@ -140,7 +140,7 @@ def _serialize_hook_data(data, node):
     node.attrib["status"] = data.status or ""
     _add_time_attr(node, "start-time", data.start_time)
     _add_time_attr(node, "end-time", data.end_time)
-    _serialize_steps(data.steps, node)
+    _serialize_steps(data.get_steps(), node)
 
 
 def _serialize_suite_data(suite):
@@ -274,7 +274,8 @@ def _unserialize_test_data(xml):
     test.tags = [node.text for node in xml.xpath("tag")]
     test.properties = {node.attrib["name"]: node.text for node in xml.xpath("property")}
     test.links = [(link.text, link.attrib.get("name", None)) for link in xml.xpath("link")]
-    test.steps = [_unserialize_step_data(step) for step in xml.xpath("step")]
+    for step in map(_unserialize_step_data, xml.xpath("step")):
+        test.add_step(step)
     return test
 
 
@@ -283,7 +284,8 @@ def _unserialize_hook_data(xml):
     data.status = xml.attrib["status"] or None
     data.start_time = _unserialize_datetime(xml.attrib["start-time"])
     data.end_time = _unserialize_datetime(xml.attrib["end-time"]) if "end-time" in xml.attrib else None
-    data.steps = [_unserialize_step_data(step) for step in xml.xpath("step")]
+    for step in map(_unserialize_step_data, xml.xpath("step")):
+        data.add_step(step)
     return data
 
 

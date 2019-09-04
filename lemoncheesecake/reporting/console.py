@@ -8,7 +8,7 @@ import six
 from lemoncheesecake.helpers.text import wrap_text
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.helpers import terminalsize
-from lemoncheesecake.filter import ReportFilter
+from lemoncheesecake.filter import ResultFilter
 from lemoncheesecake.reporting import Log, Check, Url, Attachment, TestResult
 
 
@@ -163,7 +163,7 @@ class Renderer(object):
         else:
             short_description = test.path
 
-        return self.render_chunk(test.description, short_description, test.status, test.steps)
+        return self.render_chunk(test.description, short_description, test.status, test.get_steps())
 
     def render_result(self, result):
         if result.type == "suite_setup":
@@ -181,7 +181,7 @@ class Renderer(object):
         else:
             raise ValueError("Unknown result type '%s'" % result.type)
 
-        return self.render_chunk(description, short_description, result.status, result.steps)
+        return self.render_chunk(description, short_description, result.status, result.get_steps())
 
     def render_results(self, results):
         for result in results:
@@ -210,7 +210,7 @@ def print_report(report, filtr=None, max_width=None, explicit=False):
     ###
     renderer = Renderer(
         max_width=max_width, explicit=explicit,
-        highlight=filtr.grep if isinstance(filtr, ReportFilter) else None
+        highlight=filtr.grep if isinstance(filtr, ResultFilter) else None
     )
     if not filtr:
         if report.nb_tests == 0:
@@ -218,7 +218,7 @@ def print_report(report, filtr=None, max_width=None, explicit=False):
             return
         chunks = renderer.render_results(report.all_results())
     else:
-        results = list(filter(filtr, report.all_results()))
+        results = list(report.all_results(filtr))
         if not results:
             print("The filter does not match anything in the report")
             return

@@ -7,8 +7,7 @@ from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import auto_detect_reporting_backends
 from lemoncheesecake.reporting.console import test_status_to_color
 from lemoncheesecake.reporting import load_report
-from lemoncheesecake.filter import add_report_filter_cli_args, make_report_filter, \
-    filter_suites
+from lemoncheesecake.filter import add_result_filter_cli_args, make_result_filter
 from lemoncheesecake.testtree import flatten_tests, find_test
 from lemoncheesecake.exceptions import CannotFindTreeNode, UserError
 
@@ -109,7 +108,7 @@ class DiffCommand(Command):
         return "Display differences between two reports"
 
     def add_cli_args(self, cli_parser):
-        add_report_filter_cli_args(cli_parser)
+        add_result_filter_cli_args(cli_parser)
         group = cli_parser.add_argument_group("Diff")
         group.add_argument("old_report_path", help="Old report path")
         group.add_argument("new_report_path", help="New report path")
@@ -121,10 +120,10 @@ class DiffCommand(Command):
 
         old_report = load_report(cli_args.old_report_path, reporting_backends)
         new_report = load_report(cli_args.new_report_path, reporting_backends)
-        filtr = make_report_filter(cli_args)
+        filtr = make_result_filter(cli_args)
 
-        old_suites = filter_suites(old_report.get_suites(), filtr)
-        new_suites = filter_suites(new_report.get_suites(), filtr)
+        old_suites = list(old_report.all_suites(filtr))
+        new_suites = list(new_report.all_suites(filtr))
 
         if len(old_suites) == 0 and len(new_suites) == 0:
             raise UserError("The filter does not match any test on both reports")

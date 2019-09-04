@@ -2,15 +2,17 @@ import re
 import argparse
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.filter import RunFilter, ReportFilter, filter_suites, \
-    add_report_filter_cli_args, add_run_filter_cli_args, make_report_filter, make_run_filter
+from lemoncheesecake.matching import *
+# import _TestFilter as __TestFilter to avoid the class being interpreted as a test by pytest
+from lemoncheesecake.filter import TestFilter as _TestFilter, ResultFilter, StepFilter, \
+    add_result_filter_cli_args, add_test_filter_cli_args, add_step_filter_cli_args, \
+    make_result_filter, make_test_filter, make_step_filter
 from lemoncheesecake.suite import load_suites_from_classes, load_suite_from_class
-from lemoncheesecake.testtree import flatten_tests
+from lemoncheesecake.testtree import flatten_tests, filter_suites
 from lemoncheesecake.reporting.backends.json_ import JsonBackend
 from lemoncheesecake.reporting import ReportLocation
 
-from helpers.testtreemockup import suite_mockup, tst_mockup, make_suite_data_from_mockup
-from helpers.runner import run_suite, run_suites
+from helpers.runner import run_suite, run_suites, run_suite_class, run_func_in_test
 
 
 def _test_filter(suites, filtr, expected_test_paths):
@@ -19,17 +21,17 @@ def _test_filter(suites, filtr, expected_test_paths):
     assert sorted(t.path for t in filtered_tests) == sorted(expected_test_paths)
 
 
-def _test_run_filter(suite_classes, filtr, expected_test_paths):
+def _test_test_filter(suite_classes, filtr, expected_test_paths):
     suites = load_suites_from_classes(suite_classes)
     _test_filter(suites, filtr, expected_test_paths)
 
 
-def _test_report_filter(suites, filtr, expected, fixtures=None):
+def _test_result_filter(suites, filtr, expected, fixtures=None):
     if not isinstance(suites, (list, tuple)):
         suites = (suites,)
 
     report = run_suites(load_suites_from_classes(suites), fixtures=fixtures)
-    results = list(filter(filtr, report.all_results()))
+    results = list(report.all_results(filtr))
 
     assert len(results) == len(expected)
     for expected_result in expected:
@@ -37,6 +39,13 @@ def _test_report_filter(suites, filtr, expected, fixtures=None):
             expected_result = ReportLocation.in_test(expected_result)
         expected_result = report.get(expected_result)
         assert expected_result in results
+
+
+def _test_step_filter(func, filtr, expected):
+    report = run_func_in_test(func)
+    steps = list(report.all_steps(filtr))
+
+    assert [s.description for s in steps] == expected
 
 
 def test_filter_full_path_on_test():
@@ -52,9 +61,9 @@ def test_filter_full_path_on_test():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.subsuite.baz"]),
+        _TestFilter(paths=["mysuite.subsuite.baz"]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -72,7 +81,7 @@ def test_filter_simple_func():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
         lambda test: test.path == "mysuite.subsuite.baz",
         ["mysuite.subsuite.baz"]
@@ -92,9 +101,9 @@ def test_filter_full_path_on_test_negative():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(paths=["-mysuite.subsuite.baz"]),
+        _TestFilter(paths=["-mysuite.subsuite.baz"]),
         ["mysuite.subsuite.test2"]
     )
 
@@ -112,9 +121,9 @@ def test_filter_full_path_on_suite():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.subsuite"]),
+        _TestFilter(paths=["mysuite.subsuite"]),
         ["mysuite.subsuite.test1", "mysuite.subsuite.test2"]
     )
 
@@ -132,9 +141,9 @@ def test_filter_path_on_suite_negative():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(paths=["-mysuite.subsuite.*"]),
+        _TestFilter(paths=["-mysuite.subsuite.*"]),
         []
     )
 
@@ -152,9 +161,9 @@ def test_filter_path_complete_on_top_suite():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(paths=["mysuite"]),
+        _TestFilter(paths=["mysuite"]),
         ["mysuite.subsuite.test1", "mysuite.subsuite.test2"]
     )
 
@@ -172,9 +181,9 @@ def test_filter_path_wildcard_on_test():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.subsuite.ba*"]),
+        _TestFilter(paths=["mysuite.subsuite.ba*"]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -192,9 +201,9 @@ def test_filter_path_wildcard_on_test_negative():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(paths=["-mysuite.subsuite.ba*"]),
+        _TestFilter(paths=["-mysuite.subsuite.ba*"]),
         ["mysuite.subsuite.test2"]
     )
 
@@ -212,9 +221,9 @@ def test_filter_path_wildcard_on_suite():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.sub*.baz"]),
+        _TestFilter(paths=["mysuite.sub*.baz"]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -232,9 +241,9 @@ def test_filter_path_wildcard_on_suite_negative():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(paths=["~mysuite.sub*.baz"]),
+        _TestFilter(paths=["~mysuite.sub*.baz"]),
         ["mysuite.subsuite.test2"]
     )
 
@@ -252,9 +261,9 @@ def test_filter_description_on_test():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(descriptions=[["desc2"]]),
+        _TestFilter(descriptions=[["desc2"]]),
         ["mysuite.subsuite.test2"]
     )
 
@@ -272,9 +281,9 @@ def test_filter_description_on_test_negative():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(descriptions=[["~desc2"]]),
+        _TestFilter(descriptions=[["~desc2"]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -294,9 +303,9 @@ def test_filter_description_on_suite():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(descriptions=[["desc2"]]),
+        _TestFilter(descriptions=[["desc2"]]),
         ["mysuite.othersuite.test2"]
     )
 
@@ -318,9 +327,9 @@ def test_filter_description_on_suite_negative():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(descriptions=[["-desc2"]]),
+        _TestFilter(descriptions=[["-desc2"]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -339,9 +348,9 @@ def test_filter_tag_on_test():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(tags=[["tag1"]]),
+        _TestFilter(tags=[["tag1"]]),
         ["mysuite.subsuite.test2"]
     )
 
@@ -360,9 +369,9 @@ def test_filter_tag_on_test_negative():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(tags=[["-tag1"]]),
+        _TestFilter(tags=[["-tag1"]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -384,9 +393,9 @@ def test_filter_tag_on_suite():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(tags=[["tag2"]]),
+        _TestFilter(tags=[["tag2"]]),
         ["mysuite.subsuite2.test2"]
     )
 
@@ -408,9 +417,9 @@ def test_filter_tag_on_suite_negative():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(tags=[["~tag2"]]),
+        _TestFilter(tags=[["~tag2"]]),
         ["mysuite.subsuite1.baz"]
     )
 
@@ -429,9 +438,9 @@ def test_filter_property_on_test():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(properties=[[("myprop", "foo")]]),
+        _TestFilter(properties=[[("myprop", "foo")]]),
         ["mysuite.subsuite.test2"]
     )
 
@@ -451,9 +460,9 @@ def test_filter_property_on_test_negative():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(properties=[[("myprop", "-foo")]]),
+        _TestFilter(properties=[[("myprop", "-foo")]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -475,9 +484,9 @@ def test_filter_property_on_suite():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(properties=[[("myprop", "bar")]]),
+        _TestFilter(properties=[[("myprop", "bar")]]),
         ["mysuite.subsuite2.test2"]
     )
 
@@ -499,9 +508,9 @@ def test_filter_property_on_suite_negative():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(properties=[[("myprop", "~bar")]]),
+        _TestFilter(properties=[[("myprop", "~bar")]]),
         ["mysuite.subsuite1.baz"]
     )
 
@@ -520,9 +529,9 @@ def test_filter_link_on_test_without_name():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(links=[["http://bug.trac.ker/1234"]]),
+        _TestFilter(links=[["http://bug.trac.ker/1234"]]),
         ["mysuite.subsuite.test2"]
     )
 
@@ -541,9 +550,9 @@ def test_filter_link_on_test_negative_with_name():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(links=[["-#1234"]]),
+        _TestFilter(links=[["-#1234"]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -565,9 +574,9 @@ def test_filter_link_on_suite():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(links=[["#1235"]]),
+        _TestFilter(links=[["#1235"]]),
         ["mysuite.subsuite2.test2"]
     )
 
@@ -589,9 +598,9 @@ def test_filter_link_on_suite_negative():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(links=[["~#1235"]]),
+        _TestFilter(links=[["~#1235"]]),
         ["mysuite.subsuite1.baz"]
     )
 
@@ -610,9 +619,9 @@ def test_filter_path_on_suite_and_tag_on_test():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.subsuite"], tags=[["tag1"]]),
+        _TestFilter(paths=["mysuite.subsuite"], tags=[["tag1"]]),
         ["mysuite.subsuite.test2"]
     )
 
@@ -631,9 +640,9 @@ def test_filter_path_on_suite_and_negative_tag_on_test():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.subsuite"], tags=[["-tag1"]]),
+        _TestFilter(paths=["mysuite.subsuite"], tags=[["-tag1"]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -658,9 +667,9 @@ def test_filter_description_on_suite_and_link_on_test():
             def test3(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(descriptions=[["Sub suite 2"]], links=[["#1234"]]),
+        _TestFilter(descriptions=[["Sub suite 2"]], links=[["#1234"]]),
         ["mysuite.subsuite2.test2"]
     )
 
@@ -682,9 +691,9 @@ def test_filter_path_and_tag_on_suite():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.subsuite1"], tags=[["foo"]]),
+        _TestFilter(paths=["mysuite.subsuite1"], tags=[["foo"]]),
         ["mysuite.subsuite1.test1"]
     )
 
@@ -710,9 +719,9 @@ def test_filter_path_and_tag_on_test():
             def test3(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.subsuite2.*"], tags=[["foo"]]),
+        _TestFilter(paths=["mysuite.subsuite2.*"], tags=[["foo"]]),
         ["mysuite.subsuite2.test2"]
     )
 
@@ -738,9 +747,9 @@ def test_filter_path_and_negative_tag_on_test():
             def test3(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(paths=["mysuite.subsuite2.*"], tags=[["-foo"]]),
+        _TestFilter(paths=["mysuite.subsuite2.*"], tags=[["-foo"]]),
         ["mysuite.subsuite2.test3"]
     )
 
@@ -757,9 +766,9 @@ def test_filter_disabled():
         def test2(self):
             pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(disabled=True),
+        _TestFilter(disabled=True),
         ["mysuite.test2"]
     )
 
@@ -776,21 +785,21 @@ def test_filter_enabled():
         def test2(self):
             pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(enabled=True),
+        _TestFilter(enabled=True),
         ["mysuite.test1"]
     )
 
 
 def test_empty_filter():
-    filt = RunFilter()
+    filt = _TestFilter()
     assert not filt
 
 
 def test_non_empty_filter():
     def do_test(attr, val):
-        filtr = RunFilter()
+        filtr = _TestFilter()
         assert hasattr(filtr, attr)
         setattr(filtr, attr, val)
         assert filtr
@@ -815,9 +824,9 @@ def test_filter_description_and():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(descriptions=[["mysuite"], ["test1"]]),
+        _TestFilter(descriptions=[["mysuite"], ["test1"]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -837,9 +846,9 @@ def test_filter_tags_and():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(tags=[["foo"], ["bar"]]),
+        _TestFilter(tags=[["foo"], ["bar"]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -860,9 +869,9 @@ def test_filter_properties_and():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(properties=[[("foo", "1")], [("bar", "2")]]),
+        _TestFilter(properties=[[("foo", "1")], [("bar", "2")]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -883,9 +892,9 @@ def test_filter_links_and():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(links=[["#1234"], ["*/1235"]]),
+        _TestFilter(links=[["#1234"], ["*/1235"]]),
         ["mysuite.subsuite.baz"]
     )
 
@@ -905,14 +914,14 @@ def test_filter_and_or():
             def test2(self):
                 pass
 
-    _test_run_filter(
+    _test_test_filter(
         [mysuite],
-        RunFilter(tags=[["foo"], ["bar", "baz"]]),
+        _TestFilter(tags=[["foo"], ["bar", "baz"]]),
         ["mysuite.subsuite.baz", "mysuite.subsuite.test2"]
     )
 
 
-def test_report_filter_on_path():
+def test_result_filter_on_path():
     @lcc.suite("suite")
     class suite(object):
         @lcc.test("test1")
@@ -923,14 +932,14 @@ def test_report_filter_on_path():
         def test2(self):
             pass
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(paths=["suite.test2"]),
+        ResultFilter(paths=["suite.test2"]),
         ["suite.test2"]
     )
 
 
-def test_report_filter_on_passed():
+def test_result_filter_on_passed():
     @lcc.suite("suite")
     class suite(object):
         @lcc.test("test1")
@@ -941,14 +950,14 @@ def test_report_filter_on_passed():
         def test2(self):
             pass
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(statuses=["passed"]),
+        ResultFilter(statuses=["passed"]),
         ["suite.test2"]
     )
 
 
-def test_report_filter_on_failed():
+def test_result_filter_on_failed():
     @lcc.suite("suite")
     class suite(object):
         @lcc.test("test1")
@@ -959,14 +968,14 @@ def test_report_filter_on_failed():
         def test2(self):
             pass
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(statuses=["failed"]),
+        ResultFilter(statuses=["failed"]),
         ["suite.test1"]
     )
 
 
-def test_report_filter_with_setup_teardown_on_passed():
+def test_result_filter_with_setup_teardown_on_passed():
     @lcc.fixture(scope="session")
     def fixt():
         lcc.log_info("session setup")
@@ -990,9 +999,9 @@ def test_report_filter_with_setup_teardown_on_passed():
         def test2(self):
             pass
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(statuses=["passed"]),
+        ResultFilter(statuses=["passed"]),
         (
             ReportLocation.in_test_session_setup(),
             ReportLocation.in_suite_setup("suite"),
@@ -1004,7 +1013,7 @@ def test_report_filter_with_setup_teardown_on_passed():
     )
 
 
-def test_report_filter_with_setup_teardown_on_disabled():
+def test_result_filter_with_setup_teardown_on_disabled():
     @lcc.fixture(scope="session")
     def fixt():
         lcc.log_info("session setup")
@@ -1028,9 +1037,9 @@ def test_report_filter_with_setup_teardown_on_disabled():
         def test2(self):
             pass
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(disabled=True),
+        ResultFilter(disabled=True),
         (
             "suite.test2",
         ),
@@ -1038,7 +1047,7 @@ def test_report_filter_with_setup_teardown_on_disabled():
     )
 
 
-def test_report_filter_with_setup_teardown_on_enabled():
+def test_result_filter_with_setup_teardown_on_enabled():
     @lcc.fixture(scope="session")
     def fixt():
         lcc.log_info("session setup")
@@ -1062,9 +1071,9 @@ def test_report_filter_with_setup_teardown_on_enabled():
         def test2(self):
             pass
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(enabled=True),
+        ResultFilter(enabled=True),
         (
             ReportLocation.in_test_session_setup(),
             ReportLocation.in_suite_setup("suite"),
@@ -1076,7 +1085,7 @@ def test_report_filter_with_setup_teardown_on_enabled():
     )
 
 
-def test_report_filter_with_setup_teardown_on_tags():
+def test_result_filter_with_setup_teardown_on_tags():
     @lcc.fixture(scope="session")
     def fixt():
         lcc.log_info("session setup")
@@ -1101,9 +1110,9 @@ def test_report_filter_with_setup_teardown_on_tags():
         def test2(self):
             pass
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(tags=[["mytag"]]),
+        ResultFilter(tags=[["mytag"]]),
         (
             ReportLocation.in_suite_setup("suite"),
             "suite.test1",
@@ -1114,7 +1123,7 @@ def test_report_filter_with_setup_teardown_on_tags():
     )
 
 
-def test_report_filter_with_setup_teardown_on_failed_and_skipped():
+def test_result_filter_with_setup_teardown_on_failed_and_skipped():
     @lcc.fixture(scope="session")
     def fixt():
         lcc.log_info("session setup")
@@ -1138,9 +1147,9 @@ def test_report_filter_with_setup_teardown_on_failed_and_skipped():
         def test2(self):
             pass
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(statuses=("failed", "skipped")),
+        ResultFilter(statuses=("failed", "skipped")),
         (
             ReportLocation.in_suite_setup("suite"),
             "suite.test1"
@@ -1149,7 +1158,7 @@ def test_report_filter_with_setup_teardown_on_failed_and_skipped():
     )
 
 
-def test_report_filter_with_setup_teardown_on_grep():
+def test_result_filter_with_setup_teardown_on_grep():
     @lcc.fixture(scope="session")
     def fixt():
         lcc.log_info("foobar")
@@ -1168,9 +1177,9 @@ def test_report_filter_with_setup_teardown_on_grep():
         def test1(self, fixt):
             lcc.log_info("foobar")
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         (
             ReportLocation.in_test_session_setup(),
             ReportLocation.in_suite_setup("suite"),
@@ -1182,7 +1191,7 @@ def test_report_filter_with_setup_teardown_on_grep():
     )
 
 
-def test_report_filter_grep_no_result():
+def test_result_filter_grep_no_result():
     @lcc.suite("suite")
     class suite(object):
         @lcc.test("test")
@@ -1193,14 +1202,14 @@ def test_report_filter_grep_no_result():
             lcc.log_url("http://www.example.com")
             lcc.save_attachment_content("A" * 100, "file.txt")
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=()
     )
 
 
-def test_report_filter_grep_step():
+def test_result_filter_grep_step():
     @lcc.suite("suite")
     class suite(object):
         @lcc.test("test")
@@ -1208,120 +1217,287 @@ def test_report_filter_grep_step():
             lcc.set_step("foobar")
             lcc.log_info("something")
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=("suite.test",)
     )
 
 
-def test_report_filter_grep_log():
+def test_result_filter_grep_log():
     @lcc.suite("suite")
     class suite(object):
         @lcc.test("test")
         def test(self):
             lcc.log_info("foobar")
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=("suite.test",)
     )
 
 
-def test_report_filter_grep_check_description():
+def test_result_filter_grep_check_description():
     @lcc.suite("suite")
     class suite(object):
         @lcc.test("test")
         def test(self):
             lcc.log_check("foobar", True)
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=("suite.test",)
     )
 
 
-def test_report_filter_grep_check_details():
+def test_result_filter_grep_check_details():
     @lcc.suite("suite")
     class suite(object):
         @lcc.test("test")
         def test(self):
             lcc.log_check("something", True, "foobar")
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=("suite.test",)
     )
 
 
-def test_report_filter_grep_url():
+def test_result_filter_grep_url():
     @lcc.suite("suite")
     class suite(object):
         @lcc.test("test")
         def test(self):
             lcc.log_url("http://example.com/foobar")
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=("suite.test",)
     )
 
 
-def test_report_filter_grep_attachment_filename():
+def test_result_filter_grep_attachment_filename():
     @lcc.suite("suite")
     class suite(object):
         @lcc.test("test")
         def test(self):
             lcc.save_attachment_content("hello world", "foobar.txt")
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=("suite.test",)
     )
 
 
-def test_report_filter_grep_attachment_description():
+def test_result_filter_grep_attachment_description():
     @lcc.suite("suite")
     class suite(object):
         @lcc.test("test")
         def test(self):
             lcc.save_attachment_content("hello world", "file.txt", "foobar")
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=("suite.test",)
     )
 
 
-def test_report_filter_grep_url_description():
+def test_result_filter_grep_url_description():
     @lcc.suite("suite")
     class suite(object):
         @lcc.test("test")
         def test(self):
             lcc.log_url("http://example.com", "foobar")
 
-    _test_report_filter(
+    _test_result_filter(
         suite,
-        ReportFilter(grep=re.compile(r"foobar")),
+        ResultFilter(grep=re.compile(r"foobar")),
         expected=("suite.test",)
     )
 
 
-def test_make_run_filter():
+def test_step_filter_no_criteria():
+    def do():
+        lcc.set_step("mystep")
+        lcc.log_info("foobar")
+
+    _test_step_filter(do, StepFilter(), ["mystep"])
+
+
+def test_step_filter_passed_ok():
+    def do():
+        lcc.set_step("mystep")
+        lcc.log_info("foobar")
+
+    _test_step_filter(do, StepFilter(passed=True), ["mystep"])
+
+
+def test_step_filter_passed_ko_because_of_log_error():
+    def do():
+        lcc.set_step("mystep")
+        lcc.log_error("foobar")
+
+    _test_step_filter(do, StepFilter(passed=True), [])
+
+
+def test_step_filter_passed_ko_because_of_check_error():
+    def do():
+        lcc.set_step("mystep")
+        check_that("value", 1, equal_to(2))
+
+    _test_step_filter(do, StepFilter(passed=True), [])
+
+
+def test_step_filter_failed_ok():
+    def do():
+        lcc.set_step("mystep")
+        lcc.log_error("foobar")
+
+    _test_step_filter(do, StepFilter(failed=True), ["mystep"])
+
+
+def test_step_filter_failed_ko():
+    def do():
+        lcc.set_step("mystep")
+        lcc.log_info("foobar")
+
+    _test_step_filter(do, StepFilter(failed=True), [])
+
+
+def test_step_filter_grep_ok():
+    def do():
+        lcc.set_step("mystep")
+        lcc.log_error("foobar")
+
+    _test_step_filter(do, StepFilter(grep=re.compile("foo")), ["mystep"])
+
+
+def test_step_filter_grep_ko():
+    def do():
+        lcc.set_step("mystep")
+        lcc.log_info("foobar")
+
+    _test_step_filter(do, StepFilter(grep=re.compile("baz")), [])
+
+
+def test_step_filter_through_parent_ok():
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test")
+        def test(self):
+            lcc.set_step("mystep")
+            lcc.log_info("foobar")
+
+    report = run_suite_class(suite)
+
+    steps = list(report.all_steps(StepFilter(paths=("suite.test",))))
+
+    assert [s.description for s in steps] == ["mystep"]
+
+
+def test_step_filter_in_suite_setup():
+    @lcc.suite("suite")
+    class suite:
+        def setup_suite(self):
+            lcc.set_step("setup_suite")
+            lcc.log_info("in setup_suite")
+
+        @lcc.test("test")
+        def test(self):
+            lcc.set_step("mystep")
+            lcc.log_info("foobar")
+
+    report = run_suite_class(suite)
+
+    steps = list(report.all_steps(StepFilter(grep=re.compile("in setup_suite"))))
+
+    assert [s.description for s in steps] == ["setup_suite"]
+
+
+def test_step_filter_in_session_setup():
+    @lcc.fixture(scope="session")
+    def fixt():
+        lcc.set_step("setup_session")
+        lcc.log_info("in setup_session")
+
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test")
+        def test(self, fixt):
+            lcc.set_step("mystep")
+            lcc.log_info("foobar")
+
+    report = run_suite_class(suite, fixtures=(fixt,))
+
+    steps = list(report.all_steps(StepFilter(grep=re.compile("in setup_session"))))
+
+    assert [s.description for s in steps] == ["setup_session"]
+
+
+def test_step_filter_through_parent_ko():
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test")
+        def test(self):
+            lcc.set_step("mystep")
+            lcc.log_info("foobar")
+
+    report = run_suite_class(suite)
+
+    steps = list(report.all_steps(StepFilter(paths=("unknown.test",))))
+
+    assert len(steps) == 0
+
+
+def test_filter_suites_on_suite_setup():
+    @lcc.suite("suite")
+    class suite(object):
+        def setup_suite(self):
+            lcc.log_info("foobar")
+
+        @lcc.test("test")
+        def test(self):
+            pass
+
+    report = run_suite_class(suite)
+
+    suites = list(report.all_suites(ResultFilter(grep=re.compile("foobar"))))
+
+    assert len(suites) == 1
+
+
+def test_filter_suites_on_suite_teardown():
+    @lcc.suite("suite")
+    class suite(object):
+        def teardown_suite(self):
+            lcc.log_info("foobar")
+
+        @lcc.test("test")
+        def test(self):
+            pass
+
+    report = run_suite_class(suite)
+
+    suites = list(report.all_suites(ResultFilter(grep=re.compile("foobar"))))
+
+    assert len(suites) == 1
+
+
+def test_make_test_filter():
     cli_parser = argparse.ArgumentParser()
-    add_run_filter_cli_args(cli_parser)
+    add_test_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=[])
-    filtr = make_run_filter(cli_args)
+    filtr = make_test_filter(cli_args)
     assert not filtr
 
 
-def test_run_filter_from_report(tmpdir):
+def test_test_filter_from_report(tmpdir):
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.test("mytest")
@@ -1333,23 +1509,23 @@ def test_run_filter_from_report(tmpdir):
     run_suite(suite, backends=[JsonBackend()], tmpdir=tmpdir)
 
     cli_parser = argparse.ArgumentParser()
-    add_run_filter_cli_args(cli_parser)
+    add_test_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=["--from-report", tmpdir.strpath])
-    filtr = make_report_filter(cli_args)
+    filtr = make_test_filter(cli_args)
     assert filtr(suite.get_tests()[0])
 
 
-def test_make_report_filter():
+def test_make_result_filter():
     cli_parser = argparse.ArgumentParser()
-    add_report_filter_cli_args(cli_parser)
+    add_result_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=[])
-    filtr = make_report_filter(cli_args)
+    filtr = make_result_filter(cli_args)
     assert not filtr
 
 
-def test_add_report_filter_cli_args():
+def test_add_result_filter_cli_args():
     cli_parser = argparse.ArgumentParser()
-    add_report_filter_cli_args(cli_parser)
+    add_result_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=[])
     assert hasattr(cli_args, "passed")
     assert hasattr(cli_args, "failed")
@@ -1360,9 +1536,9 @@ def test_add_report_filter_cli_args():
     assert hasattr(cli_args, "grep")
 
 
-def test_add_report_filter_cli_args_with_only_executed_tests():
+def test_add_result_filter_cli_args_with_only_executed_tests():
     cli_parser = argparse.ArgumentParser()
-    add_report_filter_cli_args(cli_parser, only_executed_tests=True)
+    add_result_filter_cli_args(cli_parser, only_executed_tests=True)
     cli_args = cli_parser.parse_args(args=[])
     assert hasattr(cli_args, "passed")
     assert hasattr(cli_args, "failed")
@@ -1373,33 +1549,54 @@ def test_add_report_filter_cli_args_with_only_executed_tests():
     assert hasattr(cli_args, "grep")
 
 
-def test_make_report_filter_with_only_executed_tests():
+def test_add_step_filter_cli_args():
     cli_parser = argparse.ArgumentParser()
-    add_report_filter_cli_args(cli_parser, only_executed_tests=True)
+    add_step_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=[])
-    filtr = make_report_filter(cli_args, only_executed_tests=True)
+    assert hasattr(cli_args, "passed")
+    assert hasattr(cli_args, "failed")
+    assert not hasattr(cli_args, "skipped")
+    assert not hasattr(cli_args, "enabled")
+    assert not hasattr(cli_args, "disabled")
+    assert not hasattr(cli_args, "non_passed")
+    assert hasattr(cli_args, "grep")
+
+
+def test_make_result_filter_with_only_executed_tests():
+    cli_parser = argparse.ArgumentParser()
+    add_result_filter_cli_args(cli_parser, only_executed_tests=True)
+    cli_args = cli_parser.parse_args(args=[])
+    filtr = make_result_filter(cli_args, only_executed_tests=True)
     assert filtr.statuses == {"passed", "failed"}
 
 
-def test_make_report_filter_with_only_executed_tests_and_passed():
+def test_make_result_filter_with_only_executed_tests_and_passed():
     cli_parser = argparse.ArgumentParser()
-    add_report_filter_cli_args(cli_parser, only_executed_tests=True)
+    add_result_filter_cli_args(cli_parser, only_executed_tests=True)
     cli_args = cli_parser.parse_args(args=["--passed"])
-    filtr = make_report_filter(cli_args, only_executed_tests=True)
+    filtr = make_result_filter(cli_args, only_executed_tests=True)
     assert filtr.statuses == {"passed"}
 
 
-def test_make_report_filter_non_passed():
+def test_make_result_filter_non_passed():
     cli_parser = argparse.ArgumentParser()
-    add_report_filter_cli_args(cli_parser)
+    add_result_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=["--non-passed"])
-    filtr = make_report_filter(cli_args)
+    filtr = make_result_filter(cli_args)
     assert filtr.statuses == {"skipped", "failed"}
 
 
-def test_make_report_filter_grep():
+def test_make_result_filter_grep():
     cli_parser = argparse.ArgumentParser()
-    add_report_filter_cli_args(cli_parser)
+    add_result_filter_cli_args(cli_parser)
     cli_args = cli_parser.parse_args(args=["--grep", "foobar"])
-    filtr = make_report_filter(cli_args)
+    filtr = make_result_filter(cli_args)
     assert filtr.grep
+
+
+def test_make_step_filter_passed():
+    cli_parser = argparse.ArgumentParser()
+    add_step_filter_cli_args(cli_parser)
+    cli_args = cli_parser.parse_args(args=["--passed"])
+    filtr = make_step_filter(cli_args)
+    assert filtr.passed

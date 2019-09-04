@@ -695,7 +695,7 @@ def test(test_fixture):
     report = run_suite(suite, fixtures=[test_fixture])
 
     test = next(report.all_tests())
-    assert test.steps[0].entries[0].message == "2"
+    assert test.get_steps()[0].entries[0].message == "2"
 
 
 def test_run_with_fixture_with_logs():
@@ -719,7 +719,7 @@ def test_run_with_fixture_with_logs():
 
     assert marker == [1]
 
-    steps = report.get_suites()[0].get_tests()[0].steps
+    steps = report.get_suites()[0].get_tests()[0].get_steps()
 
     assert len(steps) == 3
     assert steps[0].description == "Setup test"
@@ -776,12 +776,12 @@ def test_run_with_fixtures_using_yield_and_dependencies():
     assert marker == [2, 6, 24, 120, 720, 4, 3, 2, 1]
 
     # check that each fixture and fixture teardown is properly executed in the right scope
-    assert report.test_session_setup.steps[0].entries[0].message == "session_fixture_setup"
-    assert report.test_session_teardown.steps[0].entries[0].message == "session_fixture_teardown"
-    assert report.get_suites()[0].suite_setup.steps[0].entries[0].message == "suite_fixture_setup"
-    assert report.get_suites()[0].suite_teardown.steps[0].entries[0].message == "suite_fixture_teardown"
-    assert report.get_suites()[0].get_tests()[0].steps[0].entries[0].message == "test_fixture_setup"
-    assert report.get_suites()[0].get_tests()[0].steps[1].entries[0].message == "test_fixture_teardown"
+    assert report.test_session_setup.get_steps()[0].entries[0].message == "session_fixture_setup"
+    assert report.test_session_teardown.get_steps()[0].entries[0].message == "session_fixture_teardown"
+    assert report.get_suites()[0].suite_setup.get_steps()[0].entries[0].message == "suite_fixture_setup"
+    assert report.get_suites()[0].suite_teardown.get_steps()[0].entries[0].message == "suite_fixture_teardown"
+    assert report.get_suites()[0].get_tests()[0].get_steps()[0].entries[0].message == "test_fixture_setup"
+    assert report.get_suites()[0].get_tests()[0].get_steps()[1].entries[0].message == "test_fixture_teardown"
 
 
 def test_run_with_fixtures_dependencies_in_test_pre_run_scope():
@@ -1010,7 +1010,7 @@ def sometest():
     report = run_suite(suite, fixtures=[fixt1])
 
     test = next(report.all_tests())
-    assert test.steps[0].entries[0].message == "MARKER"
+    assert test.get_steps()[0].entries[0].message == "MARKER"
 
 
 def test_fixture_called_multiple_times():

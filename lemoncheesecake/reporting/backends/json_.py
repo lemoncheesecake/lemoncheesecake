@@ -92,7 +92,7 @@ def _serialize_test_data(test):
     serialized.update(_dict(
         "start_time", _serialize_time(test.start_time),
         "end_time", _serialize_time(test.end_time),
-        "steps", _serialize_steps(test.steps),
+        "steps", _serialize_steps(test.get_steps()),
         "status", test.status,
         "status_details", test.status_details
     ))
@@ -103,7 +103,7 @@ def _serialize_hook_data(hook_data):
     return _dict(
         "start_time", _serialize_time(hook_data.start_time),
         "end_time", _serialize_time(hook_data.end_time),
-        "steps", _serialize_steps(hook_data.steps),
+        "steps", _serialize_steps(hook_data.get_steps()),
         "status", hook_data.status
     )
 
@@ -194,7 +194,8 @@ def _unserialize_test_data(js):
     test.tags = js["tags"]
     test.properties = js["properties"]
     test.links = [(link["url"], link["name"]) for link in js["links"]]
-    test.steps = [_unserialize_step_data(s) for s in js["steps"]]
+    for step in map(_unserialize_step_data, js["steps"]):
+        test.add_step(step)
     return test
 
 
@@ -203,7 +204,8 @@ def _unserialize_hook_data(js):
     data.status = js["status"]
     data.start_time = parse_iso8601_time(js["start_time"])
     data.end_time = parse_iso8601_time(js["end_time"]) if js["end_time"] else None
-    data.steps = [_unserialize_step_data(s) for s in js["steps"]]
+    for step in map(_unserialize_step_data, js["steps"]):
+        data.add_step(step)
 
     return data
 

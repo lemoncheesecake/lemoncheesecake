@@ -1,18 +1,24 @@
+import re
+
 from lemoncheesecake.cli import main
 from lemoncheesecake.cli.commands.top import TopSuites, TopTests, TopSteps
 from lemoncheesecake.reporting.backends.json_ import save_report_into_file
+from lemoncheesecake.filter import ResultFilter, StepFilter
+import lemoncheesecake.api as lcc
 
 from helpers.cli import cmdout
 from helpers.report import report_in_progress_path
 from helpers.testtreemockup import suite_mockup, tst_mockup, step_mockup, make_suite_data_from_mockup, \
     report_mockup, make_report_from_mockup
+from helpers.runner import run_suite_class
 
 
 def test_get_top_suites():
     suite1 = suite_mockup("suite1").add_test(tst_mockup("test", start_time=0.0, end_time=1.0))
     suite2 = suite_mockup("suite2").add_test(tst_mockup("test", start_time=1.0, end_time=4.0))
+    report = report_mockup().add_suite(suite1).add_suite(suite2)
 
-    top_suites = TopSuites.get_top_suites([make_suite_data_from_mockup(suite) for suite in (suite1, suite2)])
+    top_suites = TopSuites.get_top_suites(make_report_from_mockup(report), ResultFilter())
     assert len(top_suites) == 2
     assert top_suites[0][0] == "suite2"
     assert top_suites[0][1] == 1
@@ -22,6 +28,27 @@ def test_get_top_suites():
     assert top_suites[1][1] == 1
     assert top_suites[1][2] == "1.000s"
     assert top_suites[1][3] == "25%"
+
+
+def test_get_top_suites_with_suite_setup():
+    @lcc.suite("suite")
+    class suite:
+        def setup_suite(self):
+            lcc.log_info("foobar")
+
+        @lcc.test("test")
+        def test(self):
+            pass
+
+    report = run_suite_class(suite)
+
+    top_suites = TopSuites.get_top_suites(report, ResultFilter(grep=re.compile("foobar")))
+
+    assert len(top_suites) == 1
+
+    assert top_suites[0][0] == "suite"
+    assert top_suites[0][1] == 0
+    assert top_suites[0][3] == "100%"
 
 
 def test_top_suites_cmd(tmpdir, cmdout):
@@ -48,8 +75,9 @@ def test_top_suites_cmd_test_run_in_progress(report_in_progress_path, cmdout):
 def test_get_top_tests():
     suite1 = suite_mockup("suite1").add_test(tst_mockup("test", start_time=0.0, end_time=1.0))
     suite2 = suite_mockup("suite2").add_test(tst_mockup("test", start_time=1.0, end_time=4.0))
+    report = report_mockup().add_suite(suite1).add_suite(suite2)
 
-    top_suites = TopTests.get_top_tests([make_suite_data_from_mockup(suite) for suite in (suite1, suite2)])
+    top_suites = TopTests.get_top_tests(make_report_from_mockup(report), ResultFilter())
     assert len(top_suites) == 2
     assert top_suites[0][0] == "suite2.test"
     assert top_suites[0][1] == "3.000s"
@@ -88,7 +116,9 @@ def test_get_top_steps():
     suite1 = suite_mockup("suite1").add_test(tst_mockup().add_step(first_step).add_step(second_step))
     suite2 = suite_mockup("suite2").add_test(tst_mockup().add_step(third_step))
 
-    top_steps = TopSteps.get_top_steps([make_suite_data_from_mockup(suite) for suite in (suite1, suite2)])
+    report = report_mockup().add_suite(suite1).add_suite(suite2)
+
+    top_steps = TopSteps.get_top_steps(make_report_from_mockup(report), StepFilter())
 
     assert len(top_steps) == 2
 
@@ -107,6 +137,62 @@ def test_get_top_steps():
     assert top_steps[1][4] == "1.000s"
     assert top_steps[1][5] == "1.000s"
     assert top_steps[1][6] == "25%"
+
+
+def test_get_top_steps_with_test_session_setup_and_grep():
+    @lcc.fixture(scope="session")
+    def fixt():
+        lcc.set_step("mystep")
+        lcc.log_info("foobar")
+
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test")
+        def test(self, fixt):
+            pass
+
+    report = run_suite_class(suite, fixtures=[fixt])
+
+    top_steps = TopSteps.get_top_steps(report, StepFilter(grep=re.compile("foobar")))
+
+    assert len(top_steps) == 1
+    assert top_steps[0][0] == "mystep"
+
+
+def test_get_top_steps_filter_on_passed():
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test")
+        def test(self):
+            lcc.set_step("something ok")
+            lcc.log_info("info")
+            lcc.set_step("something not ok")
+            lcc.log_error("error")
+
+    report = run_suite_class(suite)
+
+    top_steps = TopSteps.get_top_steps(report, StepFilter(passed=True))
+
+    assert len(top_steps) == 1
+    assert top_steps[0][0] == "something ok"
+
+
+def test_get_top_steps_filter_on_grep():
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test")
+        def test(self):
+            lcc.set_step("something ok")
+            lcc.log_info("info")
+            lcc.set_step("something not ok")
+            lcc.log_error("error")
+
+    report = run_suite_class(suite)
+
+    top_steps = TopSteps.get_top_steps(report, StepFilter(grep=re.compile("error")))
+
+    assert len(top_steps) == 1
+    assert top_steps[0][0] == "something not ok"
 
 
 def test_top_steps_cmd(tmpdir, cmdout):

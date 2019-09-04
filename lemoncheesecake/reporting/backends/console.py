@@ -14,9 +14,8 @@ import six
 
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession, ReportingSessionBuilderMixin
 from lemoncheesecake.reporting.report import get_stats_from_suites
-from lemoncheesecake.filter import filter_suites
 from lemoncheesecake.helpers.time import humanize_duration
-from lemoncheesecake.testtree import flatten_suites
+from lemoncheesecake.testtree import flatten_suites, filter_suites
 from lemoncheesecake.helpers.text import ensure_single_line_text
 from lemoncheesecake.helpers import terminalsize
 from lemoncheesecake.reporting.console import test_status_to_color

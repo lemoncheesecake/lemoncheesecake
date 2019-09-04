@@ -116,7 +116,7 @@ def make_hook_data_from_mockup(mockup):
     data.start_time = mockup.start_time if mockup.start_time is not None else NOW
     data.end_time = mockup.end_time if mockup.end_time is not None else NOW
     for step_mockup in mockup.steps:
-        data.steps.append(make_step_data_from_mockup(step_mockup))
+        data.add_step(make_step_data_from_mockup(step_mockup))
     return data
 
 
@@ -177,7 +177,7 @@ def make_test_data_from_mockup(mockup):
     data.start_time = mockup.start_time if mockup.start_time is not None else NOW
     data.end_time = mockup.end_time if mockup.end_time is not None else NOW
     for step_mockup in mockup.steps:
-        data.steps.append(make_step_data_from_mockup(step_mockup))
+        data.add_step(make_step_data_from_mockup(step_mockup))
     return data
 
 

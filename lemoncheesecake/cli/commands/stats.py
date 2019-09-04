@@ -12,7 +12,7 @@ import colorama
 from lemoncheesecake.helpers.console import print_table, bold
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import load_suites_from_project
-from lemoncheesecake.filter import add_run_filter_cli_args, make_run_filter
+from lemoncheesecake.filter import add_test_filter_cli_args, make_test_filter
 from lemoncheesecake.testtree import flatten_suites
 from lemoncheesecake.project import load_project
 
@@ -61,13 +61,13 @@ class StatsCommand(Command):
         return "Display statistics about the project's tests"
 
     def add_cli_args(self, cli_parser):
-        add_run_filter_cli_args(cli_parser)
+        add_test_filter_cli_args(cli_parser)
 
     def run_cmd(self, cli_args):
         colorama.init()
 
         project = load_project()
-        suites = load_suites_from_project(project, make_run_filter(cli_args))
+        suites = load_suites_from_project(project, make_test_filter(cli_args))
 
         stats = compute_stats(suites)
 

@@ -22,7 +22,7 @@ class ReportWriter:
         report_node_data = self.report.get(event.location)
         if not report_node_data:
             raise ProgrammingError("Cannot find location %s in the report" % event.location)
-        step = self._lookup_step(report_node_data.steps, event.step)
+        step = self._lookup_step(report_node_data.get_steps(), event.step)
         if step.end_time:
             raise ProgrammingError("Cannot update step '%s', it is already ended" % step.description)
         step.entries.append(entry)
@@ -79,7 +79,7 @@ class ReportWriter:
         self.report.test_session_setup = self._start_hook(event.time)
 
     def on_test_session_setup_end(self, event):
-        self._finalize_steps(self.report.test_session_setup.steps, event.time)
+        self._finalize_steps(self.report.test_session_setup.get_steps(), event.time)
 
         if self.report.test_session_setup.is_empty():
             self.report.test_session_setup = None
@@ -90,7 +90,7 @@ class ReportWriter:
         self.report.test_session_teardown = self._start_hook(event.time)
 
     def on_test_session_teardown_end(self, event):
-        self._finalize_steps(self.report.test_session_teardown.steps, event.time)
+        self._finalize_steps(self.report.test_session_teardown.get_steps(), event.time)
 
         if self.report.test_session_teardown.is_empty():
             self.report.test_session_teardown = None
@@ -121,7 +121,7 @@ class ReportWriter:
 
     def on_suite_setup_end(self, event):
         suite_data = self._get_suite_data(event.suite)
-        self._finalize_steps(suite_data.suite_setup.steps, event.time)
+        self._finalize_steps(suite_data.suite_setup.get_steps(), event.time)
 
         if suite_data.suite_setup.is_empty():
             suite_data.suite_setup = None
@@ -135,7 +135,7 @@ class ReportWriter:
 
     def on_suite_teardown_end(self, event):
         suite_data = self._get_suite_data(event.suite)
-        self._finalize_steps(suite_data.suite_teardown.steps, event.time)
+        self._finalize_steps(suite_data.suite_teardown.get_steps(), event.time)
 
         if suite_data.suite_teardown.is_empty():
             suite_data.suite_teardown = None
@@ -153,7 +153,7 @@ class ReportWriter:
 
     def on_test_end(self, event):
         test_data = self._get_test_data(event.test)
-        self._finalize_steps(test_data.steps, event.time)
+        self._finalize_steps(test_data.get_steps(), event.time)
 
         test_data.status = "passed" if test_data.is_successful() else "failed"
         test_data.end_time = event.time
@@ -175,17 +175,17 @@ class ReportWriter:
 
     def on_step(self, event):
         report_node_data = self.report.get(event.location)
-        current_step = self._lookup_current_step(report_node_data.steps)
+        current_step = self._lookup_current_step(report_node_data.get_steps())
         if current_step:
             current_step.end_time = event.time
 
         new_step = Step(event.step_description, detached=event.detached)
         new_step.start_time = event.time
-        report_node_data.steps.append(new_step)
+        report_node_data.add_step(new_step)
 
     def on_step_end(self, event):
         report_node_data = self.report.get(event.location)
-        step = self._lookup_step(report_node_data.steps, event.step)
+        step = self._lookup_step(report_node_data.get_steps(), event.step)
 
         # only detached steps can be explicitly ended, otherwise do nothing
         if step._detached:
