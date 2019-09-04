@@ -11,6 +11,7 @@ from __future__ import print_function
 import time
 
 import lemoncheesecake.api as lcc
+from lemoncheesecake.matching import *
 from lemoncheesecake.reporting import Report
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy
 
@@ -44,7 +45,7 @@ def test_simple_test(backend, serialization_tester, tmpdir, report_saving_strate
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
-            lcc.check_that("foo", 1, lcc.equal_to(1))
+            check_that("foo", 1, equal_to(1))
 
     serialization_tester(MySuite, backend, tmpdir, report_saving_strategy=report_saving_strategy)
 
@@ -57,7 +58,7 @@ def test_test_with_all_metadata(backend, serialization_tester, tmpdir):
         @lcc.tags("foo", "bar")
         @lcc.test("Some test")
         def sometest(self):
-            lcc.check_that("foo", 1, lcc.equal_to(1))
+            check_that("foo", 1, equal_to(1))
 
     serialization_tester(MySuite, backend, tmpdir)
 
@@ -70,7 +71,7 @@ def test_suite_with_all_metadata(backend, serialization_tester, tmpdir):
     class MySuite:
         @lcc.test("Some test")
         def sometest(self):
-            lcc.check_that("foo", 1, lcc.equal_to(1))
+            check_that("foo", 1, equal_to(1))
 
     serialization_tester(MySuite, backend, tmpdir)
 
@@ -99,7 +100,7 @@ def test_unicode(backend, serialization_tester, tmpdir):
         @lcc.test(u"Some test ààà")
         def sometest(self):
             lcc.set_step(u"éééààà")
-            lcc.check_that(u"éééààà", 1, lcc.equal_to(1))
+            check_that(u"éééààà", 1, equal_to(1))
             lcc.log_info(u"éééààà")
             lcc.save_attachment_content("A" * 1024, u"somefileààà", u"éééààà")
             lcc.log_url("http://example.com", "example")
@@ -113,17 +114,17 @@ def test_multiple_suites_and_tests(backend, serialization_tester, tmpdir):
         @lcc.tags("foo")
         @lcc.test("Some test 1")
         def test_1_1(self):
-            lcc.check_that("foo", 2, lcc.equal_to(2))
+            check_that("foo", 2, equal_to(2))
 
         @lcc.tags("bar")
         @lcc.test("Some test 2")
         def test_1_2(self):
-            lcc.check_that("foo", 2, lcc.equal_to(2))
+            check_that("foo", 2, equal_to(2))
 
         @lcc.tags("baz")
         @lcc.test("Some test 3")
         def test_1_3(self):
-            lcc.check_that("foo", 3, lcc.equal_to(2))
+            check_that("foo", 3, equal_to(2))
 
     @lcc.suite("MySuite2")
     class MySuite2:
@@ -135,11 +136,11 @@ def test_multiple_suites_and_tests(backend, serialization_tester, tmpdir):
         @lcc.prop("foo", "baz")
         @lcc.test("Some test 2")
         def test_2_2(self):
-            lcc.check_that("foo", 2, lcc.equal_to(2))
+            check_that("foo", 2, equal_to(2))
 
         @lcc.test("Some test 3")
         def test_2_3(self):
-            lcc.check_that("foo", 2, lcc.equal_to(2))
+            check_that("foo", 2, equal_to(2))
 
         # suite3 is a sub suite of suite3
         @lcc.suite("MySuite3")
@@ -147,7 +148,7 @@ def test_multiple_suites_and_tests(backend, serialization_tester, tmpdir):
             @lcc.prop("foo", "bar")
             @lcc.test("Some test 1")
             def test_3_1(self):
-                lcc.check_that("foo", 1, lcc.equal_to(1))
+                check_that("foo", 1, equal_to(1))
 
             @lcc.prop("foo", "baz")
             @lcc.test("Some test 2")
@@ -156,7 +157,7 @@ def test_multiple_suites_and_tests(backend, serialization_tester, tmpdir):
 
             @lcc.test("Some test 3")
             def test_3_3(self):
-                lcc.check_that("foo", 1, lcc.equal_to(1))
+                check_that("foo", 1, equal_to(1))
 
     serialization_tester((MySuite1, MySuite2), backend, tmpdir)
 
@@ -166,7 +167,7 @@ def test_check_success(backend, serialization_tester, tmpdir):
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
-            lcc.check_that("somevalue", "foo", lcc.equal_to("foo"))
+            check_that("somevalue", "foo", equal_to("foo"))
 
     serialization_tester(MySuite, backend, tmpdir)
 
@@ -176,7 +177,7 @@ def test_check_failure(backend, serialization_tester, tmpdir):
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
-            lcc.check_that("somevalue", "foo", lcc.equal_to("bar"))
+            check_that("somevalue", "foo", equal_to("bar"))
 
     serialization_tester(MySuite, backend, tmpdir)
 
@@ -186,7 +187,7 @@ def test_require_success(backend, serialization_tester, tmpdir):
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
-            lcc.require_that("somevalue", "foo", lcc.equal_to("foo"))
+            require_that("somevalue", "foo", equal_to("foo"))
 
     serialization_tester(MySuite, backend, tmpdir)
 
@@ -196,7 +197,7 @@ def test_require_failure(backend, serialization_tester, tmpdir):
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
-            lcc.require_that("somevalue", "foo", lcc.equal_to("bar"))
+            require_that("somevalue", "foo", equal_to("bar"))
 
     serialization_tester(MySuite, backend, tmpdir)
 
@@ -206,7 +207,7 @@ def test_assert_failure(backend, serialization_tester, tmpdir):
     class MySuite:
         @lcc.test("Test 1")
         def test_1(self):
-            lcc.assert_that("somevalue", "foo", lcc.equal_to("bar"))
+            assert_that("somevalue", "foo", equal_to("bar"))
 
     serialization_tester(MySuite, backend, tmpdir)
 
@@ -218,7 +219,7 @@ def test_all_types_of_logs(backend, serialization_tester, tmpdir):
         def test_1(self):
             lcc.log_debug("some debug message")
             lcc.log_info("some info message")
-            lcc.log_warn("some warning message")
+            lcc.log_warning("some warning message")
 
         @lcc.test("Test 2")
         def test_2(self):
