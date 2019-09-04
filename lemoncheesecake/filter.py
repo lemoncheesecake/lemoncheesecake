@@ -12,6 +12,7 @@ from lemoncheesecake.reporting import load_report
 from lemoncheesecake.reporting.reportdir import DEFAULT_REPORT_DIR_NAME
 from lemoncheesecake.reporting.report import Result, TestResult, Step, Log, Check, Attachment, Url
 from lemoncheesecake.testtree import BaseTest, BaseSuite
+from lemoncheesecake.suite import Test
 from lemoncheesecake.exceptions import UserError
 from lemoncheesecake.consts import NEGATIVE_CHARS
 
@@ -49,7 +50,7 @@ class Filter(object):
         raise NotImplemented()
 
 
-class BaseFilter(Filter):
+class BaseTreeNodeFilter(Filter):
     def __init__(self, paths=(), descriptions=(), tags=(), properties=(), links=()):
         self.paths = list(paths)
         self.descriptions = list(descriptions)
@@ -95,7 +96,7 @@ class BaseFilter(Filter):
 
     @staticmethod
     def _match_values_lists(lsts, patterns):
-        return BaseFilter._match_values(
+        return BaseTreeNodeFilter._match_values(
             reduce(lambda x, y: list(x) + list(y), lsts, []),  # make a flat list
             patterns
         )
@@ -126,38 +127,39 @@ class BaseFilter(Filter):
         )
 
 
-class TestFilter(BaseFilter):
+class TestFilter(BaseTreeNodeFilter):
     def __init__(self, enabled=False, disabled=False, **kwargs):
-        BaseFilter.__init__(self, **kwargs)
+        BaseTreeNodeFilter.__init__(self, **kwargs)
         self.enabled = enabled
         self.disabled = disabled
 
     def __bool__(self):
-        return BaseFilter.__bool__(self) or any((self.enabled, self.disabled))
+        return BaseTreeNodeFilter.__bool__(self) or any((self.enabled, self.disabled))
 
-    def _do_enabled(self, node):
-        return not node.is_disabled() if self.enabled else True
+    def _do_enabled(self, test):
+        return not test.is_disabled() if self.enabled else True
 
-    def _do_disabled(self, node):
-        return node.is_disabled() if self.disabled else True
+    def _do_disabled(self, test):
+        return test.is_disabled() if self.disabled else True
 
-    def _apply_test_criteria(self, node):
-        return self._apply_criteria(node, self._do_enabled, self._do_disabled)
+    def _apply_test_criteria(self, test):
+        return self._apply_criteria(test, self._do_enabled, self._do_disabled)
 
-    def __call__(self, node):
-        return BaseFilter.__call__(self, node) and self._apply_test_criteria(node)
+    def __call__(self, test):
+        assert isinstance(test, Test)
+        return BaseTreeNodeFilter.__call__(self, test) and self._apply_test_criteria(test)
 
 
-class ResultFilter(BaseFilter):
+class ResultFilter(BaseTreeNodeFilter):
     def __init__(self, statuses=None, enabled=False, disabled=False, grep=None, **kwargs):
-        BaseFilter.__init__(self, **kwargs)
+        BaseTreeNodeFilter.__init__(self, **kwargs)
         self.statuses = set(statuses) if statuses is not None else set()
         self.enabled = enabled
         self.disabled = disabled
         self.grep = grep
 
     def __bool__(self):
-        return BaseFilter.__bool__(self) or any((self.statuses, self.enabled, self.disabled, self.grep))
+        return BaseTreeNodeFilter.__bool__(self) or any((self.statuses, self.enabled, self.disabled, self.grep))
 
     def _do_statuses(self, result):
         return result.status in self.statuses if self.statuses else True
@@ -186,13 +188,13 @@ class ResultFilter(BaseFilter):
 
         # test result:
         if isinstance(result, TestResult):
-            return BaseFilter.__call__(self, result) and self._apply_result_criteria(result)
+            return BaseTreeNodeFilter.__call__(self, result) and self._apply_result_criteria(result)
         # suite setup or teardown result, apply the base filter on the suite node:
         elif result.parent_suite:
-            return BaseFilter.__call__(self, result.parent_suite) and self._apply_result_criteria(result)
+            return BaseTreeNodeFilter.__call__(self, result.parent_suite) and self._apply_result_criteria(result)
         # session setup or teardown:
         else:
-            if BaseFilter.__bool__(self):
+            if BaseTreeNodeFilter.__bool__(self):
                 # no criteria of BaseFilter is applicable to a session setup/teardown result,
                 # meaning it's a no match
                 return False
@@ -200,15 +202,15 @@ class ResultFilter(BaseFilter):
                 return self._apply_result_criteria(result)
 
 
-class StepFilter(BaseFilter):
+class StepFilter(BaseTreeNodeFilter):
     def __init__(self, passed=False, failed=False, grep=None, **kwargs):
-        BaseFilter.__init__(self, **kwargs)
+        BaseTreeNodeFilter.__init__(self, **kwargs)
         self.passed = passed
         self.failed = failed
         self.grep = grep
 
     def __bool__(self):
-        return BaseFilter.__bool__(self) or any((self.passed, self.failed, self.grep))
+        return BaseTreeNodeFilter.__bool__(self) or any((self.passed, self.failed, self.grep))
 
     def _do_passed(self, step):
         return step.is_successful() if self.passed else True
@@ -234,13 +236,13 @@ class StepFilter(BaseFilter):
 
         # test result:
         if isinstance(step.parent_result, TestResult):
-            return BaseFilter.__call__(self, step.parent_result) and self._apply_step_criteria(step)
+            return BaseTreeNodeFilter.__call__(self, step.parent_result) and self._apply_step_criteria(step)
         # suite setup or teardown result, apply the base filter on the suite node:
         elif step.parent_result.parent_suite:
-            return BaseFilter.__call__(self, step.parent_result.parent_suite) and self._apply_step_criteria(step)
+            return BaseTreeNodeFilter.__call__(self, step.parent_result.parent_suite) and self._apply_step_criteria(step)
         # session setup or teardown:
         else:
-            if BaseFilter.__bool__(self):
+            if BaseTreeNodeFilter.__bool__(self):
                 # no criteria of BaseFilter is applicable to a session setup/teardown result,
                 # meaning it's a no match
                 return False
