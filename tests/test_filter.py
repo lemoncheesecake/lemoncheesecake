@@ -2,15 +2,17 @@ import re
 import argparse
 
 import lemoncheesecake.api as lcc
+from lemoncheesecake.matching import *
 # import _TestFilter as __TestFilter to avoid the class being interpreted as a test by pytest
-from lemoncheesecake.filter import TestFilter as _TestFilter, ResultFilter, \
-    add_result_filter_cli_args, add_test_filter_cli_args, make_result_filter, make_test_filter
+from lemoncheesecake.filter import TestFilter as _TestFilter, ResultFilter, StepFilter, \
+    add_result_filter_cli_args, add_test_filter_cli_args, add_step_filter_cli_args, \
+    make_result_filter, make_test_filter, make_step_filter
 from lemoncheesecake.suite import load_suites_from_classes, load_suite_from_class
 from lemoncheesecake.testtree import flatten_tests, filter_suites
 from lemoncheesecake.reporting.backends.json_ import JsonBackend
 from lemoncheesecake.reporting import ReportLocation
 
-from helpers.runner import run_suite, run_suites, run_suite_class
+from helpers.runner import run_suite, run_suites, run_suite_class, run_func_in_test
 
 
 def _test_filter(suites, filtr, expected_test_paths):
@@ -37,6 +39,13 @@ def _test_result_filter(suites, filtr, expected, fixtures=None):
             expected_result = ReportLocation.in_test(expected_result)
         expected_result = report.get(expected_result)
         assert expected_result in results
+
+
+def _test_step_filter(func, filtr, expected):
+    report = run_func_in_test(func)
+    steps = list(report.all_steps(filtr))
+
+    assert [s.description for s in steps] == expected
 
 
 def test_filter_full_path_on_test():
@@ -1313,6 +1322,139 @@ def test_result_filter_grep_url_description():
     )
 
 
+def test_step_filter_no_criteria():
+    def do():
+        lcc.set_step("mystep")
+        lcc.log_info("foobar")
+
+    _test_step_filter(do, StepFilter(), ["mystep"])
+
+
+def test_step_filter_passed_ok():
+    def do():
+        lcc.set_step("mystep")
+        lcc.log_info("foobar")
+
+    _test_step_filter(do, StepFilter(passed=True), ["mystep"])
+
+
+def test_step_filter_passed_ko_because_of_log_error():
+    def do():
+        lcc.set_step("mystep")
+        lcc.log_error("foobar")
+
+    _test_step_filter(do, StepFilter(passed=True), [])
+
+
+def test_step_filter_passed_ko_because_of_check_error():
+    def do():
+        lcc.set_step("mystep")
+        check_that("value", 1, equal_to(2))
+
+    _test_step_filter(do, StepFilter(passed=True), [])
+
+
+def test_step_filter_failed_ok():
+    def do():
+        lcc.set_step("mystep")
+        lcc.log_error("foobar")
+
+    _test_step_filter(do, StepFilter(failed=True), ["mystep"])
+
+
+def test_step_filter_failed_ko():
+    def do():
+        lcc.set_step("mystep")
+        lcc.log_info("foobar")
+
+    _test_step_filter(do, StepFilter(failed=True), [])
+
+
+def test_step_filter_grep_ok():
+    def do():
+        lcc.set_step("mystep")
+        lcc.log_error("foobar")
+
+    _test_step_filter(do, StepFilter(grep=re.compile("foo")), ["mystep"])
+
+
+def test_step_filter_grep_ko():
+    def do():
+        lcc.set_step("mystep")
+        lcc.log_info("foobar")
+
+    _test_step_filter(do, StepFilter(grep=re.compile("baz")), [])
+
+
+def test_step_filter_through_parent_ok():
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test")
+        def test(self):
+            lcc.set_step("mystep")
+            lcc.log_info("foobar")
+
+    report = run_suite_class(suite)
+
+    steps = list(report.all_steps(StepFilter(paths=("suite.test",))))
+
+    assert [s.description for s in steps] == ["mystep"]
+
+
+def test_step_filter_in_suite_setup():
+    @lcc.suite("suite")
+    class suite:
+        def setup_suite(self):
+            lcc.set_step("setup_suite")
+            lcc.log_info("in setup_suite")
+
+        @lcc.test("test")
+        def test(self):
+            lcc.set_step("mystep")
+            lcc.log_info("foobar")
+
+    report = run_suite_class(suite)
+
+    steps = list(report.all_steps(StepFilter(grep=re.compile("in setup_suite"))))
+
+    assert [s.description for s in steps] == ["setup_suite"]
+
+
+def test_step_filter_in_session_setup():
+    @lcc.fixture(scope="session")
+    def fixt():
+        lcc.set_step("setup_session")
+        lcc.log_info("in setup_session")
+
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test")
+        def test(self, fixt):
+            lcc.set_step("mystep")
+            lcc.log_info("foobar")
+
+    report = run_suite_class(suite, fixtures=(fixt,))
+
+    steps = list(report.all_steps(StepFilter(grep=re.compile("in setup_session"))))
+
+    assert [s.description for s in steps] == ["setup_session"]
+
+
+def test_step_filter_through_parent_ko():
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test")
+        def test(self):
+            lcc.set_step("mystep")
+            lcc.log_info("foobar")
+
+    report = run_suite_class(suite)
+
+    steps = list(report.all_steps(StepFilter(paths=("unknown.test",))))
+
+    assert len(steps) == 0
+
+
 def test_filter_suites_on_suite_setup():
     @lcc.suite("suite")
     class suite(object):
@@ -1407,6 +1549,19 @@ def test_add_result_filter_cli_args_with_only_executed_tests():
     assert hasattr(cli_args, "grep")
 
 
+def test_add_step_filter_cli_args():
+    cli_parser = argparse.ArgumentParser()
+    add_step_filter_cli_args(cli_parser)
+    cli_args = cli_parser.parse_args(args=[])
+    assert hasattr(cli_args, "passed")
+    assert hasattr(cli_args, "failed")
+    assert not hasattr(cli_args, "skipped")
+    assert not hasattr(cli_args, "enabled")
+    assert not hasattr(cli_args, "disabled")
+    assert not hasattr(cli_args, "non_passed")
+    assert hasattr(cli_args, "grep")
+
+
 def test_make_result_filter_with_only_executed_tests():
     cli_parser = argparse.ArgumentParser()
     add_result_filter_cli_args(cli_parser, only_executed_tests=True)
@@ -1437,3 +1592,11 @@ def test_make_result_filter_grep():
     cli_args = cli_parser.parse_args(args=["--grep", "foobar"])
     filtr = make_result_filter(cli_args)
     assert filtr.grep
+
+
+def test_make_step_filter_passed():
+    cli_parser = argparse.ArgumentParser()
+    add_step_filter_cli_args(cli_parser)
+    cli_args = cli_parser.parse_args(args=["--passed"])
+    filtr = make_step_filter(cli_args)
+    assert filtr.passed

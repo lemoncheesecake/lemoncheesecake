@@ -500,6 +500,19 @@ class Report(object):
         else:
             return self._all_results()
 
+    def _all_steps(self):
+        # type: () -> Iterable[Step]
+        for result in self.all_results():
+            for step in result.get_steps():
+                yield step
+
+    def all_steps(self, filtr=None):
+        # type: (Optional[Callable[[Step], bool]]) -> Iterable[Step]
+        if filtr:
+            return filter(filtr, self._all_steps())
+        else:
+            return self._all_steps()
+
 
 def flatten_results(suites):
     # type: (Iterable[SuiteResult]) -> Generator[Result]

@@ -10,10 +10,32 @@ from functools import reduce
 
 from lemoncheesecake.reporting import load_report
 from lemoncheesecake.reporting.reportdir import DEFAULT_REPORT_DIR_NAME
-from lemoncheesecake.reporting.report import Result, TestResult, Log, Check, Attachment, Url
-from lemoncheesecake.testtree import flatten_tests, filter_suites, BaseTest, BaseSuite
+from lemoncheesecake.reporting.report import Result, TestResult, Step, Log, Check, Attachment, Url
+from lemoncheesecake.testtree import BaseTest, BaseSuite
 from lemoncheesecake.exceptions import UserError
 from lemoncheesecake.consts import NEGATIVE_CHARS
+
+
+def _iter_grepable(steps):
+    for step in steps:
+        yield step.description
+        for entry in step.entries:
+            if isinstance(entry, Log):
+                yield entry.message
+            elif isinstance(entry, Check):
+                yield entry.description
+                if entry.details:
+                    yield entry.details
+            elif isinstance(entry, Attachment):
+                yield entry.filename
+                yield entry.description
+            elif isinstance(entry, Url):
+                yield entry.url
+                yield entry.description
+
+
+def _grep(pattern, steps):
+    return any(map(pattern.search, _iter_grepable(steps)))
 
 
 class Filter(object):
@@ -146,29 +168,11 @@ class ResultFilter(BaseFilter):
     def _do_disabled(self, result):
         return result.status == "disabled" if self.disabled else True
 
-    @staticmethod
-    def _iter_grepable(result):
-        for step in result.get_steps():
-            yield step.description
-            for entry in step.entries:
-                if isinstance(entry, Log):
-                    yield entry.message
-                elif isinstance(entry, Check):
-                    yield entry.description
-                    if entry.details:
-                        yield entry.details
-                elif isinstance(entry, Attachment):
-                    yield entry.filename
-                    yield entry.description
-                elif isinstance(entry, Url):
-                    yield entry.url
-                    yield entry.description
-
     def _do_grep(self, result):
         if not self.grep:
             return True
 
-        return any(map(self.grep.search, self._iter_grepable(result)))
+        return _grep(self.grep, result.get_steps())
 
     def _apply_result_criteria(self, result):
         return self._apply_criteria(
@@ -194,6 +198,54 @@ class ResultFilter(BaseFilter):
                 return False
             else:
                 return self._apply_result_criteria(result)
+
+
+class StepFilter(BaseFilter):
+    def __init__(self, passed=False, failed=False, grep=None, **kwargs):
+        BaseFilter.__init__(self, **kwargs)
+        self.passed = passed
+        self.failed = failed
+        self.grep = grep
+
+    def __bool__(self):
+        return BaseFilter.__bool__(self) or any((self.passed, self.failed, self.grep))
+
+    def _do_passed(self, step):
+        return step.is_successful() if self.passed else True
+
+    def _do_failed(self, step):
+        return not step.is_successful() if self.failed else True
+
+    def _do_grep(self, step):
+        if not self.grep:
+            return True
+
+        return _grep(self.grep, (step,))
+
+    def _apply_step_criteria(self, step):
+        return self._apply_criteria(
+            step, self._do_passed, self._do_failed, self._do_grep
+        )
+
+    def __call__(self, step):
+        # type: (Step) -> bool
+
+        assert isinstance(step, Step)
+
+        # test result:
+        if isinstance(step.parent_result, TestResult):
+            return BaseFilter.__call__(self, step.parent_result) and self._apply_step_criteria(step)
+        # suite setup or teardown result, apply the base filter on the suite node:
+        elif step.parent_result.parent_suite:
+            return BaseFilter.__call__(self, step.parent_result.parent_suite) and self._apply_step_criteria(step)
+        # session setup or teardown:
+        else:
+            if BaseFilter.__bool__(self):
+                # no criteria of BaseFilter is applicable to a session setup/teardown result,
+                # meaning it's a no match
+                return False
+            else:
+                return self._apply_step_criteria(step)
 
 
 class FromTestsFilter(Filter):
@@ -273,6 +325,10 @@ def add_result_filter_cli_args(cli_parser, only_executed_tests=False):
     return _add_filter_cli_args(cli_parser, no_positional_argument=True, only_executed_tests=only_executed_tests)
 
 
+def add_step_filter_cli_args(cli_parser):
+    return _add_filter_cli_args(cli_parser, no_positional_argument=True, only_executed_tests=True)
+
+
 def _set_common_filter_criteria(fltr, cli_args, only_executed_tests=False):
     if not only_executed_tests and (cli_args.disabled and cli_args.enabled):
         raise UserError("--disabled and --enabled arguments are mutually exclusive")
@@ -299,6 +355,10 @@ def _make_test_filter(cli_args):
     return fltr
 
 
+def _make_grep_criterion(grep):
+    return re.compile(grep, re.IGNORECASE | re.MULTILINE)
+
+
 def make_result_filter(cli_args, only_executed_tests=False):
     fltr = ResultFilter()
     _set_common_filter_criteria(fltr, cli_args, only_executed_tests=only_executed_tests)
@@ -323,7 +383,7 @@ def make_result_filter(cli_args, only_executed_tests=False):
             fltr.statuses.update(("failed", "skipped"))
 
     if cli_args.grep:
-        fltr.grep = re.compile(cli_args.grep, re.IGNORECASE | re.MULTILINE)
+        fltr.grep = _make_grep_criterion(cli_args.grep)
 
     return fltr
 
@@ -339,3 +399,18 @@ def make_test_filter(cli_args):
         return _make_from_report_filter(cli_args)
     else:
         return _make_test_filter(cli_args)
+
+
+def make_step_filter(cli_args):
+    if cli_args.passed and cli_args.failed:
+        raise UserError("--passed and --failed arguments are mutually exclusive")
+
+    filtr = StepFilter()
+    _set_common_filter_criteria(filtr, cli_args, only_executed_tests=True)
+
+    filtr.passed = cli_args.passed
+    filtr.failed = cli_args.failed
+    if cli_args.grep:
+        filtr.grep = _make_grep_criterion(cli_args.grep)
+
+    return filtr
