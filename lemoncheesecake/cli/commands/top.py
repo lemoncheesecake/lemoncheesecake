@@ -6,11 +6,12 @@ from lemoncheesecake.helpers.console import print_table
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import auto_detect_reporting_backends, add_report_path_cli_arg, get_report_path
 from lemoncheesecake.reporting import load_report
-from lemoncheesecake.filter import add_result_filter_cli_args, make_result_filter
+from lemoncheesecake.filter import add_result_filter_cli_args, make_result_filter, \
+    add_step_filter_cli_args, make_step_filter
 
 
 def get_total_duration(elems):
-    return reduce(lambda x, y: x + y, [elem.duration for elem in elems], 0)
+    return reduce(lambda x, y: x + y, (elem.duration or 0 for elem in elems), 0)
 
 
 class TopTests(Command):
@@ -122,7 +123,7 @@ class TopSteps(Command):
         return "Display steps aggregated and ordered by duration"
 
     def add_cli_args(self, cli_parser):
-        add_result_filter_cli_args(cli_parser, only_executed_tests=True)
+        add_step_filter_cli_args(cli_parser)
         group = cli_parser.add_argument_group("Top steps")
         add_report_path_cli_arg(group)
 
@@ -138,11 +139,11 @@ class TopSteps(Command):
 
     @staticmethod
     def _get_steps_min_duration(steps):
-        return min(step.duration for step in steps)
+        return min(step.duration or 0 for step in steps)
 
     @staticmethod
     def _get_steps_max_duration(steps):
-        return max(step.duration for step in steps)
+        return max(step.duration or 0 for step in steps)
 
     @staticmethod
     def _get_steps_average_duration(steps):
@@ -182,14 +183,8 @@ class TopSteps(Command):
         return sorted(data, key=lambda row: row[-2], reverse=True)
 
     @staticmethod
-    def _iter_steps(results):
-        for result in results:
-            for step in result.get_steps():
-                yield step
-
-    @staticmethod
     def get_top_steps(report, filtr):
-        steps = list(TopSteps._iter_steps(report.all_results(filtr)))
+        steps = list(report.all_steps(filtr))
         steps_aggregation = TopSteps._get_steps_aggregation(steps)
         return [TopSteps._format_steps_aggregation(*agg) for agg in steps_aggregation]
 
@@ -197,7 +192,7 @@ class TopSteps(Command):
         report_path = get_report_path(cli_args)
 
         report = load_report(report_path, auto_detect_reporting_backends())
-        filtr = make_result_filter(cli_args, only_executed_tests=True)
+        filtr = make_step_filter(cli_args)
 
         print_table(
             "Steps, aggregated and ordered by duration",

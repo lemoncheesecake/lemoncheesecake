@@ -3,7 +3,7 @@ import re
 from lemoncheesecake.cli import main
 from lemoncheesecake.cli.commands.top import TopSuites, TopTests, TopSteps
 from lemoncheesecake.reporting.backends.json_ import save_report_into_file
-from lemoncheesecake.filter import ResultFilter
+from lemoncheesecake.filter import ResultFilter, StepFilter
 import lemoncheesecake.api as lcc
 
 from helpers.cli import cmdout
@@ -118,7 +118,7 @@ def test_get_top_steps():
 
     report = report_mockup().add_suite(suite1).add_suite(suite2)
 
-    top_steps = TopSteps.get_top_steps(make_report_from_mockup(report), ResultFilter())
+    top_steps = TopSteps.get_top_steps(make_report_from_mockup(report), StepFilter())
 
     assert len(top_steps) == 2
 
@@ -153,10 +153,46 @@ def test_get_top_steps_with_test_session_setup_and_grep():
 
     report = run_suite_class(suite, fixtures=[fixt])
 
-    top_steps = TopSteps.get_top_steps(report, ResultFilter(grep=re.compile("foobar")))
+    top_steps = TopSteps.get_top_steps(report, StepFilter(grep=re.compile("foobar")))
 
     assert len(top_steps) == 1
     assert top_steps[0][0] == "mystep"
+
+
+def test_get_top_steps_filter_on_passed():
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test")
+        def test(self):
+            lcc.set_step("something ok")
+            lcc.log_info("info")
+            lcc.set_step("something not ok")
+            lcc.log_error("error")
+
+    report = run_suite_class(suite)
+
+    top_steps = TopSteps.get_top_steps(report, StepFilter(passed=True))
+
+    assert len(top_steps) == 1
+    assert top_steps[0][0] == "something ok"
+
+
+def test_get_top_steps_filter_on_grep():
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test")
+        def test(self):
+            lcc.set_step("something ok")
+            lcc.log_info("info")
+            lcc.set_step("something not ok")
+            lcc.log_error("error")
+
+    report = run_suite_class(suite)
+
+    top_steps = TopSteps.get_top_steps(report, StepFilter(grep=re.compile("error")))
+
+    assert len(top_steps) == 1
+    assert top_steps[0][0] == "something not ok"
 
 
 def test_top_steps_cmd(tmpdir, cmdout):
