@@ -15,16 +15,16 @@ from lemoncheesecake.reporting.report import (
     Log, Check, Attachment, Url, Step, Result, TestResult, SuiteResult,
     format_time_as_iso8601, parse_iso8601_time
 )
-from lemoncheesecake.exceptions import InvalidReportFile, IncompatibleReportFile, ProgrammingError
+from lemoncheesecake.exceptions import InvalidReportFile, IncompatibleReportFile
 
 JS_PREFIX = "var reporting_data = "
 
 
-def _serialize_time(ts):
-    return format_time_as_iso8601(ts) if ts else None
+def _serialize_time(t):
+    return format_time_as_iso8601(t) if t is not None else None
 
 
-def _dict(*args):
+def _odict(*args):
     d = OrderedDict()
     i = 0
     while i < len(args):
@@ -36,7 +36,7 @@ def _dict(*args):
 def _serialize_steps(steps):
     json_steps = []
     for step in steps:
-        json_step = _dict(
+        json_step = _odict(
             "description", step.description,
             "start_time", _serialize_time(step.start_time),
             "end_time", _serialize_time(step.end_time),
@@ -45,14 +45,14 @@ def _serialize_steps(steps):
         json_steps.append(json_step)
         for entry in step.entries:
             if isinstance(entry, Log):
-                entry = _dict(
+                json_entry = _odict(
                     "type", "log",
                     "level", entry.level,
                     "message", entry.message,
                     "time", _serialize_time(entry.time)
                 )
             elif isinstance(entry, Attachment):
-                entry = _dict(
+                json_entry = _odict(
                     "type", "attachment",
                     "description", entry.description,
                     "filename", entry.filename,
@@ -60,74 +60,71 @@ def _serialize_steps(steps):
                     "time", _serialize_time(entry.time)
                 )
             elif isinstance(entry, Url):
-                entry = _dict(
+                json_entry = _odict(
                     "type", "url",
                     "description", entry.description,
                     "url", entry.url,
                     "time", _serialize_time(entry.time)
                 )
             elif isinstance(entry, Check):
-                entry = _dict(
+                json_entry = _odict(
                     "type", "check",
                     "description", entry.description,
                     "is_successful", entry.is_successful,
                     "details", entry.details,
                     "time", _serialize_time(entry.time)
                 )
-            json_step["entries"].append(entry)
+            else:
+                raise ValueError("Don't know how to handle step entry %s" % entry)
+            json_step["entries"].append(json_entry)
     return json_steps
 
 
-def _serialize_common_data(obj):
-    return _dict(
-        "name", obj.name, "description", obj.description,
-        "tags", obj.tags,
-        "properties", obj.properties,
-        "links", [_dict("name", link[1], "url", link[0]) for link in obj.links]
-    )
-
-
-def _serialize_test_data(test):
-    serialized = _serialize_common_data(test)
-    serialized.update(_dict(
-        "start_time", _serialize_time(test.start_time),
-        "end_time", _serialize_time(test.end_time),
-        "steps", _serialize_steps(test.get_steps()),
-        "status", test.status,
-        "status_details", test.status_details
+def _serialize_node_metadata(node, json_node):
+    json_node.update(_odict(
+        "name", node.name, "description", node.description,
+        "tags", node.tags,
+        "properties", node.properties,
+        "links", [_odict("name", link[1], "url", link[0]) for link in node.links]
     ))
-    return serialized
 
 
-def _serialize_hook_data(hook_data):
-    return _dict(
-        "start_time", _serialize_time(hook_data.start_time),
-        "end_time", _serialize_time(hook_data.end_time),
-        "steps", _serialize_steps(hook_data.get_steps()),
-        "status", hook_data.status
+def _serialize_result(result):
+    return _odict(
+        "start_time", _serialize_time(result.start_time),
+        "end_time", _serialize_time(result.end_time),
+        "steps", _serialize_steps(result.get_steps()),
+        "status", result.status,
+        "status_details", result.status_details
     )
 
 
-def _serialize_suite_data(suite):
-    json_suite = _serialize_common_data(suite)
-    json_suite.update(_dict(
+def _serialize_test_result(test):
+    json_test = _serialize_result(test)
+    _serialize_node_metadata(test, json_test)
+    return json_test
+
+
+def _serialize_suite_result(suite):
+    json_suite = _odict(
         "start_time", _serialize_time(suite.start_time),
         "end_time", _serialize_time(suite.end_time),
-        "tests", [_serialize_test_data(t) for t in suite.get_tests()],
-        "suites", [_serialize_suite_data(s) for s in suite.get_suites()]
-    ))
+        "tests", list(map(_serialize_test_result, suite.get_tests())),
+        "suites", list(map(_serialize_suite_result, suite.get_suites()))
+    )
+    _serialize_node_metadata(suite, json_suite)
     if suite.suite_setup:
-        json_suite["suite_setup"] = _serialize_hook_data(suite.suite_setup)
+        json_suite["suite_setup"] = _serialize_result(suite.suite_setup)
     if suite.suite_teardown:
-        json_suite["suite_teardown"] = _serialize_hook_data(suite.suite_teardown)
+        json_suite["suite_teardown"] = _serialize_result(suite.suite_teardown)
 
     return json_suite
 
 
 def serialize_report_into_json(report):
-    serialized = _dict(
+    json_report = _odict(
         "lemoncheesecake_version", lemoncheesecake.__version__,
-        "report_version", 1.0,
+        "report_version", 1.1,
         "start_time", _serialize_time(report.start_time),
         "end_time", _serialize_time(report.end_time),
         "generation_time", _serialize_time(time.time()),
@@ -137,106 +134,133 @@ def serialize_report_into_json(report):
     )
 
     if report.test_session_setup:
-        serialized["test_session_setup"] = _serialize_hook_data(report.test_session_setup)
+        json_report["test_session_setup"] = _serialize_result(report.test_session_setup)
 
-    serialized["suites"] = [_serialize_suite_data(s) for s in report.get_suites()]
+    json_report["suites"] = list(map(_serialize_suite_result, report.get_suites()))
 
     if report.test_session_teardown:
-        serialized["test_session_teardown"] = _serialize_hook_data(report.test_session_teardown)
+        json_report["test_session_teardown"] = _serialize_result(report.test_session_teardown)
 
-    return serialized
+    return json_report
 
 
 def save_report_into_file(report, filename, javascript_compatibility=True, pretty_formatting=False):
-    js_report = serialize_report_into_json(report)
+    json_report = serialize_report_into_json(report)
     with open(filename, "w") as fh:
         if javascript_compatibility:
             fh.write(JS_PREFIX)
         if pretty_formatting:
-            fh.write(json.dumps(js_report, indent=4))
+            fh.write(json.dumps(json_report, indent=4))
         else:
-            fh.write(json.dumps(js_report))
+            fh.write(json.dumps(json_report))
 
 
-def _unserialize_step_data(js):
-    step = Step(js["description"])
-    step.start_time = parse_iso8601_time(js["start_time"])
-    step.end_time = parse_iso8601_time(js["end_time"]) if js["end_time"] else None
-    for js_entry in js["entries"]:
-        if js_entry["type"] == "log":
+def _unserialize_time(t):
+    return parse_iso8601_time(t) if t is not None else None
+
+
+def _unserialize_step(json_step):
+    step = Step(json_step["description"])
+    step.start_time = _unserialize_time(json_step["start_time"])
+    step.end_time = _unserialize_time(json_step["end_time"])
+    for json_entry in json_step["entries"]:
+        if json_entry["type"] == "log":
             entry = Log(
-                js_entry["level"], js_entry["message"], parse_iso8601_time(js_entry["time"])
+                json_entry["level"], json_entry["message"], _unserialize_time(json_entry["time"])
             )
-        elif js_entry["type"] == "attachment":
+        elif json_entry["type"] == "attachment":
             entry = Attachment(
-                js_entry["description"], js_entry["filename"], js_entry["as_image"], parse_iso8601_time(js_entry["time"])
+                json_entry["description"], json_entry["filename"], json_entry["as_image"],
+                _unserialize_time(json_entry["time"])
             )
-        elif js_entry["type"] == "url":
+        elif json_entry["type"] == "url":
             entry = Url(
-                js_entry["description"], js_entry["url"], parse_iso8601_time(js_entry["time"])
+                json_entry["description"], json_entry["url"], _unserialize_time(json_entry["time"])
             )
-        elif js_entry["type"] == "check":
+        elif json_entry["type"] == "check":
             entry = Check(
-                js_entry["description"], js_entry["is_successful"], js_entry["details"], parse_iso8601_time(js_entry["time"])
+                json_entry["description"], json_entry["is_successful"], json_entry["details"],
+                _unserialize_time(json_entry["time"])
             )
         else:
-            raise ProgrammingError("Unknown entry type '%s'" % js_entry["type"])
+            raise ValueError("Unknown entry type '%s'" % json_entry["type"])
         step.entries.append(entry)
     return step
 
 
-def _unserialize_test_data(js):
-    test = TestResult(js["name"], js["description"])
-    test.status = js["status"]
-    test.status_details = js["status_details"]
-    test.start_time = parse_iso8601_time(js["start_time"])
-    test.end_time = parse_iso8601_time(js["end_time"]) if js["end_time"] else None
-    test.tags = js["tags"]
-    test.properties = js["properties"]
-    test.links = [(link["url"], link["name"]) for link in js["links"]]
-    for step in map(_unserialize_step_data, js["steps"]):
-        test.add_step(step)
+def _unserialize_result(json_result, result):
+    result.status = json_result["status"]
+    # status_details for non-test results has been introduced in report version 1.1:
+    result.status_details = json_result.get("status_details", None)
+    result.start_time = _unserialize_time(json_result["start_time"])
+    result.end_time = _unserialize_time(json_result["end_time"])
+    for json_step in json_result["steps"]:
+        result.add_step(_unserialize_step(json_step))
+
+    return result
+
+
+def _unserialize_node_metadata(json_node, node):
+    node.tags = json_node["tags"]
+    node.properties = json_node["properties"]
+    node.links = [(link["url"], link["name"]) for link in json_node["links"]]
+
+
+def _unserialize_test_result(json_test):
+    test = TestResult(json_test["name"], json_test["description"])
+    _unserialize_result(json_test, test)
+    _unserialize_node_metadata(json_test, test)
     return test
 
 
-def _unserialize_hook_data(js):
-    data = Result()
-    data.status = js["status"]
-    data.start_time = parse_iso8601_time(js["start_time"])
-    data.end_time = parse_iso8601_time(js["end_time"]) if js["end_time"] else None
-    for step in map(_unserialize_step_data, js["steps"]):
-        data.add_step(step)
+def _unserialize_suite_result(json_suite):
+    suite = SuiteResult(json_suite["name"], json_suite["description"])
+    _unserialize_node_metadata(json_suite, suite)
+    suite.start_time = _unserialize_time(json_suite["start_time"])
+    suite.end_time = _unserialize_time(json_suite["end_time"])
 
-    return data
+    if "suite_setup" in json_suite:
+        suite.suite_setup = Result()
+        _unserialize_result(json_suite["suite_setup"], suite.suite_setup)
 
+    for json_test in json_suite["tests"]:
+        suite.add_test(_unserialize_test_result(json_test))
 
-def _unserialize_suite_data(js):
-    suite = SuiteResult(js["name"], js["description"])
-    suite.start_time = parse_iso8601_time(js["start_time"])
-    suite.end_time = parse_iso8601_time(js["end_time"]) if js["end_time"] else None
-    suite.tags = js["tags"]
-    suite.properties = js["properties"]
-    suite.links = [(link["url"], link["name"]) for link in js["links"]]
+    if "suite_teardown" in json_suite:
+        suite.suite_teardown = Result()
+        _unserialize_result(json_suite["suite_teardown"], suite.suite_teardown)
 
-    if "suite_setup" in js:
-        suite.suite_setup = _unserialize_hook_data(js["suite_setup"])
-
-    for js_test in js["tests"]:
-        test = _unserialize_test_data(js_test)
-        suite.add_test(test)
-
-    if "suite_teardown" in js:
-        suite.suite_teardown = _unserialize_hook_data(js["suite_teardown"])
-
-    for js_suite in js["suites"]:
-        sub_suite = _unserialize_suite_data(js_suite)
-        suite.add_suite(sub_suite)
+    for json_sub_suite in json_suite["suites"]:
+        suite.add_suite(_unserialize_suite_result(json_sub_suite))
 
     return suite
 
 
-def load_report_from_file(filename):
+def _unserialize_report(json_report):
     report = BoundReport()
+
+    report.title = json_report["title"]
+    report.info = json_report["info"]
+    report.start_time = _unserialize_time(json_report["start_time"])
+    report.end_time = _unserialize_time(json_report["end_time"])
+    report.report_generation_time = _unserialize_time(json_report["generation_time"])
+    report.nb_threads = json_report["nb_threads"]
+
+    if "test_session_setup" in json_report:
+        report.test_session_setup = Result()
+        _unserialize_result(json_report["test_session_setup"], report.test_session_setup)
+
+    for json_suite in json_report["suites"]:
+        report.add_suite(_unserialize_suite_result(json_suite))
+
+    if "test_session_teardown" in json_report:
+        report.test_session_teardown = Result()
+        _unserialize_result(json_report["test_session_teardown"], report.test_session_teardown)
+
+    return report
+
+
+def load_report_from_file(filename):
     try:
         with open(filename, "r") as fh:
             js_content = fh.read()
@@ -256,24 +280,7 @@ def load_report_from_file(filename):
     if report_version >= 2.0:
         raise IncompatibleReportFile("Incompatible report version: got %s while 1.x is supported" % report_version)
 
-    report.title = js["title"]
-    report.info = js["info"]
-    report.start_time = parse_iso8601_time(js["start_time"])
-    report.end_time = parse_iso8601_time(js["end_time"]) if js["end_time"] else None
-    report.report_generation_time = parse_iso8601_time(js["generation_time"]) if js["generation_time"] else None
-    report.nb_threads = js["nb_threads"]
-
-    if "test_session_setup" in js:
-        report.test_session_setup = _unserialize_hook_data(js["test_session_setup"])
-
-    for js_suite in js["suites"]:
-        suite = _unserialize_suite_data(js_suite)
-        report.add_suite(suite)
-
-    if "test_session_teardown" in js:
-        report.test_session_teardown = _unserialize_hook_data(js["test_session_teardown"])
-
-    return report
+    return _unserialize_report(js)
 
 
 class JsonBackend(FileReportBackend, ReportUnserializerMixin):
