@@ -21,7 +21,7 @@ from lemoncheesecake.reporting.report import (
     Log, Check, Attachment, Url, Step, Result, TestResult, SuiteResult,
     format_time_as_iso8601, parse_iso8601_time
 )
-from lemoncheesecake.exceptions import ProgrammingError, InvalidReportFile, IncompatibleReportFile
+from lemoncheesecake.exceptions import InvalidReportFile, IncompatibleReportFile
 
 DEFAULT_INDENT_LEVEL = 4
 
@@ -43,171 +43,162 @@ def indent_xml(elem, level=0, indent_level=DEFAULT_INDENT_LEVEL):
             elem.tail = i
 
 
-def set_node_attr(node, attr_name, attr_value):
-    if six.PY3:
-        node.attrib[attr_name] = attr_value
-    else:
-        node.attrib[attr_name] = attr_value if type(attr_value) is unicode else unicode(attr_value, "utf-8")
-
-
 def make_xml_node(name, *args):
     node = E(name)
     i = 0
     while i < len(args):
         attr_name, attr_value = args[i], args[i+1]
-        if attr_value is not None:
-            set_node_attr(node, attr_name, attr_value)
+        node.attrib[attr_name] = attr_value
         i += 2
     return node
 
 
-def make_xml_child(parent_node, name, *args):
-    node = make_xml_node(name, *args)
-    parent_node.append(node)
-    return node
+def make_xml_child(parent, name, *args):
+    child = make_xml_node(name, *args)
+    parent.append(child)
+    return child
 
 
-def _add_time_attr(node, name, value):
-    if not value:
-        return
-    node.attrib[name] = format_time_as_iso8601(value)
+def _serialize_time(value):
+    return format_time_as_iso8601(value)
 
 
 def _serialize_bool(value):
     return "true" if value else "false"
 
 
-def _serialize_steps(steps, parent_node):
+def _serialize_steps(steps, xml_result):
     for step in steps:
-        step_node = make_xml_child(parent_node, "step", "description", step.description)
-        _add_time_attr(step_node, "start-time", step.start_time)
-        _add_time_attr(step_node, "end-time", step.end_time)
+        xml_step = make_xml_child(
+            xml_result, "step",
+            "description", step.description,
+            "start-time", _serialize_time(step.start_time)
+        )
+        if step.end_time is not None:
+            xml_step.attrib["end-time"] = _serialize_time(step.end_time)
         for entry in step.entries:
             if isinstance(entry, Log):
-                log_node = make_xml_child(
-                    step_node, "log",
+                xml_log = make_xml_child(
+                    xml_step, "log",
                     "level", entry.level,
-                    "time", format_time_as_iso8601(entry.time)
+                    "time", _serialize_time(entry.time)
                 )
-                log_node.text = entry.message
+                xml_log.text = entry.message
             elif isinstance(entry, Attachment):
-                attachment_node = make_xml_child(
-                    step_node, "attachment",
+                xml_attachment = make_xml_child(
+                    xml_step, "attachment",
                     "description", entry.description,
                     "as-image", _serialize_bool(entry.as_image),
-                    "time", format_time_as_iso8601(entry.time)
+                    "time", _serialize_time(entry.time)
                 )
-                attachment_node.text = entry.filename
+                xml_attachment.text = entry.filename
             elif isinstance(entry, Url):
-                url_node = make_xml_child(
-                    step_node, "url",
+                xml_url = make_xml_child(
+                    xml_step, "url",
                     "description", entry.description,
-                    "time", format_time_as_iso8601(entry.time)
+                    "time", _serialize_time(entry.time)
                 )
-                url_node.text = entry.url
+                xml_url.text = entry.url
             else:  # TestCheck
-                check_node = make_xml_child(
-                    step_node, "check",
+                xml_check = make_xml_child(
+                    xml_step, "check",
                     "description", entry.description,
                     "is-successful", _serialize_bool(entry.is_successful),
-                    "time", format_time_as_iso8601(entry.time)
+                    "time", _serialize_time(entry.time)
                 )
-                check_node.text = entry.details
+                xml_check.text = entry.details
 
 
-def _serialize_test_data(test):
-    test_node = make_xml_node(
-        "test", "name", test.name, "description", test.description,
-        "status", test.status, "status-details", test.status_details
-    )
-    _add_time_attr(test_node, "start-time", test.start_time)
-    _add_time_attr(test_node, "end-time", test.end_time)
-    for tag in test.tags:
-        tag_node = make_xml_child(test_node, "tag")
-        tag_node.text = tag
-    for name, value in test.properties.items():
-        property_node = make_xml_child(test_node, "property", "name", name)
-        property_node.text = value
-    for link in test.links:
-        link_node = make_xml_child(test_node, "link", "name", link[1])
-        link_node.text = link[0]
-    _serialize_steps(test.get_steps(), test_node)
-
-    return test_node
+def _serialize_result(result, xml_result):
+    if result.status:
+        xml_result.attrib["status"] = result.status
+    if result.status_details:
+        xml_result.attrib["status-details"] = result.status_details
+    xml_result.attrib["start-time"] = _serialize_time(result.start_time)
+    if result.end_time is not None:
+        xml_result.attrib["end-time"] = _serialize_time(result.end_time)
+    _serialize_steps(result.get_steps(), xml_result)
 
 
-def _serialize_hook_data(data, node):
-    node.attrib["status"] = data.status or ""
-    _add_time_attr(node, "start-time", data.start_time)
-    _add_time_attr(node, "end-time", data.end_time)
-    _serialize_steps(data.get_steps(), node)
+def _serialize_node_metadata(obj, xml_node):
+    xml_node.attrib["name"] = obj.name
+    xml_node.attrib["description"] = obj.description
+
+    for tag in obj.tags:
+        xml_tag = make_xml_child(xml_node, "tag")
+        xml_tag.text = tag
+    for name, value in obj.properties.items():
+        xml_property = make_xml_child(xml_node, "property", "name", name)
+        xml_property.text = value
+    for link in obj.links:
+        xml_link = make_xml_child(xml_node, "link")
+        if link[1]:
+            xml_link.attrib["name"] = link[1]
+        xml_link.text = link[0]
 
 
-def _serialize_suite_data(suite):
-    suite_node = make_xml_node("suite", "name", suite.name, "description", suite.description)
-    _add_time_attr(suite_node, "start-time", suite.start_time)
-    _add_time_attr(suite_node, "end-time", suite.end_time)
-    for tag in suite.tags:
-        tag_node = make_xml_child(suite_node, "tag")
-        tag_node.text = tag
-    for name, value in suite.properties.items():
-        property_node = make_xml_child(suite_node, "property", "name", name)
-        property_node.text = value
-    for link in suite.links:
-        link_node = make_xml_child(suite_node, "link", "name", link[1])
-        link_node.text = link[0]
+def _serialize_test_result(test):
+    xml_test = make_xml_node("test")
+    _serialize_node_metadata(test, xml_test)
+    _serialize_result(test, xml_test)
+    return xml_test
+
+
+def _serialize_suite_result(suite):
+    xml_suite = make_xml_node("suite")
+
+    _serialize_node_metadata(suite, xml_suite)
+
+    xml_suite.attrib["start-time"] = _serialize_time(suite.start_time)
+    if suite.end_time is not None:
+        xml_suite.attrib["end-time"] = _serialize_time(suite.end_time)
 
     # before suite
     if suite.suite_setup:
-        _serialize_hook_data(suite.suite_setup, make_xml_child(suite_node, "suite-setup"))
+        _serialize_result(suite.suite_setup, make_xml_child(xml_suite, "suite-setup"))
 
     # tests
-    for test in suite.get_tests():
-        test_node = _serialize_test_data(test)
-        suite_node.append(test_node)
+    xml_suite.extend(map(_serialize_test_result, suite.get_tests()))
 
     # sub suites
-    for sub_suite in suite.get_suites():
-        sub_suite_node = _serialize_suite_data(sub_suite)
-        suite_node.append(sub_suite_node)
+    xml_suite.extend(map(_serialize_suite_result, suite.get_suites()))
 
     # after suite
     if suite.suite_teardown:
-        _serialize_hook_data(suite.suite_teardown, make_xml_child(suite_node, "suite-teardown"))
+        _serialize_result(suite.suite_teardown, make_xml_child(xml_suite, "suite-teardown"))
 
-    return suite_node
+    return xml_suite
 
 
-def serialize_report_as_tree(report):
-    xml = E("lemoncheesecake-report")
-    xml.attrib["lemoncheesecake-version"] = lemoncheesecake.__version__
-    xml.attrib["report-version"] = "1.0"
-    _add_time_attr(xml, "start-time", report.start_time)
-    _add_time_attr(xml, "end-time", report.end_time)
-    _add_time_attr(xml, "generation-time", time.time())
-    xml.attrib["nb-threads"] = str(report.nb_threads)
+def serialize_report_as_xml_tree(report):
+    xml_report = E("lemoncheesecake-report")
+    xml_report.attrib["lemoncheesecake-version"] = lemoncheesecake.__version__
+    xml_report.attrib["report-version"] = "1.1"
+    xml_report.attrib["start-time"] = _serialize_time(report.start_time)
+    if report.end_time is not None:
+        xml_report.attrib["end-time"] = _serialize_time(report.end_time)
+    xml_report.attrib["generation-time"] = _serialize_time(time.time())
+    xml_report.attrib["nb-threads"] = str(report.nb_threads)
 
-    title_node = make_xml_child(xml, "title")
-    title_node.text = report.title
+    xml_title = make_xml_child(xml_report, "title")
+    xml_title.text = report.title
     for name, value in report.info:
-        info_node = make_xml_child(xml, "info", "name", name)
-        info_node.text = value
+        xml_info = make_xml_child(xml_report, "info", "name", name)
+        xml_info.text = value
 
     if report.test_session_setup:
-        _serialize_hook_data(report.test_session_setup, make_xml_child(xml, "test-session-setup"))
+        _serialize_result(report.test_session_setup, make_xml_child(xml_report, "test-session-setup"))
 
-    for suite in report.get_suites():
-        suite_node = _serialize_suite_data(suite)
-        xml.append(suite_node)
+    xml_report.extend(map(_serialize_suite_result, report.get_suites()))
 
     if report.test_session_teardown:
-        _serialize_hook_data(report.test_session_teardown, make_xml_child(xml, "test-session-teardown"))
+        _serialize_result(report.test_session_teardown, make_xml_child(xml_report, "test-session-teardown"))
 
-    return xml
+    return xml_report
 
 
 def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
-    xml_report = serialize_report_as_tree(report)
+    xml_report = serialize_report_as_xml_tree(report)
     indent_xml(xml_report, indent_level=indent_level)
 
     if six.PY3:
@@ -222,7 +213,7 @@ def save_report_into_file(report, filename, indent_level=DEFAULT_INDENT_LEVEL):
         fh.write(content)
 
 
-def _unserialize_datetime(value):
+def _unserialize_time(value):
     return parse_iso8601_time(value)
 
 
@@ -232,94 +223,118 @@ def _unserialize_bool(value):
     elif value == "false":
         return False
     else:
-        raise ProgrammingError("Invalid boolean representation: '%s'" % value)
+        raise ValueError("Invalid boolean representation: '%s'" % value)
 
 
-def _unserialize_step_data(xml):
-    step = Step(xml.attrib["description"])
-    step.start_time = _unserialize_datetime(xml.attrib["start-time"])
-    step.end_time = _unserialize_datetime(xml.attrib["end-time"]) if "end-time" in xml.attrib else None
-    for xml_entry in xml:
+def _unserialize_step(xml_step):
+    step = Step(xml_step.attrib["description"])
+    step.start_time = _unserialize_time(xml_step.attrib["start-time"])
+    step.end_time = _unserialize_time(xml_step.attrib["end-time"]) if "end-time" in xml_step.attrib else None
+    for xml_entry in xml_step:
         if xml_entry.tag == "log":
             entry = Log(
-                xml_entry.attrib["level"], xml_entry.text, _unserialize_datetime(xml_entry.attrib["time"])
+                xml_entry.attrib["level"], xml_entry.text, _unserialize_time(xml_entry.attrib["time"])
             )
         elif xml_entry.tag == "attachment":
             entry = Attachment(
                 xml_entry.attrib["description"], xml_entry.text,
                 _unserialize_bool(xml_entry.attrib["as-image"]),
-                _unserialize_datetime(xml_entry.attrib["time"])
+                _unserialize_time(xml_entry.attrib["time"])
             )
         elif xml_entry.tag == "url":
             entry = Url(
-                xml_entry.attrib["description"], xml_entry.text, _unserialize_datetime(xml_entry.attrib["time"])
+                xml_entry.attrib["description"], xml_entry.text, _unserialize_time(xml_entry.attrib["time"])
             )
         elif xml_entry.tag == "check":
             entry = Check(
                 xml_entry.attrib["description"], _unserialize_bool(xml_entry.attrib["is-successful"]),
-                xml_entry.text, _unserialize_datetime(xml_entry.attrib["time"])
+                xml_entry.text, _unserialize_time(xml_entry.attrib["time"])
             )
         else:
-            raise ProgrammingError("Unknown tag '%s' for step" % xml_entry.tag)
+            raise ValueError("Unknown tag '%s' for step" % xml_entry.tag)
         step.entries.append(entry)
     return step
 
 
-def _unserialize_test_data(xml):
-    test = TestResult(xml.attrib["name"], xml.attrib["description"])
-    test.status = xml.attrib.get("status", None)
-    test.status_details = xml.attrib.get("status-details", None)
-    test.start_time = _unserialize_datetime(xml.attrib["start-time"])
-    test.end_time = _unserialize_datetime(xml.attrib["end-time"]) if "end-time" in xml.attrib else None
-    test.tags = [node.text for node in xml.xpath("tag")]
-    test.properties = {node.attrib["name"]: node.text for node in xml.xpath("property")}
-    test.links = [(link.text, link.attrib.get("name", None)) for link in xml.xpath("link")]
-    for step in map(_unserialize_step_data, xml.xpath("step")):
-        test.add_step(step)
+def _unserialize_result(xml_result, result):
+    result.status = xml_result.attrib.get("status", None)
+    # status_details for non-test results has been introduced in report version 1.1:
+    result.status_details = xml_result.attrib.get("status-details", None)
+    result.start_time = _unserialize_time(xml_result.attrib["start-time"])
+    result.end_time = _unserialize_time(xml_result.attrib["end-time"]) if "end-time" in xml_result.attrib else None
+    for xml_step in xml_result.xpath("step"):
+        result.add_step(_unserialize_step(xml_step))
+
+
+def _unserialize_node_metadata(xml_node, node):
+    node.tags = [n.text for n in xml_node.xpath("tag")]
+    node.properties = {n.attrib["name"]: n.text for n in xml_node.xpath("property")}
+    node.links = [(n.text, n.attrib.get("name", None)) for n in xml_node.xpath("link")]
+
+
+def _unserialize_test_result(xml_result):
+    test = TestResult(xml_result.attrib["name"], xml_result.attrib["description"])
+    _unserialize_result(xml_result, test)
+    _unserialize_node_metadata(xml_result, test)
     return test
 
 
-def _unserialize_hook_data(xml):
-    data = Result()
-    data.status = xml.attrib["status"] or None
-    data.start_time = _unserialize_datetime(xml.attrib["start-time"])
-    data.end_time = _unserialize_datetime(xml.attrib["end-time"]) if "end-time" in xml.attrib else None
-    for step in map(_unserialize_step_data, xml.xpath("step")):
-        data.add_step(step)
-    return data
+def _unserialize_suite_result(xml_suite):
+    suite = SuiteResult(xml_suite.attrib["name"], xml_suite.attrib["description"])
+    suite.start_time = _unserialize_time(xml_suite.attrib["start-time"])
+    suite.end_time = _unserialize_time(xml_suite.attrib["end-time"]) if "end-time" in xml_suite.attrib else None
+    _unserialize_node_metadata(xml_suite, suite)
 
+    xml_setup = xml_suite.xpath("suite-setup")
+    xml_setup = xml_setup[0] if len(xml_setup) > 0 else None
+    if xml_setup is not None:
+        suite.suite_setup = Result()
+        _unserialize_result(xml_setup, suite.suite_setup)
 
-def _unserialize_suite_data(xml):
-    suite = SuiteResult(xml.attrib["name"], xml.attrib["description"])
-    suite.start_time = _unserialize_datetime(xml.attrib["start-time"])
-    suite.end_time = _unserialize_datetime(xml.attrib["end-time"]) if "end-time" in xml.attrib else None
-    suite.tags = [node.text for node in xml.xpath("tag")]
-    suite.properties = {node.attrib["name"]: node.text for node in xml.xpath("property")}
-    suite.links = [(link.text, link.attrib.get("name", None)) for link in xml.xpath("link")]
+    for xml_test in xml_suite.xpath("test"):
+        suite.add_test(_unserialize_test_result(xml_test))
 
-    suite_setup = xml.xpath("suite-setup")
-    suite_setup = suite_setup[0] if len(suite_setup) > 0 else None
-    if suite_setup is not None:
-        suite.suite_setup = _unserialize_hook_data(suite_setup)
+    xml_teardown = xml_suite.xpath("suite-teardown")
+    xml_teardown = xml_teardown[0] if len(xml_teardown) > 0 else None
+    if xml_teardown is not None:
+        suite.suite_teardown = Result()
+        _unserialize_result(xml_teardown, suite.suite_teardown)
 
-    for xml_test in xml.xpath("test"):
-        test = _unserialize_test_data(xml_test)
-        suite.add_test(test)
-
-    suite_teardown = xml.xpath("suite-teardown")
-    suite_teardown = suite_teardown[0] if len(suite_teardown) > 0 else None
-    if suite_teardown is not None:
-        suite.suite_teardown = _unserialize_hook_data(suite_teardown)
-
-    for xml_suite in xml.xpath("suite"):
-        sub_suite = _unserialize_suite_data(xml_suite)
-        suite.add_suite(sub_suite)
+    for xml_suite in xml_suite.xpath("suite"):
+        suite.add_suite(_unserialize_suite_result(xml_suite))
 
     return suite
 
 
-def load_report_from_file(filename):
+def _unserialize_report(xml_report):
     report = BoundReport()
+
+    report.start_time = _unserialize_time(xml_report.attrib["start-time"])
+    report.end_time = _unserialize_time(xml_report.attrib["end-time"]) if "end-time" in xml_report.attrib else None
+    report.report_generation_time = _unserialize_time(xml_report.attrib["generation-time"]) if "generation-time" in xml_report.attrib else None
+    report.nb_threads = int(xml_report.attrib["nb-threads"])
+    report.title = xml_report.xpath("title")[0].text
+    report.info = [(node.attrib["name"], node.text) for node in xml_report.xpath("info")]
+
+    xml_setup = xml_report.xpath("test-session-setup")
+    xml_setup = xml_setup[0] if len(xml_setup) else None
+    if xml_setup is not None:
+        report.test_session_setup = Result()
+        _unserialize_result(xml_setup, report.test_session_setup)
+
+    for xml_suite in xml_report.xpath("suite"):
+        report.add_suite(_unserialize_suite_result(xml_suite))
+
+    xml_teardown = xml_report.xpath("test-session-teardown")
+    xml_teardown = xml_teardown[0] if len(xml_teardown) else None
+    if xml_teardown is not None:
+        report.test_session_teardown = Result()
+        _unserialize_result(xml_teardown, report.test_session_teardown)
+
+    return report
+
+
+def load_report_from_file(filename):
     try:
         with open(filename, "r") as fh:
             xml = ET.parse(fh)
@@ -336,28 +351,7 @@ def load_report_from_file(filename):
     if report_version >= 2.0:
         raise IncompatibleReportFile("Incompatible report version: got %s while 1.x is supported" % report_version)
 
-    report.start_time = _unserialize_datetime(root.attrib["start-time"]) if "start-time" in root.attrib else None
-    report.end_time = _unserialize_datetime(root.attrib["end-time"]) if "end-time" in root.attrib else None
-    report.report_generation_time = _unserialize_datetime(root.attrib["generation-time"]) if "generation-time" in root.attrib else None
-    report.nb_threads = int(root.attrib["nb-threads"])
-    report.title = root.xpath("title")[0].text
-    report.info = [[node.attrib["name"], node.text] for node in root.xpath("info")]
-
-    test_session_setup = xml.xpath("test-session-setup")
-    test_session_setup = test_session_setup[0] if len(test_session_setup) else None
-    if test_session_setup is not None:
-        report.test_session_setup = _unserialize_hook_data(test_session_setup)
-
-    for xml_suite in root.xpath("suite"):
-        suite = _unserialize_suite_data(xml_suite)
-        report.add_suite(suite)
-
-    test_session_teardown = xml.xpath("test-session-teardown")
-    test_session_teardown = test_session_teardown[0] if len(test_session_teardown) else None
-    if test_session_teardown is not None:
-        report.test_session_teardown = _unserialize_hook_data(test_session_teardown)
-
-    return report
+    return _unserialize_report(root)
 
 
 class XmlBackend(FileReportBackend, ReportUnserializerMixin):

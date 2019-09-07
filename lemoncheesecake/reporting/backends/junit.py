@@ -24,85 +24,74 @@ except ImportError:
 from lemoncheesecake.reporting.backend import FileReportBackend
 from lemoncheesecake.reporting.report import Log, Check, format_time_as_iso8601
 from lemoncheesecake.consts import LOG_LEVEL_ERROR
-from lemoncheesecake.reporting.backends.xml import make_xml_child, make_xml_node, indent_xml, set_node_attr, \
-    DEFAULT_INDENT_LEVEL
+from lemoncheesecake.reporting.backends.xml import make_xml_child, make_xml_node, indent_xml, DEFAULT_INDENT_LEVEL
 
 
-def format_duration(duration):
+def _serialization_duration(duration):
     return "%d.%03d" % (int(duration), Decimal(round(duration, 3)) % 1 * 1000)
 
 
-def _serialize_test_data(test):
-    junit_test = make_xml_node(
+def _serialize_test_result(test):
+    xml_test = make_xml_node(
         "testcase",
         "name", test.name,
-        "time", format_duration(test.duration if test.end_time else 0),
+        "time", _serialization_duration(test.duration or 0),
     )
     
     if test.status == "skipped":
-        make_xml_child(junit_test, "skipped")
+        make_xml_child(xml_test, "skipped")
     else:
         for step in test.get_steps():
             for step_entry in step.entries:
                 if isinstance(step_entry, Check) and step_entry.is_successful is False:
-                    make_xml_child(junit_test, "failure", "message", "failed check in step '%s'" % step.description)
+                    make_xml_child(xml_test, "failure", "message", "failed check in step '%s'" % step.description)
                 elif isinstance(step_entry, Log) and step_entry.level == LOG_LEVEL_ERROR:
-                    make_xml_child(junit_test, "error", "message", "error log in step '%s'" % step.description)
+                    make_xml_child(xml_test, "error", "message", "error log in step '%s'" % step.description)
 
-    return junit_test
+    return xml_test
 
 
-def _serialize_suite_data(suite):
-    junit_testsuites = []
+def _serialize_suite_result(suite):
     tests = suite.get_tests()
-    if tests:
-        junit_testsuite = make_xml_node(
-            "testsuite", 
-            "name", suite.path,
-            "tests", str(len(tests)),
-            "failures", str(len(list(filter(lambda t: t.status == "failed", tests)))),
-            "skipped", str(len(list(filter(lambda t: t.status == "skipped", tests)))),
-            "time", format_duration(reduce(lambda x, y: x + y, (t.duration for t in tests if t.end_time), 0)),
-            "timestamp", format_time_as_iso8601(min(t.start_time for t in tests))
-        )
-        junit_testsuites.append(junit_testsuite)
-        for test in tests:
-            junit_test = _serialize_test_data(test)
-            junit_testsuite.append(junit_test)
-    
-    for sub_suite in suite.get_suites():
-        junit_sub_testsuites = _serialize_suite_data(sub_suite)
-        for junit_sub_testsuite in junit_sub_testsuites:
-            junit_testsuites.append(junit_sub_testsuite)
-    
-    return junit_testsuites
+    xml_suite = make_xml_node(
+        "testsuite",
+        "name", suite.path,
+        "tests", str(len(tests)),
+        "failures", str(len(list(filter(lambda t: t.status == "failed", tests)))),
+        "skipped", str(len(list(filter(lambda t: t.status == "skipped", tests)))),
+        "time", _serialization_duration(reduce(lambda x, y: x + y, (t.duration or 0 for t in tests), 0)),
+        "timestamp", format_time_as_iso8601(min(t.start_time for t in tests))
+    )
+    xml_suite.extend(map(_serialize_test_result, tests))
+    return xml_suite
 
 
-def serialize_report_as_tree(report):
-    junit_report_testsuites = E("testsuites")
+def serialize_report_as_xml_tree(report):
+    xml_report = E("testsuites")
     
     report_stats = report.stats()
-    set_node_attr(junit_report_testsuites, "tests", str(report_stats.test_statuses["passed"]))
-    set_node_attr(junit_report_testsuites, "failures", str(report_stats.test_statuses["failed"]))
-    if report.end_time is not None:
-        set_node_attr(junit_report_testsuites, "time", format_duration(report.end_time - report.start_time))
-    
-    for suite in report.get_suites():
-        junit_testsuites = _serialize_suite_data(suite)
-        for junit_testsuite in junit_testsuites:
-            junit_report_testsuites.append(junit_testsuite)
 
-    return junit_report_testsuites
+    xml_report.attrib["tests"] = str(report_stats.test_statuses["passed"])
+    xml_report.attrib["failures"] = str(report_stats.test_statuses["failed"])
+
+    if report.end_time is not None:
+        xml_report.attrib["time"] = _serialization_duration(report.end_time - report.start_time)
+
+    for suite in report.all_suites():
+        if suite.get_tests():
+            xml_report.append(_serialize_suite_result(suite))
+
+    return xml_report
 
 
 def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
-    report = serialize_report_as_tree(report)
-    indent_xml(report, indent_level=indent_level)
+    xml_report = serialize_report_as_xml_tree(report)
+    indent_xml(xml_report, indent_level=indent_level)
 
     if six.PY3:
-        return ET.tostring(report, pretty_print=True, encoding="unicode")
+        return ET.tostring(xml_report, pretty_print=True, encoding="unicode")
     else:
-        return ET.tostring(report, pretty_print=True, xml_declaration=True, encoding="utf-8")
+        return ET.tostring(xml_report, pretty_print=True, xml_declaration=True, encoding="utf-8")
 
 
 def save_report_into_file(report, filename, indent_level=DEFAULT_INDENT_LEVEL):
