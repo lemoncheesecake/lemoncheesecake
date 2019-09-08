@@ -24,30 +24,30 @@ class Diff:
         return len(self.added) + len(self.removed) + len(self.status_changed) == 0
 
 
-def compute_diff(old_suites, new_suites):
+def compute_diff(report_1_suites, report_2_suites):
     diff = Diff()
 
-    new_tests = {test.path: test for test in flatten_tests(new_suites)}
-    for old_test in flatten_tests(old_suites):
+    report_2_tests = {test.path: test for test in flatten_tests(report_2_suites)}
+    for report_1_test in flatten_tests(report_1_suites):
         # handle removed tests
         try:
-            new_test = find_test(new_suites, old_test.path)
+            report_2_test = find_test(report_2_suites, report_1_test.path)
         except CannotFindTreeNode:
-            diff.removed.append(old_test)
+            diff.removed.append(report_1_test)
             continue
 
         # handle status-changed tests
-        if new_test.status != old_test.status:
-            if old_test.status not in diff.status_changed:
-                diff.status_changed[old_test.status] = {}
-            if new_test.status not in diff.status_changed[old_test.status]:
-                diff.status_changed[old_test.status][new_test.status] = []
-            diff.status_changed[old_test.status][new_test.status].append(new_test)
+        if report_2_test.status != report_1_test.status:
+            if report_1_test.status not in diff.status_changed:
+                diff.status_changed[report_1_test.status] = {}
+            if report_2_test.status not in diff.status_changed[report_1_test.status]:
+                diff.status_changed[report_1_test.status][report_2_test.status] = []
+            diff.status_changed[report_1_test.status][report_2_test.status].append(report_2_test)
 
-        del new_tests[new_test.path]
+        del report_2_tests[report_2_test.path]
 
     # handle added tests
-    diff.added.extend(new_tests.values())
+    diff.added.extend(report_2_tests.values())
 
     return diff
 
@@ -66,19 +66,19 @@ def render_test_with_status(test):
     return "%s (%s)" % (test.path, colored(test.status, test_status_to_color(test.status)))
 
 
-def render_test_with_status_changed(test, old_status):
+def render_test_with_status_changed(test, former_status):
     return "%s (%s => %s)" % (
         test.path,
-        colored(old_status, test_status_to_color(old_status)),
+        colored(former_status, test_status_to_color(former_status)),
         colored(test.status, test_status_to_color(test.status))
     )
 
 
 def flatten_test_status_changed(status_changed):
-    for old_status in ORDERED_STATUSES:
+    for former_status in ORDERED_STATUSES:
         for new_status in ORDERED_STATUSES:
-            for test in status_changed.get(old_status, {}).get(new_status, []):
-                yield test, old_status
+            for test in status_changed.get(former_status, {}).get(new_status, []):
+                yield test, former_status
 
 
 def display_diff(diff):
@@ -110,25 +110,25 @@ class DiffCommand(Command):
     def add_cli_args(self, cli_parser):
         add_result_filter_cli_args(cli_parser)
         group = cli_parser.add_argument_group("Diff")
-        group.add_argument("old_report_path", help="Old report path")
-        group.add_argument("new_report_path", help="New report path")
+        group.add_argument("report_1_path", help="Report 1 path")
+        group.add_argument("report_2_path", help="Report 2 path")
 
     def run_cmd(self, cli_args):
         colorama.init()
 
         reporting_backends = auto_detect_reporting_backends()
 
-        old_report = load_report(cli_args.old_report_path, reporting_backends)
-        new_report = load_report(cli_args.new_report_path, reporting_backends)
+        report_1 = load_report(cli_args.report_1_path, reporting_backends)
+        report_2 = load_report(cli_args.report_2_path, reporting_backends)
         filtr = make_result_filter(cli_args)
 
-        old_suites = list(old_report.all_suites(filtr))
-        new_suites = list(new_report.all_suites(filtr))
+        report_1_suites = list(report_1.all_suites(filtr))
+        report_2_suites = list(report_2.all_suites(filtr))
 
-        if len(old_suites) == 0 and len(new_suites) == 0:
+        if len(report_1_suites) == 0 and len(report_2_suites) == 0:
             raise UserError("The filter does not match any test on both reports")
 
-        diff = compute_diff(old_suites, new_suites)
+        diff = compute_diff(report_1_suites, report_2_suites)
         display_diff(diff)
 
         return 0
