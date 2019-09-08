@@ -31,7 +31,7 @@ def _test_result_filter(suites, filtr, expected, fixtures=None):
         suites = (suites,)
 
     report = run_suites(load_suites_from_classes(suites), fixtures=fixtures)
-    results = list(report.all_results(filtr))
+    results = list(filter(filtr, report.all_results()))
 
     assert len(results) == len(expected)
     for expected_result in expected:
@@ -43,7 +43,7 @@ def _test_result_filter(suites, filtr, expected, fixtures=None):
 
 def _test_step_filter(func, filtr, expected):
     report = run_func_in_test(func)
-    steps = list(report.all_steps(filtr))
+    steps = list(filter(filtr, report.all_steps()))
 
     assert [s.description for s in steps] == expected
 
@@ -1396,7 +1396,7 @@ def test_step_filter_through_parent_ok():
 
     report = run_suite_class(suite)
 
-    steps = list(report.all_steps(StepFilter(paths=("suite.test",))))
+    steps = list(filter(StepFilter(paths=("suite.test",)), report.all_steps()))
 
     assert [s.description for s in steps] == ["mystep"]
 
@@ -1415,7 +1415,7 @@ def test_step_filter_in_suite_setup():
 
     report = run_suite_class(suite)
 
-    steps = list(report.all_steps(StepFilter(grep=re.compile("in setup_suite"))))
+    steps = list(filter(StepFilter(grep=re.compile("in setup_suite")), report.all_steps()))
 
     assert [s.description for s in steps] == ["setup_suite"]
 
@@ -1435,7 +1435,7 @@ def test_step_filter_in_session_setup():
 
     report = run_suite_class(suite, fixtures=(fixt,))
 
-    steps = list(report.all_steps(StepFilter(grep=re.compile("in setup_session"))))
+    steps = list(filter(StepFilter(grep=re.compile("in setup_session")), report.all_steps()))
 
     assert [s.description for s in steps] == ["setup_session"]
 
@@ -1450,7 +1450,7 @@ def test_step_filter_through_parent_ko():
 
     report = run_suite_class(suite)
 
-    steps = list(report.all_steps(StepFilter(paths=("unknown.test",))))
+    steps = list(filter(StepFilter(paths=("unknown.test",)), report.all_steps()))
 
     assert len(steps) == 0
 

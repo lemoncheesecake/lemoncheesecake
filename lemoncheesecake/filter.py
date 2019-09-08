@@ -393,7 +393,7 @@ def make_result_filter(cli_args, only_executed_tests=False):
 def _make_from_report_filter(cli_args, only_executed_tests=False):
     report = load_report(cli_args.from_report or DEFAULT_REPORT_DIR_NAME)
     filtr = make_result_filter(cli_args, only_executed_tests=only_executed_tests)
-    return FromTestsFilter(report.all_tests(filtr))
+    return FromTestsFilter(filter(filtr, report.all_tests()))
 
 
 def make_test_filter(cli_args):

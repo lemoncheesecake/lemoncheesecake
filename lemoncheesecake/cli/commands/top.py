@@ -43,7 +43,7 @@ class TopTests(Command):
 
     @staticmethod
     def get_top_tests(report, filtr):
-        tests = TopTests._get_tests_ordered_by_duration(report.all_tests(filtr))
+        tests = TopTests._get_tests_ordered_by_duration(filter(filtr, report.all_tests()))
         total_duration = get_total_duration(tests)
         return [TopTests._format_test_entry(test, total_duration) for test in tests]
 
@@ -184,7 +184,7 @@ class TopSteps(Command):
 
     @staticmethod
     def get_top_steps(report, filtr):
-        steps = list(report.all_steps(filtr))
+        steps = list(filter(filtr, report.all_steps()))
         steps_aggregation = TopSteps._get_steps_aggregation(steps)
         return [TopSteps._format_steps_aggregation(*agg) for agg in steps_aggregation]
 

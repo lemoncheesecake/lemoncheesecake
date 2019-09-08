@@ -7,7 +7,7 @@ Created on Mar 26, 2016
 import time
 from decimal import Decimal
 from functools import reduce
-from typing import Union, List, Generator, Iterable, Optional
+from typing import Union, List, Iterable, Optional
 import datetime
 import calendar
 
@@ -17,7 +17,6 @@ from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, \
     filter_suites, normalize_node_hierarchy, TreeNodeHierarchy
-from lemoncheesecake.suite.core import Test
 
 _TEST_STATUSES = "passed", "failed", "skipped", "disabled"
 _DEFAULT_REPORT_TITLE = "Test Report"
@@ -467,14 +466,11 @@ class Report(object):
         else:
             return flatten_suites(self._suites)
 
-    def all_tests(self, filtr=None):
-        # type: (Optional[Callable[[TestResult], bool]]) -> Iterable[TestResult]
-        if filtr:
-            return filter(filtr, flatten_tests(self._suites))
-        else:
-            return flatten_tests(self._suites)
+    def all_tests(self):
+        # type: () -> Iterable[TestResult]
+        return flatten_tests(self._suites)
 
-    def _all_results(self):
+    def all_results(self):
         # type: () -> Iterable[Result]
         if self.test_session_setup:
             yield self.test_session_setup
@@ -483,29 +479,15 @@ class Report(object):
         if self.test_session_teardown:
             yield self.test_session_teardown
 
-    def all_results(self, filtr=None):
-        # type: (Optional[Callable[[TestResult], bool]]) -> Iterable[Result]
-        if filtr:
-            return filter(filtr, self._all_results())
-        else:
-            return self._all_results()
-
-    def _all_steps(self):
+    def all_steps(self):
         # type: () -> Iterable[Step]
         for result in self.all_results():
             for step in result.get_steps():
                 yield step
 
-    def all_steps(self, filtr=None):
-        # type: (Optional[Callable[[Step], bool]]) -> Iterable[Step]
-        if filtr:
-            return filter(filtr, self._all_steps())
-        else:
-            return self._all_steps()
-
 
 def flatten_results(suites):
-    # type: (Iterable[SuiteResult]) -> Generator[Result]
+    # type: (Iterable[SuiteResult]) -> Iterable[Result]
     for suite in flatten_suites(suites):
         if suite.suite_setup:
             yield suite.suite_setup

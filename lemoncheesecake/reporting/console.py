@@ -218,7 +218,7 @@ def print_report(report, filtr=None, max_width=None, explicit=False):
             return
         chunks = renderer.render_results(report.all_results())
     else:
-        results = list(report.all_results(filtr))
+        results = list(filter(filtr, report.all_results()))
         if not results:
             print("The filter does not match anything in the report")
             return
