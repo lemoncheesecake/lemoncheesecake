@@ -5,6 +5,7 @@ from helpers.testtreemockup import report_mockup, suite_mockup, tst_mockup, make
 
 from lemoncheesecake.cli import main
 from lemoncheesecake.reporting.backends.json_ import save_report_into_file
+from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.cli.commands.diff import compute_diff
 
 
@@ -16,37 +17,45 @@ def check_diff(diff, added=[], removed=[], status_changed=[]):
 
 
 def test_added_test():
-    old_suite = suite_mockup("mysuite").add_test(tst_mockup("mytest1"))
-    new_suite = suite_mockup("mysuite").add_test(tst_mockup("mytest1")).add_test(tst_mockup("mytest2"))
+    suite_1 = suite_mockup("mysuite").add_test(tst_mockup("mytest1"))
+    suite_2 = suite_mockup("mysuite").add_test(tst_mockup("mytest1")).add_test(tst_mockup("mytest2"))
+    tests_1 = list(flatten_tests([make_suite_data_from_mockup(suite_1)]))
+    tests_2 = list(flatten_tests([make_suite_data_from_mockup(suite_2)]))
 
-    diff = compute_diff([make_suite_data_from_mockup(old_suite)], [make_suite_data_from_mockup(new_suite)])
+    diff = compute_diff(tests_1, tests_2)
 
     check_diff(diff, added=["mysuite.mytest2"])
 
 
 def test_removed_test():
-    old_suite = suite_mockup("mysuite").add_test(tst_mockup("mytest1")).add_test(tst_mockup("mytest2"))
-    new_suite = suite_mockup("mysuite").add_test(tst_mockup("mytest1"))
+    suite_1 = suite_mockup("mysuite").add_test(tst_mockup("mytest1")).add_test(tst_mockup("mytest2"))
+    suite_2 = suite_mockup("mysuite").add_test(tst_mockup("mytest1"))
+    tests_1 = list(flatten_tests([make_suite_data_from_mockup(suite_1)]))
+    tests_2 = list(flatten_tests([make_suite_data_from_mockup(suite_2)]))
 
-    diff = compute_diff([make_suite_data_from_mockup(old_suite)], [make_suite_data_from_mockup(new_suite)])
+    diff = compute_diff(tests_1, tests_2)
 
     check_diff(diff, removed=["mysuite.mytest2"])
 
 
 def test_passed_to_failed():
-    old_suite = suite_mockup("mysuite").add_test(tst_mockup("mytest1", status="passed"))
-    new_suite = suite_mockup("mysuite").add_test(tst_mockup("mytest1", status="failed"))
+    suite_1 = suite_mockup("mysuite").add_test(tst_mockup("mytest1", status="passed"))
+    suite_2 = suite_mockup("mysuite").add_test(tst_mockup("mytest1", status="failed"))
+    tests_1 = list(flatten_tests([make_suite_data_from_mockup(suite_1)]))
+    tests_2 = list(flatten_tests([make_suite_data_from_mockup(suite_2)]))
 
-    diff = compute_diff([make_suite_data_from_mockup(old_suite)], [make_suite_data_from_mockup(new_suite)])
+    diff = compute_diff(tests_1, tests_2)
 
     check_diff(diff, status_changed=[["mysuite.mytest1", "passed", "failed"]])
 
 
 def test_failed_to_passed():
-    old_suite = suite_mockup("mysuite").add_test(tst_mockup("mytest1", status="failed"))
-    new_suite = suite_mockup("mysuite").add_test(tst_mockup("mytest1", status="passed"))
+    suite_1 = suite_mockup("mysuite").add_test(tst_mockup("mytest1", status="failed"))
+    suite_2 = suite_mockup("mysuite").add_test(tst_mockup("mytest1", status="passed"))
+    tests_1 = list(flatten_tests([make_suite_data_from_mockup(suite_1)]))
+    tests_2 = list(flatten_tests([make_suite_data_from_mockup(suite_2)]))
 
-    diff = compute_diff([make_suite_data_from_mockup(old_suite)], [make_suite_data_from_mockup(new_suite)])
+    diff = compute_diff(tests_1, tests_2)
 
     check_diff(diff, status_changed=[["mysuite.mytest1", "failed", "passed"]])
 

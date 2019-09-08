@@ -10,8 +10,7 @@ from lemoncheesecake.cli.utils import auto_detect_reporting_backends
 from lemoncheesecake.reporting.console import test_status_to_color
 from lemoncheesecake.reporting import load_report
 from lemoncheesecake.filter import add_result_filter_cli_args, make_result_filter
-from lemoncheesecake.testtree import flatten_tests, find_test
-from lemoncheesecake.exceptions import CannotFindTreeNode, UserError
+from lemoncheesecake.exceptions import UserError
 
 ORDERED_STATUSES = "failed", "skipped", "disabled", "passed"
 
@@ -26,15 +25,15 @@ class Diff:
         return not any((self.added, self.removed, self.status_changed))
 
 
-def compute_diff(report_1_suites, report_2_suites):
+def compute_diff(report_1_tests, report_2_tests):
     diff = Diff()
 
-    report_2_tests = {test.path: test for test in flatten_tests(report_2_suites)}
-    for report_1_test in flatten_tests(report_1_suites):
+    report_2_tests = report_2_tests[:]  # make a copy as a list will be modified
+    for report_1_test in report_1_tests:
         # handle removed tests
         try:
-            report_2_test = find_test(report_2_suites, report_1_test.path)
-        except CannotFindTreeNode:
+            report_2_test = next(test for test in report_2_tests if test.path == report_1_test.path)
+        except StopIteration:
             diff.removed.append(report_1_test)
             continue
 
@@ -42,10 +41,10 @@ def compute_diff(report_1_suites, report_2_suites):
         if report_2_test.status != report_1_test.status:
             diff.status_changed[report_1_test.status][report_2_test.status].append(report_2_test)
 
-        del report_2_tests[report_2_test.path]
+        report_2_tests.remove(report_2_test)
 
     # handle added tests
-    diff.added.extend(report_2_tests.values())
+    diff.added.extend(report_2_tests)
 
     return diff
 
@@ -118,15 +117,15 @@ class DiffCommand(Command):
 
         report_1 = load_report(cli_args.report_1_path, reporting_backends)
         report_2 = load_report(cli_args.report_2_path, reporting_backends)
-        result_filter = make_result_filter(cli_args)
+        test_filter = make_result_filter(cli_args)
 
-        report_1_suites = list(report_1.all_suites(result_filter))
-        report_2_suites = list(report_2.all_suites(result_filter))
+        report_1_tests = list(filter(test_filter, report_1.all_tests()))
+        report_2_tests = list(filter(test_filter, report_2.all_tests()))
 
-        if len(report_1_suites) == 0 and len(report_2_suites) == 0:
+        if len(report_1_tests) == 0 and len(report_2_tests) == 0:
             raise UserError("The filter does not match any test on both reports")
 
-        diff = compute_diff(report_1_suites, report_2_suites)
+        diff = compute_diff(report_1_tests, report_2_tests)
         display_diff(diff)
 
         return 0
