@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+from collections import defaultdict
+
 from termcolor import colored
 import colorama
 
@@ -18,10 +20,10 @@ class Diff:
     def __init__(self):
         self.added = []
         self.removed = []
-        self.status_changed = {}
+        self.status_changed = defaultdict(lambda: defaultdict(list))
 
     def is_empty(self):
-        return len(self.added) + len(self.removed) + len(self.status_changed) == 0
+        return not any((self.added, self.removed, self.status_changed))
 
 
 def compute_diff(report_1_suites, report_2_suites):
@@ -38,10 +40,6 @@ def compute_diff(report_1_suites, report_2_suites):
 
         # handle status-changed tests
         if report_2_test.status != report_1_test.status:
-            if report_1_test.status not in diff.status_changed:
-                diff.status_changed[report_1_test.status] = {}
-            if report_2_test.status not in diff.status_changed[report_1_test.status]:
-                diff.status_changed[report_1_test.status][report_2_test.status] = []
             diff.status_changed[report_1_test.status][report_2_test.status].append(report_2_test)
 
         del report_2_tests[report_2_test.path]
@@ -53,7 +51,7 @@ def compute_diff(report_1_suites, report_2_suites):
 
 
 def display_diff_type(title, test_entries):
-    if len(test_entries) == 0:
+    if not test_entries:
         return
 
     print("%s (%d):" % (colored(title, attrs=["bold"]), len(test_entries)))
@@ -77,7 +75,7 @@ def render_test_with_status_changed(test, former_status):
 def flatten_test_status_changed(status_changed):
     for former_status in ORDERED_STATUSES:
         for new_status in ORDERED_STATUSES:
-            for test in status_changed.get(former_status, {}).get(new_status, []):
+            for test in status_changed[former_status][new_status]:
                 yield test, former_status
 
 
@@ -86,16 +84,16 @@ def display_diff(diff):
         print("There is no difference between the two reports.")
     else:
         display_diff_type(
-            "Added tests", [render_test_with_status(test) for test in diff.added]
+            "Added tests", list(map(render_test_with_status, diff.added))
         )
         display_diff_type(
-            "Removed tests", [render_test_with_status(test) for test in diff.removed]
+            "Removed tests", list(map(render_test_with_status, diff.removed))
         )
         display_diff_type(
             "Status changed",
             [
-                render_test_with_status_changed(test, old_status)
-                    for test, old_status in flatten_test_status_changed(diff.status_changed)
+                render_test_with_status_changed(test, former_status)
+                    for test, former_status in flatten_test_status_changed(diff.status_changed)
             ]
         )
 
