@@ -42,9 +42,18 @@ class ReportCommand(Command):
         if cli_args.short:
             print_report_as_test_run(report, filtr)
         else:
-            print_report(
-                report, filtr=filtr, max_width=cli_args.max_width,
-                explicit=cli_args.explicit or not sys.stdout.isatty()
-            )
+            try:
+                print_report(
+                    report, filtr=filtr, max_width=cli_args.max_width,
+                    explicit=cli_args.explicit or not sys.stdout.isatty()
+                )
+            except IOError as excp:
+                if excp.errno == 32:
+                    # broken pipe (example: "lcc report | less" and the user quit less)
+                    # in that case, simply exit gracefully
+                    pass
+                else:
+                    # otherwise, re-raise
+                    raise
 
         return 0
