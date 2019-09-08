@@ -4,7 +4,8 @@ Created on Jan 24, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.reporting.report import *
+from lemoncheesecake.reporting.report import \
+    SuiteResult, TestResult, Result, Step, Log, Check, Attachment, Url
 from lemoncheesecake.exceptions import ProgrammingError
 
 
@@ -12,32 +13,52 @@ class ReportWriter:
     def __init__(self, report):
         self.report = report
 
-    def _get_test_data(self, test):
+    def _get_test_result(self, test):
         return self.report.get_test(test)
 
-    def _get_suite_data(self, suite):
+    def _get_suite_result(self, suite):
         return self.report.get_suite(suite)
 
     def _add_step_entry(self, entry, event):
-        report_node_data = self.report.get(event.location)
-        if not report_node_data:
+        result = self.report.get(event.location)
+        if not result:
             raise ProgrammingError("Cannot find location %s in the report" % event.location)
-        step = self._lookup_step(report_node_data.get_steps(), event.step)
+        step = self._lookup_step(result.get_steps(), event.step)
         if step.end_time:
             raise ProgrammingError("Cannot update step '%s', it is already ended" % step.description)
         step.entries.append(entry)
 
     @staticmethod
-    def _start_hook(ts):
-        hook_data = Result()
-        hook_data.start_time = ts
-        return hook_data
+    def _initialize_result(start_time):
+        result = Result()
+        result.start_time = start_time
+        return result
 
     @staticmethod
-    def _end_hook(hook_data, ts):
-        if hook_data:
-            hook_data.end_time = ts
-            hook_data.status = "passed" if hook_data.is_successful() else "failed"
+    def _initialize_test_result(test, start_time):
+        result = TestResult(test.name, test.description)
+        result.tags.extend(test.tags)
+        result.properties.update(test.properties)
+        result.links.extend(test.links)
+        result.rank = test.rank
+        result.start_time = start_time
+        return result
+
+    @staticmethod
+    def _finalize_result(result, end_time):
+        # finalize steps:
+        steps = result.get_steps()
+        for step in steps[:]:
+            if step.entries:
+                # set step end time (last step or detached step)
+                if step.end_time is None:
+                    step.end_time = end_time
+            else:
+                # remove empty step
+                steps.remove(step)
+
+        result.end_time = end_time
+        result.status = "passed" if result.is_successful() else "failed"
 
     @staticmethod
     def _lookup_step(steps, step):
@@ -56,19 +77,6 @@ class ReportWriter:
                 return step
         return None
 
-    @staticmethod
-    def _finalize_steps(steps, end_time):
-        if not steps:
-            return
-        for step in steps[:]:
-            if step.entries:
-                # set step end time (last step or detached step)
-                if not step.end_time:
-                    step.end_time = end_time
-            else:
-                # remove empty step
-                steps.remove(step)
-
     def on_test_session_start(self, event):
         self.report.start_time = event.time
 
@@ -76,96 +84,76 @@ class ReportWriter:
         self.report.end_time = event.time
 
     def on_test_session_setup_start(self, event):
-        self.report.test_session_setup = self._start_hook(event.time)
+        self.report.test_session_setup = self._initialize_result(event.time)
 
     def on_test_session_setup_end(self, event):
-        self._finalize_steps(self.report.test_session_setup.get_steps(), event.time)
-
+        self._finalize_result(self.report.test_session_setup, event.time)
         if self.report.test_session_setup.is_empty():
             self.report.test_session_setup = None
-        else:
-            self._end_hook(self.report.test_session_setup, event.time)
 
     def on_test_session_teardown_start(self, event):
-        self.report.test_session_teardown = self._start_hook(event.time)
+        self.report.test_session_teardown = self._initialize_result(event.time)
 
     def on_test_session_teardown_end(self, event):
-        self._finalize_steps(self.report.test_session_teardown.get_steps(), event.time)
-
+        self._finalize_result(self.report.test_session_teardown, event.time)
         if self.report.test_session_teardown.is_empty():
             self.report.test_session_teardown = None
-        else:
-            self._end_hook(self.report.test_session_teardown, event.time)
 
     def on_suite_start(self, event):
         suite = event.suite
-        suite_data = SuiteResult(suite.name, suite.description)
-        suite_data.start_time = event.time
-        suite_data.tags.extend(suite.tags)
-        suite_data.properties.update(suite.properties)
-        suite_data.links.extend(suite.links)
-        suite_data.rank = suite.rank
+        suite_result = SuiteResult(suite.name, suite.description)
+        suite_result.start_time = event.time
+        suite_result.tags.extend(suite.tags)
+        suite_result.properties.update(suite.properties)
+        suite_result.links.extend(suite.links)
+        suite_result.rank = suite.rank
         if suite.parent_suite:
-            parent_suite_data = self._get_suite_data(suite.parent_suite)
-            parent_suite_data.add_suite(suite_data)
+            parent_suite_result = self._get_suite_result(suite.parent_suite)
+            parent_suite_result.add_suite(suite_result)
         else:
-            self.report.add_suite(suite_data)
+            self.report.add_suite(suite_result)
 
     def on_suite_end(self, event):
-        suite_data = self._get_suite_data(event.suite)
-        suite_data.end_time = event.time
+        suite_result = self._get_suite_result(event.suite)
+        suite_result.end_time = event.time
 
     def on_suite_setup_start(self, event):
-        suite_data = self._get_suite_data(event.suite)
-        suite_data.suite_setup = self._start_hook(event.time)
+        suite_result = self._get_suite_result(event.suite)
+        suite_result.suite_setup = self._initialize_result(event.time)
 
     def on_suite_setup_end(self, event):
-        suite_data = self._get_suite_data(event.suite)
-        self._finalize_steps(suite_data.suite_setup.get_steps(), event.time)
-
-        if suite_data.suite_setup.is_empty():
-            suite_data.suite_setup = None
-        else:
-            self._end_hook(suite_data.suite_setup, event.time)
+        suite_result = self._get_suite_result(event.suite)
+        self._finalize_result(suite_result.suite_setup, event.time)
+        if suite_result.suite_setup.is_empty():
+            suite_result.suite_setup = None
 
     def on_suite_teardown_start(self, event):
-        suite_data = self._get_suite_data(event.suite)
-
-        suite_data.suite_teardown = self._start_hook(event.time)
+        suite_result = self._get_suite_result(event.suite)
+        suite_result.suite_teardown = self._initialize_result(event.time)
 
     def on_suite_teardown_end(self, event):
-        suite_data = self._get_suite_data(event.suite)
-        self._finalize_steps(suite_data.suite_teardown.get_steps(), event.time)
-
-        if suite_data.suite_teardown.is_empty():
-            suite_data.suite_teardown = None
-        else:
-            self._end_hook(suite_data.suite_teardown, event.time)
+        suite_result = self._get_suite_result(event.suite)
+        self._finalize_result(suite_result.suite_teardown, event.time)
+        if suite_result.suite_teardown.is_empty():
+            suite_result.suite_teardown = None
 
     def on_test_start(self, event):
-        test = event.test
-
-        test_data = TestResult.from_test(test)
-        test_data.start_time = event.time
-
-        suite_data = self._get_suite_data(event.test.parent_suite)
-        suite_data.add_test(test_data)
+        test_result = self._initialize_test_result(event.test, event.time)
+        suite_result = self._get_suite_result(event.test.parent_suite)
+        suite_result.add_test(test_result)
 
     def on_test_end(self, event):
-        test_data = self._get_test_data(event.test)
-        self._finalize_steps(test_data.get_steps(), event.time)
-
-        test_data.status = "passed" if test_data.is_successful() else "failed"
-        test_data.end_time = event.time
+        test_result = self._get_test_result(event.test)
+        self._finalize_result(test_result, event.time)
 
     def _bypass_test(self, test, status, status_details, time):
-        test_data = TestResult.from_test(test)
-        test_data.end_time = test_data.start_time = time
-        test_data.status = status
-        test_data.status_details = status_details
+        test_result = self._initialize_test_result(test, time)
+        test_result.end_time = time
+        test_result.status = status
+        test_result.status_details = status_details
 
-        suite_data = self._get_suite_data(test.parent_suite)
-        suite_data.add_test(test_data)
+        suite_result = self._get_suite_result(test.parent_suite)
+        suite_result.add_test(test_result)
 
     def on_test_skipped(self, event):
         self._bypass_test(event.test, "skipped", event.skipped_reason, event.time)
@@ -174,18 +162,18 @@ class ReportWriter:
         self._bypass_test(event.test, "disabled", event.disabled_reason, event.time)
 
     def on_step(self, event):
-        report_node_data = self.report.get(event.location)
-        current_step = self._lookup_current_step(report_node_data.get_steps())
+        result = self.report.get(event.location)
+        current_step = self._lookup_current_step(result.get_steps())
         if current_step:
             current_step.end_time = event.time
 
         new_step = Step(event.step_description, detached=event.detached)
         new_step.start_time = event.time
-        report_node_data.add_step(new_step)
+        result.add_step(new_step)
 
     def on_step_end(self, event):
-        report_node_data = self.report.get(event.location)
-        step = self._lookup_step(report_node_data.get_steps(), event.step)
+        result = self.report.get(event.location)
+        step = self._lookup_step(result.get_steps(), event.step)
 
         # only detached steps can be explicitly ended, otherwise do nothing
         if step._detached:
