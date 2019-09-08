@@ -1,3 +1,17 @@
+# 1.2.1 (2019-09-08)
+
+- **lcc top-suites**: results coming from setup/teardown are now taken into account
+- **lcc top-steps**: results coming from setup/teardown are now taken into account
+- **lcc top-steps**: filtering arguments such as `--grep`, `--passed` and `--failed` are now directly
+  applied to the step itself instead of the parent result
+- **lcc report**: broken pipe errors (that typically raised when the command is used with `| less` being
+  quit before the end of the output) are now gracefully handled
+- **CLI**: the `--from-report` argument is now only available for the `lcc run` command
+- **under the hood**: refactoring of:
+  - JSON, XML, Junit reporting backends
+  - `lcc top-*` and `lcc diff` commands
+  - the `lemoncheesecake.filter` module
+
 # 1.2.0 (2019-08-27)
 
 - **CLI**: in filtering arguments, add a `--grep` option that takes a pattern as argument
