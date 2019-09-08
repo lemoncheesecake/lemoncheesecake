@@ -197,7 +197,7 @@ def _print_chunks(chunks):
         print(chunk if six.PY3 else chunk.encode("utf8"))
 
 
-def print_report(report, filtr=None, max_width=None, explicit=False):
+def print_report(report, result_filter=None, max_width=None, explicit=False):
     ###
     # Setup terminal
     ###
@@ -210,15 +210,15 @@ def print_report(report, filtr=None, max_width=None, explicit=False):
     ###
     renderer = Renderer(
         max_width=max_width, explicit=explicit,
-        highlight=filtr.grep if isinstance(filtr, ResultFilter) else None
+        highlight=result_filter.grep if isinstance(result_filter, ResultFilter) else None
     )
-    if not filtr:
+    if not result_filter:
         if report.nb_tests == 0:
             print("No tests found in report")
             return
         chunks = renderer.render_results(report.all_results())
     else:
-        results = list(filter(filtr, report.all_results()))
+        results = list(filter(result_filter, report.all_results()))
         if not results:
             print("The filter does not match anything in the report")
             return

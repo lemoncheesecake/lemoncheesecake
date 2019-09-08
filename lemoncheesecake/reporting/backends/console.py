@@ -255,8 +255,8 @@ class ConsoleBackend(ReportingBackend, ReportingSessionBuilderMixin):
             SequentialConsoleReportingSession(self.terminal_width, self.show_test_full_path, report)
 
 
-def print_report_as_test_run(report, filtr):
-    suites = filter_suites(report.get_suites(), filtr)
+def print_report_as_test_run(report, test_filter):
+    suites = list(report.all_suites(test_filter))
 
     ###
     # Setup terminal
@@ -268,7 +268,7 @@ def print_report_as_test_run(report, filtr):
     # Display suite results
     ###
     suite_idx = 0
-    for suite in flatten_suites(suites):
+    for suite in suites:
         if len(suite.get_tests()) == 0:
             continue
         if suite_idx > 0:
@@ -284,7 +284,7 @@ def print_report_as_test_run(report, filtr):
     # Display summary
     ###
     if suite_idx > 0:
-        if filtr:
+        if test_filter:
             stats = get_stats_from_suites(suites, report.parallelized)
         else:
             stats = report.stats()

@@ -149,23 +149,23 @@ class BaseSuite(BaseTreeNode):
         node._suites = []
         return node
 
-    def filter(self, filtr):
+    def filter(self, test_filter):
         suite = self.pull_node()
 
         for test in self.get_tests():
-            if filtr(test):
+            if test_filter(test):
                 suite.add_test(test.pull_node())
 
-        for sub_suite in filter_suites(self.get_suites(), filtr):
+        for sub_suite in filter_suites(self.get_suites(), test_filter):
             suite.add_suite(sub_suite)
 
         return suite
 
 
-def filter_suites(suites, filtr):
+def filter_suites(suites, test_filter):
     return list(
         filter(
-            lambda s: not s.is_empty(), (s.filter(filtr) for s in suites)
+            lambda s: not s.is_empty(), (s.filter(test_filter) for s in suites)
         )
     )
 

@@ -37,14 +37,14 @@ class ReportCommand(Command):
     def run_cmd(self, cli_args):
         report_path = get_report_path(cli_args)
         report = load_report(report_path, auto_detect_reporting_backends())
-        filtr = make_result_filter(cli_args)
+        result_filter = make_result_filter(cli_args)
 
         if cli_args.short:
-            print_report_as_test_run(report, filtr)
+            print_report_as_test_run(report, result_filter)
         else:
             try:
                 print_report(
-                    report, filtr=filtr, max_width=cli_args.max_width,
+                    report, result_filter=result_filter, max_width=cli_args.max_width,
                     explicit=cli_args.explicit or not sys.stdout.isatty()
                 )
             except IOError as excp:

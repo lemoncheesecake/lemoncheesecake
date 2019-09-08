@@ -223,11 +223,11 @@ class SuiteResult(BaseSuite):
     def is_empty(self):
         return BaseSuite.is_empty(self) and self._suite_setup is None and self._suite_teardown is None
 
-    def filter(self, filtr):
-        suite = BaseSuite.filter(self, filtr)
-        if self._suite_setup and filtr(self._suite_setup):
+    def filter(self, result_filter):
+        suite = BaseSuite.filter(self, result_filter)
+        if self._suite_setup and result_filter(self._suite_setup):
             suite._suite_setup = self._suite_setup
-        if self._suite_teardown and filtr(self._suite_teardown):
+        if self._suite_teardown and result_filter(self._suite_teardown):
             suite._suite_teardown = self._suite_teardown
         return suite
 
@@ -459,10 +459,10 @@ class Report(object):
 
         return stats
 
-    def all_suites(self, filtr=None):
+    def all_suites(self, result_filter=None):
         # type: (Optional[Callable[[TestResult], bool]]) -> Iterable[SuiteResult]
-        if filtr:
-            return flatten_suites(filter_suites(self._suites, filtr))
+        if result_filter:
+            return flatten_suites(filter_suites(self._suites, result_filter))
         else:
             return flatten_suites(self._suites)
 

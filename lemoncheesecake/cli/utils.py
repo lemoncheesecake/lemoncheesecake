@@ -22,15 +22,15 @@ LEMONCHEESECAKE_VERSION = "lemoncheesecake version %s (using Python %s - %s)" % 
 )
 
 
-def load_suites_from_project(project, filtr=None):
+def load_suites_from_project(project, test_filter=None):
     suites = project.load_suites()
     if all(suite.is_empty() for suite in suites):
         raise UserError("No test is defined in your lemoncheesecake project.")
 
     project.metadata_policy.check_suites_compliance(suites)
 
-    if filtr:
-        suites = filter_suites(suites, filtr)
+    if test_filter:
+        suites = filter_suites(suites, test_filter)
         if len(suites) == 0:
             raise UserError("The filter does not match any test")
 

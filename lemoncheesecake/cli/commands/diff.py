@@ -118,10 +118,10 @@ class DiffCommand(Command):
 
         report_1 = load_report(cli_args.report_1_path, reporting_backends)
         report_2 = load_report(cli_args.report_2_path, reporting_backends)
-        filtr = make_result_filter(cli_args)
+        result_filter = make_result_filter(cli_args)
 
-        report_1_suites = list(report_1.all_suites(filtr))
-        report_2_suites = list(report_2.all_suites(filtr))
+        report_1_suites = list(report_1.all_suites(result_filter))
+        report_2_suites = list(report_2.all_suites(result_filter))
 
         if len(report_1_suites) == 0 and len(report_2_suites) == 0:
             raise UserError("The filter does not match any test on both reports")

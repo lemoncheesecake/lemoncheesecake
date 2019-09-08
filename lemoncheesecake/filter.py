@@ -345,16 +345,12 @@ def _set_common_filter_criteria(fltr, cli_args, only_executed_tests=False):
         fltr.enabled = cli_args.enabled
 
 
-def _set_test_filter_criteria(filtr, cli_args):
+def _make_test_filter(cli_args):
     if cli_args.passed or cli_args.failed or cli_args.skipped:
         raise UserError("--passed, --failed and --skipped arguments can only be used on the report-based filter")
-    _set_common_filter_criteria(filtr, cli_args)
-
-
-def _make_test_filter(cli_args):
-    fltr = TestFilter()
-    _set_test_filter_criteria(fltr, cli_args)
-    return fltr
+    test_filter = TestFilter()
+    _set_common_filter_criteria(test_filter, cli_args)
+    return test_filter
 
 
 def _make_grep_criterion(grep):
@@ -362,38 +358,38 @@ def _make_grep_criterion(grep):
 
 
 def make_result_filter(cli_args, only_executed_tests=False):
-    fltr = ResultFilter()
-    _set_common_filter_criteria(fltr, cli_args, only_executed_tests=only_executed_tests)
+    result_filter = ResultFilter()
+    _set_common_filter_criteria(result_filter, cli_args, only_executed_tests=only_executed_tests)
 
     if only_executed_tests:
         if cli_args.passed:
-            fltr.statuses.add("passed")
+            result_filter.statuses.add("passed")
         if cli_args.failed:
-            fltr.statuses.add("failed")
+            result_filter.statuses.add("failed")
         # when neither --passed not --failed was passed, enforce statuses passed and failed
         # to select tests that have been executed
-        if len(fltr.statuses) == 0:
-            fltr.statuses.update(("passed", "failed"))
+        if not result_filter.statuses:
+            result_filter.statuses.update(("passed", "failed"))
     else:
         if cli_args.passed:
-            fltr.statuses.add("passed")
+            result_filter.statuses.add("passed")
         if cli_args.failed:
-            fltr.statuses.add("failed")
+            result_filter.statuses.add("failed")
         if cli_args.skipped:
-            fltr.statuses.add("skipped")
+            result_filter.statuses.add("skipped")
         if cli_args.non_passed:
-            fltr.statuses.update(("failed", "skipped"))
+            result_filter.statuses.update(("failed", "skipped"))
 
     if cli_args.grep:
-        fltr.grep = _make_grep_criterion(cli_args.grep)
+        result_filter.grep = _make_grep_criterion(cli_args.grep)
 
-    return fltr
+    return result_filter
 
 
 def _make_from_report_filter(cli_args, only_executed_tests=False):
     report = load_report(cli_args.from_report or DEFAULT_REPORT_DIR_NAME)
-    filtr = make_result_filter(cli_args, only_executed_tests=only_executed_tests)
-    return FromTestsFilter(filter(filtr, report.all_tests()))
+    test_filter = make_result_filter(cli_args, only_executed_tests=only_executed_tests)
+    return FromTestsFilter(filter(test_filter, report.all_tests()))
 
 
 def make_test_filter(cli_args):
@@ -407,12 +403,12 @@ def make_step_filter(cli_args):
     if cli_args.passed and cli_args.failed:
         raise UserError("--passed and --failed arguments are mutually exclusive")
 
-    filtr = StepFilter()
-    _set_common_filter_criteria(filtr, cli_args, only_executed_tests=True)
+    step_filter = StepFilter()
+    _set_common_filter_criteria(step_filter, cli_args, only_executed_tests=True)
 
-    filtr.passed = cli_args.passed
-    filtr.failed = cli_args.failed
+    step_filter.passed = cli_args.passed
+    step_filter.failed = cli_args.failed
     if cli_args.grep:
-        filtr.grep = _make_grep_criterion(cli_args.grep)
+        step_filter.grep = _make_grep_criterion(cli_args.grep)
 
-    return filtr
+    return step_filter
