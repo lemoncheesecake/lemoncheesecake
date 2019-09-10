@@ -255,22 +255,6 @@ class TestDisabledEvent(_TestEvent):
         self.disabled_reason = reason
 
 
-class TestSetupStartEvent(_TestEvent):
-    pass
-
-
-class TestSetupEndEvent(_TestEvent):
-    pass
-
-
-class TestTeardownStartEvent(_TestEvent):
-    pass
-
-
-class TestTeardownEndEvent(_TestEvent):
-    pass
-
-
 ###
 # Transverse test execution events
 ###
