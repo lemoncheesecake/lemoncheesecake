@@ -19,7 +19,7 @@ from lemoncheesecake.reporting import Report
 from lemoncheesecake import events
 from lemoncheesecake.exceptions import ProgrammingError
 from lemoncheesecake.fixture import ScheduledFixtures
-
+from lemoncheesecake.helpers.typecheck import check_type_string, check_type_bool
 
 _session = None  # type: Optional[Session]
 
@@ -125,6 +125,7 @@ def set_step(description, detached=False):
     :param description: the step description
     :param detached: whether or not the step is "detached"
     """
+    check_type_string("description", description)
     get_session().set_step(description, detached=detached)
 
 
@@ -153,39 +154,55 @@ def detached_step(description):
     end_step(description)
 
 
+def _log(level, content):
+    check_type_string("content", content)
+    get_session().log(level, content)
+
+
 def log_debug(content):
+    # type: (str) -> None
     """
     Log a debug level message.
     """
-    get_session().log(LOG_LEVEL_DEBUG, content)
+    _log(LOG_LEVEL_DEBUG, content)
 
 
 def log_info(content):
+    # type: (str) -> None
     """
     Log a info level message.
     """
-    get_session().log(LOG_LEVEL_INFO, content)
+    _log(LOG_LEVEL_INFO, content)
 
 
 def log_warning(content):
+    # type: (str) -> None
     """
     Log a warning level message.
     """
-    get_session().log(LOG_LEVEL_WARN, content)
+    _log(LOG_LEVEL_WARN, content)
 
 
 def log_error(content):
+    # type: (str) -> None
     """
     Log an error level message.
     """
-    get_session().log(LOG_LEVEL_ERROR, content)
+    _log(LOG_LEVEL_ERROR, content)
 
 
 def log_check(description, is_successful, details=None):
+    check_type_string("description", description)
+    check_type_bool("is_successful", is_successful)
+    check_type_string("details", details, optional=True)
+
     get_session().log_check(description, is_successful, details)
 
 
 def _prepare_attachment(filename, description=None, as_image=False):
+    check_type_string("description", description, optional=True)
+    check_type_bool("as_image", as_image)
+
     return get_session().prepare_attachment(filename, description or filename, as_image=as_image)
 
 
@@ -256,9 +273,13 @@ def save_image_content(content, filename, description=None):
 
 
 def log_url(url, description=None):
+    # type: (str, Optional[str]) -> None
     """
     Log an URL.
     """
+    check_type_string("url", url)
+    check_type_string("description", description, optional=True)
+
     get_session().log_url(url, description or url)
 
 
@@ -281,6 +302,11 @@ def get_fixture(name):
 
 
 def add_report_info(name, value):
+    # type: (str, str) -> None
+
+    check_type_string("name", name)
+    check_type_string("value", value)
+
     report = get_report()
     report.add_info(name, value)
 
