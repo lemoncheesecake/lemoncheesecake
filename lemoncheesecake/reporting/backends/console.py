@@ -8,14 +8,12 @@ from __future__ import print_function
 
 import sys
 
-import colorama
 from termcolor import colored
 import six
 
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession, ReportingSessionBuilderMixin
 from lemoncheesecake.reporting.report import get_stats_from_suites
 from lemoncheesecake.helpers.time import humanize_duration
-from lemoncheesecake.testtree import flatten_suites, filter_suites
 from lemoncheesecake.helpers.text import ensure_single_line_text
 from lemoncheesecake.helpers import terminalsize
 from lemoncheesecake.reporting.console import test_status_to_color
@@ -107,7 +105,6 @@ class SequentialConsoleReportingSession(ReportingSession):
         self.terminal_width = terminal_width
         self.show_test_full_path = show_test_full_path
         self.report = report
-        colorama.init()
         self.lp = LinePrinter(self.terminal_width)
         self.context = None
         self.custom_step_prefix = None
@@ -210,7 +207,6 @@ class ParallelConsoleReportingSession(ReportingSession):
     def __init__(self, terminal_width, report):
         self.terminal_width = terminal_width
         self.report = report
-        colorama.init()
         self.lp = LinePrinter(self.terminal_width)
         self.current_test_idx = 1
 
@@ -261,7 +257,6 @@ def print_report_as_test_run(report, test_filter):
     ###
     # Setup terminal
     ###
-    colorama.init()
     terminal_width, _ = terminalsize.get_terminal_size()
 
     ###

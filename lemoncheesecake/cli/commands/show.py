@@ -6,8 +6,6 @@ Created on Feb 14, 2017
 
 from __future__ import print_function
 
-import colorama
-
 from lemoncheesecake.helpers.console import bold
 from lemoncheesecake.helpers.text import ensure_single_line_text
 from lemoncheesecake.cli.command import Command
@@ -77,8 +75,6 @@ class ShowCommand(Command):
         )
 
     def run_cmd(self, cli_args):
-        colorama.init()
-
         project = load_project()
         suites = load_suites_from_project(project, make_test_filter(cli_args))
 

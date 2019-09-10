@@ -7,8 +7,6 @@ Created on Feb 14, 2017
 from __future__ import print_function
 from functools import reduce
 
-import colorama
-
 from lemoncheesecake.helpers.console import print_table, bold
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import load_suites_from_project
@@ -64,8 +62,6 @@ class StatsCommand(Command):
         add_test_filter_cli_args(cli_parser)
 
     def run_cmd(self, cli_args):
-        colorama.init()
-
         project = load_project()
         suites = load_suites_from_project(project, make_test_filter(cli_args))
 

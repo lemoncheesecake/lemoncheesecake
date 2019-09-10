@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 from terminaltables import AsciiTable
-import colorama
 from termcolor import colored
 import six
 
@@ -201,7 +200,6 @@ def print_report(report, result_filter=None, max_width=None, explicit=False):
     ###
     # Setup terminal
     ###
-    colorama.init()
     if not max_width:
         max_width, _ = terminalsize.get_terminal_size()
 

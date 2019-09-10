@@ -8,6 +8,8 @@ from __future__ import print_function
 import argparse
 import sys
 
+import colorama
+
 from lemoncheesecake.exceptions import LemoncheesecakeException
 from lemoncheesecake.cli.commands import get_commands
 from lemoncheesecake.cli.utils import LEMONCHEESECAKE_VERSION
@@ -39,6 +41,8 @@ def build_cli_args(args=None):
 
 
 def main(args=None):
+    colorama.init()
+
     try:
         cli_args = build_cli_args(args)
     except LemoncheesecakeException as excp:

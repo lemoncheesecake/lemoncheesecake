@@ -6,8 +6,6 @@ Created on Feb 14, 2017
 
 from __future__ import print_function
 
-import colorama
-
 from lemoncheesecake.helpers.console import print_table, bold
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.testtree import flatten_tests
@@ -40,8 +38,6 @@ class FixturesCommand(Command):
         )
 
     def run_cmd(self, cli_args):
-        colorama.init()
-
         project = load_project()
         suites = project.load_suites()
         fixtures = project.load_fixtures()
