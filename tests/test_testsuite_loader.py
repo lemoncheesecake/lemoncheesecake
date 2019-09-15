@@ -5,7 +5,7 @@ import six
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite.loader import load_suites_from_directory, load_suite_from_file, \
     load_suite_from_class, load_suites_from_files, load_suites_from_classes, _load_test_from_function, \
-    _load_test_from_method
+    _load_test_from_method, load_test
 from lemoncheesecake.metadatapolicy import MetadataPolicy
 from lemoncheesecake.exceptions import *
 
@@ -201,13 +201,13 @@ def test_load_suite_from_class_suites_order():
 def test_metadata_policy():
     @lcc.suite("My Suite 1")
     class MySuite1:
-        @lcc.prop("foo", 3)
+        @lcc.prop("foo", "3")
         @lcc.test("Some test")
         def sometest(self):
             pass
 
     @lcc.suite("My Suite 1")
-    @lcc.prop("foo", 3)
+    @lcc.prop("foo", "3")
     class MySuite2:
         @lcc.test("Some test")
         def sometest(self):
@@ -217,7 +217,7 @@ def test_metadata_policy():
     suite2 = load_suites_from_classes([MySuite2])
 
     policy = MetadataPolicy()
-    policy.add_property_rule("foo", (1, 2))
+    policy.add_property_rule("foo", ("1", "2"))
     with pytest.raises(InvalidMetadataError):
         policy.check_suites_compliance(suite1)
     with pytest.raises(InvalidMetadataError):
@@ -723,3 +723,84 @@ def test_load_suite_class_with_property():
 
     suite = load_suite_from_class(mysuite)
     assert len(suite.get_tests()) == 1
+
+
+def test_invalid_type_name():
+    @lcc.test("test", name=1)
+    def test():
+        pass
+
+    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+        load_test(test)
+
+
+def test_invalid_type_description():
+    @lcc.test(1)
+    def test():
+        pass
+
+    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+        load_test(test)
+
+
+def test_invalid_type_tag():
+    @lcc.test("test")
+    @lcc.tags(1)
+    def test():
+        pass
+
+    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+        load_test(test)
+
+
+def test_invalid_type_link_url():
+    @lcc.test("test")
+    @lcc.link(1)
+    def test():
+        pass
+
+    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+        load_test(test)
+
+
+def test_invalid_type_link_name():
+    @lcc.test("test")
+    @lcc.link("http://www.example.com", 1)
+    def test():
+        pass
+
+    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+        load_test(test)
+
+
+def test_invalid_type_prop():
+    @lcc.test("test")
+    @lcc.prop("foo", 1)
+    def test():
+        pass
+
+    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+        load_test(test)
+
+
+def test_invalid_type_on_suite_class():
+    @lcc.suite("suite")
+    @lcc.prop("foo", 1)
+    class suite():
+        pass
+
+    with pytest.raises(InvalidMetadataError, match="Invalid suite metadata"):
+        load_suite_from_class(suite)
+
+
+def test_invalid_type_on_suite_module(tmpdir):
+    file = tmpdir.join("mysuite.py")
+    file.write(
+        """SUITE = {
+    "description": "My Suite",
+    "tags": [1]
+}
+""")
+
+    with pytest.raises(InvalidMetadataError, match="Invalid suite metadata"):
+        load_suite_from_file(file.strpath)
