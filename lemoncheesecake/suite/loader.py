@@ -2,13 +2,15 @@ import os.path as osp
 import inspect
 
 from typing import Sequence, Any, List
+import six
 
 from lemoncheesecake.helpers.moduleimport import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
 from lemoncheesecake.helpers.introspection import get_object_attributes
 from lemoncheesecake.exceptions import UserError, ProgrammingError, ModuleImportError, InvalidMetadataError, \
     InvalidSuiteError, VisibilityConditionNotMet, serialize_current_exception
 from lemoncheesecake.suite.core import Test, Suite, SUITE_HOOKS
-
+from lemoncheesecake.testtree import BaseTreeNode
+from lemoncheesecake.helpers.typecheck import check_type_string, check_type
 
 def _is_suite_class(obj):
     return inspect.isclass(obj) and hasattr(obj, "_lccmetadata") and obj._lccmetadata.is_suite
@@ -27,6 +29,32 @@ def _ensure_node_is_visible(obj, metadata):
         raise VisibilityConditionNotMet()
 
 
+def _check_tags(tags):
+    return isinstance(tags, (list, tuple)) and \
+           all(isinstance(tag, six.string_types) for tag in tags)
+
+
+def _check_properties(props):
+    return isinstance(props, dict) and \
+        all(isinstance(key, six.string_types) for key in props.keys()) and \
+        all(isinstance(value, six.string_types) for value in props.values())
+
+
+def _check_links(links):
+    return isinstance(links, (list, tuple)) and \
+        all(isinstance(url, six.string_types) for url, _ in links) and \
+        all(name is None or isinstance(name, six.string_types) for _, name in links)
+
+
+def _check_test_tree_node_types(node):
+    # type: (BaseTreeNode) -> None
+    check_type_string("name", node.name)
+    check_type_string("description", node.description)
+    check_type("tags", node.tags, "List[str]", _check_tags, show_actual_type=False)
+    check_type("properties", node.properties, "Dict[str, str]", _check_properties, show_actual_type=False)
+    check_type("links", node.links, "List[Tuple[str, Optional[str]]]", _check_links, show_actual_type=False)
+
+
 def load_test(obj):
     md = obj._lccmetadata
     _ensure_node_is_visible(obj, md)
@@ -38,6 +66,12 @@ def load_test(obj):
     test.disabled = md.disabled
     test.rank = md.rank
     test.dependencies.extend(md.dependencies)
+
+    try:
+        _check_test_tree_node_types(test)
+    except TypeError as excp:
+        raise InvalidMetadataError("Invalid test metadata for '%s': %s" % (test.name, excp))
+
     return test
 
 
@@ -121,6 +155,11 @@ def load_suite_from_class(class_):
     suite.rank = md.rank
     suite.disabled = md.disabled
 
+    try:
+        _check_test_tree_node_types(suite)
+    except TypeError as excp:
+        raise InvalidMetadataError("Invalid suite metadata for '%s': %s" % (suite.name, excp))
+
     for hook_name in SUITE_HOOKS:
         if hasattr(suite_obj, hook_name):
             suite.add_hook(hook_name, getattr(suite_obj, hook_name))
@@ -176,6 +215,11 @@ def load_suite_from_module(mod):
     suite.properties.update(suite_info.get("properties", []))
     suite.links.extend(suite_info.get("links", []))
     suite.rank = suite_info.get("rank", _get_metadata_next_rank())
+
+    try:
+        _check_test_tree_node_types(suite)
+    except TypeError as excp:
+        raise InvalidMetadataError("Invalid suite metadata for '%s': %s" % (suite.name, excp))
 
     for hook_name in SUITE_HOOKS:
         if hasattr(mod, hook_name):
