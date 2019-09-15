@@ -1,3 +1,9 @@
+# 1.2.2 (2019-09-15)
+
+- **API**: do explicit type checking for test/suite metadata and logged information (steps,
+  logs, checks, attachments, urls) in order to avoid side effects, hard to debug issues, etc...
+- **lcc report**: improve broken pipe errors handling on Python 3
+
 # 1.2.1 (2019-09-08)
 
 - **lcc top-suites**: results coming from setup/teardown are now taken into account
