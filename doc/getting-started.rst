@@ -64,15 +64,17 @@ to set the reporting backends that will be used.
 
 .. code-block:: none
 
-    $ lcc.py run --help
-    usage: lcc.py run [-h] [--desc DESC [DESC ...]] [--tag TAG [TAG ...]]
-                      [--property PROPERTY [PROPERTY ...]]
-                      [--link LINK [LINK ...]] [--disabled] [--passed] [--failed]
-                      [--skipped] [--enabled] [--from-report FROM_REPORT]
-                      [--exit-error-on-failure] [--stop-on-failure]
-                      [--report-dir REPORT_DIR]
-                      [--reporting REPORTING [REPORTING ...]]
-                      [path [path ...]]
+    $ lcc run --help
+    usage: lcc run [-h] [--desc DESC [DESC ...]] [--tag TAG [TAG ...]]
+                   [--property PROPERTY [PROPERTY ...]]
+                   [--link LINK [LINK ...]] [--passed] [--failed] [--grep GREP]
+                   [--skipped] [--non-passed] [--disabled] [--enabled]
+                   [--from-report FROM_REPORT] [--force-disabled]
+                   [--exit-error-on-failure] [--stop-on-failure]
+                   [--threads THREADS] [--report-dir REPORT_DIR]
+                   [--reporting REPORTING [REPORTING ...]]
+                   [--save-report SAVE_REPORT]
+                   [path [path ...]]
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -88,30 +90,36 @@ to set the reporting backends that will be used.
                             Filter on properties
       --link LINK [LINK ...], -l LINK [LINK ...]
                             Filter on links (names and URLs)
+      --passed              Filter on passed tests
+      --failed              Filter on failed tests
+      --grep GREP, -g GREP  Filter result content using pattern
+      --skipped             Filter on skipped tests
+      --non-passed          Alias for --failed --skipped
       --disabled            Filter on disabled tests
-      --passed              Filter on passed tests (only available with --from-report)
-      --failed              Filter on failed tests (only available with --from-report)
-      --skipped             Filter on skipped tests (only available with --from-report)
       --enabled             Filter on enabled (non-disabled) tests
       --from-report FROM_REPORT
                             When enabled, the filtering is based on the given
                             report
 
     Test execution:
+      --force-disabled      Force the run of disabled tests
       --exit-error-on-failure
                             Exit with non-zero code if there is at least one non-
                             passed test
       --stop-on-failure     Stop tests execution on the first non-passed test
+      --threads THREADS     Number of threads used to run tests (default:
+                            $LCC_THREADS or 1)
 
     Reporting:
       --report-dir REPORT_DIR, -r REPORT_DIR
                             Directory where report data will be stored
       --reporting REPORTING [REPORTING ...]
-                            The list of reporting backends to use
+                            The list of reporting backends to use (default:
+                            console, json, html)
       --save-report SAVE_REPORT
                             At what frequency the reporting backends such as json
                             or xml must save reporting data to disk. (default:
-                            $LCC_SAVE_REPORT_AT or at_each_failed_test, possible
+                            $LCC_SAVE_REPORT or at_each_failed_test, possible
                             values are: at_end_of_tests, at_each_suite,
                             at_each_test, at_each_failed_test, at_each_event,
                             every_${N}s)
