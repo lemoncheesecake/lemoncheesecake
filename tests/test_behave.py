@@ -9,8 +9,12 @@ except ImportError:
 else:
     import os
 
+    import pytest
+
     from lemoncheesecake.reporting import load_report
+    from lemoncheesecake.bdd.behave import initialize_event_manager
     from helpers.report import get_last_test, get_last_suite
+    from helpers.utils import env_var
 
     STEPS = u"""# -*- coding: utf-8 -*-
 from behave import *
@@ -64,6 +68,18 @@ initialize_event_manager(
 
         return load_report(tmpdir.join("report").strpath)
 
+
+    def test_initialize_event_manager():
+        assert initialize_event_manager(".", ()) is not None
+
+    def test_initialize_event_manager_with_valid_custom_report_saving_strategy():
+        with env_var("LCC_SAVE_REPORT", "at_each_test"):
+            assert initialize_event_manager(".", ()) is not None
+
+    def test_initialize_event_manager_with_invalid_custom_report_saving_strategy():
+        with env_var("LCC_SAVE_REPORT", "foobar"):
+            with pytest.raises(ValueError, match="Invalid expression"):
+                assert initialize_event_manager(".", ()) is not None
 
     def test_scenario_passed(tmpdir):
         feature = u"""Feature: do some computations

@@ -15,7 +15,7 @@ from lemoncheesecake.filter import add_test_filter_cli_args, make_test_filter
 from lemoncheesecake.fixture import FixtureRegistry, BuiltinFixture
 from lemoncheesecake.project import find_project_file, load_project_from_file, load_project, DEFAULT_REPORTING_BACKENDS
 from lemoncheesecake.reporting.backend import ReportingSessionBuilderMixin
-from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy
+from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy, DEFAULT_REPORT_SAVING_STRATEGY
 from lemoncheesecake.runner import initialize_event_manager, run_suites
 from lemoncheesecake.consts import NEGATIVE_CHARS
 
@@ -45,14 +45,12 @@ def get_nb_threads(cli_args):
 
 
 def get_report_saving_strategy(cli_args):
-    saving_strategy_expression = cli_args.save_report or os.environ.get("LCC_SAVE_REPORT") or "at_each_failed_test"
-
+    saving_strategy_expression = cli_args.save_report or \
+        os.environ.get("LCC_SAVE_REPORT") or DEFAULT_REPORT_SAVING_STRATEGY
     try:
         return make_report_saving_strategy(saving_strategy_expression)
-    except ValueError:
-        raise LemoncheesecakeException(
-            "Invalid expression '%s' for report saving strategy" % saving_strategy_expression
-        )
+    except ValueError as excp:
+        raise LemoncheesecakeException(str(excp))
 
 
 def get_reporting_backend_names(default_names, specified_names):

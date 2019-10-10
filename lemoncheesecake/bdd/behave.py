@@ -1,8 +1,10 @@
+import os
+
 from slugify import slugify
 import six
 
 from lemoncheesecake.reporting import Report, ReportWriter, ReportLocation
-from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy
+from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy, DEFAULT_REPORT_SAVING_STRATEGY
 from lemoncheesecake.reporting.reportdir import create_report_dir_with_rotation
 from lemoncheesecake.session import \
     initialize_session, is_location_successful, \
@@ -32,10 +34,12 @@ def initialize_event_manager(top_dir, reporting_backends):
     report_dir = create_report_dir_with_rotation(top_dir)
     initialize_session(event_manager, report_dir, report)
 
+    report_saving_strategy = make_report_saving_strategy(
+        os.environ.get("LCC_SAVE_REPORT", DEFAULT_REPORT_SAVING_STRATEGY)
+    )
+
     for backend in reporting_backends:
-        session = backend.create_reporting_session(
-            report_dir, report, False, make_report_saving_strategy("at_each_test")
-        )
+        session = backend.create_reporting_session(report_dir, report, False, report_saving_strategy)
         event_manager.add_listener(session)
 
     return event_manager
