@@ -7,8 +7,10 @@ Created on Mar 29, 2016
 import os
 import os.path as osp
 
-from lemoncheesecake.exceptions import InvalidReportFile, ProgrammingError
+from lemoncheesecake.helpers.orderedset import OrderedSet
+from lemoncheesecake.exceptions import InvalidReportFile, ProgrammingError, LemoncheesecakeException
 from lemoncheesecake.reporting.report import Report
+from lemoncheesecake.consts import NEGATIVE_CHARS
 
 
 class ReportingSession(object):
@@ -94,11 +96,53 @@ def get_reporting_backends():
     )
 
 
+def get_reporting_backend_names(default_names, custom_names):
+    if all(name[0] not in ("+" + NEGATIVE_CHARS) for name in custom_names):  # fixed list
+        return custom_names
+
+    elif all(name[0] in ("+" + NEGATIVE_CHARS) for name in custom_names):  # turn on/off directives
+        names = OrderedSet(default_names)
+        for specified_name in custom_names:
+            if specified_name[0] == "+":  # turn on
+                names.add(specified_name[1:])
+            else:  # turn off
+                try:
+                    names.remove(specified_name[1:])
+                except KeyError:
+                    raise ValueError(
+                        "reporting backend '%s' is not among the default reporting backends" % specified_name[1:]
+                    )
+        return names
+
+    else:
+        raise ValueError(
+            "either the custom reporting backends must be fixed backend list, "
+            "or a list of turn on/off (+ / ^) directives"
+        )
+
+
+def parse_reporting_backend_names_expression(expr):
+    return list(filter(bool, expr.split(" ")))
+
+
 def get_reporting_backend_by_name(name):
     try:
         return next(backend for backend in get_reporting_backends() if backend.get_name() == name)
     except StopIteration:
         raise KeyError()
+
+
+def get_reporting_backends_for_test_run(available_backends, backend_names):
+    backends = []
+    for backend_name in backend_names:
+        try:
+            backend = available_backends[backend_name]
+        except KeyError:
+            raise LemoncheesecakeException("Unknown reporting backend '%s'" % backend_name)
+        if not isinstance(backend, ReportingSessionBuilderMixin):
+            raise LemoncheesecakeException("Reporting backend '%s' is not suitable for test run" % backend_name)
+        backends.append(backend)
+    return backends
 
 
 class BoundReport(Report):

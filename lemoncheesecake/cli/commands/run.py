@@ -6,7 +6,6 @@ Created on Dec 31, 2016
 
 import os
 
-from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import load_suites_from_project
 from lemoncheesecake.exceptions import LemoncheesecakeException, ProgrammingError, UserError, \
@@ -14,10 +13,10 @@ from lemoncheesecake.exceptions import LemoncheesecakeException, ProgrammingErro
 from lemoncheesecake.filter import add_test_filter_cli_args, make_test_filter
 from lemoncheesecake.fixture import FixtureRegistry, BuiltinFixture
 from lemoncheesecake.project import find_project_file, load_project_from_file, load_project, DEFAULT_REPORTING_BACKENDS
-from lemoncheesecake.reporting.backend import ReportingSessionBuilderMixin
+from lemoncheesecake.reporting.backend import get_reporting_backend_names as do_get_reporting_backend_names, \
+    parse_reporting_backend_names_expression, get_reporting_backends_for_test_run
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy, DEFAULT_REPORT_SAVING_STRATEGY
 from lemoncheesecake.runner import initialize_event_manager, run_suites
-from lemoncheesecake.consts import NEGATIVE_CHARS
 
 
 def build_fixture_registry(project, cli_args):
@@ -53,32 +52,24 @@ def get_report_saving_strategy(cli_args):
         raise LemoncheesecakeException(str(excp))
 
 
-def get_reporting_backend_names(default_names, specified_names):
-    if not specified_names:
-        return default_names
-
-    elif all(name[0] not in ("+" + NEGATIVE_CHARS) for name in specified_names):  # fixed list
-        return specified_names
-
-    elif all(name[0] in ("+" + NEGATIVE_CHARS) for name in specified_names):  # turn on/off directives
-        names = OrderedSet(default_names)
-        for specified_name in specified_names:
-            if specified_name[0] == "+":  # turn on
-                names.add(specified_name[1:])
-            else:  # turn off
-                try:
-                    names.remove(specified_name[1:])
-                except KeyError:
-                    raise LemoncheesecakeException(
-                        "--reporting: backend '%s' is not among the default reporting backends" % specified_name[1:]
-                    )
-        return names
-
+def get_reporting_backend_names(cli_args, project):
+    if cli_args.reporting:
+        try:
+            return do_get_reporting_backend_names(
+                project.default_reporting_backend_names, cli_args.reporting
+            )
+        except ValueError as e:
+            raise LemoncheesecakeException("Invalid --reporting argument: %s" % e)
+    elif "LCC_REPORTING" in os.environ:
+        try:
+            return do_get_reporting_backend_names(
+                project.default_reporting_backend_names,
+                parse_reporting_backend_names_expression(os.environ["LCC_REPORTING"])
+            )
+        except ValueError as e:
+            raise LemoncheesecakeException("Invalid $LCC_REPORTING: %s" % e)
     else:
-        raise LemoncheesecakeException(
-            "--reporting: either the specified reporting backends must be fixed backend list, "
-            "or a list of turn on/off (+ / ^) directives"
-        )
+        return project.default_reporting_backend_names
 
 
 class ReportSetupHandler(object):
@@ -106,15 +97,8 @@ def run_project(project, cli_args):
     fixture_registry.check_fixtures_in_suites(suites)
 
     # Get reporting backends
-    reporting_backends = []
-    for backend_name in get_reporting_backend_names(project.default_reporting_backend_names, cli_args.reporting):
-        try:
-            backend = project.reporting_backends[backend_name]
-        except KeyError:
-            raise LemoncheesecakeException("Unknown reporting backend '%s'" % backend_name)
-        if not isinstance(backend, ReportingSessionBuilderMixin):
-            raise LemoncheesecakeException("Reporting backend '%s' is not suitable for test run" % backend_name)
-        reporting_backends.append(backend)
+    reporting_backend_names = get_reporting_backend_names(cli_args, project)
+    reporting_backends = get_reporting_backends_for_test_run(project.reporting_backends, reporting_backend_names)
 
     # Get report save mode
     report_saving_strategy = get_report_saving_strategy(cli_args)

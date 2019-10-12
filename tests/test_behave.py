@@ -54,12 +54,8 @@ def step_impl(context, value):
 import os.path
 
 from lemoncheesecake.bdd.behave import *
-from lemoncheesecake.reporting import get_reporting_backend_by_name
 
-initialize_event_manager(
-    os.path.dirname(__file__),
-    list(map(get_reporting_backend_by_name, ("json",)))
-)
+initialize_event_manager(os.path.dirname(__file__))
 """, "utf-8")
 
         cmd = "behave %s" % tmpdir.join("features").join("feature.feature   ").strpath
@@ -71,16 +67,16 @@ initialize_event_manager(
 
 
     def test_initialize_event_manager():
-        assert initialize_event_manager(".", ()) is not None
+        assert initialize_event_manager(".") is not None
 
     def test_initialize_event_manager_with_valid_custom_report_saving_strategy():
         with env_var("LCC_SAVE_REPORT", "at_each_test"):
-            assert initialize_event_manager(".", ()) is not None
+            assert initialize_event_manager(".") is not None
 
     def test_initialize_event_manager_with_invalid_custom_report_saving_strategy():
         with env_var("LCC_SAVE_REPORT", "foobar"):
             with pytest.raises(ValueError, match="Invalid expression"):
-                assert initialize_event_manager(".", ()) is not None
+                assert initialize_event_manager(".") is not None
 
     def test_scenario_passed(tmpdir):
         feature = u"""Feature: do some computations
@@ -227,3 +223,18 @@ Scenario: do a simple addition
             report = run_behave_tests(tmpdir, feature, STEPS, expected_report_dir=report_dir)
 
         assert report is not None
+
+    def test_custom_reporting(tmpdir):
+        feature = u"""Feature: do some computations
+
+        Scenario: do a simple addition
+            Given a is 2
+            And b is 2
+            Then a + b is equal to 4
+        """
+
+        with env_var("LCC_REPORTING", "-html"):
+            run_behave_tests(tmpdir, feature, STEPS)
+
+        assert tmpdir.join("report", "report.js").exists()
+        assert not tmpdir.join("report", "report.html").exists()

@@ -9,6 +9,7 @@ from lemoncheesecake.reporting.backends.xml import \
 from lemoncheesecake.reporting.backends.json_ import \
     save_report_into_file as save_json, \
     load_report_from_file as load_json
+from lemoncheesecake.reporting.backend import get_reporting_backend_names, parse_reporting_backend_names_expression
 
 from helpers.report import assert_report
 
@@ -77,3 +78,41 @@ else:
         assert_report(reports[1], sample_report)
         assert "json" in [r.backend.get_name() for r in reports]
         assert "xml" in [r.backend.get_name() for r in reports]
+
+
+def _test_get_reporting_backend_names(specified, expected):
+    assert get_reporting_backend_names(("console", "html", "json"), specified) == expected
+
+
+def test_reporting_fixed_one():
+    _test_get_reporting_backend_names(("console",), ("console",))
+
+
+def test_reporting_fixed_two():
+    _test_get_reporting_backend_names(("html", "json"), ("html", "json"))
+
+
+def test_reporting_fixed_turn_on():
+    _test_get_reporting_backend_names(("+junit",), ("console", "html", "json", "junit"))
+
+
+def test_reporting_fixed_turn_off():
+    _test_get_reporting_backend_names(("^console",), ("html", "json"))
+
+
+def test_reporting_fixed_turn_on_and_off():
+    _test_get_reporting_backend_names(("+junit", "^console"), ("html", "json", "junit"))
+
+
+def test_reporting_fixed_invalid_mix():
+    with pytest.raises(ValueError):
+        get_reporting_backend_names(("console", "html", "json"), ("console", "+junit"))
+
+
+def test_reporting_fixed_invalid_turn_off():
+    with pytest.raises(ValueError):
+        get_reporting_backend_names(("console", "html", "json"), ("^unknown",))
+
+
+def test_parse_reporting_backend_names_expression():
+    assert parse_reporting_backend_names_expression("-console  +xml  ") == ["-console", "+xml"]

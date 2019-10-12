@@ -6,6 +6,8 @@ import six
 from lemoncheesecake.reporting import Report, ReportWriter, ReportLocation
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy, DEFAULT_REPORT_SAVING_STRATEGY
 from lemoncheesecake.reporting.reportdir import create_report_dir_with_rotation
+from lemoncheesecake.reporting.backend import get_reporting_backend_names, parse_reporting_backend_names_expression, \
+    get_reporting_backends_for_test_run, get_reporting_backends
 from lemoncheesecake.session import \
     initialize_session, is_location_successful, \
     start_test_session, end_test_session, start_suite, end_suite, start_test, end_test
@@ -22,8 +24,10 @@ __all__ = (
     "before_step", "after_step"
 )
 
+DEFAULT_REPORTING_BACKENDS = "json", "html"
 
-def initialize_event_manager(top_dir, reporting_backends):
+
+def initialize_event_manager(top_dir):
     event_manager = SyncEventManager.load()
 
     report = Report()
@@ -41,6 +45,21 @@ def initialize_event_manager(top_dir, reporting_backends):
 
     report_saving_strategy = make_report_saving_strategy(
         os.environ.get("LCC_SAVE_REPORT", DEFAULT_REPORT_SAVING_STRATEGY)
+    )
+
+    if "LCC_REPORTING" in os.environ:
+        try:
+            reporting_backend_names = get_reporting_backend_names(
+                DEFAULT_REPORTING_BACKENDS,
+                parse_reporting_backend_names_expression(os.environ["LCC_REPORTING"])
+            )
+        except ValueError as e:
+            raise Exception("Invalid $LCC_REPORTING: %s" % e)
+    else:
+        reporting_backend_names = DEFAULT_REPORTING_BACKENDS
+
+    reporting_backends = get_reporting_backends_for_test_run(
+        {b.get_name(): b for b in get_reporting_backends()}, reporting_backend_names
     )
 
     for backend in reporting_backends:
