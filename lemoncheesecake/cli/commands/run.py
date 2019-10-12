@@ -120,11 +120,11 @@ def run_project(project, cli_args):
     report_saving_strategy = get_report_saving_strategy(cli_args)
 
     # Create report dir
-    if cli_args.report_dir:
-        report_dir = cli_args.report_dir
+    report_dir = cli_args.report_dir or os.environ.get("LCC_REPORT_DIR")
+    if report_dir:
         try:
             os.mkdir(report_dir)
-        except Exception as e:
+        except OSError as e:
             return LemoncheesecakeException("Cannot create report directory: %s" % e)
     else:
         try:
@@ -217,7 +217,8 @@ class RunCommand(Command):
         reporting_group = cli_parser.add_argument_group("Reporting")
         reporting_group.add_argument(
             "--report-dir", "-r", required=False,
-            help="Directory where report data will be stored"
+            help="Directory where report data will be stored (default: $LCC_REPORT_DIR or 'report' depending on "
+                 "the project configuration)"
         )
         reporting_group.add_argument(
             "--reporting", nargs="+", default=[],

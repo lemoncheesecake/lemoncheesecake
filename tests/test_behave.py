@@ -46,7 +46,7 @@ def step_impl(context, value):
     check_that("%s + %s" % (context.a, context.b), context.a + context.b, equal_to(value))
 """
 
-    def run_behave_tests(tmpdir, feature_content, step_content):
+    def run_behave_tests(tmpdir, feature_content, step_content, expected_report_dir=None):
         tmpdir.mkdir("features").join("feature.feature").write_text(feature_content, "utf-8")
         tmpdir.mkdir("steps").join("step.py").write_text(step_content, "utf-8")
         tmpdir.join("environment.py").write_text(u"""from __future__ import print_function
@@ -55,7 +55,6 @@ import os.path
 
 from lemoncheesecake.bdd.behave import *
 from lemoncheesecake.reporting import get_reporting_backend_by_name
-
 
 initialize_event_manager(
     os.path.dirname(__file__),
@@ -66,7 +65,9 @@ initialize_event_manager(
         cmd = "behave %s" % tmpdir.join("features").join("feature.feature   ").strpath
         os.system(cmd)
 
-        return load_report(tmpdir.join("report").strpath)
+        if not expected_report_dir:
+            expected_report_dir = tmpdir.join("report").strpath
+        return load_report(expected_report_dir)
 
 
     def test_initialize_event_manager():
@@ -211,3 +212,18 @@ Scenario: do a simple addition
         assert test_3.name == "addition_1_3"
         assert test_3.description == "Scenario: addition -- @1.3"
         assert test_3.status == "passed"
+
+    def test_custom_report_dir(tmpdir):
+        feature = u"""Feature: do some computations
+
+        Scenario: do a simple addition
+            Given a is 2
+            And b is 2
+            Then a + b is equal to 4
+        """
+
+        report_dir = os.path.join(tmpdir.strpath, "custom_report_dir")
+        with env_var("LCC_REPORT_DIR", report_dir):
+            report = run_behave_tests(tmpdir, feature, STEPS, expected_report_dir=report_dir)
+
+        assert report is not None

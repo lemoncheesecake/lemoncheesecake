@@ -31,7 +31,12 @@ def initialize_event_manager(top_dir, reporting_backends):
     writer = ReportWriter(report)
     event_manager.add_listener(writer)
 
-    report_dir = create_report_dir_with_rotation(top_dir)
+    report_dir = os.environ.get("LCC_REPORT_DIR")
+    if report_dir:
+        os.mkdir(report_dir)
+    else:
+        report_dir = create_report_dir_with_rotation(top_dir)
+
     initialize_session(event_manager, report_dir, report)
 
     report_saving_strategy = make_report_saving_strategy(
