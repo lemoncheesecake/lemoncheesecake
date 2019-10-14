@@ -12,7 +12,7 @@ else:
     import pytest
 
     from lemoncheesecake.reporting import load_report
-    from lemoncheesecake.bdd.behave import initialize_event_manager
+    from lemoncheesecake.bdd.behave import start_reporting_session
     from helpers.report import get_last_test, get_last_suite
     from helpers.utils import env_var
 
@@ -49,13 +49,11 @@ def step_impl(context, value):
     def run_behave_tests(tmpdir, feature_content, step_content, expected_report_dir=None):
         tmpdir.mkdir("features").join("feature.feature").write_text(feature_content, "utf-8")
         tmpdir.mkdir("steps").join("step.py").write_text(step_content, "utf-8")
-        tmpdir.join("environment.py").write_text(u"""from __future__ import print_function
-    
-import os.path
-
+        tmpdir.join("environment.py").write_text(u"""import os.path
 from lemoncheesecake.bdd.behave import *
 
-initialize_event_manager(os.path.dirname(__file__))
+def before_all(_):
+    start_reporting_session(os.path.dirname(__file__))
 """, "utf-8")
 
         cmd = "behave %s" % tmpdir.join("features").join("feature.feature   ").strpath
@@ -66,17 +64,17 @@ initialize_event_manager(os.path.dirname(__file__))
         return load_report(expected_report_dir)
 
 
-    def test_initialize_event_manager():
-        assert initialize_event_manager(".") is not None
+    def test_start_reporting_session():
+        start_reporting_session(".")
 
-    def test_initialize_event_manager_with_valid_custom_report_saving_strategy():
+    def test_start_reporting_session_with_valid_custom_report_saving_strategy():
         with env_var("LCC_SAVE_REPORT", "at_each_test"):
-            assert initialize_event_manager(".") is not None
+            start_reporting_session(".")
 
-    def test_initialize_event_manager_with_invalid_custom_report_saving_strategy():
+    def test_start_reporting_session_with_invalid_custom_report_saving_strategy():
         with env_var("LCC_SAVE_REPORT", "foobar"):
             with pytest.raises(ValueError, match="Invalid expression"):
-                assert initialize_event_manager(".") is not None
+                start_reporting_session(".")
 
     def test_scenario_passed(tmpdir):
         feature = u"""Feature: do some computations

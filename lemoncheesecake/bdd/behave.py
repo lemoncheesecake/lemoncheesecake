@@ -17,8 +17,8 @@ from lemoncheesecake.api import set_step
 
 
 __all__ = (
-    "initialize_event_manager",
-    "before_all", "after_all",
+    "start_reporting_session",
+    "after_all",
     "before_feature", "after_feature",
     "before_scenario", "after_scenario",
     "before_step", "after_step"
@@ -27,7 +27,7 @@ __all__ = (
 DEFAULT_REPORTING_BACKENDS = "json", "html"
 
 
-def initialize_event_manager(top_dir):
+def _init_reporting_session(top_dir):
     event_manager = SyncEventManager.load()
 
     report = Report()
@@ -66,7 +66,10 @@ def initialize_event_manager(top_dir):
         session = backend.create_reporting_session(report_dir, report, False, report_saving_strategy)
         event_manager.add_listener(session)
 
-    return event_manager
+
+def start_reporting_session(top_dir):
+    _init_reporting_session(top_dir)
+    start_test_session()
 
 
 def _make_suite_description(feature):
@@ -108,10 +111,6 @@ def _make_test_from_scenario(scenario, context):
     test.parent_suite = context.current_suite
     test.tags.extend(map(six.text_type, scenario.tags))
     return test
-
-
-def before_all(_):
-    start_test_session()
 
 
 def after_all(_):
