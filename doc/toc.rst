@@ -15,6 +15,7 @@ Table of content
     setup-and-teardown-suites
     fixtures
     ddt
+    bdd
     parallelism
     cli
     project

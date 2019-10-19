@@ -132,15 +132,17 @@ Writing tests
 
 - :ref:`Data Driven Testing (DDT) <ddt>`
 
+- :ref:`BDD using behave <bdd>`
+
 - :ref:`Test parallelism <parallelism>`
 
 - :ref:`The lcc command line tool and filtering arguments <cli>`
 
 - :ref:`Project customization <project>`
 
-- :ref:`Migrating from to 0.22.x to 1.x <migrating to 1.x>`
-
 - :ref:`API reference <api>`
+
+- :ref:`Migrating from to 0.22.x to 1.x <migrating to 1.x>`
 
 Contact
 -------
