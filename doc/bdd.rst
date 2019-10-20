@@ -10,7 +10,8 @@ It does not aim to be a BDD tool. However, since version 1.3.0, it provides an i
 with `behave <https://behave.readthedocs.io/en/latest/>`_.
 
 This integration allows :ref:`logging functions <logging>`, :ref:`matchers <matchers>` to be used
-within behave's steps. This integration also benefit from the various lemoncheesecake reporting backends.
+within behave's steps. This integration also benefit from the various lemoncheesecake reporting backends
+(Slack, ReportPortal, among others).
 
 No extra dependency are required besides lemoncheesecake and behave.
 
@@ -23,27 +24,21 @@ Setup
 lemoncheesecake uses `behave hook system <https://behave.readthedocs.io/en/latest/tutorial.html#environmental-controls>`_
 to create a report with suites, tests, etc...
 
-The ``environment.py`` file must look like this::
+The ``environment.py`` file must integrate a call to ``install_hook``, like this::
 
     # file: environment.py
 
-    import os.path
+    from lemoncheesecake.bdd.behave import install_hooks
 
-    from lemoncheesecake.bdd.behave import *
+    install_hooks()
 
-    def before_all(_):
-        start_reporting_session(os.path.dirname(__file__))
-
-The reporting session is initialized through the ``start_reporting_session`` function call. It takes the behave project
-top directory (the parent directory of "features" and "steps" sub-directories) as argument.
-
-It is required to keep the wildcard import of the ``lemoncheesecake.bdd.behave`` module in order to export
-all the hooks (``before_feature``, ``before_scenario``, etc...) that will build the test report.
+If you have defined your own hooks (such as ``before_feature``, ``before_scenario``, etc...), they will be preserved
+by ``install_hooks``.
 
 Example
 -------
 
-Giving the feature file:
+Giving this feature file:
 
 .. code-block:: gherkin
 
@@ -66,7 +61,7 @@ Giving the feature file:
            | 3 | 2 | 5 |
            | 1 | 5 | 6 |
 
-And the step file::
+And this step file::
 
     # file: steps/calc.py
 

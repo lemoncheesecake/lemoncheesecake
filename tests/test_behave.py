@@ -12,7 +12,7 @@ else:
     import pytest
 
     from lemoncheesecake.reporting import load_report
-    from lemoncheesecake.bdd.behave import start_reporting_session
+    from lemoncheesecake.bdd.behave import _init_reporting_session
     from helpers.report import get_last_test, get_last_suite
     from helpers.utils import env_var
 
@@ -46,17 +46,16 @@ def step_impl(context, value):
     check_that("%s + %s" % (context.a, context.b), context.a + context.b, equal_to(value))
 """
 
-    def run_behave_tests(tmpdir, feature_content, step_content, expected_report_dir=None):
+    def run_behave_tests(tmpdir, feature_content, step_content, env_content=None, expected_report_dir=None):
         tmpdir.mkdir("features").join("feature.feature").write_text(feature_content, "utf-8")
         tmpdir.mkdir("steps").join("step.py").write_text(step_content, "utf-8")
-        tmpdir.join("environment.py").write_text(u"""import os.path
-from lemoncheesecake.bdd.behave import *
+        if not env_content:
+            env_content = u"""from lemoncheesecake.bdd.behave import install_hooks
+install_hooks()
+"""
+        tmpdir.join("environment.py").write_text(env_content, "utf-8")
 
-def before_all(_):
-    start_reporting_session(os.path.dirname(__file__))
-""", "utf-8")
-
-        cmd = "behave %s" % tmpdir.join("features").join("feature.feature   ").strpath
+        cmd = "behave %s" % tmpdir.join("features").join("feature.feature").strpath
         os.system(cmd)
 
         if not expected_report_dir:
@@ -64,17 +63,17 @@ def before_all(_):
         return load_report(expected_report_dir)
 
 
-    def test_start_reporting_session():
-        start_reporting_session(".")
+    def test_init_reporting_session():
+        _init_reporting_session(".")
 
-    def test_start_reporting_session_with_valid_custom_report_saving_strategy():
+    def test_init_reporting_session_with_valid_custom_report_saving_strategy():
         with env_var("LCC_SAVE_REPORT", "at_each_test"):
-            start_reporting_session(".")
+            _init_reporting_session(".")
 
-    def test_start_reporting_session_with_invalid_custom_report_saving_strategy():
+    def test_init_reporting_session_with_invalid_custom_report_saving_strategy():
         with env_var("LCC_SAVE_REPORT", "foobar"):
             with pytest.raises(ValueError, match="Invalid expression"):
-                start_reporting_session(".")
+                _init_reporting_session(".")
 
     def test_scenario_passed(tmpdir):
         feature = u"""Feature: do some computations
@@ -236,3 +235,27 @@ Scenario: do a simple addition
 
         assert tmpdir.join("report", "report.js").exists()
         assert not tmpdir.join("report", "report.html").exists()
+
+    def test_play_well_with_existing_hook(tmpdir):
+        feature = u"""Feature: do some computations
+
+        Scenario: do a simple addition
+            Given a is 2
+            And b is 2
+            Then a + b is equal to 4
+        """
+        env = u"""import os
+from lemoncheesecake.bdd.behave import install_hooks
+
+def after_all(_):
+    os.mkdir("{tmpdir}/iwashere")
+
+install_hooks()
+""".format(tmpdir=tmpdir.strpath)
+
+        with env_var("LCC_REPORTING", "-html"):
+            run_behave_tests(tmpdir, feature, STEPS, env_content=env)
+
+        assert tmpdir.join("report", "report.js").exists()
+        assert not tmpdir.join("report", "report.html").exists()
+        assert tmpdir.join("iwashere").exists()

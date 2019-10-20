@@ -1,4 +1,10 @@
+###
+# The installation hook mechanism has been greatly inspired by allure-behave
+# (see: https://github.com/allure-framework/allure-python/blob/master/allure-behave/src/hooks.py)
+###
+
 import os
+import inspect
 
 from slugify import slugify
 import six
@@ -16,15 +22,32 @@ from lemoncheesecake.events import SyncEventManager
 from lemoncheesecake.api import set_step
 
 
-__all__ = (
-    "start_reporting_session",
-    "after_all",
+_HOOK_NAMES = (
+    "before_all", "after_all",
     "before_feature", "after_feature",
     "before_scenario", "after_scenario",
     "before_step", "after_step"
 )
 
-DEFAULT_REPORTING_BACKENDS = "json", "html"
+_DEFAULT_REPORTING_BACKENDS = "json", "html"
+
+
+def _wrap_hook(orig, new):
+    def hook(*args, **kwargs):
+        new(*args, **kwargs)
+        return orig(*args, **kwargs)
+    return hook
+
+
+def install_hooks():
+    frame_info = inspect.stack()[1]
+    namespace = frame_info[0].f_locals
+    hooks = _Hooks(os.path.dirname(frame_info[1]))
+    for hook_name in _HOOK_NAMES:
+        if hook_name in namespace:
+            namespace[hook_name] = _wrap_hook(namespace[hook_name], getattr(hooks, hook_name))
+        else:
+            namespace[hook_name] = getattr(hooks, hook_name)
 
 
 def _init_reporting_session(top_dir):
@@ -50,13 +73,13 @@ def _init_reporting_session(top_dir):
     if "LCC_REPORTING" in os.environ:
         try:
             reporting_backend_names = get_reporting_backend_names(
-                DEFAULT_REPORTING_BACKENDS,
+                _DEFAULT_REPORTING_BACKENDS,
                 parse_reporting_backend_names_expression(os.environ["LCC_REPORTING"])
             )
         except ValueError as e:
             raise Exception("Invalid $LCC_REPORTING: %s" % e)
     else:
-        reporting_backend_names = DEFAULT_REPORTING_BACKENDS
+        reporting_backend_names = _DEFAULT_REPORTING_BACKENDS
 
     reporting_backends = get_reporting_backends_for_test_run(
         {b.get_name(): b for b in get_reporting_backends()}, reporting_backend_names
@@ -67,78 +90,75 @@ def _init_reporting_session(top_dir):
         event_manager.add_listener(session)
 
 
-def start_reporting_session(top_dir):
-    _init_reporting_session(top_dir)
-    start_test_session()
+class _Hooks(object):
+    def __init__(self, top_dir):
+        self.top_dir = top_dir
 
+    @staticmethod
+    def _make_suite_description(feature):
+        if feature.description:
+            return "Feature: %s\n%s" % (feature.name, "\n".join(feature.description))
+        else:
+            return "Feature: %s" % feature.name
 
-def _make_suite_description(feature):
-    if feature.description:
-        return "Feature: %s\n%s" % (feature.name, "\n".join(feature.description))
-    else:
-        return "Feature: %s" % feature.name
+    @staticmethod
+    def _make_suite_name(feature):
+        return slugify(feature.name, separator="_")
 
+    @staticmethod
+    def _make_test_description(scenario):
+        # scenario outlines end with a blank character... strip it:
+        scenario_name = scenario.name.strip()
+        if scenario.description:
+            return "Scenario: %s\n%s" % (scenario_name, "\n".join(scenario.description))
+        else:
+            return "Scenario: %s" % scenario_name
 
-def _make_suite_name(feature):
-    return slugify(feature.name, separator="_")
+    @staticmethod
+    def _make_test_name(scenario):
+        return slugify(scenario.name, separator="_")
 
+    @staticmethod
+    def _make_suite_from_feature(feature):
+        suite = Suite(
+            None, _Hooks._make_suite_name(feature), _Hooks._make_suite_description(feature)
+        )
+        suite.tags.extend(map(six.text_type, feature.tags))
+        return suite
 
-def _make_test_description(scenario):
-    # scenario outlines end with a blank character... strip it:
-    scenario_name = scenario.name.strip()
-    if scenario.description:
-        return "Scenario: %s\n%s" % (scenario_name, "\n".join(scenario.description))
-    else:
-        return "Scenario: %s" % scenario_name
+    @staticmethod
+    def _make_test_from_scenario(scenario, context):
+        test = Test(
+            _Hooks._make_test_name(scenario), _Hooks._make_test_description(scenario), None
+        )
+        test.parent_suite = context.current_suite
+        test.tags.extend(map(six.text_type, scenario.tags))
+        return test
 
+    def before_all(self, _):
+        _init_reporting_session(self.top_dir)
+        start_test_session()
 
-def _make_test_name(scenario):
-    return slugify(scenario.name, separator="_")
+    def after_all(self, _):
+        end_test_session()
 
+    def before_feature(self, context, feature):
+        context.current_suite = _Hooks._make_suite_from_feature(feature)
+        start_suite(context.current_suite)
 
-def _make_suite_from_feature(feature):
-    suite = Suite(
-        None, _make_suite_name(feature), _make_suite_description(feature)
-    )
-    suite.tags.extend(map(six.text_type, feature.tags))
-    return suite
+    def after_feature(self, context, _):
+        end_suite(context.current_suite)
 
+    def before_scenario(self, context, scenario):
+        context.current_test = _Hooks._make_test_from_scenario(scenario, context)
+        start_test(context.current_test)
 
-def _make_test_from_scenario(scenario, context):
-    test = Test(
-        _make_test_name(scenario), _make_test_description(scenario), None
-    )
-    test.parent_suite = context.current_suite
-    test.tags.extend(map(six.text_type, scenario.tags))
-    return test
+    def after_scenario(self, context, _):
+        end_test(context.current_test)
 
+    def before_step(self, _, step):
+        set_step(step.keyword + " " + step.name)
 
-def after_all(_):
-    end_test_session()
-
-
-def before_feature(context, feature):
-    context.current_suite = _make_suite_from_feature(feature)
-    start_suite(context.current_suite)
-
-
-def after_feature(context, _):
-    end_suite(context.current_suite)
-
-
-def before_scenario(context, scenario):
-    context.current_test = _make_test_from_scenario(scenario, context)
-    start_test(context.current_test)
-
-
-def after_scenario(context, _):
-    end_test(context.current_test)
-
-
-def before_step(_, step):
-    set_step(step.keyword + " " + step.name)
-
-
-def after_step(context, step):
-    if not is_location_successful(ReportLocation.in_test(context.current_test)):
-        step.hook_failed = True
+    def after_step(self, context, step):
+        if not is_location_successful(ReportLocation.in_test(context.current_test)):
+            step.hook_failed = True
