@@ -1,3 +1,11 @@
+# 1.3.0 (2019-10-20)
+
+- Add support for behave (BDD, http://docs.lemoncheesecake.io/en/latest/bdd.html)
+- **lcc run**: `--report-dir` and `--reporting` can also be controlled respectively
+  through `$LCC_REPORT_DIR` and `$LCC_REPORTING` environment variables (also applies when tests are
+  run through behave)
+- Drop official support for Python 3.4
+
 # 1.2.2 (2019-09-15)
 
 - **API**: do explicit type checking for test/suite metadata and logged information (steps,
