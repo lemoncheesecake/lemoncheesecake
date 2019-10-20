@@ -10,8 +10,12 @@ import itertools
 import six
 
 from lemoncheesecake.session import initialize_session, initialize_fixture_cache, set_session_location,\
-    is_location_successful, is_session_successful, mark_location_as_failed, get_report,\
-    log_error, set_step
+    is_location_successful, is_session_successful, mark_location_as_failed, get_report, log_error, set_step, \
+    start_test_session, end_test_session, \
+    start_test_session_setup, end_test_session_setup, \
+    start_test_session_teardown, end_test_session_teardown, \
+    start_suite, end_suite, start_suite_setup, end_suite_setup, start_suite_teardown, end_suite_teardown, \
+    start_test, end_test, disable_test, skip_test
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
     UserError, TaskFailure, serialize_current_exception
 from lemoncheesecake import events
@@ -121,15 +125,14 @@ class TestTask(BaseTask):
             disabled = self.test.is_disabled()
             if disabled:
                 disabled_reason = disabled if isinstance(disabled, six.string_types) else ""
-                context.event_manager.fire(events.TestDisabledEvent(self.test, disabled_reason))
+                disable_test(self.test, disabled_reason)
                 return True
         return False
 
     def skip(self, context, reason=""):
         if self._handle_disabled(context):
             return
-        context.event_manager.fire(events.TestSkippedEvent(self.test, "Test skipped because %s" % reason))
-        mark_location_as_failed(ReportLocation.in_test(self.test))
+        skip_test(self.test, "Test skipped because %s" % reason)
 
     def run(self, context):
         suite = self.test.parent_suite
@@ -143,8 +146,7 @@ class TestTask(BaseTask):
         ###
         # Begin test
         ###
-        context.event_manager.fire(events.TestStartEvent(self.test))
-        set_session_location(ReportLocation.in_test(self.test))
+        start_test(self.test)
 
         ###
         # Setup test (setup and fixtures)
@@ -171,10 +173,8 @@ class TestTask(BaseTask):
         setup_teardown_funcs.extend(scheduled_fixtures.get_setup_teardown_pairs())
 
         if any(setup for setup, _ in setup_teardown_funcs):
-            context.event_manager.fire(events.TestSetupStartEvent(self.test))
             set_step("Setup test")
             teardown_funcs = context.run_setup_funcs(setup_teardown_funcs, ReportLocation.in_test(self.test))
-            context.event_manager.fire(events.TestSetupEndEvent(self.test))
         else:
             teardown_funcs = [teardown for _, teardown in setup_teardown_funcs if teardown]
 
@@ -193,12 +193,10 @@ class TestTask(BaseTask):
         # Teardown
         ###
         if any(teardown_funcs):
-            context.event_manager.fire(events.TestTeardownStartEvent(self.test))
             set_step("Teardown test")
             context.run_teardown_funcs(teardown_funcs)
-            context.event_manager.fire(events.TestTeardownEndEvent(self.test))
 
-        context.event_manager.fire(events.TestEndEvent(self.test))
+        end_test(self.test)
 
         if not is_location_successful(ReportLocation.in_test(self.test)):
             raise TaskFailure("test '%s' failed" % self.test.path)
@@ -287,7 +285,7 @@ class SuiteBeginningTask(BaseTask):
         return self._dependencies
 
     def run(self, context):
-        context.event_manager.fire(events.SuiteStartEvent(self.suite))
+        start_suite(self.suite)
 
     def skip(self, context, _):
         self.run(context)
@@ -314,15 +312,14 @@ class SuiteInitializationTask(BaseTask):
     def run(self, context):
         if any(setup for setup, _ in self.setup_teardown_funcs):
             # before actual initialization
-            context.event_manager.fire(events.SuiteSetupStartEvent(self.suite))
-            set_session_location(ReportLocation.in_suite_setup(self.suite))
+            start_suite_setup(self.suite)
             set_step("Setup suite")
             # actual initialization
             self.teardown_funcs = context.run_setup_funcs(
                 self.setup_teardown_funcs, ReportLocation.in_suite_setup(self.suite)
             )
             # after actual initialization
-            context.event_manager.fire(events.SuiteSetupEndEvent(self.suite))
+            end_suite_setup(self.suite)
             if not is_location_successful(ReportLocation.in_suite_setup(self.suite)):
                 raise TaskFailure("suite '%s' setup failed" % self.suite.path)
         else:
@@ -376,7 +373,7 @@ class SuiteEndingTask(BaseTask):
         return self._dependencies
 
     def run(self, context):
-        context.event_manager.fire(events.SuiteEndEvent(self.suite))
+        end_suite(self.suite)
 
     def skip(self, context, _):
         self.run(context)
@@ -402,13 +399,12 @@ class SuiteTeardownTask(BaseTask):
     def run(self, context):
         if any(self.suite_setup_task.teardown_funcs):
             # before actual teardown
-            context.event_manager.fire(events.SuiteTeardownStartEvent(self.suite))
-            set_session_location(ReportLocation.in_suite_teardown(self.suite))
+            start_suite_teardown(self.suite)
             set_step("Teardown suite")
             # actual teardown
             context.run_teardown_funcs(self.suite_setup_task.teardown_funcs)
             # after actual teardown
-            context.event_manager.fire(events.SuiteTeardownEndEvent(self.suite))
+            end_suite_teardown(self.suite)
 
     def skip(self, context, _):
         self.run(context)
@@ -432,13 +428,12 @@ class TestSessionSetupTask(BaseTask):
 
         if any(setup for setup, _ in setup_teardown_funcs):
             # before actual setup
-            context.event_manager.fire(events.TestSessionSetupStartEvent())
-            set_session_location(ReportLocation.in_test_session_setup())
+            start_test_session_setup()
             set_step("Setup test session")
             # actual setup
             self.teardown_funcs = context.run_setup_funcs(setup_teardown_funcs, ReportLocation.in_test_session_setup())
             # after actual setup
-            context.event_manager.fire(events.TestSessionSetupEndEvent())
+            end_test_session_setup()
             if not is_location_successful(ReportLocation.in_test_session_setup()):
                 raise TaskFailure("test session setup failed")
         else:
@@ -461,13 +456,12 @@ class TestSessionTeardownTask(BaseTask):
     def run(self, context):
         if any(self.test_session_setup_task.teardown_funcs):
             # before actual teardown
-            context.event_manager.fire(events.TestSessionTeardownStartEvent())
-            set_session_location(ReportLocation.in_test_session_teardown())
+            start_test_session_teardown()
             set_step("Teardown test session")
             # actual teardown
             context.run_teardown_funcs(self.test_session_setup_task.teardown_funcs)
             # after actual teardown
-            context.event_manager.fire(events.TestSessionTeardownEndEvent())
+            end_test_session_teardown()
 
     def skip(self, context, _):
         self.run(context)
@@ -553,9 +547,9 @@ def run_session(suites, fixture_registry, pre_run_scheduled_fixtures, event_mana
     report = get_report()
 
     with event_manager.handle_events():
-        event_manager.fire(events.TestSessionStartEvent(report))
+        start_test_session()
         run_tasks(tasks, context, nb_threads, context.watchdog)
-        event_manager.fire(events.TestSessionEndEvent(report))
+        end_test_session()
 
     exception, serialized_exception = event_manager.get_pending_failure()
     if exception:

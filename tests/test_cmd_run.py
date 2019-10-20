@@ -1,9 +1,8 @@
 import os
 import pytest
 
-from lemoncheesecake.exceptions import LemoncheesecakeException
 from lemoncheesecake.cli import build_cli_args
-from lemoncheesecake.cli.commands.run import run_project, get_reporting_backend_names
+from lemoncheesecake.cli.commands.run import run_project
 
 from helpers.runner import generate_project, run_main
 from helpers.cli import assert_run_output, cmdout
@@ -131,41 +130,3 @@ def test_post_run(tmpdir):
     run_project(project, args)
 
     assert marker == ["run"]
-
-
-def _test_get_reporting_backend_names(specified, expected):
-    assert get_reporting_backend_names(("console", "html", "json"), specified) == expected
-
-
-def test_reporting_no_arguments():
-    _test_get_reporting_backend_names((), ("console", "html", "json"))
-
-
-def test_reporting_fixed_one():
-    _test_get_reporting_backend_names(("console",), ("console",))
-
-
-def test_reporting_fixed_two():
-    _test_get_reporting_backend_names(("html", "json"), ("html", "json"))
-
-
-def test_reporting_fixed_turn_on():
-    _test_get_reporting_backend_names(("+junit",), ("console", "html", "json", "junit"))
-
-
-def test_reporting_fixed_turn_off():
-    _test_get_reporting_backend_names(("^console",), ("html", "json"))
-
-
-def test_reporting_fixed_turn_on_and_off():
-    _test_get_reporting_backend_names(("+junit", "^console"), ("html", "json", "junit"))
-
-
-def test_reporting_fixed_invalid_mix():
-    with pytest.raises(LemoncheesecakeException):
-        get_reporting_backend_names(("console", "html", "json"), ("console", "+junit"))
-
-
-def test_reporting_fixed_invalid_turn_off():
-    with pytest.raises(LemoncheesecakeException):
-        get_reporting_backend_names(("console", "html", "json"), ("^unknown",))

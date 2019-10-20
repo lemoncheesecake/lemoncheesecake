@@ -5,6 +5,9 @@ from lemoncheesecake.events import TestSessionSetupEndEvent, TestSessionTeardown
     TestEndEvent, SuiteSetupEndEvent, SuiteTeardownEndEvent, SuiteEndEvent, SteppedEvent
 
 
+DEFAULT_REPORT_SAVING_STRATEGY = "at_each_failed_test"
+
+
 def _get_testish_info(event, report):
     if isinstance(event, TestEndEvent):
         test_data = report.get_test(event.test)
@@ -80,9 +83,9 @@ def make_report_saving_strategy(expression):
         pass
 
     # second, try with "every_Ns"
-    m = re.compile("^every[_ ](\d+)s$").match(expression)
+    m = re.compile(r"^every[_ ](\d+)s$").match(expression)
     if m:
         return SaveAtInterval(int(m.group(1)))
 
     # ok... nothing we know about
-    raise ValueError("Unknown report saving strategy expression '%s'" % expression)
+    raise ValueError("Invalid expression '%s' for report saving strategy" % expression)

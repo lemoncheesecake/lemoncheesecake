@@ -15,7 +15,7 @@ import six
 
 from lemoncheesecake.consts import ATTACHMENTS_DIR, \
     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
-from lemoncheesecake.reporting import Report
+from lemoncheesecake.reporting import Report, ReportLocation
 from lemoncheesecake import events
 from lemoncheesecake.exceptions import ProgrammingError
 from lemoncheesecake.fixture import ScheduledFixtures
@@ -50,7 +50,7 @@ class Session(object):
         self._local.location = None
         self._local.step = None
 
-    def set_location(self, location):
+    def set_logging_location(self, location):
         self._local.location = location
 
     @property
@@ -100,6 +100,60 @@ class Session(object):
             self._local.location, self._local.step, "%s/%s" % (ATTACHMENTS_DIR, attachment_filename),
             description, as_image
         ))
+
+    def start_test_session(self):
+        self.event_manager.fire(events.TestSessionStartEvent(self.report))
+
+    def end_test_session(self):
+        self.event_manager.fire(events.TestSessionEndEvent(self.report))
+
+    def start_test_session_setup(self):
+        self.event_manager.fire(events.TestSessionSetupStartEvent())
+        self.set_logging_location(ReportLocation.in_test_session_setup())
+
+    def end_test_session_setup(self):
+        self.event_manager.fire(events.TestSessionSetupEndEvent())
+
+    def start_test_session_teardown(self):
+        self.event_manager.fire(events.TestSessionTeardownStartEvent())
+        self.set_logging_location(ReportLocation.in_test_session_teardown())
+
+    def end_test_session_teardown(self):
+        self.event_manager.fire(events.TestSessionTeardownEndEvent())
+
+    def start_suite(self, suite):
+        self.event_manager.fire(events.SuiteStartEvent(suite))
+
+    def end_suite(self, suite):
+        self.event_manager.fire(events.SuiteEndEvent(suite))
+
+    def start_suite_setup(self, suite):
+        self.event_manager.fire(events.SuiteSetupStartEvent(suite))
+        self.set_logging_location(ReportLocation.in_suite_setup(suite))
+
+    def end_suite_setup(self, suite):
+        self.event_manager.fire(events.SuiteSetupEndEvent(suite))
+
+    def start_suite_teardown(self, suite):
+        self.event_manager.fire(events.SuiteTeardownStartEvent(suite))
+        self.set_logging_location(ReportLocation.in_suite_teardown(suite))
+
+    def end_suite_teardown(self, suite):
+        self.event_manager.fire(events.SuiteTeardownEndEvent(suite))
+
+    def start_test(self, test):
+        self.event_manager.fire(events.TestStartEvent(test))
+        self.set_logging_location(ReportLocation.in_test(test))
+
+    def end_test(self, test):
+        self.event_manager.fire(events.TestEndEvent(test))
+
+    def skip_test(self, test, reason):
+        self.event_manager.fire(events.TestSkippedEvent(test, reason))
+        self.mark_location_as_failed(ReportLocation.in_test(test))
+
+    def disable_test(self, test, reason):
+        self.event_manager.fire(events.TestDisabledEvent(test, reason))
 
 
 def get_session():
@@ -312,7 +366,7 @@ def add_report_info(name, value):
 
 
 def set_session_location(location):
-    get_session().set_location(location)
+    get_session().set_logging_location(location)
 
 
 def mark_location_as_failed(location):
@@ -325,6 +379,70 @@ def is_location_successful(location):
 
 def is_session_successful():
     return get_session().is_successful()
+
+
+def start_test_session():
+    return get_session().start_test_session()
+
+
+def end_test_session():
+    return get_session().end_test_session()
+
+
+def start_test_session_setup():
+    return get_session().start_test_session_setup()
+
+
+def end_test_session_setup():
+    return get_session().end_test_session_setup()
+
+
+def start_test_session_teardown():
+    return get_session().start_test_session_teardown()
+
+
+def end_test_session_teardown():
+    return get_session().end_test_session_teardown()
+
+
+def start_suite(suite):
+    get_session().start_suite(suite)
+
+
+def end_suite(suite):
+    get_session().end_suite(suite)
+
+
+def start_suite_setup(suite):
+    get_session().start_suite_setup(suite)
+
+
+def end_suite_setup(suite):
+    get_session().end_suite_setup(suite)
+
+
+def start_suite_teardown(suite):
+    get_session().start_suite_teardown(suite)
+
+
+def end_suite_teardown(suite):
+    get_session().end_suite_teardown(suite)
+
+
+def start_test(test):
+    get_session().start_test(test)
+
+
+def end_test(test):
+    get_session().end_test(test)
+
+
+def skip_test(test, reason=None):
+    get_session().skip_test(test, reason)
+
+
+def disable_test(test, reason=None):
+    get_session().disable_test(test, reason)
 
 
 class Thread(threading.Thread):

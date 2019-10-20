@@ -110,6 +110,10 @@ def assert_test_skipped(report):
     _assert_test_status(report, "skipped")
 
 
+def get_last_suite(report):
+    return next(reversed(list(report.all_suites())))
+
+
 def get_last_test(report):
     return next(reversed(list(report.all_tests())))
 
