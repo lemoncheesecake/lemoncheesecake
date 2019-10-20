@@ -82,6 +82,8 @@ Features
 
 - Multiple reporting flavors built-in: HTML, JSON, XML, JUnit, ReportPortal, Slack notifications
 
+- BDD support using `behave <https://behave.readthedocs.io/en/latest/>`_
+
 - Test parallelization
 
 - Rich CLI toolbox

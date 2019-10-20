@@ -77,7 +77,8 @@ On August 11th, 2019, lemoncheesecake 1.0.0 has been released. This major releas
 
 - a new API reference documentation
 
-The full changelog is available `here <https://github.com/lemoncheesecake/lemoncheesecake/blob/master/CHANGELOG.md#100-2019-08-11>`_.
+The full changelog is available
+`here <https://github.com/lemoncheesecake/lemoncheesecake/blob/master/CHANGELOG.md#100-2019-08-11>`_.
 
 This version is not compatible with prior 0.22.x releases. The migration process is documented in
 :ref:`Migrating from to 0.22.x to 1.x <migrating to 1.x>`.
@@ -92,6 +93,8 @@ Features
 - Support for test filtering
 
 - Multiple reporting flavors built-in: HTML, JSON, XML, JUnit, ReportPortal, Slack notifications
+
+- BDD support using `behave <https://behave.readthedocs.io/en/latest/>`_
 
 - Test parallelization
 
