@@ -54,10 +54,20 @@ def add_report_path_cli_arg(cli_parser):
 
 
 def get_report_path(cli_args):
-    if cli_args.report_path is None:
-        project_dirname = find_project_dir()
-        if project_dirname is None:
-            raise UserError("Cannot find project")
-        return osp.join(project_dirname, DEFAULT_REPORT_DIR_NAME)
-    else:
+    # first attempt: has the report path been specified on the CLI ?
+    if cli_args.report_path:
         return cli_args.report_path
+
+    # second attempt: is there a report on the current working directory ?
+    if osp.exists(DEFAULT_REPORT_DIR_NAME):
+        return DEFAULT_REPORT_DIR_NAME
+
+    # third attempt: try to find a project and then the corresponding report
+    project_dirname = find_project_dir()
+    if project_dirname:
+        report_path = osp.join(project_dirname, DEFAULT_REPORT_DIR_NAME)
+        if osp.exists(report_path):
+            return report_path
+
+    # could not find anything
+    raise UserError("Cannot find report path")
