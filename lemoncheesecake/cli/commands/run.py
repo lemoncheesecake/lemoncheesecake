@@ -29,18 +29,23 @@ def build_fixture_registry(project, cli_args):
     return registry
 
 
-def get_nb_threads(cli_args):
+def get_nb_threads(cli_args, project):
     if cli_args.threads is not None:
-        return max(cli_args.threads, 1)
+        nb_threads = max(cli_args.threads, 1)
     elif "LCC_THREADS" in os.environ:
         try:
-            return max(int(os.environ["LCC_THREADS"]), 1)
+            nb_threads = max(int(os.environ["LCC_THREADS"]), 1)
         except ValueError:
             raise LemoncheesecakeException(
                 "Invalid value '%s' for $LCC_THREADS environment variable (expect integer)" % os.environ["LCC_THREADS"]
             )
     else:
-        return 1
+        nb_threads = 1
+
+    if nb_threads > 1 and not project.threaded:
+        raise LemoncheesecakeException("Project does not support multi-threading")
+
+    return nb_threads
 
 
 def get_report_saving_strategy(cli_args):
@@ -72,38 +77,7 @@ def get_reporting_backend_names(cli_args, project):
         return project.default_reporting_backend_names
 
 
-class ReportSetupHandler(object):
-    def __init__(self, project):
-        self.project = project
-
-    def __call__(self, event):
-        title = self.project.build_report_title()
-        if title:
-            event.report.title = title
-
-        for key, value in self.project.build_report_info():
-            event.report.add_info(key, value)
-
-
-def run_project(project, cli_args):
-    nb_threads = get_nb_threads(cli_args)
-    if nb_threads > 1 and not project.threaded:
-        raise LemoncheesecakeException("Project does not support multi-threading")
-
-    suites = load_suites_from_project(project, make_test_filter(cli_args))
-
-    # Build fixture registry
-    fixture_registry = build_fixture_registry(project, cli_args)
-    fixture_registry.check_fixtures_in_suites(suites)
-
-    # Get reporting backends
-    reporting_backend_names = get_reporting_backend_names(cli_args, project)
-    reporting_backends = get_reporting_backends_for_test_run(project.reporting_backends, reporting_backend_names)
-
-    # Get report save mode
-    report_saving_strategy = get_report_saving_strategy(cli_args)
-
-    # Create report dir
+def create_report_dir(cli_args, project):
     report_dir = cli_args.report_dir or os.environ.get("LCC_REPORT_DIR")
     if report_dir:
         try:
@@ -120,6 +94,43 @@ def run_project(project, cli_args):
                 "Got an unexpected exception while creating report directory:%s" % \
                 serialize_current_exception(show_stacktrace=True)
             )
+
+    return report_dir
+
+
+class ReportSetupHandler(object):
+    def __init__(self, project):
+        self.project = project
+
+    def __call__(self, event):
+        title = self.project.build_report_title()
+        if title:
+            event.report.title = title
+
+        for key, value in self.project.build_report_info():
+            event.report.add_info(key, value)
+
+
+def run_suites_from_project(project, cli_args):
+    # Load suites
+    suites = load_suites_from_project(project, make_test_filter(cli_args))
+
+    # Build fixture registry
+    fixture_registry = build_fixture_registry(project, cli_args)
+    fixture_registry.check_fixtures_in_suites(suites)
+
+    # Get reporting backends
+    reporting_backend_names = get_reporting_backend_names(cli_args, project)
+    reporting_backends = get_reporting_backends_for_test_run(project.reporting_backends, reporting_backend_names)
+
+    # Get report save mode
+    report_saving_strategy = get_report_saving_strategy(cli_args)
+
+    # Create report dir
+    report_dir = create_report_dir(cli_args, project)
+
+    # Get number of threads
+    nb_threads = get_nb_threads(cli_args, project)
 
     # Handle before run hook
     try:
@@ -156,6 +167,7 @@ def run_project(project, cli_args):
             serialize_current_exception(show_stacktrace=True)
         )
 
+    # Return exit code
     if cli_args.exit_error_on_failure:
         return 0 if is_successful else 1
     else:
@@ -220,4 +232,4 @@ class RunCommand(Command):
             project.add_cli_args(cli_group)
 
     def run_cmd(self, cli_args):
-        return run_project(load_project(), cli_args)
+        return run_suites_from_project(load_project(), cli_args)
