@@ -3,45 +3,45 @@ import time
 
 from lemoncheesecake.events import TestSessionSetupEndEvent, TestSessionTeardownEndEvent, \
     TestEndEvent, SuiteSetupEndEvent, SuiteTeardownEndEvent, SuiteEndEvent, SteppedEvent
-
+from lemoncheesecake.reporting.report import ReportLocation
 
 DEFAULT_REPORT_SAVING_STRATEGY = "at_each_failed_test"
 
 
-def _get_testish_info(event, report):
+def _is_end_of_result_event(event):
     if isinstance(event, TestEndEvent):
-        test_data = report.get_test(event.test)
-        return True, test_data.status == "passed"
+        return ReportLocation.in_test(event.test)
 
     if isinstance(event, SuiteSetupEndEvent):
-        suite_data = report.get_suite(event.suite)
-        return True, suite_data.suite_setup and not suite_data.suite_setup.is_successful()
+        return ReportLocation.in_suite_setup(event.suite)
 
     if isinstance(event, SuiteTeardownEndEvent):
-        suite_data = report.get_suite(event.suite)
-        return True, suite_data.suite_teardown and not suite_data.suite_teardown.is_successful()
+        return ReportLocation.in_suite_teardown(event.suite)
 
     if isinstance(event, TestSessionSetupEndEvent):
-        return True, report.test_session_setup and not report.test_session_setup.is_successful()
+        return ReportLocation.in_test_session_setup()
 
     if isinstance(event, TestSessionTeardownEndEvent):
-        return True, report.test_session_teardown and not report.test_session_teardown.is_successful()
+        return ReportLocation.in_test_session_teardown()
 
-    return False, None
+    return None
 
 
 def save_at_each_suite_strategy(event, _):
     return isinstance(event, SuiteEndEvent)
 
 
-def save_at_each_test_strategy(event, report):
-    is_testish_end, _ = _get_testish_info(event, report)
-    return is_testish_end
+def save_at_each_test_strategy(event, _):
+    return _is_end_of_result_event(event) is not None
 
 
 def save_at_each_failed_test_strategy(event, report):
-    is_testish_end, is_successful = _get_testish_info(event, report)
-    return is_testish_end and not is_successful
+    location = _is_end_of_result_event(event)
+    if location:
+        result = report.get(location)
+        return result and result.status == "failed"
+    else:
+        return False
 
 
 def save_at_each_event_strategy(event, _):

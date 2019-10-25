@@ -43,6 +43,11 @@ def do_test_serialization(suites_or_report, backend, tmpdir, fixtures=(), report
 def test_simple_test(backend, serialization_tester, tmpdir, report_saving_strategy=None):
     @lcc.suite("MySuite")
     class MySuite:
+        def setup_suite(self):
+            # make sure that the saving strategy also works well with
+            # a end-type event but no result
+            pass
+
         @lcc.test("Some test")
         def sometest(self):
             check_that("foo", 1, equal_to(1))
