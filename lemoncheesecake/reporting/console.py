@@ -16,7 +16,8 @@ def test_status_to_color(status):
         "passed": "green",
         "failed": "red",
         "disabled": "cyan",
-        "in_progress": "cyan"
+        "in_progress": "cyan",
+        None: "cyan"  # None means test is in progress
     }.get(status, "yellow")
 
 
