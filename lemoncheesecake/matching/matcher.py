@@ -122,7 +122,7 @@ class Matcher(object):
         Build a description for the matcher given the instance of :py:class:`MatcherDescriptionTransformer`
         passed as argument.
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def build_short_description(self, transformation):
         return self.build_description(transformation)
@@ -135,4 +135,4 @@ class Matcher(object):
         :param actual: the actual value to match
         :return: an instance of :py:class:`MatchResult`
         """
-        raise NotImplemented()
+        raise NotImplementedError()

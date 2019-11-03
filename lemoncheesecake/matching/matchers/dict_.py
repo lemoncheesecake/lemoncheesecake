@@ -13,12 +13,12 @@ from lemoncheesecake.matching.matchers.composites import is_
 
 class EntryMatcher(object):
     def build_description(self):
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def get_entry(self, actual):
         # type: (dict) -> Any
         """Return the value of dict corresponding to entry matching or raise KeyError if entry is not found"""
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
 class KeyPathMatcher(EntryMatcher):

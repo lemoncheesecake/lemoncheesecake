@@ -41,13 +41,13 @@ def _grep(pattern, steps):
 
 class Filter(object):
     def __bool__(self):
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def __nonzero__(self):  # for Python 2 compatibility
         return self.__bool__()
 
     def __call__(self, test):
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
 class BaseTreeNodeFilter(Filter):

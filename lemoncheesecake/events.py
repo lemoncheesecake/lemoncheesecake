@@ -98,7 +98,7 @@ class BaseEventManager(object):
         self._event_types[event.__class__.get_name()].handle(event)
 
     def fire(self, event):
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
 class AsyncEventManager(BaseEventManager):

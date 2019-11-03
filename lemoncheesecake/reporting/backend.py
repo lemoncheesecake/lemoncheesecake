@@ -19,22 +19,22 @@ class ReportingSession(object):
 
 class ReportingSessionBuilderMixin(object):
     def create_reporting_session(self, report_dir, report, parallel, report_saving_strategy):
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
 class ReportSerializerMixin(object):
     def save_report(self, filename, report):
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
 class ReportUnserializerMixin(object):
     def load_report(self, filename):
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
 class ReportingBackend(object):
     def get_name(self):
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def is_available(self):
         return True
@@ -74,7 +74,7 @@ class FileReportSession(ReportingSession):
 
 class FileReportBackend(ReportingBackend, ReportSerializerMixin, ReportingSessionBuilderMixin):
     def get_report_filename(self):
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def create_reporting_session(self, report_dir, report, parallel, report_saving_strategy):
         return FileReportSession(
