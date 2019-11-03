@@ -17,7 +17,7 @@ def prepare_report_dirs(top_dir, has_current=False, archive_nums=None):
 
 def get_report_nums_in_dir(top_dir):
     for dirname in glob.glob(osp.join(top_dir, "report-*")):
-        m = re.compile("report-(\d+)$").search(dirname)
+        m = re.compile(r"report-(\d+)$").search(dirname)
         if m is not None:
             yield int(m.group(1))
 
