@@ -1,3 +1,9 @@
+# 1.3.1 (2019-11-03)
+
+- Add official support for Python 3.8
+- **lcc report -s**: fix status display of in progress tests
+- **under the hood**: minor code refactoring and bug fix
+
 # 1.3.0 (2019-10-20)
 
 - Add support for behave (BDD, http://docs.lemoncheesecake.io/en/latest/bdd.html)
