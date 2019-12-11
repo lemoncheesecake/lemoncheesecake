@@ -123,6 +123,11 @@ def assert_last_test_status(report, status):
     assert test.status == status
 
 
+def get_last_log(report):
+    test = get_last_test(report)
+    return next(entry for entry in reversed(test.get_steps()[-1].entries) if isinstance(entry, reporting.Log))
+
+
 def get_last_logged_check(report):
     test = get_last_test(report)
     return next(entry for entry in reversed(test.get_steps()[-1].entries) if isinstance(entry, reporting.Check))

@@ -10,7 +10,8 @@ from lemoncheesecake.exceptions import UserError, ProgrammingError, ModuleImport
     InvalidSuiteError, VisibilityConditionNotMet, serialize_current_exception
 from lemoncheesecake.suite.core import Test, Suite, SUITE_HOOKS
 from lemoncheesecake.testtree import BaseTreeNode
-from lemoncheesecake.helpers.typecheck import check_type_string, check_type
+from lemoncheesecake.helpers.typecheck import check_type_string, check_type_dict, check_type
+
 
 def _is_suite_class(obj):
     return inspect.isclass(obj) and hasattr(obj, "_lccmetadata") and obj._lccmetadata.is_suite
@@ -55,7 +56,7 @@ def _check_test_tree_node_types(node):
     check_type("links", node.links, "List[Tuple[str, Optional[str]]]", _check_links, show_actual_type=False)
 
 
-def load_test(obj):
+def _load_test(obj):
     md = obj._lccmetadata
     _ensure_node_is_visible(obj, md)
 
@@ -75,28 +76,33 @@ def load_test(obj):
     return test
 
 
-def _load_test_from_method(method):
-    return load_test(method)
+def _load_parametrized_tests(obj):
+    md = obj._lccmetadata
+    test = _load_test(obj)
 
+    for idx, parameters in enumerate(md.parametrized.parameters_source):
+        check_type_dict("test parameters", parameters)
+        parametrized_test_name, parametrized_test_description = md.parametrized.naming_scheme(
+            test.name, test.description, parameters, idx+1
+        )
+        parametrized_test = test.pull_node()
+        parametrized_test.name = parametrized_test_name
+        parametrized_test.description = parametrized_test_description
+        parametrized_test.parameters = parameters
 
-def _load_test_from_function(func):
-    return load_test(func)
+        yield parametrized_test
 
 
 def _load_tests(objs):
     for obj in objs:
         try:
-            yield load_test(obj)
+            if obj._lccmetadata.parametrized:
+                for test in _load_parametrized_tests(obj):
+                    yield test
+            else:
+                yield _load_test(obj)
         except VisibilityConditionNotMet:
             pass
-
-
-def _load_tests_from_methods(methods):
-    return _load_tests(methods)
-
-
-def _load_tests_from_functions(funcs):
-    return _load_tests(funcs)
 
 
 def _get_test_symbols(obj, filter_func):
@@ -164,7 +170,7 @@ def load_suite_from_class(class_):
         if hasattr(suite_obj, hook_name):
             suite.add_hook(hook_name, getattr(suite_obj, hook_name))
 
-    for test in _load_tests_from_methods(_get_test_methods_from_class(suite_obj)):
+    for test in _load_tests(_get_test_methods_from_class(suite_obj)):
         suite.add_test(test)
 
     for test in _get_generated_tests(suite_obj):
@@ -225,7 +231,7 @@ def load_suite_from_module(mod):
         if hasattr(mod, hook_name):
             suite.add_hook(hook_name, getattr(mod, hook_name))
 
-    for test in _load_tests_from_functions(_get_test_functions_from_module(mod)):
+    for test in _load_tests(_get_test_functions_from_module(mod)):
         suite.add_test(test)
 
     for test in _get_generated_tests(mod):

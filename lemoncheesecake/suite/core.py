@@ -30,12 +30,16 @@ class Test(BaseTest):
         self.disabled = False
         self.rank = 0
         self.dependencies = []
+        self.parameters = {}
 
     def is_disabled(self):
         return _is_node_disabled(self)
 
-    def get_fixtures(self):
+    def get_arguments(self):
         return get_callable_args(self.callback)
+
+    def get_fixtures(self):
+        return list(filter(lambda arg: arg not in self.parameters, self.get_arguments()))
 
 
 class InjectedFixture:
