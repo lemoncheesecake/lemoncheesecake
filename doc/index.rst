@@ -94,6 +94,8 @@ Features
 
 - Multiple reporting flavors built-in: HTML, JSON, XML, JUnit, ReportPortal, Slack notifications
 
+- Fixtures, parametrized tests
+
 - BDD support using `behave <https://behave.readthedocs.io/en/latest/>`_
 
 - Test parallelization
@@ -133,7 +135,9 @@ Writing tests
 
 - :ref:`Setup and teardown methods <setup_teardown>`, :ref:`fixtures <fixtures>`
 
-- :ref:`Data Driven Testing (DDT) <ddt>`
+- :ref:`Parametrized tests <parametrized>`
+
+- :ref:`Generating tests dynamically <generated>`
 
 - :ref:`BDD using behave <bdd>`
 

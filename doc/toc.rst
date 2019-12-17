@@ -14,7 +14,8 @@ Table of content
     logging
     setup-and-teardown-suites
     fixtures
-    ddt
+    parametrized
+    generated
     bdd
     parallelism
     cli
