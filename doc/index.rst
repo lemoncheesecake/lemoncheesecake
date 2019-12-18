@@ -107,8 +107,7 @@ lemoncheesecake is compatible with Python 2.7, 3.5-3.8.
 Changelog
 ---------
 
-The |location_link| will tell you about features, improvements, fixes and possible backward-incompatibilities of each
-version.
+The |location_link| will tell you about features, improvements and fixes of each version.
 
 .. |location_link| raw:: html
 
@@ -161,5 +160,5 @@ https://groups.google.com/forum/#!forum/lemoncheesecake .
 License
 -------
 
-lemoncheeseake is licensed under the
+lemoncheesecake is licensed under the
 `Apache License <https://github.com/lemoncheesecake/lemoncheesecake/blob/master/LICENSE.txt>`_
