@@ -1,3 +1,7 @@
+# 1.4.0 (2019-12-18)
+
+- **API**: add parametrized tests feature
+
 # 1.3.1 (2019-11-03)
 
 - Add official support for Python 3.8
