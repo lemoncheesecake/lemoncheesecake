@@ -7,7 +7,7 @@ Created on Sep 8, 2016
 import inspect
 import copy
 
-from typing import Any
+from typing import Any, Iterable, Callable, Optional, Tuple
 
 from lemoncheesecake.suite.core import InjectedFixture, Test
 from lemoncheesecake.exceptions import ProgrammingError
@@ -28,6 +28,7 @@ class Metadata(object):
         self.dependencies = []
         self.disabled = False
         self.condition = None
+        self.parametrized = None
 
 
 def _get_metadata_next_rank():
@@ -186,3 +187,31 @@ def inject_fixture(fixture_name=None):
     the injected fixture will be used.
     """
     return InjectedFixture(fixture_name)
+
+
+def _default_naming_scheme(name, description, parameters, nb):
+    return name + "_%d" % nb, description + " #%d" % nb
+
+
+class _Parametrized(object):
+    def __init__(self, parameters_source, naming_scheme):
+        self.parameters_source = parameters_source
+        self.naming_scheme = naming_scheme
+
+
+def parametrized(parameter_source, naming_scheme=_default_naming_scheme):
+    # type: (Iterable[dict], Optional[Callable[[str, str, dict, int], Tuple[str, str]]]) -> Any
+    """
+    Decorator, make the test parametrized.
+
+    :param parameter_source: a list / iterable of dicts, each dict represent the parameters that will be used
+        by the test
+    :param naming_scheme: a optional function that takes as parameters the base test name, description, parameters, index
+         and must return the expanded test name and description as a two elements list
+    """
+
+    def wrapper(obj):
+        md = get_metadata(obj)
+        md.parametrized = _Parametrized(parameter_source, naming_scheme)
+        return obj
+    return wrapper

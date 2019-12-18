@@ -24,6 +24,7 @@ Tests and suites declaration
 .. autofunction:: visible_if
 .. autofunction:: hidden
 .. autofunction:: depends_on
+.. autofunction:: parametrized
 .. autofunction:: inject_fixture
 .. autofunction:: add_test_into_suite
 

@@ -15,7 +15,7 @@ from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
 
 from helpers.runner import run_suite_class, run_suite_classes, run_suite, build_suite_from_module
 from helpers.report import assert_test_statuses, assert_test_passed, assert_test_failed, assert_test_skipped, \
-    assert_report_node_success, get_last_test
+    assert_report_node_success, get_last_test, get_last_log
 
 
 def test_test_success():
@@ -1081,6 +1081,73 @@ def test_fixture_name_multiple_names():
     run_suite_class(suite, fixtures=[fixt])
 
     assert sorted(fixts) == ["fixt1", "fixt2"]
+
+
+def test_parametrized_simple():
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test")
+        @lcc.parametrized([{"value": "foo"}])
+        def test(self, value):
+            lcc.log_info(value)
+
+    report = run_suite_class(suite)
+
+    test = get_last_test(report)
+    assert test.name == "test_1"
+    assert test.description == "test #1"
+
+    log = get_last_log(report)
+    assert log.message == "foo"
+
+
+def test_parametrized_with_multiple_test_and_fixture():
+    @lcc.fixture(scope="session")
+    def fixt():
+        return "something"
+
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test")
+        @lcc.parametrized([{"value_1": "foo", "value_2": "bar"}, {"value_1": "baz", "value_2": "foo"}])
+        def test(self, value_1, value_2, fixt):
+            lcc.log_info(value_1)
+            lcc.log_info(value_2)
+            lcc.log_info(fixt)
+
+    report = run_suite_class(suite, fixtures=[fixt])
+
+    test_1, test_2 = report.all_tests()
+
+    assert test_1.name == "test_1"
+    assert test_1.description == "test #1"
+    assert test_1.get_steps()[0].entries[0].message == "foo"
+    assert test_1.get_steps()[0].entries[1].message == "bar"
+    assert test_1.get_steps()[0].entries[2].message == "something"
+
+    assert test_2.name == "test_2"
+    assert test_2.description == "test #2"
+    assert test_2.get_steps()[0].entries[0].message == "baz"
+    assert test_2.get_steps()[0].entries[1].message == "foo"
+    assert test_2.get_steps()[0].entries[2].message == "something"
+
+
+def test_parametrized_extra_param():
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test")
+        @lcc.parametrized([{"value": "foo", "extra": "bar"}])
+        def test(self, value):
+            lcc.log_info(value)
+
+    report = run_suite_class(suite)
+
+    test = get_last_test(report)
+    assert test.name == "test_1"
+    assert test.description == "test #1"
+
+    log = get_last_log(report)
+    assert log.message == "foo"
 
 
 def test_stop_on_failure_test():

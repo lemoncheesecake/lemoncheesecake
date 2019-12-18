@@ -1,15 +1,13 @@
-.. _ddt:
+.. _generated:
 
-Data Driven Testing (DDT)
-=========================
+Generating tests
+================
 
-Unlike other frameworks, lemoncheesecake does not provide a dedicated API allowing a given test function to be run
-against data defined in an external file. However, a test suite can be built programmatically making it easy to implement
-data driven tests with any kind of input data.
+lemoncheesecake provides a :ref:`parametrized tests <parametrized>` feature, that allows a single test to be run against
+a list of parameters, it also provides a way to dynamically generate tests.
 
-Here is simple example where the input data is defined in a JSON file (it could have been XML, YAML, CSV, INI, plain text, etc...
-JSON has been chosen because it's easy to process and demonstrate).
-Each data entry defines two operands ``i`` and ``j``, ``expected`` is the result of their addition .
+In the following example, tests are generated from data defined in a JSON file. Please note that in real life,
+parametrized tests would be a better fit for achieving the same purpose.
 
 Project structure:
 

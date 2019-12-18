@@ -461,6 +461,19 @@ def test_check_fixtures_in_suites_incompatible_fixture_in_inject():
         registry.check_fixtures_in_suites([suite])
 
 
+def test_check_fixture_in_suites_parametrized_test():
+    @lcc.suite("MySuite")
+    class MySuite:
+        @lcc.test("test")
+        @lcc.parametrized([{"value": 1}])
+        def sometest(self, value):
+            pass
+
+    suite = load_suite_from_class(MySuite)
+    registry = build_registry()
+    registry.check_fixtures_in_suites([suite])
+
+
 @pytest.fixture()
 def fixture_registry_sample():
     @lcc.fixture(scope="pre_run")

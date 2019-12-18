@@ -134,6 +134,17 @@ class TestTask(BaseTask):
             return
         skip_test(self.test, "Test skipped because %s" % reason)
 
+    @staticmethod
+    def _prepare_test_args(test, scheduled_fixtures):
+        args = {}
+        for arg_name in test.get_arguments():
+            if arg_name in test.parameters:
+                args[arg_name] = test.parameters[arg_name]
+            else:
+                args[arg_name] = scheduled_fixtures.get_fixture_result(arg_name)
+
+        return args
+
     def run(self, context):
         suite = self.test.parent_suite
 
@@ -182,10 +193,10 @@ class TestTask(BaseTask):
         # Run test:
         ###
         if is_location_successful(ReportLocation.in_test(self.test)):
-            test_func_params = scheduled_fixtures.get_fixture_results(self.test.get_fixtures())
+            test_args = self._prepare_test_args(self.test, scheduled_fixtures)
             set_step(self.test.description)
             try:
-                self.test.callback(**test_func_params)
+                self.test.callback(**test_args)
             except Exception as e:
                 context.handle_exception(e, suite)
 

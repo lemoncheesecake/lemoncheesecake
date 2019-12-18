@@ -4,8 +4,7 @@ import six
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite.loader import load_suites_from_directory, load_suite_from_file, \
-    load_suite_from_class, load_suites_from_files, load_suites_from_classes, _load_test_from_function, \
-    _load_test_from_method, load_test
+    load_suite_from_class, load_suites_from_files, load_suites_from_classes, _load_test
 from lemoncheesecake.metadatapolicy import MetadataPolicy
 from lemoncheesecake.exceptions import *
 
@@ -276,6 +275,45 @@ def test_load_suites_from_classes_with_condition_on_test_not_met():
     assert len(suites[0].get_tests()) == 0
 
 
+def test_load_parametrized_test():
+    @lcc.suite("suite")
+    class MySuite:
+        @lcc.test("test")
+        @lcc.parametrized(({"value": 1}, {"value": 2}))
+        @lcc.tags("mytag")
+        def test(self, value):
+            pass
+
+    suite = load_suite_from_class(MySuite)
+
+    tests = suite.get_tests()
+    assert len(tests) == 2
+    assert tests[0].name == "test_1"
+    assert tests[0].description == "test #1"
+    assert tests[0].tags == ["mytag"]
+    assert tests[1].name == "test_2"
+    assert tests[1].description == "test #2"
+    assert tests[1].tags == ["mytag"]
+
+
+def test_load_parametrized_test_custom_naming():
+    def naming_scheme(name, description, parameters, idx):
+        return "%s_%s" % (name, parameters["value"]), "%s %s" % (description, parameters["value"])
+
+    @lcc.suite("suite")
+    class MySuite:
+        @lcc.test("test")
+        @lcc.parametrized(({"value": "foo"},), naming_scheme)
+        def test(self, value):
+            pass
+
+    suite = load_suite_from_class(MySuite)
+    test = suite.get_tests()[0]
+
+    assert test.name == "test_foo"
+    assert test.description == "test foo"
+
+
 def test_hidden_test():
     @lcc.suite("My Suite")
     class MySuite:
@@ -287,31 +325,6 @@ def test_hidden_test():
     suites = load_suites_from_classes([MySuite])
 
     assert len(suites[0].get_tests()) == 0
-
-
-def test_load_test_from_function():
-    @lcc.test("mytest")
-    def func():
-        return 1
-
-    test = _load_test_from_function(func)
-    assert test.name == "func"
-    assert test.description == "mytest"
-    assert test.callback() == 1
-
-
-def test_load_test_from_method():
-    @lcc.suite("mysuite")
-    class Suite:
-        @lcc.test("mytest")
-        def meth(self):
-            return 1
-
-    suite = Suite()
-    test = _load_test_from_method(suite.meth)
-    assert test.name == "meth"
-    assert test.description == "mytest"
-    assert test.callback() == 1
 
 
 def test_load_suite_from_class_with_hooks():
@@ -731,7 +744,7 @@ def test_invalid_type_name():
         pass
 
     with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
-        load_test(test)
+        _load_test(test)
 
 
 def test_invalid_type_description():
@@ -740,7 +753,7 @@ def test_invalid_type_description():
         pass
 
     with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
-        load_test(test)
+        _load_test(test)
 
 
 def test_invalid_type_tag():
@@ -750,7 +763,7 @@ def test_invalid_type_tag():
         pass
 
     with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
-        load_test(test)
+        _load_test(test)
 
 
 def test_invalid_type_link_url():
@@ -760,7 +773,7 @@ def test_invalid_type_link_url():
         pass
 
     with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
-        load_test(test)
+        _load_test(test)
 
 
 def test_invalid_type_link_name():
@@ -770,7 +783,7 @@ def test_invalid_type_link_name():
         pass
 
     with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
-        load_test(test)
+        _load_test(test)
 
 
 def test_invalid_type_prop():
@@ -780,7 +793,7 @@ def test_invalid_type_prop():
         pass
 
     with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
-        load_test(test)
+        _load_test(test)
 
 
 def test_invalid_type_on_suite_class():

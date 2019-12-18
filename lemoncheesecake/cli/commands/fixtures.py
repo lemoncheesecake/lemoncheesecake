@@ -5,6 +5,7 @@ Created on Feb 14, 2017
 '''
 
 from __future__ import print_function
+from collections import defaultdict
 
 from lemoncheesecake.helpers.console import print_table, bold
 from lemoncheesecake.cli.command import Command
@@ -42,12 +43,9 @@ class FixturesCommand(Command):
         suites = project.load_suites()
         fixtures = project.load_fixtures()
 
-        fixtures_by_scope = {}
+        fixtures_by_scope = defaultdict(list)
         for fixt in fixtures:
-            if fixt.scope in fixtures_by_scope:
-                fixtures_by_scope[fixt.scope].append(fixt)
-            else:
-                fixtures_by_scope[fixt.scope] = [fixt]
+            fixtures_by_scope[fixt.scope].append(fixt)
 
         used_by_tests = {}
         for test in flatten_tests(suites):

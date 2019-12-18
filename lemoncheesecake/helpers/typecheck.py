@@ -22,3 +22,9 @@ def check_type_bool(value_description, value):
     return check_type(
         value_description, value, "boolean", lambda value: type(value) is bool
     )
+
+
+def check_type_dict(value_description, value):
+    return check_type(
+        value_description, value, "dict", lambda value: isinstance(value, dict)
+    )
