@@ -114,19 +114,19 @@ complex can be implemented such as taking parameters from an external file.
 
 .. code-block:: python
 
-    import os.path as osp
+    import os.path
     import csv
 
     import lemoncheesecake.api as lcc
     from lemoncheesecake.matching import *
 
-    PROJECT_DIR = osp.join(osp.dirname(__file__), "..")
+    PROJECT_DIR = os.path.join(os.path.dirname(__file__), "..")
 
 
     @lcc.suite("suite")
     class suite:
         @lcc.test("test")
-        @lcc.parametrized(csv.DictReader(open(osp.join(PROJECT_DIR, "data.csv"))))
+        @lcc.parametrized(csv.DictReader(open(os.path.join(PROJECT_DIR, "data.csv"))))
         def test(self, phrase, word):
             check_that("phrase", phrase, contains_string(word))
 
@@ -149,19 +149,19 @@ complex can be implemented such as taking parameters from an external file.
 
 .. code-block:: python
 
-    import os.path as osp
+    import os.path
     import json
 
     import lemoncheesecake.api as lcc
     from lemoncheesecake.matching import *
 
-    PROJECT_DIR = osp.join(osp.dirname(__file__), "..")
+    PROJECT_DIR = os.path.join(os.path.dirname(__file__), "..")
 
 
     @lcc.suite("suite")
     class suite:
         @lcc.test("test")
-        @lcc.parametrized(json.load(open(osp.join(PROJECT_DIR, "data.json"))))
+        @lcc.parametrized(json.load(open(os.path.join(PROJECT_DIR, "data.json"))))
         def test(self, phrase, word):
             check_that("phrase", phrase, contains_string(word))
 

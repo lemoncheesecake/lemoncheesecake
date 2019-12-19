@@ -140,10 +140,10 @@ Here is an example of project that loads suites and fixtures from alternate dire
 
     class MyProject(Project):
         def load_suites(self):
-            return load_suites_from_directory(osp.join(self.dir, "my_suites"))
+            return load_suites_from_directory(os.path.join(self.dir, "my_suites"))
 
         def load_fixtures(self):
-            return load_fixtures_from_directory(osp.join(self.dir, "my_fixtures"))
+            return load_fixtures_from_directory(os.path.join(self.dir, "my_fixtures"))
 
 
     project_dir = os.path.dirname(__file__)

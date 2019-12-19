@@ -44,19 +44,19 @@ The test suite module (the ``suites/add.py`` file):
 
 .. code-block:: python
 
-    import os.path as osp
+    import os.path
     import json
 
     import lemoncheesecake.api as lcc
     from lemoncheesecake.matching import *
 
-    PROJECT_DIR = osp.join(osp.dirname(__file__), "..")
+    PROJECT_DIR = os.path.join(os.path.dirname(__file__), "..")
 
 
     @lcc.suite("Add")
     class add:
         def __init__(self):
-            data = json.load(open(osp.join(PROJECT_DIR, "data.json")))
+            data = json.load(open(os.path.join(PROJECT_DIR, "data.json")))
             for entry in data:
                 test = lcc.Test(
                     entry["name"], entry["description"],
@@ -89,7 +89,7 @@ The test function could also be implemented as a callable object (i.e implementi
     @lcc.suite("Add")
     class add(object):
         def __init__(self):
-            data = json.load(open(osp.join(PROJECT_DIR, "data.json")))
+            data = json.load(open(os.path.join(PROJECT_DIR, "data.json")))
             for entry in data:
                 test = lcc.Test(
                     entry["name"], entry["description"],
