@@ -202,7 +202,7 @@ def load_suite_from_module(mod):
     Load a suite from a module object.
     """
     # TODO: find a better way to workaround circular import
-    from lemoncheesecake.suite.definition import _get_metadata_next_rank
+    from lemoncheesecake.suite.builder import _get_metadata_next_rank
 
     suite_info = getattr(mod, "SUITE")
     suite_condition = suite_info.get("visible_if")
