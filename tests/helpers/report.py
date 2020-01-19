@@ -380,18 +380,9 @@ def assert_report_from_suite(report, suite_class):
 
 
 def assert_report_stats(report,
-                        expected_passed_tests=0, expected_failed_tests=0, expected_skipped_tests=0,
-                        expected_errors=0,
-                        expected_succeeded_checks=0, expected_failed_checks=0,
-                        expected_error_logs=0, expected_warning_logs=0):
+                        expected_passed_tests=0, expected_failed_tests=0, expected_skipped_tests=0):
     stats = report.stats()
     assert stats.tests == expected_passed_tests + expected_failed_tests + expected_skipped_tests
     assert stats.test_statuses["passed"] == expected_passed_tests
     assert stats.test_statuses["failed"] == expected_failed_tests
     assert stats.test_statuses["skipped"] == expected_skipped_tests
-    assert stats.errors == expected_errors
-    assert stats.checks == expected_succeeded_checks + expected_failed_checks
-    assert stats.check_successes == expected_succeeded_checks
-    assert stats.check_failures == expected_failed_checks
-    assert stats.error_logs == expected_error_logs
-    assert stats.warning_logs == expected_warning_logs

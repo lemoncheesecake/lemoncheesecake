@@ -41,7 +41,7 @@ def test_report_stats_simple():
     )))
     report = make_report_from_mockup(mockup)
 
-    assert_report_stats(report, expected_passed_tests=1, expected_succeeded_checks=1)
+    assert_report_stats(report, expected_passed_tests=1)
 
 
 def test_report_stats_failure():
@@ -55,7 +55,7 @@ def test_report_stats_failure():
     )
     report = make_report_from_mockup(mockup)
 
-    assert_report_stats(report, expected_failed_tests=1, expected_failed_checks=1, expected_error_logs=1)
+    assert_report_stats(report, expected_failed_tests=1)
 
 
 def test_report_stats_skipped():

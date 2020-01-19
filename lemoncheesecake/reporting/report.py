@@ -236,12 +236,6 @@ class _Stats(object):
     def __init__(self):
         self.tests = 0
         self.test_statuses = {s: 0 for s in _TEST_STATUSES}
-        self.errors = 0
-        self.checks = 0
-        self.check_successes = 0
-        self.check_failures = 0
-        self.error_logs = 0
-        self.warning_logs = 0
         self.duration = None
         self.duration_cumulative = 0
 
@@ -262,22 +256,7 @@ class _Stats(object):
 
 
 def _update_stats_from_results(stats, results):
-    for result in results:
-        if result.duration is not None:
-            stats.duration_cumulative += result.duration
-        for step in result.get_steps():
-            for entry in step.entries:
-                if isinstance(entry, Check):
-                    stats.checks += 1
-                    if entry.is_successful is True:
-                        stats.check_successes += 1
-                    elif entry.is_successful is False:
-                        stats.check_failures += 1
-                if isinstance(entry, Log):
-                    if entry.level == LOG_LEVEL_WARN:
-                        stats.warning_logs += 1
-                    elif entry.level == LOG_LEVEL_ERROR:
-                        stats.error_logs += 1
+    stats.duration_cumulative += sum(result.duration or 0 for result in results)
 
 
 def _update_stats_from_tests(stats, tests):
