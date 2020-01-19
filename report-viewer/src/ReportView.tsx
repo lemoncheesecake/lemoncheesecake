@@ -171,7 +171,7 @@ function build_report_stats(report: Report): Array<Array<string>> {
 
     stats.push(Array.of("Successful tests", successful_tests_nb.toString()));
 
-    let enabled_tests = tests_nb - disabled_tests_nb;
+    let enabled_tests = successful_tests_nb + failed_tests_nb + skipped_tests_nb;
     let successful_tests_pct = enabled_tests ? (successful_tests_nb / enabled_tests * 100) : 0;
     stats.push(Array.of("Successful tests in %", sprintf("%d%%", successful_tests_pct)));
 
