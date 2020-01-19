@@ -11,9 +11,9 @@ from typing import Union, List, Iterable, Optional
 import datetime
 import calendar
 
-from typing import Callable
+from typing import Callable, Any
 
-from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
+from lemoncheesecake.consts import LOG_LEVEL_ERROR
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, \
     filter_suites, normalize_node_hierarchy, TreeNodeHierarchy
@@ -254,31 +254,44 @@ class _Stats(object):
             description += " (parallelization speedup factor is %.1f)" % (float(self.duration_cumulative) / self.duration)
         return description
 
+    @classmethod
+    def from_results(cls, results, duration):
+        # type: (List[Result], Any[int, None]) -> _Stats
 
-def _update_stats_from_results(stats, results):
-    stats.duration_cumulative += sum(result.duration or 0 for result in results)
+        stats = cls()
 
+        stats.duration = duration
 
-def _update_stats_from_tests(stats, tests):
-    stats.tests = len(tests)
+        stats.duration_cumulative = sum(result.duration or 0 for result in results)
 
-    for test in tests:
-        if test.status:
-            stats.test_statuses[test.status] += 1
+        tests = list(filter(lambda r: isinstance(r, TestResult), results))
+
+        stats.tests = len(tests)
+
+        for test in tests:
+            if test.status:
+                stats.test_statuses[test.status] += 1
+
+        return stats
+
+    @classmethod
+    def from_report(cls, report):
+        # type: (Report) -> _Stats
+        return cls.from_results(list(report.all_results()), report.duration)
+
+    @classmethod
+    def from_suites(cls, suites, parallelized):
+        # type: (List[SuiteResult], bool) -> _Stats
+        results = list(flatten_results(suites))
+
+        return cls.from_results(
+            results,
+            results[-1].end_time - results[0].start_time if not parallelized else None
+        )
 
 
 def get_stats_from_suites(suites, parallelized):
-    stats = _Stats()
-
-    results = list(flatten_results(suites))
-
-    if not parallelized:
-        stats.duration = results[-1].end_time - results[0].start_time
-
-    _update_stats_from_results(stats, results)
-    _update_stats_from_tests(stats, list(flatten_tests(suites)))
-
-    return stats
+    return _Stats.from_suites(suites, parallelized)
 
 
 class ReportLocation(object):
@@ -429,14 +442,7 @@ class Report(object):
 
     def stats(self):
         # type: () -> _Stats
-        stats = _Stats()
-
-        if self.end_time is not None:
-            stats.duration = self.end_time - self.start_time
-        _update_stats_from_results(stats, self.all_results())
-        _update_stats_from_tests(stats, list(self.all_tests()))
-
-        return stats
+        return _Stats.from_report(self)
 
     def all_suites(self, result_filter=None):
         # type: (Optional[Callable[[TestResult], bool]]) -> Iterable[SuiteResult]
