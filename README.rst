@@ -44,31 +44,12 @@ Here is a test example:
                 "hooks_url", ends_with("/hooks"),
                 "members_url", ends_with("/members{/member}"),
                 "public_members_url", ends_with("/public_members{/member}")
-        )
+            )
 
 And here are the corresponding test results:
 
 .. image:: https://github.com/lemoncheesecake/lemoncheesecake/blob/master/doc/_static/report-sample.png?raw=true
     :alt: test results
-
-News
-----
-
-On August 11th, 2019, lemoncheesecake 1.0.0 has been released. This major release brings (among other things):
-
-- various API improvements
-
-- type annotations for most of the API
-
-- improved documentation
-
-- a new API reference documentation
-
-See the full `changelog <https://github.com/lemoncheesecake/lemoncheesecake/blob/master/CHANGELOG.md#100-2019-08-11>`_
-for more information.
-
-This version is not compatible with prior 0.22.x releases. The migration process is documented in
-`Migrating from to 0.22.x to 1.x <http://docs.lemoncheesecake.io/en/latest/migrating-to-v1.html>`_.
 
 
 Features

@@ -64,25 +64,6 @@ And here are the corresponding test results:
 
 See :ref:`Getting Started <getting started>` to create your first test project.
 
-News
-----
-
-On August 11th, 2019, lemoncheesecake 1.0.0 has been released. This major release brings (among other things):
-
-- various API improvements
-
-- type annotations for most of the API
-
-- improved documentation
-
-- a new API reference documentation
-
-The full changelog is available
-`here <https://github.com/lemoncheesecake/lemoncheesecake/blob/master/CHANGELOG.md#100-2019-08-11>`_.
-
-This version is not compatible with prior 0.22.x releases. The migration process is documented in
-:ref:`Migrating from to 0.22.x to 1.x <migrating to 1.x>`.
-
 Features
 --------
 
