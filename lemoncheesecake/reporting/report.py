@@ -247,7 +247,7 @@ class _Stats(object):
 
     @property
     def enabled_tests(self):
-        return self.tests - self.test_statuses["disabled"]
+        return sum((self.test_statuses["passed"], self.test_statuses["failed"], self.test_statuses["skipped"]))
 
     @property
     def successful_tests_percentage(self):
