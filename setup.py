@@ -14,7 +14,7 @@ import lemoncheesecake
 setup(
     name="lemoncheesecake",
     version=lemoncheesecake.__version__,
-    description="A framework for functional QA testing",
+    description="Test Storytelling",
     long_description=open("README.rst").read(),
     author="Nicolas Delon",
     author_email="nicolas.delon@gmail.com",

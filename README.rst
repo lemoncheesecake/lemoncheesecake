@@ -1,8 +1,8 @@
-lemoncheesecake: a functional test framework for Python
-=======================================================
+lemoncheesecake: Test Storytelling
+==================================
 
-lemoncheesecake makes reporting the first class citizen while providing modern test features such as
-fixtures and matchers.
+lemoncheesecake is a functional test framework for Python that brings trust around test results.
+It allows test developers to be very explicit about what their tests really do with logging, matchers, file attachments, etc..
 
 Here is a test example:
 
