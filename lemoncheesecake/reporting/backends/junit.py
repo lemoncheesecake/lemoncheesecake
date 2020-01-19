@@ -22,7 +22,7 @@ except ImportError:
     LXML_IS_AVAILABLE = False
 
 from lemoncheesecake.reporting.backend import FileReportBackend
-from lemoncheesecake.reporting.report import Log, Check, format_time_as_iso8601
+from lemoncheesecake.reporting.report import ReportStats, Log, Check, format_time_as_iso8601
 from lemoncheesecake.consts import LOG_LEVEL_ERROR
 from lemoncheesecake.reporting.backends.xml import make_xml_child, make_xml_node, indent_xml, DEFAULT_INDENT_LEVEL
 
@@ -68,11 +68,11 @@ def _serialize_suite_result(suite):
 
 def serialize_report_as_xml_tree(report):
     xml_report = E("testsuites")
-    
-    report_stats = report.stats()
 
-    xml_report.attrib["tests"] = str(report_stats.test_statuses["passed"])
-    xml_report.attrib["failures"] = str(report_stats.test_statuses["failed"])
+    stats = ReportStats.from_report(report)
+
+    xml_report.attrib["tests"] = str(stats.tests_nb_by_status["passed"])
+    xml_report.attrib["failures"] = str(stats.tests_nb_by_status["failed"])
 
     if report.end_time is not None:
         xml_report.attrib["time"] = _serialization_duration(report.end_time - report.start_time)

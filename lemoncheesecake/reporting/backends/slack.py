@@ -10,7 +10,7 @@ try:
 except ImportError:
     SLACKER_IS_AVAILABLE = False
 
-from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession, ReportingSessionBuilderMixin
+from lemoncheesecake.reporting import ReportingBackend, ReportingSession, ReportingSessionBuilderMixin, ReportStats
 from lemoncheesecake.exceptions import UserError
 from lemoncheesecake.helpers.time import humanize_duration
 
@@ -50,25 +50,25 @@ def get_message_template_parameters():
         "end_time": lambda report, stats: time.asctime(time.localtime(report.end_time)),
         "duration": lambda report, stats: humanize_duration(report.end_time - report.start_time),
 
-        "total": lambda report, stats: stats.tests,
-        "enabled": lambda report, stats: stats.enabled_tests,
+        "total": lambda report, stats: stats.tests_nb,
+        "enabled": lambda report, stats: stats.tests_enabled_nb,
 
-        "passed": lambda report, stats: stats.test_statuses["passed"],
-        "passed_pct": lambda report, stats: percent(stats.test_statuses["passed"], of=stats.enabled_tests),
+        "passed": lambda report, stats: stats.tests_nb_by_status["passed"],
+        "passed_pct": lambda report, stats: percent(stats.tests_nb_by_status["passed"], of=stats.tests_enabled_nb),
 
-        "failed": lambda report, stats: stats.test_statuses["failed"],
-        "failed_pct": lambda report, stats: percent(stats.test_statuses["failed"], of=stats.enabled_tests),
+        "failed": lambda report, stats: stats.tests_nb_by_status["failed"],
+        "failed_pct": lambda report, stats: percent(stats.tests_nb_by_status["failed"], of=stats.tests_enabled_nb),
 
-        "skipped": lambda report, stats: stats.test_statuses["skipped"],
-        "skipped_pct": lambda report, stats: percent(stats.test_statuses["skipped"], of=stats.enabled_tests),
+        "skipped": lambda report, stats: stats.tests_nb_by_status["skipped"],
+        "skipped_pct": lambda report, stats: percent(stats.tests_nb_by_status["skipped"], of=stats.tests_enabled_nb),
 
-        "disabled": lambda report, stats: stats.test_statuses["disabled"],
-        "disabled_pct": lambda report, stats: percent(stats.test_statuses["disabled"], of=stats.tests)
+        "disabled": lambda report, stats: stats.tests_nb_by_status["disabled"],
+        "disabled_pct": lambda report, stats: percent(stats.tests_nb_by_status["disabled"], of=stats.tests_nb)
     }
 
 
 def build_message_parameters(report):
-    stats = report.stats()
+    stats = ReportStats.from_report(report)
     return {
         name: func(report, stats) for name, func in get_message_template_parameters().items()
     }

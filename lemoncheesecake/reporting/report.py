@@ -11,9 +11,9 @@ from typing import Union, List, Iterable, Optional
 import datetime
 import calendar
 
-from typing import Callable
+from typing import Callable, Any
 
-from lemoncheesecake.consts import LOG_LEVEL_ERROR, LOG_LEVEL_WARN
+from lemoncheesecake.consts import LOG_LEVEL_ERROR
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, \
     filter_suites, normalize_node_hierarchy, TreeNodeHierarchy
@@ -232,76 +232,6 @@ class SuiteResult(BaseSuite):
         return suite
 
 
-class _Stats(object):
-    def __init__(self):
-        self.tests = 0
-        self.test_statuses = {s: 0 for s in _TEST_STATUSES}
-        self.errors = 0
-        self.checks = 0
-        self.check_successes = 0
-        self.check_failures = 0
-        self.error_logs = 0
-        self.warning_logs = 0
-        self.duration = None
-        self.duration_cumulative = 0
-
-    @property
-    def enabled_tests(self):
-        return sum((self.test_statuses["passed"], self.test_statuses["failed"], self.test_statuses["skipped"]))
-
-    @property
-    def successful_tests_percentage(self):
-        return (float(self.test_statuses["passed"]) / self.enabled_tests * 100) if self.enabled_tests else 0
-
-    @property
-    def duration_cumulative_description(self):
-        description = humanize_duration(self.duration_cumulative)
-        if self.duration:
-            description += " (parallelization speedup factor is %.1f)" % (float(self.duration_cumulative) / self.duration)
-        return description
-
-
-def _update_stats_from_results(stats, results):
-    for result in results:
-        if result.duration is not None:
-            stats.duration_cumulative += result.duration
-        for step in result.get_steps():
-            for entry in step.entries:
-                if isinstance(entry, Check):
-                    stats.checks += 1
-                    if entry.is_successful is True:
-                        stats.check_successes += 1
-                    elif entry.is_successful is False:
-                        stats.check_failures += 1
-                if isinstance(entry, Log):
-                    if entry.level == LOG_LEVEL_WARN:
-                        stats.warning_logs += 1
-                    elif entry.level == LOG_LEVEL_ERROR:
-                        stats.error_logs += 1
-
-
-def _update_stats_from_tests(stats, tests):
-    stats.tests = len(tests)
-
-    for test in tests:
-        if test.status:
-            stats.test_statuses[test.status] += 1
-
-
-def get_stats_from_suites(suites, parallelized):
-    stats = _Stats()
-
-    results = list(flatten_results(suites))
-
-    if not parallelized:
-        stats.duration = results[-1].end_time - results[0].start_time
-
-    _update_stats_from_results(stats, results)
-    _update_stats_from_tests(stats, list(flatten_tests(suites)))
-
-    return stats
-
-
 class ReportLocation(object):
     _TEST_SESSION_SETUP = 0
     _TEST_SESSION_TEARDOWN = 1
@@ -371,6 +301,17 @@ class ReportLocation(object):
             ret += ".".join(self.node_hierarchy) + " "
         ret += ("session setup", "session teardown", "suite setup", "suite teardown", "test")[self.node_type]
         return "<%s>" % ret
+
+
+def flatten_results(suites):
+    # type: (Iterable[SuiteResult]) -> Iterable[Result]
+    for suite in flatten_suites(suites):
+        if suite.suite_setup:
+            yield suite.suite_setup
+        for test in suite.get_tests():
+            yield test
+        if suite.suite_teardown:
+            yield suite.suite_teardown
 
 
 class Report(object):
@@ -448,17 +389,6 @@ class Report(object):
         # type: () -> bool
         return all(test.status in ("passed", "disabled") for test in self.all_tests())
 
-    def stats(self):
-        # type: () -> _Stats
-        stats = _Stats()
-
-        if self.end_time is not None:
-            stats.duration = self.end_time - self.start_time
-        _update_stats_from_results(stats, self.all_results())
-        _update_stats_from_tests(stats, list(self.all_tests()))
-
-        return stats
-
     def all_suites(self, result_filter=None):
         # type: (Optional[Callable[[TestResult], bool]]) -> Iterable[SuiteResult]
         if result_filter:
@@ -486,12 +416,59 @@ class Report(object):
                 yield step
 
 
-def flatten_results(suites):
-    # type: (Iterable[SuiteResult]) -> Iterable[Result]
-    for suite in flatten_suites(suites):
-        if suite.suite_setup:
-            yield suite.suite_setup
-        for test in suite.get_tests():
-            yield test
-        if suite.suite_teardown:
-            yield suite.suite_teardown
+class ReportStats(object):
+    def __init__(self):
+        self.tests_nb = 0
+        self.tests_nb_by_status = {s: 0 for s in _TEST_STATUSES}
+        self.duration = None
+        self.duration_cumulative = 0
+
+    @property
+    def tests_enabled_nb(self):
+        return sum((self.tests_nb_by_status["passed"], self.tests_nb_by_status["failed"], self.tests_nb_by_status["skipped"]))
+
+    @property
+    def successful_tests_percentage(self):
+        return (float(self.tests_nb_by_status["passed"]) / self.tests_enabled_nb * 100) if self.tests_enabled_nb else 0
+
+    @property
+    def duration_cumulative_description(self):
+        description = humanize_duration(self.duration_cumulative)
+        if self.duration:
+            description += " (parallelization speedup factor is %.1f)" % (float(self.duration_cumulative) / self.duration)
+        return description
+
+    @classmethod
+    def from_results(cls, results, duration):
+        # type: (List[Result], Any[int, None]) -> ReportStats
+
+        stats = cls()
+
+        stats.duration = duration
+
+        stats.duration_cumulative = sum(result.duration or 0 for result in results)
+
+        tests = list(filter(lambda r: isinstance(r, TestResult), results))
+
+        stats.tests_nb = len(tests)
+
+        for test in tests:
+            if test.status:
+                stats.tests_nb_by_status[test.status] += 1
+
+        return stats
+
+    @classmethod
+    def from_report(cls, report):
+        # type: (Report) -> ReportStats
+        return cls.from_results(list(report.all_results()), report.duration)
+
+    @classmethod
+    def from_suites(cls, suites, parallelized):
+        # type: (List[SuiteResult], bool) -> ReportStats
+        results = list(flatten_results(suites))
+
+        return cls.from_results(
+            results,
+            results[-1].end_time - results[0].start_time if not parallelized else None
+        )

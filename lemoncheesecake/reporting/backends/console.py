@@ -12,7 +12,7 @@ from termcolor import colored
 import six
 
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession, ReportingSessionBuilderMixin
-from lemoncheesecake.reporting.report import get_stats_from_suites
+from lemoncheesecake.reporting.report import ReportStats
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.helpers.text import ensure_single_line_text
 from lemoncheesecake.helpers import terminalsize
@@ -90,13 +90,13 @@ def _print_summary(stats, parallel=False):
     print(" * Duration: %s" % (humanize_duration(stats.duration) if stats.duration is not None else "n/a"))
     if parallel:
         print(" * Cumulative duration: %s" % stats.duration_cumulative_description)
-    print(" * Tests: %d" % stats.tests)
-    print(" * Successes: %d (%d%%)" % (stats.test_statuses["passed"], stats.successful_tests_percentage))
-    print(" * Failures: %d" % (stats.test_statuses["failed"]))
-    if stats.test_statuses["skipped"]:
-        print(" * Skipped: %d" % (stats.test_statuses["skipped"]))
-    if stats.test_statuses["disabled"]:
-        print(" * Disabled: %d" % (stats.test_statuses["disabled"]))
+    print(" * Tests: %d" % stats.tests_nb)
+    print(" * Successes: %d (%d%%)" % (stats.tests_nb_by_status["passed"], stats.successful_tests_percentage))
+    print(" * Failures: %d" % (stats.tests_nb_by_status["failed"]))
+    if stats.tests_nb_by_status["skipped"]:
+        print(" * Skipped: %d" % (stats.tests_nb_by_status["skipped"]))
+    if stats.tests_nb_by_status["disabled"]:
+        print(" * Disabled: %d" % (stats.tests_nb_by_status["disabled"]))
     print()
 
 
@@ -200,7 +200,7 @@ class SequentialConsoleReportingSession(ReportingSession):
         self.lp.print_line("%s (%s...)" % (self.step_prefix, ensure_single_line_text(event.step_description)))
 
     def on_test_session_end(self, event):
-        _print_summary(self.report.stats(), self.report.parallelized)
+        _print_summary(ReportStats.from_report(self.report), self.report.parallelized)
 
 
 class ParallelConsoleReportingSession(ReportingSession):
@@ -233,7 +233,7 @@ class ParallelConsoleReportingSession(ReportingSession):
         self._bypass_test(event.test, "disabled")
 
     def on_test_session_end(self, event):
-        _print_summary(self.report.stats(), self.report.parallelized)
+        _print_summary(ReportStats.from_report(self.report), self.report.parallelized)
 
 
 class ConsoleBackend(ReportingBackend, ReportingSessionBuilderMixin):
@@ -280,9 +280,9 @@ def print_report_as_test_run(report, test_filter):
     ###
     if suite_idx > 0:
         if test_filter:
-            stats = get_stats_from_suites(suites, report.parallelized)
+            stats = ReportStats.from_suites(suites, report.parallelized)
         else:
-            stats = report.stats()
+            stats = ReportStats.from_report(report)
         _print_summary(stats, report.parallelized)
     else:
         print("No test found or no matching test in the report")
