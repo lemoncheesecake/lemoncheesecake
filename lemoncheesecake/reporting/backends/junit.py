@@ -71,8 +71,8 @@ def serialize_report_as_xml_tree(report):
     
     report_stats = report.stats()
 
-    xml_report.attrib["tests"] = str(report_stats.test_statuses["passed"])
-    xml_report.attrib["failures"] = str(report_stats.test_statuses["failed"])
+    xml_report.attrib["tests"] = str(report_stats.tests_nb_by_status["passed"])
+    xml_report.attrib["failures"] = str(report_stats.tests_nb_by_status["failed"])
 
     if report.end_time is not None:
         xml_report.attrib["time"] = _serialization_duration(report.end_time - report.start_time)

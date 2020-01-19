@@ -90,13 +90,13 @@ def _print_summary(stats, parallel=False):
     print(" * Duration: %s" % (humanize_duration(stats.duration) if stats.duration is not None else "n/a"))
     if parallel:
         print(" * Cumulative duration: %s" % stats.duration_cumulative_description)
-    print(" * Tests: %d" % stats.tests)
-    print(" * Successes: %d (%d%%)" % (stats.test_statuses["passed"], stats.successful_tests_percentage))
-    print(" * Failures: %d" % (stats.test_statuses["failed"]))
-    if stats.test_statuses["skipped"]:
-        print(" * Skipped: %d" % (stats.test_statuses["skipped"]))
-    if stats.test_statuses["disabled"]:
-        print(" * Disabled: %d" % (stats.test_statuses["disabled"]))
+    print(" * Tests: %d" % stats.tests_nb)
+    print(" * Successes: %d (%d%%)" % (stats.tests_nb_by_status["passed"], stats.successful_tests_percentage))
+    print(" * Failures: %d" % (stats.tests_nb_by_status["failed"]))
+    if stats.tests_nb_by_status["skipped"]:
+        print(" * Skipped: %d" % (stats.tests_nb_by_status["skipped"]))
+    if stats.tests_nb_by_status["disabled"]:
+        print(" * Disabled: %d" % (stats.tests_nb_by_status["disabled"]))
     print()
 
 

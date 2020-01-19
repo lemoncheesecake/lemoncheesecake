@@ -234,18 +234,18 @@ class SuiteResult(BaseSuite):
 
 class _Stats(object):
     def __init__(self):
-        self.tests = 0
-        self.test_statuses = {s: 0 for s in _TEST_STATUSES}
+        self.tests_nb = 0
+        self.tests_nb_by_status = {s: 0 for s in _TEST_STATUSES}
         self.duration = None
         self.duration_cumulative = 0
 
     @property
-    def enabled_tests(self):
-        return sum((self.test_statuses["passed"], self.test_statuses["failed"], self.test_statuses["skipped"]))
+    def tests_enabled_nb(self):
+        return sum((self.tests_nb_by_status["passed"], self.tests_nb_by_status["failed"], self.tests_nb_by_status["skipped"]))
 
     @property
     def successful_tests_percentage(self):
-        return (float(self.test_statuses["passed"]) / self.enabled_tests * 100) if self.enabled_tests else 0
+        return (float(self.tests_nb_by_status["passed"]) / self.tests_enabled_nb * 100) if self.tests_enabled_nb else 0
 
     @property
     def duration_cumulative_description(self):
@@ -266,11 +266,11 @@ class _Stats(object):
 
         tests = list(filter(lambda r: isinstance(r, TestResult), results))
 
-        stats.tests = len(tests)
+        stats.tests_nb = len(tests)
 
         for test in tests:
             if test.status:
-                stats.test_statuses[test.status] += 1
+                stats.tests_nb_by_status[test.status] += 1
 
         return stats
 
