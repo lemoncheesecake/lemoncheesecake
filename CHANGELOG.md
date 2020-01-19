@@ -1,3 +1,9 @@
+# 1.4.1 (2020-01-19)
+
+- In `lcc report -s` and HTML report, fix wrong success percentage with in progress tests
+- **under the hood**: refactor statistics computation
+- **doc & packaging**: update the lemoncheesecake's tagline for "Test Storytelling"
+
 # 1.4.0 (2019-12-18)
 
 - **API**: add parametrized tests feature
