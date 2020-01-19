@@ -232,7 +232,7 @@ class SuiteResult(BaseSuite):
         return suite
 
 
-class _Stats(object):
+class ReportStats(object):
     def __init__(self):
         self.tests_nb = 0
         self.tests_nb_by_status = {s: 0 for s in _TEST_STATUSES}
@@ -256,7 +256,7 @@ class _Stats(object):
 
     @classmethod
     def from_results(cls, results, duration):
-        # type: (List[Result], Any[int, None]) -> _Stats
+        # type: (List[Result], Any[int, None]) -> ReportStats
 
         stats = cls()
 
@@ -276,22 +276,18 @@ class _Stats(object):
 
     @classmethod
     def from_report(cls, report):
-        # type: (Report) -> _Stats
+        # type: (Report) -> ReportStats
         return cls.from_results(list(report.all_results()), report.duration)
 
     @classmethod
     def from_suites(cls, suites, parallelized):
-        # type: (List[SuiteResult], bool) -> _Stats
+        # type: (List[SuiteResult], bool) -> ReportStats
         results = list(flatten_results(suites))
 
         return cls.from_results(
             results,
             results[-1].end_time - results[0].start_time if not parallelized else None
         )
-
-
-def get_stats_from_suites(suites, parallelized):
-    return _Stats.from_suites(suites, parallelized)
 
 
 class ReportLocation(object):
@@ -439,10 +435,6 @@ class Report(object):
     def is_successful(self):
         # type: () -> bool
         return all(test.status in ("passed", "disabled") for test in self.all_tests())
-
-    def stats(self):
-        # type: () -> _Stats
-        return _Stats.from_report(self)
 
     def all_suites(self, result_filter=None):
         # type: (Optional[Callable[[TestResult], bool]]) -> Iterable[SuiteResult]

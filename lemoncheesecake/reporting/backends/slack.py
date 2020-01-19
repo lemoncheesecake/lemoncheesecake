@@ -10,7 +10,7 @@ try:
 except ImportError:
     SLACKER_IS_AVAILABLE = False
 
-from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession, ReportingSessionBuilderMixin
+from lemoncheesecake.reporting import ReportingBackend, ReportingSession, ReportingSessionBuilderMixin, ReportStats
 from lemoncheesecake.exceptions import UserError
 from lemoncheesecake.helpers.time import humanize_duration
 
@@ -68,7 +68,7 @@ def get_message_template_parameters():
 
 
 def build_message_parameters(report):
-    stats = report.stats()
+    stats = ReportStats.from_report(report)
     return {
         name: func(report, stats) for name, func in get_message_template_parameters().items()
     }

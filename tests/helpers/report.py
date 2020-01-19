@@ -13,7 +13,7 @@ import pytest
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake import reporting
 from lemoncheesecake.session import get_session
-from lemoncheesecake.reporting import Report, Result, SuiteResult, TestResult, Step, Log, JsonBackend
+from lemoncheesecake.reporting import Report, ReportStats, Result, SuiteResult, TestResult, Step, Log, JsonBackend
 
 
 def make_report_in_progress():
@@ -381,7 +381,7 @@ def assert_report_from_suite(report, suite_class):
 
 def assert_report_stats(report,
                         expected_passed_tests=0, expected_failed_tests=0, expected_skipped_tests=0):
-    stats = report.stats()
+    stats = ReportStats.from_report(report)
     assert stats.tests_nb == expected_passed_tests + expected_failed_tests + expected_skipped_tests
     assert stats.tests_nb_by_status["passed"] == expected_passed_tests
     assert stats.tests_nb_by_status["failed"] == expected_failed_tests
