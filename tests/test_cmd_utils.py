@@ -8,7 +8,7 @@ from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake.exceptions import InvalidMetadataError
 
 from helpers.runner import build_project_module
-from helpers.utils import env_var
+from helpers.utils import env_vars
 
 
 def test_auto_detect_reporting_backends_no_project_found():
@@ -19,7 +19,7 @@ def test_auto_detect_reporting_backends_no_project_found():
 def test_auto_detect_reporting_backends_invalid_project(tmpdir):
     tmpdir.join("project.py").write("THIS IS NOT A VALID PYTHON MODULE")
 
-    with env_var("LCC_PROJECT_FILE", tmpdir.join("project.py").strpath):
+    with env_vars(LCC_PROJECT_FILE=tmpdir.join("project.py").strpath):
         backends = auto_detect_reporting_backends()
 
     assert sorted(b.get_name() for b in backends) == sorted(b.get_name() for b in get_reporting_backends())
@@ -35,7 +35,7 @@ class MyProject(Project):
         self.reporting_backends = {"console": ConsoleBackend()}
 """))
 
-    with env_var("LCC_PROJECT_FILE", tmpdir.join("project.py").strpath):
+    with env_vars(LCC_PROJECT_FILE=tmpdir.join("project.py").strpath):
         backends = auto_detect_reporting_backends()
 
     assert [b.get_name() for b in backends] == ["console"]

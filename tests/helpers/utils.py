@@ -2,14 +2,22 @@ import os
 from contextlib import contextmanager
 
 
+def _apply_vars(new_vars):
+    for name, value in new_vars.items():
+        if value is not None:
+            os.environ[name] = value
+        else:
+            if name in os.environ:
+                del os.environ[name]
+
+
 @contextmanager
-def env_var(name, value):
-    orig_value = os.environ.get(name)
-    os.environ[name] = value
+def env_vars(**new_vars):
+    old_vars = {name: os.environ.get(name) for name in new_vars}
+
+    _apply_vars(new_vars)
     try:
         yield
+
     finally:
-        if orig_value is not None:
-            os.environ[name] = orig_value
-        else:
-            del os.environ[name]
+        _apply_vars(old_vars)
