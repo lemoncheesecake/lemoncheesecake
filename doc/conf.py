@@ -55,7 +55,7 @@ master_doc = 'toc'
 
 # General information about the project.
 project = u'lemoncheesecake'
-copyright = u'2019, Nicolas Delon'
+copyright = u'2020, Nicolas Delon'
 author = u'Nicolas Delon'
 
 # The version info for the project you're documenting, acts as replacement for
