@@ -4,7 +4,7 @@ import argparse
 from lemoncheesecake.project import Project, create_project, load_project_from_dir, find_project_file
 
 from helpers.runner import build_test_module, build_fixture_module
-from helpers.utils import env_var
+from helpers.utils import env_vars
 
 
 def test_project_dir(tmpdir):
@@ -166,7 +166,7 @@ def test_find_project_file_in_parent_dir(tmpdir):
 
 
 def test_find_project_file_env_var_not_found(tmpdir):
-    with env_var("LCC_PROJECT_FILE", tmpdir.join("project.py").strpath):
+    with env_vars(LCC_PROJECT_FILE=tmpdir.join("project.py").strpath):
         actual = find_project_file()
         assert actual is None
 
@@ -174,6 +174,6 @@ def test_find_project_file_env_var_not_found(tmpdir):
 def test_find_project_file_env_var_found(tmpdir):
     tmpdir.join("project.py").write("")
 
-    with env_var("LCC_PROJECT_FILE", tmpdir.join("project.py").strpath):
+    with env_vars(LCC_PROJECT_FILE=tmpdir.join("project.py").strpath):
         actual = find_project_file()
         assert actual == tmpdir.join("project.py").strpath

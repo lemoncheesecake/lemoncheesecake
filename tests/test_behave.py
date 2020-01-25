@@ -14,7 +14,7 @@ else:
     from lemoncheesecake.reporting import load_report
     from lemoncheesecake.bdd.behave import _init_reporting_session
     from helpers.report import get_last_test, get_last_suite
-    from helpers.utils import env_var
+    from helpers.utils import env_vars
 
     STEPS = u"""# -*- coding: utf-8 -*-
 from behave import *
@@ -67,11 +67,11 @@ install_hooks()
         _init_reporting_session(".")
 
     def test_init_reporting_session_with_valid_custom_report_saving_strategy():
-        with env_var("LCC_SAVE_REPORT", "at_each_test"):
+        with env_vars(LCC_SAVE_REPORT="at_each_test"):
             _init_reporting_session(".")
 
     def test_init_reporting_session_with_invalid_custom_report_saving_strategy():
-        with env_var("LCC_SAVE_REPORT", "foobar"):
+        with env_vars(LCC_SAVE_REPORT="foobar"):
             with pytest.raises(ValueError, match="Invalid expression"):
                 _init_reporting_session(".")
 
@@ -216,7 +216,7 @@ Scenario: do a simple addition
         """
 
         report_dir = os.path.join(tmpdir.strpath, "custom_report_dir")
-        with env_var("LCC_REPORT_DIR", report_dir):
+        with env_vars(LCC_REPORT_DIR=report_dir):
             report = run_behave_tests(tmpdir, feature, STEPS, expected_report_dir=report_dir)
 
         assert report is not None
@@ -230,7 +230,7 @@ Scenario: do a simple addition
             Then a + b is equal to 4
         """
 
-        with env_var("LCC_REPORTING", "-html"):
+        with env_vars(LCC_REPORTING="-html"):
             run_behave_tests(tmpdir, feature, STEPS)
 
         assert tmpdir.join("report", "report.js").exists()
@@ -253,7 +253,7 @@ def after_all(_):
 install_hooks()
 """.format(tmpdir=tmpdir.strpath)
 
-        with env_var("LCC_REPORTING", "-html"):
+        with env_vars(LCC_REPORTING="-html"):
             run_behave_tests(tmpdir, feature, STEPS, env_content=env)
 
         assert tmpdir.join("report", "report.js").exists()
