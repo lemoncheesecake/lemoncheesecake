@@ -34,8 +34,6 @@ The Slack reporting backend sends a notification at the end of the test run to a
 Settings
 ^^^^^^^^
 
-- ``LCC_SLACK_HTTP_PROXY``: HTTP proxy to use to connect to Slack (optional)
-
 - ``LCC_SLACK_AUTH_TOKEN``: authentication token to connect on Slack (mandatory, the value starts with ``xoxb-``)
 
 - ``LCC_SLACK_CHANNEL``: the channel or the user to send message to (mandatory, syntax: ``#channel`` or ``@user``)
@@ -45,6 +43,8 @@ Settings
 
 - ``LCC_SLACK_ONLY_NOTIFY_FAILURE``: if this variable is set, then the notification will only be sent on failures
   (meaning if there is one or more tests with status "failed" or "skipped")
+
+- ``LCC_SLACK_HTTP_PROXY``: HTTP proxy to use to connect to Slack (optional)
 
 Here are the supported variables for slack message template:
 
