@@ -3,7 +3,7 @@
 Configuring reporting backends
 ==============================
 
-Some reporting backends require specific configuration, this is done through environment variable.
+Some reporting backends require specific configuration, this is done through environment variables.
 
 ReportPortal
 ------------
