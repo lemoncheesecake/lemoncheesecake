@@ -15,31 +15,6 @@ from lemoncheesecake.exceptions import UserError
 from lemoncheesecake.helpers.time import humanize_duration
 
 
-class BaseSlackReportingSession(ReportingSession):
-    def __init__(self, auth_token, channel, proxy=None):
-        self.slack = slacker.Slacker(
-            auth_token, http_proxy=proxy, https_proxy=proxy
-        )
-        self.channel = channel
-        self.errors = []
-
-    def send_message(self, message):
-        try:
-            self.slack.chat.post_message(self.channel, message)
-        except slacker.Error as excp:
-            self.errors.append("Error while notifying Slack channel/user '%s', got: %s" % (
-                self.channel, excp
-            ))
-
-    def show_errors(self):
-        if len(self.errors) == 0:
-            return
-
-        print("Slack reporting backend, got the following errors while sending messages:", file=sys.stderr)
-        for error in self.errors:
-            print("- %s" % error, file=sys.stderr)
-
-
 def percent(val, of):
     return "%d%%" % ((float(val) / of * 100) if of else 0)
 
@@ -74,21 +49,18 @@ def build_message_parameters(report):
     }
 
 
-def build_message_empty_parameters():
-    return {name: "" for name in get_message_template_parameters()}
-
-
-def check_message_template_validity(template):
+def validate_message_template_validity(template):
     try:
-        template.format(**build_message_empty_parameters())
+        template.format(**{name: "" for name in get_message_template_parameters()})
+        return template
     except KeyError as excp:
         raise UserError("Invalid Slack message template, unknown variable: %s" % excp)
 
 
-class EndOfTestsNotifier(BaseSlackReportingSession):
+class SlackReportingSession(ReportingSession):
     def __init__(self, auth_token, channel, message_template, proxy=None, only_notify_failure=False):
-        BaseSlackReportingSession.__init__(self, auth_token, channel, proxy=proxy)
-        check_message_template_validity(message_template)
+        self.slacker = slacker.Slacker(auth_token, http_proxy=proxy, https_proxy=proxy)
+        self.channel = channel
         self.message_template = message_template
         self.only_notify_failure = only_notify_failure
 
@@ -97,9 +69,12 @@ class EndOfTestsNotifier(BaseSlackReportingSession):
             return
 
         message = self.message_template.format(**build_message_parameters(event.report))
-        self.send_message(message)
-
-        self.show_errors()
+        try:
+            self.slacker.chat.post_message(self.channel, message)
+        except slacker.Error as excp:
+            print("Error while notifying Slack channel/user '%s', got: %s" % (
+                self.channel, excp
+            ), file=sys.stderr)
 
 
 def get_env_var(name, optional=False, default=None):
@@ -109,29 +84,7 @@ def get_env_var(name, optional=False, default=None):
         if optional:
             return default
         else:
-            raise UserError("Slack reporting backend, cannot get environment variable %s" % excp)
-
-
-def get_slack_auth_token():
-    return get_env_var("LCC_SLACK_AUTH_TOKEN")
-
-
-def get_slack_http_proxy():
-    return get_env_var("LCC_SLACK_HTTP_PROXY", optional=True, default=None)
-
-
-def get_slack_channel():
-    return get_env_var("LCC_SLACK_CHANNEL")
-
-
-def get_message_template():
-    return get_env_var(
-        "LCC_SLACK_MESSAGE_TEMPLATE", optional=True, default="{passed} passed, {failed} failed, {skipped} skipped"
-    )
-
-
-def get_only_notify_on_failure():
-    return "LCC_SLACK_ONLY_NOTIFY_FAILURE" in os.environ
+            raise UserError("Missing environment variable '%s' for Slack reporting backend" % excp)
 
 
 class SlackReportingBackend(ReportingBackend, ReportingSessionBuilderMixin):
@@ -142,7 +95,13 @@ class SlackReportingBackend(ReportingBackend, ReportingSessionBuilderMixin):
         return SLACKER_IS_AVAILABLE
 
     def create_reporting_session(self, report_dir, report, parallel, saving_strategy):
-        return EndOfTestsNotifier(
-            get_slack_auth_token(), get_slack_channel(), get_message_template(),
-            proxy=get_slack_http_proxy(), only_notify_failure=get_only_notify_on_failure()
+        return SlackReportingSession(
+            auth_token=get_env_var("LCC_SLACK_AUTH_TOKEN"),
+            channel=get_env_var("LCC_SLACK_CHANNEL"),
+            message_template=validate_message_template_validity(get_env_var(
+                "LCC_SLACK_MESSAGE_TEMPLATE", optional=True,
+                default="{passed} passed, {failed} failed, {skipped} skipped"
+            )),
+            proxy=get_env_var("LCC_SLACK_HTTP_PROXY", optional=True, default=None),
+            only_notify_failure="LCC_SLACK_ONLY_NOTIFY_FAILURE" in os.environ
         )
