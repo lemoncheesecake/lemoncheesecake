@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 try:
-    import behave
+    from behave.__main__ import main as behave_main
 
 except ImportError:
     pass  # no behave tests if behave is not available
@@ -55,8 +55,7 @@ install_hooks()
 """
         tmpdir.join("environment.py").write_text(env_content, "utf-8")
 
-        cmd = "behave %s" % tmpdir.join("features").join("feature.feature").strpath
-        os.system(cmd)
+        behave_main((tmpdir.join("features").join("feature.feature").strpath,))
 
         if not expected_report_dir:
             expected_report_dir = tmpdir.join("report").strpath
