@@ -104,8 +104,9 @@ def run_suites(suites, fixtures=None, backends=None, tmpdir=None, force_disabled
         backends = []
 
     if tmpdir:
+        report_dir = tmpdir if isinstance(tmpdir, str) else tmpdir.strpath
         event_manager = runner.initialize_event_manager(
-            suites, backends, tmpdir.strpath, report_saving_strategy, nb_threads=1
+            suites, backends, report_dir, report_saving_strategy, nb_threads=1
         )
         runner.run_suites(
             suites, fixture_registry, event_manager,

@@ -21,3 +21,13 @@ def env_vars(**new_vars):
 
     finally:
         _apply_vars(old_vars)
+
+
+@contextmanager
+def change_dir(new_dir):
+    old_dir = os.getcwd()
+    os.chdir(new_dir)
+    try:
+        yield
+    finally:
+        os.chdir(old_dir)

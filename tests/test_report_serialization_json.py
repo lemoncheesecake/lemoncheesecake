@@ -11,17 +11,12 @@ import pytest
 from lemoncheesecake.reporting.backends.json_ import JsonBackend, load_report_from_file, save_report_into_file
 from lemoncheesecake.exceptions import InvalidReportFile, IncompatibleReportFile
 
-from helpers.reporttests import *  # import the actual tests against JSON serialization
+from helpers.reporttests import report_in_progress, ReportSerializationTests
 
 
-@pytest.fixture(scope="function")
-def backend():
-    return JsonBackend()
-
-
-@pytest.fixture()
-def serialization_tester():
-    return do_test_serialization
+class TestJsonSerialization(ReportSerializationTests):
+    backend = JsonBackend()
+    # it inherits all the actual serialization tests
 
 
 def test_load_report_non_json(tmpdir):
