@@ -1,3 +1,4 @@
+import itertools
 from multiprocessing.dummy import Pool, Queue
 
 from lemoncheesecake.exceptions import TaskFailure, TasksExecutionFailure, CircularDependencyError, \
@@ -51,11 +52,14 @@ class BaseTask(object):
 
 
 def pop_runnable_tasks(remaining_tasks, completed_tasks, nb_tasks):
-    runnable_tasks = [
-        task for task in remaining_tasks if set(task.get_all_dependencies()).issubset(completed_tasks)
-    ]
+    runnable_tasks = list(
+        itertools.islice(
+            filter(lambda t: set(t.get_all_dependencies()).issubset(completed_tasks), remaining_tasks),
+            0, nb_tasks
+        )
+    )
 
-    for task in runnable_tasks[:nb_tasks]:
+    for task in runnable_tasks:
         remaining_tasks.remove(task)
         _debug("pop runnable task %s" % task)
         yield task
@@ -120,7 +124,7 @@ def skip_all_tasks(tasks, remaining_tasks, completed_tasks, context, pool, compl
     schedule_tasks_to_be_skipped(remaining_tasks, context, pool, completed_tasks_queue, reason)
     while len(completed_tasks) != len(tasks):
         completed_task = completed_tasks_queue.get()
-        completed_tasks.append(completed_task)
+        completed_tasks.add(completed_task)
 
 
 def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
@@ -133,7 +137,7 @@ def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
         check_task_dependencies(task)
 
     remaining_tasks = list(tasks)
-    completed_tasks = list()
+    completed_tasks = set()
 
     pool = Pool(nb_threads)
     completed_tasks_queue = Queue()
@@ -147,7 +151,7 @@ def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
         while len(completed_tasks) != len(tasks):
             # wait for one task to complete
             completed_task = completed_tasks_queue.get()
-            completed_tasks.append(completed_task)
+            completed_tasks.add(completed_task)
 
             # schedule tasks to be run waiting for task success or simple completion
             tasks_to_be_run = pop_runnable_tasks(remaining_tasks, completed_tasks, nb_threads)
