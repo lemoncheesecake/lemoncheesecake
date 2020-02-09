@@ -5,6 +5,7 @@ Created on Jun 16, 2017
 '''
 
 import copy
+from collections import OrderedDict
 
 from typing import Union, Tuple, List, Sequence, TypeVar, Generator
 
@@ -112,15 +113,20 @@ T = TypeVar("T", bound=BaseTest)
 class BaseSuite(BaseTreeNode):
     def __init__(self, name, description):
         BaseTreeNode.__init__(self, name, description)
-        self._tests = []
+        # NB: use OrderedDict instead of list to enable fast test lookup in suites
+        # containing a large number of tests
+        self._tests = OrderedDict()
         self._suites = []
 
     def add_test(self, test):
         test.parent_suite = self
-        self._tests.append(test)
+        self._tests[test.name] = test
 
     def get_tests(self):
-        return self._tests
+        return list(self._tests.values())
+
+    def get_test_by_name(self, name):
+        return self._tests[name]
 
     def add_suite(self, suite):
         suite.parent_suite = self
@@ -145,7 +151,7 @@ class BaseSuite(BaseTreeNode):
     def pull_node(self):
         # type: () -> "BaseSuite"
         node = BaseTreeNode.pull_node(self)
-        node._tests = []
+        node._tests = OrderedDict()
         node._suites = []
         return node
 
@@ -214,8 +220,7 @@ def find_test(suites, hierarchy):
     hierarchy = normalize_node_hierarchy(hierarchy)
 
     suite = find_suite(suites, hierarchy[:-1])
-
     try:
-        return next(t for t in suite.get_tests() if t.name == hierarchy[-1])
-    except StopIteration:
-        raise CannotFindTreeNode("Cannot find test named '%s'" % hierarchy[-1])
+        return suite.get_test_by_name(hierarchy[-1])
+    except KeyError:
+        raise CannotFindTreeNode("Cannot find test named '%s'" % ".".join(hierarchy))

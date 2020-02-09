@@ -55,9 +55,15 @@ class Suite(BaseSuite):
         BaseSuite.__init__(self, name, description)
         self.obj = obj
         self.rank = 0
+        self.disabled = False
         self._hooks = {}
         self._injected_fixtures = self._load_injected_fixtures(obj)
-        self.disabled = False
+        # to optimize unique constraint checks on test/suite name/description, keep those
+        # strings in sets:
+        self._test_names = set()
+        self._test_descriptions = set()
+        self._sub_suite_names = set()
+        self._sub_suite_descriptions = set()
 
     @staticmethod
     def _assert_hook_name(hook_name):
@@ -99,35 +105,41 @@ class Suite(BaseSuite):
             attr_name = self._injected_fixtures[fixture_name]
             setattr(self.obj, attr_name, fixture_value)
 
-    def assert_test_is_unique_in_suite(self, test):
-        if any(t for t in self._tests if t.description == test.description):
+    def add_test(self, test):
+        if test.description in self._test_descriptions:
             raise InvalidMetadataError(
                 "A test with description '%s' is already registered in test suite %s" % (test.description, self.path)
             )
-
-        if any(t for t in self._tests if t.name == test.name):
+        if test.name in self._test_names:
             raise InvalidMetadataError(
                 "A test with name '%s' is already registered in test suite %s" % (test.name, self.path)
             )
 
-    def assert_sub_suite_is_unique_in_suite(self, sub_suite):
-        if any(s for s in self._suites if s.description == sub_suite.description):
-            raise InvalidMetadataError(
-                "A sub test suite with description '%s' is already registered in test suite %s" % (sub_suite.name, self.path)
-            )
-
-        if any(s for s in self._suites if s.name == sub_suite.name):
-            raise InvalidMetadataError(
-                "A sub test suite with name '%s' is already registered in test suite %s" % (sub_suite.name, self.path)
-            )
-
-    def add_test(self, test):
-        self.assert_test_is_unique_in_suite(test)
         BaseSuite.add_test(self, test)
+        self._test_names.add(test.name)
+        self._test_descriptions.add(test.description)
 
     def add_suite(self, suite):
-        self.assert_sub_suite_is_unique_in_suite(suite)
+        if suite.description in self._sub_suite_descriptions:
+            raise InvalidMetadataError(
+                "A sub test suite with description '%s' is already registered in test suite %s" % (suite.name, self.path)
+            )
+        if suite.name in self._sub_suite_names:
+            raise InvalidMetadataError(
+                "A sub test suite with name '%s' is already registered in test suite %s" % (suite.name, self.path)
+            )
+
         BaseSuite.add_suite(self, suite)
+        self._sub_suite_names.add(suite.name)
+        self._sub_suite_descriptions.add(suite.description)
+
+    def pull_node(self):
+        suite = BaseSuite.pull_node(self)
+        suite._test_names = set()
+        suite._test_descriptions = set()
+        suite._sub_suite_names = set()
+        suite._sub_suite_descriptions = set()
+        return suite
 
     def get_fixtures(self):
         fixtures = OrderedSet(self._injected_fixtures.keys())
