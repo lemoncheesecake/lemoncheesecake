@@ -1,3 +1,13 @@
+# 1.4.2 (2020-02-09)
+
+- Fix exponential tests running time when dealing with very large test suites (thousands of tests)
+- **under the hood**:
+  - put Slack reporting backend under unit tests
+  - refactor Slack reporting backend
+  - refactor tests of JSON & XML reporting backends and events replay
+  - in behave integration unit tests, avoid forking a behave process in order to speed-up tests and
+    make test coverage work
+
 # 1.4.1 (2020-01-19)
 
 - In `lcc report -s` and HTML report, fix wrong success percentage with in progress tests
