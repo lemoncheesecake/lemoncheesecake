@@ -302,6 +302,27 @@ def test_multiple_steps_on_different_threads():
     assert len(remainings) == 0
 
 
+def test_thread_logging_without_detached():
+    @lcc.suite("MySuite")
+    class mysuite:
+        @lcc.test("Some test")
+        def sometest(self):
+            thread = lcc.Thread(target=lambda: lcc.log_info("doing something"))
+            thread.start()
+            thread.join()
+
+    report = run_suite_class(mysuite)
+
+    test = get_last_test(report)
+
+    assert test.status == "passed"
+    assert len(test.get_steps()) == 1
+    step = test.get_steps()[0]
+    assert step.description == "Some test"
+    assert step.entries[0].level == "info"
+    assert "doing something" == step.entries[0].message
+
+
 def test_exception_in_thread_detached_step():
     def thread_func():
         with lcc.detached_step("step"):
