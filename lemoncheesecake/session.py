@@ -37,6 +37,12 @@ def initialize_fixture_cache(scheduled_fixtures):
     _scheduled_fixtures = scheduled_fixtures
 
 
+class _Cursor(object):
+    def __init__(self, location, step=None):
+        self.location = location
+        self.step = step
+
+
 class Session(object):
     def __init__(self, event_manager, report_dir, report):
         self.event_manager = event_manager
@@ -47,15 +53,14 @@ class Session(object):
         self._attachment_lock = threading.Lock()
         self._failures = set()
         self._local = threading.local()
-        self._local.location = None
-        self._local.step = None
-
-    def set_logging_location(self, location):
-        self._local.location = location
 
     @property
-    def location(self):
-        return self._local.location
+    def cursor(self):  # type: () -> _Cursor
+        return self._local.cursor
+
+    @cursor.setter
+    def cursor(self, cursor):
+        self._local.cursor = cursor
 
     def mark_location_as_failed(self, location):
         self._failures.add(location)
@@ -67,24 +72,28 @@ class Session(object):
             return len(self._failures) == 0
 
     def set_step(self, description, detached=False):
-        self._local.step = description
-        self.event_manager.fire(events.StepEvent(self._local.location, description, detached=detached))
+        self.cursor.step = description
+        self.event_manager.fire(events.StepEvent(self.cursor.location, description, detached=detached))
 
     def end_step(self, step):
-        self.event_manager.fire(events.StepEndEvent(self._local.location, step))
+        self.event_manager.fire(events.StepEndEvent(self.cursor.location, step))
 
     def log(self, level, content):
         if level == LOG_LEVEL_ERROR:
-            self.mark_location_as_failed(self.location)
-        self.event_manager.fire(events.LogEvent(self._local.location, self._local.step, level, content))
+            self.mark_location_as_failed(self.cursor.location)
+        self.event_manager.fire(events.LogEvent(self.cursor.location, self.cursor.step, level, content))
 
     def log_check(self, description, is_successful, details):
         if is_successful is False:
-            self.mark_location_as_failed(self.location)
-        self.event_manager.fire(events.CheckEvent(self._local.location, self._local.step, description, is_successful, details))
+            self.mark_location_as_failed(self.cursor.location)
+        self.event_manager.fire(
+            events.CheckEvent(self.cursor.location, self.cursor.step, description, is_successful, details)
+        )
 
     def log_url(self, url, description):
-        self.event_manager.fire(events.LogUrlEvent(self._local.location, self._local.step, url, description))
+        self.event_manager.fire(
+            events.LogUrlEvent(self.cursor.location, self.cursor.step, url, description)
+        )
 
     @contextmanager
     def prepare_attachment(self, filename, description, as_image=False):
@@ -97,7 +106,7 @@ class Session(object):
         yield os.path.join(self.attachments_dir, attachment_filename)
 
         self.event_manager.fire(events.LogAttachmentEvent(
-            self._local.location, self._local.step, "%s/%s" % (ATTACHMENTS_DIR, attachment_filename),
+            self.cursor.location, self.cursor.step, "%s/%s" % (ATTACHMENTS_DIR, attachment_filename),
             description, as_image
         ))
 
@@ -109,14 +118,14 @@ class Session(object):
 
     def start_test_session_setup(self):
         self.event_manager.fire(events.TestSessionSetupStartEvent())
-        self.set_logging_location(ReportLocation.in_test_session_setup())
+        self.cursor = _Cursor(ReportLocation.in_test_session_setup())
 
     def end_test_session_setup(self):
         self.event_manager.fire(events.TestSessionSetupEndEvent())
 
     def start_test_session_teardown(self):
         self.event_manager.fire(events.TestSessionTeardownStartEvent())
-        self.set_logging_location(ReportLocation.in_test_session_teardown())
+        self.cursor = _Cursor(ReportLocation.in_test_session_teardown())
 
     def end_test_session_teardown(self):
         self.event_manager.fire(events.TestSessionTeardownEndEvent())
@@ -129,21 +138,21 @@ class Session(object):
 
     def start_suite_setup(self, suite):
         self.event_manager.fire(events.SuiteSetupStartEvent(suite))
-        self.set_logging_location(ReportLocation.in_suite_setup(suite))
+        self.cursor = _Cursor(ReportLocation.in_suite_setup(suite))
 
     def end_suite_setup(self, suite):
         self.event_manager.fire(events.SuiteSetupEndEvent(suite))
 
     def start_suite_teardown(self, suite):
         self.event_manager.fire(events.SuiteTeardownStartEvent(suite))
-        self.set_logging_location(ReportLocation.in_suite_teardown(suite))
+        self.cursor = _Cursor(ReportLocation.in_suite_teardown(suite))
 
     def end_suite_teardown(self, suite):
         self.event_manager.fire(events.SuiteTeardownEndEvent(suite))
 
     def start_test(self, test):
         self.event_manager.fire(events.TestStartEvent(test))
-        self.set_logging_location(ReportLocation.in_test(test))
+        self.cursor = _Cursor(ReportLocation.in_test(test))
 
     def end_test(self, test):
         self.event_manager.fire(events.TestEndEvent(test))
@@ -365,10 +374,6 @@ def add_report_info(name, value):
     report.add_info(name, value)
 
 
-def set_session_location(location):
-    get_session().set_logging_location(location)
-
-
 def mark_location_as_failed(location):
     get_session().mark_location_as_failed(location)
 
@@ -452,8 +457,9 @@ class Thread(threading.Thread):
     """
     def __init__(self, *args, **kwargs):
         super(Thread, self).__init__(*args, **kwargs)
-        self.location = get_session().location
+        cursor = get_session().cursor
+        self.cursor = _Cursor(cursor.location, cursor.step)
 
     def run(self):
-        set_session_location(self.location)
+        get_session().cursor = self.cursor
         return super(Thread, self).run()
