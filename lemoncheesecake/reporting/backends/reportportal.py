@@ -7,7 +7,7 @@ import traceback
 import mimetypes
 
 try:
-    from reportportal_client import ReportPortalServiceAsync, ReportPortalService
+    import reportportal_client
     REPORT_PORTAL_CLIENT_IS_AVAILABLE = True
 except ImportError:
     REPORT_PORTAL_CLIENT_IS_AVAILABLE = False
@@ -22,17 +22,15 @@ def make_time(t):
     return str(int(t * 1000))
 
 
-def convert_properties_into_tags(props):
-    return ["%s_%s" % (name, value) for name, value in props.items()]
-
-
-def convert_links_into_tags(links):
-    return [link[1] or link[0] for link in links]
+def make_tags_from_test_tree_node(node):
+    return node.tags + \
+           ["%s_%s" % (name, value) for name, value in node.properties.items()] + \
+           [link[1] or link[0] for link in node.links]
 
 
 class ReportPortalReportingSession(ReportingSession):
     def __init__(self, url, auth_token, project, launch_name, launch_description, report_dir, report):
-        self.service = ReportPortalServiceAsync(
+        self.service = reportportal_client.ReportPortalServiceAsync(
             endpoint=url, project=project, token=auth_token, error_handler=self._handle_rp_error
         )
         self.launch_name = launch_name
@@ -142,9 +140,7 @@ class ReportPortalReportingSession(ReportingSession):
         self.service.start_test_item(
             item_type="SUITE", start_time=make_time(event.time),
             name=suite.name, description=suite.description,
-            tags=suite.tags +
-                convert_properties_into_tags(suite.properties) +
-                convert_links_into_tags(suite.links),
+            tags=make_tags_from_test_tree_node(suite)
         )
 
     def on_suite_end(self, event):
@@ -205,9 +201,7 @@ class ReportPortalReportingSession(ReportingSession):
         self.service.start_test_item(
             item_type="TEST", start_time=make_time(event.time),
             name=test.name, description=test.description,
-            tags=test.tags +
-                 convert_properties_into_tags(test.properties) +
-                 convert_links_into_tags(test.links)
+            tags=make_tags_from_test_tree_node(test)
         )
 
     def on_test_end(self, event):
@@ -247,7 +241,7 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        self.service.log(make_time(event.time), event.log_message, event.log_level)
+        self.service.log(make_time(event.time), event.log_message, event.log_level.upper())
 
     def on_check(self, event):
         if self._has_rp_error():

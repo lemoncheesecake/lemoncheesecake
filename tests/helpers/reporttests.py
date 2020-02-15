@@ -25,7 +25,14 @@ from helpers.utils import change_dir
 class ReportingSessionTests(object):
     backend = NotImplemented
 
-    def do_test_reporting_session(self, suites, fixtures=(), report_saving_strategy=None):
+    # for every tests in this class (and the base class), the current working directory will be a temporary directory
+    # where it can freely write any file
+    @pytest.fixture(autouse=True)
+    def prepare_work_dir(self, tmpdir):
+        with change_dir(tmpdir.strpath):
+            yield
+
+    def do_test_reporting_session(self, suites, fixtures=(), report_saving_strategy=None, nb_threads=1):
         raise NotImplementedError()
 
     def test_simple_test(self, report_saving_strategy=None):
@@ -416,21 +423,27 @@ class ReportingSessionTests(object):
     def test_save_every_seconds(self):
         self.test_simple_test(make_report_saving_strategy("every_1s"))
 
+    def test_parallelized_tests(self):
+        @lcc.suite("Suite")
+        class suite:
+            @lcc.test("Test 1")
+            def test_1(self):
+                lcc.log_info("some log")
+
+            @lcc.test("Test 2")
+            def test_2(self):
+                lcc.log_info("some other log")
+
+        self.do_test_reporting_session(suite, nb_threads=2)
+
 
 class ReportSerializationTests(ReportingSessionTests):
-    # for every tests in this class (and the base class), the current working directory will be a temporary directory
-    # where it can freely write any file
-    @pytest.fixture(autouse=True)
-    def prepare_work_dir(self, tmpdir):
-        with change_dir(tmpdir.strpath):
-            yield
-
-    def do_test_reporting_session(self, suites, fixtures=(), report_saving_strategy=None):
+    def do_test_reporting_session(self, suites, fixtures=(), report_saving_strategy=None, nb_threads=1):
         if type(suites) not in (list, tuple):
             suites = [suites]
         report = run_suite_classes(
             suites, fixtures=fixtures, backends=(self.backend,), tmpdir=".",
-            report_saving_strategy=report_saving_strategy
+            report_saving_strategy=report_saving_strategy, nb_threads=nb_threads
         )
         unserialized_report = self.backend.load_report(self.backend.get_report_filename())
         assert_report(unserialized_report, report)
