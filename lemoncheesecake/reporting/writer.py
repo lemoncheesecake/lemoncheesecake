@@ -46,16 +46,9 @@ class ReportWriter:
 
     @staticmethod
     def _finalize_result(result, end_time):
-        # finalize steps:
-        steps = result.get_steps()
-        for step in steps[:]:
-            if step.entries:
-                # set step end time (last step or detached step)
-                if step.end_time is None:
-                    step.end_time = end_time
-            else:
-                # remove empty step
-                steps.remove(step)
+        for step in result.get_steps():
+            if step.end_time is None:
+                step.end_time = end_time
 
         result.end_time = end_time
         result.status = "passed" if result.is_successful() else "failed"
@@ -88,16 +81,12 @@ class ReportWriter:
 
     def on_test_session_setup_end(self, event):
         self._finalize_result(self.report.test_session_setup, event.time)
-        if self.report.test_session_setup.is_empty():
-            self.report.test_session_setup = None
 
     def on_test_session_teardown_start(self, event):
         self.report.test_session_teardown = self._initialize_result(event.time)
 
     def on_test_session_teardown_end(self, event):
         self._finalize_result(self.report.test_session_teardown, event.time)
-        if self.report.test_session_teardown.is_empty():
-            self.report.test_session_teardown = None
 
     def on_suite_start(self, event):
         suite = event.suite
@@ -124,8 +113,6 @@ class ReportWriter:
     def on_suite_setup_end(self, event):
         suite_result = self._get_suite_result(event.suite)
         self._finalize_result(suite_result.suite_setup, event.time)
-        if suite_result.suite_setup.is_empty():
-            suite_result.suite_setup = None
 
     def on_suite_teardown_start(self, event):
         suite_result = self._get_suite_result(event.suite)
@@ -134,8 +121,6 @@ class ReportWriter:
     def on_suite_teardown_end(self, event):
         suite_result = self._get_suite_result(event.suite)
         self._finalize_result(suite_result.suite_teardown, event.time)
-        if suite_result.suite_teardown.is_empty():
-            suite_result.suite_teardown = None
 
     def on_test_start(self, event):
         test_result = self._initialize_test_result(event.test, event.time)

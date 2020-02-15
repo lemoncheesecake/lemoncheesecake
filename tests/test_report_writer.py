@@ -294,7 +294,9 @@ def test_multiple_steps_on_different_threads():
     test = get_last_test(report)
     remainings = list(range(3))
 
-    for step in test.get_steps():
+    steps = test.get_steps()
+    steps.pop(0)  # remove default starting step
+    for step in steps:
         remainings.remove(int(step.description))
         assert len(step.entries) == 1
         assert step.entries[0].message == step.description
@@ -342,7 +344,7 @@ def test_exception_in_thread_detached_step():
     test = get_last_test(report)
 
     assert test.status == "failed"
-    step = test.get_steps()[0]
+    step = test.get_steps()[1]
     assert step.description == "step"
     assert step.entries[-1].level == "error"
     assert "this_is_an_exception" in step.entries[-1].message
