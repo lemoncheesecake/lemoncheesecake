@@ -44,7 +44,7 @@ class EventType:
             handler(event)
 
 
-class BaseEventManager(object):
+class EventManager(object):
     def __init__(self):
         self._event_types = {}
 
@@ -80,8 +80,8 @@ class BaseEventManager(object):
     def subscribe_to_event(self, event, handler):
         self._event_types[self._get_event_name(event)].subscribe(handler)
 
-    def subscribe_to_events(self, event_handler_pairs):
-        for event, handler in event_handler_pairs.items():
+    def subscribe_to_events(self, handlers):
+        for event, handler in handlers.items():
             self.subscribe_to_event(event, handler)
 
     def add_listener(self, listener):
@@ -101,9 +101,9 @@ class BaseEventManager(object):
         raise NotImplementedError()
 
 
-class AsyncEventManager(BaseEventManager):
+class AsyncEventManager(EventManager):
     def __init__(self):
-        BaseEventManager.__init__(self)
+        EventManager.__init__(self)
         self._queue = None
         self._pending_failure = None, None
 
@@ -144,7 +144,7 @@ class AsyncEventManager(BaseEventManager):
             self._queue = None
 
 
-class SyncEventManager(BaseEventManager):
+class SyncEventManager(EventManager):
     def fire(self, event):
         if DEBUG:
             print("Fire event %s" % event)

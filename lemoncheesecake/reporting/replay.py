@@ -4,11 +4,11 @@ from typing import Iterable
 
 from lemoncheesecake.reporting import Report, Step, TestResult, SuiteResult, Log, Attachment, Url, Check, ReportLocation
 from lemoncheesecake import events
-from lemoncheesecake.events import BaseEventManager
+from lemoncheesecake.events import EventManager
 
 
 def _replay_step(location, step, eventmgr):
-    # type: (ReportLocation, Step, BaseEventManager) -> None
+    # type: (ReportLocation, Step, EventManager) -> None
     eventmgr.fire(events.StepEvent(location, step.description, event_time=step.start_time))
     for entry in step.entries:
         if isinstance(entry, Log):
@@ -40,13 +40,13 @@ def _replay_step(location, step, eventmgr):
 
 
 def _replay_steps_events(location, steps, eventmgr):
-    # type: (ReportLocation, Iterable[Step], BaseEventManager) -> None
+    # type: (ReportLocation, Iterable[Step], EventManager) -> None
     for step in steps:
         _replay_step(location, step, eventmgr)
 
 
 def _replay_test_events(test, eventmgr):
-    # type: (TestResult, BaseEventManager) -> None
+    # type: (TestResult, EventManager) -> None
     if test.status in ("passed", "failed", None):  # None means "in progress"
         eventmgr.fire(events.TestStartEvent(test, test.start_time))
         _replay_steps_events(ReportLocation.in_test(test), test.get_steps(), eventmgr)
@@ -61,7 +61,7 @@ def _replay_test_events(test, eventmgr):
 
 
 def _replay_suite_events(suite, eventmgr):
-    # type: (SuiteResult, BaseEventManager) -> None
+    # type: (SuiteResult, EventManager) -> None
 
     eventmgr.fire(events.SuiteStartEvent(suite, suite.start_time))
 
@@ -88,7 +88,7 @@ def _replay_suite_events(suite, eventmgr):
 
 
 def replay_report_events(report, eventmgr):
-    # type: (Report, BaseEventManager) -> None
+    # type: (Report, EventManager) -> None
 
     eventmgr.fire(events.TestSessionStartEvent(report, report.start_time))
 
