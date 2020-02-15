@@ -9,7 +9,7 @@ import itertools
 
 import six
 
-from lemoncheesecake.session import initialize_session, initialize_fixture_cache, set_session_location,\
+from lemoncheesecake.session import initialize_session, initialize_fixture_cache,\
     is_location_successful, is_session_successful, mark_location_as_failed, get_report, log_error, set_step, \
     start_test_session, end_test_session, \
     start_test_session_setup, end_test_session_setup, \

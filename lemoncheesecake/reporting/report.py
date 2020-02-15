@@ -149,10 +149,6 @@ class Result(object):
         # type: () -> Optional[float]
         return _get_duration(self.start_time, self.end_time)
 
-    def is_empty(self):
-        # type: () -> bool
-        return len(self._steps) == 0
-
 
 class TestResult(BaseTest, Result):
     def __init__(self, name, description):
