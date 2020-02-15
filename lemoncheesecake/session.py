@@ -41,6 +41,7 @@ class _Cursor(object):
     def __init__(self, location, step=None):
         self.location = location
         self.step = step
+        self.pending_events = []
 
 
 class Session(object):
@@ -62,6 +63,32 @@ class Session(object):
     def cursor(self, cursor):
         self._local.cursor = cursor
 
+    def _hold_event(self, event):
+        self.cursor.pending_events.append(event)
+
+    def _flush_pending_events(self):
+        for event in self.cursor.pending_events:
+            self.event_manager.fire(event)
+        del self.cursor.pending_events[:]
+
+    def _discard_pending_event_if_any(self, event_class):
+        if self.cursor.pending_events and isinstance(self.cursor.pending_events[-1], event_class):
+            self.cursor.pending_events.pop()
+            return True
+        else:
+            return False
+
+    def _discard_or_fire_event(self, event_class, event):
+        discarded = self._discard_pending_event_if_any(event_class)
+        if not discarded:
+            self.event_manager.fire(event)
+
+    def prepare_cursor_for_new_thread(self):
+        # In case of a new thread, we have to flush the pending events to avoid sharing the same pending events
+        # between multiple threads. It has the minor side-effect of possibly leading to empty step
+        self._flush_pending_events()
+        return _Cursor(self.cursor.location, self.cursor.step)
+
     def mark_location_as_failed(self, location):
         self._failures.add(location)
 
@@ -72,18 +99,21 @@ class Session(object):
             return len(self._failures) == 0
 
     def set_step(self, description, detached=False):
+        self._discard_pending_event_if_any(events.StepEvent)
         self.cursor.step = description
-        self.event_manager.fire(events.StepEvent(self.cursor.location, description, detached=detached))
+        self._hold_event(events.StepEvent(self.cursor.location, description, detached=detached))
 
     def end_step(self, step):
-        self.event_manager.fire(events.StepEndEvent(self.cursor.location, step))
+        self._discard_or_fire_event(events.StepEvent, events.StepEndEvent(self.cursor.location, step))
 
     def log(self, level, content):
+        self._flush_pending_events()
         if level == LOG_LEVEL_ERROR:
             self.mark_location_as_failed(self.cursor.location)
         self.event_manager.fire(events.LogEvent(self.cursor.location, self.cursor.step, level, content))
 
     def log_check(self, description, is_successful, details):
+        self._flush_pending_events()
         if is_successful is False:
             self.mark_location_as_failed(self.cursor.location)
         self.event_manager.fire(
@@ -91,6 +121,7 @@ class Session(object):
         )
 
     def log_url(self, url, description):
+        self._flush_pending_events()
         self.event_manager.fire(
             events.LogUrlEvent(self.cursor.location, self.cursor.step, url, description)
         )
@@ -105,6 +136,7 @@ class Session(object):
 
         yield os.path.join(self.attachments_dir, attachment_filename)
 
+        self._flush_pending_events()
         self.event_manager.fire(events.LogAttachmentEvent(
             self.cursor.location, self.cursor.step, "%s/%s" % (ATTACHMENTS_DIR, attachment_filename),
             description, as_image
@@ -117,18 +149,20 @@ class Session(object):
         self.event_manager.fire(events.TestSessionEndEvent(self.report))
 
     def start_test_session_setup(self):
-        self.event_manager.fire(events.TestSessionSetupStartEvent())
         self.cursor = _Cursor(ReportLocation.in_test_session_setup())
+        self._hold_event(events.TestSessionSetupStartEvent())
 
     def end_test_session_setup(self):
-        self.event_manager.fire(events.TestSessionSetupEndEvent())
+        self._discard_pending_event_if_any(events.StepEvent)
+        self._discard_or_fire_event(events.TestSessionSetupStartEvent, events.TestSessionSetupEndEvent())
 
     def start_test_session_teardown(self):
-        self.event_manager.fire(events.TestSessionTeardownStartEvent())
         self.cursor = _Cursor(ReportLocation.in_test_session_teardown())
+        self._hold_event(events.TestSessionTeardownStartEvent())
 
     def end_test_session_teardown(self):
-        self.event_manager.fire(events.TestSessionTeardownEndEvent())
+        self._discard_pending_event_if_any(events.StepEvent)
+        self._discard_or_fire_event(events.TestSessionTeardownStartEvent, events.TestSessionTeardownEndEvent())
 
     def start_suite(self, suite):
         self.event_manager.fire(events.SuiteStartEvent(suite))
@@ -137,18 +171,20 @@ class Session(object):
         self.event_manager.fire(events.SuiteEndEvent(suite))
 
     def start_suite_setup(self, suite):
-        self.event_manager.fire(events.SuiteSetupStartEvent(suite))
         self.cursor = _Cursor(ReportLocation.in_suite_setup(suite))
+        self._hold_event(events.SuiteSetupStartEvent(suite))
 
     def end_suite_setup(self, suite):
-        self.event_manager.fire(events.SuiteSetupEndEvent(suite))
+        self._discard_pending_event_if_any(events.StepEvent)
+        self._discard_or_fire_event(events.SuiteSetupStartEvent, events.SuiteSetupEndEvent(suite))
 
     def start_suite_teardown(self, suite):
-        self.event_manager.fire(events.SuiteTeardownStartEvent(suite))
         self.cursor = _Cursor(ReportLocation.in_suite_teardown(suite))
+        self._hold_event(events.SuiteTeardownStartEvent(suite))
 
     def end_suite_teardown(self, suite):
-        self.event_manager.fire(events.SuiteTeardownEndEvent(suite))
+        self._discard_pending_event_if_any(events.StepEvent)
+        self._discard_or_fire_event(events.SuiteTeardownStartEvent, events.SuiteTeardownEndEvent(suite))
 
     def start_test(self, test):
         self.event_manager.fire(events.TestStartEvent(test))
@@ -457,8 +493,7 @@ class Thread(threading.Thread):
     """
     def __init__(self, *args, **kwargs):
         super(Thread, self).__init__(*args, **kwargs)
-        cursor = get_session().cursor
-        self.cursor = _Cursor(cursor.location, cursor.step)
+        self.cursor = get_session().prepare_cursor_for_new_thread()
 
     def run(self):
         get_session().cursor = self.cursor
