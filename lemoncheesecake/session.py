@@ -89,7 +89,7 @@ class Session(object):
         self._flush_pending_events()
         return _Cursor(self.cursor.location, self.cursor.step)
 
-    def mark_location_as_failed(self, location):
+    def _mark_location_as_failed(self, location):
         self._failures.add(location)
 
     def is_successful(self, location=None):
@@ -109,13 +109,13 @@ class Session(object):
     def log(self, level, content):
         self._flush_pending_events()
         if level == LOG_LEVEL_ERROR:
-            self.mark_location_as_failed(self.cursor.location)
+            self._mark_location_as_failed(self.cursor.location)
         self.event_manager.fire(events.LogEvent(self.cursor.location, self.cursor.step, level, content))
 
     def log_check(self, description, is_successful, details):
         self._flush_pending_events()
         if is_successful is False:
-            self.mark_location_as_failed(self.cursor.location)
+            self._mark_location_as_failed(self.cursor.location)
         self.event_manager.fire(
             events.CheckEvent(self.cursor.location, self.cursor.step, description, is_successful, details)
         )
@@ -195,7 +195,7 @@ class Session(object):
 
     def skip_test(self, test, reason):
         self.event_manager.fire(events.TestSkippedEvent(test, reason))
-        self.mark_location_as_failed(ReportLocation.in_test(test))
+        self._mark_location_as_failed(ReportLocation.in_test(test))
 
     def disable_test(self, test, reason):
         self.event_manager.fire(events.TestDisabledEvent(test, reason))
@@ -408,10 +408,6 @@ def add_report_info(name, value):
 
     report = get_report()
     report.add_info(name, value)
-
-
-def mark_location_as_failed(location):
-    get_session().mark_location_as_failed(location)
 
 
 def is_location_successful(location):
