@@ -1,3 +1,12 @@
+# 1.4.3 (2020-02-16)
+
+- **ReportPortal**: do not send steps and setup/teardown results to ReportPortal if they are empty
+- Fix logging in a new thread when no explicit step has been set
+- **under the hood**:
+  - hold events related to step and setup/teardown in to order to avoid empty steps
+    and empty results as soon as possible in the event processing chain
+  - put ReportPortal reporting backend under unit tests
+
 # 1.4.2 (2020-02-09)
 
 - Fix exponential tests running time when dealing with very large test suites (thousands of tests)
