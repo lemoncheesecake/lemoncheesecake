@@ -6,7 +6,7 @@ import six
 
 from lemoncheesecake.helpers.moduleimport import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
 from lemoncheesecake.helpers.introspection import get_object_attributes
-from lemoncheesecake.exceptions import UserError, ProgrammingError, ModuleImportError, InvalidMetadataError, \
+from lemoncheesecake.exceptions import LemoncheesecakeException, UserError, ModuleImportError, InvalidMetadataError, \
     InvalidSuiteError, VisibilityConditionNotMet, serialize_current_exception
 from lemoncheesecake.suite.core import Test, Suite, SUITE_HOOKS
 from lemoncheesecake.testtree import BaseTreeNode
@@ -149,7 +149,7 @@ def load_suite_from_class(class_):
     except UserError as e:
         raise e  # propagate UserError
     except Exception:
-        raise ProgrammingError("Got an unexpected error while instantiating suite class '%s':%s" % (
+        raise LemoncheesecakeException("Got an unexpected error while instantiating suite class '%s':%s" % (
             class_.__name__, serialize_current_exception()
         ))
     _ensure_node_is_visible(suite_obj, md)

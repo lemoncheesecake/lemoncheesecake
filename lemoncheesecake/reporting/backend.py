@@ -8,7 +8,7 @@ import os
 import os.path as osp
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
-from lemoncheesecake.exceptions import InvalidReportFile, ProgrammingError, LemoncheesecakeException
+from lemoncheesecake.exceptions import InvalidReportFile, LemoncheesecakeException
 from lemoncheesecake.reporting.report import Report
 from lemoncheesecake.consts import NEGATIVE_CHARS
 
@@ -160,8 +160,7 @@ class BoundReport(Report):
         return self.backend is not None and self.path is not None
 
     def save(self):
-        if not self.is_bound():
-            raise ProgrammingError("Cannot save unbound report")
+        assert self.is_bound(), "Cannot save unbound report"
         save_report(self.path, self, self.backend)
 
 
@@ -200,5 +199,5 @@ def load_report(path, backends=None):
 
 def save_report(filename, report, backend):
     if not isinstance(backend, ReportSerializerMixin):
-        raise ProgrammingError("Reporting backend '%s' does not support report saving" % backend.get_name())
+        raise NotImplementedError("Reporting backend '%s' does not support report saving" % backend.get_name())
     backend.save_report(filename, report)

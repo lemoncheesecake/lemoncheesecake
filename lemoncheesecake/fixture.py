@@ -3,7 +3,7 @@ from collections import OrderedDict
 from typing import List, Any, Sequence, Callable
 
 from lemoncheesecake.helpers.moduleimport import import_module, get_matching_files, get_py_files_from_dir
-from lemoncheesecake.exceptions import FixtureError, ProgrammingError
+from lemoncheesecake.exceptions import FixtureError
 from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.helpers.introspection import get_callable_args
 
@@ -32,7 +32,7 @@ def fixture(names=None, scope="test"):
     """
     def wrapper(func):
         if scope not in _SCOPE_LEVELS.keys():
-            raise ProgrammingError("Invalid fixture scope '%s' in fixture function '%s'" % (scope, func.__name__))
+            raise ValueError("Invalid fixture scope '%s' in fixture function '%s'" % (scope, func.__name__))
 
         setattr(func, "_lccfixtureinfo", _FixtureInfo(names, scope))
         return func
@@ -155,7 +155,7 @@ class ScheduledFixtures(object):
         elif self._parent_scheduled_fixtures:
             return self._parent_scheduled_fixtures.get_fixture_result(name)
         else:
-            raise ProgrammingError("Cannot find fixture named '%s' in scheduled fixtures" % name)
+            raise LookupError("Cannot find fixture named '%s' in scheduled fixtures" % name)
 
     def get_fixture_results(self, names):
         return {name: self.get_fixture_result(name) for name in names}

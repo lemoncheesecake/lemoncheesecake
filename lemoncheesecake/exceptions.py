@@ -1,7 +1,6 @@
-from typing import Optional
-
 import sys
 import traceback
+from typing import Optional
 
 
 class LemoncheesecakeException(Exception):
@@ -12,10 +11,6 @@ class LemoncheesecakeException(Exception):
         if self.message_prefix:
             s = "%s, %s" % (self.message_prefix, s)
         return s
-
-
-class ProgrammingError(LemoncheesecakeException):
-    pass
 
 
 class ProjectError(LemoncheesecakeException):
@@ -34,7 +29,7 @@ class InvalidSuiteError(LemoncheesecakeException):
     pass
 
 
-class InvalidMetadataError(ProgrammingError):
+class InvalidMetadataError(LemoncheesecakeException):
     pass
 
 

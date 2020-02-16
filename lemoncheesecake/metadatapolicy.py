@@ -4,7 +4,7 @@ Created on Sep 8, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.exceptions import InvalidMetadataError, ProgrammingError
+from lemoncheesecake.exceptions import InvalidMetadataError
 from lemoncheesecake.testtree import flatten_suites
 
 
@@ -23,7 +23,7 @@ class MetadataPolicy:
         if on_test is None and on_suite is None:
             return True, False
         if not on_test and not on_suite:
-            raise ProgrammingError("either on_test or on_suite need to be True")
+            raise AssertionError("either on_test or on_suite need to be True")
         return bool(on_test), bool(on_suite)
 
     def add_property_rule(self, prop_name, accepted_values=None, on_test=None, on_suite=None, required=False):

@@ -1335,7 +1335,7 @@ def test_get_fixture_bad_scope():
         def mytest(self, fixt):
             try:
                 lcc.get_fixture("fixt")
-            except ProgrammingError:
+            except LookupError:
                 marker.append("exception")
 
     run_suite_class(mysuite, fixtures=[fixt])
@@ -1352,7 +1352,7 @@ def test_get_fixture_unknown():
         def mytest(self):
             try:
                 lcc.get_fixture("fixt")
-            except ProgrammingError:
+            except LookupError:
                 marker.append("exception")
 
     run_suite_class(mysuite)
@@ -1373,7 +1373,7 @@ def test_get_fixture_not_executed():
         def mytest(self):
             try:
                 lcc.get_fixture("fixt")
-            except ProgrammingError:
+            except LookupError:
                 marker.append("exception")
 
     run_suite_class(mysuite)
