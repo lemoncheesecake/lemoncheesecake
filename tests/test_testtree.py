@@ -3,7 +3,6 @@ import pytest
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite import load_suites_from_classes, load_suite_from_class
 from lemoncheesecake.testtree import find_suite, find_test, flatten_suites, flatten_tests
-from lemoncheesecake.exceptions import CannotFindTreeNode
 
 
 def test_hierarchy():
@@ -272,7 +271,7 @@ def test_find_suite_unknown():
 
     suites = load_suites_from_classes([mysuite1])
 
-    with pytest.raises(CannotFindTreeNode):
+    with pytest.raises(LookupError):
         find_suite(suites, "unknownsuite")
 
 
@@ -297,7 +296,7 @@ def test_find_test_unknown():
 
     suites = load_suites_from_classes([mysuite1])
 
-    with pytest.raises(CannotFindTreeNode):
+    with pytest.raises(LookupError):
         find_test(suites, "mysuite1.unknown")
 
 

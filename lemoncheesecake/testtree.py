@@ -10,7 +10,6 @@ from collections import OrderedDict
 from typing import Union, Tuple, List, Sequence, TypeVar, Generator
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
-from lemoncheesecake.exceptions import CannotFindTreeNode
 
 
 # Please note that attributes from base classes do not appear
@@ -205,7 +204,7 @@ def find_suite(suites, hierarchy):
         try:
             lookup_suite = next(s for s in lookup_suites if s.name == lookup_suite_name)
         except StopIteration:
-            raise CannotFindTreeNode("Cannot find suite named '%s' within %s" % (
+            raise LookupError("Cannot find suite named '%s' within %s" % (
                 lookup_suite_name, [s.name for s in lookup_suites]
             ))
 
@@ -223,4 +222,4 @@ def find_test(suites, hierarchy):
     try:
         return suite.get_test_by_name(hierarchy[-1])
     except KeyError:
-        raise CannotFindTreeNode("Cannot find test named '%s'" % ".".join(hierarchy))
+        raise LookupError("Cannot find test named '%s'" % ".".join(hierarchy))

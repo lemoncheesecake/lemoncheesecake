@@ -86,10 +86,6 @@ class IncompatibleReportFile(LemoncheesecakeException):
     pass
 
 
-class CannotFindTreeNode(LemoncheesecakeException):
-    pass
-
-
 class TaskFailure(LemoncheesecakeException):
     pass
 
