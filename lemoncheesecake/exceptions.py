@@ -37,10 +37,6 @@ class VisibilityConditionNotMet(LemoncheesecakeException):
     pass
 
 
-class UnknownReportBackendError(LemoncheesecakeException):
-    pass
-
-
 class AbortTest(LemoncheesecakeException):
     """
     Raising this exception will stop the currently running test.
