@@ -350,6 +350,49 @@ def test_exception_in_thread_detached_step():
     assert "this_is_an_exception" in step.entries[-1].message
 
 
+def test_same_step_in_two_threads():
+    def thread_func():
+        with lcc.detached_step("step 2"):
+            lcc.log_info("log 2")
+        time.sleep(0.001)
+        with lcc.detached_step("step 1"):
+            lcc.log_info("log 3")
+
+    @lcc.suite("MySuite")
+    class mysuite:
+        @lcc.test("Some test")
+        def sometest(self):
+            lcc.set_step("step 1")
+            lcc.log_info("log 1")
+            thread = lcc.Thread(target=thread_func)
+            thread.start()
+            lcc.log_info("log 4")
+            thread.join()
+
+    report = run_suite_class(mysuite)
+
+    test = get_last_test(report)
+
+    steps = test.get_steps()
+    assert len(steps) == 3
+
+    step = next(steps)
+    assert step.description == "step 1"
+    assert len(step.entries) == 2
+    assert step.entries[0].message == "log 1"
+    assert step.entries[1].message == "log 4"
+
+    step = next(steps)
+    assert step.description == "step 2"
+    assert len(step.entries) == 1
+    assert step.entries[0].message == "log 2"
+
+    step = next(steps)
+    assert step.description == "step 1"
+    assert len(step.entries) == 1
+    assert step.entries[0].message == "log 3"
+
+
 def test_end_step_on_detached_step():
     @lcc.suite("MySuite")
     class mysuite:
