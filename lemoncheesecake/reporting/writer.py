@@ -129,7 +129,7 @@ class ReportWriter:
     def on_test_disabled(self, event):
         self._bypass_test(event.test, "disabled", event.disabled_reason, event.time)
 
-    def on_step(self, event):
+    def on_step_start(self, event):
         result = self.report.get(event.location)
         step = Step(event.step_description)
         step.start_time = event.time

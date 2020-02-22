@@ -13,7 +13,7 @@ def _replay_step(location, step, eventmgr):
     # type: (ReportLocation, Step, EventManager) -> None
 
     thread_id = threading.current_thread().ident
-    eventmgr.fire(events.StepEvent(location, step.description, thread_id, event_time=step.start_time))
+    eventmgr.fire(events.StepStartEvent(location, step.description, thread_id, event_time=step.start_time))
 
     for entry in step.entries:
         if isinstance(entry, Log):

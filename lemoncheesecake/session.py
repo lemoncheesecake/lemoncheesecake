@@ -96,17 +96,17 @@ class Session(object):
         else:
             return len(self._failures) == 0
 
-    def set_step(self, description):
+    def start_step(self, description):
         self._end_step_if_any()
         self.cursor.step = description
         self._hold_event(
-            events.StepEvent(self.cursor.location, description, _get_thread_id())
+            events.StepStartEvent(self.cursor.location, description, _get_thread_id())
         )
 
     def end_step(self):
         assert self.cursor.step, "There is no started step"
         self._discard_or_fire_event(
-            events.StepEvent, events.StepEndEvent(self.cursor.location, self.cursor.step, _get_thread_id())
+            events.StepStartEvent, events.StepEndEvent(self.cursor.location, self.cursor.step, _get_thread_id())
         )
         self.cursor.step = None
 
@@ -240,7 +240,7 @@ def set_step(description, detached=NotImplemented):
         )
 
     check_type_string("description", description)
-    get_session().set_step(description)
+    get_session().start_step(description)
 
 
 def end_step(step):
@@ -501,7 +501,7 @@ class Thread(threading.Thread):
         # flush result starting event if any
         session = get_session()
         cursor = session.cursor
-        if session.cursor.pending_events and not isinstance(cursor.pending_events[0], events.StepEvent):
+        if session.cursor.pending_events and not isinstance(cursor.pending_events[0], events.StepStartEvent):
             event = cursor.pending_events.pop(0)
             session.event_manager.fire(event)
 

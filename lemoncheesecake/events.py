@@ -265,9 +265,9 @@ class RuntimeEvent(Event):
         self.location = location
 
 
-class StepEvent(RuntimeEvent):
+class StepStartEvent(RuntimeEvent):
     def __init__(self, location, description, thread_id, event_time=None):
-        super(StepEvent, self).__init__(location, event_time)
+        super(StepStartEvent, self).__init__(location, event_time)
         self.step_description = description
         self.thread_id = thread_id
 
