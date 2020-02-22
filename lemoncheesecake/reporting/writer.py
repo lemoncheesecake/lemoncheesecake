@@ -44,10 +44,6 @@ class ReportWriter:
 
     @staticmethod
     def _finalize_result(result, end_time):
-        for step in result.get_steps():
-            if step.end_time is None:
-                step.end_time = end_time
-
         result.end_time = end_time
         result.status = "passed" if result.is_successful() else "failed"
 
@@ -135,14 +131,10 @@ class ReportWriter:
 
     def on_step(self, event):
         result = self.report.get(event.location)
-        current_step = self._lookup_step(event)
-        if current_step:
-            current_step.end_time = event.time
-
-        new_step = Step(event.step_description)
-        new_step.start_time = event.time
-        result.add_step(new_step)
-        self.active_steps[event.thread_id] = new_step
+        step = Step(event.step_description)
+        step.start_time = event.time
+        result.add_step(step)
+        self.active_steps[event.thread_id] = step
 
     def on_step_end(self, event):
         step = self._lookup_step(event)

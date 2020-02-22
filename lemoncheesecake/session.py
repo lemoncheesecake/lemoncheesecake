@@ -97,16 +97,22 @@ class Session(object):
             return len(self._failures) == 0
 
     def set_step(self, description):
-        self._discard_pending_event_if_any(events.StepEvent)
+        self._end_step_if_any()
         self.cursor.step = description
         self._hold_event(
             events.StepEvent(self.cursor.location, description, _get_thread_id())
         )
 
     def end_step(self):
+        assert self.cursor.step, "There is no started step"
         self._discard_or_fire_event(
             events.StepEvent, events.StepEndEvent(self.cursor.location, self.cursor.step, _get_thread_id())
         )
+        self.cursor.step = None
+
+    def _end_step_if_any(self):
+        if self.cursor.step:
+            self.end_step()
 
     def log(self, level, content):
         self._flush_pending_events()
@@ -157,7 +163,7 @@ class Session(object):
         self._hold_event(events.TestSessionSetupStartEvent())
 
     def end_test_session_setup(self):
-        self._discard_pending_event_if_any(events.StepEvent)
+        self._end_step_if_any()
         self._discard_or_fire_event(events.TestSessionSetupStartEvent, events.TestSessionSetupEndEvent())
 
     def start_test_session_teardown(self):
@@ -165,7 +171,7 @@ class Session(object):
         self._hold_event(events.TestSessionTeardownStartEvent())
 
     def end_test_session_teardown(self):
-        self._discard_pending_event_if_any(events.StepEvent)
+        self._end_step_if_any()
         self._discard_or_fire_event(events.TestSessionTeardownStartEvent, events.TestSessionTeardownEndEvent())
 
     def start_suite(self, suite):
@@ -179,7 +185,7 @@ class Session(object):
         self._hold_event(events.SuiteSetupStartEvent(suite))
 
     def end_suite_setup(self, suite):
-        self._discard_pending_event_if_any(events.StepEvent)
+        self._end_step_if_any()
         self._discard_or_fire_event(events.SuiteSetupStartEvent, events.SuiteSetupEndEvent(suite))
 
     def start_suite_teardown(self, suite):
@@ -187,7 +193,7 @@ class Session(object):
         self._hold_event(events.SuiteTeardownStartEvent(suite))
 
     def end_suite_teardown(self, suite):
-        self._discard_pending_event_if_any(events.StepEvent)
+        self._end_step_if_any()
         self._discard_or_fire_event(events.SuiteTeardownStartEvent, events.SuiteTeardownEndEvent(suite))
 
     def start_test(self, test):
@@ -195,6 +201,7 @@ class Session(object):
         self.cursor = _Cursor(ReportLocation.in_test(test))
 
     def end_test(self, test):
+        self._end_step_if_any()
         self.event_manager.fire(events.TestEndEvent(test))
 
     def skip_test(self, test, reason):
