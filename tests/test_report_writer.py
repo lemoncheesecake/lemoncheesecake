@@ -9,6 +9,7 @@ Created on Nov 1, 2016
 import os.path as osp
 import time
 
+import pytest
 import six
 
 import lemoncheesecake.api as lcc
@@ -274,10 +275,9 @@ def test_multiple_steps():
 
 def test_multiple_steps_on_different_threads():
     def thread_func(i):
-        lcc.set_step(str(i), detached=True)
+        lcc.set_step(str(i))
         time.sleep(0.001)
         lcc.log_info(str(i))
-        lcc.end_step(str(i))
 
     @lcc.suite("MySuite")
     class mysuite:
@@ -303,7 +303,7 @@ def test_multiple_steps_on_different_threads():
     assert len(remainings) == 0
 
 
-def test_thread_logging_without_detached():
+def test_thread_logging_without_explicit_step():
     @lcc.suite("MySuite")
     class mysuite:
         @lcc.test("Some test")
@@ -361,11 +361,10 @@ def test_thread_logging_without_detached_bis():
     assert step.entries[0].message == "log in thread"
 
 
-def test_exception_in_thread_detached_step():
+def test_exception_in_thread():
     def thread_func():
-        with lcc.detached_step("step"):
-            lcc.log_info("doing something")
-            raise Exception("this_is_an_exception")
+        lcc.log_info("doing something")
+        raise Exception("this_is_an_exception")
 
     @lcc.suite("MySuite")
     class mysuite:
@@ -383,18 +382,18 @@ def test_exception_in_thread_detached_step():
     steps = test.get_steps()
     assert len(steps) == 1
     step = steps[0]
-    assert step.description == "step"
+    assert step.description == "Some test"
     assert step.entries[-1].level == "error"
     assert "this_is_an_exception" in step.entries[-1].message
 
 
 def test_same_step_in_two_threads():
     def thread_func():
-        with lcc.detached_step("step 2"):
-            lcc.log_info("log 2")
+        lcc.set_step("step 2")
+        lcc.log_info("log 2")
         time.sleep(0.001)
-        with lcc.detached_step("step 1"):
-            lcc.log_info("log 3")
+        lcc.set_step("step 1")
+        lcc.log_info("log 3")
 
     @lcc.suite("MySuite")
     class mysuite:
@@ -431,16 +430,17 @@ def test_same_step_in_two_threads():
     assert step.entries[0].message == "log 3"
 
 
-def test_end_step_on_detached_step():
+def test_deprecated_end_step():
     @lcc.suite("MySuite")
     class mysuite:
         @lcc.test("Some test")
         def sometest(self):
-            lcc.set_step("step", detached=True)
+            lcc.set_step("step")
             lcc.log_info("log")
             lcc.end_step("step")
 
-    report = run_suite_class(mysuite)
+    with pytest.warns(DeprecationWarning, match="deprecated"):
+        report = run_suite_class(mysuite)
 
     test = get_last_test(report)
     assert test.status == "passed"
@@ -450,7 +450,7 @@ def test_end_step_on_detached_step():
     assert step.entries[0].message == "log"
 
 
-def test_detached_step():
+def test_deprecated_detached_step():
     @lcc.suite("MySuite")
     class mysuite:
         @lcc.test("Some test")
@@ -458,7 +458,8 @@ def test_detached_step():
             with lcc.detached_step("step"):
                 lcc.log_info("log")
 
-    report = run_suite_class(mysuite)
+    with pytest.warns(DeprecationWarning, match="deprecated"):
+        report = run_suite_class(mysuite)
 
     test = get_last_test(report)
     step = test.get_steps()[0]

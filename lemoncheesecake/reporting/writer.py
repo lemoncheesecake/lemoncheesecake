@@ -139,17 +139,14 @@ class ReportWriter:
         if current_step:
             current_step.end_time = event.time
 
-        new_step = Step(event.step_description, detached=event.detached)
+        new_step = Step(event.step_description)
         new_step.start_time = event.time
         result.add_step(new_step)
         self.active_steps[event.thread_id] = new_step
 
     def on_step_end(self, event):
         step = self._lookup_step(event)
-
-        # only detached steps can be explicitly ended, otherwise do nothing
-        if step._detached and step.end_time is None:
-            step.end_time = event.time
+        step.end_time = event.time
 
     def on_log(self, event):
         self._add_step_entry(

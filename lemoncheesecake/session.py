@@ -10,6 +10,7 @@ import shutil
 import threading
 import traceback
 from typing import Optional
+import warnings
 
 import six
 
@@ -95,16 +96,16 @@ class Session(object):
         else:
             return len(self._failures) == 0
 
-    def set_step(self, description, detached=False):
+    def set_step(self, description):
         self._discard_pending_event_if_any(events.StepEvent)
         self.cursor.step = description
         self._hold_event(
-            events.StepEvent(self.cursor.location, description, _get_thread_id(), detached=detached)
+            events.StepEvent(self.cursor.location, description, _get_thread_id())
         )
 
-    def end_step(self, step):
+    def end_step(self):
         self._discard_or_fire_event(
-            events.StepEvent, events.StepEndEvent(self.cursor.location, step, _get_thread_id())
+            events.StepEvent, events.StepEndEvent(self.cursor.location, self.cursor.step, _get_thread_id())
         )
 
     def log(self, level, content):
@@ -217,41 +218,45 @@ def get_report():
     return report
 
 
-def set_step(description, detached=False):
+def set_step(description, detached=NotImplemented):
     # type: (str, bool) -> None
     """
     Set a new step.
 
     :param description: the step description
-    :param detached: whether or not the step is "detached"
+    :param detached: argument deprecated since 1.4.5, does nothing.
     """
+    if detached is not NotImplemented:
+        warnings.warn(
+            "The 'detached' argument does no longer do anything (deprecated since version 1.4.5)",
+            DeprecationWarning, stacklevel=2
+        )
+
     check_type_string("description", description)
-    get_session().set_step(description, detached=detached)
+    get_session().set_step(description)
 
 
 def end_step(step):
     """
-    End a detached step.
+    Function deprecated since version 1.4.5, does nothing.
     """
-    get_session().end_step(step)
+    warnings.warn(
+        "The 'end_step' function is deprecated since version 1.4.5, it actually does nothing.",
+        DeprecationWarning, stacklevel=2
+    )
 
 
 @contextmanager
 def detached_step(description):
     """
-    Context manager. Like set_step, but ends the step at the end of the "with" block.
-    Intended to be use with code run through lcc.Thread.
+    Context manager deprecated since version 1.4.5, it only does a set_step.
     """
-    set_step(description, detached=True)
-    try:
-        yield
-    except Exception:
-        # FIXME: use exception instead of last implicit stacktrace
-        stacktrace = traceback.format_exc()
-        if six.PY2:
-            stacktrace = stacktrace.decode("utf-8", "replace")
-        log_error("Caught unexpected exception while running test: " + stacktrace)
-    end_step(description)
+    warnings.warn(
+        "The 'detached_step' context manager is deprecated since version 1.4.5. Use 'set_step' function instead.",
+        DeprecationWarning, stacklevel=2
+    )
+    set_step(description)
+    yield
 
 
 def _log(level, content):
@@ -498,7 +503,17 @@ class Thread(threading.Thread):
         self._default_step = get_session().cursor.step
 
     def run(self):
-        get_session().cursor = self._cursor
+        session = get_session()
+        session.cursor = self._cursor
 
-        with detached_step(self._default_step):
+        set_step(self._default_step)
+        try:
             return super(Thread, self).run()
+        except Exception:
+            # FIXME: use exception instead of last implicit stacktrace
+            stacktrace = traceback.format_exc()
+            if six.PY2:
+                stacktrace = stacktrace.decode("utf-8", "replace")
+            log_error("Caught unexpected exception while running test: " + stacktrace)
+        finally:
+            session.end_step()

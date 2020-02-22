@@ -266,11 +266,10 @@ class RuntimeEvent(Event):
 
 
 class StepEvent(RuntimeEvent):
-    def __init__(self, location, description, thread_id, detached=False, event_time=None):
+    def __init__(self, location, description, thread_id, event_time=None):
         super(StepEvent, self).__init__(location, event_time)
         self.step_description = description
         self.thread_id = thread_id
-        self.detached = detached
 
     def __str__(self):
         return "<Event type='%s' description='%s'>" % (
