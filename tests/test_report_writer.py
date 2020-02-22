@@ -295,7 +295,6 @@ def test_multiple_steps_on_different_threads():
     remainings = list(range(3))
 
     steps = test.get_steps()
-    steps.pop(0)  # remove default starting step
     for step in steps:
         remainings.remove(int(step.description))
         assert len(step.entries) == 1
@@ -325,6 +324,43 @@ def test_thread_logging_without_detached():
     assert "doing something" == step.entries[0].message
 
 
+def test_thread_logging_without_detached_bis():
+    def func():
+        lcc.log_info("log in thread")
+
+    @lcc.suite("MySuite")
+    class mysuite:
+        @lcc.test("Some test")
+        def sometest(self):
+            lcc.set_step("Step 1")
+            lcc.log_info("log 1")
+            thread = lcc.Thread(target=func)
+            lcc.set_step("Step 2")
+            lcc.log_info("log 2")
+            thread.start()
+            thread.join()
+
+    report = run_suite_class(mysuite)
+
+    test = get_last_test(report)
+    assert test.status == "passed"
+
+    steps = test.get_steps()
+    assert len(steps) == 3
+
+    step = test.get_steps()[0]
+    assert step.description == "Step 1"
+    assert step.entries[0].message == "log 1"
+
+    step = test.get_steps()[1]
+    assert step.description == "Step 2"
+    assert step.entries[0].message == "log 2"
+
+    step = test.get_steps()[2]
+    assert step.description == "Step 1"
+    assert step.entries[0].message == "log in thread"
+
+
 def test_exception_in_thread_detached_step():
     def thread_func():
         with lcc.detached_step("step"):
@@ -344,7 +380,9 @@ def test_exception_in_thread_detached_step():
     test = get_last_test(report)
 
     assert test.status == "failed"
-    step = test.get_steps()[1]
+    steps = test.get_steps()
+    assert len(steps) == 1
+    step = steps[0]
     assert step.description == "step"
     assert step.entries[-1].level == "error"
     assert "this_is_an_exception" in step.entries[-1].message
@@ -376,18 +414,18 @@ def test_same_step_in_two_threads():
     steps = test.get_steps()
     assert len(steps) == 3
 
-    step = next(steps)
+    step = steps[0]
     assert step.description == "step 1"
     assert len(step.entries) == 2
     assert step.entries[0].message == "log 1"
     assert step.entries[1].message == "log 4"
 
-    step = next(steps)
+    step = steps[1]
     assert step.description == "step 2"
     assert len(step.entries) == 1
     assert step.entries[0].message == "log 2"
 
-    step = next(steps)
+    step = steps[2]
     assert step.description == "step 1"
     assert len(step.entries) == 1
     assert step.entries[0].message == "log 3"

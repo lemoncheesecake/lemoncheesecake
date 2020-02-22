@@ -25,6 +25,10 @@ _session = None  # type: Optional[Session]
 _scheduled_fixtures = None  # type: Optional[ScheduledFixtures]
 
 
+def _get_thread_id():
+    return threading.current_thread().ident
+
+
 def initialize_session(event_manager, report_dir, report):
     global _session
     _session = Session(event_manager, report_dir, report)
@@ -82,12 +86,6 @@ class Session(object):
         if not discarded:
             self.event_manager.fire(event)
 
-    def prepare_cursor_for_new_thread(self):
-        # In case of a new thread, we have to flush the pending events to avoid sharing the same pending events
-        # between multiple threads. It has the minor side-effect of possibly leading to empty step
-        self._flush_pending_events()
-        return _Cursor(self.cursor.location, self.cursor.step)
-
     def _mark_location_as_failed(self, location):
         self._failures.add(location)
 
@@ -100,29 +98,35 @@ class Session(object):
     def set_step(self, description, detached=False):
         self._discard_pending_event_if_any(events.StepEvent)
         self.cursor.step = description
-        self._hold_event(events.StepEvent(self.cursor.location, description, detached=detached))
+        self._hold_event(
+            events.StepEvent(self.cursor.location, description, _get_thread_id(), detached=detached)
+        )
 
     def end_step(self, step):
-        self._discard_or_fire_event(events.StepEvent, events.StepEndEvent(self.cursor.location, step))
+        self._discard_or_fire_event(
+            events.StepEvent, events.StepEndEvent(self.cursor.location, step, _get_thread_id())
+        )
 
     def log(self, level, content):
         self._flush_pending_events()
         if level == LOG_LEVEL_ERROR:
             self._mark_location_as_failed(self.cursor.location)
-        self.event_manager.fire(events.LogEvent(self.cursor.location, self.cursor.step, level, content))
+        self.event_manager.fire(
+            events.LogEvent(self.cursor.location, self.cursor.step, _get_thread_id(), level, content)
+        )
 
     def log_check(self, description, is_successful, details):
         self._flush_pending_events()
         if is_successful is False:
             self._mark_location_as_failed(self.cursor.location)
-        self.event_manager.fire(
-            events.CheckEvent(self.cursor.location, self.cursor.step, description, is_successful, details)
-        )
+        self.event_manager.fire(events.CheckEvent(
+            self.cursor.location, self.cursor.step, _get_thread_id(), description, is_successful, details
+        ))
 
     def log_url(self, url, description):
         self._flush_pending_events()
         self.event_manager.fire(
-            events.LogUrlEvent(self.cursor.location, self.cursor.step, url, description)
+            events.LogUrlEvent(self.cursor.location, self.cursor.step, _get_thread_id(), url, description)
         )
 
     @contextmanager
@@ -137,8 +141,8 @@ class Session(object):
 
         self._flush_pending_events()
         self.event_manager.fire(events.LogAttachmentEvent(
-            self.cursor.location, self.cursor.step, "%s/%s" % (ATTACHMENTS_DIR, attachment_filename),
-            description, as_image
+            self.cursor.location, self.cursor.step, _get_thread_id(),
+            "%s/%s" % (ATTACHMENTS_DIR, attachment_filename), description, as_image
         ))
 
     def start_test_session(self):
@@ -481,8 +485,20 @@ class Thread(threading.Thread):
     """
     def __init__(self, *args, **kwargs):
         super(Thread, self).__init__(*args, **kwargs)
-        self.cursor = get_session().prepare_cursor_for_new_thread()
+
+        # flush result starting event if any
+        session = get_session()
+        cursor = session.cursor
+        if session.cursor.pending_events and not isinstance(cursor.pending_events[0], events.StepEvent):
+            event = cursor.pending_events.pop(0)
+            session.event_manager.fire(event)
+
+        # keep track of the current location and step
+        self._cursor = _Cursor(cursor.location)
+        self._default_step = get_session().cursor.step
 
     def run(self):
-        get_session().cursor = self.cursor
-        return super(Thread, self).run()
+        get_session().cursor = self._cursor
+
+        with detached_step(self._default_step):
+            return super(Thread, self).run()

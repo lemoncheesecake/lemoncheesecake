@@ -11,6 +11,7 @@ from lemoncheesecake.reporting.report import \
 class ReportWriter:
     def __init__(self, report):
         self.report = report
+        self.active_steps = {}
 
     def _get_test_result(self, test):
         return self.report.get_test(test)
@@ -21,7 +22,7 @@ class ReportWriter:
     def _add_step_entry(self, entry, event):
         result = self.report.get(event.location)
         assert result, "Cannot find location %s in the report" % event.location
-        step = self._lookup_step(result.get_steps(), event.step)
+        step = self._lookup_step(event)
         assert not step.end_time, "Cannot update step '%s', it is already ended" % step.description
         step.entries.append(entry)
 
@@ -50,22 +51,11 @@ class ReportWriter:
         result.end_time = end_time
         result.status = "passed" if result.is_successful() else "failed"
 
-    @staticmethod
-    def _lookup_step(steps, step):
-        if step is None:
-            return steps[-1]
-        else:
-            try:
-                return next(s for s in reversed(steps) if s.description == step)
-            except StopIteration:
-                raise LookupError("Cannot find step '%s'" % step)
-
-    @staticmethod
-    def _lookup_current_step(steps):
-        for step in reversed(steps):
-            if not step._detached:
-                return step
-        return None
+    def _lookup_step(self, event):
+        try:
+            return self.active_steps[event.thread_id]
+        except KeyError:
+            return None
 
     def on_test_session_start(self, event):
         self.report.start_time = event.time
@@ -145,20 +135,20 @@ class ReportWriter:
 
     def on_step(self, event):
         result = self.report.get(event.location)
-        current_step = self._lookup_current_step(result.get_steps())
+        current_step = self._lookup_step(event)
         if current_step:
             current_step.end_time = event.time
 
         new_step = Step(event.step_description, detached=event.detached)
         new_step.start_time = event.time
         result.add_step(new_step)
+        self.active_steps[event.thread_id] = new_step
 
     def on_step_end(self, event):
-        result = self.report.get(event.location)
-        step = self._lookup_step(result.get_steps(), event.step)
+        step = self._lookup_step(event)
 
         # only detached steps can be explicitly ended, otherwise do nothing
-        if step._detached:
+        if step._detached and step.end_time is None:
             step.end_time = event.time
 
     def on_log(self, event):

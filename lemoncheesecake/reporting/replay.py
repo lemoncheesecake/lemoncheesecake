@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import threading
+
 from typing import Iterable
 
 from lemoncheesecake.reporting import Report, Step, TestResult, SuiteResult, Log, Attachment, Url, Check, ReportLocation
@@ -9,30 +11,33 @@ from lemoncheesecake.events import EventManager
 
 def _replay_step(location, step, eventmgr):
     # type: (ReportLocation, Step, EventManager) -> None
-    eventmgr.fire(events.StepEvent(location, step.description, event_time=step.start_time))
+    thread_id = threading.current_thread().ident
+    eventmgr.fire(events.StepEvent(location, step.description, thread_id, event_time=step.start_time))
     for entry in step.entries:
         if isinstance(entry, Log):
             eventmgr.fire(
                 events.LogEvent(
-                    location, step.description, entry.level, entry.message, entry.time
+                    location, step.description, thread_id, entry.level, entry.message, entry.time
                 )
             )
         elif isinstance(entry, Attachment):
             eventmgr.fire(
                 events.LogAttachmentEvent(
-                    location, step.description, entry.filename, entry.description, entry.as_image, entry.time
+                    location, step.description, thread_id, entry.filename, entry.description,
+                    entry.as_image, entry.time
                 )
             )
         elif isinstance(entry, Url):
             eventmgr.fire(
                 events.LogUrlEvent(
-                    location, step.description, entry.url, entry.description, entry.time
+                    location, step.description, thread_id, entry.url, entry.description, entry.time
                 )
             )
         elif isinstance(entry, Check):
             eventmgr.fire(
                 events.CheckEvent(
-                    location, step.description, entry.description, entry.is_successful, entry.details, entry.time
+                    location, step.description, thread_id, entry.description, entry.is_successful,
+                    entry.details, entry.time
                 )
             )
         else:
