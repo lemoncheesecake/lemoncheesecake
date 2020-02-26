@@ -1,8 +1,7 @@
 import itertools
 from multiprocessing.dummy import Pool, Queue
 
-from lemoncheesecake.exceptions import LemoncheesecakeException, TaskFailure, CircularDependencyError, \
-    serialize_current_exception
+from lemoncheesecake.exceptions import LemoncheesecakeException, TaskFailure, serialize_current_exception
 
 DEBUG = 0
 _KEYBOARD_INTERRUPT_ERROR_MESSAGE = "tests have been interrupted by the user"
@@ -177,7 +176,7 @@ def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
 def check_task_dependencies(task, task_path=()):
     for task_in_path in task_path:
         if task_in_path in task.get_all_dependencies():
-            raise CircularDependencyError("Task %s has a circular dependency on task %s" % (task, task_in_path))
+            raise AssertionError("Task %s has a circular dependency on task %s" % (task, task_in_path))
 
     for dependency in task.get_all_dependencies():
         check_task_dependencies(dependency, task_path=(task,) + task_path)

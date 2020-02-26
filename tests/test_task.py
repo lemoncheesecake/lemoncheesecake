@@ -6,7 +6,7 @@ import pytest
 
 from lemoncheesecake.task import BaseTask, run_tasks, check_task_dependencies, \
     TaskResultSuccess, TaskResultFailure
-from lemoncheesecake.exceptions import LemoncheesecakeException, TaskFailure, CircularDependencyError
+from lemoncheesecake.exceptions import LemoncheesecakeException, TaskFailure
 
 
 class BaseTestTask(BaseTask):
@@ -211,7 +211,7 @@ def test_check_task_dependencies_ko_direct_dependency():
     b = DummyTask("b", 2, [a])
     a.on_success_dependencies.append(b)
 
-    with pytest.raises(CircularDependencyError):
+    with pytest.raises(AssertionError, match="circular dependency"):
         check_task_dependencies(b)
 
 
@@ -221,7 +221,7 @@ def test_check_task_dependencies_ko_indirect_dependency():
     c = DummyTask("c", 3, [b])
     a.on_success_dependencies.append(c)
 
-    with pytest.raises(CircularDependencyError):
+    with pytest.raises(AssertionError, match="circular dependency"):
         check_task_dependencies(c)
 
 
@@ -231,5 +231,5 @@ def test_check_task_dependencies_ko_indirect_dependency_2():
     c = DummyTask("c", 3, [b])
     a.on_success_dependencies.append(b)
 
-    with pytest.raises(CircularDependencyError):
+    with pytest.raises(AssertionError, match="circular dependency"):
         check_task_dependencies(c)
