@@ -1,7 +1,7 @@
 import itertools
 from multiprocessing.dummy import Pool, Queue
 
-from lemoncheesecake.exceptions import TaskFailure, TasksExecutionFailure, CircularDependencyError, \
+from lemoncheesecake.exceptions import LemoncheesecakeException, TaskFailure, CircularDependencyError, \
     serialize_current_exception
 
 DEBUG = 0
@@ -169,7 +169,9 @@ def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
 
     exceptions = [task.result.stacktrace for task in tasks if isinstance(task.result, TaskResultException)]
     if exceptions:
-        raise TasksExecutionFailure("Caught exceptions:\n%s" % "\n".join(exceptions))
+        raise LemoncheesecakeException(
+            "Error(s) while running tasks, got exceptions:\n%s" % "\n".join(exceptions)
+        )
 
 
 def check_task_dependencies(task, task_path=()):

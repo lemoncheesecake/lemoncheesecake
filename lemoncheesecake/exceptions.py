@@ -90,10 +90,6 @@ class TaskFailure(LemoncheesecakeException):
     pass
 
 
-class TasksExecutionFailure(LemoncheesecakeException):
-    pass
-
-
 class CircularDependencyError(LemoncheesecakeException):
     pass
 
