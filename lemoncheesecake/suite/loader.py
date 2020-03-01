@@ -6,7 +6,7 @@ import six
 
 from lemoncheesecake.helpers.moduleimport import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
 from lemoncheesecake.helpers.introspection import get_object_attributes
-from lemoncheesecake.exceptions import LemoncheesecakeException, UserError, ModuleImportError, InvalidMetadataError, \
+from lemoncheesecake.exceptions import LemoncheesecakeException, UserError, ModuleImportError, \
     SuiteLoadingError, VisibilityConditionNotMet, serialize_current_exception
 from lemoncheesecake.suite.core import Test, Suite, SUITE_HOOKS
 from lemoncheesecake.testtree import BaseTreeNode
@@ -71,7 +71,7 @@ def _load_test(obj):
     try:
         _check_test_tree_node_types(test)
     except TypeError as excp:
-        raise InvalidMetadataError("Invalid test metadata for '%s': %s" % (test.name, excp))
+        raise SuiteLoadingError("Invalid test metadata type for '%s': %s" % (test.name, excp))
 
     return test
 
@@ -164,7 +164,7 @@ def load_suite_from_class(class_):
     try:
         _check_test_tree_node_types(suite)
     except TypeError as excp:
-        raise InvalidMetadataError("Invalid suite metadata for '%s': %s" % (suite.name, excp))
+        raise SuiteLoadingError("Invalid suite metadata type for '%s': %s" % (suite.name, excp))
 
     for hook_name in SUITE_HOOKS:
         if hasattr(suite_obj, hook_name):
@@ -214,7 +214,7 @@ def load_suite_from_module(mod):
     try:
         suite_description = suite_info["description"]
     except KeyError:
-        raise InvalidMetadataError("Missing description in '%s' suite information" % mod.__file__)
+        raise SuiteLoadingError("Missing description in '%s' suite information" % mod.__file__)
 
     suite = Suite(mod, suite_name, suite_description)
     suite.tags.extend(suite_info.get("tags", []))
@@ -225,7 +225,7 @@ def load_suite_from_module(mod):
     try:
         _check_test_tree_node_types(suite)
     except TypeError as excp:
-        raise InvalidMetadataError("Invalid suite metadata for '%s': %s" % (suite.name, excp))
+        raise SuiteLoadingError("Invalid suite metadata type for '%s': %s" % (suite.name, excp))
 
     for hook_name in SUITE_HOOKS:
         if hasattr(mod, hook_name):

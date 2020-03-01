@@ -743,7 +743,7 @@ def test_invalid_type_name():
     def test():
         pass
 
-    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+    with pytest.raises(SuiteLoadingError, match="Invalid test metadata"):
         _load_test(test)
 
 
@@ -752,7 +752,7 @@ def test_invalid_type_description():
     def test():
         pass
 
-    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+    with pytest.raises(SuiteLoadingError, match="Invalid test metadata"):
         _load_test(test)
 
 
@@ -762,7 +762,7 @@ def test_invalid_type_tag():
     def test():
         pass
 
-    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+    with pytest.raises(SuiteLoadingError, match="Invalid test metadata"):
         _load_test(test)
 
 
@@ -772,7 +772,7 @@ def test_invalid_type_link_url():
     def test():
         pass
 
-    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+    with pytest.raises(SuiteLoadingError, match="Invalid test metadata"):
         _load_test(test)
 
 
@@ -782,7 +782,7 @@ def test_invalid_type_link_name():
     def test():
         pass
 
-    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+    with pytest.raises(SuiteLoadingError, match="Invalid test metadata"):
         _load_test(test)
 
 
@@ -792,7 +792,7 @@ def test_invalid_type_prop():
     def test():
         pass
 
-    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+    with pytest.raises(SuiteLoadingError, match="Invalid test metadata"):
         _load_test(test)
 
 
@@ -802,7 +802,7 @@ def test_invalid_type_on_suite_class():
     class suite():
         pass
 
-    with pytest.raises(InvalidMetadataError, match="Invalid suite metadata"):
+    with pytest.raises(SuiteLoadingError, match="Invalid suite metadata"):
         load_suite_from_class(suite)
 
 
@@ -815,5 +815,5 @@ def test_invalid_type_on_suite_module(tmpdir):
 }
 """)
 
-    with pytest.raises(InvalidMetadataError, match="Invalid suite metadata"):
+    with pytest.raises(SuiteLoadingError, match="Invalid suite metadata"):
         load_suite_from_file(file.strpath)
