@@ -7,7 +7,7 @@ import six
 from lemoncheesecake.helpers.moduleimport import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
 from lemoncheesecake.helpers.introspection import get_object_attributes
 from lemoncheesecake.exceptions import LemoncheesecakeException, UserError, ModuleImportError, InvalidMetadataError, \
-    InvalidSuiteError, VisibilityConditionNotMet, serialize_current_exception
+    SuiteLoadingError, VisibilityConditionNotMet, serialize_current_exception
 from lemoncheesecake.suite.core import Test, Suite, SUITE_HOOKS
 from lemoncheesecake.testtree import BaseTreeNode
 from lemoncheesecake.helpers.typecheck import check_type_string, check_type_dict, check_type
@@ -142,7 +142,7 @@ def load_suite_from_class(class_):
     try:
         md = class_._lccmetadata
     except AttributeError:
-        raise InvalidSuiteError()
+        raise SuiteLoadingError("Class is not declared as a suite")
 
     try:
         suite_obj = class_()

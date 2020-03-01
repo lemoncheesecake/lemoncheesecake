@@ -718,7 +718,7 @@ class mysuite:
         pass
 """)
 
-    with pytest.raises(InvalidSuiteError):
+    with pytest.raises(SuiteLoadingError, match="Class is not declared as a suite"):
         load_suite_from_file(file.strpath)
 
 

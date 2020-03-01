@@ -25,7 +25,7 @@ class FixtureError(LemoncheesecakeException):
     pass
 
 
-class InvalidSuiteError(LemoncheesecakeException):
+class SuiteLoadingError(LemoncheesecakeException):
     pass
 
 
