@@ -1,3 +1,8 @@
+# 1.4.4 (2020-03-04)
+
+- **ReportPortal**: enforce reportportal-client version ~= 3.0 to avoid
+  upgrading to the non-compatible 4.0.0 version
+
 # 1.4.3 (2020-02-16)
 
 - **ReportPortal**: do not send steps and setup/teardown results to ReportPortal if they are empty
