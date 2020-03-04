@@ -5,7 +5,7 @@ from lemoncheesecake.cli.utils import auto_detect_reporting_backends, load_suite
 from lemoncheesecake.reporting.backend import get_reporting_backends
 from lemoncheesecake.project import Project
 from lemoncheesecake.suite import load_suite_from_class
-from lemoncheesecake.exceptions import InvalidMetadataError
+from lemoncheesecake.exceptions import MetadataPolicyViolation
 
 from helpers.runner import build_project_module
 from helpers.utils import env_vars
@@ -58,7 +58,7 @@ def test_load_suites_from_project_with_metadata_policy_ko(tmpdir):
             return [load_suite_from_class(mysuite)]
 
     project = MyProject(tmpdir.strpath)
-    with pytest.raises(InvalidMetadataError):
+    with pytest.raises(MetadataPolicyViolation):
         load_suites_from_project(project)
 
 

@@ -4,7 +4,7 @@ Created on Sep 8, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.exceptions import InvalidMetadataError
+from lemoncheesecake.exceptions import MetadataPolicyViolation
 from lemoncheesecake.testtree import flatten_suites
 
 
@@ -85,7 +85,7 @@ class MetadataPolicy:
                 if property_name not in available_properties:
                     help_msg = "available are %s" % ", ".join(map(repr, available_properties.keys())) \
                         if available_properties else "no property is available"
-                    raise InvalidMetadataError(
+                    raise MetadataPolicyViolation(
                         "In %s '%s', the property '%s' is not supported (%s)" % (
                             obj_type, obj.path, property_name, help_msg
                         )
@@ -94,7 +94,7 @@ class MetadataPolicy:
         # check forbidden properties
         for property_name in obj.properties.keys():
             if property_name in forbidden_properties:
-                raise InvalidMetadataError(
+                raise MetadataPolicyViolation(
                     "In %s '%s', the property '%s' is not accepted on a %s" % (
                         obj_type, obj.path, property_name, obj_type
                     )
@@ -103,7 +103,7 @@ class MetadataPolicy:
         # check required properties
         for required_property in filter(lambda p: available_properties[p]["required"], available_properties.keys()):
             if required_property not in obj.properties.keys():
-                raise InvalidMetadataError(
+                raise MetadataPolicyViolation(
                     "In %s '%s', the mandatory property '%s' is missing" % (
                         obj_type, obj.path, required_property
                     )
@@ -114,7 +114,7 @@ class MetadataPolicy:
             if name not in available_properties:
                 continue
             if available_properties[name]["values"] and value not in available_properties[name]["values"]:
-                raise InvalidMetadataError(
+                raise MetadataPolicyViolation(
                     "In %s '%s', value '%s' of property '%s' is not among accepted values: %s" % (
                         obj_type, obj.path, value, name, available_properties[name]["values"]
                     )
@@ -126,7 +126,7 @@ class MetadataPolicy:
                 if tag not in available_tags.keys():
                     help_msg = "available are %s" % ", ".join(map(repr, available_tags.keys())) \
                         if available_tags else "no property is available"
-                    raise InvalidMetadataError(
+                    raise MetadataPolicyViolation(
                         "In %s '%s', the tag '%s' is not supported (%s)" % (
                             obj_type, obj.path, tag, help_msg
                         )
@@ -135,7 +135,7 @@ class MetadataPolicy:
         # check forbidden tags
         for tag in obj.tags:
             if tag in forbidden_tags:
-                raise InvalidMetadataError(
+                raise MetadataPolicyViolation(
                     "In %s '%s', the tag '%s' is not accepted on a %s" % (
                         obj_type, obj.path, tag, obj_type
                     )
@@ -144,7 +144,7 @@ class MetadataPolicy:
     def check_test_compliance(self, test):
         """
         Check if the test complies to the metadata policy.
-        Raise InvalidMetadataError if not compliant.
+        Raise MetadataPolicyViolation if not compliant.
         """
         self._check_compliance(
             test, "test",
@@ -158,7 +158,7 @@ class MetadataPolicy:
         """
         Check if the suite complies to the metadata policy.
         If recursive if set to True (which is the default), then suite tests and sub suites are also checked.
-        Raise InvalidMetadataError if not compliant.
+        Raise MetadataPolicyViolation if not compliant.
         """
         self._check_compliance(
             suite, "suite",
@@ -174,7 +174,7 @@ class MetadataPolicy:
     def check_suites_compliance(self, suites):
         """
         Check if the suites comply to the metadata policy.
-        Raise InvalidMetadataError if not compliant.
+        Raise MetadataPolicyViolation if not compliant.
         """
         for suite in flatten_suites(suites):
             self.check_suite_compliance(suite)

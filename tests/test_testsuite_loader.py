@@ -217,9 +217,9 @@ def test_metadata_policy():
 
     policy = MetadataPolicy()
     policy.add_property_rule("foo", ("1", "2"))
-    with pytest.raises(InvalidMetadataError):
+    with pytest.raises(MetadataPolicyViolation):
         policy.check_suites_compliance(suite1)
-    with pytest.raises(InvalidMetadataError):
+    with pytest.raises(MetadataPolicyViolation):
         policy.check_suites_compliance(suite2)
 
 
