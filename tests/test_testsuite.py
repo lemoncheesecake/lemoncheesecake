@@ -10,7 +10,7 @@ import pytest
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite import load_suite_from_class, add_test_into_suite
-from lemoncheesecake.exceptions import InvalidMetadataError
+from lemoncheesecake.exceptions import SuiteLoadingError
 
 from helpers.runner import dummy_test_callback, build_suite_from_module
 
@@ -170,7 +170,7 @@ def test_duplicated_suite_description():
         class SubSuite2:
             pass
 
-    with pytest.raises(InvalidMetadataError) as excinfo:
+    with pytest.raises(SuiteLoadingError, match="is already registered"):
         load_suite_from_class(MySuite)
 
 
@@ -185,7 +185,7 @@ def test_duplicated_test_description():
         def bar(self):
             pass
 
-    with pytest.raises(InvalidMetadataError):
+    with pytest.raises(SuiteLoadingError, match="is already registered"):
         load_suite_from_class(MySuite)
 
 
@@ -196,7 +196,7 @@ def test_duplicated_test_name():
             add_test_into_suite(lcc.Test("mytest", "First test", dummy_test_callback()), self)
             add_test_into_suite(lcc.Test("mytest", "Second test", dummy_test_callback()), self)
 
-    with pytest.raises(InvalidMetadataError):
+    with pytest.raises(SuiteLoadingError, match="is already registered"):
         load_suite_from_class(MySuite)
 
 
