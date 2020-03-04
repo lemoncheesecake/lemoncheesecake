@@ -276,9 +276,12 @@ def load_suite_from_file(filename):
                     def my_test():
                         pass
 
-    Raise ModuleImportError if the suite class cannot be imported.
+    Raise SuiteLoadingError if the suite class cannot be imported.
     """
-    mod = import_module(filename)
+    try:
+        mod = import_module(filename)
+    except ModuleImportError as e:
+        raise SuiteLoadingError(str(e))
 
     if hasattr(mod, "SUITE"):
         suite = load_suite_from_module(mod)
@@ -287,7 +290,7 @@ def load_suite_from_file(filename):
         try:
             klass = getattr(mod, mod_name)
         except AttributeError:
-            raise ModuleImportError("Cannot find class '%s' in '%s'" % (mod_name, mod.__file__))
+            raise SuiteLoadingError("Cannot find class '%s' in '%s'" % (mod_name, mod.__file__))
 
         suite = load_suite_from_class(klass)
     return suite
@@ -331,10 +334,10 @@ def load_suites_from_directory(dir, recursive=True):
     If the recursive argument is set to True, sub suites will be searched in a directory named
     from the suite module: if the suite module is "foo.py" then the sub suites directory must be "foo".
 
-    Raise ModuleImportError if one or more suite cannot be imported.
+    Raise SuiteLoadingError if one or more suite cannot be imported.
     """
     if not osp.exists(dir):
-        raise ModuleImportError("Directory '%s' does not exist" % dir)
+        raise SuiteLoadingError("Directory '%s' does not exist" % dir)
 
     suites = []
     for filename in get_py_files_from_dir(dir):

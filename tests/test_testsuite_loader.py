@@ -20,14 +20,14 @@ def test_load_suite_from_file(tmpdir):
 
 def test_load_suite_from_file_invalid_module(tmpdir):
     file = tmpdir.join("doesnotexist.py")
-    with pytest.raises(ModuleImportError):
+    with pytest.raises(SuiteLoadingError):
         load_suite_from_file(file.strpath)
 
 
 def test_load_suite_from_file_invalid_class(tmpdir):
     file = tmpdir.join("anothersuite.py")
     file.write(build_test_module())
-    with pytest.raises(ModuleImportError):
+    with pytest.raises(SuiteLoadingError):
         load_suite_from_file(file.strpath)
 
 
@@ -703,7 +703,7 @@ def test_load_suite_from_module_missing_suite_definition(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write("")
 
-    with pytest.raises(ModuleImportError):
+    with pytest.raises(SuiteLoadingError):
         load_suite_from_file(file.strpath)
 
 
