@@ -3,7 +3,7 @@ from collections import OrderedDict
 from typing import List, Any, Sequence, Callable
 
 from lemoncheesecake.helpers.moduleimport import import_module, get_matching_files, get_py_files_from_dir
-from lemoncheesecake.exceptions import FixtureConstraintViolation
+from lemoncheesecake.exceptions import FixtureConstraintViolation, ModuleImportError, FixtureLoadingError
 from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.helpers.introspection import get_callable_args
 
@@ -318,7 +318,10 @@ def load_fixtures_from_file(filename):
     """
     Load fixtures from a given file.
     """
-    mod = import_module(filename)
+    try:
+        mod = import_module(filename)
+    except ModuleImportError as e:
+        raise FixtureLoadingError(str(e))
 
     fixtures = []
     for sym_name in dir(mod):

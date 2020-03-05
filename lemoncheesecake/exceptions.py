@@ -29,6 +29,10 @@ class SuiteLoadingError(LemoncheesecakeException):
     pass
 
 
+class FixtureLoadingError(LemoncheesecakeException):
+    pass
+
+
 class MetadataPolicyViolation(LemoncheesecakeException):
     pass
 
