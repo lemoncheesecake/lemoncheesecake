@@ -8,7 +8,7 @@ import six
 import pytest
 
 from lemoncheesecake.reporting.backends.xml import XmlBackend, load_report_from_file, save_report_into_file
-from lemoncheesecake.exceptions import InvalidReportFile, IncompatibleReportFile
+from lemoncheesecake.exceptions import ReportLoadingError
 
 from helpers.reporttests import ReportSerializationTests, report_in_progress
 
@@ -25,13 +25,13 @@ else:
     def test_load_report_non_xml(tmpdir):
         file = tmpdir.join("report.xml")
         file.write("foobar")
-        with pytest.raises(InvalidReportFile):
+        with pytest.raises(ReportLoadingError):
             load_report_from_file(file.strpath)
 
     def test_load_report_bad_xml(tmpdir):
         file = tmpdir.join("report.xml")
         file.write("<value>foobar</value>")
-        with pytest.raises(InvalidReportFile):
+        with pytest.raises(ReportLoadingError):
             load_report_from_file(file.strpath)
 
     def test_load_report_incompatible_version(report_in_progress, tmpdir):
@@ -49,5 +49,5 @@ else:
         with open(filename, "w") as fh:
             fh.write(xml_content)
 
-        with pytest.raises(IncompatibleReportFile):
+        with pytest.raises(ReportLoadingError, match="Incompatible"):
             load_report_from_file(filename)

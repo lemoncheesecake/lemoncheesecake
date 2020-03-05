@@ -21,7 +21,7 @@ from lemoncheesecake.reporting.report import (
     Log, Check, Attachment, Url, Step, Result, TestResult, SuiteResult,
     format_time_as_iso8601, parse_iso8601_time
 )
-from lemoncheesecake.exceptions import InvalidReportFile, IncompatibleReportFile
+from lemoncheesecake.exceptions import ReportLoadingError
 
 DEFAULT_INDENT_LEVEL = 4
 
@@ -339,17 +339,17 @@ def load_report_from_file(filename):
         with open(filename, "r") as fh:
             xml = ET.parse(fh)
     except ET.LxmlError as e:
-        raise InvalidReportFile(str(e))
+        raise ReportLoadingError(str(e))
     except IOError as e:
         raise e  # re-raise as-is
     try:
         root = xml.getroot().xpath("/lemoncheesecake-report")[0]
     except IndexError:
-        raise InvalidReportFile("Cannot find lemoncheesecake-report element in XML")
+        raise ReportLoadingError("Cannot find lemoncheesecake-report element in XML")
 
     report_version = float(root.attrib["report-version"])
     if report_version >= 2.0:
-        raise IncompatibleReportFile("Incompatible report version: got %s while 1.x is supported" % report_version)
+        raise ReportLoadingError("Incompatible report version: got %s while 1.x is supported" % report_version)
 
     return _unserialize_report(root)
 

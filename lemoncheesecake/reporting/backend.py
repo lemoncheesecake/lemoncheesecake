@@ -8,7 +8,7 @@ import os
 import os.path as osp
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
-from lemoncheesecake.exceptions import InvalidReportFile, LemoncheesecakeException
+from lemoncheesecake.exceptions import ReportLoadingError, LemoncheesecakeException
 from lemoncheesecake.reporting.report import Report
 from lemoncheesecake.consts import NEGATIVE_CHARS
 
@@ -172,10 +172,10 @@ def load_report_from_file(filename, backends=None):
             try:
                 return backend.load_report(filename)
             except IOError as excp:
-                raise InvalidReportFile("Cannot load report from file '%s': %s" % (filename, excp))
-            except InvalidReportFile:
+                raise ReportLoadingError("Cannot load report from file '%s': %s" % (filename, excp))
+            except ReportLoadingError:
                 pass
-    raise InvalidReportFile("Cannot find any suitable report backend to load report file '%s'" % filename)
+    raise ReportLoadingError("Cannot find any suitable report backend to load report file '%s'" % filename)
 
 
 def load_reports_from_dir(dirname, backends=None):
@@ -183,7 +183,7 @@ def load_reports_from_dir(dirname, backends=None):
         if os.path.isfile(filename):
             try:
                 yield load_report_from_file(filename, backends)
-            except InvalidReportFile:
+            except ReportLoadingError:
                 pass
 
 
@@ -192,7 +192,7 @@ def load_report(path, backends=None):
         try:
             return next(load_reports_from_dir(path, backends))
         except StopIteration:
-            raise InvalidReportFile("Cannot find any report in directory '%s'" % path)
+            raise ReportLoadingError("Cannot find any report in directory '%s'" % path)
     else:
         return load_report_from_file(path, backends)
 

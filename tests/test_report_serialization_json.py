@@ -9,7 +9,7 @@ import json
 import pytest
 
 from lemoncheesecake.reporting.backends.json_ import JsonBackend, load_report_from_file, save_report_into_file
-from lemoncheesecake.exceptions import InvalidReportFile, IncompatibleReportFile
+from lemoncheesecake.exceptions import ReportLoadingError
 
 from helpers.reporttests import report_in_progress, ReportSerializationTests
 
@@ -22,14 +22,14 @@ class TestJsonSerialization(ReportSerializationTests):
 def test_load_report_non_json(tmpdir):
     file = tmpdir.join("report.js")
     file.write("foobar")
-    with pytest.raises(InvalidReportFile):
+    with pytest.raises(ReportLoadingError):
         load_report_from_file(file.strpath)
 
 
 def test_load_report_bad_json(tmpdir):
     file = tmpdir.join("report.xml")
     file.write("{'foo': 'bar'}")
-    with pytest.raises(InvalidReportFile):
+    with pytest.raises(ReportLoadingError):
         load_report_from_file(file.strpath)
 
 
@@ -42,5 +42,5 @@ def test_load_report_incompatible_version(report_in_progress, tmpdir):
     with open(filename, "w") as fh:
         json.dump(report_data, fh)
 
-    with pytest.raises(IncompatibleReportFile):
+    with pytest.raises(ReportLoadingError, match="Incompatible"):
         load_report_from_file(filename)

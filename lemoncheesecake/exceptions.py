@@ -82,11 +82,7 @@ class UserError(LemoncheesecakeException):
         LemoncheesecakeException.__init__(self, reason)
 
 
-class InvalidReportFile(LemoncheesecakeException):
-    pass
-
-
-class IncompatibleReportFile(LemoncheesecakeException):
+class ReportLoadingError(LemoncheesecakeException):
     pass
 
 

@@ -15,7 +15,7 @@ from lemoncheesecake.reporting.report import (
     Log, Check, Attachment, Url, Step, Result, TestResult, SuiteResult,
     format_time_as_iso8601, parse_iso8601_time
 )
-from lemoncheesecake.exceptions import InvalidReportFile, IncompatibleReportFile
+from lemoncheesecake.exceptions import ReportLoadingError
 
 JS_PREFIX = "var reporting_data = "
 
@@ -272,13 +272,13 @@ def load_report_from_file(filename):
     try:
         js = json.loads(js_content)
     except ValueError as e:
-        raise InvalidReportFile(str(e))
+        raise ReportLoadingError(str(e))
 
     report_version = js.get("report_version")
     if report_version is None:
-        raise InvalidReportFile("Cannot find 'report_version' in JSON")
+        raise ReportLoadingError("Cannot find 'report_version' in JSON")
     if report_version >= 2.0:
-        raise IncompatibleReportFile("Incompatible report version: got %s while 1.x is supported" % report_version)
+        raise ReportLoadingError("Incompatible report version: got %s while 1.x is supported" % report_version)
 
     return _unserialize_report(js)
 
