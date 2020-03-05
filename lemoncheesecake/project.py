@@ -17,7 +17,7 @@ from lemoncheesecake.fixture import load_fixtures_from_directory, Fixture
 from lemoncheesecake.metadatapolicy import MetadataPolicy
 from lemoncheesecake.reporting import get_reporting_backends, ReportingBackend
 from lemoncheesecake.reporting.reportdir import create_report_dir_with_rotation
-from lemoncheesecake.exceptions import ProjectError, UserError, serialize_current_exception
+from lemoncheesecake.exceptions import ProjectLoadingError, ModuleImportError
 from lemoncheesecake.helpers.resources import get_resource_path
 from lemoncheesecake.helpers.moduleimport import import_module
 
@@ -153,20 +153,16 @@ def load_project_from_file(project_filename):
     # load project module
     try:
         project_module = import_module(project_filename)
-    except UserError as e:
-        raise e  # propagate UserError
-    except Exception:
-        raise ProjectError("Got an unexpected error while loading project:%s" % (
-            serialize_current_exception()
-        ))
-    
+    except ModuleImportError as e:
+        raise ProjectLoadingError(str(e))
+
     # get project config instance
     try:
         project = project_module.project
     except AttributeError:
-        raise ProjectError("Cannot find symbol 'project' in module '%s'" % project_filename)
+        raise ProjectLoadingError("Cannot find symbol 'project' in module '%s'" % project_filename)
     if not isinstance(project, Project):
-        raise ProjectError("Symbol 'project' in module '%s' does not inherit lemoncheesecake.project.Project" % project_filename)
+        raise ProjectLoadingError("Symbol 'project' in module '%s' does not inherit lemoncheesecake.project.Project" % project_filename)
     
     return project
 
@@ -180,6 +176,6 @@ def load_project():
     # type: () -> Project
     project_filename = find_project_file()
     if project_filename is None:
-        raise ProjectError("Cannot find project file")
+        raise ProjectLoadingError("Cannot find project file")
 
     return load_project_from_file(project_filename)

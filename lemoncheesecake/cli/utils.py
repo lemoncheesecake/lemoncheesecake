@@ -15,7 +15,7 @@ from lemoncheesecake.project import find_project_dir, find_project_file, load_pr
 from lemoncheesecake.reporting import get_reporting_backends
 from lemoncheesecake.reporting.reportdir import DEFAULT_REPORT_DIR_NAME
 from lemoncheesecake.testtree import filter_suites
-from lemoncheesecake.exceptions import UserError, ProjectError
+from lemoncheesecake.exceptions import UserError, ProjectLoadingError
 
 LEMONCHEESECAKE_VERSION = "lemoncheesecake version %s (using Python %s - %s)" % (
     lemoncheesecake.__version__, platform.python_version(), sys.executable
@@ -45,7 +45,7 @@ def auto_detect_reporting_backends():
     try:
         project = load_project_from_file(project_filename)
         return project.reporting_backends.values()
-    except ProjectError:
+    except ProjectLoadingError:
         return get_reporting_backends()
 
 

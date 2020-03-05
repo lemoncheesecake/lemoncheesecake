@@ -13,7 +13,7 @@ class LemoncheesecakeException(Exception):
         return s
 
 
-class ProjectError(LemoncheesecakeException):
+class ProjectLoadingError(LemoncheesecakeException):
     pass
 
 
