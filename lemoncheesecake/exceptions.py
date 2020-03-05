@@ -21,7 +21,7 @@ class ModuleImportError(LemoncheesecakeException):
     pass
 
 
-class FixtureError(LemoncheesecakeException):
+class FixtureConstraintViolation(LemoncheesecakeException):
     pass
 
 

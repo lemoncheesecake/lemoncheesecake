@@ -352,7 +352,7 @@ def test_registry_forbidden_fixture_name():
 
     registry = FixtureRegistry()
     registry.add_fixtures(load_fixtures_from_func(fixture_name))
-    with pytest.raises(exceptions.FixtureError) as excinfo:
+    with pytest.raises(exceptions.FixtureConstraintViolation) as excinfo:
         registry.check_dependencies()
     assert "forbidden" in str(excinfo.value)
 
@@ -410,7 +410,7 @@ def test_check_fixtures_in_suites_unknown_fixture_in_test():
 
     suite = load_suite_from_class(MySuite)
     registry = build_registry()
-    with pytest.raises(exceptions.FixtureError):
+    with pytest.raises(exceptions.FixtureConstraintViolation):
         registry.check_fixtures_in_suites([suite])
 
 
@@ -426,7 +426,7 @@ def test_check_fixtures_in_suites_unknown_fixture_in_setup_suite():
 
     suite = load_suite_from_class(MySuite)
     registry = build_registry()
-    with pytest.raises(exceptions.FixtureError):
+    with pytest.raises(exceptions.FixtureConstraintViolation):
         registry.check_fixtures_in_suites([suite])
 
 
@@ -442,7 +442,7 @@ def test_check_fixtures_in_suites_incompatible_fixture_in_setup_suite():
 
     suite = load_suite_from_class(MySuite)
     registry = build_registry()
-    with pytest.raises(exceptions.FixtureError):
+    with pytest.raises(exceptions.FixtureConstraintViolation):
         registry.check_fixtures_in_suites([suite])
 
 
@@ -457,7 +457,7 @@ def test_check_fixtures_in_suites_incompatible_fixture_in_inject():
 
     suite = load_suite_from_class(MySuite)
     registry = build_registry()
-    with pytest.raises(exceptions.FixtureError):
+    with pytest.raises(exceptions.FixtureConstraintViolation):
         registry.check_fixtures_in_suites([suite])
 
 
