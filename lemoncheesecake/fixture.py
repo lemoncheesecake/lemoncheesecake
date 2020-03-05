@@ -41,7 +41,8 @@ def fixture(names=None, scope="test"):
 
 
 class _FixtureResult(object):
-    def __init__(self, result):
+    def __init__(self, name, result):
+        self.name = name
         if inspect.isgenerator(result):
             self._generator = result
             self._result = next(result)
@@ -61,7 +62,7 @@ class _FixtureResult(object):
         except StopIteration:
             pass
         else:
-            raise FixtureError("The fixture yields more than once, only one yield is supported")
+            raise AssertionError("Fixture '%s' yields more than once: only one yield is supported." % self.name)
 
 
 class _BaseFixture(object):
@@ -88,7 +89,7 @@ class Fixture(_BaseFixture):
         for param_name in params.keys():
             assert param_name in self.params
 
-        return _FixtureResult(self.func(**params))
+        return _FixtureResult(self.name, self.func(**params))
 
 
 class BuiltinFixture(_BaseFixture):
@@ -102,7 +103,7 @@ class BuiltinFixture(_BaseFixture):
         return True
 
     def execute(self, params={}):
-        return _FixtureResult(self._value() if callable(self._value) else self._value)
+        return _FixtureResult(self.name, self._value() if callable(self._value) else self._value)
 
 
 class ScheduledFixtures(object):
