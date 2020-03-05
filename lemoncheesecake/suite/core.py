@@ -28,6 +28,7 @@ class Test(BaseTest):
         BaseTest.__init__(self, name, description)
         self.callback = callback
         self.disabled = False
+        self.hidden = False
         self.rank = 0
         self.dependencies = []
         self.parameters = {}
@@ -56,6 +57,7 @@ class Suite(BaseSuite):
         self.obj = obj
         self.rank = 0
         self.disabled = False
+        self.hidden = False
         self._hooks = {}
         self._injected_fixtures = self._load_injected_fixtures(obj)
         # to optimize unique constraint checks on test/suite name/description, keep those

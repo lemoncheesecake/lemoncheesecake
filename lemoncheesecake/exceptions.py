@@ -1,5 +1,6 @@
 import sys
 import traceback
+
 from typing import Optional
 
 
@@ -34,10 +35,6 @@ class FixtureLoadingError(LemoncheesecakeException):
 
 
 class MetadataPolicyViolation(LemoncheesecakeException):
-    pass
-
-
-class VisibilityConditionNotMet(LemoncheesecakeException):
     pass
 
 
