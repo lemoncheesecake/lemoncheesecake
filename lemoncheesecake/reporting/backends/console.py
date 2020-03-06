@@ -196,7 +196,7 @@ class SequentialConsoleReportingSession(ReportingSession):
     def on_test_disabled(self, event):
         self._bypass_test(event.test, "disabled")
 
-    def on_step(self, event):
+    def on_step_start(self, event):
         self.lp.print_line("%s (%s...)" % (self.step_prefix, ensure_single_line_text(event.step_description)))
 
     def on_test_session_end(self, event):

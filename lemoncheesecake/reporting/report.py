@@ -89,10 +89,9 @@ class Url(object):
 
 
 class Step(object):
-    def __init__(self, description, detached=False):
-        # type: (str, bool) -> None
+    def __init__(self, description):
+        # type: (str) -> None
         self.description = description
-        self._detached = detached  # this attribute is runtime only is not intended to be serialized
         self.parent_result = None
         self.entries = []  # type: List[Union[Log, Check, Attachment, Url]]
         self.start_time = None  # type: Optional[float]

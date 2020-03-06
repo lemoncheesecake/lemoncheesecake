@@ -265,11 +265,11 @@ class RuntimeEvent(Event):
         self.location = location
 
 
-class StepEvent(RuntimeEvent):
-    def __init__(self, location, description, detached=False, event_time=None):
-        super(StepEvent, self).__init__(location, event_time)
+class StepStartEvent(RuntimeEvent):
+    def __init__(self, location, description, thread_id, event_time=None):
+        super(StepStartEvent, self).__init__(location, event_time)
         self.step_description = description
-        self.detached = detached
+        self.thread_id = thread_id
 
     def __str__(self):
         return "<Event type='%s' description='%s'>" % (
@@ -278,9 +278,10 @@ class StepEvent(RuntimeEvent):
 
 
 class StepEndEvent(RuntimeEvent):
-    def __init__(self, location, step, event_time=None):
+    def __init__(self, location, step, thread_id, event_time=None):
         super(StepEndEvent, self).__init__(location, event_time)
         self.step = step
+        self.thread_id = thread_id
 
 
 class SteppedEvent(RuntimeEvent):
@@ -288,14 +289,15 @@ class SteppedEvent(RuntimeEvent):
     This event class cannot be instantiated directly and only serve has a base
     class for all events happening within a step.
     """
-    def __init__(self, location, step, event_time=None):
+    def __init__(self, location, step, thread_id, event_time=None):
         super(SteppedEvent, self).__init__(location, event_time)
         self.step = step
+        self.thread_id = thread_id
 
 
 class LogEvent(SteppedEvent):
-    def __init__(self, location, step, level, message, event_time=None):
-        super(LogEvent, self).__init__(location, step, event_time)
+    def __init__(self, location, step, thread_id, level, message, event_time=None):
+        super(LogEvent, self).__init__(location, step, thread_id, event_time)
         self.log_level = level
         self.log_message = message
 
@@ -306,8 +308,8 @@ class LogEvent(SteppedEvent):
 
 
 class CheckEvent(SteppedEvent):
-    def __init__(self, location, step, description, is_successful, details=None, event_time=None):
-        super(CheckEvent, self).__init__(location, step, event_time)
+    def __init__(self, location, step, thread_id, description, is_successful, details=None, event_time=None):
+        super(CheckEvent, self).__init__(location, step, thread_id, event_time)
         self.check_description = description
         self.check_is_successful = is_successful
         self.check_details = details
@@ -320,8 +322,8 @@ class CheckEvent(SteppedEvent):
 
 
 class LogAttachmentEvent(SteppedEvent):
-    def __init__(self, location, step, path, description, as_image, event_time=None):
-        super(LogAttachmentEvent, self).__init__(location, step, event_time)
+    def __init__(self, location, step, thread_id, path, description, as_image, event_time=None):
+        super(LogAttachmentEvent, self).__init__(location, step, thread_id, event_time)
         self.attachment_path = path
         self.attachment_description = description
         self.as_image = as_image
@@ -333,8 +335,8 @@ class LogAttachmentEvent(SteppedEvent):
 
 
 class LogUrlEvent(SteppedEvent):
-    def __init__(self, location, step, url, description, event_time=None):
-        super(LogUrlEvent, self).__init__(location, step, event_time)
+    def __init__(self, location, step, thread_id, url, description, event_time=None):
+        super(LogUrlEvent, self).__init__(location, step, thread_id, event_time)
         self.url = url
         self.url_description = description
 

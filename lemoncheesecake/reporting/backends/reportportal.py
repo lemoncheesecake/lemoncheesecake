@@ -231,7 +231,7 @@ class ReportPortalReportingSession(ReportingSession):
         # do not log disabled test, moreover it seems that there is not corresponding status in ReportPortal
         pass
 
-    def on_step(self, event):
+    def on_step_start(self, event):
         if self._has_rp_error():
             return
 

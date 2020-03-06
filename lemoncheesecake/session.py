@@ -10,6 +10,7 @@ import shutil
 import threading
 import traceback
 from typing import Optional
+import warnings
 
 import six
 
@@ -23,6 +24,10 @@ from lemoncheesecake.helpers.typecheck import check_type_string, check_type_bool
 _session = None  # type: Optional[Session]
 
 _scheduled_fixtures = None  # type: Optional[ScheduledFixtures]
+
+
+def _get_thread_id():
+    return threading.current_thread().ident
 
 
 def initialize_session(event_manager, report_dir, report):
@@ -82,12 +87,6 @@ class Session(object):
         if not discarded:
             self.event_manager.fire(event)
 
-    def prepare_cursor_for_new_thread(self):
-        # In case of a new thread, we have to flush the pending events to avoid sharing the same pending events
-        # between multiple threads. It has the minor side-effect of possibly leading to empty step
-        self._flush_pending_events()
-        return _Cursor(self.cursor.location, self.cursor.step)
-
     def _mark_location_as_failed(self, location):
         self._failures.add(location)
 
@@ -97,32 +96,44 @@ class Session(object):
         else:
             return len(self._failures) == 0
 
-    def set_step(self, description, detached=False):
-        self._discard_pending_event_if_any(events.StepEvent)
+    def start_step(self, description):
+        self._end_step_if_any()
         self.cursor.step = description
-        self._hold_event(events.StepEvent(self.cursor.location, description, detached=detached))
+        self._hold_event(
+            events.StepStartEvent(self.cursor.location, description, _get_thread_id())
+        )
 
-    def end_step(self, step):
-        self._discard_or_fire_event(events.StepEvent, events.StepEndEvent(self.cursor.location, step))
+    def end_step(self):
+        assert self.cursor.step, "There is no started step"
+        self._discard_or_fire_event(
+            events.StepStartEvent, events.StepEndEvent(self.cursor.location, self.cursor.step, _get_thread_id())
+        )
+        self.cursor.step = None
+
+    def _end_step_if_any(self):
+        if self.cursor.step:
+            self.end_step()
 
     def log(self, level, content):
         self._flush_pending_events()
         if level == LOG_LEVEL_ERROR:
             self._mark_location_as_failed(self.cursor.location)
-        self.event_manager.fire(events.LogEvent(self.cursor.location, self.cursor.step, level, content))
+        self.event_manager.fire(
+            events.LogEvent(self.cursor.location, self.cursor.step, _get_thread_id(), level, content)
+        )
 
     def log_check(self, description, is_successful, details):
         self._flush_pending_events()
         if is_successful is False:
             self._mark_location_as_failed(self.cursor.location)
-        self.event_manager.fire(
-            events.CheckEvent(self.cursor.location, self.cursor.step, description, is_successful, details)
-        )
+        self.event_manager.fire(events.CheckEvent(
+            self.cursor.location, self.cursor.step, _get_thread_id(), description, is_successful, details
+        ))
 
     def log_url(self, url, description):
         self._flush_pending_events()
         self.event_manager.fire(
-            events.LogUrlEvent(self.cursor.location, self.cursor.step, url, description)
+            events.LogUrlEvent(self.cursor.location, self.cursor.step, _get_thread_id(), url, description)
         )
 
     @contextmanager
@@ -137,8 +148,8 @@ class Session(object):
 
         self._flush_pending_events()
         self.event_manager.fire(events.LogAttachmentEvent(
-            self.cursor.location, self.cursor.step, "%s/%s" % (ATTACHMENTS_DIR, attachment_filename),
-            description, as_image
+            self.cursor.location, self.cursor.step, _get_thread_id(),
+            "%s/%s" % (ATTACHMENTS_DIR, attachment_filename), description, as_image
         ))
 
     def start_test_session(self):
@@ -152,7 +163,7 @@ class Session(object):
         self._hold_event(events.TestSessionSetupStartEvent())
 
     def end_test_session_setup(self):
-        self._discard_pending_event_if_any(events.StepEvent)
+        self._end_step_if_any()
         self._discard_or_fire_event(events.TestSessionSetupStartEvent, events.TestSessionSetupEndEvent())
 
     def start_test_session_teardown(self):
@@ -160,7 +171,7 @@ class Session(object):
         self._hold_event(events.TestSessionTeardownStartEvent())
 
     def end_test_session_teardown(self):
-        self._discard_pending_event_if_any(events.StepEvent)
+        self._end_step_if_any()
         self._discard_or_fire_event(events.TestSessionTeardownStartEvent, events.TestSessionTeardownEndEvent())
 
     def start_suite(self, suite):
@@ -174,7 +185,7 @@ class Session(object):
         self._hold_event(events.SuiteSetupStartEvent(suite))
 
     def end_suite_setup(self, suite):
-        self._discard_pending_event_if_any(events.StepEvent)
+        self._end_step_if_any()
         self._discard_or_fire_event(events.SuiteSetupStartEvent, events.SuiteSetupEndEvent(suite))
 
     def start_suite_teardown(self, suite):
@@ -182,7 +193,7 @@ class Session(object):
         self._hold_event(events.SuiteTeardownStartEvent(suite))
 
     def end_suite_teardown(self, suite):
-        self._discard_pending_event_if_any(events.StepEvent)
+        self._end_step_if_any()
         self._discard_or_fire_event(events.SuiteTeardownStartEvent, events.SuiteTeardownEndEvent(suite))
 
     def start_test(self, test):
@@ -190,6 +201,7 @@ class Session(object):
         self.cursor = _Cursor(ReportLocation.in_test(test))
 
     def end_test(self, test):
+        self._end_step_if_any()
         self.event_manager.fire(events.TestEndEvent(test))
 
     def skip_test(self, test, reason):
@@ -213,41 +225,45 @@ def get_report():
     return report
 
 
-def set_step(description, detached=False):
+def set_step(description, detached=NotImplemented):
     # type: (str, bool) -> None
     """
     Set a new step.
 
     :param description: the step description
-    :param detached: whether or not the step is "detached"
+    :param detached: argument deprecated since 1.4.5, does nothing.
     """
+    if detached is not NotImplemented:
+        warnings.warn(
+            "The 'detached' argument does no longer do anything (deprecated since version 1.4.5)",
+            DeprecationWarning, stacklevel=2
+        )
+
     check_type_string("description", description)
-    get_session().set_step(description, detached=detached)
+    get_session().start_step(description)
 
 
 def end_step(step):
     """
-    End a detached step.
+    Function deprecated since version 1.4.5, does nothing.
     """
-    get_session().end_step(step)
+    warnings.warn(
+        "The 'end_step' function is deprecated since version 1.4.5, it actually does nothing.",
+        DeprecationWarning, stacklevel=2
+    )
 
 
 @contextmanager
 def detached_step(description):
     """
-    Context manager. Like set_step, but ends the step at the end of the "with" block.
-    Intended to be use with code run through lcc.Thread.
+    Context manager deprecated since version 1.4.5, it only does a set_step.
     """
-    set_step(description, detached=True)
-    try:
-        yield
-    except Exception:
-        # FIXME: use exception instead of last implicit stacktrace
-        stacktrace = traceback.format_exc()
-        if six.PY2:
-            stacktrace = stacktrace.decode("utf-8", "replace")
-        log_error("Caught unexpected exception while running test: " + stacktrace)
-    end_step(description)
+    warnings.warn(
+        "The 'detached_step' context manager is deprecated since version 1.4.5. Use 'set_step' function instead.",
+        DeprecationWarning, stacklevel=2
+    )
+    set_step(description)
+    yield
 
 
 def _log(level, content):
@@ -481,8 +497,30 @@ class Thread(threading.Thread):
     """
     def __init__(self, *args, **kwargs):
         super(Thread, self).__init__(*args, **kwargs)
-        self.cursor = get_session().prepare_cursor_for_new_thread()
+
+        # flush result starting event if any
+        session = get_session()
+        cursor = session.cursor
+        if session.cursor.pending_events and not isinstance(cursor.pending_events[0], events.StepStartEvent):
+            event = cursor.pending_events.pop(0)
+            session.event_manager.fire(event)
+
+        # keep track of the current location and step
+        self._cursor = _Cursor(cursor.location)
+        self._default_step = get_session().cursor.step
 
     def run(self):
-        get_session().cursor = self.cursor
-        return super(Thread, self).run()
+        session = get_session()
+        session.cursor = self._cursor
+
+        set_step(self._default_step)
+        try:
+            return super(Thread, self).run()
+        except Exception:
+            # FIXME: use exception instead of last implicit stacktrace
+            stacktrace = traceback.format_exc()
+            if six.PY2:
+                stacktrace = stacktrace.decode("utf-8", "replace")
+            log_error("Caught unexpected exception while running test: " + stacktrace)
+        finally:
+            session.end_step()
