@@ -6,8 +6,8 @@ import six
 
 from lemoncheesecake.helpers.moduleimport import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
 from lemoncheesecake.helpers.introspection import get_object_attributes
-from lemoncheesecake.exceptions import UserError, ProgrammingError, ModuleImportError, InvalidMetadataError, \
-    InvalidSuiteError, VisibilityConditionNotMet, serialize_current_exception
+from lemoncheesecake.exceptions import LemoncheesecakeException, UserError, ModuleImportError, \
+    SuiteLoadingError, serialize_current_exception
 from lemoncheesecake.suite.core import Test, Suite, SUITE_HOOKS
 from lemoncheesecake.testtree import BaseTreeNode
 from lemoncheesecake.helpers.typecheck import check_type_string, check_type_dict, check_type
@@ -23,11 +23,6 @@ def _is_test_method(obj):
 
 def _is_test_function(obj):
     return inspect.isfunction(obj) and hasattr(obj, "_lccmetadata") and obj._lccmetadata.is_test
-
-
-def _ensure_node_is_visible(obj, metadata):
-    if metadata.condition is not None and not metadata.condition(obj):
-        raise VisibilityConditionNotMet()
 
 
 def _check_tags(tags):
@@ -58,20 +53,20 @@ def _check_test_tree_node_types(node):
 
 def _load_test(obj):
     md = obj._lccmetadata
-    _ensure_node_is_visible(obj, md)
 
     test = Test(md.name, md.description, obj)
     test.tags.extend(md.tags)
     test.properties.update(md.properties)
     test.links.extend(md.links)
     test.disabled = md.disabled
+    test.hidden = md.condition and not md.condition(obj)
     test.rank = md.rank
     test.dependencies.extend(md.dependencies)
 
     try:
         _check_test_tree_node_types(test)
     except TypeError as excp:
-        raise InvalidMetadataError("Invalid test metadata for '%s': %s" % (test.name, excp))
+        raise SuiteLoadingError("Invalid test metadata type for '%s': %s" % (test.name, excp))
 
     return test
 
@@ -95,14 +90,14 @@ def _load_parametrized_tests(obj):
 
 def _load_tests(objs):
     for obj in objs:
-        try:
-            if obj._lccmetadata.parametrized:
-                for test in _load_parametrized_tests(obj):
+        if obj._lccmetadata.parametrized:
+            for test in _load_parametrized_tests(obj):
+                if not test.hidden:
                     yield test
-            else:
-                yield _load_test(obj)
-        except VisibilityConditionNotMet:
-            pass
+        else:
+            test = _load_test(obj)
+            if not test.hidden:
+                yield test
 
 
 def _get_test_symbols(obj, filter_func):
@@ -142,17 +137,16 @@ def load_suite_from_class(class_):
     try:
         md = class_._lccmetadata
     except AttributeError:
-        raise InvalidSuiteError()
+        raise SuiteLoadingError("Class is not declared as a suite")
 
     try:
         suite_obj = class_()
     except UserError as e:
         raise e  # propagate UserError
     except Exception:
-        raise ProgrammingError("Got an unexpected error while instantiating suite class '%s':%s" % (
+        raise LemoncheesecakeException("Got an unexpected error while instantiating suite class '%s':%s" % (
             class_.__name__, serialize_current_exception()
         ))
-    _ensure_node_is_visible(suite_obj, md)
 
     suite = Suite(suite_obj, md.name, md.description)
     suite.tags.extend(md.tags)
@@ -160,11 +154,12 @@ def load_suite_from_class(class_):
     suite.links.extend(md.links)
     suite.rank = md.rank
     suite.disabled = md.disabled
+    suite.hidden = md.condition and not md.condition(suite_obj)
 
     try:
         _check_test_tree_node_types(suite)
     except TypeError as excp:
-        raise InvalidMetadataError("Invalid suite metadata for '%s': %s" % (suite.name, excp))
+        raise SuiteLoadingError("Invalid suite metadata type for '%s': %s" % (suite.name, excp))
 
     for hook_name in SUITE_HOOKS:
         if hasattr(suite_obj, hook_name):
@@ -187,13 +182,11 @@ def load_suites_from_classes(classes):
     """
     Load a list of suites from a list of classes.
     """
-    suites = []
-    for class_ in classes:
-        try:
-            suites.append(load_suite_from_class(class_))
-        except VisibilityConditionNotMet:
-            pass
-    return suites
+    return list(
+        filter(
+            lambda suite: not suite.hidden, map(load_suite_from_class, classes)
+        )
+    )
 
 
 def load_suite_from_module(mod):
@@ -206,26 +199,23 @@ def load_suite_from_module(mod):
 
     suite_info = getattr(mod, "SUITE")
     suite_condition = suite_info.get("visible_if")
-    if suite_condition is not None and not suite_condition(mod):
-        raise VisibilityConditionNotMet()
-
     suite_name = inspect.getmodulename(inspect.getfile(mod))
-
     try:
         suite_description = suite_info["description"]
     except KeyError:
-        raise InvalidMetadataError("Missing description in '%s' suite information" % mod.__file__)
+        raise SuiteLoadingError("Missing description in '%s' suite information" % mod.__file__)
 
     suite = Suite(mod, suite_name, suite_description)
     suite.tags.extend(suite_info.get("tags", []))
     suite.properties.update(suite_info.get("properties", []))
     suite.links.extend(suite_info.get("links", []))
     suite.rank = suite_info.get("rank", _get_metadata_next_rank())
+    suite.hidden = suite_condition and not suite_condition(mod)
 
     try:
         _check_test_tree_node_types(suite)
     except TypeError as excp:
-        raise InvalidMetadataError("Invalid suite metadata for '%s': %s" % (suite.name, excp))
+        raise SuiteLoadingError("Invalid suite metadata type for '%s': %s" % (suite.name, excp))
 
     for hook_name in SUITE_HOOKS:
         if hasattr(mod, hook_name):
@@ -276,9 +266,12 @@ def load_suite_from_file(filename):
                     def my_test():
                         pass
 
-    Raise ModuleImportError if the suite class cannot be imported.
+    Raise SuiteLoadingError if the suite class cannot be imported.
     """
-    mod = import_module(filename)
+    try:
+        mod = import_module(filename)
+    except ModuleImportError as e:
+        raise SuiteLoadingError(str(e))
 
     if hasattr(mod, "SUITE"):
         suite = load_suite_from_module(mod)
@@ -287,9 +280,9 @@ def load_suite_from_file(filename):
         try:
             klass = getattr(mod, mod_name)
         except AttributeError:
-            raise ModuleImportError("Cannot find class '%s' in '%s'" % (mod_name, mod.__file__))
-
+            raise SuiteLoadingError("Cannot find class '%s' in '%s'" % (mod_name, mod.__file__))
         suite = load_suite_from_class(klass)
+
     return suite
 
 
@@ -308,13 +301,11 @@ def load_suites_from_files(patterns, excluding=()):
 
         load_suites_from_files("test_*.py")
     """
-    suites = []
-    for filename in get_matching_files(patterns, excluding):
-        try:
-            suites.append(load_suite_from_file(filename))
-        except VisibilityConditionNotMet:
-            pass
-    return suites
+    return list(
+        filter(
+            lambda suite: not suite.hidden, map(load_suite_from_file, get_matching_files(patterns, excluding))
+        )
+    )
 
 
 def load_suites_from_directory(dir, recursive=True):
@@ -331,16 +322,15 @@ def load_suites_from_directory(dir, recursive=True):
     If the recursive argument is set to True, sub suites will be searched in a directory named
     from the suite module: if the suite module is "foo.py" then the sub suites directory must be "foo".
 
-    Raise ModuleImportError if one or more suite cannot be imported.
+    Raise SuiteLoadingError if one or more suite cannot be imported.
     """
     if not osp.exists(dir):
-        raise ModuleImportError("Directory '%s' does not exist" % dir)
+        raise SuiteLoadingError("Directory '%s' does not exist" % dir)
 
     suites = []
     for filename in get_py_files_from_dir(dir):
-        try:
-            suite = load_suite_from_file(filename)
-        except VisibilityConditionNotMet:
+        suite = load_suite_from_file(filename)
+        if suite.hidden:
             continue
 
         if recursive:

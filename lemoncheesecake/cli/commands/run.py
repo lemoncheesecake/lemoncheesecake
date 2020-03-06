@@ -8,8 +8,7 @@ import os
 
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import load_suites_from_project
-from lemoncheesecake.exceptions import LemoncheesecakeException, ProgrammingError, UserError, \
-    serialize_current_exception
+from lemoncheesecake.exceptions import LemoncheesecakeException, UserError, serialize_current_exception
 from lemoncheesecake.filter import add_test_filter_cli_args, make_test_filter
 from lemoncheesecake.fixture import FixtureRegistry, BuiltinFixture
 from lemoncheesecake.project import find_project_file, load_project_from_file, load_project, DEFAULT_REPORTING_BACKENDS
@@ -138,7 +137,7 @@ def run_suites_from_project(project, cli_args):
     except UserError as e:
         raise e
     except Exception:
-        raise ProgrammingError(
+        raise LemoncheesecakeException(
             "Got an unexpected exception while running the pre-session hook:%s" % \
             serialize_current_exception(show_stacktrace=True)
         )
@@ -162,7 +161,7 @@ def run_suites_from_project(project, cli_args):
     except UserError as e:
         raise e
     except Exception:
-        raise ProgrammingError(
+        raise LemoncheesecakeException(
             "Got an unexpected exception while running the post-session hook:%s" % \
             serialize_current_exception(show_stacktrace=True)
         )

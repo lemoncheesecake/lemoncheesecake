@@ -6,7 +6,6 @@ Created on Jan 24, 2016
 
 from lemoncheesecake.reporting.report import \
     SuiteResult, TestResult, Result, Step, Log, Check, Attachment, Url
-from lemoncheesecake.exceptions import ProgrammingError
 
 
 class ReportWriter:
@@ -21,11 +20,9 @@ class ReportWriter:
 
     def _add_step_entry(self, entry, event):
         result = self.report.get(event.location)
-        if not result:
-            raise ProgrammingError("Cannot find location %s in the report" % event.location)
+        assert result, "Cannot find location %s in the report" % event.location
         step = self._lookup_step(result.get_steps(), event.step)
-        if step.end_time:
-            raise ProgrammingError("Cannot update step '%s', it is already ended" % step.description)
+        assert not step.end_time, "Cannot update step '%s', it is already ended" % step.description
         step.entries.append(entry)
 
     @staticmethod
@@ -61,7 +58,7 @@ class ReportWriter:
             try:
                 return next(s for s in reversed(steps) if s.description == step)
             except StopIteration:
-                raise ProgrammingError("Cannot find step '%s'" % step)
+                raise LookupError("Cannot find step '%s'" % step)
 
     @staticmethod
     def _lookup_current_step(steps):

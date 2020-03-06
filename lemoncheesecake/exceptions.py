@@ -1,7 +1,7 @@
-from typing import Optional
-
 import sys
 import traceback
+
+from typing import Optional
 
 
 class LemoncheesecakeException(Exception):
@@ -14,11 +14,7 @@ class LemoncheesecakeException(Exception):
         return s
 
 
-class ProgrammingError(LemoncheesecakeException):
-    pass
-
-
-class ProjectError(LemoncheesecakeException):
+class ProjectLoadingError(LemoncheesecakeException):
     pass
 
 
@@ -26,23 +22,19 @@ class ModuleImportError(LemoncheesecakeException):
     pass
 
 
-class FixtureError(LemoncheesecakeException):
+class FixtureConstraintViolation(LemoncheesecakeException):
     pass
 
 
-class InvalidSuiteError(LemoncheesecakeException):
+class SuiteLoadingError(LemoncheesecakeException):
     pass
 
 
-class InvalidMetadataError(ProgrammingError):
+class FixtureLoadingError(LemoncheesecakeException):
     pass
 
 
-class VisibilityConditionNotMet(LemoncheesecakeException):
-    pass
-
-
-class UnknownReportBackendError(LemoncheesecakeException):
+class MetadataPolicyViolation(LemoncheesecakeException):
     pass
 
 
@@ -87,27 +79,11 @@ class UserError(LemoncheesecakeException):
         LemoncheesecakeException.__init__(self, reason)
 
 
-class InvalidReportFile(LemoncheesecakeException):
-    pass
-
-
-class IncompatibleReportFile(LemoncheesecakeException):
-    pass
-
-
-class CannotFindTreeNode(LemoncheesecakeException):
+class ReportLoadingError(LemoncheesecakeException):
     pass
 
 
 class TaskFailure(LemoncheesecakeException):
-    pass
-
-
-class TasksExecutionFailure(LemoncheesecakeException):
-    pass
-
-
-class CircularDependencyError(LemoncheesecakeException):
     pass
 
 

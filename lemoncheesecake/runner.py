@@ -16,7 +16,7 @@ from lemoncheesecake.session import initialize_session, initialize_fixture_cache
     start_test_session_teardown, end_test_session_teardown, \
     start_suite, end_suite, start_suite_setup, end_suite_setup, start_suite_teardown, end_suite_teardown, \
     start_test, end_test, disable_test, skip_test
-from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, FixtureError, \
+from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, LemoncheesecakeException, \
     UserError, TaskFailure, serialize_current_exception
 from lemoncheesecake import events
 from lemoncheesecake.testtree import flatten_tests
@@ -608,7 +608,7 @@ def run_suites(suites, fixture_registry, event_manager, force_disabled=False, st
             ))
 
     if errors:
-        raise FixtureError("\n".join(errors))
+        raise LemoncheesecakeException("\n".join(errors))
 
     return report.is_successful() if report else False
 

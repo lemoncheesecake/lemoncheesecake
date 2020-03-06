@@ -8,7 +8,7 @@ import os
 import os.path as osp
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
-from lemoncheesecake.exceptions import InvalidReportFile, ProgrammingError, LemoncheesecakeException
+from lemoncheesecake.exceptions import ReportLoadingError, LemoncheesecakeException
 from lemoncheesecake.reporting.report import Report
 from lemoncheesecake.consts import NEGATIVE_CHARS
 
@@ -160,8 +160,7 @@ class BoundReport(Report):
         return self.backend is not None and self.path is not None
 
     def save(self):
-        if not self.is_bound():
-            raise ProgrammingError("Cannot save unbound report")
+        assert self.is_bound(), "Cannot save unbound report"
         save_report(self.path, self, self.backend)
 
 
@@ -173,10 +172,10 @@ def load_report_from_file(filename, backends=None):
             try:
                 return backend.load_report(filename)
             except IOError as excp:
-                raise InvalidReportFile("Cannot load report from file '%s': %s" % (filename, excp))
-            except InvalidReportFile:
+                raise ReportLoadingError("Cannot load report from file '%s': %s" % (filename, excp))
+            except ReportLoadingError:
                 pass
-    raise InvalidReportFile("Cannot find any suitable report backend to load report file '%s'" % filename)
+    raise ReportLoadingError("Cannot find any suitable report backend to load report file '%s'" % filename)
 
 
 def load_reports_from_dir(dirname, backends=None):
@@ -184,7 +183,7 @@ def load_reports_from_dir(dirname, backends=None):
         if os.path.isfile(filename):
             try:
                 yield load_report_from_file(filename, backends)
-            except InvalidReportFile:
+            except ReportLoadingError:
                 pass
 
 
@@ -193,12 +192,12 @@ def load_report(path, backends=None):
         try:
             return next(load_reports_from_dir(path, backends))
         except StopIteration:
-            raise InvalidReportFile("Cannot find any report in directory '%s'" % path)
+            raise ReportLoadingError("Cannot find any report in directory '%s'" % path)
     else:
         return load_report_from_file(path, backends)
 
 
 def save_report(filename, report, backend):
     if not isinstance(backend, ReportSerializerMixin):
-        raise ProgrammingError("Reporting backend '%s' does not support report saving" % backend.get_name())
+        raise NotImplementedError("Reporting backend '%s' does not support report saving" % backend.get_name())
     backend.save_report(filename, report)

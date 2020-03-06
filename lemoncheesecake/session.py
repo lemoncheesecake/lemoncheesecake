@@ -17,7 +17,6 @@ from lemoncheesecake.consts import ATTACHMENTS_DIR, \
     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
 from lemoncheesecake.reporting import Report, ReportLocation
 from lemoncheesecake import events
-from lemoncheesecake.exceptions import ProgrammingError
 from lemoncheesecake.fixture import ScheduledFixtures
 from lemoncheesecake.helpers.typecheck import check_type_string, check_type_bool
 
@@ -203,16 +202,14 @@ class Session(object):
 
 def get_session():
     # type: () -> Session
-    if not _session:
-        raise ProgrammingError("Runtime is not initialized")
+    assert _session, "Runtime is not initialized"
     return _session
 
 
 def get_report():
     # type: () -> Report
     report = get_session().report
-    if not report:
-        raise ProgrammingError("Report is not available")
+    assert report, "Report is not available"
     return report
 
 
@@ -388,16 +385,11 @@ def get_fixture(name):
     """
     global _scheduled_fixtures
 
-    if not _scheduled_fixtures:
-        raise ProgrammingError("Fixture cache has not yet been initialized")
-
+    assert _scheduled_fixtures, "Fixture cache has not yet been initialized"
     if not _scheduled_fixtures.has_fixture(name):
-        raise ProgrammingError("Fixture '%s' either does not exist or don't have a prerun_session scope" % name)
+        raise LookupError("Fixture '%s' either does not exist or doesn't have a pre_run scope" % name)
 
-    try:
-        return _scheduled_fixtures.get_fixture_result(name)
-    except AssertionError as excp:
-        raise ProgrammingError(str(excp))
+    return _scheduled_fixtures.get_fixture_result(name)
 
 
 def add_report_info(name, value):

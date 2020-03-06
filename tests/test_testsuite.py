@@ -10,7 +10,7 @@ import pytest
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite import load_suite_from_class, add_test_into_suite
-from lemoncheesecake.exceptions import ProgrammingError, InvalidMetadataError
+from lemoncheesecake.exceptions import SuiteLoadingError
 
 from helpers.runner import dummy_test_callback, build_suite_from_module
 
@@ -79,9 +79,9 @@ def test_decorator_link():
 
 
 def test_test_decorator_on_invalid_object():
-    with pytest.raises(ProgrammingError):
+    with pytest.raises(AssertionError):
         @lcc.test("test")
-        class NotAFunction():
+        class NotAFunction:
             pass
 
 
@@ -95,9 +95,9 @@ def test_decorator_suite_with_name():
 
 
 def test_suite_decorator_on_invalid_object():
-    with pytest.raises(ProgrammingError):
+    with pytest.raises(AssertionError):
         @lcc.suite("suite")
-        def NotAClass():
+        def not_a_class():
             pass
 
 
@@ -170,7 +170,7 @@ def test_duplicated_suite_description():
         class SubSuite2:
             pass
 
-    with pytest.raises(InvalidMetadataError) as excinfo:
+    with pytest.raises(SuiteLoadingError, match="is already registered"):
         load_suite_from_class(MySuite)
 
 
@@ -185,7 +185,7 @@ def test_duplicated_test_description():
         def bar(self):
             pass
 
-    with pytest.raises(InvalidMetadataError):
+    with pytest.raises(SuiteLoadingError, match="is already registered"):
         load_suite_from_class(MySuite)
 
 
@@ -196,7 +196,7 @@ def test_duplicated_test_name():
             add_test_into_suite(lcc.Test("mytest", "First test", dummy_test_callback()), self)
             add_test_into_suite(lcc.Test("mytest", "Second test", dummy_test_callback()), self)
 
-    with pytest.raises(ProgrammingError):
+    with pytest.raises(SuiteLoadingError, match="is already registered"):
         load_suite_from_class(MySuite)
 
 
@@ -405,7 +405,7 @@ def test_depends_on_test():
 
 
 def test_depends_on_suite():
-    with pytest.raises(ProgrammingError):
+    with pytest.raises(AssertionError):
         @lcc.suite("suite")
         @lcc.depends_on("another.suite")
         class suite:

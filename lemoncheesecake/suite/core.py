@@ -4,7 +4,7 @@ Created on Sep 8, 2016
 @author: nicolas
 '''
 
-from lemoncheesecake.exceptions import InvalidMetadataError
+from lemoncheesecake.exceptions import SuiteLoadingError
 from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.helpers.introspection import get_callable_args, get_object_attributes
 from lemoncheesecake.testtree import BaseTest, BaseSuite
@@ -28,6 +28,7 @@ class Test(BaseTest):
         BaseTest.__init__(self, name, description)
         self.callback = callback
         self.disabled = False
+        self.hidden = False
         self.rank = 0
         self.dependencies = []
         self.parameters = {}
@@ -56,6 +57,7 @@ class Suite(BaseSuite):
         self.obj = obj
         self.rank = 0
         self.disabled = False
+        self.hidden = False
         self._hooks = {}
         self._injected_fixtures = self._load_injected_fixtures(obj)
         # to optimize unique constraint checks on test/suite name/description, keep those
@@ -107,11 +109,11 @@ class Suite(BaseSuite):
 
     def add_test(self, test):
         if test.description in self._test_descriptions:
-            raise InvalidMetadataError(
+            raise SuiteLoadingError(
                 "A test with description '%s' is already registered in test suite %s" % (test.description, self.path)
             )
         if test.name in self._test_names:
-            raise InvalidMetadataError(
+            raise SuiteLoadingError(
                 "A test with name '%s' is already registered in test suite %s" % (test.name, self.path)
             )
 
@@ -121,11 +123,11 @@ class Suite(BaseSuite):
 
     def add_suite(self, suite):
         if suite.description in self._sub_suite_descriptions:
-            raise InvalidMetadataError(
+            raise SuiteLoadingError(
                 "A sub test suite with description '%s' is already registered in test suite %s" % (suite.name, self.path)
             )
         if suite.name in self._sub_suite_names:
-            raise InvalidMetadataError(
+            raise SuiteLoadingError(
                 "A sub test suite with name '%s' is already registered in test suite %s" % (suite.name, self.path)
             )
 

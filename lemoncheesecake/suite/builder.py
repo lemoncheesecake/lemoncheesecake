@@ -10,7 +10,6 @@ import copy
 from typing import Any, Iterable, Callable, Optional, Tuple
 
 from lemoncheesecake.suite.core import InjectedFixture, Test
-from lemoncheesecake.exceptions import ProgrammingError
 
 
 class Metadata(object):
@@ -77,11 +76,9 @@ def suite(description, name=None, rank=None):
     :param rank: this value is used to order suites of the same hierarchy level
     """
     def wrapper(klass):
-        if not inspect.isclass(klass):
-            raise ProgrammingError("%s is not a class (suite decorator can only be used on a class)" % klass)
+        assert inspect.isclass(klass), "%s is not a class (suite decorator can only be used on a class)" % klass
         md = get_metadata(klass)
-        if md.dependencies:
-            raise ProgrammingError("'depends_on' can not be used on a suite class")
+        assert not md.dependencies, "'depends_on' can not be used on a suite class"
         md.is_suite = True
         md.rank = rank if rank is not None else _get_metadata_next_rank()
         md.name = name or klass.__name__
@@ -98,8 +95,7 @@ def test(description, name=None):
     :param name: test's name (by default, the suite's name is taken from the class's name)
     """
     def wrapper(func):
-        if not inspect.isfunction(func):
-            raise ProgrammingError("%s is not a function (test decorator can only be used on a function)" % func)
+        assert inspect.isfunction(func), "%s is not a function (test decorator can only be used on a function)" % func
         md = get_metadata(func)
         md.is_test = True
         md.rank = _get_metadata_next_rank()
@@ -174,8 +170,7 @@ def depends_on(*deps):
     """
     def wrapper(obj):
         md = get_metadata(obj)
-        if md.is_suite:
-            raise ProgrammingError("'depends_on' can not be used on a suite class")
+        assert not md.is_suite, "'depends_on' can only be used on a test, not on a suite"
         md.dependencies.extend(deps)
         return obj
     return wrapper

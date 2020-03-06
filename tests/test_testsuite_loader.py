@@ -20,14 +20,14 @@ def test_load_suite_from_file(tmpdir):
 
 def test_load_suite_from_file_invalid_module(tmpdir):
     file = tmpdir.join("doesnotexist.py")
-    with pytest.raises(ModuleImportError):
+    with pytest.raises(SuiteLoadingError):
         load_suite_from_file(file.strpath)
 
 
 def test_load_suite_from_file_invalid_class(tmpdir):
     file = tmpdir.join("anothersuite.py")
     file.write(build_test_module())
-    with pytest.raises(ModuleImportError):
+    with pytest.raises(SuiteLoadingError):
         load_suite_from_file(file.strpath)
 
 
@@ -217,9 +217,9 @@ def test_metadata_policy():
 
     policy = MetadataPolicy()
     policy.add_property_rule("foo", ("1", "2"))
-    with pytest.raises(InvalidMetadataError):
+    with pytest.raises(MetadataPolicyViolation):
         policy.check_suites_compliance(suite1)
-    with pytest.raises(InvalidMetadataError):
+    with pytest.raises(MetadataPolicyViolation):
         policy.check_suites_compliance(suite2)
 
 
@@ -703,7 +703,7 @@ def test_load_suite_from_module_missing_suite_definition(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write("")
 
-    with pytest.raises(ModuleImportError):
+    with pytest.raises(SuiteLoadingError):
         load_suite_from_file(file.strpath)
 
 
@@ -718,7 +718,7 @@ class mysuite:
         pass
 """)
 
-    with pytest.raises(InvalidSuiteError):
+    with pytest.raises(SuiteLoadingError, match="Class is not declared as a suite"):
         load_suite_from_file(file.strpath)
 
 
@@ -743,7 +743,7 @@ def test_invalid_type_name():
     def test():
         pass
 
-    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+    with pytest.raises(SuiteLoadingError, match="Invalid test metadata"):
         _load_test(test)
 
 
@@ -752,7 +752,7 @@ def test_invalid_type_description():
     def test():
         pass
 
-    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+    with pytest.raises(SuiteLoadingError, match="Invalid test metadata"):
         _load_test(test)
 
 
@@ -762,7 +762,7 @@ def test_invalid_type_tag():
     def test():
         pass
 
-    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+    with pytest.raises(SuiteLoadingError, match="Invalid test metadata"):
         _load_test(test)
 
 
@@ -772,7 +772,7 @@ def test_invalid_type_link_url():
     def test():
         pass
 
-    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+    with pytest.raises(SuiteLoadingError, match="Invalid test metadata"):
         _load_test(test)
 
 
@@ -782,7 +782,7 @@ def test_invalid_type_link_name():
     def test():
         pass
 
-    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+    with pytest.raises(SuiteLoadingError, match="Invalid test metadata"):
         _load_test(test)
 
 
@@ -792,7 +792,7 @@ def test_invalid_type_prop():
     def test():
         pass
 
-    with pytest.raises(InvalidMetadataError, match="Invalid test metadata"):
+    with pytest.raises(SuiteLoadingError, match="Invalid test metadata"):
         _load_test(test)
 
 
@@ -802,7 +802,7 @@ def test_invalid_type_on_suite_class():
     class suite():
         pass
 
-    with pytest.raises(InvalidMetadataError, match="Invalid suite metadata"):
+    with pytest.raises(SuiteLoadingError, match="Invalid suite metadata"):
         load_suite_from_class(suite)
 
 
@@ -815,5 +815,5 @@ def test_invalid_type_on_suite_module(tmpdir):
 }
 """)
 
-    with pytest.raises(InvalidMetadataError, match="Invalid suite metadata"):
+    with pytest.raises(SuiteLoadingError, match="Invalid suite metadata"):
         load_suite_from_file(file.strpath)

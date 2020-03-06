@@ -35,7 +35,7 @@ def get_matching_files(patterns, excluding=[]):
     for pattern in patterns:
         files.extend(glob.glob(pattern))
     if excluding:
-        tmp = files[:] # iterate on copy to be able to alter files
+        tmp = files[:]  # iterate on copy to be able to alter files
         for file in tmp:
             for excluded in excluding:
                 if fnmatch.fnmatch(file, excluded):
