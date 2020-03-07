@@ -116,10 +116,13 @@ class Renderer(object):
                         self.render_highlighted(self.wrap_details_col(entry.details))
                     ])
                 if isinstance(entry, Url):
-
+                    if entry.description == entry.url:
+                        description = entry.url
+                    else:
+                        description = "%s (%s)" % (entry.url, entry.description)
                     rows.append([
                         colored("URL", color="cyan", attrs=["bold"]),
-                        self.render_highlighted(self.wrap_description_col("%s (%s)" % (entry.url, entry.description)))
+                        self.render_highlighted(self.wrap_description_col(description))
                     ])
                 if isinstance(entry, Attachment):
                     rows.append([

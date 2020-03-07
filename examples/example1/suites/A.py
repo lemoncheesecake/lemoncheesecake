@@ -122,3 +122,8 @@ class A:
             @lcc.test("Yet Another Test")
             def yet_another_test(self):
                 check_that("string", "foo", not_equal_to("foo"))
+
+    @lcc.test("Log URLs")
+    def log_urls(self):
+        lcc.log_url("http://www.example.net")
+        lcc.log_url("http://www.example.net", "Example.net")
