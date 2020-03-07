@@ -64,7 +64,7 @@ class Renderer(object):
     def __init__(self, max_width, explicit=False, highlight=None):
         self.max_width = max_width
         self.explicit = explicit
-        self.hightlight = highlight
+        self.highlight = highlight
         # "20" is an approximation of the maximal overhead of table border, padding, and table first cell
         self._table_overhead = 20
 
@@ -83,10 +83,10 @@ class Renderer(object):
         return colored(check_label, color=outcome_to_color(is_successful), attrs=["bold"])
 
     def render_highlighted(self, content):
-        if not self.hightlight or not content:
+        if not self.highlight or not content:
             return content
 
-        return self.hightlight.sub(
+        return self.highlight.sub(
             lambda m: colored(m.group(0), color="yellow", attrs=["bold", "underline"]), content
         )
 
@@ -116,6 +116,7 @@ class Renderer(object):
                         self.render_highlighted(self.wrap_details_col(entry.details))
                     ])
                 if isinstance(entry, Url):
+
                     rows.append([
                         colored("URL", color="cyan", attrs=["bold"]),
                         self.render_highlighted(self.wrap_description_col("%s (%s)" % (entry.url, entry.description)))
