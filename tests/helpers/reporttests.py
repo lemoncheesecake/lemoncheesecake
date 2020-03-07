@@ -408,7 +408,11 @@ class ReportingSessionTests(object):
     def test_save_at_end_of_tests(self):
         self.test_simple_test(None)
 
-    def test_save_at_event(self):
+    def test_save_at_each_log(self):
+        self.test_simple_test(make_report_saving_strategy("at_each_log"))
+
+    def test_save_at_each_event(self):
+        # "at_each_event" has been deprecated in 1.4.5 and replaced by at_each_log
         self.test_simple_test(make_report_saving_strategy("at_each_event"))
 
     def test_save_at_each_failed_test(self):

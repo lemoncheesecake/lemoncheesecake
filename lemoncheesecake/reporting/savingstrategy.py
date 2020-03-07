@@ -44,9 +44,7 @@ def save_at_each_failed_test_strategy(event, report):
         return False
 
 
-def save_at_each_event_strategy(event, _):
-    # "each_event" means events that produces actual data, meaning events that adds data in
-    # a step
+def save_at_each_log_strategy(event, _):
     return isinstance(event, SteppedEvent)
 
 
@@ -74,7 +72,8 @@ def make_report_saving_strategy(expression):
         "at_each_suite": save_at_each_suite_strategy,
         "at_each_test": save_at_each_test_strategy,
         "at_each_failed_test": save_at_each_failed_test_strategy,
-        "at_each_event": save_at_each_event_strategy
+        "at_each_log": save_at_each_log_strategy,
+        "at_each_event": save_at_each_log_strategy  # deprecated since 1.4.5, "at_each_log" must be used instead
     }
 
     try:
