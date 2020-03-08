@@ -129,6 +129,8 @@ Writing tests
 
 - :ref:`API reference <api>`
 
+- :ref:`Deprecations <deprecations>`
+
 - :ref:`Migrating from to 0.22.x to 1.x <migrating to 1.x>`
 
 Contact

@@ -21,4 +21,5 @@ Table of content
     cli
     project
     api
+    deprecations
     migrating-to-v1
