@@ -1,3 +1,22 @@
+# 1.4.5 (2020-03-08)
+
+- **API**: the `detached_step` context manager (whose purpose is to create steps in new threads) has been deprecated;
+  the `set_step` function can now be used in any context (main thread or new threads)
+- **API**: the `detached` argument of the `set_step` is now deprecated
+- **CLI**: the `at_each_event` option of `lcc run --save-report` has been renamed into `at_each_log`
+  (backward-compatibility has been preserved)
+- **lcc report**: improve logged URL display
+- **doc (http://docs.lemoncheesecake.io)**: add a "Deprecations" section
+- **under the hood**:
+  - the step handling has been totally reworked internally in order to:
+    - remove special case of "detached steps"
+    - improve step handling when dealing with multiple threads within the same test
+    - provide a real "end of step" event
+  - `lemoncheesecake.exceptions` cleanup:
+    - reorganize exception handling
+    - reduce the number of exception classes from 19 to 13
+    - improve the naming of various exception classes
+
 # 1.4.4 (2020-03-04)
 
 - **ReportPortal**: enforce reportportal-client version ~= 3.0 to avoid
