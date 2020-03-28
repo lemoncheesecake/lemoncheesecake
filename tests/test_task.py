@@ -4,7 +4,7 @@ import re
 
 import pytest
 
-from lemoncheesecake.task import BaseTask, run_tasks, check_task_dependencies, \
+from lemoncheesecake.task import BaseTask, TaskContext, run_tasks, check_task_dependencies, \
     TaskResultSuccess, TaskResultFailure
 from lemoncheesecake.exceptions import LemoncheesecakeException, TaskFailure
 
@@ -68,7 +68,7 @@ def test_run_tasks_success():
     c = DummyTask("c", 3, [a])
     d = DummyTask("d", 4, [b, c])
 
-    run_tasks((a, b, c, d), nb_threads=1)
+    run_tasks((a, b, c, d), TaskContext(), nb_threads=1)
 
     assert d.output == 11
 
@@ -79,7 +79,7 @@ def test_run_tasks_failure_1():
     c = DummyTask("c", 3, [a])
     d = DummyTask("d", 4, [b, c])
 
-    run_tasks((a, b, c, d), nb_threads=1)
+    run_tasks((a, b, c, d), TaskContext(), nb_threads=1)
 
     assert not a.skipped
     assert b.skipped
@@ -93,7 +93,7 @@ def test_run_tasks_failure_2():
     c = ExceptionTask("c", TaskFailure(), [a])
     d = DummyTask("d", 4, [b, c])
 
-    run_tasks((a, b, c, d), nb_threads=1)
+    run_tasks((a, b, c, d), TaskContext(), nb_threads=1)
 
     assert not a.skipped
     assert not b.skipped
@@ -108,7 +108,7 @@ def test_run_tasks_unexpected_exception_in_run():
     d = DummyTask("d", 4, [b, c])
 
     with pytest.raises(LemoncheesecakeException, match=re.compile(r"Error\(s\) while running tasks")) as excinfo:
-        run_tasks((a, b, c, d), nb_threads=1)
+        run_tasks((a, b, c, d), TaskContext(), nb_threads=1)
 
     assert "something bad happened" in str(excinfo.value)
 
@@ -126,7 +126,7 @@ def test_run_tasks_unexpected_exception_in_abort():
     d.exception_within_skip = Exception("something bad happened")
 
     with pytest.raises(LemoncheesecakeException, match=re.compile(r"Error\(s\) while running tasks")) as excinfo:
-        run_tasks((a, b, c, d), nb_threads=1)
+        run_tasks((a, b, c, d), TaskContext(), nb_threads=1)
 
     assert "something bad happened" in str(excinfo.value)
 
@@ -140,7 +140,7 @@ def test_run_tasks_using_on_completion_dependency_1():
     a = ExceptionTask("a", TaskFailure())
     b = DummyTask("b", 1, on_completion_dependencies=[a])
 
-    run_tasks((a, b))
+    run_tasks((a, b), TaskContext())
 
     assert not a.skipped
     assert b.output == 1
@@ -150,7 +150,7 @@ def test_run_tasks_using_on_completion_dependency_2():
     a = DummyTask("a", 1)
     b = DummyTask("b", 1, on_completion_dependencies=[a])
 
-    run_tasks((a, b))
+    run_tasks((a, b), TaskContext())
 
     assert isinstance(a.result, TaskResultSuccess) and isinstance(b.result, TaskResultSuccess)
     assert b.output == 2
@@ -161,7 +161,7 @@ def test_run_tasks_using_on_completion_dependency_3():
     b = DummyTask("b", 1)
     c = DummyTask("c", 1, on_completion_dependencies=[a, b])
 
-    run_tasks((a, b, c))
+    run_tasks((a, b, c), TaskContext())
 
     assert not a.skipped
     assert isinstance(b.result, TaskResultSuccess)
@@ -173,7 +173,7 @@ def test_run_tasks_using_on_completion_dependency_4():
     b = ExceptionTask("b", TaskFailure())
     c = DummyTask("c", 1, on_completion_dependencies=[a], on_success_dependencies=[b])
 
-    run_tasks((a, b, c))
+    run_tasks((a, b, c), TaskContext())
 
     assert isinstance(a.result, TaskResultFailure) and isinstance(b.result, TaskResultFailure)
     assert c.skipped
@@ -184,7 +184,7 @@ def test_run_tasks_using_on_completion_dependency_5():
     b = ExceptionTask("b", TaskFailure(), on_completion_dependencies=[a])
     c = DummyTask("c", 1, on_success_dependencies=[b])
 
-    run_tasks((a, b, c))
+    run_tasks((a, b, c), TaskContext())
 
     assert isinstance(a.result, TaskResultFailure) and isinstance(b.result, TaskResultFailure)
     assert c.skipped

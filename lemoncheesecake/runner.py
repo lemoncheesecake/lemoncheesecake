@@ -21,12 +21,13 @@ from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, Lem
 from lemoncheesecake import events
 from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.reporting import ReportLocation
-from lemoncheesecake.task import BaseTask, run_tasks
+from lemoncheesecake.task import BaseTask, TaskContext, run_tasks
 from lemoncheesecake.reporting import Report, ReportWriter
 
 
-class RunContext(object):
+class RunContext(TaskContext):
     def __init__(self, event_manager, fixture_registry, force_disabled, stop_on_failure):
+        super(RunContext, self).__init__()
         self.event_manager = event_manager
         self.fixture_registry = fixture_registry
         self.force_disabled = force_disabled
@@ -88,7 +89,12 @@ class RunContext(object):
                 except Exception as e:
                     self.handle_exception(e)
 
-    def watchdog(self, task):
+    def is_task_to_be_skipped(self, task):
+        # check for error in base implementation
+        skip_reason = super(RunContext, self).is_task_to_be_skipped(task)
+        if skip_reason:
+            return skip_reason
+
         # check for error in event handling
         exception, _ = self.event_manager.get_pending_failure()
         if exception is not None:
@@ -559,7 +565,7 @@ def run_session(suites, fixture_registry, pre_run_scheduled_fixtures, event_mana
 
     with event_manager.handle_events():
         start_test_session()
-        run_tasks(tasks, context, nb_threads, context.watchdog)
+        run_tasks(tasks, context, nb_threads)
         end_test_session()
 
     exception, serialized_exception = event_manager.get_pending_failure()

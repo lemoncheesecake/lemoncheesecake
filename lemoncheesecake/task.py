@@ -50,6 +50,20 @@ class BaseTask(object):
         pass
 
 
+class TaskContext(object):
+    def __init__(self):
+        self._tasks_aborted = False
+
+    def enable_task_abort(self):
+        self._tasks_aborted = True
+
+    def is_task_to_be_skipped(self, task):
+        if self._tasks_aborted:
+            return "tests have been manually stopped"
+        else:
+            return None
+
+
 def pop_runnable_tasks(remaining_tasks, completed_tasks, nb_tasks):
     runnable_tasks = list(
         itertools.islice(
@@ -78,8 +92,10 @@ def run_task(task, context, completed_task_queue):
     completed_task_queue.put(task)
 
 
-def handle_task(task, watchdogs, context, completed_task_queue):
+def handle_task(task, context, completed_task_queue):
     _debug("handle task %s" % task)
+
+    # skip task on dependency failure if any
     for dep_task in task.get_on_success_dependencies():
         if not isinstance(dep_task.result, TaskResultSuccess):
             reason = None
@@ -88,18 +104,19 @@ def handle_task(task, watchdogs, context, completed_task_queue):
             skip_task(task, context, completed_task_queue, reason)
             return
 
-    for watchdog in watchdogs:
-        error = watchdog(task)
-        if error:
-            skip_task(task, context, completed_task_queue, reason=error)
-            return
+    # skip task on external trigger if any
+    skip_reason = context.is_task_to_be_skipped(task)
+    if skip_reason:
+        skip_task(task, context, completed_task_queue, reason=skip_reason)
+        return
 
+    # run task when all conditions are met
     run_task(task, context, completed_task_queue)
 
 
-def schedule_tasks_to_be_run(tasks, watchdogs, context, pool, completed_tasks_queue):
+def schedule_tasks_to_be_run(tasks, context, pool, completed_tasks_queue):
     for task in tasks:
-        pool.apply_async(handle_task, args=(task, watchdogs, context, completed_tasks_queue))
+        pool.apply_async(handle_task, args=(task, context, completed_tasks_queue))
 
 
 def skip_task(task, context, completed_task_queue, reason=""):
@@ -126,12 +143,7 @@ def skip_all_tasks(tasks, remaining_tasks, completed_tasks, context, pool, compl
         completed_tasks.add(completed_task)
 
 
-def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
-    got_keyboard_interrupt = False
-    watchdogs = [lambda _: _KEYBOARD_INTERRUPT_ERROR_MESSAGE if got_keyboard_interrupt else None]
-    if watchdog:
-        watchdogs.append(watchdog)
-
+def run_tasks(tasks, context, nb_threads=1):
     for task in tasks:
         check_task_dependencies(task)
 
@@ -144,7 +156,7 @@ def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
     try:
         schedule_tasks_to_be_run(
             pop_runnable_tasks(remaining_tasks, completed_tasks, nb_threads),
-            watchdogs, context, pool, completed_tasks_queue
+            context, pool, completed_tasks_queue
         )
 
         while len(completed_tasks) != len(tasks):
@@ -154,10 +166,10 @@ def run_tasks(tasks, context=None, nb_threads=1, watchdog=None):
 
             # schedule tasks to be run waiting for task success or simple completion
             tasks_to_be_run = pop_runnable_tasks(remaining_tasks, completed_tasks, nb_threads)
-            schedule_tasks_to_be_run(tasks_to_be_run, watchdogs, context, pool, completed_tasks_queue)
+            schedule_tasks_to_be_run(tasks_to_be_run, context, pool, completed_tasks_queue)
 
     except KeyboardInterrupt:
-        got_keyboard_interrupt = True
+        context.enable_task_abort()
         skip_all_tasks(
             tasks, remaining_tasks, completed_tasks, context, pool, completed_tasks_queue,
             _KEYBOARD_INTERRUPT_ERROR_MESSAGE
