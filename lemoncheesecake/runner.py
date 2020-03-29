@@ -32,30 +32,18 @@ class RunContext(TaskContext):
         self.fixture_registry = fixture_registry
         self.force_disabled = force_disabled
         self.stop_on_failure = stop_on_failure
-        self._abort_session = False
+        self._aborted_session = False
         self._aborted_suites = set()
-
-    def mark_suite_as_aborted(self, suite):
-        self._aborted_suites.add(suite)
-
-    def is_suite_aborted(self, suite):
-        return suite in self._aborted_suites
-
-    def mark_session_as_aborted(self):
-        self._abort_session = True
-
-    def is_session_aborted(self):
-        return self._abort_session
 
     def handle_exception(self, excp, suite=None):
         if isinstance(excp, AbortTest):
             log_error(str(excp))
         elif isinstance(excp, AbortSuite):
             log_error(str(excp))
-            self.mark_suite_as_aborted(suite)
+            self._aborted_suites.add(suite)
         elif isinstance(excp, AbortAllTests):
             log_error(str(excp))
-            self.mark_session_as_aborted()
+            self._aborted_session = True
         else:
             # FIXME: use exception instead of last implicit stacktrace
             stacktrace = traceback.format_exc()
@@ -101,12 +89,12 @@ class RunContext(TaskContext):
             return str(exception)
 
         # check for test session abort
-        if self.is_session_aborted():
+        if self._aborted_session:
             return "tests have been aborted"
 
         # check for suite abort
         if isinstance(task, TestTask):
-            if self.is_suite_aborted(task.test.parent_suite):
+            if task.test.parent_suite in self._aborted_suites:
                 return "the tests of this test suite have been aborted"
 
         # check for --stop-on-failure
