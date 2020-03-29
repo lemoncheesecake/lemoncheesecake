@@ -33,7 +33,6 @@ def _get_thread_id():
 def initialize_session(event_manager, report_dir, report):
     global _session
     _session = Session(event_manager, report_dir, report)
-    event_manager.add_listener(_session)
 
 
 def initialize_fixture_cache(scheduled_fixtures):
