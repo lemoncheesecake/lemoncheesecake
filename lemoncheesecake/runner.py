@@ -69,6 +69,10 @@ class RunContext(TaskContext):
                 except Exception as e:
                     self.handle_exception(e)
 
+    def enable_task_abort(self):
+        super(RunContext, self).enable_task_abort()
+        self.session.aborted = True
+
     def is_task_to_be_skipped(self, task):
         # check for error in base implementation
         skip_reason = super(RunContext, self).is_task_to_be_skipped(task)
