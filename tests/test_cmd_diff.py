@@ -1,7 +1,6 @@
 from helpers.cli import cmdout
 from helpers.report import report_in_progress_path
-from helpers.testtreemockup import report_mockup, suite_mockup, tst_mockup, make_report_from_mockup, \
-    make_suite_data_from_mockup
+from helpers.report import make_test_result, make_suite_result, make_report
 
 from lemoncheesecake.cli import main
 from lemoncheesecake.reporting.backends.json_ import save_report_into_file
@@ -17,10 +16,10 @@ def check_diff(diff, added=[], removed=[], status_changed=[]):
 
 
 def test_added_test():
-    suite_1 = suite_mockup("mysuite").add_test(tst_mockup("mytest1"))
-    suite_2 = suite_mockup("mysuite").add_test(tst_mockup("mytest1")).add_test(tst_mockup("mytest2"))
-    tests_1 = list(flatten_tests([make_suite_data_from_mockup(suite_1)]))
-    tests_2 = list(flatten_tests([make_suite_data_from_mockup(suite_2)]))
+    suite_1 = make_suite_result("mysuite", tests=[make_test_result("mytest1")])
+    suite_2 = make_suite_result("mysuite", tests=[make_test_result("mytest1"), make_test_result("mytest2")])
+    tests_1 = list(flatten_tests([suite_1]))
+    tests_2 = list(flatten_tests([suite_2]))
 
     diff = compute_diff(tests_1, tests_2)
 
@@ -28,10 +27,10 @@ def test_added_test():
 
 
 def test_removed_test():
-    suite_1 = suite_mockup("mysuite").add_test(tst_mockup("mytest1")).add_test(tst_mockup("mytest2"))
-    suite_2 = suite_mockup("mysuite").add_test(tst_mockup("mytest1"))
-    tests_1 = list(flatten_tests([make_suite_data_from_mockup(suite_1)]))
-    tests_2 = list(flatten_tests([make_suite_data_from_mockup(suite_2)]))
+    suite_1 = make_suite_result("mysuite", tests=[make_test_result("mytest1"), make_test_result("mytest2")])
+    suite_2 = make_suite_result("mysuite", tests=[make_test_result("mytest1")])
+    tests_1 = list(flatten_tests([suite_1]))
+    tests_2 = list(flatten_tests([suite_2]))
 
     diff = compute_diff(tests_1, tests_2)
 
@@ -39,10 +38,10 @@ def test_removed_test():
 
 
 def test_passed_to_failed():
-    suite_1 = suite_mockup("mysuite").add_test(tst_mockup("mytest1", status="passed"))
-    suite_2 = suite_mockup("mysuite").add_test(tst_mockup("mytest1", status="failed"))
-    tests_1 = list(flatten_tests([make_suite_data_from_mockup(suite_1)]))
-    tests_2 = list(flatten_tests([make_suite_data_from_mockup(suite_2)]))
+    suite_1 = make_suite_result("mysuite", tests=[make_test_result("mytest1", status="passed")])
+    suite_2 = make_suite_result("mysuite", tests=[make_test_result("mytest1", status="failed")])
+    tests_1 = list(flatten_tests([suite_1]))
+    tests_2 = list(flatten_tests([suite_2]))
 
     diff = compute_diff(tests_1, tests_2)
 
@@ -50,10 +49,10 @@ def test_passed_to_failed():
 
 
 def test_failed_to_passed():
-    suite_1 = suite_mockup("mysuite").add_test(tst_mockup("mytest1", status="failed"))
-    suite_2 = suite_mockup("mysuite").add_test(tst_mockup("mytest1", status="passed"))
-    tests_1 = list(flatten_tests([make_suite_data_from_mockup(suite_1)]))
-    tests_2 = list(flatten_tests([make_suite_data_from_mockup(suite_2)]))
+    suite_1 = make_suite_result("mysuite", tests=[make_test_result("mytest1", status="failed")])
+    suite_2 = make_suite_result("mysuite", tests=[make_test_result("mytest1", status="passed")])
+    tests_1 = list(flatten_tests([suite_1]))
+    tests_2 = list(flatten_tests([suite_2]))
 
     diff = compute_diff(tests_1, tests_2)
 
@@ -72,27 +71,25 @@ def _split_lines(lines, separator):
 
 
 def test_diff_cmd(tmpdir, cmdout):
-    old_report = report_mockup()
-    old_report.add_suite(
-        suite_mockup("mysuite").
-            add_test(tst_mockup("mytest1", status="passed")).
-            add_test(tst_mockup("mytest2", status="failed")).
-            add_test(tst_mockup("mytest3"))
-    )
-
-    new_report = report_mockup()
-    new_report.add_suite(
-        suite_mockup("mysuite").
-            add_test(tst_mockup("mytest1", status="failed")).
-            add_test(tst_mockup("mytest2", status="passed")).
-            add_test(tst_mockup("mytest4"))
-    )
-
+    old_report = make_report([
+        make_suite_result("mysuite", tests=[
+            make_test_result("mytest1"),
+            make_test_result("mytest2", status="failed"),
+            make_test_result("mytest3")
+        ])
+    ])
     old_report_path = tmpdir.join("old_report.json").strpath
-    save_report_into_file(make_report_from_mockup(old_report), old_report_path)
+    save_report_into_file(old_report, old_report_path)
 
+    new_report = make_report([
+        make_suite_result("mysuite", tests=[
+            make_test_result("mytest1", status="failed"),
+            make_test_result("mytest2"),
+            make_test_result("mytest4")
+        ])
+    ])
     new_report_path = tmpdir.join("new_report.json").strpath
-    save_report_into_file(make_report_from_mockup(new_report), new_report_path)
+    save_report_into_file(new_report, new_report_path)
 
     assert main(["diff", old_report_path, new_report_path]) == 0
 

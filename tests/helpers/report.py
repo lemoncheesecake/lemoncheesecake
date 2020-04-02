@@ -13,50 +13,176 @@ import pytest
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake import reporting
 from lemoncheesecake.session import get_session
-from lemoncheesecake.reporting import Report, ReportStats, Result, SuiteResult, TestResult, Step, Log, JsonBackend
+from lemoncheesecake.reporting import Report, ReportStats, Result, SuiteResult, TestResult, Step, Log, Check, JsonBackend,\
+    flatten_results
+
+
+###
+# Helpers that make easier to build a custom report for tests
+###
+
+
+def make_log(level, message=None, ts=None):
+    return Log(level, message if message else "some %s" % level, ts or time.time())
+
+
+def make_check(is_successful, description="some check", details=None, ts=None):
+    return Check(description, is_successful, details, ts or time.time())
+
+
+def make_step(description="Step", entries=(), start_time=NotImplemented, end_time=NotImplemented):
+    step = Step(description)
+    step.entries.extend(entries)
+
+    if start_time is not NotImplemented:
+        step.start_time = start_time
+    elif entries:
+        step.start_time = entries[0].time
+    else:
+        step.start_time = time.time()
+
+    if end_time is not NotImplemented:
+        step.end_time = end_time
+    elif entries:
+        step.end_time = entries[-1].time
+    else:
+        step.end_time = time.time()
+
+    return step
+
+
+def _set_result(result, steps=(), status=NotImplemented, start_time=NotImplemented, end_time=NotImplemented):
+    for step in steps:
+        result.add_step(step)
+
+    if start_time is not NotImplemented:
+        result.start_time = start_time
+    elif steps:
+        result.start_time = steps[0].start_time
+    else:
+        result.start_time = time.time()
+
+    if end_time is not NotImplemented:
+        result.end_time = end_time
+    elif steps:
+        result.end_time = steps[-1].end_time
+    else:
+        result.end_time = time.time()
+
+    if status is not NotImplemented:
+        result.status = status
+    else:
+        result.status = "passed" if result.is_successful() else "failed"
+
+
+def make_result(steps=(), status=NotImplemented, start_time=NotImplemented, end_time=NotImplemented):
+    result = Result()
+    _set_result(result, steps, status, start_time, end_time)
+    return result
+
+
+_counter = 0  # used to create some unicity in test/suite names/descriptions
+
+
+def make_test_result(name=None, description=None, steps=(), status=NotImplemented, start_time=NotImplemented, end_time=NotImplemented):
+    global _counter
+
+    test = TestResult(name or "test_%d" % _counter, description or "Test %d" % _counter)
+    _counter += 1
+
+    _set_result(test, steps, status, start_time, end_time)
+
+    return test
+
+
+def make_suite_result(name=None, description=None, tests=(), sub_suites=(), setup=None, teardown=None,
+                      start_time=NotImplemented, end_time=NotImplemented):
+    global _counter
+
+    suite = SuiteResult(name or "suite_%d" % _counter, description or "Suite %d" % _counter)
+    _counter += 1
+
+    if setup:
+        suite.suite_setup = setup
+
+    if teardown:
+        suite.suite_teardown = teardown
+
+    for test in tests:
+        suite.add_test(test)
+
+    for sub_suite in sub_suites:
+        suite.add_suite(sub_suite)
+
+    results = list(flatten_results([suite]))
+
+    if start_time is not NotImplemented:
+        suite.start_time = start_time
+    elif results:
+        suite.start_time = results[0].start_time
+    else:
+        suite.start_time = time.time()
+
+    if end_time is not NotImplemented:
+        suite.end_time = end_time
+    elif results:
+        suite.end_time = results[-1].end_time
+    else:
+        suite.end_time = time.time()
+
+    return suite
+
+
+def make_report(suites=(), setup=None, teardown=None):
+    report = Report()
+
+    if setup:
+        report.test_session_setup = setup
+    for suite in suites:
+        report.add_suite(suite)
+    if teardown:
+        report.test_session_teardown = teardown
+
+    results = list(report.all_results())
+    if results:
+        report.start_time = results[0].start_time
+        report.end_time = results[-1].end_time
+        report.report_generation_time = time.time()
+    else:
+        report.start_time = report.end_time = report.report_generation_time = time.time()
+
+    return report
+
+
+###
+# Some helpful fixtures
+###
 
 
 def make_report_in_progress():
     # create a pseudo report where all elements that can be "in-progress" (meaning without
     # an end time) are present in the report
     now = time.time()
-    report = Report()
-    report.start_time = now
-    report.test_session_setup = Result()
-    report.test_session_setup.start_time = now
-    report.test_session_teardown = Result()
-    report.test_session_teardown.start_time = now
-    suite = SuiteResult("suite", "suite")
-    suite.start_time = now
-    report.add_suite(suite)
-    
-    suite.suite_setup = Result()
-    suite.suite_setup.start_time = now
-    suite.suite_teardown = Result()
-    suite.suite_teardown.start_time = now
-    
-    test = TestResult("test_1", "test_1")
-    suite.add_test(test)
-    test.start_time = now
-    step = Step("step")
-    test.add_step(step)
-    step.start_time = now
-    log = Log("info", "message", now)
-    step.entries.append(log)
-
-    test = TestResult("test_2", "test_2")
-    suite.add_test(test)
-    test.start_time = now
-    test.end_time = now + 1
-    test.status = "passed"
-    step = Step("step")
-    test.add_step(step)
-    step.start_time = now
-    step.end_time = now + 1
-    log = Log("info", "message", now)
-    step.entries.append(log)
-
-    return report
+    return make_report(
+        setup=make_result(start_time=now, end_time=None),
+        teardown=make_result(start_time=now, end_time=None),
+        suites=[make_suite_result(
+            "suite", "suite",
+            start_time=now, end_time=None,
+            setup=make_result(start_time=now, end_time=None),
+            teardown=make_result(start_time=now, end_time=None),
+            tests=[
+                make_test_result(
+                    "test_1", "test_1", start_time=now, end_time=None, status=None,
+                    steps=[make_step("step", start_time=now, end_time=None, entries=[make_log("info", "message", ts=now)])]
+                ),
+                make_test_result(
+                    "test_2", "test_2", start_time=now, end_time=now+1, status="passed",
+                    steps=[make_step("step", start_time=now, end_time=now+1, entries=[make_log("info", "message", ts=now)])]
+                )
+            ]
+        )]
+    )
 
 
 @pytest.fixture()

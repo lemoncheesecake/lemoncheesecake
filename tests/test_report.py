@@ -1,11 +1,10 @@
 import time
 
-from lemoncheesecake.reporting.report import format_time_as_iso8601, parse_iso8601_time, \
-    TestResult as TstData, Step
+from lemoncheesecake.reporting.report import format_time_as_iso8601, parse_iso8601_time, Step, \
+    TestResult as TstResult  # we change the name of TestResult so that pytest won't try to interpret as a test class
 
-from helpers.testtreemockup import tst_mockup, suite_mockup, step_mockup, report_mockup, hook_mockup, \
-    make_suite_data_from_mockup, make_report_from_mockup
-from helpers.report import assert_report_stats
+from helpers.report import assert_report_stats, make_check, make_step, make_test_result, make_result, \
+    make_suite_result, make_log, make_report
 
 NOW = time.time()
 
@@ -35,49 +34,43 @@ def test_format_and_parse_iso8601_time_5():
 
 
 def test_report_stats_simple():
-    mockup = report_mockup()
-    mockup.add_suite(suite_mockup().add_test(tst_mockup().add_step(
-        step_mockup().add_check(True)
-    )))
-    report = make_report_from_mockup(mockup)
+    report = make_report(suites=[
+        make_suite_result(tests=[
+            make_test_result(steps=[make_step(entries=[make_check(True)])])
+        ])
+    ])
 
     assert_report_stats(report, expected_passed_tests=1)
 
 
 def test_report_stats_failure():
-    mockup = report_mockup()
-    mockup.add_suite(
-        suite_mockup().add_test(
-            tst_mockup(status="failed").add_step(
-                step_mockup().add_check(False).add_error_log()
-            )
-        )
-    )
-    report = make_report_from_mockup(mockup)
+    report = make_report(suites=[
+        make_suite_result(tests=[
+            make_test_result(steps=[make_step(entries=[make_check(True), make_log("error")])])
+        ])
+    ])
 
     assert_report_stats(report, expected_failed_tests=1)
 
 
 def test_report_stats_skipped():
-    mockup = report_mockup()
-    mockup.add_suite(
-        suite_mockup().add_test(
-            tst_mockup(status="skipped")
-        )
-    )
-    report = make_report_from_mockup(mockup)
+    report = make_report(suites=[
+        make_suite_result(tests=[
+            make_test_result(status="skipped")
+        ])
+    ])
 
     assert_report_stats(report, expected_skipped_tests=1)
 
 
 def test_test_duration_unfinished():
-    test = TstData("test", "test")
+    test = TstResult("test", "test")
     test.start_time = NOW
     assert test.duration is None
 
 
 def test_test_duration_finished():
-    test = TstData("test", "test")
+    test = TstResult("test", "test")
     test.start_time = NOW
     test.end_time = NOW + 1.0
     assert test.duration == 1.0
@@ -97,29 +90,29 @@ def test_step_duration_finished():
 
 
 def test_suite_duration():
-    suite = make_suite_data_from_mockup(
-        suite_mockup().
-            add_test(tst_mockup(start_time=NOW, end_time=NOW+1)).
-            add_test(tst_mockup(start_time=NOW+1, end_time=NOW+2))
-    )
+    suite = make_suite_result(tests=[
+        make_test_result(start_time=NOW, end_time=NOW+1),
+        make_test_result(start_time=NOW+1, end_time=NOW+2)
+    ])
+
     assert suite.duration == 2
 
 
 def test_suite_duration_with_setup():
-    suite = make_suite_data_from_mockup(
-        suite_mockup().
-            add_setup(hook_mockup(start_time=NOW, end_time=NOW+1)).
-            add_test(tst_mockup(start_time=NOW+1, end_time=NOW+2))
+    suite = make_suite_result(
+        setup=make_result(start_time=NOW, end_time=NOW+1),
+        tests=[make_test_result(start_time=NOW+1, end_time=NOW+2)],
     )
+
     assert suite.duration == 2
 
 
 def test_suite_duration_with_teardown():
-    suite = make_suite_data_from_mockup(
-        suite_mockup().
-            add_test(tst_mockup(start_time=NOW+1, end_time=NOW+2)).
-            add_teardown(hook_mockup(start_time=NOW+2, end_time=NOW+3))
+    suite = make_suite_result(
+        tests=[make_test_result(start_time=NOW+1, end_time=NOW+2)],
+        teardown=make_result(start_time=NOW+2, end_time=NOW+3)
     )
+
     assert suite.duration == 2
 
 # TODO: report_stats lake tests

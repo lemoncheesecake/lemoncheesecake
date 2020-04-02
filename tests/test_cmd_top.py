@@ -8,17 +8,17 @@ import lemoncheesecake.api as lcc
 
 from helpers.cli import cmdout
 from helpers.report import report_in_progress_path
-from helpers.testtreemockup import suite_mockup, tst_mockup, step_mockup, make_suite_data_from_mockup, \
-    report_mockup, make_report_from_mockup
 from helpers.runner import run_suite_class
+from helpers.report import make_test_result, make_suite_result, make_step, make_report
 
 
 def test_get_top_suites():
-    suite1 = suite_mockup("suite1").add_test(tst_mockup("test", start_time=0.0, end_time=1.0))
-    suite2 = suite_mockup("suite2").add_test(tst_mockup("test", start_time=1.0, end_time=4.0))
-    report = report_mockup().add_suite(suite1).add_suite(suite2)
+    report = make_report([
+        make_suite_result("suite1", tests=[make_test_result("test", start_time=0.0, end_time=1.0)]),
+        make_suite_result("suite2", tests=[make_test_result("test", start_time=1.0, end_time=4.0)]),
+    ])
 
-    top_suites = TopSuites.get_top_suites(make_report_from_mockup(report), ResultFilter())
+    top_suites = TopSuites.get_top_suites(report, ResultFilter())
     assert len(top_suites) == 2
     assert top_suites[0][0] == "suite2"
     assert top_suites[0][1] == 1
@@ -52,12 +52,13 @@ def test_get_top_suites_with_suite_setup():
 
 
 def test_top_suites_cmd(tmpdir, cmdout):
-    suite1 = suite_mockup("suite1").add_test(tst_mockup("test", start_time=0.1, end_time=1.0))
-    suite2 = suite_mockup("suite2").add_test(tst_mockup("test", start_time=1.0, end_time=4.0))
-    report = report_mockup().add_suite(suite1).add_suite(suite2)
+    report = make_report([
+        make_suite_result("suite1", tests=[make_test_result("test", start_time=0.1, end_time=1.0)]),
+        make_suite_result("suite2", tests=[make_test_result("test", start_time=1.0, end_time=4.0)]),
+    ])
 
     report_path = tmpdir.join("report.json").strpath
-    save_report_into_file(make_report_from_mockup(report), report_path)
+    save_report_into_file(report, report_path)
 
     assert main(["top-suites", report_path]) == 0
 
@@ -73,11 +74,12 @@ def test_top_suites_cmd_test_run_in_progress(report_in_progress_path, cmdout):
 
 
 def test_get_top_tests():
-    suite1 = suite_mockup("suite1").add_test(tst_mockup("test", start_time=0.0, end_time=1.0))
-    suite2 = suite_mockup("suite2").add_test(tst_mockup("test", start_time=1.0, end_time=4.0))
-    report = report_mockup().add_suite(suite1).add_suite(suite2)
+    report = make_report([
+        make_suite_result("suite1", tests=[make_test_result("test", start_time=0.0, end_time=1.0)]),
+        make_suite_result("suite2", tests=[make_test_result("test", start_time=1.0, end_time=4.0)]),
+    ])
 
-    top_suites = TopTests.get_top_tests(make_report_from_mockup(report), ResultFilter())
+    top_suites = TopTests.get_top_tests(report, ResultFilter())
     assert len(top_suites) == 2
     assert top_suites[0][0] == "suite2.test"
     assert top_suites[0][1] == "3.000s"
@@ -88,12 +90,13 @@ def test_get_top_tests():
 
 
 def test_top_tests_cmd(tmpdir, cmdout):
-    suite1 = suite_mockup("suite1").add_test(tst_mockup("test", start_time=0.1, end_time=1.0))
-    suite2 = suite_mockup("suite2").add_test(tst_mockup("test", start_time=1.0, end_time=4.0))
-    report = report_mockup().add_suite(suite1).add_suite(suite2)
+    report = make_report([
+        make_suite_result("suite1", tests=[make_test_result("test", start_time=0.1, end_time=1.0)]),
+        make_suite_result("suite2", tests=[make_test_result("test", start_time=1.0, end_time=4.0)]),
+    ])
 
     report_path = tmpdir.join("report.json").strpath
-    save_report_into_file(make_report_from_mockup(report), report_path)
+    save_report_into_file(report, report_path)
 
     assert main(["top-tests", report_path]) == 0
 
@@ -109,16 +112,17 @@ def test_top_tests_cmd_test_run_in_progress(report_in_progress_path, cmdout):
 
 
 def test_get_top_steps():
-    first_step = step_mockup("step1", start_time=0.0, end_time=1.0)
-    second_step = step_mockup("step1", start_time=1.0, end_time=3.0)
-    third_step = step_mockup("step2", start_time=3.0, end_time=4.0)
+    report = make_report([
+        make_suite_result("suite1", tests=[make_test_result(steps=[
+            make_step("step1", start_time=0.0, end_time=1.0),
+            make_step("step1", start_time=1.0, end_time=3.0),
+        ])]),
+        make_suite_result("suite2", tests=[make_test_result(steps=[
+            make_step("step2", start_time=3.0, end_time=4.0)
+        ])]),
+    ])
 
-    suite1 = suite_mockup("suite1").add_test(tst_mockup().add_step(first_step).add_step(second_step))
-    suite2 = suite_mockup("suite2").add_test(tst_mockup().add_step(third_step))
-
-    report = report_mockup().add_suite(suite1).add_suite(suite2)
-
-    top_steps = TopSteps.get_top_steps(make_report_from_mockup(report), StepFilter())
+    top_steps = TopSteps.get_top_steps(report, StepFilter())
 
     assert len(top_steps) == 2
 
@@ -196,16 +200,14 @@ def test_get_top_steps_filter_on_grep():
 
 
 def test_top_steps_cmd(tmpdir, cmdout):
-    report = report_mockup().add_suite(
-        suite_mockup("suite1").add_test(
-            tst_mockup().add_step(
-                step_mockup("step1", start_time=0.1, end_time=1.0)
-            )
-        )
-    )
+    report = make_report([
+        make_suite_result("suite1", tests=[
+            make_test_result(steps=[make_step("step1", start_time=0.1, end_time=1.0)])
+        ])
+    ])
 
     report_path = tmpdir.join("report.json").strpath
-    save_report_into_file(make_report_from_mockup(report), report_path)
+    save_report_into_file(report, report_path)
 
     assert main(["top-steps", report_path]) == 0
 
