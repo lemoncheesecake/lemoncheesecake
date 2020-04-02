@@ -1,3 +1,6 @@
+import pytest
+from pytest_mock import mocker
+
 from lemoncheesecake.matching.matcher import MatcherDescriptionTransformer
 
 
@@ -22,3 +25,9 @@ def assert_match_success(matcher, actual, result_details=()):
 
 def assert_match_failure(matcher, actual, result_details):
     return assert_match_result(matcher, actual, False, result_details)
+
+
+@pytest.fixture
+def log_check_mock(mocker):
+    mocked = mocker.patch("lemoncheesecake.matching.operations.log_check")
+    return mocked

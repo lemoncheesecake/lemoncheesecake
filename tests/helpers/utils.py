@@ -1,6 +1,8 @@
 import os
 from contextlib import contextmanager
 
+import callee
+
 
 def _apply_vars(new_vars):
     for name, value in new_vars.items():
@@ -31,3 +33,15 @@ def change_dir(new_dir):
         yield
     finally:
         os.chdir(old_dir)
+
+
+class Search(callee.Regex):
+    """
+    Just like callee.Regex but does a `search` over a `match`.
+    """
+
+    def match(self, value):
+        return self.pattern.search(value)
+
+    def __repr__(self):
+        return "<Search %s>" % (self.pattern.pattern,)
