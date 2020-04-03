@@ -277,7 +277,7 @@ to know to migrate from 0.22.x release.
 - **API**, `match_pattern`:
   - add `description` and `mention_regexp` argument to make the matcher description customizable
   - add `make_pattern_matcher` function to easily create a new matcher function from a given pattern
-- **HTML report**: tests in progress are not displayed with a (pseudo) `IN_PROGRESS` status instead of `n/a`
+- **HTML report**: tests in progress are now displayed with a (pseudo) `IN_PROGRESS` status instead of `n/a`
 - **console & HTML report**: support multi-line test descriptions, suite descriptions and steps
 - Add official support for Python 3.7 and drop official support for Python 3.3
 
