@@ -123,10 +123,10 @@ class TestTask(BaseTask):
                 return True
         return False
 
-    def skip(self, context, reason=""):
+    def skip(self, context, reason=None):
         if self._handle_disabled(context):
             return
-        skip_test(self.test, "Test skipped because %s" % reason)
+        skip_test(self.test, "Test skipped because %s" % reason if reason else None)
 
     @staticmethod
     def _prepare_test_args(test, scheduled_fixtures):
