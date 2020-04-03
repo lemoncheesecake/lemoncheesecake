@@ -22,8 +22,7 @@ except ImportError:
     LXML_IS_AVAILABLE = False
 
 from lemoncheesecake.reporting.backend import FileReportBackend
-from lemoncheesecake.reporting.report import ReportStats, Log, Check, format_time_as_iso8601
-from lemoncheesecake.consts import LOG_LEVEL_ERROR
+from lemoncheesecake.reporting import ReportStats, Log, Check, format_time_as_iso8601, LOG_LEVEL_ERROR
 from lemoncheesecake.reporting.backends.xml import make_xml_child, make_xml_node, indent_xml, DEFAULT_INDENT_LEVEL
 
 

@@ -13,10 +13,14 @@ import calendar
 
 from typing import Callable, Any
 
-from lemoncheesecake.consts import LOG_LEVEL_ERROR
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, \
     filter_suites, normalize_node_hierarchy, TreeNodeHierarchy
+
+LOG_LEVEL_DEBUG = "debug"
+LOG_LEVEL_INFO = "info"
+LOG_LEVEL_WARN = "warn"
+LOG_LEVEL_ERROR = "error"
 
 _TEST_STATUSES = "passed", "failed", "skipped", "disabled"
 _DEFAULT_REPORT_TITLE = "Test Report"

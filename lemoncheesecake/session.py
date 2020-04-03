@@ -14,9 +14,8 @@ import warnings
 
 import six
 
-from lemoncheesecake.consts import ATTACHMENTS_DIR, \
+from lemoncheesecake.reporting import Report, ReportLocation,\
     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
-from lemoncheesecake.reporting import Report, ReportLocation
 from lemoncheesecake import events
 from lemoncheesecake.fixture import ScheduledFixtures
 from lemoncheesecake.helpers.typecheck import check_type_string, check_type_bool
@@ -24,6 +23,8 @@ from lemoncheesecake.helpers.typecheck import check_type_string, check_type_bool
 _session = None  # type: Optional[Session]
 
 _scheduled_fixtures = None  # type: Optional[ScheduledFixtures]
+
+_ATTACHMENTS_DIR = "attachments"
 
 
 def _get_thread_id():
@@ -52,7 +53,7 @@ class Session(object):
         self.event_manager = event_manager
         self.report_dir = report_dir
         self.report = report
-        self.attachments_dir = os.path.join(self.report_dir, ATTACHMENTS_DIR)
+        self.attachments_dir = os.path.join(self.report_dir, _ATTACHMENTS_DIR)
         self.attachment_count = 0
         self._attachment_lock = threading.Lock()
         self._failures = set()
@@ -148,7 +149,7 @@ class Session(object):
         self._flush_pending_events()
         self.event_manager.fire(events.LogAttachmentEvent(
             self.cursor.location, self.cursor.step, _get_thread_id(),
-            "%s/%s" % (ATTACHMENTS_DIR, attachment_filename), description, as_image
+            "%s/%s" % (_ATTACHMENTS_DIR, attachment_filename), description, as_image
         ))
 
     def start_test_session(self):

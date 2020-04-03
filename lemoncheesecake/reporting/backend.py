@@ -10,7 +10,8 @@ import os.path as osp
 from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.exceptions import ReportLoadingError, LemoncheesecakeException
 from lemoncheesecake.reporting.report import Report
-from lemoncheesecake.consts import NEGATIVE_CHARS
+
+_NEGATION_FLAGS = "-^~"
 
 
 class ReportingSession(object):
@@ -97,10 +98,10 @@ def get_reporting_backends():
 
 
 def get_reporting_backend_names(default_names, custom_names):
-    if all(name[0] not in ("+" + NEGATIVE_CHARS) for name in custom_names):  # fixed list
+    if all(name[0] not in ("+" + _NEGATION_FLAGS) for name in custom_names):  # fixed list
         return custom_names
 
-    elif all(name[0] in ("+" + NEGATIVE_CHARS) for name in custom_names):  # turn on/off directives
+    elif all(name[0] in ("+" + _NEGATION_FLAGS) for name in custom_names):  # turn on/off directives
         names = OrderedSet(default_names)
         for specified_name in custom_names:
             if specified_name[0] == "+":  # turn on

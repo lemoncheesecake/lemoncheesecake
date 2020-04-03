@@ -14,7 +14,8 @@ from lemoncheesecake.reporting.report import Result, TestResult, Step, Log, Chec
 from lemoncheesecake.testtree import BaseTest, BaseSuite
 from lemoncheesecake.suite import Test
 from lemoncheesecake.exceptions import UserError
-from lemoncheesecake.consts import NEGATIVE_CHARS
+
+_NEGATION_FLAGS = "-^~"
 
 
 def _iter_grepable(steps):
@@ -71,7 +72,7 @@ class BaseTreeNodeFilter(Filter):
         values = [value or "" for value in values]  # convert None to ""
 
         for pattern in patterns:
-            if pattern[0] in NEGATIVE_CHARS:
+            if pattern[0] in _NEGATION_FLAGS:
                 if not fnmatch.filter(values, pattern[1:]):
                     return True
             else:
@@ -86,7 +87,7 @@ class BaseTreeNodeFilter(Filter):
 
         for key, value in patterns:
             if key in key_values:
-                if value[0] in NEGATIVE_CHARS:
+                if value[0] in _NEGATION_FLAGS:
                     if not fnmatch.fnmatch(key_values[key], value[1:]):
                         return True
                 else:
