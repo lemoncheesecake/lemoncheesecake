@@ -14,7 +14,7 @@ else:
     from lemoncheesecake.reporting import load_report
     from lemoncheesecake.bdd.behave import _init_reporting_session
     from helpers.report import get_last_test, get_last_suite
-    from helpers.utils import env_vars
+    from helpers.utils import env_vars, change_dir
 
     STEPS = u"""# -*- coding: utf-8 -*-
 from behave import *
@@ -62,17 +62,20 @@ install_hooks()
         return load_report(expected_report_dir)
 
 
-    def test_init_reporting_session():
-        _init_reporting_session(".")
-
-    def test_init_reporting_session_with_valid_custom_report_saving_strategy():
-        with env_vars(LCC_SAVE_REPORT="at_each_test"):
+    def test_init_reporting_session(tmpdir):
+        with change_dir(tmpdir.strpath):
             _init_reporting_session(".")
 
-    def test_init_reporting_session_with_invalid_custom_report_saving_strategy():
-        with env_vars(LCC_SAVE_REPORT="foobar"):
-            with pytest.raises(ValueError, match="Invalid expression"):
+    def test_init_reporting_session_with_valid_custom_report_saving_strategy(tmpdir):
+        with change_dir(tmpdir.strpath):
+            with env_vars(LCC_SAVE_REPORT="at_each_test"):
                 _init_reporting_session(".")
+
+    def test_init_reporting_session_with_invalid_custom_report_saving_strategy(tmpdir):
+        with change_dir(tmpdir.strpath):
+            with env_vars(LCC_SAVE_REPORT="foobar"):
+                with pytest.raises(ValueError, match="Invalid expression"):
+                    _init_reporting_session(".")
 
     def test_scenario_passed(tmpdir):
         feature = u"""Feature: do some computations
