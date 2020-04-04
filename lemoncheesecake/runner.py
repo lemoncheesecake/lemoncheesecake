@@ -114,19 +114,19 @@ class TestTask(BaseTask):
     def get_on_success_dependencies(self):
         return self.dependencies
 
-    def _handle_disabled(self, context):
-        if not context.force_disabled:
-            disabled = self.test.is_disabled()
-            if disabled:
-                disabled_reason = disabled if isinstance(disabled, six.string_types) else ""
-                disable_test(self.test, disabled_reason)
-                return True
-        return False
+    def _is_test_disabled(self, context):
+        return self.test.is_disabled() and not context.force_disabled
+
+    def _handle_disabled_test(self):
+        disabled = self.test.is_disabled()
+        disabled_reason = disabled if isinstance(disabled, six.string_types) else None
+        disable_test(self.test, disabled_reason)
 
     def skip(self, context, reason=None):
-        if self._handle_disabled(context):
-            return
-        skip_test(self.test, "Test skipped because %s" % reason if reason else None)
+        if self._is_test_disabled(context):
+            self._handle_disabled_test()
+        else:
+            skip_test(self.test, "Test skipped because %s" % reason if reason else None)
 
     @staticmethod
     def _prepare_test_args(test, scheduled_fixtures):
@@ -140,12 +140,11 @@ class TestTask(BaseTask):
         return args
 
     def run(self, context):
-        suite = self.test.parent_suite
-
         ###
         # Checker whether the test must be executed or not
         ###
-        if self._handle_disabled(context):
+        if self._is_test_disabled(context):
+            self._handle_disabled_test()
             return
 
         ###
@@ -156,7 +155,7 @@ class TestTask(BaseTask):
         ###
         # Setup test (setup and fixtures)
         ###
-        setup_teardown_funcs = list()
+        suite = self.test.parent_suite
 
         if suite.has_hook("setup_test"):
             def setup_test_wrapper():
@@ -171,6 +170,7 @@ class TestTask(BaseTask):
         else:
             teardown_test_wrapper = None
 
+        setup_teardown_funcs = list()
         setup_teardown_funcs.append((setup_test_wrapper, teardown_test_wrapper))
         scheduled_fixtures = context.fixture_registry.get_fixtures_scheduled_for_test(
             self.test, self.suite_scheduled_fixtures
