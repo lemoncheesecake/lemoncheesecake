@@ -53,8 +53,8 @@ class Session(object):
         self.event_manager = event_manager
         self.report_dir = report_dir
         self.report = report
-        self.attachments_dir = os.path.join(self.report_dir, _ATTACHMENTS_DIR)
-        self.attachment_count = 0
+        self._attachments_dir = os.path.join(self.report_dir, _ATTACHMENTS_DIR)
+        self._attachment_count = 0
         self._attachment_lock = threading.Lock()
         self._failures = set()
         self._local = threading.local()
@@ -139,12 +139,12 @@ class Session(object):
     @contextmanager
     def prepare_attachment(self, filename, description, as_image=False):
         with self._attachment_lock:
-            attachment_filename = "%04d_%s" % (self.attachment_count + 1, filename)
-            self.attachment_count += 1
-            if not os.path.exists(self.attachments_dir):
-                os.mkdir(self.attachments_dir)
+            attachment_filename = "%04d_%s" % (self._attachment_count + 1, filename)
+            self._attachment_count += 1
+            if not os.path.exists(self._attachments_dir):
+                os.mkdir(self._attachments_dir)
 
-        yield os.path.join(self.attachments_dir, attachment_filename)
+        yield os.path.join(self._attachments_dir, attachment_filename)
 
         self._flush_pending_events()
         self.event_manager.fire(events.LogAttachmentEvent(
