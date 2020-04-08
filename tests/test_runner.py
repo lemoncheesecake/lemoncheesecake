@@ -503,6 +503,11 @@ def test_setup_test_session_error_because_of_exception():
     assert_test_statuses(report, skipped=["MySuite.sometest", "MySuite.sometest_bis"])
     assert_report_node_success(report, ReportLocation.in_test_session_setup(), expected=False)
 
+    test_1, test_2 = list(report.all_tests())
+
+    assert "test session setup failed" in test_1.status_details
+    assert "test session setup failed" in test_2.status_details
+
 
 def test_setup_test_session_error_and_setup_suite():
     marker = []

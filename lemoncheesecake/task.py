@@ -3,7 +3,7 @@ from multiprocessing.dummy import Pool, Queue
 
 from lemoncheesecake.exceptions import LemoncheesecakeException, TaskFailure, serialize_current_exception
 
-DEBUG = 0
+DEBUG = False
 _KEYBOARD_INTERRUPT_ERROR_MESSAGE = "tests have been interrupted by the user"
 
 
@@ -17,7 +17,8 @@ class TaskResultSuccess(object):
 
 
 class TaskResultSkipped(object):
-    pass
+    def __init__(self, reason):
+        self.reason = reason
 
 
 class TaskResultFailure(object):
@@ -98,9 +99,10 @@ def handle_task(task, context, completed_task_queue):
     # skip task on dependency failure if any
     for dep_task in task.get_on_success_dependencies():
         if not isinstance(dep_task.result, TaskResultSuccess):
-            reason = None
-            if isinstance(dep_task.result, TaskResultFailure):
+            if isinstance(dep_task.result, (TaskResultFailure, TaskResultSkipped)):
                 reason = dep_task.result.reason
+            else:
+                reason = None
             skip_task(task, context, completed_task_queue, reason)
             return
 
@@ -126,7 +128,7 @@ def skip_task(task, context, completed_task_queue, reason=""):
     except Exception:
         task.result = TaskResultException(serialize_current_exception())
     else:
-        task.result = TaskResultSkipped()
+        task.result = TaskResultSkipped(reason)
 
     completed_task_queue.put(task)
 
