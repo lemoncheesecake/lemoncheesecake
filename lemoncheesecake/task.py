@@ -133,13 +133,12 @@ def skip_task(task, context, completed_task_queue, reason=""):
     completed_task_queue.put(task)
 
 
-def schedule_tasks_to_be_skipped(tasks, context, pool, completed_tasks_queue, reason=""):
-    for task in tasks:
+def skip_all_tasks(tasks, remaining_tasks, completed_tasks, context, pool, completed_tasks_queue, reason):
+    # schedule all tasks to be skipped...
+    for task in remaining_tasks:
         pool.apply_async(skip_task, args=(task, context, completed_tasks_queue, reason))
 
-
-def skip_all_tasks(tasks, remaining_tasks, completed_tasks, context, pool, completed_tasks_queue, reason):
-    schedule_tasks_to_be_skipped(remaining_tasks, context, pool, completed_tasks_queue, reason)
+    # ... and wait for their completion
     while len(completed_tasks) != len(tasks):
         completed_task = completed_tasks_queue.get()
         completed_tasks.add(completed_task)
