@@ -14,7 +14,7 @@ import warnings
 
 import six
 
-from lemoncheesecake.reporting import Report, ReportLocation,\
+from lemoncheesecake.reporting import ReportLocation,\
     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
 from lemoncheesecake import events
 from lemoncheesecake.fixture import ScheduledFixtures
@@ -34,6 +34,7 @@ def _get_thread_id():
 def initialize_session(event_manager, report_dir, report):
     global _session
     _session = Session(event_manager, report_dir, report)
+    return _session
 
 
 def initialize_fixture_cache(scheduled_fixtures):
@@ -102,6 +103,7 @@ class Session(object):
         self._hold_event(
             events.StepStartEvent(self.cursor.location, description, _get_thread_id())
         )
+    set_step = start_step
 
     def end_step(self):
         assert self.cursor.step, "There is no started step"
@@ -114,13 +116,25 @@ class Session(object):
         if self.cursor.step:
             self.end_step()
 
-    def log(self, level, content):
+    def _log(self, level, content):
         self._flush_pending_events()
         if level == LOG_LEVEL_ERROR:
             self._mark_location_as_failed(self.cursor.location)
         self.event_manager.fire(
             events.LogEvent(self.cursor.location, self.cursor.step, _get_thread_id(), level, content)
         )
+
+    def log_debug(self, content):
+        return self._log(LOG_LEVEL_DEBUG, content)
+
+    def log_info(self, content):
+        return self._log(LOG_LEVEL_INFO, content)
+
+    def log_warning(self, content):
+        return self._log(LOG_LEVEL_WARN, content)
+
+    def log_error(self, content):
+        return self._log(LOG_LEVEL_ERROR, content)
 
     def log_check(self, description, is_successful, details):
         self._flush_pending_events()
@@ -218,13 +232,6 @@ def get_session():
     return _session
 
 
-def get_report():
-    # type: () -> Report
-    report = get_session().report
-    assert report, "Report is not available"
-    return report
-
-
 def set_step(description, detached=NotImplemented):
     # type: (str, bool) -> None
     """
@@ -266,17 +273,13 @@ def detached_step(description):
     yield
 
 
-def _log(level, content):
-    check_type_string("content", content)
-    get_session().log(level, content)
-
-
 def log_debug(content):
     # type: (str) -> None
     """
     Log a debug level message.
     """
-    _log(LOG_LEVEL_DEBUG, content)
+    check_type_string("content", content)
+    get_session().log_debug(content)
 
 
 def log_info(content):
@@ -284,7 +287,8 @@ def log_info(content):
     """
     Log a info level message.
     """
-    _log(LOG_LEVEL_INFO, content)
+    check_type_string("content", content)
+    get_session().log_info(content)
 
 
 def log_warning(content):
@@ -292,7 +296,8 @@ def log_warning(content):
     """
     Log a warning level message.
     """
-    _log(LOG_LEVEL_WARN, content)
+    check_type_string("content", content)
+    get_session().log_warning(content)
 
 
 def log_error(content):
@@ -300,7 +305,8 @@ def log_error(content):
     """
     Log an error level message.
     """
-    _log(LOG_LEVEL_ERROR, content)
+    check_type_string("content", content)
+    get_session().log_error(content)
 
 
 def log_check(description, is_successful, details=None):
@@ -414,80 +420,8 @@ def add_report_info(name, value):
     check_type_string("name", name)
     check_type_string("value", value)
 
-    report = get_report()
-    report.add_info(name, value)
-
-
-def is_location_successful(location):
-    return get_session().is_successful(location)
-
-
-def is_session_successful():
-    return get_session().is_successful()
-
-
-def start_test_session():
-    return get_session().start_test_session()
-
-
-def end_test_session():
-    return get_session().end_test_session()
-
-
-def start_test_session_setup():
-    return get_session().start_test_session_setup()
-
-
-def end_test_session_setup():
-    return get_session().end_test_session_setup()
-
-
-def start_test_session_teardown():
-    return get_session().start_test_session_teardown()
-
-
-def end_test_session_teardown():
-    return get_session().end_test_session_teardown()
-
-
-def start_suite(suite):
-    get_session().start_suite(suite)
-
-
-def end_suite(suite):
-    get_session().end_suite(suite)
-
-
-def start_suite_setup(suite):
-    get_session().start_suite_setup(suite)
-
-
-def end_suite_setup(suite):
-    get_session().end_suite_setup(suite)
-
-
-def start_suite_teardown(suite):
-    get_session().start_suite_teardown(suite)
-
-
-def end_suite_teardown(suite):
-    get_session().end_suite_teardown(suite)
-
-
-def start_test(test):
-    get_session().start_test(test)
-
-
-def end_test(test):
-    get_session().end_test(test)
-
-
-def skip_test(test, reason=None):
-    get_session().skip_test(test, reason)
-
-
-def disable_test(test, reason=None):
-    get_session().disable_test(test, reason)
+    session = get_session()
+    session.report.add_info(name, value)
 
 
 class Thread(threading.Thread):

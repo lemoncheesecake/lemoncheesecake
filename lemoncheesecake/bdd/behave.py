@@ -14,12 +14,9 @@ from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy
 from lemoncheesecake.reporting.reportdir import create_report_dir_with_rotation
 from lemoncheesecake.reporting.backend import get_reporting_backend_names, parse_reporting_backend_names_expression, \
     get_reporting_backends_for_test_run, get_reporting_backends
-from lemoncheesecake.session import \
-    initialize_session, is_location_successful, \
-    start_test_session, end_test_session, start_suite, end_suite, start_test, end_test
+from lemoncheesecake.session import initialize_session
 from lemoncheesecake.suite import Test, Suite
 from lemoncheesecake.events import SyncEventManager
-from lemoncheesecake.api import set_step
 
 
 _HOOK_NAMES = (
@@ -64,7 +61,7 @@ def _init_reporting_session(top_dir):
     else:
         report_dir = create_report_dir_with_rotation(top_dir)
 
-    initialize_session(event_manager, report_dir, report)
+    session = initialize_session(event_manager, report_dir, report)
 
     report_saving_strategy = make_report_saving_strategy(
         os.environ.get("LCC_SAVE_REPORT", DEFAULT_REPORT_SAVING_STRATEGY)
@@ -86,13 +83,17 @@ def _init_reporting_session(top_dir):
     )
 
     for backend in reporting_backends:
-        session = backend.create_reporting_session(report_dir, report, False, report_saving_strategy)
-        event_manager.add_listener(session)
+        event_manager.add_listener(
+            backend.create_reporting_session(report_dir, report, False, report_saving_strategy)
+        )
+
+    return session
 
 
 class _Hooks(object):
     def __init__(self, top_dir):
         self.top_dir = top_dir
+        self.session = None
 
     @staticmethod
     def _make_suite_description(feature):
@@ -136,29 +137,29 @@ class _Hooks(object):
         return test
 
     def before_all(self, _):
-        _init_reporting_session(self.top_dir)
-        start_test_session()
+        self.session = _init_reporting_session(self.top_dir)
+        self.session.start_test_session()
 
     def after_all(self, _):
-        end_test_session()
+        self.session.end_test_session()
 
     def before_feature(self, context, feature):
         context.current_suite = _Hooks._make_suite_from_feature(feature)
-        start_suite(context.current_suite)
+        self.session.start_suite(context.current_suite)
 
     def after_feature(self, context, _):
-        end_suite(context.current_suite)
+        self.session.end_suite(context.current_suite)
 
     def before_scenario(self, context, scenario):
         context.current_test = _Hooks._make_test_from_scenario(scenario, context)
-        start_test(context.current_test)
+        self.session.start_test(context.current_test)
 
     def after_scenario(self, context, _):
-        end_test(context.current_test)
+        self.session.end_test(context.current_test)
 
     def before_step(self, _, step):
-        set_step(step.keyword + " " + step.name)
+        self.session.set_step(step.keyword + " " + step.name)
 
     def after_step(self, context, step):
-        if not is_location_successful(ReportLocation.in_test(context.current_test)):
+        if not self.session.is_successful(ReportLocation.in_test(context.current_test)):
             step.hook_failed = True
