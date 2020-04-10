@@ -14,13 +14,11 @@ import warnings
 
 import six
 
-from lemoncheesecake.reporting import ReportLocation,\
+from lemoncheesecake.reporting import Report, ReportWriter, ReportLocation,\
     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
 from lemoncheesecake import events
 from lemoncheesecake.fixture import ScheduledFixtures
 from lemoncheesecake.helpers.typecheck import check_type_string, check_type_bool
-
-_session = None  # type: Optional[Session]
 
 _scheduled_fixtures = None  # type: Optional[ScheduledFixtures]
 
@@ -29,12 +27,6 @@ _ATTACHMENTS_DIR = "attachments"
 
 def _get_thread_id():
     return threading.current_thread().ident
-
-
-def initialize_session(event_manager, report_dir, report):
-    global _session
-    _session = Session(event_manager, report_dir, report)
-    return _session
 
 
 def initialize_fixture_cache(scheduled_fixtures):
@@ -50,6 +42,8 @@ class _Cursor(object):
 
 
 class Session(object):
+    _instance = None
+
     def __init__(self, event_manager, report_dir, report):
         self.event_manager = event_manager
         self.report_dir = report_dir
@@ -59,6 +53,33 @@ class Session(object):
         self._attachment_lock = threading.Lock()
         self._failures = set()
         self._local = threading.local()
+
+    @classmethod
+    def create(cls, event_manager, reporting_backends, report_dir, report_saving_strategy,
+               nb_threads=1, parallelized=None):
+        report = Report()
+        report.nb_threads = nb_threads
+        writer = ReportWriter(report)
+        event_manager.add_listener(writer)
+
+        cls._instance = cls(event_manager, report_dir, report)
+
+        # hint: tests with nb_threads > 1 are not actually parallelized if there is only one test
+        # that's why there is a dedicated parallelized argument alongside nb_threads
+        if parallelized is None:
+            parallelized = nb_threads > 1
+
+        for backend in reporting_backends:
+            event_manager.add_listener(
+                backend.create_reporting_session(report_dir, report, parallelized, report_saving_strategy)
+            )
+
+        return cls._instance
+
+    @classmethod
+    def get(cls):
+        assert cls._instance, "Session has not been created (yet)"
+        return cls._instance
 
     @property
     def cursor(self):  # type: () -> _Cursor
@@ -226,12 +247,6 @@ class Session(object):
         self.event_manager.fire(events.TestDisabledEvent(test, reason))
 
 
-def get_session():
-    # type: () -> Session
-    assert _session, "Runtime is not initialized"
-    return _session
-
-
 def set_step(description, detached=NotImplemented):
     # type: (str, bool) -> None
     """
@@ -247,7 +262,7 @@ def set_step(description, detached=NotImplemented):
         )
 
     check_type_string("description", description)
-    get_session().start_step(description)
+    Session.get().start_step(description)
 
 
 def end_step(step):
@@ -279,7 +294,7 @@ def log_debug(content):
     Log a debug level message.
     """
     check_type_string("content", content)
-    get_session().log_debug(content)
+    Session.get().log_debug(content)
 
 
 def log_info(content):
@@ -288,7 +303,7 @@ def log_info(content):
     Log a info level message.
     """
     check_type_string("content", content)
-    get_session().log_info(content)
+    Session.get().log_info(content)
 
 
 def log_warning(content):
@@ -297,7 +312,7 @@ def log_warning(content):
     Log a warning level message.
     """
     check_type_string("content", content)
-    get_session().log_warning(content)
+    Session.get().log_warning(content)
 
 
 def log_error(content):
@@ -306,7 +321,7 @@ def log_error(content):
     Log an error level message.
     """
     check_type_string("content", content)
-    get_session().log_error(content)
+    Session.get().log_error(content)
 
 
 def log_check(description, is_successful, details=None):
@@ -314,14 +329,14 @@ def log_check(description, is_successful, details=None):
     check_type_bool("is_successful", is_successful)
     check_type_string("details", details, optional=True)
 
-    get_session().log_check(description, is_successful, details)
+    Session.get().log_check(description, is_successful, details)
 
 
 def _prepare_attachment(filename, description=None, as_image=False):
     check_type_string("description", description, optional=True)
     check_type_bool("as_image", as_image)
 
-    return get_session().prepare_attachment(filename, description or filename, as_image=as_image)
+    return Session.get().prepare_attachment(filename, description or filename, as_image=as_image)
 
 
 def prepare_attachment(filename, description=None):
@@ -398,7 +413,7 @@ def log_url(url, description=None):
     check_type_string("url", url)
     check_type_string("description", description, optional=True)
 
-    get_session().log_url(url, description or url)
+    Session.get().log_url(url, description or url)
 
 
 def get_fixture(name):
@@ -420,7 +435,7 @@ def add_report_info(name, value):
     check_type_string("name", name)
     check_type_string("value", value)
 
-    session = get_session()
+    session = Session.get()
     session.report.add_info(name, value)
 
 
@@ -431,23 +446,21 @@ class Thread(threading.Thread):
     """
     def __init__(self, *args, **kwargs):
         super(Thread, self).__init__(*args, **kwargs)
+        self._session = Session.get()
 
         # flush result starting event if any
-        session = get_session()
-        cursor = session.cursor
-        if session.cursor.pending_events and not isinstance(cursor.pending_events[0], events.StepStartEvent):
+        cursor = self._session.cursor
+        if self._session.cursor.pending_events and not isinstance(cursor.pending_events[0], events.StepStartEvent):
             event = cursor.pending_events.pop(0)
-            session.event_manager.fire(event)
+            self._session.event_manager.fire(event)
 
         # keep track of the current location and step
         self._cursor = _Cursor(cursor.location)
-        self._default_step = get_session().cursor.step
+        self._default_step = self._session.cursor.step
 
     def run(self):
-        session = get_session()
-        session.cursor = self._cursor
-
-        set_step(self._default_step)
+        self._session.cursor = self._cursor
+        self._session.start_step(self._default_step)
         try:
             return super(Thread, self).run()
         except Exception:
@@ -457,4 +470,4 @@ class Thread(threading.Thread):
                 stacktrace = stacktrace.decode("utf-8", "replace")
             log_error("Caught unexpected exception while running test: " + stacktrace)
         finally:
-            session.end_step()
+            self._session.end_step()

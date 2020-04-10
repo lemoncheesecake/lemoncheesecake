@@ -9,12 +9,12 @@ import inspect
 from slugify import slugify
 import six
 
-from lemoncheesecake.reporting import Report, ReportWriter, ReportLocation
+from lemoncheesecake.reporting import ReportLocation
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy, DEFAULT_REPORT_SAVING_STRATEGY
 from lemoncheesecake.reporting.reportdir import create_report_dir_with_rotation
 from lemoncheesecake.reporting.backend import get_reporting_backend_names, parse_reporting_backend_names_expression, \
     get_reporting_backends_for_test_run, get_reporting_backends
-from lemoncheesecake.session import initialize_session
+from lemoncheesecake.session import Session
 from lemoncheesecake.suite import Test, Suite
 from lemoncheesecake.events import SyncEventManager
 
@@ -48,20 +48,11 @@ def install_hooks():
 
 
 def _init_reporting_session(top_dir):
-    event_manager = SyncEventManager.load()
-
-    report = Report()
-    report.nb_threads = 1
-    writer = ReportWriter(report)
-    event_manager.add_listener(writer)
-
     report_dir = os.environ.get("LCC_REPORT_DIR")
     if report_dir:
         os.mkdir(report_dir)
     else:
         report_dir = create_report_dir_with_rotation(top_dir)
-
-    session = initialize_session(event_manager, report_dir, report)
 
     report_saving_strategy = make_report_saving_strategy(
         os.environ.get("LCC_SAVE_REPORT", DEFAULT_REPORT_SAVING_STRATEGY)
@@ -82,12 +73,7 @@ def _init_reporting_session(top_dir):
         {b.get_name(): b for b in get_reporting_backends()}, reporting_backend_names
     )
 
-    for backend in reporting_backends:
-        event_manager.add_listener(
-            backend.create_reporting_session(report_dir, report, False, report_saving_strategy)
-        )
-
-    return session
+    return Session.create(SyncEventManager.load(), reporting_backends, report_dir, report_saving_strategy)
 
 
 class _Hooks(object):

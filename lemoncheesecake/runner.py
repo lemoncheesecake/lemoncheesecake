@@ -9,14 +9,12 @@ import itertools
 
 import six
 
-from lemoncheesecake.session import initialize_session, initialize_fixture_cache, get_session
+from lemoncheesecake.session import initialize_fixture_cache
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, LemoncheesecakeException, \
     UserError, TaskFailure, serialize_current_exception
-from lemoncheesecake import events
 from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.reporting import ReportLocation
 from lemoncheesecake.task import BaseTask, TaskContext, run_tasks
-from lemoncheesecake.reporting import Report, ReportWriter
 
 
 class RunContext(TaskContext):
@@ -534,29 +532,26 @@ def build_tasks(suites, fixture_registry, session_scheduled_fixtures):
     return tasks
 
 
-def run_session(suites, fixture_registry, pre_run_scheduled_fixtures, event_manager,
+def _run_suites(suites, fixture_registry, pre_run_scheduled_fixtures, session,
                 force_disabled=False, stop_on_failure=False, nb_threads=1):
     # build tasks and run context
     session_scheduled_fixtures = fixture_registry.get_fixtures_scheduled_for_session(
         suites, pre_run_scheduled_fixtures
     )
     tasks = build_tasks(suites, fixture_registry, session_scheduled_fixtures)
-    session = get_session()
     context = RunContext(session, fixture_registry, force_disabled, stop_on_failure)
 
-    with event_manager.handle_events():
+    with session.event_manager.handle_events():
         session.start_test_session()
         run_tasks(tasks, context, nb_threads)
         session.end_test_session()
 
-    exception, serialized_exception = event_manager.get_pending_failure()
+    exception, serialized_exception = session.event_manager.get_pending_failure()
     if exception:
         raise exception.__class__(serialized_exception)
 
-    return session.report
 
-
-def run_suites(suites, fixture_registry, event_manager, force_disabled=False, stop_on_failure=False, nb_threads=1):
+def run_suites(suites, fixture_registry, session, force_disabled=False, stop_on_failure=False, nb_threads=1):
     fixture_teardowns = []
 
     # setup of 'pre_run' fixtures
@@ -576,12 +571,10 @@ def run_suites(suites, fixture_registry, event_manager, force_disabled=False, st
         fixture_teardowns.append(teardown)
 
     if not errors:
-        report = run_session(
-            suites, fixture_registry, scheduled_fixtures, event_manager,
+        _run_suites(
+            suites, fixture_registry, scheduled_fixtures, session,
             force_disabled=force_disabled, stop_on_failure=stop_on_failure, nb_threads=nb_threads
         )
-    else:
-        report = None
 
     # teardown of 'pre_run' fixtures
     for teardown in fixture_teardowns:
@@ -596,24 +589,5 @@ def run_suites(suites, fixture_registry, event_manager, force_disabled=False, st
 
     if errors:
         raise LemoncheesecakeException("\n".join(errors))
-
-    return report.is_successful() if report else False
-
-
-def initialize_event_manager(suites, reporting_backends, report_dir, report_saving_strategy, nb_threads):
-    event_manager = events.AsyncEventManager.load()
-
-    report = Report()
-    report.nb_threads = nb_threads
-    writer = ReportWriter(report)
-    event_manager.add_listener(writer)
-
-    initialize_session(event_manager, report_dir, report)
-
-    nb_tests = len(list(flatten_tests(suites)))
-    parallelized = nb_threads > 1 and nb_tests > 1
-    for backend in reporting_backends:
-        session = backend.create_reporting_session(report_dir, report, parallelized, report_saving_strategy)
-        event_manager.add_listener(session)
-
-    return event_manager
+    else:
+        return session.report.is_successful()
