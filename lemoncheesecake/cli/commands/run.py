@@ -94,23 +94,33 @@ def create_report_dir(cli_args, project):
         except Exception:
             raise LemoncheesecakeException(
                 "Got an unexpected exception while creating report directory:%s" % \
-                serialize_current_exception(show_stacktrace=True)
+                    serialize_current_exception(show_stacktrace=True)
             )
 
     return report_dir
 
 
-class ReportSetupHandler(object):
-    def __init__(self, project):
-        self.project = project
+def setup_report_from_project(report, project):
+    try:
+        title = project.build_report_title()
+    except Exception:
+        raise LemoncheesecakeException(
+            "Got an unexpected exception while getting report title from project:%s" % \
+                serialize_current_exception(show_stacktrace=True)
+        )
+    if title:
+        report.title = title
 
-    def __call__(self, event):
-        title = self.project.build_report_title()
-        if title:
-            event.report.title = title
+    try:
+        info = list(project.build_report_info())
+    except Exception:
+        raise LemoncheesecakeException(
+            "Got an unexpected exception while getting report info from project:%s" % \
+                serialize_current_exception(show_stacktrace=True)
+        )
 
-        for key, value in self.project.build_report_info():
-            event.report.add_info(key, value)
+    for key, value in info:
+        report.add_info(key, value)
 
 
 def run_suites_from_project(project, cli_args):
@@ -150,7 +160,7 @@ def run_suites_from_project(project, cli_args):
         AsyncEventManager.load(), reporting_backends, report_dir, report_saving_strategy,
         nb_threads=nb_threads, parallelized=nb_threads > 1 and len(list(flatten_tests(suites))) > 1
     )
-    session.event_manager.subscribe_to_event("test_session_start", ReportSetupHandler(project))
+    setup_report_from_project(session.report, project)
 
     # Run tests
     is_successful = run_suites(

@@ -51,8 +51,7 @@ class Session(object):
                nb_threads=1, parallelized=None):
         report = Report()
         report.nb_threads = nb_threads
-        writer = ReportWriter(report)
-        event_manager.add_listener(writer)
+        event_manager.add_listener(ReportWriter(report))
 
         cls._instance = cls(event_manager, report_dir, report)
 
