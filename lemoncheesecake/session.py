@@ -17,21 +17,13 @@ import six
 from lemoncheesecake.reporting import Report, ReportWriter, ReportLocation,\
     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
 from lemoncheesecake import events
-from lemoncheesecake.fixture import ScheduledFixtures
 from lemoncheesecake.helpers.typecheck import check_type_string, check_type_bool
-
-_scheduled_fixtures = None  # type: Optional[ScheduledFixtures]
 
 _ATTACHMENTS_DIR = "attachments"
 
 
 def _get_thread_id():
     return threading.current_thread().ident
-
-
-def initialize_fixture_cache(scheduled_fixtures):
-    global _scheduled_fixtures
-    _scheduled_fixtures = scheduled_fixtures
 
 
 class _Cursor(object):
@@ -414,19 +406,6 @@ def log_url(url, description=None):
     check_type_string("description", description, optional=True)
 
     Session.get().log_url(url, description or url)
-
-
-def get_fixture(name):
-    """
-    Return the corresponding fixture value. Only fixtures whose scope is pre_run can be retrieved.
-    """
-    global _scheduled_fixtures
-
-    assert _scheduled_fixtures, "Fixture cache has not yet been initialized"
-    if not _scheduled_fixtures.has_fixture(name):
-        raise LookupError("Fixture '%s' either does not exist or doesn't have a pre_run scope" % name)
-
-    return _scheduled_fixtures.get_fixture_result(name)
 
 
 def add_report_info(name, value):

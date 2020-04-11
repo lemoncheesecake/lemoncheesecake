@@ -9,12 +9,12 @@ import itertools
 
 import six
 
-from lemoncheesecake.session import initialize_fixture_cache
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, LemoncheesecakeException, \
     UserError, TaskFailure, serialize_current_exception
 from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.reporting import ReportLocation
 from lemoncheesecake.task import BaseTask, TaskContext, run_tasks
+from lemoncheesecake.fixture import initialize_fixture_cache
 
 
 class RunContext(TaskContext):
