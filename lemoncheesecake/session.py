@@ -18,6 +18,7 @@ from lemoncheesecake.reporting import Report, ReportWriter, ReportLocation,\
     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
 from lemoncheesecake import events
 from lemoncheesecake.helpers.typecheck import check_type_string, check_type_bool
+from lemoncheesecake.exceptions import AbortTest
 
 _ATTACHMENTS_DIR = "attachments"
 
@@ -40,6 +41,7 @@ class Session(object):
         self.event_manager = event_manager
         self.report_dir = report_dir
         self.report = report
+        self.aborted = False
         self._attachments_dir = os.path.join(self.report_dir, _ATTACHMENTS_DIR)
         self._attachment_count = 0
         self._attachment_lock = threading.Lock()
@@ -238,6 +240,15 @@ class Session(object):
         self.event_manager.fire(events.TestDisabledEvent(test, reason))
 
 
+def _interruptible(wrapped):
+    def wrapper(*args, **kwargs):
+        if Session.get().aborted:
+            raise AbortTest("tests have been manually stopped")
+        return wrapped(*args, **kwargs)
+    return wrapper
+
+
+@_interruptible
 def set_step(description, detached=NotImplemented):
     # type: (str, bool) -> None
     """
@@ -267,6 +278,7 @@ def end_step(step):
 
 
 @contextmanager
+@_interruptible
 def detached_step(description):
     """
     Context manager deprecated since version 1.4.5, it only does a set_step.
@@ -279,6 +291,7 @@ def detached_step(description):
     yield
 
 
+@_interruptible
 def log_debug(content):
     # type: (str) -> None
     """
@@ -288,6 +301,7 @@ def log_debug(content):
     Session.get().log_debug(content)
 
 
+@_interruptible
 def log_info(content):
     # type: (str) -> None
     """
@@ -297,6 +311,7 @@ def log_info(content):
     Session.get().log_info(content)
 
 
+@_interruptible
 def log_warning(content):
     # type: (str) -> None
     """
@@ -306,6 +321,7 @@ def log_warning(content):
     Session.get().log_warning(content)
 
 
+@_interruptible
 def log_error(content):
     # type: (str) -> None
     """
@@ -315,6 +331,7 @@ def log_error(content):
     Session.get().log_error(content)
 
 
+@_interruptible
 def log_check(description, is_successful, details=None):
     check_type_string("description", description)
     check_type_bool("is_successful", is_successful)
@@ -330,6 +347,7 @@ def _prepare_attachment(filename, description=None, as_image=False):
     return Session.get().prepare_attachment(filename, description or filename, as_image=as_image)
 
 
+@_interruptible
 def prepare_attachment(filename, description=None):
     """
     Context manager. Prepare a attachment using a pseudo filename and an optional description.
@@ -339,6 +357,7 @@ def prepare_attachment(filename, description=None):
     return _prepare_attachment(filename, description)
 
 
+@_interruptible
 def prepare_image_attachment(filename, description=None):
     """
     Context manager. Prepare an image attachment using a pseudo filename and an optional description.
@@ -353,6 +372,7 @@ def _save_attachment_file(filename, description=None, as_image=False):
         shutil.copy(filename, report_attachment_path)
 
 
+@_interruptible
 def save_attachment_file(filename, description=None):
     """
     Save an attachment using an existing file (identified by filename) and an optional
@@ -361,6 +381,7 @@ def save_attachment_file(filename, description=None):
     return _save_attachment_file(filename, description)
 
 
+@_interruptible
 def save_image_file(filename, description=None):
     """
     Save an image using an existing file (identified by filename) and an optional
@@ -382,6 +403,7 @@ def _save_attachment_content(content, filename, description=None, as_image=False
             fh.write(content)
 
 
+@_interruptible
 def save_attachment_content(content, filename, description=None):
     """
     Save a given content as attachment using pseudo filename and optional description.
@@ -389,6 +411,7 @@ def save_attachment_content(content, filename, description=None):
     return _save_attachment_content(content, filename, description, as_image=False)
 
 
+@_interruptible
 def save_image_content(content, filename, description=None):
     """
     Save a given image content as attachment using pseudo filename and optional description.
@@ -396,6 +419,7 @@ def save_image_content(content, filename, description=None):
     return _save_attachment_content(content, filename, description, as_image=True)
 
 
+@_interruptible
 def log_url(url, description=None):
     # type: (str, Optional[str]) -> None
     """

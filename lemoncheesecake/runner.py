@@ -29,12 +29,12 @@ class RunContext(TaskContext):
 
     def handle_exception(self, excp, suite=None):
         if isinstance(excp, AbortTest):
-            self.session.log_error(str(excp))
+            self.session.log_error("The test has been aborted: %s" % excp)
         elif isinstance(excp, AbortSuite):
-            self.session.log_error(str(excp))
+            self.session.log_error("The suite has been aborted: %s" % excp)
             self._aborted_suites.add(suite)
         elif isinstance(excp, AbortAllTests):
-            self.session.log_error(str(excp))
+            self.session.log_error("All tests have been aborted: %s" % excp)
             self._aborted_session = True
         else:
             # FIXME: use exception instead of last implicit stacktrace
@@ -68,6 +68,10 @@ class RunContext(TaskContext):
                     teardown_func()
                 except Exception as e:
                     self.handle_exception(e)
+
+    def enable_task_abort(self):
+        super(RunContext, self).enable_task_abort()
+        self.session.aborted = True
 
     def is_task_to_be_skipped(self, task):
         # check for error in base implementation
