@@ -12,7 +12,7 @@ import pytest
 
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake import reporting
-from lemoncheesecake.session import get_session
+from lemoncheesecake.session import Session
 from lemoncheesecake.reporting import Report, ReportStats, Result, SuiteResult, TestResult, Step, Log, Check, JsonBackend,\
     flatten_results
 
@@ -272,7 +272,7 @@ def assert_attachment(attachment, filename, description, as_image, content, file
     assert attachment.filename.endswith(filename)
     assert attachment.description == description
     assert attachment.as_image is as_image
-    assert file_reader(os.path.join(get_session().report_dir, attachment.filename)) == content
+    assert file_reader(os.path.join(Session.get().report_dir, attachment.filename)) == content
 
 
 def get_last_test_checks(report):

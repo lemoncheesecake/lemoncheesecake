@@ -8,7 +8,8 @@ import shutil
 
 from lemoncheesecake.suite.loader import load_suites_from_classes, load_suite_from_file
 from lemoncheesecake import runner
-from lemoncheesecake.session import get_session
+from lemoncheesecake.events import AsyncEventManager
+from lemoncheesecake.session import Session
 from lemoncheesecake.reporting.backends.xml import serialize_report_as_string
 from lemoncheesecake.fixture import FixtureRegistry, load_fixtures_from_func
 from lemoncheesecake.project import create_project
@@ -105,30 +106,29 @@ def run_suites(suites, fixtures=None, backends=None, tmpdir=None, force_disabled
 
     if tmpdir:
         report_dir = tmpdir if isinstance(tmpdir, str) else tmpdir.strpath
-        event_manager = runner.initialize_event_manager(
-            suites, backends, report_dir, report_saving_strategy, nb_threads=nb_threads
+        session = Session.create(
+            AsyncEventManager.load(), backends, report_dir, report_saving_strategy, nb_threads=nb_threads
         )
         runner.run_suites(
-            suites, fixture_registry, event_manager,
+            suites, fixture_registry, session,
             force_disabled=force_disabled, stop_on_failure=stop_on_failure, nb_threads=nb_threads
         )
     else:
         report_dir = tempfile.mkdtemp()
-        event_manager = runner.initialize_event_manager(
-            suites, backends, report_dir, report_saving_strategy, nb_threads=nb_threads
+        session = Session.create(
+            AsyncEventManager.load(), backends, report_dir, report_saving_strategy, nb_threads=nb_threads
         )
         try:
             runner.run_suites(
-                suites, fixture_registry, event_manager,
+                suites, fixture_registry, session,
                 force_disabled=force_disabled, stop_on_failure=stop_on_failure, nb_threads=nb_threads
             )
         finally:
             shutil.rmtree(report_dir)
 
-    report = get_session().report
-    dump_report(report)
+    dump_report(session.report)
 
-    return report
+    return session.report
 
 
 def run_suite_classes(suite_classes, fixtures=None, backends=None, tmpdir=None,

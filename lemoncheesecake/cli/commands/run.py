@@ -15,7 +15,10 @@ from lemoncheesecake.project import find_project_file, load_project_from_file, l
 from lemoncheesecake.reporting.backend import get_reporting_backend_names as do_get_reporting_backend_names, \
     parse_reporting_backend_names_expression, get_reporting_backends_for_test_run
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy, DEFAULT_REPORT_SAVING_STRATEGY
-from lemoncheesecake.runner import initialize_event_manager, run_suites
+from lemoncheesecake.runner import run_suites
+from lemoncheesecake.session import Session
+from lemoncheesecake.events import AsyncEventManager
+from lemoncheesecake.testtree import flatten_tests
 
 
 def build_fixture_registry(project, cli_args):
@@ -91,23 +94,33 @@ def create_report_dir(cli_args, project):
         except Exception:
             raise LemoncheesecakeException(
                 "Got an unexpected exception while creating report directory:%s" % \
-                serialize_current_exception(show_stacktrace=True)
+                    serialize_current_exception(show_stacktrace=True)
             )
 
     return report_dir
 
 
-class ReportSetupHandler(object):
-    def __init__(self, project):
-        self.project = project
+def setup_report_from_project(report, project):
+    try:
+        title = project.build_report_title()
+    except Exception:
+        raise LemoncheesecakeException(
+            "Got an unexpected exception while getting report title from project:%s" % \
+                serialize_current_exception(show_stacktrace=True)
+        )
+    if title:
+        report.title = title
 
-    def __call__(self, event):
-        title = self.project.build_report_title()
-        if title:
-            event.report.title = title
+    try:
+        info = list(project.build_report_info())
+    except Exception:
+        raise LemoncheesecakeException(
+            "Got an unexpected exception while getting report info from project:%s" % \
+                serialize_current_exception(show_stacktrace=True)
+        )
 
-        for key, value in self.project.build_report_info():
-            event.report.add_info(key, value)
+    for key, value in info:
+        report.add_info(key, value)
 
 
 def run_suites_from_project(project, cli_args):
@@ -142,15 +155,16 @@ def run_suites_from_project(project, cli_args):
             serialize_current_exception(show_stacktrace=True)
         )
 
-    # Initialize event manager
-    event_manager = initialize_event_manager(
-        suites, reporting_backends, report_dir, report_saving_strategy, nb_threads
+    # Create session
+    session = Session.create(
+        AsyncEventManager.load(), reporting_backends, report_dir, report_saving_strategy,
+        nb_threads=nb_threads, parallelized=nb_threads > 1 and len(list(flatten_tests(suites))) > 1
     )
-    event_manager.subscribe_to_event("test_session_start", ReportSetupHandler(project))
+    setup_report_from_project(session.report, project)
 
     # Run tests
     is_successful = run_suites(
-        suites, fixture_registry, event_manager,
+        suites, fixture_registry, session,
         force_disabled=cli_args.force_disabled, stop_on_failure=cli_args.stop_on_failure,
         nb_threads=nb_threads
     )

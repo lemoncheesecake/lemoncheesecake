@@ -1,6 +1,6 @@
 import inspect
 from collections import OrderedDict
-from typing import List, Any, Sequence, Callable
+from typing import List, Any, Sequence, Callable, Optional
 
 from lemoncheesecake.helpers.moduleimport import import_module, get_matching_files, get_py_files_from_dir
 from lemoncheesecake.exceptions import FixtureConstraintViolation, ModuleImportError, FixtureLoadingError
@@ -15,6 +15,26 @@ _SCOPE_LEVELS = {
     "session": 3,
     "pre_run": 4
 }
+
+_scheduled_fixtures = None  # type: Optional[ScheduledFixtures]
+
+
+def initialize_fixture_cache(scheduled_fixtures):
+    global _scheduled_fixtures
+    _scheduled_fixtures = scheduled_fixtures
+
+
+def get_fixture(name):
+    """
+    Return the corresponding fixture value. Only fixtures whose scope is 'pre_run' can be retrieved.
+    """
+    global _scheduled_fixtures
+
+    assert _scheduled_fixtures, "Fixture cache has not yet been initialized"
+    if not _scheduled_fixtures.has_fixture(name):
+        raise LookupError("Fixture '%s' either does not exist or doesn't have a pre_run scope" % name)
+
+    return _scheduled_fixtures.get_fixture_result(name)
 
 
 class _FixtureInfo:
