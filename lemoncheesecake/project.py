@@ -232,8 +232,8 @@ def run_project(project, suites, cli_args, reporting_backends, report_dir, repor
         raise e
     except Exception:
         raise LemoncheesecakeException(
-            "Got an unexpected exception while running the pre-session hook:%s" % \
-            serialize_current_exception(show_stacktrace=True)
+            "Got an unexpected exception while running project's pre_run method:%s" % \
+                serialize_current_exception(show_stacktrace=True)
         )
 
     # Create session
@@ -257,8 +257,8 @@ def run_project(project, suites, cli_args, reporting_backends, report_dir, repor
         raise e
     except Exception:
         raise LemoncheesecakeException(
-            "Got an unexpected exception while running the post-session hook:%s" % \
-            serialize_current_exception(show_stacktrace=True)
+            "Got an unexpected exception while running project's post_run method:%s" % \
+                serialize_current_exception(show_stacktrace=True)
         )
 
     return session.report
