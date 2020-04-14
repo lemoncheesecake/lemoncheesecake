@@ -1,3 +1,10 @@
+# 1.4.6 (2020-04-14)
+
+- **lcc run**: when the user hits Ctrl-C, every already running tests will be interrupted when/if
+  the test calls a lemoncheesecake logging function
+- Fix test skip reason not properly set under certain circumstances
+- **under the hood**: various main code (among which `lemoncheesecake.session`) and test code refactoring
+
 # 1.4.5 (2020-03-08)
 
 - **API**: the `detached_step` context manager (whose purpose is to create steps in new threads) has been deprecated;
