@@ -10,25 +10,11 @@ from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import load_suites_from_project
 from lemoncheesecake.exceptions import LemoncheesecakeException, UserError, serialize_current_exception
 from lemoncheesecake.filter import add_test_filter_cli_args, make_test_filter
-from lemoncheesecake.fixture import FixtureRegistry, BuiltinFixture
-from lemoncheesecake.project import find_project_file, load_project_from_file, load_project, DEFAULT_REPORTING_BACKENDS
+from lemoncheesecake.project import find_project_file, load_project_from_file, load_project, run_project, \
+    DEFAULT_REPORTING_BACKENDS
 from lemoncheesecake.reporting.backend import get_reporting_backend_names as do_get_reporting_backend_names, \
     parse_reporting_backend_names_expression, get_reporting_backends_for_test_run
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy, DEFAULT_REPORT_SAVING_STRATEGY
-from lemoncheesecake.runner import run_suites
-from lemoncheesecake.session import Session
-from lemoncheesecake.events import AsyncEventManager
-from lemoncheesecake.testtree import flatten_tests
-
-
-def build_fixture_registry(project, cli_args):
-    registry = FixtureRegistry()
-    registry.add_fixture(BuiltinFixture("cli_args", lambda: cli_args))
-    registry.add_fixture(BuiltinFixture("project_dir", lambda: project.dir))
-    for fixture in project.load_fixtures():
-        registry.add_fixture(fixture)
-    registry.check_dependencies()
-    return registry
 
 
 def get_nb_threads(cli_args, project):
@@ -100,36 +86,9 @@ def create_report_dir(cli_args, project):
     return report_dir
 
 
-def setup_report_from_project(report, project):
-    try:
-        title = project.build_report_title()
-    except Exception:
-        raise LemoncheesecakeException(
-            "Got an unexpected exception while getting report title from project:%s" % \
-                serialize_current_exception(show_stacktrace=True)
-        )
-    if title:
-        report.title = title
-
-    try:
-        info = list(project.build_report_info())
-    except Exception:
-        raise LemoncheesecakeException(
-            "Got an unexpected exception while getting report info from project:%s" % \
-                serialize_current_exception(show_stacktrace=True)
-        )
-
-    for key, value in info:
-        report.add_info(key, value)
-
-
 def run_suites_from_project(project, cli_args):
     # Load suites
     suites = load_suites_from_project(project, make_test_filter(cli_args))
-
-    # Build fixture registry
-    fixture_registry = build_fixture_registry(project, cli_args)
-    fixture_registry.check_fixtures_in_suites(suites)
 
     # Get reporting backends
     reporting_backend_names = get_reporting_backend_names(cli_args, project)
@@ -144,45 +103,15 @@ def run_suites_from_project(project, cli_args):
     # Get number of threads
     nb_threads = get_nb_threads(cli_args, project)
 
-    # Handle before run hook
-    try:
-        project.pre_run(cli_args, report_dir)
-    except UserError as e:
-        raise e
-    except Exception:
-        raise LemoncheesecakeException(
-            "Got an unexpected exception while running the pre-session hook:%s" % \
-            serialize_current_exception(show_stacktrace=True)
-        )
-
-    # Create session
-    session = Session.create(
-        AsyncEventManager.load(), reporting_backends, report_dir, report_saving_strategy,
-        nb_threads=nb_threads, parallelized=nb_threads > 1 and len(list(flatten_tests(suites))) > 1
-    )
-    setup_report_from_project(session.report, project)
-
     # Run tests
-    is_successful = run_suites(
-        suites, fixture_registry, session,
-        force_disabled=cli_args.force_disabled, stop_on_failure=cli_args.stop_on_failure,
-        nb_threads=nb_threads
+    report = run_project(
+        project, suites, cli_args, reporting_backends, report_dir, report_saving_strategy,
+        cli_args.force_disabled, cli_args.stop_on_failure, nb_threads
     )
-
-    # Handle after run hook
-    try:
-        project.post_run(cli_args, report_dir)
-    except UserError as e:
-        raise e
-    except Exception:
-        raise LemoncheesecakeException(
-            "Got an unexpected exception while running the post-session hook:%s" % \
-            serialize_current_exception(show_stacktrace=True)
-        )
 
     # Return exit code
     if cli_args.exit_error_on_failure:
-        return 0 if is_successful else 1
+        return 0 if report.is_successful() else 1
     else:
         return 0
 
