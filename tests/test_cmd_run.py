@@ -1,12 +1,24 @@
-import os
-import pytest
+try:
+    # Python 3
+    from unittest.mock import patch
+except ImportError:
+    # Python 2
+    from mock import patch
 
+import pytest
+from callee import Any, Matcher
+
+import lemoncheesecake.api as lcc
+from lemoncheesecake.project import Project
+from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake.cli import build_cli_args
 from lemoncheesecake.cli.commands.run import run_suites_from_project
+from lemoncheesecake.reporting import savingstrategy
+from lemoncheesecake.exceptions import LemoncheesecakeException
 
 from helpers.runner import generate_project, run_main
 from helpers.cli import assert_run_output, cmdout
-from helpers.project import DummyProject, DUMMY_SUITE
+from helpers.utils import change_dir, tmp_cwd, env_vars
 
 
 TEST_MODULE = """import lemoncheesecake.api as lcc
@@ -41,12 +53,8 @@ class mysuite:
 
 
 @pytest.fixture()
-def project(tmpdir):
-    generate_project(tmpdir.strpath, "mysuite", TEST_MODULE)
-    old_cwd = os.getcwd()
-    os.chdir(tmpdir.strpath)
-    yield
-    os.chdir(old_cwd)
+def project(tmp_cwd):
+    generate_project(tmp_cwd, "mysuite", TEST_MODULE)
 
 
 @pytest.fixture()
@@ -55,12 +63,8 @@ def failing_project(project):
 
 
 @pytest.fixture()
-def project_with_fixtures(tmpdir):
-    generate_project(tmpdir.strpath, "mysuite", TEST_MODULE_USING_FIXTURES, FIXTURE_MODULE)
-    old_cwd = os.getcwd()
-    os.chdir(tmpdir.strpath)
-    yield
-    os.chdir(old_cwd)
+def project_with_fixtures(tmp_cwd):
+    generate_project(tmp_cwd, "mysuite", TEST_MODULE_USING_FIXTURES, FIXTURE_MODULE)
 
 
 @pytest.fixture()
@@ -68,9 +72,9 @@ def successful_project(project_with_fixtures):
     return project_with_fixtures
 
 
-def test_run(project, cmdout):
-    assert run_main(["run"]) == 0
-    assert_run_output(cmdout, "mysuite", successful_tests=["mytest2"], failed_tests=["mytest1"])
+@pytest.fixture()
+def run_project_mock(mocker):
+    return mocker.patch("lemoncheesecake.cli.commands.run.run_project")
 
 
 def test_run_with_filter(project, cmdout):
@@ -88,45 +92,161 @@ def test_stop_on_failure(project, cmdout):
     assert_run_output(cmdout, "mysuite", failed_tests=["mytest1"], skipped_tests=["mytest2"])
 
 
-def test_exit_error_on_failure_successful_suite(successful_project):
+def test_cli_run(project, cmdout):
+    assert run_main(["run"]) == 0
+    assert_run_output(cmdout, "mysuite", successful_tests=["mytest2"], failed_tests=["mytest1"])
+
+
+def test_cli_exit_error_on_failure_successful_suite(successful_project):
     assert run_main(["run", "--exit-error-on-failure"]) == 0
 
 
-def test_exit_error_on_failure_failing_suite(failing_project):
+def test_cli_exit_error_on_failure_failing_suite(failing_project):
     assert run_main(["run", "--exit-error-on-failure"]) == 1
 
 
-def test_pre_run(tmpdir):
-    marker = []
-
-    class MyProject(DummyProject):
-        def pre_run(self, cli_args, report_dir):
-            marker.append(cli_args.command)
-
-    project = MyProject(tmpdir.strpath, [DUMMY_SUITE])
-
-    # force the --reporting arguments to what the project really supports
-    args = build_cli_args(["run"])
-    args.reporting = project.reporting_backends
-
-    run_suites_from_project(project, args)
-
-    assert marker == ["run"]
+@lcc.suite("Sample Suite")
+class SampleSuite:
+    @lcc.test("test 1")
+    def test_1(self):
+        pass
 
 
-def test_post_run(tmpdir):
-    marker = []
+class SampleProject(Project):
+    def __init__(self, project_dir="."):
+        Project.__init__(self, project_dir)
 
-    class MyProject(DummyProject):
-        def post_run(self, cli_args, report_dir):
-            marker.append(cli_args.command)
+    def load_suites(self):
+        return [load_suite_from_class(SampleSuite)]
 
-    project = MyProject(tmpdir.strpath, [DUMMY_SUITE])
 
-    # force the --reporting arguments to what the project really supports
-    args = build_cli_args(["run"])
-    args.reporting = project.reporting_backends
+def _test_run_suites_from_project(project, cli_args, expected_args):
+    with patch("lemoncheesecake.cli.commands.run.run_project") as mocked:
+        run_suites_from_project(project, build_cli_args(["run"] + cli_args))
+        mocked.assert_called_with(*expected_args)
 
-    run_suites_from_project(project, args)
 
-    assert marker == ["run"]
+class ReportingBackendMatcher(Matcher):
+    def __init__(self, *expected):
+        self.expected = expected
+
+    def match(self, actual):
+        return sorted([b.get_name() for b in actual]) == sorted(self.expected)
+
+
+def test_run_suites_from_project_default():
+    project = SampleProject(".")
+    _test_run_suites_from_project(
+        project, [],
+        (project, Any(), Any(), ReportingBackendMatcher("json", "html", "console"), "./report",
+         savingstrategy.save_at_each_failed_test_strategy, False, False, 1)
+    )
+
+
+def test_run_suites_from_project_thread_cli_args():
+    _test_run_suites_from_project(
+        SampleProject(), ["--threads", "4"],
+        (Any(), Any(), Any(), Any(), Any(), Any(), Any(), Any(), 4)
+    )
+
+
+def test_run_suites_from_project_thread_env():
+    with env_vars(LCC_THREADS="4"):
+        _test_run_suites_from_project(
+            SampleProject(), [],
+            (Any(), Any(), Any(), Any(), Any(), Any(), Any(), Any(), 4)
+        )
+
+
+def test_run_suites_from_project_thread_cli_args_while_threaded_is_disabled():
+    project = SampleProject()
+    project.threaded = False
+
+    with pytest.raises(LemoncheesecakeException, match="does not support multi-threading"):
+        _test_run_suites_from_project(project, ["--threads", "4"], None)
+
+
+def test_run_suites_from_project_saving_strategy_cli_args():
+    _test_run_suites_from_project(
+        SampleProject(), ["--save-report", "at_each_failed_test"],
+        (Any(), Any(), Any(), Any(), Any(), savingstrategy.save_at_each_failed_test_strategy, Any(), Any(), Any())
+    )
+
+
+def test_run_suites_from_project_saving_strategy_env():
+    with env_vars(LCC_SAVE_REPORT="at_each_failed_test"):
+        _test_run_suites_from_project(
+            SampleProject(), [],
+            (Any(), Any(), Any(), Any(), Any(), savingstrategy.save_at_each_failed_test_strategy, Any(), Any(), Any())
+        )
+
+
+def test_run_suites_from_project_reporting_backends_cli_args():
+    _test_run_suites_from_project(
+        SampleProject(), ["--reporting", "^console"],
+        (Any(), Any(), Any(), ReportingBackendMatcher("json", "html"), Any(), Any(), Any(), Any(), Any())
+    )
+
+
+def test_run_suites_from_project_reporting_backends_env():
+    with env_vars(LCC_REPORTING="^console"):
+        _test_run_suites_from_project(
+            SampleProject(), [],
+            (Any(), Any(), Any(), ReportingBackendMatcher("json", "html"), Any(), Any(), Any(), Any(), Any())
+        )
+
+
+def test_run_suites_from_project_custom_attr_default_reporting_backend_names():
+    project = SampleProject()
+    project.default_reporting_backend_names = ["json", "html"]
+
+    _test_run_suites_from_project(
+        project, [],
+        (Any(), Any(), Any(), ReportingBackendMatcher("json", "html"), Any(), Any(), Any(), Any(), Any())
+    )
+
+
+def test_run_suites_from_project_force_disabled_set():
+    _test_run_suites_from_project(
+        SampleProject(), ["--force-disabled"],
+        (Any(), Any(), Any(), Any(), Any(), Any(), True, Any(), Any())
+    )
+
+
+def test_run_suites_from_project_stop_on_failure_set():
+    _test_run_suites_from_project(
+        SampleProject(), ["--stop-on-failure"],
+        (Any(), Any(), Any(), Any(), Any(), Any(), Any(), True, Any())
+    )
+
+
+def test_run_suites_from_project_report_dir_through_project(tmpdir):
+    report_dir = tmpdir.join("other_report_dir").strpath
+
+    class MyProject(SampleProject):
+        def create_report_dir(self):
+            return report_dir
+
+    _test_run_suites_from_project(
+        MyProject(), [],
+        (Any(), Any(), Any(), Any(), report_dir, Any(), Any(), Any(), Any())
+    )
+
+
+def test_run_suites_from_project_report_dir_cli_args(tmpdir):
+    report_dir = tmpdir.join("other_report_dir").strpath
+
+    _test_run_suites_from_project(
+        SampleProject(), ["--report-dir", report_dir],
+        (Any(), Any(), Any(), Any(), report_dir, Any(), Any(), Any(), Any())
+    )
+
+
+def test_run_suites_from_project_report_dir_env(tmpdir):
+    report_dir = tmpdir.join("other_report_dir").strpath
+
+    with env_vars(LCC_REPORT_DIR=report_dir):
+        _test_run_suites_from_project(
+            SampleProject(), [],
+            (Any(), Any(), Any(), Any(), report_dir, Any(), Any(), Any(), Any())
+        )
