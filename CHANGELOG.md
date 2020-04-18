@@ -1,3 +1,7 @@
+# 1.4.7 (2020-04-18)
+
+- **lcc run**: --exit-error-on-failure also returns a non-zero exit code on any failure in a setup/teardown result (see #15)
+
 # 1.4.6 (2020-04-14)
 
 - **lcc run**: when the user hits Ctrl-C, every already running tests will be interrupted when/if
