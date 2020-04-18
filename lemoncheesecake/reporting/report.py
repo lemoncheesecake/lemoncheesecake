@@ -386,7 +386,7 @@ class Report(object):
 
     def is_successful(self):
         # type: () -> bool
-        return all(test.status in ("passed", "disabled") for test in self.all_tests())
+        return all(result.status in ("passed", "disabled") for result in self.all_results())
 
     def all_suites(self, result_filter=None):
         # type: (Optional[Callable[[TestResult], bool]]) -> Iterable[SuiteResult]

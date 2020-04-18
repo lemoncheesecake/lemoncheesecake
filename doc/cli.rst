@@ -80,7 +80,7 @@ from extra arguments that allow a finer control over tests execution and reporti
 .. option:: --exit-error-on-failure
 
     ``lcc run`` exits with a "0" exit code when the tests have been successfully executed (no matter their status),
-    with this option it will exit with a "1" exit code if there is any failed or skipped test
+    with this option it will exit with a "1" exit code if any failure (error log of failed check) has been encountered
 
 .. option:: --stop-on-failure
 
