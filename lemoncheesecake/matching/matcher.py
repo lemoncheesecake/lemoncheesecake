@@ -59,14 +59,15 @@ class MatcherDescriptionTransformer(object):
         pattern = re.compile(r"^to (\w+)")
         m = pattern.match(description)
         if m:
+            verb = m.group(1)
             if self.conjugate and self.negative:
-                substitution = "does not " + m.group(1)
+                substitution = "does not " + verb
             elif self.conjugate:
-                substitution = m.group(1) + "s"
+                substitution = verb + "s"
             elif self.negative:
-                substitution = "to not " + m.group(1)
+                substitution = "to not " + verb
             else:
-                substitution = "not " + m.group(1)
+                substitution = "not " + verb
 
             return pattern.sub(substitution, description)
 
