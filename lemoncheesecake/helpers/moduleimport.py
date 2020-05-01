@@ -21,9 +21,12 @@ def strip_py_ext(filename):
 
 
 def get_py_files_from_dir(dir):
-    return list(filter(
-        lambda f: not os.path.basename(f).startswith("__"), glob.glob(os.path.join(dir, "*.py"))
-    ))
+    return \
+        sorted(
+            filter(
+                lambda f: not os.path.basename(f).startswith("__"), glob.glob(os.path.join(dir, "*.py"))
+            )
+        )
 
 
 def get_matching_files(patterns, excluding=[]):
@@ -41,7 +44,7 @@ def get_matching_files(patterns, excluding=[]):
                 if fnmatch.fnmatch(file, excluded):
                     files.remove(file)
                     break
-    return files
+    return sorted(files)
 
 
 def import_module(mod_filename):

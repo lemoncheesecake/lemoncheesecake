@@ -43,8 +43,9 @@ def test_load_suites_from_directory_with_modules(tmpdir):
         names.append(name)
         tmpdir.join("%s.py" % name).write(build_test_module(name))
     suites = load_suites_from_directory(tmpdir.strpath)
-    for name in names:
-        assert name in [k.name for k in suites]
+    assert suites[0].name == "mysuite0"
+    assert suites[1].name == "mysuite1"
+    assert suites[2].name == "mysuite2"
 
 
 def test_load_suites_from_directory_with_subdir(tmpdir):
@@ -64,8 +65,8 @@ def test_load_suites_from_files(tmpdir):
         tmpdir.join(name + ".py").write(build_test_module(name))
     suites = load_suites_from_files(tmpdir.join("suite*.py").strpath)
     assert len(suites) == 2
-    assert "suite1" in [k.name for k in suites]
-    assert "suite2" in [k.name for k in suites]
+    assert suites[0].name == "suite1"
+    assert suites[1].name == "suite2"
 
 
 def test_load_suites_from_files_nomatch(tmpdir):
