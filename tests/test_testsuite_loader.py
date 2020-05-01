@@ -14,8 +14,8 @@ from helpers.runner import build_test_module
 def test_load_suite_from_file(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(build_test_module())
-    klass = load_suite_from_file(file.strpath)
-    assert klass.name == "mysuite"
+    suite = load_suite_from_file(file.strpath)
+    assert suite.name == "mysuite"
 
 
 def test_load_suite_from_file_invalid_module(tmpdir):
@@ -32,8 +32,8 @@ def test_load_suite_from_file_invalid_class(tmpdir):
 
 
 def test_load_suites_from_directory_without_modules(tmpdir):
-    klasses = load_suites_from_directory(tmpdir.strpath)
-    assert len(klasses) == 0
+    suites = load_suites_from_directory(tmpdir.strpath)
+    assert len(suites) == 0
 
 
 def test_load_suites_from_directory_with_modules(tmpdir):
@@ -42,9 +42,9 @@ def test_load_suites_from_directory_with_modules(tmpdir):
         name = "mysuite%d" % i
         names.append(name)
         tmpdir.join("%s.py" % name).write(build_test_module(name))
-    klasses = load_suites_from_directory(tmpdir.strpath)
+    suites = load_suites_from_directory(tmpdir.strpath)
     for name in names:
-        assert name in [k.name for k in klasses]
+        assert name in [k.name for k in suites]
 
 
 def test_load_suites_from_directory_with_subdir(tmpdir):
@@ -54,31 +54,31 @@ def test_load_suites_from_directory_with_subdir(tmpdir):
     subdir.mkdir()
     file = subdir.join("childsuite.py")
     file.write(build_test_module("childsuite"))
-    klasses = load_suites_from_directory(tmpdir.strpath)
-    assert klasses[0].name == "parentsuite"
-    assert len(klasses[0].get_suites()) == 1
+    suites = load_suites_from_directory(tmpdir.strpath)
+    assert suites[0].name == "parentsuite"
+    assert len(suites[0].get_suites()) == 1
 
 
 def test_load_suites_from_files(tmpdir):
     for name in "suite1", "suite2", "mysuite":
         tmpdir.join(name + ".py").write(build_test_module(name))
-    klasses = load_suites_from_files(tmpdir.join("suite*.py").strpath)
-    assert len(klasses) == 2
-    assert "suite1" in [k.name for k in klasses]
-    assert "suite2" in [k.name for k in klasses]
+    suites = load_suites_from_files(tmpdir.join("suite*.py").strpath)
+    assert len(suites) == 2
+    assert "suite1" in [k.name for k in suites]
+    assert "suite2" in [k.name for k in suites]
 
 
 def test_load_suites_from_files_nomatch(tmpdir):
-    klasses = load_suites_from_files(tmpdir.join("*.py").strpath)
-    assert len(klasses) == 0
+    suites = load_suites_from_files(tmpdir.join("*.py").strpath)
+    assert len(suites) == 0
 
 
 def test_load_suites_from_files_exclude(tmpdir):
     for name in "suite1", "suite2", "mysuite":
         tmpdir.join(name + ".py").write(build_test_module(name))
-    klasses = load_suites_from_files(tmpdir.join("*.py").strpath, "*/suite*.py")
-    assert len(klasses) == 1
-    assert klasses[0].name == "mysuite"
+    suites = load_suites_from_files(tmpdir.join("*.py").strpath, "*/suite*.py")
+    assert len(suites) == 1
+    assert suites[0].name == "mysuite"
 
 
 def test_load_suites_with_same_name():
@@ -347,10 +347,10 @@ def test_load_suite_from_class_with_hooks():
             pass
 
     suite = load_suite_from_class(Suite)
-    assert suite.get_hook("setup_suite")() == 1
-    assert suite.get_hook("teardown_suite")() == 2
-    assert suite.get_hook("setup_test")(suite.get_tests()[0]) == 3
-    assert suite.get_hook("teardown_test")(suite.get_tests()[0], "passed") == 4
+    assert suite.has_hook("setup_suite")
+    assert suite.has_hook("teardown_suite")
+    assert suite.has_hook("setup_test")
+    assert suite.has_hook("teardown_test")
 
 
 def test_load_suite_from_class_with_fixture_dependencies():
@@ -660,10 +660,10 @@ def mytest():
     pass
 """)
     suite = load_suite_from_file(file.strpath)
-    assert suite.get_hook("setup_suite")() == 1
-    assert suite.get_hook("teardown_suite")() == 2
-    assert suite.get_hook("setup_test")(suite.get_tests()[0]) == 3
-    assert suite.get_hook("teardown_test")(suite.get_tests()[0], "passed") == 4
+    assert suite.has_hook("setup_suite")
+    assert suite.has_hook("teardown_suite")
+    assert suite.has_hook("setup_test")
+    assert suite.has_hook("teardown_test")
 
 
 def test_load_suites_from_directory_with_suite_and_sub_suite(tmpdir):
