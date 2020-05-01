@@ -1,6 +1,7 @@
 import os
 from contextlib import contextmanager
 
+import pytest
 import callee
 
 
@@ -33,6 +34,12 @@ def change_dir(new_dir):
         yield
     finally:
         os.chdir(old_dir)
+
+
+@pytest.fixture()
+def tmp_cwd(tmpdir):
+    with change_dir(tmpdir.strpath):
+        yield tmpdir.strpath
 
 
 class Search(callee.Regex):
