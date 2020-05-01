@@ -6,7 +6,7 @@ Created on Mar 27, 2017
 
 from lemoncheesecake.helpers.text import jsonify
 from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatcherDescriptionTransformer
-from lemoncheesecake.matching.matchers.composites import is_
+from lemoncheesecake.matching.matchers.composites import is_, not_
 from lemoncheesecake.matching.matchers.types_ import is_bool
 
 
@@ -79,14 +79,25 @@ def is_between(min, max):
     return IsBetween(min, max)
 
 
+class IsNone(Matcher):
+    def build_description(self, transformation):
+        return transformation("to be null")
+
+    def matches(self, actual):
+        if actual is None:
+            return MatchResult.success("got null")
+        else:
+            return MatchResult.failure("got %s" % jsonify(actual))
+
+
 def is_none():
     """Test if value is None"""
-    return equal_to(None)
+    return IsNone()
 
 
 def is_not_none():
     """Test if value is not None"""
-    return not_equal_to(None)
+    return not_(is_none())
 
 
 class HasLength(Matcher):
