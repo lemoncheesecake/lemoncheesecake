@@ -10,6 +10,7 @@ from pytest_mock import mocker
 from callee import Any
 
 from lemoncheesecake.matching import check_that
+from lemoncheesecake.matching.matcher import MatcherDescriptionTransformer
 
 
 def assert_match_result(matcher, actual, expected_is_successful, expected_details):
@@ -25,6 +26,10 @@ def assert_match_success(matcher, actual, result_details=Any()):
 
 def assert_match_failure(matcher, actual, result_details):
     return assert_match_result(matcher, actual, False, result_details)
+
+
+def assert_matcher_description(matcher, expected, transformer=MatcherDescriptionTransformer()):
+    assert matcher.build_description(transformer) == expected
 
 
 @pytest.fixture
