@@ -26,6 +26,42 @@ def _make_items(items, prefix="- ", relationship="and"):
     ]
 
 
+def _build_multi_line_description(matchers, transformation, relationship):
+    return "\n".join(
+        [":"] +
+        [
+            _make_item(matcher.build_description(transformation), prefix="- %s " % relationship if i > 0 else "- ")
+                for i, matcher in enumerate(matchers)
+        ]
+    )
+
+
+def _build_single_line_description_if_suitable(matchers, transformation, relationship):
+    if any(isinstance(matcher, (AllOf, AnyOf)) for matcher in matchers):
+        # in case of "composite of composite", the multi-line rendering must be used in order to keep the logic
+        return None
+
+    descriptions = [matcher.build_description(transformation) for matcher in matchers]
+    if any("\n" in desc for desc in descriptions):
+        # in case of a \n in a matcher description, the resulting description will not be readable
+        return None
+
+    description = " {} ".format(relationship).join(descriptions)
+    if len(description) > 100:
+        # if the resulting description is more than 100 characters, we probably better keep multi-line rendering
+        return None
+
+    return description
+
+
+def _build_composite_description(matchers, transformation, relationship):
+    description = _build_single_line_description_if_suitable(matchers, transformation, relationship)
+    if description:
+        return description
+    else:
+        return _build_multi_line_description(matchers, transformation, relationship)
+
+
 def _serialize_sub_matcher_result(matcher, result):
     content = "%s => %s" % (matcher.build_short_description(MatcherDescriptionTransformer()), "OK" if result else "KO")
     if result.description is not None:
@@ -42,13 +78,7 @@ class AllOf(Matcher):
         return ":"
 
     def build_description(self, transformation):
-        return "\n".join(
-            [":"] +
-            [
-                _make_item(matcher.build_description(transformation), prefix="- and " if i > 0 else "- ")
-                    for i, matcher in enumerate(self.matchers)
-            ]
-        )
+        return _build_composite_description(self.matchers, transformation, "and")
 
     def matches(self, actual):
         results = []
@@ -85,13 +115,7 @@ class AnyOf(Matcher):
         return ":"
 
     def build_description(self, transformation):
-        return "\n".join(
-            [":"] +
-            [
-                _make_item(matcher.build_description(transformation), prefix="- or " if i > 0 else "- ")
-                    for i, matcher in enumerate(self.matchers)
-            ]
-        )
+        return _build_composite_description(self.matchers, transformation, "or")
 
     def matches(self, actual):
         results = []
