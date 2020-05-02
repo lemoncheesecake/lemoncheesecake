@@ -269,20 +269,24 @@ class FixtureRegistry:
         return self._fixtures[name].scope
 
     @staticmethod
-    def get_fixtures_used_in_suite(suite):
+    def get_fixtures_used_in_suite(suite, include_disabled):
+        if not suite.has_enabled_tests() and not include_disabled:
+            return OrderedSet()
+
         fixtures = suite.get_fixtures()
 
         for test in suite.get_tests():
-            fixtures.update(test.get_fixtures())
+            if test.is_enabled() or include_disabled:
+                fixtures.update(test.get_fixtures())
 
         return fixtures
 
     @staticmethod
-    def get_fixtures_used_in_suite_recursively(suite):
-        fixtures = FixtureRegistry.get_fixtures_used_in_suite(suite)
+    def get_fixtures_used_in_suite_recursively(suite, include_disabled):
+        fixtures = FixtureRegistry.get_fixtures_used_in_suite(suite, include_disabled)
 
         for sub_suite in suite.get_suites():
-            fixtures.update(FixtureRegistry.get_fixtures_used_in_suite_recursively(sub_suite))
+            fixtures.update(FixtureRegistry.get_fixtures_used_in_suite_recursively(sub_suite, include_disabled))
 
         return fixtures
 
@@ -296,21 +300,21 @@ class FixtureRegistry:
             parent_scheduled_fixtures=parent_scheduled_fixtures
         )
 
-    def get_fixtures_scheduled_for_pre_run(self, suites):
+    def get_fixtures_scheduled_for_pre_run(self, suites, include_disabled=False):
         fixtures = OrderedSet()
         for suite in suites:
-            fixtures.update(FixtureRegistry.get_fixtures_used_in_suite_recursively(suite))
+            fixtures.update(FixtureRegistry.get_fixtures_used_in_suite_recursively(suite, include_disabled))
         return self.get_scheduled_fixtures_for_scope(fixtures, "pre_run")
 
-    def get_fixtures_scheduled_for_session(self, suites, prerun_session_scheduled_fixtures):
+    def get_fixtures_scheduled_for_session(self, suites, prerun_session_scheduled_fixtures, include_disabled=False):
         fixtures = OrderedSet()
         for suite in suites:
-            fixtures.update(FixtureRegistry.get_fixtures_used_in_suite_recursively(suite))
+            fixtures.update(FixtureRegistry.get_fixtures_used_in_suite_recursively(suite, include_disabled))
         return self.get_scheduled_fixtures_for_scope(fixtures, "session", prerun_session_scheduled_fixtures)
 
-    def get_fixtures_scheduled_for_suite(self, suite, session_scheduled_fixtures):
+    def get_fixtures_scheduled_for_suite(self, suite, session_scheduled_fixtures, include_disabled=False):
         return self.get_scheduled_fixtures_for_scope(
-            FixtureRegistry.get_fixtures_used_in_suite(suite), "suite", session_scheduled_fixtures
+            FixtureRegistry.get_fixtures_used_in_suite(suite, include_disabled), "suite", session_scheduled_fixtures
         )
 
     def get_fixtures_scheduled_for_test(self, test, suite_scheduled_fixtures):

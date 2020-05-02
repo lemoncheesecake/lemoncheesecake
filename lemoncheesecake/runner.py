@@ -212,7 +212,7 @@ def build_test_task(test, suite_scheduled_fixtures, dependency):
 
 def build_suite_tasks(
         suite, fixture_registry, session_scheduled_fixtures, test_session_setup_task,
-        parent_suite_beginning_task=None):
+        parent_suite_beginning_task=None, force_disabled=False):
     ###
     # Build suite beginning task
     ###
@@ -224,9 +224,11 @@ def build_suite_tasks(
     # Build suite setup task (if any)
     ###
     suite_scheduled_fixtures = fixture_registry.get_fixtures_scheduled_for_suite(
-        suite, session_scheduled_fixtures
+        suite, session_scheduled_fixtures, force_disabled
     )
-    suite_setup_task = build_suite_initialization_task(suite, suite_scheduled_fixtures, [suite_beginning_task])
+    suite_setup_task = build_suite_initialization_task(
+        suite, suite_scheduled_fixtures, [suite_beginning_task], force_disabled
+    )
 
     ###
     # Build test tasks
@@ -249,7 +251,8 @@ def build_suite_tasks(
     for sub_suite in suite.get_suites():
         sub_suite_tasks.extend(
             build_suite_tasks(
-                sub_suite, fixture_registry, session_scheduled_fixtures, test_session_setup_task, suite_beginning_task
+                sub_suite, fixture_registry, session_scheduled_fixtures, test_session_setup_task, suite_beginning_task,
+                force_disabled
             )
         )
 
@@ -343,7 +346,10 @@ def wrap_setup_suite(suite, scheduled_fixtures):
     return wrapper
 
 
-def build_suite_initialization_task(suite, scheduled_fixtures, dependencies):
+def build_suite_initialization_task(suite, scheduled_fixtures, dependencies, force_disabled):
+    if not suite.has_enabled_tests() and not force_disabled:
+        return None
+
     setup_teardown_funcs = []
 
     if not scheduled_fixtures.is_empty():
@@ -479,7 +485,7 @@ def lookup_test_task(tasks, test_path):
         raise LookupError("Cannot find test '%s' in tasks" % test_path)
 
 
-def build_tasks(suites, fixture_registry, session_scheduled_fixtures):
+def build_tasks(suites, fixture_registry, session_scheduled_fixtures, force_disabled):
     ###
     # Build test session setup task
     ###
@@ -491,7 +497,10 @@ def build_tasks(suites, fixture_registry, session_scheduled_fixtures):
     suite_tasks = []
     for suite in suites:
         suite_tasks.extend(
-            build_suite_tasks(suite, fixture_registry, session_scheduled_fixtures, test_session_setup_task)
+            build_suite_tasks(
+                suite, fixture_registry, session_scheduled_fixtures, test_session_setup_task,
+                force_disabled=force_disabled
+            )
         )
 
     ###
@@ -540,9 +549,9 @@ def _run_suites(suites, fixture_registry, pre_run_scheduled_fixtures, session,
                 force_disabled=False, stop_on_failure=False, nb_threads=1):
     # build tasks and run context
     session_scheduled_fixtures = fixture_registry.get_fixtures_scheduled_for_session(
-        suites, pre_run_scheduled_fixtures
+        suites, pre_run_scheduled_fixtures, force_disabled
     )
-    tasks = build_tasks(suites, fixture_registry, session_scheduled_fixtures)
+    tasks = build_tasks(suites, fixture_registry, session_scheduled_fixtures, force_disabled)
     context = RunContext(session, fixture_registry, force_disabled, stop_on_failure)
 
     with session.event_manager.handle_events():
@@ -560,7 +569,7 @@ def run_suites(suites, fixture_registry, session, force_disabled=False, stop_on_
 
     # setup of 'pre_run' fixtures
     errors = []
-    scheduled_fixtures = fixture_registry.get_fixtures_scheduled_for_pre_run(suites)
+    scheduled_fixtures = fixture_registry.get_fixtures_scheduled_for_pre_run(suites, force_disabled)
     initialize_fixture_cache(scheduled_fixtures)
     for setup, teardown in scheduled_fixtures.get_setup_teardown_pairs():
         try:

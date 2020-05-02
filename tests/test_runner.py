@@ -222,6 +222,58 @@ def test_setup_suite():
     assert marker
 
 
+def test_setup_suite_with_disabled_test():
+    marker = []
+
+    @lcc.suite("suite_1")
+    class suite_1:
+        def setup_suite(self):
+            marker.append("ok")
+
+        @lcc.test("test")
+        @lcc.disabled()
+        def test(self):
+            pass
+
+    @lcc.suite("suite_2")
+    class suite_2:
+        @lcc.test("test")
+        def test(self):
+            pass
+
+    report = run_suite_classes((suite_1, suite_2))
+
+    assert_test_statuses(report, disabled=["suite_1.test"], passed=["suite_2.test"])
+
+    assert not marker
+
+
+def test_setup_suite_with_disabled_test_and_force_disabled():
+    marker = []
+
+    @lcc.suite("suite_1")
+    class suite_1:
+        def setup_suite(self):
+            marker.append("ok")
+
+        @lcc.test("test")
+        @lcc.disabled()
+        def test(self):
+            pass
+
+    @lcc.suite("suite_2")
+    class suite_2:
+        @lcc.test("test")
+        def test(self):
+            pass
+
+    report = run_suite_classes((suite_1, suite_2), force_disabled=True)
+
+    assert_test_statuses(report, passed=["suite_1.test", "suite_2.test"])
+
+    assert marker
+
+
 def test_teardown_suite():
     marker = []
 
@@ -235,6 +287,58 @@ def test_teardown_suite():
             pass
 
     run_suite_class(MySuite)
+
+    assert marker
+
+
+def test_teardown_suite_with_disabled_test():
+    marker = []
+
+    @lcc.suite("suite_1")
+    class suite_1:
+        @lcc.test("test")
+        @lcc.disabled()
+        def test(self):
+            pass
+
+        def teardown_suite(self):
+            marker.append("ok")
+
+    @lcc.suite("suite_2")
+    class suite_2:
+        @lcc.test("test")
+        def test(self):
+            pass
+
+    report = run_suite_classes((suite_1, suite_2))
+
+    assert_test_statuses(report, disabled=["suite_1.test"], passed=["suite_2.test"])
+
+    assert not marker
+
+
+def test_teardown_suite_with_disabled_test_and_force_disabled():
+    marker = []
+
+    @lcc.suite("suite_1")
+    class suite_1:
+        @lcc.test("test")
+        @lcc.disabled()
+        def test(self):
+            pass
+
+        def teardown_suite(self):
+            marker.append("ok")
+
+    @lcc.suite("suite_2")
+    class suite_2:
+        @lcc.test("test")
+        def test(self):
+            pass
+
+    report = run_suite_classes((suite_1, suite_2), force_disabled=True)
+
+    assert_test_statuses(report, passed=["suite_1.test", "suite_2.test"])
 
     assert marker
 
@@ -1086,6 +1190,230 @@ def test_fixture_name_multiple_names():
     run_suite_class(suite, fixtures=[fixt])
 
     assert sorted(fixts) == ["fixt1", "fixt2"]
+
+
+def test_fixture_with_test_scope_on_disabled_test():
+    marker = []
+
+    @lcc.fixture(scope="test")
+    def fixt():
+        marker.append("i've been executed")
+
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test 1")
+        @lcc.disabled()
+        def test_1(self, fixt):
+            pass
+
+        @lcc.test("test 2")
+        def test_2(self):
+            pass
+
+    report = run_suite_class(suite, fixtures=[fixt])
+    assert_test_statuses(report, disabled=["suite.test_1"], passed=["suite.test_2"])
+
+    assert not marker
+
+
+def test_fixture_with_suite_scope_on_disabled_test():
+    marker = []
+
+    @lcc.fixture(scope="suite")
+    def fixt():
+        marker.append("i've been executed")
+
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test 1")
+        @lcc.disabled()
+        def test_1(self, fixt):
+            pass
+
+        @lcc.test("test 2")
+        def test_2(self):
+            pass
+
+    report = run_suite_class(suite, fixtures=[fixt])
+    assert_test_statuses(report, disabled=["suite.test_1"], passed=["suite.test_2"])
+
+    assert not marker
+
+
+def test_fixture_with_suite_scope_on_disabled_test_and_force_disabled():
+    marker = []
+
+    @lcc.fixture(scope="suite")
+    def fixt():
+        marker.append("i've been executed")
+
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test 1")
+        @lcc.disabled()
+        def test_1(self, fixt):
+            pass
+
+        @lcc.test("test 2")
+        def test_2(self):
+            pass
+
+    report = run_suite_class(suite, fixtures=[fixt], force_disabled=True)
+    assert_test_statuses(report, passed=["suite.test_1", "suite.test_2"])
+
+    assert marker
+
+
+def test_fixture_with_session_scope_on_disabled_test():
+    marker = []
+
+    @lcc.fixture(scope="session")
+    def fixt():
+        marker.append("i've been executed")
+
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test 1")
+        @lcc.disabled()
+        def test_1(self, fixt):
+            pass
+
+        @lcc.test("test 2")
+        def test_2(self):
+            pass
+
+    report = run_suite_class(suite, fixtures=[fixt])
+    assert_test_statuses(report, disabled=["suite.test_1"], passed=["suite.test_2"])
+
+    assert not marker
+
+
+def test_fixture_with_session_scope_on_disabled_test_and_force_disabled():
+    marker = []
+
+    @lcc.fixture(scope="session")
+    def fixt():
+        marker.append("i've been executed")
+
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test 1")
+        @lcc.disabled()
+        def test_1(self, fixt):
+            pass
+
+        @lcc.test("test 2")
+        def test_2(self):
+            pass
+
+    report = run_suite_class(suite, fixtures=[fixt], force_disabled=True)
+    assert_test_statuses(report, passed=["suite.test_1", "suite.test_2"])
+
+    assert marker
+
+
+def test_fixture_with_pre_run_scope_on_disabled_test():
+    marker = []
+
+    @lcc.fixture(scope="pre_run")
+    def fixt():
+        marker.append("i've been executed")
+
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test 1")
+        @lcc.disabled()
+        def test_1(self, fixt):
+            pass
+
+        @lcc.test("test 2")
+        def test_2(self):
+            pass
+
+    report = run_suite_class(suite, fixtures=[fixt])
+    assert_test_statuses(report, disabled=["suite.test_1"], passed=["suite.test_2"])
+
+    assert not marker
+
+
+def test_fixture_with_pre_run_scope_on_disabled_test_and_force_disabled():
+    marker = []
+
+    @lcc.fixture(scope="pre_run")
+    def fixt():
+        marker.append("i've been executed")
+
+    @lcc.suite("suite")
+    class suite:
+        @lcc.test("test 1")
+        @lcc.disabled()
+        def test_1(self, fixt):
+            pass
+
+        @lcc.test("test 2")
+        def test_2(self):
+            pass
+
+    report = run_suite_class(suite, fixtures=[fixt], force_disabled=True)
+    assert_test_statuses(report, passed=["suite.test_1", "suite.test_2"])
+
+    assert marker
+
+
+def test_fixture_in_suite_with_disabled_test():
+    marker = []
+
+    @lcc.fixture(scope="suite")
+    def fixt():
+        marker.append("i've been executed")
+
+    @lcc.suite("suite_1")
+    class suite_1:
+        fixt = lcc.inject_fixture()
+
+        @lcc.test("test")
+        @lcc.disabled()
+        def test(self, fixt):
+            pass
+
+    @lcc.suite("suite_2")
+    class suite_2:
+        @lcc.test("test")
+        def test(self):
+            pass
+
+    report = run_suite_classes((suite_1, suite_2), fixtures=[fixt])
+    assert_test_statuses(report, disabled=["suite_1.test"], passed=["suite_2.test"])
+
+    assert not marker
+
+
+def test_fixture_in_suite_with_disabled_test_and_force_disabled():
+    marker = []
+
+    @lcc.fixture(scope="suite")
+    def fixt():
+        marker.append("i've been executed")
+
+    @lcc.suite("suite_1")
+    class suite_1:
+        fixt = lcc.inject_fixture()
+
+        @lcc.test("test")
+        @lcc.disabled()
+        def test(self, fixt):
+            pass
+
+    @lcc.suite("suite_2")
+    class suite_2:
+        @lcc.test("test")
+        def test(self):
+            pass
+
+    report = run_suite_classes((suite_1, suite_2), fixtures=[fixt], force_disabled=True)
+    assert_test_statuses(report, passed=["suite_1.test", "suite_2.test"])
+
+    assert marker
 
 
 def test_parametrized_simple():

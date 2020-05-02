@@ -36,6 +36,9 @@ class Test(BaseTest):
     def is_disabled(self):
         return _is_node_disabled(self)
 
+    def is_enabled(self):
+        return not self.is_disabled()
+
     def get_arguments(self):
         return get_callable_args(self.callback)
 
@@ -81,6 +84,9 @@ class Suite(BaseSuite):
 
     def is_disabled(self):
         return _is_node_disabled(self)
+
+    def has_enabled_tests(self):
+        return any(test.is_enabled() for test in self.get_tests())
 
     def add_hook(self, hook_name, func):
         self._assert_hook_name(hook_name)
