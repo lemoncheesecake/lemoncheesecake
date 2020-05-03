@@ -1,3 +1,12 @@
+# 1.4.8 (2020-05-03)
+
+- Fix `setup_suite`, `teardown_suite` and fixtures being executed even if the related suites/tests are disabled (see #16)
+- Fix suite's modules not properly sorted alphabetically by default
+- Fix undesired symbols import while doing the wildcard import `from lemoncheesecake.matching import *`
+- `any_of()` and `all_of()` matchers: make the description single line when suited
+- `is_none()` matcher: improve matcher's description
+- **under the hood**: refactor and add new tests on command `lcc run`
+
 # 1.4.7 (2020-04-18)
 
 - **lcc run**: --exit-error-on-failure also returns a non-zero exit code on any failure in a setup/teardown result (see #15)
