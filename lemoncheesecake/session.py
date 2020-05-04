@@ -245,6 +245,7 @@ def _interruptible(wrapped):
         if Session.get().aborted:
             raise AbortTest("tests have been manually stopped")
         return wrapped(*args, **kwargs)
+    wrapper.__doc__ = wrapped.__doc__
     return wrapper
 
 

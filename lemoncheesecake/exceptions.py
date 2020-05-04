@@ -34,18 +34,27 @@ class AbortTest(LemoncheesecakeException):
     """
     Raising this exception will stop the currently running test.
     """
+    # NB: sphinx requires the constructor to be overridden, otherwise it raises an error
+    def __init__(self, *args):
+        LemoncheesecakeException.__init__(self, *args)
 
 
 class AbortSuite(LemoncheesecakeException):
     """
     Raising this exception will stop the currently running suite.
     """
+    # NB: sphinx requires the constructor to be overridden, otherwise it raises an error
+    def __init__(self, *args):
+        LemoncheesecakeException.__init__(self, *args)
 
 
 class AbortAllTests(LemoncheesecakeException):
     """
     Raising this exception will stop the currently running test and all the tests waiting to be run.
     """
+    # NB: sphinx requires the constructor to be overridden, otherwise it raises an error
+    def __init__(self, *args):
+        LemoncheesecakeException.__init__(self, *args)
 
 
 class UserError(LemoncheesecakeException):
