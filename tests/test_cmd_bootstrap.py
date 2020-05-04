@@ -1,13 +1,16 @@
+import os
+
 from helpers.runner import run_main
+from helpers.utils import tmp_cwd
 
-from lemoncheesecake.project import load_project_from_dir
+from lemoncheesecake.project import load_project
 
 
-def test_bootstrap(tmpdir):
-    project_dir = tmpdir.join("myproj").strpath
-    assert run_main(["bootstrap", project_dir]) == 0
+def test_bootstrap(tmp_cwd):
+    assert run_main(["bootstrap", "myproject"]) == 0
 
-    project = load_project_from_dir(project_dir)
+    os.chdir("myproject")
+    project = load_project()
     assert project.load_suites() == []
 
 

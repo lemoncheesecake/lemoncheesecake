@@ -4,16 +4,16 @@ import re
 
 import pytest
 
-from lemoncheesecake.project import Project, create_project, load_project_from_dir, find_project_file, run_project
+from lemoncheesecake.project import Project, create_project, find_project_file, load_project, run_project
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake.fixture import load_fixtures_from_func
 from lemoncheesecake.session import Session
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy
 from lemoncheesecake.reporting import JsonBackend
-from lemoncheesecake.exceptions import LemoncheesecakeException, FixtureConstraintViolation
+from lemoncheesecake.exceptions import LemoncheesecakeException, FixtureConstraintViolation, ProjectLoadingError
 import lemoncheesecake.api as lcc
 
-from helpers.utils import env_vars
+from helpers.utils import env_vars, tmp_cwd
 
 
 def test_create_report_dir(tmpdir):
@@ -50,63 +50,55 @@ def test_default_reporting_backend_names(tmpdir):
     assert project.default_reporting_backend_names == ["console", "json", "html"]
 
 
-def test_project_creation(tmpdir):
-    create_project(tmpdir.strpath)
-    project = load_project_from_dir(tmpdir.strpath)
-    assert project.dir == tmpdir.strpath
+def test_project_creation(tmp_cwd):
+    create_project(".")
+    project = load_project()
+    assert project.dir == tmp_cwd
     assert len(project.load_suites()) == 0
     assert len(project.load_fixtures()) == 0
     assert len(project.default_reporting_backend_names) > 0
 
-    project.pre_run(object(), tmpdir.strpath)
-    project.post_run(object(), tmpdir.strpath)
+    project.pre_run(object(), tmp_cwd)
+    project.post_run(object(), tmp_cwd)
 
 
-def test_find_project_file_not_found(tmpdir):
-    old_cwd = os.getcwd()
-    os.chdir(tmpdir.strpath)
-    try:
-        actual = find_project_file()
-        assert actual is None
-    finally:
-        os.chdir(old_cwd)
+def test_load_project_while_no_project(tmp_cwd):
+    with pytest.raises(ProjectLoadingError):
+        load_project()
 
 
-def test_find_project_file_in_current_dir(tmpdir):
-    old_cwd = os.getcwd()
-    os.chdir(tmpdir.strpath)
-    try:
-        tmpdir.join("project.py").write("")
-        actual = find_project_file()
-        assert actual == tmpdir.join("project.py").strpath
-    finally:
-        os.chdir(old_cwd)
+def test_load_project_while_project_file_in_current_dir(tmp_cwd):
+    create_project(".")
+    project = load_project()
+    assert project
 
 
-def test_find_project_file_in_parent_dir(tmpdir):
-    old_cwd = os.getcwd()
-    tmpdir.join("project.py").write("")
-    tmpdir.join("subdir").mkdir()
-    os.chdir(tmpdir.join("subdir").strpath)
-    try:
-        actual = find_project_file()
-        assert actual == tmpdir.join("project.py").strpath
-    finally:
-        os.chdir(old_cwd)
+def test_load_project_while_suites_dir_in_current_dir(tmp_cwd):
+    os.mkdir("suites")
+    project = load_project()
+    assert project.dir == tmp_cwd
 
 
-def test_find_project_file_env_var_not_found(tmpdir):
+def test_load_project_while_project_file_in_parent_dir(tmp_cwd):
+    create_project(tmp_cwd)
+    os.mkdir("subdir")
+    os.chdir("subdir")
+    project = load_project()
+    assert project.dir == tmp_cwd
+
+
+def test_load_project_while_project_file_env_var_not_found(tmpdir):
     with env_vars(LCC_PROJECT_FILE=tmpdir.join("project.py").strpath):
-        actual = find_project_file()
-        assert actual is None
+        with pytest.raises(ProjectLoadingError):
+            load_project()
 
 
-def test_find_project_file_env_var_found(tmpdir):
-    tmpdir.join("project.py").write("")
+def test_load_project_while_project_file_env_var_found(tmpdir):
+    create_project(tmpdir.strpath)
 
     with env_vars(LCC_PROJECT_FILE=tmpdir.join("project.py").strpath):
-        actual = find_project_file()
-        assert actual == tmpdir.join("project.py").strpath
+        project = load_project()
+        assert project.dir == tmpdir.strpath
 
 
 def test_run_project(tmpdir):

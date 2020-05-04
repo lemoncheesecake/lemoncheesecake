@@ -5,6 +5,7 @@ The ``lcc`` command line tool
 
 .. _cli_commands:
 
+
 ``lcc`` commands
 ----------------
 
@@ -12,15 +13,6 @@ The ``lcc`` command line tool
 
 ``lcc run``
 ~~~~~~~~~~~
-
-Like for any other ``lcc`` sub command (except ``lcc bootstrap``), the ``project.py`` file is the entry point of
-``lcc run``:
-
-- this file is searched from the current directory to the parent directories (meaning: ``.``, ``..``, ``../..``, etc...)
-
-- it can be set through the environment variable ``$LCC_PROJECT_FILE`` that points to the path of the file that holds
-  the lemoncheesecake project, in that case the choice of the file name is free and does not have to be ``project.py``;
-  if this environment variable set, it has precedence over the ``project.py`` lookup
 
 Like most of the ``lcc`` sub-commands, ``lcc run`` benefits from the :ref:`filtering arguments <cli_filters>` but also
 from extra arguments that allow a finer control over tests execution and reporting:

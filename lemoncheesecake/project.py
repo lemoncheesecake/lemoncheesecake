@@ -26,8 +26,10 @@ from lemoncheesecake.helpers.moduleimport import import_module
 from lemoncheesecake.testtree import flatten_tests
 from lemoncheesecake.exceptions import UserError, LemoncheesecakeException, serialize_current_exception
 
-PROJECT_CONFIG_FILE = "project.py"
+PROJECT_FILE = "project.py"
 DEFAULT_REPORTING_BACKENDS = ("console", "json", "html")
+DEFAULT_SUITES_DIR = "suites"
+DEFAULT_FIXTURES_DIR = "fixtures"
 
 
 class Project(object):
@@ -64,14 +66,14 @@ class Project(object):
         """
         Overridable. Load the project's suites.
         """
-        return load_suites_from_directory(osp.join(self.dir, "suites"))
+        return load_suites_from_directory(osp.join(self.dir, DEFAULT_SUITES_DIR))
 
     def load_fixtures(self):
         # type: () -> Sequence[Fixture]
         """
         Overridable. Load the project's fixtures.
         """
-        fixtures_dir = osp.join(self.dir, "fixtures")
+        fixtures_dir = osp.join(self.dir, DEFAULT_FIXTURES_DIR)
         if osp.exists(fixtures_dir):
             return load_fixtures_from_directory(fixtures_dir)
         else:
@@ -117,37 +119,47 @@ class Project(object):
         return info
 
 
-def _find_file_in_parent_directories(filename, dirname):
-    if osp.exists(osp.join(dirname, filename)):
-        return osp.join(dirname, filename)
-
-    parent_dirname = osp.dirname(dirname)
-    if parent_dirname == dirname:
-        return None  # root directory has been reached
-
-    return _find_file_in_parent_directories(filename, parent_dirname)
+def _iter_on_path_hierarchy(path):
+    yield path
+    parent_path = osp.dirname(path)
+    while parent_path != path:
+        yield parent_path
+        path, parent_path = parent_path, osp.dirname(parent_path)
 
 
 def find_project_file():
     # type: () -> Optional[str]
     filename = os.environ.get("LCC_PROJECT_FILE")
-    if filename is not None:
+    if filename:
         return filename if osp.exists(filename) else None
 
-    return _find_file_in_parent_directories(PROJECT_CONFIG_FILE, os.getcwd())
+    for dirname in _iter_on_path_hierarchy(os.getcwd()):
+        filename = osp.join(dirname, PROJECT_FILE)
+        if osp.exists(filename):
+            return filename
+
+    return None
+
+
+def _find_project_dir_from_suites_dir():
+    for dirname in _iter_on_path_hierarchy(os.getcwd()):
+        if osp.exists(osp.join(dirname, DEFAULT_SUITES_DIR)):
+            return dirname
+    return None
 
 
 def find_project_dir():
     # type: () -> Optional[str]
     project_filename = find_project_file()
-    if project_filename is None:
-        return None
-    return osp.dirname(project_filename)
+    if project_filename:
+        return osp.dirname(project_filename)
+    else:
+        return _find_project_dir_from_suites_dir()
 
 
 def create_project(project_dir):
     # type: (str) -> None
-    shutil.copyfile(get_resource_path(("project", "template.py")), osp.join(project_dir, PROJECT_CONFIG_FILE))
+    shutil.copyfile(get_resource_path(("project", "template.py")), osp.join(project_dir, PROJECT_FILE))
     os.mkdir(osp.join(project_dir, "suites"))
     os.mkdir(osp.join(project_dir, "fixtures"))
 
@@ -172,18 +184,18 @@ def load_project_from_file(project_filename):
     return project
 
 
-def load_project_from_dir(project_dir):
-    # type: (str) -> Project
-    return load_project_from_file(osp.join(project_dir, PROJECT_CONFIG_FILE))
-
-
 def load_project():
     # type: () -> Project
-    project_filename = find_project_file()
-    if project_filename is None:
-        raise ProjectLoadingError("Cannot find project file")
 
-    return load_project_from_file(project_filename)
+    project_filename = find_project_file()
+    if project_filename:
+        return load_project_from_file(project_filename)
+
+    project_dir = _find_project_dir_from_suites_dir()
+    if project_dir:
+        return Project(project_dir)
+
+    raise ProjectLoadingError("Cannot neither find a 'suites' directory nor a 'project.py' file")
 
 
 def _build_fixture_registry(project, cli_args):

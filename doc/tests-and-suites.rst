@@ -1,7 +1,19 @@
 .. _`tests and suites`:
 
-Tests and suites
-================
+Writing tests
+=============
+
+Suites discovery
+----------------
+
+Tests are organized within test suites, here is how suites are discovered by lemoncheesecake (by order of priority):
+
+- if a ``$LCC_PROJECT_FILE`` environment variable is defined, then the suites will be loaded using
+  this :ref:`customized project file <project>`
+- a :ref:`custom <project>` ``project.py`` file is searched from the current directory up to the root directory, if it's found
+  then is will be used to load the suites
+- a ``suites`` directory is searched from the current directory up to the root directory, if it's found then
+  the suites will be loaded from that directory
 
 Defining a suite
 ----------------

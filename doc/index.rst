@@ -17,6 +17,7 @@ Here is a test example:
 
 .. code-block:: python
 
+    # suites/suite.py
     import json
     import requests
 

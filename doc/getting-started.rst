@@ -3,28 +3,11 @@
 Getting started
 ===============
 
-Creating a new test project
----------------------------
-
-Before writing tests, you need to setup a lemoncheesecake project.
-
-The command:
-
-.. code-block:: shell
-
-    $ lcc bootstrap myproject
-
-creates a new project directory "myproject" containing one file "project.py" (it contains your project settings) and
-a "suites" directory where you can add your test suites.
-
-Writing a suite
----------------
-
-A suite looks like this:
+Create a "suites" directory, add a suite module :
 
 .. code-block:: python
 
-    # suites/mysuite.py:
+    # suites/my_suite.py:
 
     import lemoncheesecake.api as lcc
     from lemoncheesecake.matching import *
@@ -37,6 +20,38 @@ A suite looks like this:
     def my_test():
         check_that("value", "foo", equal_to("foo"))
 
+And then, run the tests :
+
+.. code-block:: none
+
+    $ lcc run
+    ================================== my_suite ===================================
+     OK  1 # my_suite.my_test
+
+    Statistics :
+     * Duration: 0.034s
+     * Tests: 1
+     * Successes: 1 (100%)
+     * Failures: 0
+
+The generated HTML report is available in the file ``report/report.html``.
+
+The report can also be viewed directly on the terminal:
+
+.. code-block:: none
+
+    $ lcc report
+    PASSED: My test
+    (my_suite.my_test)
+    +----------+-----------------------------------+-----------+
+    |          | My test                           | 0.001s    |
+    +----------+-----------------------------------+-----------+
+    | CHECK OK | Expect value to be equal to "foo" | Got "foo" |
+    +----------+-----------------------------------+-----------+
+
+``lcc run`` provides plenty of options on test filtering, test execution and reporting.
+All the details about this command can be found :ref:`here <lcc_run>`.
+
 .. note::
 
     About imports:
@@ -44,7 +59,7 @@ A suite looks like this:
     - ``lemoncheesecake.api`` is imported as a module aliased to ``lcc`` and contains the complete lemoncheesecake
       API needed to write tests
 
-    - ``lemoncheesecake.matching`` is imported using a wildcard import to make matching operations more natural to read:
+    - ``lemoncheesecake.matching`` is imported using a wildcard import to make matching operations more pleasant to read:
 
       .. code-block:: python
 
@@ -53,91 +68,3 @@ A suite looks like this:
 
         # than that:
         lcc.check_that("value", 1, lcc.is_integer(lcc.greater_than(0)))
-
-Using the default ``project.py`` file, suites will be loaded from the ``suites`` sub directory.
-
-Running the tests
------------------
-
-The command ``lcc run`` is in charge of running the tests, it provides several option to filter the test to be run and
-to set the reporting backends that will be used.
-
-.. code-block:: none
-
-    $ lcc run --help
-    usage: lcc run [-h] [--desc DESC [DESC ...]] [--tag TAG [TAG ...]]
-                   [--property PROPERTY [PROPERTY ...]]
-                   [--link LINK [LINK ...]] [--passed] [--failed] [--grep GREP]
-                   [--skipped] [--non-passed] [--disabled] [--enabled]
-                   [--from-report FROM_REPORT] [--force-disabled]
-                   [--exit-error-on-failure] [--stop-on-failure]
-                   [--threads THREADS] [--report-dir REPORT_DIR]
-                   [--reporting REPORTING [REPORTING ...]]
-                   [--save-report SAVE_REPORT]
-                   [path [path ...]]
-
-    optional arguments:
-      -h, --help            show this help message and exit
-
-    Filtering:
-      path                  Filter on test/suite path (wildcard character '*' can
-                            be used)
-      --desc DESC [DESC ...]
-                            Filter on descriptions
-      --tag TAG [TAG ...], -a TAG [TAG ...]
-                            Filter on tags
-      --property PROPERTY [PROPERTY ...], -m PROPERTY [PROPERTY ...]
-                            Filter on properties
-      --link LINK [LINK ...], -l LINK [LINK ...]
-                            Filter on links (names and URLs)
-      --passed              Filter on passed tests
-      --failed              Filter on failed tests
-      --grep GREP, -g GREP  Filter result content using pattern
-      --skipped             Filter on skipped tests
-      --non-passed          Alias for --failed --skipped
-      --disabled            Filter on disabled tests
-      --enabled             Filter on enabled (non-disabled) tests
-      --from-report FROM_REPORT
-                            When enabled, the filtering is based on the given
-                            report
-
-    Test execution:
-      --force-disabled      Force the run of disabled tests
-      --exit-error-on-failure
-                            Exit with non-zero code if there is at least one non-
-                            passed test
-      --stop-on-failure     Stop tests execution on the first non-passed test
-      --threads THREADS     Number of threads used to run tests (default:
-                            $LCC_THREADS or 1)
-
-    Reporting:
-      --report-dir REPORT_DIR, -r REPORT_DIR
-                            Directory where report data will be stored
-      --reporting REPORTING [REPORTING ...]
-                            The list of reporting backends to use (default:
-                            console, json, html)
-      --save-report SAVE_REPORT
-                            At what frequency the reporting backends such as json
-                            or xml must save reporting data to disk. (default:
-                            $LCC_SAVE_REPORT or at_each_failed_test, possible
-                            values are: at_end_of_tests, at_each_suite,
-                            at_each_test, at_each_failed_test, at_each_event,
-                            every_${N}s)
-
-Tests are run like this:
-
-.. code-block:: none
-
-    $ lcc run
-    ============================= my_first_suite ==============================
-     OK  1 # some_test
-
-    Statistics :
-     * Duration: 0s
-     * Tests: 1
-     * Successes: 1 (100%)
-     * Failures: 0
-
-The generated HTML report is available in the file ``report/report.html``.
-
-You will find more information about ``lcc run`` options :ref:`here <lcc_run>`.
