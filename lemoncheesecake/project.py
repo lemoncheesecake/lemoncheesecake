@@ -9,6 +9,7 @@ import os
 import os.path as osp
 import shutil
 import argparse
+import inspect
 
 from typing import Any, Dict, Optional, Sequence, Tuple, List
 
@@ -32,10 +33,15 @@ DEFAULT_SUITES_DIR = "suites"
 DEFAULT_FIXTURES_DIR = "fixtures"
 
 
+def get_caller_dir(stack):
+    frame_info = stack[1]
+    return os.path.dirname(frame_info[1])
+
+
 class Project(object):
-    def __init__(self, project_dir):
-        #: The project's directory path
-        self.dir = project_dir  # type: str
+    def __init__(self, project_dir=None):
+        #: The project's directory path (optional, defaults to the caller dir)
+        self.dir = project_dir or get_caller_dir(inspect.stack())  # type: str
         #: The project's metadata policy
         self.metadata_policy = MetadataPolicy()
         #: Indicates whether or not the project supports parallel execution of tests

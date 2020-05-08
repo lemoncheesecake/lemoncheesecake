@@ -62,6 +62,15 @@ def test_project_creation(tmp_cwd):
     project.post_run(object(), tmp_cwd)
 
 
+def test_load_project_with_project_instantiated_without_project_dir(tmp_cwd):
+    with open(osp.join(tmp_cwd, "project.py"), "w") as fh:
+        fh.write("""from lemoncheesecake.project import Project
+project = Project()""")
+
+    project = load_project()
+    assert project.dir == tmp_cwd
+
+
 def test_load_project_while_no_project(tmp_cwd):
     with pytest.raises(ProjectLoadingError):
         load_project()

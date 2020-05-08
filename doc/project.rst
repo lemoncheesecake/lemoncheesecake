@@ -6,30 +6,51 @@ Project customization
 A project file allows the customization of several behaviors of lemoncheesecake.
 
 It consists of a ``project.py`` file that resides in the project top directory (at the same level of the "suites" directory).
-It is a python that provides a ``project`` variable. This variable must be an instance (or a subclass) of a
-:class:`Project <lemoncheesecake.project.Project>` instantiated with the project top directory path.
+It is a module that provides a ``project`` variable. This variable must be an instance (or a subclass) of a
+:class:`Project <lemoncheesecake.project.Project>` class.
 
 A minimal project module looks like this::
 
     # project.py:
 
-    import os.path
-
     from lemoncheesecake.project import Project
 
-    project_dir = os.path.dirname(__file__)
-    project = Project(project_dir)
+    project = Project()
+
+.. note::
+
+    The ``Project`` constructor takes an optional ``project_dir`` argument that is
+    used by lemoncheesecake to know where the suites, fixtures must be loaded from, where the report must be
+    written, etc...
+
+    By default, this directory is determined from the path of the module where the ``Project`` constructor is called.
+    If the ``Project`` class is instantiated in the ``project.py`` module as described above, everything
+    will work as expected.
+
+    However, if the constructor of ``Project`` is called outside of ``project.py`` then the
+    ``project_dir`` will have to be passed explicitly.
+
+.. versionchanged:: 1.5.0
+
+Prior to 1.5.0, the project dir argument is required, such as:
+
+.. code-block:: python
+
+    # project.py:
+
+    import os
+    from lemoncheesecake.project import Project
+
+    project = Project(os.path.dirname(__file__))
 
 .. _`add CLI args`:
 
 Adding custom CLI arguments to lcc run
 --------------------------------------
 
-Custom command line arguments are can be added to ``lcc run``::
+Custom command line arguments can be added to ``lcc run``::
 
     # project.py:
-
-    import os.path
 
     from lemoncheesecake.project import Project
 
@@ -38,8 +59,7 @@ Custom command line arguments are can be added to ``lcc run``::
             cli_parser.add_argument("--host", required=True, help="Target host")
             cli_parser.add_argument("--port", type=int, default=443, help="Target port")
 
-    project_dir = os.path.dirname(__file__)
-    project = CustomProject(project_dir)
+    project = CustomProject()
 
 And then accessed through the ``cli_args`` fixture::
 
@@ -61,8 +81,6 @@ into the report won't be available (they will raise an exception)::
 
     # project.py:
 
-    import os.path
-
     from lemoncheesecake.project import Project
 
     class CustomProject(Project):
@@ -72,8 +90,7 @@ into the report won't be available (they will raise an exception)::
         def post_run(self, cli_args, report_dir):
             # do something after the tests are run
 
-    project_dir = os.path.dirname(__file__)
-    project = CustomProject(project_dir)
+    project = CustomProject()
 
 An exception raised within the ``pre_run`` method will prevent the tests from being run.
 The :func:`lcc.UserError <lemoncheesecake.exceptions.UserError>` exception class
@@ -91,8 +108,6 @@ Extra key/value pairs can be added to the "Information" section of the report::
 
     # project.py:
 
-    import os.path
-
     from lemoncheesecake.project import Project
 
     class CustomProject(Project):
@@ -102,8 +117,7 @@ Extra key/value pairs can be added to the "Information" section of the report::
                 ("info2", "value2")
             ]
 
-    project_dir = os.path.dirname(__file__)
-    project = CustomProject(project_dir)
+    project = CustomProject()
 
 .. _reporttitle:
 
@@ -114,17 +128,15 @@ A custom report title can also be set::
 
     # project.py:
 
-    import os.path
     import time
 
     from lemoncheesecake.project import Project
 
     class CustomProject(Project):
         def build_report_title(self):
-            return "This is my test report for %s" % time.asctime()
+            return "This is my test report at %s" % time.asctime()
 
-    project_dir = os.path.dirname(__file__)
-    project = CustomProject(project_dir)
+    project = CustomProject()
 
 .. _loadsuitesandfixtures:
 
@@ -140,8 +152,6 @@ Here is an example of project that loads suites and fixtures from alternate dire
 
     # project.py:
 
-    import os.path
-
     from lemoncheesecake.project import Project
     from lemoncheesecake.suite import load_suites_from_directory
     from lemoncheesecake.fixture import load_fixtures_from_directory
@@ -153,8 +163,7 @@ Here is an example of project that loads suites and fixtures from alternate dire
         def load_fixtures(self):
             return load_fixtures_from_directory(os.path.join(self.dir, "my_fixtures"))
 
-    project_dir = os.path.dirname(__file__)
-    project = CustomProject(project_dir)
+    project = CustomProject()
 
 
 For more information, see:
@@ -175,12 +184,9 @@ The following example requires that every tests provide a property "priority" wh
 
     # project.py:
 
-    import os.path
-
     from lemoncheesecake.project import Project
 
-    project_dir = os.path.dirname(__file__)
-    project = Project(project_dir)
+    project = Project()
     project.metadata_policy.add_property_rule(
         "priority", ("low", "medium", "high"), required=True
     )
@@ -197,5 +203,5 @@ and suites while forbidding the usage of any other tag::
     )
     project.disallow_unknown_tags()
 
-See :class:`lemoncheesecake.metadatapolicy.MetadataPolicy <lemoncheesecake.metadatapolicy.MetadataPolicy>`
+See :class:`MetadataPolicy <lemoncheesecake.metadatapolicy.MetadataPolicy>`
 for more information.
