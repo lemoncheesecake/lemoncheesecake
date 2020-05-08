@@ -36,6 +36,10 @@ def _get_metadata_next_rank():
     return rank
 
 
+def build_description_from_name(name):
+    return name.capitalize().replace("_", " ")
+
+
 def add_test_into_suite(test, suite):
     # type: (Test, Any) -> None
     """
@@ -67,11 +71,11 @@ def get_metadata(obj):
         return obj._lccmetadata
 
 
-def suite(description, name=None, rank=None):
+def suite(description=None, name=None, rank=None):
     """
     Decorator, mark a class as a suite class.
 
-    :param description: suite's description
+    :param description: suite's description (by default, the suite's description is built from the name)
     :param name: suite's name (by default, the suite's name is taken from the class's name)
     :param rank: this value is used to order suites of the same hierarchy level
     """
@@ -82,12 +86,12 @@ def suite(description, name=None, rank=None):
         md.is_suite = True
         md.rank = rank if rank is not None else _get_metadata_next_rank()
         md.name = name or klass.__name__
-        md.description = description
+        md.description = description or build_description_from_name(md.name)
         return klass
     return wrapper
 
 
-def test(description, name=None):
+def test(description=None, name=None):
     """
     Decorator, make a method as a test method.
 
@@ -100,7 +104,7 @@ def test(description, name=None):
         md.is_test = True
         md.rank = _get_metadata_next_rank()
         md.name = name or func.__name__
-        md.description = description
+        md.description = description or build_description_from_name(md.name)
         return func
     return wrapper
 

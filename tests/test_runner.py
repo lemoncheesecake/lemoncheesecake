@@ -12,8 +12,9 @@ from lemoncheesecake.matching import *
 from lemoncheesecake.suite import add_test_into_suite
 from lemoncheesecake.reporting.report import ReportLocation
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession
+from lemoncheesecake.suite import load_suites_from_directory
 
-from helpers.runner import run_suite_class, run_suite_classes, run_suite, build_suite_from_module
+from helpers.runner import run_suite_class, run_suite_classes, run_suites, run_suite, build_suite_from_module
 from helpers.report import assert_test_statuses, assert_test_passed, assert_test_failed, assert_test_skipped, \
     assert_report_node_success, get_last_test, get_last_log
 
@@ -152,6 +153,22 @@ def test_sub_suite_inline():
                 pass
 
     assert_test_passed(run_suite_class(MyParentSuite))
+
+
+def test_sub_suite_with_dir_only(tmpdir):
+    tmpdir.mkdir("parent_suite")
+    tmpdir.join("parent_suite").join("child_suite.py").write("""
+import lemoncheesecake.api as lcc
+
+@lcc.test()
+def my_test():
+    lcc.log_info("some thing")
+""")
+
+    suites = load_suites_from_directory(tmpdir.strpath)
+    report = run_suites(suites)
+
+    assert_test_statuses(report, passed=("parent_suite.child_suite.my_test",))
 
 
 def test_setup_test():

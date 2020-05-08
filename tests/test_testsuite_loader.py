@@ -24,13 +24,6 @@ def test_load_suite_from_file_invalid_module(tmpdir):
         load_suite_from_file(file.strpath)
 
 
-def test_load_suite_from_file_invalid_class(tmpdir):
-    file = tmpdir.join("anothersuite.py")
-    file.write(build_test_module())
-    with pytest.raises(SuiteLoadingError):
-        load_suite_from_file(file.strpath)
-
-
 def test_load_suites_from_directory_without_modules(tmpdir):
     suites = load_suites_from_directory(tmpdir.strpath)
     assert len(suites) == 0
@@ -55,9 +48,24 @@ def test_load_suites_from_directory_with_subdir(tmpdir):
     subdir.mkdir()
     file = subdir.join("childsuite.py")
     file.write(build_test_module("childsuite"))
+
     suites = load_suites_from_directory(tmpdir.strpath)
     assert suites[0].name == "parentsuite"
     assert len(suites[0].get_suites()) == 1
+    assert suites[0].get_suites()[0].name == "childsuite"
+
+
+def test_load_suites_from_directory_with_subdir_only(tmpdir):
+    subdir = tmpdir.join("parentsuite")
+    subdir.mkdir()
+    file = subdir.join("childsuite.py")
+    file.write(build_test_module("childsuite"))
+
+    suites = load_suites_from_directory(tmpdir.strpath)
+    assert suites[0].name == "parentsuite"
+    assert suites[0].description == "Parentsuite"
+    assert len(suites[0].get_suites()) == 1
+    assert suites[0].get_suites()[0].name == "childsuite"
 
 
 def test_load_suites_from_files(tmpdir):
@@ -364,19 +372,52 @@ def test_load_suite_from_class_with_fixture_dependencies():
     assert fixture_names == ["foo"]
 
 
-def test_load_suite_from_module(tmpdir):
-    file = tmpdir.join("mysuite.py")
+def test_load_suite_from_file_with_single_suite(tmpdir):
+    file = tmpdir.join("my_suite.py")
     file.write(
-        """SUITE = {
-    "description": "My Suite"
-}
+        """import lemoncheesecake.api as lcc
+
+@lcc.suite()
+class my_suite:
+    @lcc.test()
+    def my_test(self):
+        pass
 """)
+
     suite = load_suite_from_file(file.strpath)
-    assert suite.name == "mysuite"
-    assert suite.description == "My Suite"
+
+    assert suite.name == "my_suite"
+    assert len(suite.get_tests()) == 1
 
 
-def test_load_suite_from_module_tests_order(tmpdir):
+def test_load_suite_from_file_without_suite_marker(tmpdir):
+    file = tmpdir.join("my_suite.py")
+    file.write(
+        """import lemoncheesecake.api as lcc
+
+@lcc.test()
+def my_test(self):
+    pass
+""")
+
+    suite = load_suite_from_file(file.strpath)
+
+    assert suite.name == "my_suite"
+    assert len(suite.get_tests()) == 1
+
+
+def test_load_suite_from_file_empty_module(tmpdir):
+    file = tmpdir.join("my_suite.py")
+    file.write("")
+
+    suite = load_suite_from_file(file.strpath)
+
+    assert suite.name == "my_suite"
+    assert suite.description == "My suite"
+    assert len(suite.get_tests()) == 0
+
+
+def test_load_suite_from_file_tests_order(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
         """
@@ -417,7 +458,7 @@ def b():
     assert tests[3].name == "b"
 
 
-def test_load_suite_from_module_suites_order(tmpdir):
+def test_load_suite_from_file_suites_order(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
         """
@@ -466,7 +507,7 @@ class b:
     assert suites[3].name == "b"
 
 
-def test_load_suite_from_module_with_fixture_dependencies(tmpdir):
+def test_load_suite_from_file_with_fixture_dependencies(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
         """import lemoncheesecake.api as lcc
@@ -483,25 +524,26 @@ foo = lcc.inject_fixture()
     assert fixture_names == ["foo"]
 
 
-def test_load_suite_from_module_with_all_metadata(tmpdir):
+def test_load_suite_from_file_with_all_metadata(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
         """SUITE = {
+    "name": "my_suite",
     "description": "My Suite",
     "tags": ["foo", "bar"],
     "properties": {"bar": "baz"},
-    "links": [("http://u.r.l/1234", None), ("http://u.r.l/1235", "#1235")],
+    "links": [("http://u.r.l/1234", None), ("http://u.r.l/1235", "#1235"), "http://u.r.l/1236"],
 }
 """)
     suite = load_suite_from_file(file.strpath)
-    assert suite.name == "mysuite"
+    assert suite.name == "my_suite"
     assert suite.description == "My Suite"
     assert suite.tags == ["foo", "bar"]
     assert suite.properties == {"bar": "baz"}
-    assert suite.links == [("http://u.r.l/1234", None), ("http://u.r.l/1235", "#1235")]
+    assert suite.links == [("http://u.r.l/1234", None), ("http://u.r.l/1235", "#1235"), ("http://u.r.l/1236", None)]
 
 
-def test_load_suite_from_module_with_test_function(tmpdir):
+def test_load_suite_from_file_with_test_function(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
         """import lemoncheesecake.api as lcc
@@ -520,7 +562,7 @@ def mytest():
     assert test.description == "My Test"
 
 
-def test_load_suite_from_module_with_condition_on_suite_met(tmpdir):
+def test_load_suite_from_files_with_condition_on_suite_met(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
         """import lemoncheesecake.api as lcc
@@ -539,7 +581,7 @@ def mytest():
     assert len(suites) == 1
 
 
-def test_load_suite_from_module_with_condition_on_suite_not_met(tmpdir):
+def test_load_suite_from_files_with_condition_on_suite_not_met(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
         """import lemoncheesecake.api as lcc
@@ -558,7 +600,7 @@ def mytest():
     assert len(suites) == 0
 
 
-def test_load_suite_from_module_with_condition_on_test_met(tmpdir):
+def test_load_suite_from_files_with_condition_on_test_met(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
         """import lemoncheesecake.api as lcc
@@ -591,10 +633,10 @@ def mytest():
     pass
 """)
     suites = load_suites_from_files([file.strpath])
-    assert len(suites[0].get_tests()) == 0
+    assert len(suites) == 0
 
 
-def test_load_suite_from_module_with_test_function_and_fixtures(tmpdir):
+def test_load_suite_from_file_with_test_function_and_fixtures(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
         """import lemoncheesecake.api as lcc
@@ -614,7 +656,7 @@ def mytest(fixt1, fixt2):
     assert test.get_fixtures() == ["fixt1", "fixt2"]
 
 
-def test_load_suite_from_module_with_sub_suite(tmpdir):
+def test_load_suite_from_file_with_sub_suite(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
         """import lemoncheesecake.api as lcc
@@ -635,7 +677,7 @@ class subsuite:
     assert sub_suite.description == "Sub Suite"
 
 
-def test_load_suite_from_module_with_hooks(tmpdir):
+def test_load_suite_from_file_with_hooks(tmpdir):
     file = tmpdir.join("mysuite.py")
     file.write(
         """import lemoncheesecake.api as lcc
@@ -698,29 +740,6 @@ def mytest2():
     assert sub_suite.name == "subsuite"
     assert sub_suite.description == "Sub Suite"
     assert sub_suite.parent_suite == suite
-
-
-def test_load_suite_from_module_missing_suite_definition(tmpdir):
-    file = tmpdir.join("mysuite.py")
-    file.write("")
-
-    with pytest.raises(SuiteLoadingError):
-        load_suite_from_file(file.strpath)
-
-
-def test_load_suite_from_module_missing_suite_decorator(tmpdir):
-    file = tmpdir.join("mysuite.py")
-    file.write("""
-import lemoncheesecake.api as lcc
-
-class mysuite:
-    @lcc.test("My Test")
-    def mytest(self):
-        pass
-""")
-
-    with pytest.raises(SuiteLoadingError, match="Class is not declared as a suite"):
-        load_suite_from_file(file.strpath)
 
 
 def test_load_suite_class_with_property():

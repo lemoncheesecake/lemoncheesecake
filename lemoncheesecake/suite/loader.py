@@ -1,3 +1,4 @@
+import os
 import os.path as osp
 import inspect
 
@@ -9,6 +10,7 @@ from lemoncheesecake.helpers.introspection import get_object_attributes
 from lemoncheesecake.exceptions import LemoncheesecakeException, UserError, ModuleImportError, \
     SuiteLoadingError, serialize_current_exception
 from lemoncheesecake.suite.core import Test, Suite, SUITE_HOOKS
+from lemoncheesecake.suite.builder import _get_metadata_next_rank, build_description_from_name
 from lemoncheesecake.testtree import BaseTreeNode
 from lemoncheesecake.helpers.typecheck import check_type_string, check_type_dict, check_type
 
@@ -129,6 +131,18 @@ def _get_generated_tests(obj):
     return getattr(obj, "_lccgeneratedtests", [])
 
 
+def _get_sub_dirs_from_dir(top_dir):
+    paths = [os.path.join(top_dir, path) for path in os.listdir(top_dir)]
+    return sorted(filter(osp.isdir, paths))
+
+
+def _normalize_link(link):
+    if type(link) is str:
+        return link, None
+    else:
+        return link
+
+
 def load_suite_from_class(class_):
     # type: (Any) -> Suite
     """
@@ -194,21 +208,16 @@ def load_suite_from_module(mod):
     """
     Load a suite from a module object.
     """
-    # TODO: find a better way to workaround circular import
-    from lemoncheesecake.suite.builder import _get_metadata_next_rank
 
-    suite_info = getattr(mod, "SUITE")
+    suite_info = getattr(mod, "SUITE", {})
     suite_condition = suite_info.get("visible_if")
-    suite_name = inspect.getmodulename(inspect.getfile(mod))
-    try:
-        suite_description = suite_info["description"]
-    except KeyError:
-        raise SuiteLoadingError("Missing description in '%s' suite information" % mod.__file__)
+    suite_name = suite_info.get("name", inspect.getmodulename(inspect.getfile(mod)))
+    suite_description = suite_info.get("description", build_description_from_name(suite_name))
 
     suite = Suite(mod, suite_name, suite_description)
     suite.tags.extend(suite_info.get("tags", []))
-    suite.properties.update(suite_info.get("properties", []))
-    suite.links.extend(suite_info.get("links", []))
+    suite.properties.update(suite_info.get("properties", {}))
+    suite.links.extend(map(_normalize_link, suite_info.get("links", [])))
     suite.rank = suite_info.get("rank", _get_metadata_next_rank())
     suite.hidden = suite_condition and not suite_condition(mod)
 
@@ -239,49 +248,22 @@ def load_suite_from_file(filename):
     """
     Load a suite from a Python module indicated by a filename.
 
-    A valid module is either:
-      - a module containing a dict name 'SUITE' with keys:
-            - description (mandatory)
-            - tags (optional)
-            - properties (optional)
-            - links (optional)
-            - rank (optional)
-
-            Example::
-
-                SUITE = {
-                    "description": "Such a great test suite"
-                }
-                @lcc.test("Such a great test")
-                def my_test():
-                    pass
-
-      - a module that contains a suite class with the same name as the module name
-
-            Example::
-
-                @lcc.suite("Such a great test suite")
-                class my_suite:
-                    @lcc.test("Such a great test")
-                    def my_test():
-                        pass
-
-    Raise SuiteLoadingError if the suite class cannot be imported.
+    Raise SuiteLoadingError if the file cannot be loaded as a suite.
     """
     try:
         mod = import_module(filename)
     except ModuleImportError as e:
         raise SuiteLoadingError(str(e))
+    mod_name = strip_py_ext(osp.basename(filename))
 
-    if hasattr(mod, "SUITE"):
-        suite = load_suite_from_module(mod)
-    else:
-        mod_name = strip_py_ext(osp.basename(filename))
-        try:
-            klass = getattr(mod, mod_name)
-        except AttributeError:
-            raise SuiteLoadingError("Cannot find class '%s' in '%s'" % (mod_name, mod.__file__))
-        suite = load_suite_from_class(klass)
+    suite = load_suite_from_module(mod)
+
+    # in case of module containing no tests, a single sub-suite whose name is the same a as module
+    # then this sub-suite will be actually considered as the suite itself
+    if not hasattr(mod, "SUITE") and \
+        len(suite.get_tests()) == 0 and len(suite.get_suites()) == 1 and suite.get_suites()[0].name == mod_name:
+        suite = suite.get_suites()[0]
+        suite.parent_suite = None
 
     return suite
 
@@ -294,7 +276,7 @@ def load_suites_from_files(patterns, excluding=()):
 
     :param patterns: a mandatory list (a simple string can also be used instead of a single element list)
       of files to import; the wildcard '*' character can be used
-    :param exclude: an optional list (a simple string can also be used instead of a single element list)
+    :param excluding: an optional list (a simple string can also be used instead of a single element list)
       of elements to exclude from the expanded list of files to import
 
     Example::
@@ -303,7 +285,8 @@ def load_suites_from_files(patterns, excluding=()):
     """
     return list(
         filter(
-            lambda suite: not suite.hidden, map(load_suite_from_file, get_matching_files(patterns, excluding))
+            lambda suite: not suite.hidden and not suite.is_empty(),
+            map(load_suite_from_file, get_matching_files(patterns, excluding))
         )
     )
 
@@ -314,30 +297,29 @@ def load_suites_from_directory(dir, recursive=True):
     """
     Load a list of suites from a directory.
 
-    The function expect that:
-      - each module (.py file) contains a class that inherits Suite
-      - the class name must have the same name as the module name (if the module is foo.py
-        the class must be named foo)
-
     If the recursive argument is set to True, sub suites will be searched in a directory named
     from the suite module: if the suite module is "foo.py" then the sub suites directory must be "foo".
 
-    Raise SuiteLoadingError if one or more suite cannot be imported.
+    Raise SuiteLoadingError if one or more suite could not be loaded.
     """
     if not osp.exists(dir):
         raise SuiteLoadingError("Directory '%s' does not exist" % dir)
 
-    suites = []
+    suites = {}
+
     for filename in get_py_files_from_dir(dir):
         suite = load_suite_from_file(filename)
-        if suite.hidden:
-            continue
+        if not suite.hidden:
+            suites[filename] = suite
 
-        if recursive:
-            subsuites_dir = strip_py_ext(filename)
-            if osp.isdir(subsuites_dir):
-                for sub_suite in load_suites_from_directory(subsuites_dir, recursive=True):
-                    suite.add_suite(sub_suite)
-        suites.append(suite)
-    suites.sort(key=lambda suite: suite.rank)
-    return suites
+    if recursive:
+        for dirname in _get_sub_dirs_from_dir(dir):
+            suite = suites.get(dirname + ".py")
+            if not suite:
+                suite_name = osp.basename(dirname)
+                suite = Suite(None, suite_name, build_description_from_name(suite_name))
+                suites[suite.name] = suite
+            for sub_suite in load_suites_from_directory(dirname, recursive=True):
+                suite.add_suite(sub_suite)
+
+    return sorted(sorted(filter(lambda s: not s.is_empty(), suites.values()), key=lambda s: s.name), key=lambda s: s.rank)

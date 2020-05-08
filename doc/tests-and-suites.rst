@@ -3,175 +3,249 @@
 Writing tests
 =============
 
-Suites discovery
-----------------
+Test as a function
+------------------
 
-Tests are organized within test suites, here is how suites are discovered by lemoncheesecake (by order of priority):
-
-- if a ``$LCC_PROJECT_FILE`` environment variable is defined, then the suites will be loaded using
-  this :ref:`customized project file <project>`
-- a :ref:`custom <project>` ``project.py`` file is searched from the current directory up to the root directory, if it's found
-  then is will be used to load the suites
-- a ``suites`` directory is searched from the current directory up to the root directory, if it's found then
-  the suites will be loaded from that directory
-
-Defining a suite
-----------------
-
-A suite can be either represented by:
-
-- a module (in this case the module must define a ``SUITE`` variable that contains at least
-  the ``"description"`` key), each test is a function decorated with ``@lcc.test``:
-
-  .. code-block:: python
-
-      # suites/mysuite.py:
-
-      import lemoncheesecake.api as lcc
-      from lemoncheesecake.matching import *
-
-      SUITE = {
-        "description": "My suite"
-      }
-
-      @lcc.test("My test")
-      def my_test():
-          check_that("value", "foo", equal_to("foo"))
-
-- a class (in this case the class name must match the module name), each test is a method decorated with ``@lcc.test``:
-
-  .. code-block:: python
-
-      # suites/mysuite.py:
-
-      import lemoncheesecake.api as lcc
-      from lemoncheesecake.matching import *
-
-      @lcc.suite("My suite")
-      class mysuite:
-          @lcc.test("My test")
-          def my_test(self):
-              check_that("value", "foo", equal_to("foo"))
-
-A suite can be nested in another suite, it can be performed in different ways:
-
-- as a class in a suite module:
-
-  .. code-block:: python
-
-      # suites/mysuite.py:
-
-      SUITE = {
-        "description": "Parent suite"
-      }
-
-      @lcc.test("Test A")
-      def test_a():
-          pass
-
-      @lcc.suite("Child suite 1")
-      class child_suite_1:
-          @lcc.test("Test B")
-          def test_b(self):
-              pass
-
-      @lcc.suite("Child suite 2")
-      class child_suite_2:
-          @lcc.test("Test C")
-          def test_c(self):
-              pass
-
-- as a nested class:
-
-  .. code-block:: python
-
-      # suites/mysuite.py:
-
-      @lcc.suite("Parent suite")
-      class parent_suite:
-          @lcc.suite("Child suite")
-          class child_suite:
-              pass
-
-- as a module in a sub directory whose name matches the parent suite module:
-
-  .. code-block:: text
-
-      $ tree
-      .
-      ├── parent_suite
-      │   └── child_suite.py
-      └── parent_suite.py
-
-      1 directory, 2 files
-
-Adding metadata to tests and suites
------------------------------------
-
-Several type of metadata can be associated to both tests and suites using decorators:
-
-- ``tags`` (take one or more tag name as argument):
-
-  .. code-block:: python
-
-      @lcc.test("Test something")
-      @lcc.tags("important")
-      def test_something():
-          pass
-
-      @lcc.test("Test something else")
-      @lcc.tags("slow")
-      def test_something_else():
-          pass
-
-      @lcc.test("Test something else again")
-      @lcc.tags("slow", "deprecated")
-      def test_something_else_again():
-          pass
-
-- ``properties`` (take a key/value pair arguments):
-
-  .. code-block:: python
-
-      @lcc.test("Test something")
-      @lcc.prop("type", "acceptance")
-      def test_something(self):
-          pass
-
-      @lcc.test("Test something else")
-      @lcc.prop("type", "destructive")
-      def test_something_else(self):
-          pass
-
-- ``links`` (take an URL and an optional description as arguments):
-
-  .. code-block:: python
-
-      @lcc.test("Test something")
-      @lcc.link("http://bugtracker.example.com/issues/1234", "TICKET-1234")
-      def test_something():
-          pass
-
-      @lcc.test("Test something else")
-      @lcc.link("http://bugtracker.example.com/issues/5678")
-      def test_something_else():
-          pass
-
-Metadata can also be associated to a suite module using the ``SUITE`` variable:
+Here is a very simple example of a suite:
 
 .. code-block:: python
 
+    # suites/my_suite.py:
+
+    import lemoncheesecake.api as lcc
+    from lemoncheesecake.matching import *
+
+    @lcc.test()
+    def my_test_1():
+        check_that("value", "foo", equal_to("foo"))
+
+    @lcc.test()
+    def my_test_2():
+        check_that("value", "bar", equal_to("bar"))
+
+
+.. code-block:: text
+
+    $ lcc show
+    * my_suite
+        - my_suite.my_test_1
+        - my_suite.my_test_2
+
+A test is a function (or a method, see later) decorated with ``@lcc.test()``.
+
+Test as a method
+----------------
+
+Tests can also be implemented as class methods:
+
+.. code-block:: python
+
+    # suites/my_suite.py:
+
+    import lemoncheesecake.api as lcc
+    from lemoncheesecake.matching import *
+
+    @lcc.suite()
+    class suite_a:
+        @lcc.test()
+        def my_test_1():
+            check_that("value", "foo", equal_to("foo"))
+
+    @lcc.suite()
+    class suite_b:
+        @lcc.test()
+        def my_test_1():
+            check_that("value", "bar", equal_to("bar"))
+
+.. code-block:: text
+
+    $ lcc show
+    * my_suite
+        * my_suite.suite_a
+            - my_suite.suite_a.my_test_1
+        * my_suite.suite_b
+            - my_suite.suite_b.my_test_1
+
+In that case, the class must be decorated with ``@lcc.suite()`` and will be considered as a sub-suite of the current
+module-suite.
+
+Please note that if the module only contains one suite-class whose name is equal to the module's name, then this suite will
+not be considered as a sub-suite of the module-suite, but as the suite itself:
+
+.. code-block:: python
+
+    # suites/my_suite.py:
+
+    import lemoncheesecake.api as lcc
+    from lemoncheesecake.matching import *
+
+    @lcc.suite()
+    class my_suite:
+        @lcc.test()
+        def my_test_1():
+            check_that("value", "foo", equal_to("foo"))
+
+        @lcc.test()
+        def my_test_2():
+            check_that("value", "bar", equal_to("bar"))
+
+.. code-block:: text
+
+    $ lcc show
+    * my_suite
+        - my_suite.my_test_1
+        - my_suite.my_test_2
+
+
+Organizing suites within directories
+------------------------------------
+
+Suites hierarchy can also be created through putting modules into sub-directories, such as this:
+
+.. code-block:: python
+
+    # suites/parent_suite.py:
+
+    import lemoncheesecake.api as lcc
+    from lemoncheesecake.matching import *
+
+    @lcc.test()
+    def test_in_parent_suite():
+        check_that("value", "foo", equal_to("foo"))
+
+
+    # suites/parent_suite/child_suite.py:
+
+    import lemoncheesecake.api as lcc
+    from lemoncheesecake.matching import *
+
+    @lcc.test()
+    def test_in_child_suite():
+        check_that("value", "foo", equal_to("foo"))
+
+.. code-block:: text
+
+    .
+    └── suites
+        ├── parent_suite
+        │   └── child_suite.py
+        └── parent_suite.py
+
+.. code-block:: text
+
+    $ lcc show
+    * parent_suite
+        - parent_suite.test_in_parent_suite
+        * parent_suite.child_suite
+            - parent_suite.child_suite.test_in_child_suite
+
+A directory without a ``*.py`` associated file, will be also considered as a suite:
+
+.. code-block:: python
+
+    # suites/parent_suite/child_suite.py:
+
+    import lemoncheesecake.api as lcc
+    from lemoncheesecake.matching import *
+
+    @lcc.test()
+    def test_in_child_suite():
+        check_that("value", "foo", equal_to("foo"))
+
+.. code-block:: text
+
+    .
+    └── suites
+        └── parent_suite
+            └── child_suite.py
+
+.. code-block:: text
+
+    $ lcc show
+    * parent_suite
+        * parent_suite.child_suite
+            - parent_suite.child_suite.test_in_child_suite
+
+.. versionchanged:: 1.5.0
+
+Since version 1.5.0, several prior requirements have been made optional:
+
+- the description for tests and suites is now optional
+
+- the ``SUITE`` variable in module is now optional
+
+- suites can be created with only a directory containing ``*.py`` files, a ``*.py`` file companion is no longer a requirement,
+  in other words: for a ``parent_suite`` directory a ``parent_suite.py`` file (at the same level) is no longer mandatory
+
+Metadata
+--------
+
+Metadata can be associated to both tests and suites, they can be used to :ref:`filter tests <cli_filters>` and will
+be displayed in the report:
+
+- description (a description is generated from the test/suite name by default)
+
+- tags
+
+- properties (key/value pairs)
+
+- link (an URL and an optional description)
+
+Example:
+
+.. code-block:: python
+
+    @lcc.test("A test with a meaningful description")
+    @lcc.tags("important")
+    @lcc.tags("a_second_tag", "a_third_tag")
+    @lcc.prop("type", "acceptance")
+    @lcc.link("http://bugtracker.example.com/issues/1234", "TICKET-1234")
+    @lcc.link("http://bugtracker.example.com/issues/1235")
+    def my_test():
+        check_that("value", "foo", equal_to("foo"))
+
+The ``@lcc.suite()`` decorator also takes a description like ``@lcc.test()`` does.
+
+The ``@lcc.tags()``, ``@lcc.prop()`` and ``@lcc.link()`` decorators also apply to suite-classes.
+
+In suite-modules, metadata are be set through a ``SUITE`` module-level variable:
+
+.. code-block:: python
+
+    # suites/my_suite.py
+
+    import lemoncheesecake.api as lcc
+    from lemoncheesecake.matching import *
+
     SUITE = {
-        "description": "My Suite",
-        "tags": ["slow"]
+        "name": "another_name",
+        "description": "A suite with a meaningful description",
+        "tags": ["important", "a_second_tag", "a_third_tag"],
+        "properties": {"type": "acceptance"},
+        "links": [
+            ("http://bugtracker.example.com/issues/1234", "TICKET-1234"),
+            "http://bugtracker.example.com/issues/1235"
+        ]
     }
 
-Once, the metadata are set, they:
+    @lcc.test()
+    def my_test():
+        check_that("value", "foo", equal_to("foo"))
 
-- can be used as :ref:`filters <cli_filters>` in the various lemoncheesecake :ref:`CLI tools <cli>`
+As it can be seen in the previous examples, test and suites name are determined from the decorated object's name or
+from the current module.
+It can be overridden in ``@lcc.test()`` and ``@lcc.suite()`` decorators:
 
-- will be available in the test report
+.. code-block:: python
 
+    @lcc.test(name="test_something")
+    def my_test():
+        pass
+
+.. note::
+    Test/suite descriptions are optional and automatically generated from the test/suite name.
+    Since names are somewhat technical, it is recommended to set an explicit description to the test/suite in order
+    to provide a meaningful insight of what the test/suite does to the test report reader.
 
 Disabling a test or a suite
 ---------------------------
@@ -186,10 +260,11 @@ A test or an entire suite can be disabled using the ``@lcc.disabled()`` decorato
 Disabled tests are visible in the report but they are not taken into account while computing the percentage
 of successful tests.
 
-*Since version 1.1.0*, it's possible to pass a ``reason`` (str) argument to the decorator, it will be visible
-in the generated report.
+.. versionadded:: 1.1.0
+    it's possible to pass a ``reason`` (str) argument to the decorator, it will be visible in the generated report.
 
 If you want to completely hide a test or a suite from the test tree and the report, use ``@lcc.hidden()``.
+
 
 Conditional tests and suites
 ----------------------------
@@ -238,3 +313,24 @@ This decorator:
 - it is only applicable to tests (not suites)
 
 - the test path must point to a test (not a suite)
+
+
+Suites discovery
+----------------
+
+Here is how suites are discovered by lemoncheesecake (by order of priority):
+
+- if a ``$LCC_PROJECT_FILE`` environment variable is defined, then the suites will be loaded using
+  this :ref:`customized project file <project>`
+- a :ref:`customized project file <project>` named ``project.py`` is searched from the current directory up to the root
+  directory and is used to load suites
+- a ``suites`` directory is searched from the current directory up to the root directory, if it's found then
+  the suites will be loaded from that directory
+
+In the first two cases, the project file loads (by default) suites from a ``suites`` directory present at the same
+level as the project file itself.
+
+.. versionchanged:: 1.5.0
+
+    prior to 1.5.0, a project file (``project.py``) was mandatory; since 1.5.0, lemoncheesecake can discover tests only
+    from a ``suites`` directory.

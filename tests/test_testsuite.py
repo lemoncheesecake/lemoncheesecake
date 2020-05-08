@@ -21,10 +21,24 @@ def test_decorator_test():
         @lcc.test("test_desc")
         def mytest(self):
             pass
+
     suite = load_suite_from_class(MySuite)
     test = suite.get_tests()[0]
     assert test.name == "mytest"
     assert test.description == "test_desc"
+
+
+def test_decorator_test_without_description():
+    @lcc.suite("My Suite")
+    class MySuite:
+        @lcc.test()
+        def my_test(self):
+            pass
+
+    suite = load_suite_from_class(MySuite)
+    test = suite.get_tests()[0]
+    assert test.name == "my_test"
+    assert test.description == "My test"
 
 
 def test_decorator_test_with_name():
@@ -86,12 +100,21 @@ def test_test_decorator_on_invalid_object():
 
 
 def test_decorator_suite_with_name():
-    @lcc.test("My Suite", name="mysuite")
-    def somesuite():
+    @lcc.suite("My Suite", name="mysuite")
+    class somesuite():
         pass
 
-    metadata = lcc.get_metadata(somesuite)
-    assert metadata.name == "mysuite"
+    suite = load_suite_from_class(somesuite)
+    assert suite.name == "mysuite"
+
+
+def test_decorator_suite_without_description():
+    @lcc.suite()
+    class some_suite():
+        pass
+
+    suite = load_suite_from_class(some_suite)
+    assert suite.description == "Some suite"
 
 
 def test_suite_decorator_on_invalid_object():

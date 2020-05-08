@@ -62,7 +62,7 @@ class Suite(BaseSuite):
         self.disabled = False
         self.hidden = False
         self._hooks = {}
-        self._injected_fixtures = self._load_injected_fixtures(obj)
+        self._injected_fixtures = self._load_injected_fixtures(obj) if obj else {}
         # to optimize unique constraint checks on test/suite name/description, keep those
         # strings in sets:
         self._test_names = set()
