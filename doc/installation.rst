@@ -36,3 +36,5 @@ Multiple extras can be specified:
 .. code-block:: shell
 
     $ pip install lemoncheesecake[junit,reportportal]
+
+Some reporting backends require specific configuration, see :ref:`here <configuring reporting backends>`.

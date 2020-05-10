@@ -7,7 +7,6 @@ Table of content
     :maxdepth: 2
 
     installation
-    configure-reporting-backends
     getting-started
     tests-and-suites
     matchers
@@ -22,3 +21,4 @@ Table of content
     api
     deprecations
     migrating-to-v1
+    configure-reporting-backends

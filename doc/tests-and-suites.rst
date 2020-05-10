@@ -33,8 +33,8 @@ Here is a very simple example of a suite:
 
 A test is a function (or a method, see later) decorated with ``@lcc.test()``.
 
-Test as a method
-----------------
+Test as a method, suite as a class
+----------------------------------
 
 Tests can also be implemented as class methods:
 
@@ -358,5 +358,5 @@ level as the project file itself.
 
 .. versionchanged:: 1.5.0
 
-    prior to 1.5.0, a project file (``project.py``) was mandatory; since 1.5.0, lemoncheesecake can discover tests only
+    prior to 1.5.0, a project file (``project.py``) was mandatory; since 1.5.0, lemoncheesecake can discover tests simply
     from a ``suites`` directory.

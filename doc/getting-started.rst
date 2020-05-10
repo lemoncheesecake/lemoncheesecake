@@ -3,7 +3,7 @@
 Getting started
 ===============
 
-Create a "suites" directory, add a suite module :
+Create a "suites" directory and add a suite module :
 
 .. code-block:: python
 
@@ -20,7 +20,7 @@ Create a "suites" directory, add a suite module :
     def my_test():
         check_that("value", "foo", equal_to("foo"))
 
-And then, run the tests :
+Then, run the tests :
 
 .. code-block:: none
 

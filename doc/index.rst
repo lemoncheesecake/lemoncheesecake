@@ -18,6 +18,7 @@ Here is a test example:
 .. code-block:: python
 
     # suites/suite.py
+
     import json
     import requests
 
@@ -28,14 +29,11 @@ Here is a test example:
         "description": "Github tests"
     }
 
-    URL = "https://api.github.com/orgs/lemoncheesecake"
-
-
     @lcc.test("Test Organization end-point")
     def organization():
         lcc.set_step("Get lemoncheesecake organization information")
-        lcc.log_info("GET %s" % URL)
-        resp = requests.get(URL)
+        lcc.log_info("GET https://api.github.com/orgs/lemoncheesecake")
+        resp = requests.get("https://api.github.com/orgs/lemoncheesecake")
         require_that("HTTP code", resp.status_code, is_(200))
         data = resp.json()
         lcc.log_info("Response\n%s" % json.dumps(data, indent=4))
@@ -137,7 +135,8 @@ Writing tests
 Contact
 -------
 
-Bugs and improvement ideas are welcomed in tickets.
+Bugs and improvement ideas are welcomed in `tickets <https://github.com/lemoncheesecake/lemoncheesecake/issues/new>`_.
+
 A Google Groups forum is also available for discussions about lemoncheesecake:
 https://groups.google.com/forum/#!forum/lemoncheesecake .
 
