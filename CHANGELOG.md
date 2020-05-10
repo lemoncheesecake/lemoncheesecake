@@ -1,3 +1,12 @@
+# 1.5.0 (2020-05-10)
+
+- The `project.py` file is now optional (and `lcc bootstrap` command deprecated)
+- The `project_dir` argument for `Project` is now optional
+- The `description` argument for `@lcc.test()` and `@lcc.suite()` decorators is now optional
+- The `SUITE` variable in module-suite is now optional
+- The `*.py` companion file for a suite-directory is now optional
+- **doc**: "Writing tests" and "Project customization" chapters have been overhauled
+
 # 1.4.8 (2020-05-03)
 
 - Fix `setup_suite`, `teardown_suite` and fixtures being executed even if the related suites/tests are disabled (see #16)
