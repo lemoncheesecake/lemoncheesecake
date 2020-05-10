@@ -47,7 +47,7 @@ Here is a test example:
             "id", is_integer(),
             "description", is_not_none(),
             "login", is_(present()),
-            "created_at", match_pattern("^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$"),
+            "created_at", match_pattern(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$"),
             "has_organization_projects", is_true(),
             "followers", is_(greater_than_or_equal_to(0)),
             "following", is_(greater_than_or_equal_to(0)),
@@ -108,13 +108,13 @@ Writing tests
 
 - :ref:`Getting started <getting started>`
 
-- :ref:`Tests and suites organization <tests and suites>`
+- :ref:`Writing tests <tests and suites>`
 
 - :ref:`Using matchers <matchers>`
 
 - :ref:`Logging data <logging>`
 
-- :ref:`Setup and teardown methods <setup_teardown>`, :ref:`fixtures <fixtures>`
+- :ref:`Fixtures <fixtures>`
 
 - :ref:`Parametrized tests <parametrized>`
 

@@ -12,7 +12,6 @@ Table of content
     tests-and-suites
     matchers
     logging
-    setup-and-teardown-suites
     fixtures
     parametrized
     generated
