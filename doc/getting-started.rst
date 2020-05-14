@@ -12,11 +12,7 @@ Create a "suites" directory and add a suite module :
     import lemoncheesecake.api as lcc
     from lemoncheesecake.matching import *
 
-    SUITE = {
-        "description": "My suite"
-    }
-
-    @lcc.test("My test")
+    @lcc.test()
     def my_test():
         check_that("value", "foo", equal_to("foo"))
 
