@@ -1,7 +1,10 @@
 import time
 
+import pytest
+
 import lemoncheesecake.api as lcc
 from lemoncheesecake.reporting.report import format_time_as_iso8601, parse_iso8601_time, Step, \
+    check_report_message_template, \
     TestResult as TstResult  # we change the name of TestResult so that pytest won't try to interpret as a test class
 
 from helpers.report import assert_report_stats, make_check, make_step, make_test_result, make_result, \
@@ -9,6 +12,7 @@ from helpers.report import assert_report_stats, make_check, make_step, make_test
 from helpers.runner import run_suite_class
 
 NOW = time.time()
+CURRENT_YEAR = time.localtime().tm_year
 
 
 def _test_timestamp_round(raw, rounded):
@@ -179,6 +183,104 @@ def test_is_successful_with_failed_teardown():
 
     report = run_suite_class(suite)
     assert not report.is_successful()
+
+
+def test_check_report_message_template_ok():
+    template = "{passed} test passed"
+    assert check_report_message_template(template) == template
+
+
+def test_check_report_message_template_ko():
+    with pytest.raises(ValueError):
+        assert check_report_message_template("{invalid_var}'")
+
+
+@pytest.fixture()
+def report_sample():
+    @lcc.suite()
+    class suite:
+        @lcc.test()
+        def test_1(self):
+            pass
+
+        @lcc.test()
+        @lcc.disabled()
+        def test_2(self):
+            pass
+
+        @lcc.test()
+        def test_3(self):
+            lcc.log_error("some issue")
+
+        @lcc.test()
+        def test_4(self):
+            lcc.log_info("everything ok")
+
+    return run_suite_class(suite)
+
+
+def test_report_build_message_with_start_time(report_sample):
+    assert str(CURRENT_YEAR) in report_sample.build_message("{start_time}")
+
+
+def test_report_build_message_with_end_time(report_sample):
+    assert str(CURRENT_YEAR) in report_sample.build_message("{end_time}")
+
+
+def test_report_build_message_with_duration(report_sample):
+    report_sample.end_time = report_sample.start_time + 1
+
+    assert report_sample.build_message("{duration}") == "1s"
+
+
+def test_report_build_message_with_total(report_sample):
+    assert report_sample.build_message("{total}") == "4"
+
+
+def test_report_build_message_with_enabled(report_sample):
+    assert report_sample.build_message("{enabled}") == "3"
+
+
+def test_report_build_message_with_passed(report_sample):
+    assert report_sample.build_message("{passed}") == "2"
+
+
+def test_report_build_message_with_passed_pct(report_sample):
+    assert report_sample.build_message("{passed_pct}") == "66%"
+
+
+def test_report_build_message_with_failed(report_sample):
+    assert report_sample.build_message("{failed}") == "1"
+
+
+def test_report_build_message_with_failed_pct(report_sample):
+    assert report_sample.build_message("{failed_pct}") == "33%"
+
+
+def test_report_build_message_with_skipped():
+    report = make_report([
+        make_suite_result(tests=[
+            make_test_result(status="passed"), make_test_result(status="passed"), make_test_result(status="skipped")
+        ])
+    ])
+    assert report.build_message("{skipped}") == "1"
+
+
+def test_report_build_message_with_skipped_pct():
+    report = make_report([
+        make_suite_result(tests=[
+            make_test_result(status="passed"), make_test_result(status="passed"), make_test_result(status="skipped")
+        ])
+    ])
+    assert report.build_message("{skipped_pct}") == "33%"
+
+
+def test_report_build_message_with_disabled(report_sample):
+    assert report_sample.build_message("{disabled}") == "1"
+
+
+def test_report_build_message_with_disabled_pct(report_sample):
+    assert report_sample.build_message("{disabled_pct}") == "25%"
 
 
 # TODO: report_stats lake tests

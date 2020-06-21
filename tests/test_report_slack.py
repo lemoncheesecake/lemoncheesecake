@@ -38,7 +38,7 @@ else:
 
 
     def test_create_reporting_session_missing_config(tmpdir):
-        with pytest.raises(UserError, match="Missing environment variable"):
+        with pytest.raises(UserError, match="missing environment variable"):
             _test_reporting_session(LCC_SLACK_AUTH_TOKEN=None, LCC_SLACK_CHANNEL=None)
 
 

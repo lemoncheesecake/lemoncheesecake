@@ -414,6 +414,13 @@ class Report(object):
             for step in result.get_steps():
                 yield step
 
+    def build_message(self, template):
+        stats = ReportStats.from_report(self)
+        variables = {
+            name: func(self, stats) for name, func in _report_message_variables.items()
+        }
+        return template.format(**variables)
+
 
 class ReportStats(object):
     def __init__(self):
@@ -471,3 +478,37 @@ class ReportStats(object):
             results,
             results[-1].end_time - results[0].start_time if not parallelized else None
         )
+
+
+def _percent(val, of):
+    return "%d%%" % ((float(val) / of * 100) if of else 0)
+
+
+_report_message_variables = {
+    "start_time": lambda report, stats: time.asctime(time.localtime(report.start_time)),
+    "end_time": lambda report, stats: time.asctime(time.localtime(report.end_time)),
+    "duration": lambda report, stats: humanize_duration(report.end_time - report.start_time),
+
+    "total": lambda report, stats: stats.tests_nb,
+    "enabled": lambda report, stats: stats.tests_enabled_nb,
+
+    "passed": lambda report, stats: stats.tests_nb_by_status["passed"],
+    "passed_pct": lambda report, stats: _percent(stats.tests_nb_by_status["passed"], of=stats.tests_enabled_nb),
+
+    "failed": lambda report, stats: stats.tests_nb_by_status["failed"],
+    "failed_pct": lambda report, stats: _percent(stats.tests_nb_by_status["failed"], of=stats.tests_enabled_nb),
+
+    "skipped": lambda report, stats: stats.tests_nb_by_status["skipped"],
+    "skipped_pct": lambda report, stats: _percent(stats.tests_nb_by_status["skipped"], of=stats.tests_enabled_nb),
+
+    "disabled": lambda report, stats: stats.tests_nb_by_status["disabled"],
+    "disabled_pct": lambda report, stats: _percent(stats.tests_nb_by_status["disabled"], of=stats.tests_nb)
+}
+
+
+def check_report_message_template(template):
+    try:
+        template.format(**{name: "" for name in _report_message_variables})
+        return template
+    except KeyError as excp:
+        raise ValueError("invalid report message template, unknown variable: %s" % excp)
