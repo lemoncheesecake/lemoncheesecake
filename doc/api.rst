@@ -145,8 +145,8 @@ This is the class that must be used / inherited in your ``project.py`` file
         build_report_info
 
 
-All the functions that can be used to load suites within a project file
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Loading suites
+~~~~~~~~~~~~~~
 
 .. module:: lemoncheesecake.suite
 
@@ -158,14 +158,15 @@ All the functions that can be used to load suites within a project file
 .. autofunction:: load_suite_from_class
 
 
-All the functions that can be used to load fixtures within a project file
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Loading fixtures
+~~~~~~~~~~~~~~~~
 
 .. module:: lemoncheesecake.fixture
 
 .. autofunction:: load_fixtures_from_directory
 .. autofunction:: load_fixtures_from_files
 .. autofunction:: load_fixtures_from_file
+.. autofunction:: load_fixtures_from_module
 .. autofunction:: load_fixtures_from_func
 
 

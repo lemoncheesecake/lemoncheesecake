@@ -337,6 +337,22 @@ def load_fixtures_from_func(func):
     return [Fixture(name, func, scope, args) for name in names]
 
 
+def load_fixtures_from_module(mod):
+    # type: (Any) -> List[Fixture]
+    """
+    Load fixtures from a module instance.
+
+    .. versionadded:: 1.5.1
+    """
+    fixtures = []
+    for sym_name in dir(mod):
+        sym = getattr(mod, sym_name)
+        if hasattr(sym, "_lccfixtureinfo"):
+            fixtures.extend(load_fixtures_from_func(sym))
+
+    return fixtures
+
+
 def load_fixtures_from_file(filename):
     # type: (str) -> List[Fixture]
     """
@@ -347,13 +363,7 @@ def load_fixtures_from_file(filename):
     except ModuleImportError as e:
         raise FixtureLoadingError(str(e))
 
-    fixtures = []
-    for sym_name in dir(mod):
-        sym = getattr(mod, sym_name)
-        if hasattr(sym, "_lccfixtureinfo"):
-            fixtures.extend(load_fixtures_from_func(sym))
-
-    return fixtures
+    return load_fixtures_from_module(mod)
 
 
 def load_fixtures_from_files(patterns, excluding=[]):

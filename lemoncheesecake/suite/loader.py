@@ -206,7 +206,7 @@ def load_suites_from_classes(classes):
 def load_suite_from_module(mod):
     # type: (Any) -> Suite
     """
-    Load a suite from a module object.
+    Load a suite from a module instance.
     """
 
     suite_info = getattr(mod, "SUITE", {})
