@@ -1,3 +1,8 @@
+# 1.5.1 (2020-06-21)
+
+- **API**: add ``load_fixtures_from_module``
+- **under the hood**: add ``Report.build_message`` (refactored from Slack reporting backend)
+
 # 1.5.0 (2020-05-10)
 
 - The `project.py` file is now optional (and `lcc bootstrap` command deprecated)
