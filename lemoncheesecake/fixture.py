@@ -292,9 +292,11 @@ class FixtureRegistry:
 
     def get_scheduled_fixtures_for_scope(self, direct_fixtures, scope, parent_scheduled_fixtures=None):
         fixtures = OrderedSet()
+
         for fixture in direct_fixtures:
             fixtures.update(self.get_fixture_dependencies(fixture))
-        fixtures.update(direct_fixtures)
+            fixtures.add(fixture)
+
         return ScheduledFixtures(
             scope, [self._fixtures[name] for name in fixtures if self._fixtures[name].scope == scope],
             parent_scheduled_fixtures=parent_scheduled_fixtures

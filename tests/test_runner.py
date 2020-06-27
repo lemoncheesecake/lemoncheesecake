@@ -1433,6 +1433,32 @@ def test_fixture_in_suite_with_disabled_test_and_force_disabled():
     assert marker
 
 
+def test_fixture_evaluation_order():
+    @lcc.fixture()
+    def a():
+        lcc.log_info("a")
+
+    @lcc.fixture()
+    def b():
+        lcc.log_info("b")
+
+    @lcc.fixture()
+    def c(b):
+        lcc.log_info("c")
+
+    @lcc.suite()
+    class suite:
+        @lcc.test()
+        def test(self, a, c):
+            pass
+
+    report = run_suite_class(suite, fixtures=(a, b, c))
+
+    test = get_last_test(report)
+
+    assert [e.message for e in test.get_steps()[0].entries] == ["a", "b", "c"]
+
+
 def test_parametrized_simple():
     @lcc.suite("suite")
     class suite:
