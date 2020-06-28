@@ -169,6 +169,7 @@ class TestResult(BaseTest, Result):
     def __init__(self, name, description):
         BaseTest.__init__(self, name, description)
         Result.__init__(self)
+        self.type = "test"
         # non-serialized attributes (only set in-memory during test execution):
         self.rank = 0
 
