@@ -18,6 +18,7 @@ Table of content
     parallelism
     cli
     project
+    report
     api
     deprecations
     migrating-to-v1

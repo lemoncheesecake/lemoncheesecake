@@ -178,6 +178,79 @@ Metadata Policy
 .. autoclass:: MetadataPolicy
     :members: add_property_rule, disallow_unknown_properties, add_tag_rule, disallow_unknown_tags
 
+
+Report
+------
+
+.. versionadded:: 1.6.0
+
+The structure of a Report object is the following:
+
+.. parsed-literal::
+
+    Report (:class:`~lemoncheesecake.reporting.Report`)
+        (0-1) test_session_setup (:class:`~lemoncheesecake.reporting.Result`)
+            (1-N) steps (:class:`~lemoncheesecake.reporting.Step`)
+                (1-N) step logs (:class:`~lemoncheesecake.reporting.StepLog`)
+        (1-N) suites (:class:`~lemoncheesecake.reporting.SuiteResult`)
+            (0-1) suite_setup (:class:`~lemoncheesecake.reporting.Result`)
+                (1-N) steps (:class:`~lemoncheesecake.reporting.Step`)
+                    (1-N) step logs (:class:`~lemoncheesecake.reporting.StepLog`)
+            (N) tests (:class:`~lemoncheesecake.reporting.TestResult`)
+                (N) steps (:class:`~lemoncheesecake.reporting.Step`)
+                    (1-N) step logs (:class:`~lemoncheesecake.reporting.StepLog`)
+            (N) sub-suites (:class:`~lemoncheesecake.reporting.SuiteResult`)
+                [suites can embed other sub-suite hierarchy]
+            (0-1) suite_teardown (:class:`~lemoncheesecake.reporting.Result`)
+                (1-N) steps (:class:`~lemoncheesecake.reporting.Step`)
+                    (1-N) step logs (:class:`~lemoncheesecake.reporting.StepLog`)
+        (0-1) test_session_teardown (:class:`~lemoncheesecake.reporting.Result`)
+            (1-N) steps (:class:`~lemoncheesecake.reporting.Step`)
+                (1-N) step logs (:class:`~lemoncheesecake.reporting.StepLog`)
+
+    Step logs (whose base class is :class:`~lemoncheesecake.reporting.StepLog`) are one of:
+        - :class:`~lemoncheesecake.reporting.Log`
+        - :class:`~lemoncheesecake.reporting.Check`
+        - :class:`~lemoncheesecake.reporting.Attachment`
+        - :class:`~lemoncheesecake.reporting.Url`
+
+.. module:: lemoncheesecake.reporting
+
+.. autofunction:: load_report
+
+.. autoclass:: Report
+    :members: start_time, end_time, duration, saving_time, title, nb_threads, test_session_setup, test_session_teardown,
+        nb_tests, parallelized, add_info, add_suite, get_suites, is_successful,
+        all_suites, all_tests, all_results, all_steps, build_message, save
+
+.. autoclass:: SuiteResult
+    :members: start_time, end_time, duration, path, suite_setup, suite_teardown, get_tests, get_suites, add_test, add_suite
+
+.. autoclass:: Result
+    :members: STATUSES, parent_suite, type, start_time, end_time, duration, status, status_details, add_step, get_steps, is_successful
+
+.. autoclass:: TestResult
+    :members: path
+
+.. autoclass:: Step
+    :members: description, start_time, end_time, duration, add_log, get_logs, is_successful
+
+.. autoclass:: StepLog
+    :members: time, parent_step
+
+.. autoclass:: Log
+    :members: level, message
+
+.. autoclass:: Check
+    :members: description, is_successful, details
+
+.. autoclass:: Attachment
+    :members: description, filename, as_image
+
+.. autoclass:: Url
+    :members: description, url
+
+
 Exceptions
 ----------
 

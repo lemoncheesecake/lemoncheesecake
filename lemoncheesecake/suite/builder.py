@@ -93,7 +93,7 @@ def suite(description=None, name=None, rank=None):
 
 def test(description=None, name=None):
     """
-    Decorator, make a method as a test method.
+    Decorator, mark a function/method as a test.
 
     :param description: test's description
     :param name: test's name (by default, the suite's name is taken from the class's name)

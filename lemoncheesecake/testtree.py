@@ -17,6 +17,10 @@ from lemoncheesecake.helpers.orderedset import OrderedSet
 # (see https://github.com/sphinx-doc/sphinx/issues/741)
 
 class BaseTreeNode(object):
+    """
+    :var name: name
+    """
+
     def __init__(self, name, description):
         self.parent_suite = None
         #: name
@@ -39,10 +43,16 @@ class BaseTreeNode(object):
 
     @property
     def hierarchy_depth(self):
+        # type: () -> int
         return len(list(self.hierarchy)) - 1
 
     @property
     def path(self):
+        # type: () -> str
+        """
+        The complete path of the test node (example: if used on a test named "my_test" and a suite named
+        "my_suite", then the path is "my_suite.my_test").
+        """
         return ".".join(node.name for node in self.hierarchy)
 
     @property
@@ -118,16 +128,25 @@ class BaseSuite(BaseTreeNode):
         self._suites = []
 
     def add_test(self, test):
+        """
+        Add test to the suite.
+        """
         test.parent_suite = self
         self._tests[test.name] = test
 
     def get_tests(self):
+        """
+        Get suite's tests.
+        """
         return list(self._tests.values())
 
     def get_test_by_name(self, name):
         return self._tests[name]
 
     def add_suite(self, suite):
+        """
+        Add a sub-suite to the suite.
+        """
         suite.parent_suite = self
         self._suites.append(suite)
 

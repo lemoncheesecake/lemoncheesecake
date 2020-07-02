@@ -1,5 +1,8 @@
 # NEXT RELEASE
 
+- **API**: `load_report()` and `Report` are now public and documented
+  (see http://docs.lemoncheesecake.io/en/latest/report.html)
+- **under the hood**: minor improvements to `Report` and related classes before making them public
 - Add official support for Python 3.9
 
 # 1.5.2 (2020-07-05)
