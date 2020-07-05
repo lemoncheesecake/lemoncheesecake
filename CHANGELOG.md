@@ -1,3 +1,8 @@
+# 1.5.2 (2020-07-05)
+
+- Make fixture evaluation order more intuitive
+- Fix 'lcc report -s' displaying bad statistics when filtering arguments are used (regression introduced in 1.2.1)
+
 # 1.5.1 (2020-06-21)
 
 - **API**: add ``load_fixtures_from_module``
