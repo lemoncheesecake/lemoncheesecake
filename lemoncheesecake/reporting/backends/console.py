@@ -11,6 +11,7 @@ import sys
 from termcolor import colored
 import six
 
+from lemoncheesecake.testtree import filter_suites, flatten_suites
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession, ReportingSessionBuilderMixin
 from lemoncheesecake.reporting.report import ReportStats
 from lemoncheesecake.helpers.time import humanize_duration
@@ -252,7 +253,7 @@ class ConsoleBackend(ReportingBackend, ReportingSessionBuilderMixin):
 
 
 def print_report_as_test_run(report, test_filter):
-    suites = list(report.all_suites(test_filter))
+    suites = filter_suites(report.get_suites(), test_filter)
 
     ###
     # Setup terminal
@@ -263,7 +264,7 @@ def print_report_as_test_run(report, test_filter):
     # Display suite results
     ###
     suite_idx = 0
-    for suite in suites:
+    for suite in flatten_suites(suites):
         if len(suite.get_tests()) == 0:
             continue
         if suite_idx > 0:
