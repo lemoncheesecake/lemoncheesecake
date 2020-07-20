@@ -58,38 +58,43 @@ def _get_duration(start_time, end_time):
         return None
 
 
-class Log(object):
-    def __init__(self, level, message, ts):
-        # type: (str, str, float) -> None
-        self.level = level
-        self.message = message
+class StepLog(object):
+    def __init__(self, ts):
         self.time = ts
 
 
-class Check(object):
+class Log(StepLog):
+    def __init__(self, level, message, ts):
+        # type: (str, str, float) -> None
+        super(Log, self).__init__(ts)
+        self.level = level
+        self.message = message
+
+
+class Check(StepLog):
     def __init__(self, description, is_successful, details, ts):
         # type: (str, bool, Optional[str], float) -> None
+        super(Check, self).__init__(ts)
         self.description = description
         self.is_successful = is_successful
         self.details = details
-        self.time = ts
 
 
-class Attachment(object):
+class Attachment(StepLog):
     def __init__(self, description, filename, as_image, ts):
         # type: (str, str, bool, float) -> None
+        super(Attachment, self).__init__(ts)
         self.description = description
         self.filename = filename
         self.as_image = as_image
-        self.time = ts
 
 
-class Url(object):
+class Url(StepLog):
     def __init__(self, description, url, ts):
         # type: (str, str, float) -> None
+        super(Url, self).__init__(ts)
         self.description = description
         self.url = url
-        self.time = ts
 
 
 class Step(object):
