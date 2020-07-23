@@ -17,7 +17,6 @@ from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, \
     filter_suites, normalize_node_hierarchy, TreeNodeHierarchy
 
-_TEST_STATUSES = "passed", "failed", "skipped", "disabled"
 _DEFAULT_REPORT_TITLE = "Test Report"
 
 
@@ -133,6 +132,8 @@ class Step(object):
 
 
 class Result(object):
+    STATUSES = "passed", "failed", "skipped", "disabled"
+
     def __init__(self):
         # please note that this attribute is also defined in TestResult through BaseTest,
         # one will override the other
@@ -438,7 +439,7 @@ class Report(object):
 class ReportStats(object):
     def __init__(self):
         self.tests_nb = 0
-        self.tests_nb_by_status = {s: 0 for s in _TEST_STATUSES}
+        self.tests_nb_by_status = {s: 0 for s in Result.STATUSES}
         self.duration = None
         self.duration_cumulative = 0
 
