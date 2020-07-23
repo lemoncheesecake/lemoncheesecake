@@ -43,40 +43,40 @@ def _serialize_steps(steps):
             "entries", []
         )
         json_steps.append(json_step)
-        for entry in step.entries:
-            if isinstance(entry, Log):
-                json_entry = _odict(
+        for log in step.get_logs():
+            if isinstance(log, Log):
+                json_log = _odict(
                     "type", "log",
-                    "level", entry.level,
-                    "message", entry.message,
-                    "time", _serialize_time(entry.time)
+                    "level", log.level,
+                    "message", log.message,
+                    "time", _serialize_time(log.time)
                 )
-            elif isinstance(entry, Attachment):
-                json_entry = _odict(
+            elif isinstance(log, Attachment):
+                json_log = _odict(
                     "type", "attachment",
-                    "description", entry.description,
-                    "filename", entry.filename,
-                    "as_image", entry.as_image,
-                    "time", _serialize_time(entry.time)
+                    "description", log.description,
+                    "filename", log.filename,
+                    "as_image", log.as_image,
+                    "time", _serialize_time(log.time)
                 )
-            elif isinstance(entry, Url):
-                json_entry = _odict(
+            elif isinstance(log, Url):
+                json_log = _odict(
                     "type", "url",
-                    "description", entry.description,
-                    "url", entry.url,
-                    "time", _serialize_time(entry.time)
+                    "description", log.description,
+                    "url", log.url,
+                    "time", _serialize_time(log.time)
                 )
-            elif isinstance(entry, Check):
-                json_entry = _odict(
+            elif isinstance(log, Check):
+                json_log = _odict(
                     "type", "check",
-                    "description", entry.description,
-                    "is_successful", entry.is_successful,
-                    "details", entry.details,
-                    "time", _serialize_time(entry.time)
+                    "description", log.description,
+                    "is_successful", log.is_successful,
+                    "details", log.details,
+                    "time", _serialize_time(log.time)
                 )
             else:
-                raise ValueError("Don't know how to handle step entry %s" % entry)
-            json_step["entries"].append(json_entry)
+                raise ValueError("Don't know how to handle step log %s" % log)
+            json_step["entries"].append(json_log)
     return json_steps
 
 
@@ -163,28 +163,28 @@ def _unserialize_step(json_step):
     step = Step(json_step["description"])
     step.start_time = _unserialize_time(json_step["start_time"])
     step.end_time = _unserialize_time(json_step["end_time"])
-    for json_entry in json_step["entries"]:
-        if json_entry["type"] == "log":
-            entry = Log(
-                json_entry["level"], json_entry["message"], _unserialize_time(json_entry["time"])
+    for json_log in json_step["entries"]:
+        if json_log["type"] == "log":
+            step_log = Log(
+                json_log["level"], json_log["message"], _unserialize_time(json_log["time"])
             )
-        elif json_entry["type"] == "attachment":
-            entry = Attachment(
-                json_entry["description"], json_entry["filename"], json_entry["as_image"],
-                _unserialize_time(json_entry["time"])
+        elif json_log["type"] == "attachment":
+            step_log = Attachment(
+                json_log["description"], json_log["filename"], json_log["as_image"],
+                _unserialize_time(json_log["time"])
             )
-        elif json_entry["type"] == "url":
-            entry = Url(
-                json_entry["description"], json_entry["url"], _unserialize_time(json_entry["time"])
+        elif json_log["type"] == "url":
+            step_log = Url(
+                json_log["description"], json_log["url"], _unserialize_time(json_log["time"])
             )
-        elif json_entry["type"] == "check":
-            entry = Check(
-                json_entry["description"], json_entry["is_successful"], json_entry["details"],
-                _unserialize_time(json_entry["time"])
+        elif json_log["type"] == "check":
+            step_log = Check(
+                json_log["description"], json_log["is_successful"], json_log["details"],
+                _unserialize_time(json_log["time"])
             )
         else:
-            raise ValueError("Unknown entry type '%s'" % json_entry["type"])
-        step.entries.append(entry)
+            raise ValueError("Unknown step log type '%s'" % json_log["type"])
+        step.add_log(step_log)
     return step
 
 

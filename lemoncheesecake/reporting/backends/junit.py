@@ -41,10 +41,10 @@ def _serialize_test_result(test):
         make_xml_child(xml_test, "skipped")
     else:
         for step in test.get_steps():
-            for step_entry in step.entries:
-                if isinstance(step_entry, Check) and step_entry.is_successful is False:
+            for log in step.get_logs():
+                if isinstance(log, Check) and log.is_successful is False:
                     make_xml_child(xml_test, "failure", "message", "failed check in step '%s'" % step.description)
-                elif isinstance(step_entry, Log) and step_entry.level == LOG_LEVEL_ERROR:
+                elif isinstance(log, Log) and log.level == LOG_LEVEL_ERROR:
                     make_xml_child(xml_test, "error", "message", "error log in step '%s'" % step.description)
 
     return xml_test

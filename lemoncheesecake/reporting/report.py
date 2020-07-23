@@ -61,6 +61,7 @@ def _get_duration(start_time, end_time):
 class StepLog(object):
     def __init__(self, ts):
         self.time = ts
+        self.parent_step = None
 
 
 class Log(StepLog):
@@ -102,21 +103,28 @@ class Step(object):
         # type: (str) -> None
         self.description = description
         self.parent_result = None
-        self.entries = []  # type: List[Union[Log, Check, Attachment, Url]]
+        self._logs = []  # type: List[Union[Log, Check, Attachment, Url]]
         self.start_time = None  # type: Optional[float]
         self.end_time = None  # type: Optional[float]
 
+    def add_log(self, log):
+        log.parent_step = self
+        self._logs.append(log)
+
+    def get_logs(self):
+        return self._logs
+
     @staticmethod
-    def _is_entry_successful(entry):
-        if isinstance(entry, Check):
-            return entry.is_successful
-        elif isinstance(entry, Log):
-            return entry.level != LOG_LEVEL_ERROR
+    def _is_log_successful(log):
+        if isinstance(log, Check):
+            return log.is_successful
+        elif isinstance(log, Log):
+            return log.level != LOG_LEVEL_ERROR
         return True
 
     def is_successful(self):
         # type: () -> bool
-        return all(map(Step._is_entry_successful, self.entries))
+        return all(map(Step._is_log_successful, self._logs))
 
     @property
     def duration(self):

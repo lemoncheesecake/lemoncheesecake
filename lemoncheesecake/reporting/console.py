@@ -103,32 +103,32 @@ class Renderer(object):
                 colored(humanize_duration(step.duration, show_milliseconds=True), attrs=["bold"])
                     if step.duration is not None else "-"
             ])
-            for entry in step.entries:
-                if isinstance(entry, Log):
+            for log in step.get_logs():
+                if isinstance(log, Log):
                     rows.append([
-                        colored(entry.level.upper(), color=log_level_to_color(entry.level), attrs=["bold"]),
-                        self.render_highlighted(self.wrap_description_col(entry.message))
+                        colored(log.level.upper(), color=log_level_to_color(log.level), attrs=["bold"]),
+                        self.render_highlighted(self.wrap_description_col(log.message))
                     ])
-                if isinstance(entry, Check):
+                if isinstance(log, Check):
                     rows.append([
-                        self.render_check_outcome(entry.is_successful),
-                        self.render_highlighted(self.wrap_description_col(entry.description)),
-                        self.render_highlighted(self.wrap_details_col(entry.details))
+                        self.render_check_outcome(log.is_successful),
+                        self.render_highlighted(self.wrap_description_col(log.description)),
+                        self.render_highlighted(self.wrap_details_col(log.details))
                     ])
-                if isinstance(entry, Url):
-                    if entry.description == entry.url:
-                        description = entry.url
+                if isinstance(log, Url):
+                    if log.description == log.url:
+                        description = log.url
                     else:
-                        description = "%s (%s)" % (entry.url, entry.description)
+                        description = "%s (%s)" % (log.url, log.description)
                     rows.append([
                         colored("URL", color="cyan", attrs=["bold"]),
                         self.render_highlighted(self.wrap_description_col(description))
                     ])
-                if isinstance(entry, Attachment):
+                if isinstance(log, Attachment):
                     rows.append([
                         colored("ATTACH", color="cyan", attrs=["bold"]),
-                        self.render_highlighted(self.wrap_description_col(entry.description)),
-                        self.render_highlighted(entry.filename)
+                        self.render_highlighted(self.wrap_description_col(log.description)),
+                        self.render_highlighted(log.filename)
                     ])
 
         table = AsciiTable(rows)

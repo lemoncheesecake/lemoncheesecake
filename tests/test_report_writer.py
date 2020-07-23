@@ -159,10 +159,10 @@ def test_check_success():
     test = get_last_test(report)
     assert test.status == "passed"
     step = test.get_steps()[0]
-    assert "somevalue" in step.entries[0].description
-    assert "foo" in step.entries[0].description
-    assert step.entries[0].is_successful is True
-    assert "foo" in step.entries[0].details
+    assert "somevalue" in step.get_logs()[0].description
+    assert "foo" in step.get_logs()[0].description
+    assert step.get_logs()[0].is_successful is True
+    assert "foo" in step.get_logs()[0].details
 
 
 def test_check_failure():
@@ -177,10 +177,10 @@ def test_check_failure():
     test = get_last_test(report)
     assert test.status == "failed"
     step = test.get_steps()[0]
-    assert "somevalue" in step.entries[0].description
-    assert "bar" in step.entries[0].description
-    assert step.entries[0].is_successful is False
-    assert "foo" in step.entries[0].details
+    assert "somevalue" in step.get_logs()[0].description
+    assert "bar" in step.get_logs()[0].description
+    assert step.get_logs()[0].is_successful is False
+    assert "foo" in step.get_logs()[0].details
 
 
 def test_require_success():
@@ -195,10 +195,10 @@ def test_require_success():
     test = get_last_test(report)
     assert test.status == "passed"
     step = test.get_steps()[0]
-    assert "somevalue" in step.entries[0].description
-    assert "foo" in step.entries[0].description
-    assert step.entries[0].is_successful is True
-    assert "foo" in step.entries[0].details
+    assert "somevalue" in step.get_logs()[0].description
+    assert "foo" in step.get_logs()[0].description
+    assert step.get_logs()[0].is_successful is True
+    assert "foo" in step.get_logs()[0].details
 
 
 def test_require_failure():
@@ -213,10 +213,10 @@ def test_require_failure():
     test = get_last_test(report)
     assert test.status == "failed"
     step = test.get_steps()[0]
-    assert "somevalue" in step.entries[0].description
-    assert "bar" in step.entries[0].description
-    assert step.entries[0].is_successful is False
-    assert "foo" in step.entries[0].details
+    assert "somevalue" in step.get_logs()[0].description
+    assert "bar" in step.get_logs()[0].description
+    assert step.get_logs()[0].is_successful is False
+    assert "foo" in step.get_logs()[0].details
 
 
 def test_all_types_of_logs():
@@ -237,17 +237,17 @@ def test_all_types_of_logs():
     test = report.get_test("mysuite.test_1")
     assert test.status == "passed"
     step = test.get_steps()[0]
-    assert step.entries[0].level == "debug"
-    assert step.entries[0].message == "some debug message"
-    assert step.entries[1].level == "info"
-    assert step.entries[1].message == "some info message"
-    assert step.entries[2].level == "warn"
+    assert step.get_logs()[0].level == "debug"
+    assert step.get_logs()[0].message == "some debug message"
+    assert step.get_logs()[1].level == "info"
+    assert step.get_logs()[1].message == "some info message"
+    assert step.get_logs()[2].level == "warn"
 
     test = report.get_test("mysuite.test_2")
     assert test.status == "failed"
     step = test.get_steps()[0]
-    assert step.entries[0].message == "some error message"
-    assert step.entries[0].level == "error"
+    assert step.get_logs()[0].message == "some error message"
+    assert step.get_logs()[0].level == "error"
 
 
 def test_multiple_steps():
@@ -266,11 +266,11 @@ def test_multiple_steps():
     assert test.status == "passed"
     steps = test.get_steps()
     assert steps[0].description == "step 1"
-    assert steps[0].entries[0].level == "info"
-    assert steps[0].entries[0].message == "do something"
+    assert steps[0].get_logs()[0].level == "info"
+    assert steps[0].get_logs()[0].message == "do something"
     assert steps[1].description == "step 2"
-    assert steps[1].entries[0].level == "info"
-    assert steps[1].entries[0].message == "do something else"
+    assert steps[1].get_logs()[0].level == "info"
+    assert steps[1].get_logs()[0].message == "do something else"
 
 
 def test_multiple_steps_on_different_threads():
@@ -297,8 +297,8 @@ def test_multiple_steps_on_different_threads():
     steps = test.get_steps()
     for step in steps:
         remainings.remove(int(step.description))
-        assert len(step.entries) == 1
-        assert step.entries[0].message == step.description
+        assert len(step.get_logs()) == 1
+        assert step.get_logs()[0].message == step.description
 
     assert len(remainings) == 0
 
@@ -320,8 +320,8 @@ def test_thread_logging_without_explicit_step():
     assert len(test.get_steps()) == 1
     step = test.get_steps()[0]
     assert step.description == "Some test"
-    assert step.entries[0].level == "info"
-    assert "doing something" == step.entries[0].message
+    assert step.get_logs()[0].level == "info"
+    assert "doing something" == step.get_logs()[0].message
 
 
 def test_thread_logging_without_detached_bis():
@@ -350,15 +350,15 @@ def test_thread_logging_without_detached_bis():
 
     step = test.get_steps()[0]
     assert step.description == "Step 1"
-    assert step.entries[0].message == "log 1"
+    assert step.get_logs()[0].message == "log 1"
 
     step = test.get_steps()[1]
     assert step.description == "Step 2"
-    assert step.entries[0].message == "log 2"
+    assert step.get_logs()[0].message == "log 2"
 
     step = test.get_steps()[2]
     assert step.description == "Step 1"
-    assert step.entries[0].message == "log in thread"
+    assert step.get_logs()[0].message == "log in thread"
 
 
 def test_exception_in_thread():
@@ -383,8 +383,8 @@ def test_exception_in_thread():
     assert len(steps) == 1
     step = steps[0]
     assert step.description == "Some test"
-    assert step.entries[-1].level == "error"
-    assert "this_is_an_exception" in step.entries[-1].message
+    assert step.get_logs()[-1].level == "error"
+    assert "this_is_an_exception" in step.get_logs()[-1].message
 
 
 def test_same_step_in_two_threads():
@@ -415,19 +415,19 @@ def test_same_step_in_two_threads():
 
     step = steps[0]
     assert step.description == "step 1"
-    assert len(step.entries) == 2
-    assert step.entries[0].message == "log 1"
-    assert step.entries[1].message == "log 4"
+    assert len(step.get_logs()) == 2
+    assert step.get_logs()[0].message == "log 1"
+    assert step.get_logs()[1].message == "log 4"
 
     step = steps[1]
     assert step.description == "step 2"
-    assert len(step.entries) == 1
-    assert step.entries[0].message == "log 2"
+    assert len(step.get_logs()) == 1
+    assert step.get_logs()[0].message == "log 2"
 
     step = steps[2]
     assert step.description == "step 1"
-    assert len(step.entries) == 1
-    assert step.entries[0].message == "log 3"
+    assert len(step.get_logs()) == 1
+    assert step.get_logs()[0].message == "log 3"
 
 
 def test_deprecated_end_step():
@@ -446,8 +446,8 @@ def test_deprecated_end_step():
     assert test.status == "passed"
     step = test.get_steps()[0]
     assert step.description == "step"
-    assert step.entries[0].level == "info"
-    assert step.entries[0].message == "log"
+    assert step.get_logs()[0].level == "info"
+    assert step.get_logs()[0].message == "log"
 
 
 def test_deprecated_detached_step():
@@ -465,8 +465,8 @@ def test_deprecated_detached_step():
     step = test.get_steps()[0]
     assert test.status == "passed"
     assert step.description == "step"
-    assert step.entries[0].level == "info"
-    assert step.entries[0].message == "log"
+    assert step.get_logs()[0].level == "info"
+    assert step.get_logs()[0].message == "log"
 
 
 def test_default_step():
@@ -482,8 +482,8 @@ def test_default_step():
     assert test.status == "passed"
     step = test.get_steps()[0]
     assert step.description == "Some test"
-    assert step.entries[0].level == "info"
-    assert step.entries[0].message == "do something"
+    assert step.get_logs()[0].level == "info"
+    assert step.get_logs()[0].message == "do something"
 
 
 def test_step_after_test_setup():
@@ -502,11 +502,11 @@ def test_step_after_test_setup():
     assert test.status == "passed"
     steps = test.get_steps()
     assert steps[0].description == "Setup test"
-    assert steps[0].entries[0].level == "info"
-    assert steps[0].entries[0].message == "in test setup"
+    assert steps[0].get_logs()[0].level == "info"
+    assert steps[0].get_logs()[0].message == "in test setup"
     assert steps[1].description == "Some test"
-    assert steps[1].entries[0].level == "info"
-    assert steps[1].entries[0].message == "do something"
+    assert steps[1].get_logs()[0].level == "info"
+    assert steps[1].get_logs()[0].message == "do something"
 
 
 def test_prepare_attachment(tmpdir):
@@ -606,8 +606,8 @@ def test_log_url():
 
     test = get_last_test(report)
     step = test.get_steps()[0]
-    assert step.entries[0].description == "example"
-    assert step.entries[0].url == "http://example.com"
+    assert step.get_logs()[0].description == "example"
+    assert step.get_logs()[0].url == "http://example.com"
 
 
 def test_unicode(tmpdir):
@@ -626,10 +626,10 @@ def test_unicode(tmpdir):
     assert test.status == "passed"
     step = test.get_steps()[0]
     assert step.description == u"éééààà"
-    assert u"éééààà" in step.entries[0].description
-    assert "1" in step.entries[0].description
-    assert step.entries[1].message == u"éééààà"
-    assert_attachment(step.entries[2], u"somefileààà", u"éééààà", False, "A" * 1024, make_file_reader(encoding="utf8"))
+    assert u"éééààà" in step.get_logs()[0].description
+    assert "1" in step.get_logs()[0].description
+    assert step.get_logs()[1].message == u"éééààà"
+    assert_attachment(step.get_logs()[2], u"somefileààà", u"éééààà", False, "A" * 1024, make_file_reader(encoding="utf8"))
 
 
 def test_setup_suite_success():
@@ -648,7 +648,7 @@ def test_setup_suite_success():
     assert setup.status == "passed"
     assert setup.start_time is not None
     assert setup.end_time is not None
-    assert setup.get_steps()[0].entries[0].message == "some log"
+    assert setup.get_steps()[0].get_logs()[0].message == "some log"
     assert setup.is_successful()
 
 
@@ -668,7 +668,7 @@ def test_setup_suite_failure():
     assert setup.status == "failed"
     assert setup.start_time is not None
     assert setup.end_time is not None
-    assert setup.get_steps()[0].entries[0].message == "something bad happened"
+    assert setup.get_steps()[0].get_logs()[0].message == "something bad happened"
     assert not setup.is_successful()
 
 
@@ -703,7 +703,7 @@ def test_teardown_suite_success():
     assert teardown.status == "passed"
     assert teardown.start_time is not None
     assert teardown.end_time is not None
-    assert teardown.get_steps()[0].entries[0].message == "some log"
+    assert teardown.get_steps()[0].get_logs()[0].message == "some log"
     assert teardown.is_successful()
 
 
@@ -723,7 +723,7 @@ def test_teardown_suite_failure():
     assert teardown.status == "failed"
     assert teardown.start_time is not None
     assert teardown.end_time is not None
-    assert teardown.get_steps()[0].entries[0].is_successful is False
+    assert teardown.get_steps()[0].get_logs()[0].is_successful is False
     assert not teardown.is_successful()
 
 
@@ -759,7 +759,7 @@ def test_setup_test_session_success():
     assert setup.status == "passed"
     assert setup.start_time is not None
     assert setup.end_time is not None
-    assert setup.get_steps()[0].entries[0].message == "some log"
+    assert setup.get_steps()[0].get_logs()[0].message == "some log"
     assert setup.is_successful()
 
 
@@ -780,7 +780,7 @@ def test_setup_test_session_failure():
     assert setup.status == "failed"
     assert setup.start_time is not None
     assert setup.end_time is not None
-    assert setup.get_steps()[0].entries[0].message == "something bad happened"
+    assert setup.get_steps()[0].get_logs()[0].message == "something bad happened"
     assert not setup.is_successful()
 
 
@@ -818,7 +818,7 @@ def test_teardown_test_session_success():
     assert teardown.status == "passed"
     assert teardown.start_time is not None
     assert teardown.end_time is not None
-    assert teardown.get_steps()[0].entries[0].message == "some log"
+    assert teardown.get_steps()[0].get_logs()[0].message == "some log"
     assert teardown.is_successful()
 
 
@@ -840,7 +840,7 @@ def test_teardown_test_session_failure():
     assert teardown.status == "failed"
     assert teardown.start_time is not None
     assert teardown.end_time is not None
-    assert teardown.get_steps()[0].entries[0].is_successful is False
+    assert teardown.get_steps()[0].get_logs()[0].is_successful is False
     assert not teardown.is_successful()
 
 

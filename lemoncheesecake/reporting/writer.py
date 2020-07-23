@@ -19,12 +19,12 @@ class ReportWriter:
     def _get_suite_result(self, suite):
         return self.report.get_suite(suite)
 
-    def _add_step_entry(self, entry, event):
+    def _add_step_log(self, log, event):
         result = self.report.get(event.location)
         assert result, "Cannot find location %s in the report" % event.location
         step = self._lookup_step(event)
         assert not step.end_time, "Cannot update step '%s', it is already ended" % step.description
-        step.entries.append(entry)
+        step.add_log(log)
 
     @staticmethod
     def _initialize_result(start_time):
@@ -141,21 +141,21 @@ class ReportWriter:
         step.end_time = event.time
 
     def on_log(self, event):
-        self._add_step_entry(
+        self._add_step_log(
             Log(event.log_level, event.log_message, event.time), event
         )
 
     def on_check(self, event):
-        self._add_step_entry(
+        self._add_step_log(
             Check(event.check_description, event.check_is_successful, event.check_details, event.time), event
         )
 
     def on_log_attachment(self, event):
-        self._add_step_entry(
+        self._add_step_log(
             Attachment(event.attachment_description, event.attachment_path, event.as_image, event.time), event
         )
 
     def on_log_url(self, event):
-        self._add_step_entry(
+        self._add_step_log(
             Url(event.url_description, event.url, event.time), event
         )

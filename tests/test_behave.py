@@ -96,12 +96,12 @@ Scenario: do a simple addition
         assert test.description == "Scenario: do a simple addition"
         steps = test.get_steps()
         assert steps[0].description == "Given a is 2"
-        assert steps[0].entries[0].message == "a = 2"
+        assert steps[0].get_logs()[0].message == "a = 2"
         assert steps[1].description == "And b is 2"
-        assert steps[1].entries[0].message == "b = 2"
+        assert steps[1].get_logs()[0].message == "b = 2"
         assert steps[2].description == "Then a + b is equal to 4"
-        assert steps[2].entries[0].description == "Expect 2 + 2 to be equal to 4"
-        assert steps[2].entries[0].is_successful is True
+        assert steps[2].get_logs()[0].description == "Expect 2 + 2 to be equal to 4"
+        assert steps[2].get_logs()[0].is_successful is True
 
 
     def test_scenario_failed(tmpdir):
@@ -123,12 +123,12 @@ Scenario: do a simple addition
         assert test.description == "Scenario: do a simple addition"
         steps = test.get_steps()
         assert steps[0].description == "Given a is 2"
-        assert steps[0].entries[0].message == "a = 2"
+        assert steps[0].get_logs()[0].message == "a = 2"
         assert steps[1].description == "And b is 2"
-        assert steps[1].entries[0].message == "b = 2"
+        assert steps[1].get_logs()[0].message == "b = 2"
         assert steps[2].description == "Then a + b is equal to 5"
-        assert steps[2].entries[0].description == "Expect 2 + 2 to be equal to 5"
-        assert steps[2].entries[0].is_successful is False
+        assert steps[2].get_logs()[0].description == "Expect 2 + 2 to be equal to 5"
+        assert steps[2].get_logs()[0].is_successful is False
 
 
     def test_scenario_unicode(tmpdir):
@@ -150,12 +150,12 @@ Scenario: do a simple addition éà
         assert test.description == u"Scenario: do a simple addition éà"
         steps = test.get_steps()
         assert steps[0].description == u"Given a is 2 éà"
-        assert steps[0].entries[0].message == "a = 2"
+        assert steps[0].get_logs()[0].message == "a = 2"
         assert steps[1].description == "And b is 2"
-        assert steps[1].entries[0].message == "b = 2"
+        assert steps[1].get_logs()[0].message == "b = 2"
         assert steps[2].description == "Then a + b is equal to 4"
-        assert steps[2].entries[0].description == "Expect 2 + 2 to be equal to 4"
-        assert steps[2].entries[0].is_successful is True
+        assert steps[2].get_logs()[0].description == "Expect 2 + 2 to be equal to 4"
+        assert steps[2].get_logs()[0].is_successful is True
 
 
     def test_tags(tmpdir):
