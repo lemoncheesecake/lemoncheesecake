@@ -14,8 +14,7 @@ import warnings
 
 import six
 
-from lemoncheesecake.reporting import Report, ReportWriter, ReportLocation,\
-    LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_WARN
+from lemoncheesecake.reporting import Report, ReportWriter, ReportLocation, Log
 from lemoncheesecake import events
 from lemoncheesecake.helpers.typecheck import check_type_string, check_type_bool
 from lemoncheesecake.exceptions import AbortTest
@@ -132,23 +131,23 @@ class Session(object):
 
     def _log(self, level, content):
         self._flush_pending_events()
-        if level == LOG_LEVEL_ERROR:
+        if level == Log.LEVEL_ERROR:
             self._mark_location_as_failed(self.cursor.location)
         self.event_manager.fire(
             events.LogEvent(self.cursor.location, self.cursor.step, _get_thread_id(), level, content)
         )
 
     def log_debug(self, content):
-        return self._log(LOG_LEVEL_DEBUG, content)
+        return self._log(Log.LEVEL_DEBUG, content)
 
     def log_info(self, content):
-        return self._log(LOG_LEVEL_INFO, content)
+        return self._log(Log.LEVEL_INFO, content)
 
     def log_warning(self, content):
-        return self._log(LOG_LEVEL_WARN, content)
+        return self._log(Log.LEVEL_WARN, content)
 
     def log_error(self, content):
-        return self._log(LOG_LEVEL_ERROR, content)
+        return self._log(Log.LEVEL_ERROR, content)
 
     def log_check(self, description, is_successful, details):
         self._flush_pending_events()

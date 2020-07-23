@@ -17,11 +17,6 @@ from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, \
     filter_suites, normalize_node_hierarchy, TreeNodeHierarchy
 
-LOG_LEVEL_DEBUG = "debug"
-LOG_LEVEL_INFO = "info"
-LOG_LEVEL_WARN = "warn"
-LOG_LEVEL_ERROR = "error"
-
 _TEST_STATUSES = "passed", "failed", "skipped", "disabled"
 _DEFAULT_REPORT_TITLE = "Test Report"
 
@@ -65,6 +60,11 @@ class StepLog(object):
 
 
 class Log(StepLog):
+    LEVEL_DEBUG = "debug"
+    LEVEL_INFO = "info"
+    LEVEL_WARN = "warn"
+    LEVEL_ERROR = "error"
+
     def __init__(self, level, message, ts):
         # type: (str, str, float) -> None
         super(Log, self).__init__(ts)
@@ -119,7 +119,7 @@ class Step(object):
         if isinstance(log, Check):
             return log.is_successful
         elif isinstance(log, Log):
-            return log.level != LOG_LEVEL_ERROR
+            return log.level != Log.LEVEL_ERROR
         return True
 
     def is_successful(self):
