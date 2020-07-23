@@ -17,8 +17,6 @@ from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, \
     filter_suites, normalize_node_hierarchy, TreeNodeHierarchy
 
-_DEFAULT_REPORT_TITLE = "Test Report"
-
 
 # NB: it would be nicer to use:
 # datetime.isoformat(sep=' ', timespec='milliseconds')
@@ -328,6 +326,8 @@ def flatten_results(suites):
 
 
 class Report(object):
+    DEFAULT_TITLE = "Test Report"
+
     def __init__(self):
         self.info = []
         self._test_session_setup = None  # type: Optional[Result]
@@ -336,7 +336,7 @@ class Report(object):
         self.start_time = None  # type: Optional[float]
         self.end_time = None  # type: Optional[float]
         self.report_generation_time = None  # type: Optional[float]
-        self.title = _DEFAULT_REPORT_TITLE
+        self.title = Report.DEFAULT_TITLE
         self.nb_threads = 1
 
     @property
