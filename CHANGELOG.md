@@ -1,3 +1,7 @@
+# NEXT RELEASE
+
+- Add official support for Python 3.9
+
 # 1.5.2 (2020-07-05)
 
 - Make fixture evaluation order more intuitive
