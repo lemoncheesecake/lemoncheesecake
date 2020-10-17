@@ -84,9 +84,11 @@ def steps_to_calls(steps):
             if isinstance(entry, Url):
                 yield "log", (substr(entry.url), "INFO"), {}
             if isinstance(entry, Attachment):
+                with open(entry.filename, "rb") as fh:
+                    attachment_content = fh.read()
                 attachment_arg = {
                     "name": osp.basename(entry.filename),
-                    "data": open(entry.filename, "rb").read(),
+                    "data": attachment_content,
                     "mime": mimetypes.guess_type(entry.filename)[0] or "application/octet-stream"
                 }
                 yield "log", (entry.description, "INFO"), {"attachment": attachment_arg}
