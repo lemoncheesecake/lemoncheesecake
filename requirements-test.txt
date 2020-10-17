@@ -1,0 +1,9 @@
+pytest
+pytest_mock
+callee
+tox
+# all extra dependencies:
+lxml
+reportportal-client~=3.0
+slacker
+
