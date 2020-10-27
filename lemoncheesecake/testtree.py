@@ -131,11 +131,8 @@ class BaseSuite(BaseTreeNode):
         suite.parent_suite = self
         self._suites.append(suite)
 
-    def get_suites(self, include_empty_suites=False):
-        if include_empty_suites:
-            return self._suites
-        else:
-            return list(filter(lambda suite: not suite.is_empty(), self._suites))
+    def get_suites(self):
+        return self._suites
 
     def is_empty(self):
         if len(self.get_tests()) != 0:
@@ -208,7 +205,7 @@ def find_suite(suites, hierarchy):
                 lookup_suite_name, [s.name for s in lookup_suites]
             ))
 
-        lookup_suites = lookup_suite.get_suites(include_empty_suites=True)
+        lookup_suites = lookup_suite.get_suites()
 
     return lookup_suite
 

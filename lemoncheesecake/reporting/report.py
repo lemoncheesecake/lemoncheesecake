@@ -221,9 +221,9 @@ class SuiteResult(BaseSuite):
         tests = super(SuiteResult, self).get_tests()
         return sorted(tests, key=lambda t: t.rank)
 
-    def get_suites(self, include_empty_suites=False):
-        # type: (bool) -> List[SuiteResult]
-        suites = super(SuiteResult, self).get_suites(include_empty_suites)
+    def get_suites(self):
+        # type: () -> List[SuiteResult]
+        suites = super(SuiteResult, self).get_suites()
         return sorted(suites, key=lambda s: s.rank)
 
     def pull_node(self):
