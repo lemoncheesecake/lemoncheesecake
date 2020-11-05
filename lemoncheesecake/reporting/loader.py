@@ -3,12 +3,12 @@ import os.path as osp
 from typing import Sequence, Iterator
 
 from lemoncheesecake.exceptions import ReportLoadingError
-from lemoncheesecake.reporting.backend import get_reporting_backends, ReportUnserializerMixin, ReportingBackend, \
-    BoundReport
+from lemoncheesecake.reporting.report import Report
+from lemoncheesecake.reporting.backend import get_reporting_backends, ReportUnserializerMixin, ReportingBackend
 
 
 def load_report_from_file(filename, backends=None):
-    # type: (str, Sequence[ReportingBackend]) -> BoundReport
+    # type: (str, Sequence[ReportingBackend]) -> Report
     if backends is None:
         backends = get_reporting_backends()
     for backend in backends:
@@ -23,7 +23,7 @@ def load_report_from_file(filename, backends=None):
 
 
 def load_reports_from_dir(dirname, backends=None):
-    # type: (str, Sequence[ReportingBackend]) -> Iterator[BoundReport]
+    # type: (str, Sequence[ReportingBackend]) -> Iterator[Report]
     for filename in [os.path.join(dirname, filename) for filename in os.listdir(dirname)]:
         if os.path.isfile(filename):
             try:
@@ -33,7 +33,7 @@ def load_reports_from_dir(dirname, backends=None):
 
 
 def load_report(path, backends=None):
-    # type: (str, Sequence[ReportingBackend]) -> BoundReport
+    # type: (str, Sequence[ReportingBackend]) -> Report
     """
     Load report from a report directory or file.
     """

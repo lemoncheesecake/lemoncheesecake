@@ -16,9 +16,9 @@ except ImportError:
 import six
 
 import lemoncheesecake
-from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend, ReportUnserializerMixin
+from lemoncheesecake.reporting.backend import FileReportBackend, ReportUnserializerMixin
 from lemoncheesecake.reporting.report import (
-    Log, Check, Attachment, Url, Step, Result, TestResult, SuiteResult,
+    Report, Log, Check, Attachment, Url, Step, Result, TestResult, SuiteResult,
     format_time_as_iso8601, parse_iso8601_time
 )
 from lemoncheesecake.exceptions import ReportLoadingError
@@ -307,7 +307,7 @@ def _unserialize_suite_result(xml_suite):
 
 
 def _unserialize_report(xml_report):
-    report = BoundReport()
+    report = Report()
 
     report.start_time = _unserialize_time(xml_report.attrib["start-time"])
     report.end_time = _unserialize_time(xml_report.attrib["end-time"]) if "end-time" in xml_report.attrib else None
@@ -370,5 +370,7 @@ class XmlBackend(FileReportBackend, ReportUnserializerMixin):
     def save_report(self, filename, report):
         save_report_into_file(report, filename, self.indent_level)
 
-    def load_report(self, filename):
-        return load_report_from_file(filename).bind(self, filename)
+    def load_report(self, path):
+        report = load_report_from_file(path)
+        report.bind(self, path)
+        return report

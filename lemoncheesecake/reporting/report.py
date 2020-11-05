@@ -16,6 +16,7 @@ from typing import Callable, Any
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, \
     filter_suites, normalize_node_hierarchy, TreeNodeHierarchy
+from lemoncheesecake.reporting.backend import ReportSerializerMixin
 
 
 # NB: it would be nicer to use:
@@ -339,6 +340,9 @@ class Report(object):
         self.report_generation_time = None  # type: Optional[float]
         self.title = Report.DEFAULT_TITLE
         self.nb_threads = 1
+        # both attributes enable the report to be saved back if Report.bind() as been called
+        self.backend = None
+        self.path = None
 
     @property
     def test_session_setup(self):
@@ -435,6 +439,15 @@ class Report(object):
             name: func(self, stats) for name, func in _report_message_variables.items()
         }
         return template.format(**variables)
+
+    def bind(self, backend, path):
+        # type: (ReportSerializerMixin, str) -> None
+        self.backend = backend
+        self.path = path
+
+    def save(self):
+        assert self.backend and self.path, "Cannot save unbound report"
+        self.backend.save_report(self.path, self)
 
 
 class ReportStats(object):

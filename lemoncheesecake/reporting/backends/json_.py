@@ -10,9 +10,9 @@ from collections import OrderedDict
 import time
 
 import lemoncheesecake
-from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend, ReportUnserializerMixin
+from lemoncheesecake.reporting.backend import FileReportBackend, ReportUnserializerMixin
 from lemoncheesecake.reporting.report import (
-    Log, Check, Attachment, Url, Step, Result, TestResult, SuiteResult,
+    Report, Log, Check, Attachment, Url, Step, Result, TestResult, SuiteResult,
     format_time_as_iso8601, parse_iso8601_time
 )
 from lemoncheesecake.exceptions import ReportLoadingError
@@ -237,7 +237,7 @@ def _unserialize_suite_result(json_suite):
 
 
 def _unserialize_report(json_report):
-    report = BoundReport()
+    report = Report()
 
     report.title = json_report["title"]
     report.info = json_report["info"]
@@ -300,5 +300,7 @@ class JsonBackend(FileReportBackend, ReportUnserializerMixin):
             javascript_compatibility=self.javascript_compatibility, pretty_formatting=self.pretty_formatting
         )
 
-    def load_report(self, filename):
-        return load_report_from_file(filename).bind(self, filename)
+    def load_report(self, path):
+        report = load_report_from_file(path)
+        report.bind(self, path)
+        return report
