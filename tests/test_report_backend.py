@@ -20,7 +20,7 @@ def sample_report():
     ts = time.time()
     report.start_time = ts
     report.end_time = ts
-    report.report_generation_time = ts
+    report.saving_time = ts
     return report
 
 

@@ -311,7 +311,7 @@ def _unserialize_report(xml_report):
 
     report.start_time = _unserialize_time(xml_report.attrib["start-time"])
     report.end_time = _unserialize_time(xml_report.attrib["end-time"]) if "end-time" in xml_report.attrib else None
-    report.report_generation_time = _unserialize_time(xml_report.attrib["generation-time"]) if "generation-time" in xml_report.attrib else None
+    report.saving_time = _unserialize_time(xml_report.attrib["generation-time"]) if "generation-time" in xml_report.attrib else None
     report.nb_threads = int(xml_report.attrib["nb-threads"])
     report.title = xml_report.xpath("title")[0].text
     report.info = [(node.attrib["name"], node.text) for node in xml_report.xpath("info")]

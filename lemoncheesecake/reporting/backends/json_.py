@@ -243,7 +243,7 @@ def _unserialize_report(json_report):
     report.info = json_report["info"]
     report.start_time = _unserialize_time(json_report["start_time"])
     report.end_time = _unserialize_time(json_report["end_time"])
-    report.report_generation_time = _unserialize_time(json_report["generation_time"])
+    report.saving_time = _unserialize_time(json_report["generation_time"])
     report.nb_threads = json_report["nb_threads"]
 
     if "test_session_setup" in json_report:

@@ -148,9 +148,9 @@ def make_report(suites=(), setup=None, teardown=None):
     if results:
         report.start_time = results[0].start_time
         report.end_time = results[-1].end_time
-        report.report_generation_time = time.time()
+        report.saving_time = time.time()
     else:
-        report.start_time = report.end_time = report.report_generation_time = time.time()
+        report.start_time = report.end_time = report.saving_time = time.time()
 
     return report
 
@@ -437,9 +437,9 @@ def assert_report(actual, expected, is_persisted=True):
     else:
         assert_time(actual.end_time, expected.end_time)
     if is_persisted:
-        assert actual.report_generation_time is not None
+        assert actual.saving_time is not None
     else:
-        assert actual.report_generation_time is None
+        assert actual.saving_time is None
     assert actual.nb_threads == expected.nb_threads
     assert len(actual.get_suites()) == len(expected.get_suites())
 

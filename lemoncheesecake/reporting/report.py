@@ -337,7 +337,7 @@ class Report(object):
         self._suites = []  # type: List[SuiteResult]
         self.start_time = None  # type: Optional[float]
         self.end_time = None  # type: Optional[float]
-        self.report_generation_time = None  # type: Optional[float]
+        self.saving_time = None  # type: Optional[float]
         self.title = Report.DEFAULT_TITLE
         self.nb_threads = 1
         # both attributes enable the report to be saved back if Report.bind() as been called

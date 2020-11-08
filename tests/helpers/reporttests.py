@@ -462,7 +462,7 @@ class ReportSerializationTests(ReportingSessionTests):
         report.title = "Report Title"
         report.start_time = time.time()
         report.end_time = report.start_time
-        report.report_generation_time = report.start_time
+        report.saving_time = report.start_time
 
         self.do_test_report_serialization(report)
 
@@ -471,7 +471,7 @@ class ReportSerializationTests(ReportingSessionTests):
         report.nb_threads = 3
         report.start_time = time.time()
         report.end_time = report.start_time
-        report.report_generation_time = report.start_time
+        report.saving_time = report.start_time
 
         self.do_test_report_serialization(report)
 
