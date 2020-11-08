@@ -1,4 +1,4 @@
-# NEXT RELEASE
+# 1.6.0 (2020-11-08)
 
 - **API**: `load_report()` and `Report` are now public and documented
   (see http://docs.lemoncheesecake.io/en/latest/report.html)
