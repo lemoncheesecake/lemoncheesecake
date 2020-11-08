@@ -30,21 +30,22 @@ def make_check(is_successful, description="some check", details=None, ts=None):
     return Check(description, is_successful, details, ts or time.time())
 
 
-def make_step(description="Step", entries=(), start_time=NotImplemented, end_time=NotImplemented):
+def make_step(description="Step", logs=(), start_time=NotImplemented, end_time=NotImplemented):
     step = Step(description)
-    step.entries.extend(entries)
+    for log in logs:
+        step.add_log(log)
 
     if start_time is not NotImplemented:
         step.start_time = start_time
-    elif entries:
-        step.start_time = entries[0].time
+    elif logs:
+        step.start_time = logs[0].time
     else:
         step.start_time = time.time()
 
     if end_time is not NotImplemented:
         step.end_time = end_time
-    elif entries:
-        step.end_time = entries[-1].time
+    elif logs:
+        step.end_time = logs[-1].time
     else:
         step.end_time = time.time()
 
@@ -147,9 +148,9 @@ def make_report(suites=(), setup=None, teardown=None):
     if results:
         report.start_time = results[0].start_time
         report.end_time = results[-1].end_time
-        report.report_generation_time = time.time()
+        report.saving_time = time.time()
     else:
-        report.start_time = report.end_time = report.report_generation_time = time.time()
+        report.start_time = report.end_time = report.saving_time = time.time()
 
     return report
 
@@ -174,11 +175,11 @@ def make_report_in_progress():
             tests=[
                 make_test_result(
                     "test_1", "test_1", start_time=now, end_time=None, status=None,
-                    steps=[make_step("step", start_time=now, end_time=None, entries=[make_log("info", "message", ts=now)])]
+                    steps=[make_step("step", start_time=now, end_time=None, logs=[make_log("info", "message", ts=now)])]
                 ),
                 make_test_result(
                     "test_2", "test_2", start_time=now, end_time=now+1, status="passed",
-                    steps=[make_step("step", start_time=now, end_time=now+1, entries=[make_log("info", "message", ts=now)])]
+                    steps=[make_step("step", start_time=now, end_time=now+1, logs=[make_log("info", "message", ts=now)])]
                 )
             ]
         )]
@@ -249,19 +250,21 @@ def assert_last_test_status(report, status):
     assert test.status == status
 
 
-def get_last_log(report):
+def _get_last_log(report, log_class):
     test = get_last_test(report)
-    return next(entry for entry in reversed(test.get_steps()[-1].entries) if isinstance(entry, reporting.Log))
+    return next(log for log in reversed(test.get_steps()[-1].get_logs()) if isinstance(log, log_class))
+
+
+def get_last_log(report):
+    return _get_last_log(report, reporting.Log)
 
 
 def get_last_logged_check(report):
-    test = get_last_test(report)
-    return next(entry for entry in reversed(test.get_steps()[-1].entries) if isinstance(entry, reporting.Check))
+    return _get_last_log(report, reporting.Check)
 
 
 def get_last_attachment(report):
-    test = get_last_test(report)
-    return next(entry for entry in reversed(test.get_steps()[-1].entries) if isinstance(entry, reporting.Attachment))
+    return _get_last_log(report, reporting.Attachment)
 
 
 def assert_time(actual, expected):
@@ -279,9 +282,9 @@ def get_last_test_checks(report):
     test = get_last_test(report)
     checks = []
     for step in test.get_steps():
-        for entry in step.entries:
-            if isinstance(entry, reporting.Check):
-                checks.append(entry)
+        for log in step.get_logs():
+            if isinstance(log, reporting.Check):
+                checks.append(log)
     return checks
 
 
@@ -289,8 +292,8 @@ def count_logs(report, log_level):
     count = 0
     for test in report.all_tests():
         for step in test.get_steps():
-            for entry in step.entries:
-                if isinstance(entry, reporting.Log) and entry.level == log_level:
+            for log in step.get_logs():
+                if isinstance(log, reporting.Log) and log.level == log_level:
                     count += 1
     return count
 
@@ -300,9 +303,9 @@ def assert_test_checks(test, expected_successes=0, expected_failures=0):
     failures = 0
 
     for step in test.get_steps():
-        for entry in step.entries:
-            if isinstance(entry, reporting.Check):
-                if entry.is_successful:
+        for log in step.get_logs():
+            if isinstance(log, reporting.Check):
+                if log.is_successful:
                     successes += 1
                 else:
                     failures += 1
@@ -348,17 +351,17 @@ def assert_step_data(actual, expected):
     else:
         assert_time(actual.end_time, expected.end_time)
     assert actual.description == expected.description
-    assert len(actual.entries) == len(expected.entries)
-    for actual_entry, expected_entry in zip(actual.entries, expected.entries):
-        assert actual_entry.__class__ == expected_entry.__class__
-        if isinstance(actual_entry, reporting.Log):
-            assert_log_data(actual_entry, expected_entry)
-        elif isinstance(actual_entry, reporting.Check):
-            assert_check_data(actual_entry, expected_entry)
-        elif isinstance(actual_entry, reporting.Attachment):
-            assert_attachment_data(actual_entry, expected_entry)
-        elif isinstance(actual_entry, reporting.Url):
-            assert_url_data(actual_entry, expected_entry)
+    assert len(actual.get_logs()) == len(expected.get_logs())
+    for actual_log, expected_log in zip(actual.get_logs(), expected.get_logs()):
+        assert actual_log.__class__ == expected_log.__class__
+        if isinstance(actual_log, reporting.Log):
+            assert_log_data(actual_log, expected_log)
+        elif isinstance(actual_log, reporting.Check):
+            assert_check_data(actual_log, expected_log)
+        elif isinstance(actual_log, reporting.Attachment):
+            assert_attachment_data(actual_log, expected_log)
+        elif isinstance(actual_log, reporting.Url):
+            assert_url_data(actual_log, expected_log)
         else:
             raise Exception("Unknown class '%s'" % actual.__class__.__name__)
 
@@ -434,9 +437,9 @@ def assert_report(actual, expected, is_persisted=True):
     else:
         assert_time(actual.end_time, expected.end_time)
     if is_persisted:
-        assert actual.report_generation_time is not None
+        assert actual.saving_time is not None
     else:
-        assert actual.report_generation_time is None
+        assert actual.saving_time is None
     assert actual.nb_threads == expected.nb_threads
     assert len(actual.get_suites()) == len(expected.get_suites())
 

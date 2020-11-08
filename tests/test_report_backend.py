@@ -2,7 +2,7 @@ import time
 
 import pytest
 
-from lemoncheesecake.reporting import Report, XmlBackend, JsonBackend, save_report, load_report, load_reports_from_dir
+from lemoncheesecake.reporting import Report, XmlBackend, JsonBackend, load_report, load_reports_from_dir
 from lemoncheesecake.reporting.backends.xml import \
     save_report_into_file as save_xml, \
     load_report_from_file as load_xml
@@ -20,13 +20,13 @@ def sample_report():
     ts = time.time()
     report.start_time = ts
     report.end_time = ts
-    report.report_generation_time = ts
+    report.saving_time = ts
     return report
 
 
 def _test_save_report(tmpdir, sample_report, backend, load_func):
     filename = tmpdir.join("report").strpath
-    save_report(filename, sample_report, backend)
+    backend.save_report(filename, sample_report)
     report = load_func(filename)
     assert_report(report, sample_report)
 

@@ -15,35 +15,35 @@ def _replay_step(location, step, eventmgr):
     thread_id = threading.current_thread().ident
     eventmgr.fire(events.StepStartEvent(location, step.description, thread_id, event_time=step.start_time))
 
-    for entry in step.entries:
-        if isinstance(entry, Log):
+    for log in step.get_logs():
+        if isinstance(log, Log):
             eventmgr.fire(
                 events.LogEvent(
-                    location, step.description, thread_id, entry.level, entry.message, entry.time
+                    location, step.description, thread_id, log.level, log.message, log.time
                 )
             )
-        elif isinstance(entry, Attachment):
+        elif isinstance(log, Attachment):
             eventmgr.fire(
                 events.LogAttachmentEvent(
-                    location, step.description, thread_id, entry.filename, entry.description,
-                    entry.as_image, entry.time
+                    location, step.description, thread_id, log.filename, log.description,
+                    log.as_image, log.time
                 )
             )
-        elif isinstance(entry, Url):
+        elif isinstance(log, Url):
             eventmgr.fire(
                 events.LogUrlEvent(
-                    location, step.description, thread_id, entry.url, entry.description, entry.time
+                    location, step.description, thread_id, log.url, log.description, log.time
                 )
             )
-        elif isinstance(entry, Check):
+        elif isinstance(log, Check):
             eventmgr.fire(
                 events.CheckEvent(
-                    location, step.description, thread_id, entry.description, entry.is_successful,
-                    entry.details, entry.time
+                    location, step.description, thread_id, log.description, log.is_successful,
+                    log.details, log.time
                 )
             )
         else:
-            raise ValueError("Unknown step entry %s" % entry)
+            raise ValueError("Unknown step log %s" % log)
 
     eventmgr.fire(events.StepEndEvent(location, step.description, thread_id, event_time=step.end_time))
 

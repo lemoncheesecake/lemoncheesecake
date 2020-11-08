@@ -5,11 +5,9 @@ Created on Mar 29, 2016
 '''
 
 import os
-import os.path as osp
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
-from lemoncheesecake.exceptions import ReportLoadingError, LemoncheesecakeException
-from lemoncheesecake.reporting.report import Report
+from lemoncheesecake.exceptions import LemoncheesecakeException
 
 _NEGATION_FLAGS = "-^~"
 
@@ -144,61 +142,3 @@ def get_reporting_backends_for_test_run(available_backends, backend_names):
             raise LemoncheesecakeException("Reporting backend '%s' is not suitable for test run" % backend_name)
         backends.append(backend)
     return backends
-
-
-class BoundReport(Report):
-    def __init__(self):
-        Report.__init__(self)
-        self.backend = None
-        self.path = None
-
-    def bind(self, backend, path):
-        self.backend = backend
-        self.path = path
-        return self
-
-    def is_bound(self):
-        return self.backend is not None and self.path is not None
-
-    def save(self):
-        assert self.is_bound(), "Cannot save unbound report"
-        save_report(self.path, self, self.backend)
-
-
-def load_report_from_file(filename, backends=None):
-    if backends is None:
-        backends = get_reporting_backends()
-    for backend in backends:
-        if isinstance(backend, ReportUnserializerMixin):
-            try:
-                return backend.load_report(filename)
-            except IOError as excp:
-                raise ReportLoadingError("Cannot load report from file '%s': %s" % (filename, excp))
-            except ReportLoadingError:
-                pass
-    raise ReportLoadingError("Cannot find any suitable report backend to load report file '%s'" % filename)
-
-
-def load_reports_from_dir(dirname, backends=None):
-    for filename in [os.path.join(dirname, filename) for filename in os.listdir(dirname)]:
-        if os.path.isfile(filename):
-            try:
-                yield load_report_from_file(filename, backends)
-            except ReportLoadingError:
-                pass
-
-
-def load_report(path, backends=None):
-    if osp.isdir(path):
-        try:
-            return next(load_reports_from_dir(path, backends))
-        except StopIteration:
-            raise ReportLoadingError("Cannot find any report in directory '%s'" % path)
-    else:
-        return load_report_from_file(path, backends)
-
-
-def save_report(filename, report, backend):
-    if not isinstance(backend, ReportSerializerMixin):
-        raise NotImplementedError("Reporting backend '%s' does not support report saving" % backend.get_name())
-    backend.save_report(filename, report)

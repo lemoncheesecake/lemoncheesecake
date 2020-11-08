@@ -16,9 +16,9 @@ except ImportError:
 import six
 
 import lemoncheesecake
-from lemoncheesecake.reporting.backend import BoundReport, FileReportBackend, ReportUnserializerMixin
+from lemoncheesecake.reporting.backend import FileReportBackend, ReportUnserializerMixin
 from lemoncheesecake.reporting.report import (
-    Log, Check, Attachment, Url, Step, Result, TestResult, SuiteResult,
+    Report, Log, Check, Attachment, Url, Step, Result, TestResult, SuiteResult,
     format_time_as_iso8601, parse_iso8601_time
 )
 from lemoncheesecake.exceptions import ReportLoadingError
@@ -76,37 +76,37 @@ def _serialize_steps(steps, xml_result):
         )
         if step.end_time is not None:
             xml_step.attrib["end-time"] = _serialize_time(step.end_time)
-        for entry in step.entries:
-            if isinstance(entry, Log):
+        for log in step.get_logs():
+            if isinstance(log, Log):
                 xml_log = make_xml_child(
                     xml_step, "log",
-                    "level", entry.level,
-                    "time", _serialize_time(entry.time)
+                    "level", log.level,
+                    "time", _serialize_time(log.time)
                 )
-                xml_log.text = entry.message
-            elif isinstance(entry, Attachment):
+                xml_log.text = log.message
+            elif isinstance(log, Attachment):
                 xml_attachment = make_xml_child(
                     xml_step, "attachment",
-                    "description", entry.description,
-                    "as-image", _serialize_bool(entry.as_image),
-                    "time", _serialize_time(entry.time)
+                    "description", log.description,
+                    "as-image", _serialize_bool(log.as_image),
+                    "time", _serialize_time(log.time)
                 )
-                xml_attachment.text = entry.filename
-            elif isinstance(entry, Url):
+                xml_attachment.text = log.filename
+            elif isinstance(log, Url):
                 xml_url = make_xml_child(
                     xml_step, "url",
-                    "description", entry.description,
-                    "time", _serialize_time(entry.time)
+                    "description", log.description,
+                    "time", _serialize_time(log.time)
                 )
-                xml_url.text = entry.url
+                xml_url.text = log.url
             else:  # TestCheck
                 xml_check = make_xml_child(
                     xml_step, "check",
-                    "description", entry.description,
-                    "is-successful", _serialize_bool(entry.is_successful),
-                    "time", _serialize_time(entry.time)
+                    "description", log.description,
+                    "is-successful", _serialize_bool(log.is_successful),
+                    "time", _serialize_time(log.time)
                 )
-                xml_check.text = entry.details
+                xml_check.text = log.details
 
 
 def _serialize_result(result, xml_result):
@@ -230,29 +230,29 @@ def _unserialize_step(xml_step):
     step = Step(xml_step.attrib["description"])
     step.start_time = _unserialize_time(xml_step.attrib["start-time"])
     step.end_time = _unserialize_time(xml_step.attrib["end-time"]) if "end-time" in xml_step.attrib else None
-    for xml_entry in xml_step:
-        if xml_entry.tag == "log":
-            entry = Log(
-                xml_entry.attrib["level"], xml_entry.text, _unserialize_time(xml_entry.attrib["time"])
+    for xml_log in xml_step:
+        if xml_log.tag == "log":
+            step_log = Log(
+                xml_log.attrib["level"], xml_log.text, _unserialize_time(xml_log.attrib["time"])
             )
-        elif xml_entry.tag == "attachment":
-            entry = Attachment(
-                xml_entry.attrib["description"], xml_entry.text,
-                _unserialize_bool(xml_entry.attrib["as-image"]),
-                _unserialize_time(xml_entry.attrib["time"])
+        elif xml_log.tag == "attachment":
+            step_log = Attachment(
+                xml_log.attrib["description"], xml_log.text,
+                _unserialize_bool(xml_log.attrib["as-image"]),
+                _unserialize_time(xml_log.attrib["time"])
             )
-        elif xml_entry.tag == "url":
-            entry = Url(
-                xml_entry.attrib["description"], xml_entry.text, _unserialize_time(xml_entry.attrib["time"])
+        elif xml_log.tag == "url":
+            step_log = Url(
+                xml_log.attrib["description"], xml_log.text, _unserialize_time(xml_log.attrib["time"])
             )
-        elif xml_entry.tag == "check":
-            entry = Check(
-                xml_entry.attrib["description"], _unserialize_bool(xml_entry.attrib["is-successful"]),
-                xml_entry.text, _unserialize_time(xml_entry.attrib["time"])
+        elif xml_log.tag == "check":
+            step_log = Check(
+                xml_log.attrib["description"], _unserialize_bool(xml_log.attrib["is-successful"]),
+                xml_log.text, _unserialize_time(xml_log.attrib["time"])
             )
         else:
-            raise ValueError("Unknown tag '%s' for step" % xml_entry.tag)
-        step.entries.append(entry)
+            raise ValueError("Unknown tag '%s' for step" % xml_log.tag)
+        step.add_log(step_log)
     return step
 
 
@@ -307,11 +307,11 @@ def _unserialize_suite_result(xml_suite):
 
 
 def _unserialize_report(xml_report):
-    report = BoundReport()
+    report = Report()
 
     report.start_time = _unserialize_time(xml_report.attrib["start-time"])
     report.end_time = _unserialize_time(xml_report.attrib["end-time"]) if "end-time" in xml_report.attrib else None
-    report.report_generation_time = _unserialize_time(xml_report.attrib["generation-time"]) if "generation-time" in xml_report.attrib else None
+    report.saving_time = _unserialize_time(xml_report.attrib["generation-time"]) if "generation-time" in xml_report.attrib else None
     report.nb_threads = int(xml_report.attrib["nb-threads"])
     report.title = xml_report.xpath("title")[0].text
     report.info = [(node.attrib["name"], node.text) for node in xml_report.xpath("info")]
@@ -370,5 +370,7 @@ class XmlBackend(FileReportBackend, ReportUnserializerMixin):
     def save_report(self, filename, report):
         save_report_into_file(report, filename, self.indent_level)
 
-    def load_report(self, filename):
-        return load_report_from_file(filename).bind(self, filename)
+    def load_report(self, path):
+        report = load_report_from_file(path)
+        report.bind(self, path)
+        return report

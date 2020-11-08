@@ -7,7 +7,7 @@ Created on Mar 26, 2016
 import time
 from decimal import Decimal
 from functools import reduce
-from typing import Union, List, Iterable, Optional
+from typing import Union, List, Iterator, Optional
 import datetime
 import calendar
 
@@ -15,15 +15,8 @@ from typing import Callable, Any
 
 from lemoncheesecake.helpers.time import humanize_duration
 from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests, flatten_suites, find_test, find_suite, \
-    filter_suites, normalize_node_hierarchy, TreeNodeHierarchy
-
-LOG_LEVEL_DEBUG = "debug"
-LOG_LEVEL_INFO = "info"
-LOG_LEVEL_WARN = "warn"
-LOG_LEVEL_ERROR = "error"
-
-_TEST_STATUSES = "passed", "failed", "skipped", "disabled"
-_DEFAULT_REPORT_TITLE = "Test Report"
+    normalize_node_hierarchy, TreeNodeHierarchy
+from lemoncheesecake.reporting.backend import ReportSerializerMixin
 
 
 # NB: it would be nicer to use:
@@ -58,90 +51,184 @@ def _get_duration(start_time, end_time):
         return None
 
 
-class Log(object):
+class StepLog(object):
+    """
+    Base class for logs contained in a Step instance.
+    """
+    def __init__(self, ts):
+        #: Log time (float).
+        self.time = ts
+        #: Parent step.
+        self.parent_step = None
+
+
+class Log(StepLog):
+    """
+    The log resulting of log_info/log_debug/log_warning/log_error functions.
+    Inherits :py:class:`StepLog <lemoncheesecake.reporting.StepLog>`.
+    """
+    LEVEL_DEBUG = "debug"
+    LEVEL_INFO = "info"
+    LEVEL_WARN = "warn"
+    LEVEL_ERROR = "error"
+
     def __init__(self, level, message, ts):
         # type: (str, str, float) -> None
+        super(Log, self).__init__(ts)
+        #: Log level.
         self.level = level
+        #: Log message.
         self.message = message
-        self.time = ts
 
 
-class Check(object):
+class Check(StepLog):
+    """
+    The log resulting of a check_that/require_that/assert_that functions.
+    Inherits :py:class:`StepLog <lemoncheesecake.reporting.StepLog>`.
+    """
     def __init__(self, description, is_successful, details, ts):
         # type: (str, bool, Optional[str], float) -> None
+        super(Check, self).__init__(ts)
+        #: Check description.
         self.description = description
+        #: Whether the check is successful or not (boolean).
         self.is_successful = is_successful
+        #: Optional check details.
         self.details = details
-        self.time = ts
 
 
-class Attachment(object):
+class Attachment(StepLog):
+    """
+    The log resulting of save/prepare_*attachment* functions.
+    Inherits :py:class:`StepLog <lemoncheesecake.reporting.StepLog>`.
+    """
     def __init__(self, description, filename, as_image, ts):
         # type: (str, str, bool, float) -> None
+        super(Attachment, self).__init__(ts)
+        #: Attachment description.
         self.description = description
+        #: Attachment filename, this is a path relative to the report directory.
         self.filename = filename
+        #: Whether or not the attachment should be interpreted as an image (boolean).
         self.as_image = as_image
-        self.time = ts
 
 
-class Url(object):
+class Url(StepLog):
+    """
+    The log resulting of log_url function.
+    Inherits :py:class:`StepLog <lemoncheesecake.reporting.StepLog>`.
+    """
     def __init__(self, description, url, ts):
         # type: (str, str, float) -> None
+        super(Url, self).__init__(ts)
+        #: Optional description.
         self.description = description
+        #: Actual url.
         self.url = url
-        self.time = ts
 
 
 class Step(object):
+    """
+    This class holds logs occurring within a step.
+    """
     def __init__(self, description):
         # type: (str) -> None
+        #: Step description.
         self.description = description
+        #: Parent result.
         self.parent_result = None
-        self.entries = []  # type: List[Union[Log, Check, Attachment, Url]]
+        self._logs = []  # type: List[StepLog]
+        #: Step start time.
         self.start_time = None  # type: Optional[float]
+        #: Step end time.
         self.end_time = None  # type: Optional[float]
 
+    def add_log(self, log):
+        # type: (StepLog) -> None
+        """
+        Add a log to the step.
+        """
+        log.parent_step = self
+        self._logs.append(log)
+
+    def get_logs(self):
+        # type: () -> List[StepLog]
+        """
+        Get step logs.
+        """
+        return self._logs
+
     @staticmethod
-    def _is_entry_successful(entry):
-        if isinstance(entry, Check):
-            return entry.is_successful
-        elif isinstance(entry, Log):
-            return entry.level != LOG_LEVEL_ERROR
+    def _is_log_successful(log):
+        if isinstance(log, Check):
+            return log.is_successful
+        elif isinstance(log, Log):
+            return log.level != Log.LEVEL_ERROR
         return True
 
     def is_successful(self):
         # type: () -> bool
-        return all(map(Step._is_entry_successful, self.entries))
+        """
+        Return whether or not (as a boolean) the step is successful.
+        """
+        return all(map(Step._is_log_successful, self._logs))
 
     @property
     def duration(self):
         # type: () -> Optional[float]
+        """
+        Return the duration as a float or None if the step is not yet complete.
+        """
         return _get_duration(self.start_time, self.end_time)
 
 
 class Result(object):
+    """
+    Holds the result of setup/teardown phase and it's also the base class of
+    :py:class:`TestResult <lemoncheesecake.reporting.TestResult>`.
+    """
+
+    #: possible status values for a Result instance
+    STATUSES = "passed", "failed", "skipped", "disabled"
+
     def __init__(self):
         # please note that this attribute is also defined in TestResult through BaseTest,
         # one will override the other
+        #: Parent suite.
         self.parent_suite = None  # type: Optional[SuiteResult]
+        #: Result type (it is one of the following: "test_session_setup", "test_session_teardown",
+        #: "suite_setup", "suite_teardown", "test").
         self.type = None  # type: Optional[str]
         self._steps = []  # type: List[Step]
+        #: Result start time.
         self.start_time = None  # type: Optional[float]
+        #: Result end time.
         self.end_time = None  # type: Optional[float]
+        #: Result status (one of Result.STATUSES or None if the result is not yet complete).
         self.status = None  # type: Optional[str]
+        #: Result status details, if any.
         self.status_details = None  # type: Optional[str]
 
     def add_step(self, step):
         # type: (Step) -> None
+        """
+        Add step to the result.
+        """
         step.parent_result = self
         self._steps.append(step)
 
     def get_steps(self):
         # type: () -> List[Step]
+        """
+        Get steps.
+        """
         return self._steps
 
     def is_successful(self):
         # type: () -> bool
+        """
+        Return whether or not the result is successful (even if the result is not yet complete).
+        """
         if self.status:  # test is finished
             return self.status in ("passed", "disabled")
         else:  # check if the test is successful "so far"
@@ -150,21 +237,45 @@ class Result(object):
     @property
     def duration(self):
         # type: () -> Optional[float]
+        """
+        Return the duration as a float or None if the result is not yet complete.
+        """
         return _get_duration(self.start_time, self.end_time)
 
 
 class TestResult(BaseTest, Result):
+    """
+    Holds the result of a test. Inherits :py:class:`Result <lemoncheesecake.reporting.Result>`.
+
+    :var str ~.name: test name
+    :var str ~.description: test description
+    :var list ~.tags: test tags
+    :var dict ~.properties: test properties, as a dict
+    :var dict ~.links: test links, as a list of tuples (`(url, description)` where description can be `None`)
+    """
     def __init__(self, name, description):
         BaseTest.__init__(self, name, description)
         Result.__init__(self)
+        self.type = "test"
         # non-serialized attributes (only set in-memory during test execution):
         self.rank = 0
 
 
 class SuiteResult(BaseSuite):
+    """
+    Contains the results of tests and sub-suites within the suite.
+
+    :var str ~.name: test name
+    :var str ~.description: test description
+    :var list ~.tags: test tags
+    :var dict ~.properties: test properties, as a dict
+    :var dict ~.links: test links, as a list of tuples (`(url, description)` where description can be `None`)
+    """
     def __init__(self, name, description):
         BaseSuite.__init__(self, name, description)
+        #: The suite start time.
         self.start_time = None  # type: Optional[float]
+        #: The suite end time.
         self.end_time = None  # type: Optional[float]
         self._suite_setup = None  # type: Optional[Result]
         self._suite_teardown = None  # type: Optional[Result]
@@ -173,10 +284,15 @@ class SuiteResult(BaseSuite):
 
     @property
     def suite_setup(self):
+        # type: () -> Result
+        """
+        The suite setup result (if any).
+        """
         return self._suite_setup
     
     @suite_setup.setter
     def suite_setup(self, setup):
+        # type: (Result) -> None
         if setup:
             setup.parent_suite = self
             setup.type = "suite_setup"
@@ -184,10 +300,15 @@ class SuiteResult(BaseSuite):
 
     @property
     def suite_teardown(self):
+        # type: () -> Result
+        """
+        The suite teardown result (if any).
+        """
         return self._suite_teardown
 
     @suite_teardown.setter
     def suite_teardown(self, teardown):
+        # type: (Result) -> None
         if teardown:
             teardown.parent_suite = self
             teardown.type = "suite_teardown"
@@ -196,6 +317,9 @@ class SuiteResult(BaseSuite):
     @property
     def duration(self):
         # type: () -> Optional[float]
+        """
+        The suite duration, which is the addition of all results contained in the suite and its sub-suite (recursively).
+        """
         return reduce(
             lambda x, y: x + y,
             # result.duration is None if the corresponding result is in progress
@@ -205,12 +329,18 @@ class SuiteResult(BaseSuite):
 
     def get_tests(self):
         # type: () -> List[TestResult]
+        """
+        Return the tests contained in the suite.
+        """
         tests = super(SuiteResult, self).get_tests()
         return sorted(tests, key=lambda t: t.rank)
 
-    def get_suites(self, include_empty_suites=False):
-        # type: (bool) -> List[SuiteResult]
-        suites = super(SuiteResult, self).get_suites(include_empty_suites)
+    def get_suites(self):
+        # type: () -> List[SuiteResult]
+        """
+        Return the sub-suites contained in the suite.
+        """
+        suites = super(SuiteResult, self).get_suites()
         return sorted(suites, key=lambda s: s.rank)
 
     def pull_node(self):
@@ -220,9 +350,11 @@ class SuiteResult(BaseSuite):
         return node
 
     def is_empty(self):
+        # type: () -> bool
         return BaseSuite.is_empty(self) and self._suite_setup is None and self._suite_teardown is None
 
     def filter(self, result_filter):
+        # type: (Callable[[SuiteResult], bool]) -> SuiteResult
         suite = BaseSuite.filter(self, result_filter)
         if self._suite_setup and result_filter(self._suite_setup):
             suite._suite_setup = self._suite_setup
@@ -303,7 +435,7 @@ class ReportLocation(object):
 
 
 def flatten_results(suites):
-    # type: (Iterable[SuiteResult]) -> Iterable[Result]
+    # type: (Iterator[SuiteResult]) -> Iterator[Result]
     for suite in flatten_suites(suites):
         if suite.suite_setup:
             yield suite.suite_setup
@@ -314,33 +446,53 @@ def flatten_results(suites):
 
 
 class Report(object):
+    DEFAULT_TITLE = "Test Report"
+
     def __init__(self):
         self.info = []
         self._test_session_setup = None  # type: Optional[Result]
         self._test_session_teardown = None  # type: Optional[Result]
         self._suites = []  # type: List[SuiteResult]
+        #: The test run start time.
         self.start_time = None  # type: Optional[float]
+        #: The test run end time.
         self.end_time = None  # type: Optional[float]
-        self.report_generation_time = None  # type: Optional[float]
-        self.title = _DEFAULT_REPORT_TITLE
+        #: The report saving time.
+        self.saving_time = None  # type: Optional[float]
+        #: The report title.
+        self.title = Report.DEFAULT_TITLE
+        #: The number of threads used for the test run.
         self.nb_threads = 1
+        # both attributes enable the report to be saved back if Report.bind() as been called
+        self.backend = None
+        self.path = None
 
     @property
     def test_session_setup(self):
+        # type: () -> Optional[Result]
+        """
+        The session setup result if any.
+        """
         return self._test_session_setup
 
     @test_session_setup.setter
     def test_session_setup(self, setup):
+        # type: (Result) -> None
         if setup:
             setup.type = "test_session_setup"
         self._test_session_setup = setup
 
     @property
     def test_session_teardown(self):
+        # type: () -> Optional[Result]
+        """
+        The session teardown result if any.
+        """
         return self._test_session_teardown
 
     @test_session_teardown.setter
     def test_session_teardown(self, teardown):
+        # type: (Result) -> None
         if teardown:
             teardown.type = "test_session_teardown"
         self._test_session_teardown = teardown
@@ -348,28 +500,46 @@ class Report(object):
     @property
     def duration(self):
         # type: () -> Optional[float]
+        """
+        The test run duration.
+        """
         return _get_duration(self.start_time, self.end_time)
 
     @property
     def nb_tests(self):
         # type: () -> int
+        """
+        The number of tests in the report.
+        """
         return len(list(self.all_tests()))
 
     @property
     def parallelized(self):
         # type: () -> bool
+        """
+        Whether or not the tests were parallelized.
+        """
         return self.nb_threads > 1 and self.nb_tests > 1
 
     def add_info(self, name, value):
         # type: (str, str) -> None
+        """
+        Add extra information (name, value) in the report.
+        """
         self.info.append([name, value])
     
     def add_suite(self, suite):
         # type: (SuiteResult) -> None
+        """
+        Add suite result to the report.
+        """
         self._suites.append(suite)
     
     def get_suites(self):
         # type: () -> List[SuiteResult]
+        """
+        Get suite results.
+        """
         return sorted(self._suites, key=lambda s: s.rank)
 
     def get_suite(self, hierarchy):
@@ -386,21 +556,32 @@ class Report(object):
 
     def is_successful(self):
         # type: () -> bool
+        """
+        Return whether or not the test run is considered as successful.
+
+        Please note that every result is taken into account, including tests but also setups and teardowns.
+        """
         return all(result.status in ("passed", "disabled") for result in self.all_results())
 
-    def all_suites(self, result_filter=None):
-        # type: (Optional[Callable[[TestResult], bool]]) -> Iterable[SuiteResult]
-        if result_filter:
-            return flatten_suites(filter_suites(self._suites, result_filter))
-        else:
-            return flatten_suites(self._suites)
+    def all_suites(self):
+        # type: () -> Iterator[SuiteResult]
+        """
+        An iterator over all suite results contained in the report (recursive).
+        """
+        return flatten_suites(self._suites)
 
     def all_tests(self):
-        # type: () -> Iterable[TestResult]
+        # type: () -> Iterator[TestResult]
+        """
+        An iterator over all test results contained in the report.
+        """
         return flatten_tests(self._suites)
 
     def all_results(self):
-        # type: () -> Iterable[Result]
+        # type: () -> Iterator[Result]
+        """
+        An iterator over all results (tests, setups, teardowns) contained in the report.
+        """
         if self.test_session_setup:
             yield self.test_session_setup
         for result in flatten_results(self.get_suites()):
@@ -409,23 +590,73 @@ class Report(object):
             yield self.test_session_teardown
 
     def all_steps(self):
-        # type: () -> Iterable[Step]
+        # type: () -> Iterator[Step]
+        """
+        An iterator over all steps contained in the report.
+        """
         for result in self.all_results():
             for step in result.get_steps():
                 yield step
 
     def build_message(self, template):
+        # type: (str) -> str
+        """
+        Build a message from a template that contains variable placeholders.
+
+        Example: with template "Test results: {passed}/{enabled} passed ({passed_pct})" the method will return
+        for instance "Test results: 1/2 passed (50%)".
+
+        The following variables are available:
+
+        - `start_time`: the test run start time
+
+        - `end_time`: the test run end time
+
+        - `duration`: the test run duration
+
+        - `total`: the total number of tests (including disabled tests)
+
+        - `enabled`: the total number of tests (excluding disabled tests)
+
+        - `passed`: the number of passed tests
+
+        - `passed_pct`: the number of passed tests in percentage of enabled tests
+
+        - `failed`: the number of failed tests
+
+        - `failed_pct`: the number of failed tests in percentage of enabled tests
+
+        - `skipped`: the number of skipped tests
+
+        - `skipped_pct`: the number of skipped tests in percentage of enabled tests
+
+        - `disabled`: the number of disabled tests
+
+        - `disabled_pct`: the number of disabled tests in percentage of all tests
+        """
         stats = ReportStats.from_report(self)
         variables = {
             name: func(self, stats) for name, func in _report_message_variables.items()
         }
         return template.format(**variables)
 
+    def bind(self, backend, path):
+        # type: (ReportSerializerMixin, str) -> None
+        self.backend = backend
+        self.path = path
+
+    def save(self):
+        """
+        Save the report.
+        """
+        assert self.backend and self.path, "Cannot save unbound report"
+        self.backend.save_report(self.path, self)
+
 
 class ReportStats(object):
     def __init__(self):
         self.tests_nb = 0
-        self.tests_nb_by_status = {s: 0 for s in _TEST_STATUSES}
+        self.tests_nb_by_status = {s: 0 for s in Result.STATUSES}
         self.duration = None
         self.duration_cumulative = 0
 

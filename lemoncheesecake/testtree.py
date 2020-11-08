@@ -17,6 +17,10 @@ from lemoncheesecake.helpers.orderedset import OrderedSet
 # (see https://github.com/sphinx-doc/sphinx/issues/741)
 
 class BaseTreeNode(object):
+    """
+    :var name: name
+    """
+
     def __init__(self, name, description):
         self.parent_suite = None
         #: name
@@ -39,10 +43,16 @@ class BaseTreeNode(object):
 
     @property
     def hierarchy_depth(self):
+        # type: () -> int
         return len(list(self.hierarchy)) - 1
 
     @property
     def path(self):
+        # type: () -> str
+        """
+        The complete path of the test node (example: if used on a test named "my_test" and a suite named
+        "my_suite", then the path is "my_suite.my_test").
+        """
         return ".".join(node.name for node in self.hierarchy)
 
     @property
@@ -118,24 +128,30 @@ class BaseSuite(BaseTreeNode):
         self._suites = []
 
     def add_test(self, test):
+        """
+        Add test to the suite.
+        """
         test.parent_suite = self
         self._tests[test.name] = test
 
     def get_tests(self):
+        """
+        Get suite's tests.
+        """
         return list(self._tests.values())
 
     def get_test_by_name(self, name):
         return self._tests[name]
 
     def add_suite(self, suite):
+        """
+        Add a sub-suite to the suite.
+        """
         suite.parent_suite = self
         self._suites.append(suite)
 
-    def get_suites(self, include_empty_suites=False):
-        if include_empty_suites:
-            return self._suites
-        else:
-            return list(filter(lambda suite: not suite.is_empty(), self._suites))
+    def get_suites(self):
+        return self._suites
 
     def is_empty(self):
         if len(self.get_tests()) != 0:
@@ -208,7 +224,7 @@ def find_suite(suites, hierarchy):
                 lookup_suite_name, [s.name for s in lookup_suites]
             ))
 
-        lookup_suites = lookup_suite.get_suites(include_empty_suites=True)
+        lookup_suites = lookup_suite.get_suites()
 
     return lookup_suite
 

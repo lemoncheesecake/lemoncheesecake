@@ -21,19 +21,19 @@ _NEGATION_FLAGS = "-^~"
 def _iter_grepable(steps):
     for step in steps:
         yield step.description
-        for entry in step.entries:
-            if isinstance(entry, Log):
-                yield entry.message
-            elif isinstance(entry, Check):
-                yield entry.description
-                if entry.details:
-                    yield entry.details
-            elif isinstance(entry, Attachment):
-                yield entry.filename
-                yield entry.description
-            elif isinstance(entry, Url):
-                yield entry.url
-                yield entry.description
+        for log in step.get_logs():
+            if isinstance(log, Log):
+                yield log.message
+            elif isinstance(log, Check):
+                yield log.description
+                if log.details:
+                    yield log.details
+            elif isinstance(log, Attachment):
+                yield log.filename
+                yield log.description
+            elif isinstance(log, Url):
+                yield log.url
+                yield log.description
 
 
 def _grep(pattern, steps):

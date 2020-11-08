@@ -375,12 +375,12 @@ def load_fixtures_from_files(patterns, excluding=[]):
 
     :param patterns: a mandatory list (a simple string can also be used instead of a single element list)
         of files to import; the wildcard '*' character can be used
-    :param exclude: an optional list (a simple string can also be used instead of a single element list)
+    :param excluding: an optional list (a simple string can also be used instead of a single element list)
       of elements to exclude from the expanded list of files to import
 
     Example::
 
-        load_suites_from_files("test_*.py")
+        load_fixtures_from_files("test_*.py")
     """
     fixtures = []
     for file in get_matching_files(patterns, excluding):

@@ -72,26 +72,26 @@ def assert_rp_calls(actual_calls, expected_calls):
 def steps_to_calls(steps):
     for step in steps:
         yield "log", (substr(step.description), 'INFO'), {}
-        for entry in step.entries:
-            if isinstance(entry, Log):
-                yield "log", (entry.message, entry.level.upper()), {}
-            if isinstance(entry, Check):
-                message = "%s => %s" % (entry.description, "OK" if entry.is_successful else "NOT OK")
-                if entry.details:
-                    message += "\nDetails: %s" % entry.details
-                level = "INFO" if entry.is_successful else "ERROR"
+        for log in step.get_logs():
+            if isinstance(log, Log):
+                yield "log", (log.message, log.level.upper()), {}
+            if isinstance(log, Check):
+                message = "%s => %s" % (log.description, "OK" if log.is_successful else "NOT OK")
+                if log.details:
+                    message += "\nDetails: %s" % log.details
+                level = "INFO" if log.is_successful else "ERROR"
                 yield "log", (message, level), {}
-            if isinstance(entry, Url):
-                yield "log", (substr(entry.url), "INFO"), {}
-            if isinstance(entry, Attachment):
-                with open(entry.filename, "rb") as fh:
+            if isinstance(log, Url):
+                yield "log", (substr(log.url), "INFO"), {}
+            if isinstance(log, Attachment):
+                with open(log.filename, "rb") as fh:
                     attachment_content = fh.read()
                 attachment_arg = {
-                    "name": osp.basename(entry.filename),
+                    "name": osp.basename(log.filename),
                     "data": attachment_content,
-                    "mime": mimetypes.guess_type(entry.filename)[0] or "application/octet-stream"
+                    "mime": mimetypes.guess_type(log.filename)[0] or "application/octet-stream"
                 }
-                yield "log", (entry.description, "INFO"), {"attachment": attachment_arg}
+                yield "log", (log.description, "INFO"), {"attachment": attachment_arg}
 
 
 def start_test_item(item_type, name, description, tags=None):

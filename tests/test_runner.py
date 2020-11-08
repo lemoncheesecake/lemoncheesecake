@@ -821,7 +821,7 @@ def test(test_fixture):
     report = run_suite(suite, fixtures=[test_fixture])
 
     test = next(report.all_tests())
-    assert test.get_steps()[0].entries[0].message == "2"
+    assert test.get_steps()[0].get_logs()[0].message == "2"
 
 
 def test_run_with_fixture_with_logs():
@@ -902,12 +902,12 @@ def test_run_with_fixtures_using_yield_and_dependencies():
     assert marker == [2, 6, 24, 120, 720, 4, 3, 2, 1]
 
     # check that each fixture and fixture teardown is properly executed in the right scope
-    assert report.test_session_setup.get_steps()[0].entries[0].message == "session_fixture_setup"
-    assert report.test_session_teardown.get_steps()[0].entries[0].message == "session_fixture_teardown"
-    assert report.get_suites()[0].suite_setup.get_steps()[0].entries[0].message == "suite_fixture_setup"
-    assert report.get_suites()[0].suite_teardown.get_steps()[0].entries[0].message == "suite_fixture_teardown"
-    assert report.get_suites()[0].get_tests()[0].get_steps()[0].entries[0].message == "test_fixture_setup"
-    assert report.get_suites()[0].get_tests()[0].get_steps()[1].entries[0].message == "test_fixture_teardown"
+    assert report.test_session_setup.get_steps()[0].get_logs()[0].message == "session_fixture_setup"
+    assert report.test_session_teardown.get_steps()[0].get_logs()[0].message == "session_fixture_teardown"
+    assert report.get_suites()[0].suite_setup.get_steps()[0].get_logs()[0].message == "suite_fixture_setup"
+    assert report.get_suites()[0].suite_teardown.get_steps()[0].get_logs()[0].message == "suite_fixture_teardown"
+    assert report.get_suites()[0].get_tests()[0].get_steps()[0].get_logs()[0].message == "test_fixture_setup"
+    assert report.get_suites()[0].get_tests()[0].get_steps()[1].get_logs()[0].message == "test_fixture_teardown"
 
 
 def test_run_with_fixtures_dependencies_in_test_pre_run_scope():
@@ -1136,7 +1136,7 @@ def sometest():
     report = run_suite(suite, fixtures=[fixt1])
 
     test = next(report.all_tests())
-    assert test.get_steps()[0].entries[0].message == "MARKER"
+    assert test.get_steps()[0].get_logs()[0].message == "MARKER"
 
 
 def test_fixture_called_multiple_times():
@@ -1456,7 +1456,7 @@ def test_fixture_evaluation_order():
 
     test = get_last_test(report)
 
-    assert [e.message for e in test.get_steps()[0].entries] == ["a", "b", "c"]
+    assert [e.message for e in test.get_steps()[0].get_logs()] == ["a", "b", "c"]
 
 
 def test_parametrized_simple():
@@ -1497,15 +1497,15 @@ def test_parametrized_with_multiple_test_and_fixture():
 
     assert test_1.name == "test_1"
     assert test_1.description == "test #1"
-    assert test_1.get_steps()[0].entries[0].message == "foo"
-    assert test_1.get_steps()[0].entries[1].message == "bar"
-    assert test_1.get_steps()[0].entries[2].message == "something"
+    assert test_1.get_steps()[0].get_logs()[0].message == "foo"
+    assert test_1.get_steps()[0].get_logs()[1].message == "bar"
+    assert test_1.get_steps()[0].get_logs()[2].message == "something"
 
     assert test_2.name == "test_2"
     assert test_2.description == "test #2"
-    assert test_2.get_steps()[0].entries[0].message == "baz"
-    assert test_2.get_steps()[0].entries[1].message == "foo"
-    assert test_2.get_steps()[0].entries[2].message == "something"
+    assert test_2.get_steps()[0].get_logs()[0].message == "baz"
+    assert test_2.get_steps()[0].get_logs()[1].message == "foo"
+    assert test_2.get_steps()[0].get_logs()[2].message == "something"
 
 
 def test_parametrized_extra_param():

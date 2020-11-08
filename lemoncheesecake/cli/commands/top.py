@@ -8,6 +8,7 @@ from lemoncheesecake.cli.utils import auto_detect_reporting_backends, add_report
 from lemoncheesecake.reporting import load_report
 from lemoncheesecake.filter import add_result_filter_cli_args, make_result_filter, \
     add_step_filter_cli_args, make_step_filter
+from lemoncheesecake.testtree import flatten_suites, filter_suites
 
 
 def get_total_duration(elems):
@@ -96,7 +97,9 @@ class TopSuites(Command):
 
     @staticmethod
     def get_top_suites(report, result_filter):
-        processed_suites = TopSuites._get_suites_ordered_by_duration(report.all_suites(result_filter))
+        processed_suites = TopSuites._get_suites_ordered_by_duration(
+            flatten_suites(filter_suites(report.get_suites(), result_filter))
+        )
         total_duration = get_total_duration(processed_suites)
         return [TopSuites._format_suite_entry(suite, total_duration) for suite in processed_suites]
 

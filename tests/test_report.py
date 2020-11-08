@@ -42,7 +42,7 @@ def test_format_and_parse_iso8601_time_5():
 def test_report_stats_simple():
     report = make_report(suites=[
         make_suite_result(tests=[
-            make_test_result(steps=[make_step(entries=[make_check(True)])])
+            make_test_result(steps=[make_step(logs=[make_check(True)])])
         ])
     ])
 
@@ -52,7 +52,7 @@ def test_report_stats_simple():
 def test_report_stats_failure():
     report = make_report(suites=[
         make_suite_result(tests=[
-            make_test_result(steps=[make_step(entries=[make_check(True), make_log("error")])])
+            make_test_result(steps=[make_step(logs=[make_check(True), make_log("error")])])
         ])
     ])
 
