@@ -407,12 +407,9 @@ class Report(object):
         # type: () -> bool
         return all(result.status in ("passed", "disabled") for result in self.all_results())
 
-    def all_suites(self, result_filter=None):
-        # type: (Optional[Callable[[TestResult], bool]]) -> Iterable[SuiteResult]
-        if result_filter:
-            return flatten_suites(filter_suites(self._suites, result_filter))
-        else:
-            return flatten_suites(self._suites)
+    def all_suites(self):
+        # type: () -> Iterable[SuiteResult]
+        return flatten_suites(self._suites)
 
     def all_tests(self):
         # type: () -> Iterable[TestResult]

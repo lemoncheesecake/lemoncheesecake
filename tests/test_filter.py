@@ -1467,7 +1467,7 @@ def test_filter_suites_on_suite_setup():
 
     report = run_suite_class(suite)
 
-    suites = list(report.all_suites(ResultFilter(grep=re.compile("foobar"))))
+    suites = list(filter_suites(report.get_suites(), ResultFilter(grep=re.compile("foobar"))))
 
     assert len(suites) == 1
 
@@ -1484,7 +1484,7 @@ def test_filter_suites_on_suite_teardown():
 
     report = run_suite_class(suite)
 
-    suites = list(report.all_suites(ResultFilter(grep=re.compile("foobar"))))
+    suites = list(filter_suites(report.get_suites(), ResultFilter(grep=re.compile("foobar"))))
 
     assert len(suites) == 1
 
