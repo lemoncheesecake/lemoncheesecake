@@ -29,3 +29,11 @@ def test_has_entry_using_list_success():
 
 def test_has_entry_using_list_failure():
     assert_match_failure(has_entry(["foo", "bar"]), {"foo": "baz"}, Contains("No entry"))
+
+
+def test_has_entry_using_list_index_success():
+    assert_match_success(has_entry(("foo", 0)), {"foo": ["bar"]})
+
+
+def test_has_entry_using_list_index_failure():
+    assert_match_failure(has_entry(("foo", 0)), {"foo": []}, Contains("No entry"))

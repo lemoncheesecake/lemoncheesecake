@@ -1,3 +1,8 @@
+# NEXT RELEASE
+
+- Fix `has_entry` matcher exception when an item cannot be found by index like in `has_entry(("foo", 0))` with the
+  actual data being `{"foo": []}`; also fixes the same use case with `{check,require,assert}_that_in` functions
+
 # 1.6.0 (2020-11-08)
 
 - **API**: `load_report()` and `Report` are now public and documented

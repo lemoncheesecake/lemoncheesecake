@@ -35,7 +35,9 @@ class KeyPathMatcher(EntryMatcher):
         for key in self.path:
             try:
                 d = d[key]
-            except TypeError:  # if d is not accessible though key, it will raise TypeError
+            # make sure to always raise a KeyError even if d is a list/tuple or something
+            # that does not support __getitem__
+            except (TypeError, IndexError):
                 raise KeyError()
         return d
 
