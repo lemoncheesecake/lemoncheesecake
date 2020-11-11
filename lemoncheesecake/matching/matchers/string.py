@@ -4,7 +4,6 @@ Created on Apr 4, 2017
 @author: nicolas
 '''
 
-import os
 import re
 import difflib
 import json
@@ -13,9 +12,13 @@ from typing import Any, Pattern, Union, Callable
 
 from lemoncheesecake.helpers.text import jsonify
 from lemoncheesecake.matching.matcher import Matcher, MatchResult
-
+from lemoncheesecake.matching.matchers.types_ import STRING_TYPES
 
 _REGEXP_TYPE = type(re.compile(r"dummy"))
+
+
+def _is_string(actual):
+    return type(actual) in STRING_TYPES
 
 
 class StartsWith(Matcher):
@@ -26,7 +29,10 @@ class StartsWith(Matcher):
         return transformation('to start with "%s"' % self.expected)
 
     def matches(self, actual):
-        return MatchResult(actual.startswith(self.expected), "got %s" % jsonify(actual))
+        return MatchResult(
+            _is_string(actual) and actual.startswith(self.expected),
+            "got %s" % jsonify(actual)
+        )
 
 
 def starts_with(expected):
@@ -43,7 +49,10 @@ class EndsWith(Matcher):
         return transformation('to end with "%s"' % self.expected)
 
     def matches(self, actual):
-        return MatchResult(actual.endswith(self.expected), "got %s" % jsonify(actual))
+        return MatchResult(
+            _is_string(actual) and actual.endswith(self.expected),
+            "got %s" % jsonify(actual)
+        )
 
 
 def ends_with(expected):
@@ -60,7 +69,10 @@ class ContainsString(Matcher):
         return transformation('to contain "%s"' % self.expected)
 
     def matches(self, actual):
-        return MatchResult(self.expected in actual, "got %s" % jsonify(actual))
+        return MatchResult(
+            _is_string(actual) and self.expected in actual,
+            "got %s" % jsonify(actual)
+        )
 
 
 def contains_string(expected):

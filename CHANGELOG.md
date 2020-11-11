@@ -2,6 +2,7 @@
 
 - Fix `has_entry` matcher exception when an item cannot be found by index like in `has_entry(("foo", 0))` with the
   actual data being `{"foo": []}`; also fixes the same use case with `{check,require,assert}_that_in` functions
+- Fix `starts_with/ends_with/contains_string` matchers exception when the actual value is not a string
 
 # 1.6.0 (2020-11-08)
 

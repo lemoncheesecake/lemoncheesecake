@@ -18,6 +18,10 @@ def test_starts_with_failure():
     assert_match_failure(starts_with("foo"), "bar", Contains("bar"))
 
 
+def test_starts_with_failure_not_a_string():
+    assert_match_failure(starts_with("foo"), None, Contains("null"))
+
+
 def test_ends_with_success():
     assert_match_success(ends_with("bar"), "foobar", Contains("foobar"))
 
@@ -26,12 +30,20 @@ def test_ends_with_failure():
     assert_match_failure(ends_with("foo"), "bar", Contains("bar"))
 
 
+def test_ends_with_failure_not_a_string():
+    assert_match_failure(ends_with("foo"), None, Contains("null"))
+
+
 def test_contains_string_with_success():
     assert_match_success(contains_string("ob"), "foobar", Contains("foobar"))
 
 
 def test_contains_string_with_failure():
     assert_match_failure(contains_string("ob"), "baz", Contains("baz"))
+
+
+def test_contains_string_with_failure_not_a_string():
+    assert_match_failure(contains_string("ob"), None, Contains("null"))
 
 
 def test_match_pattern_success():
