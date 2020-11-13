@@ -7,7 +7,7 @@ Created on Sep 8, 2016
 import inspect
 import copy
 
-from typing import Any, Iterable, Callable, Optional, Tuple
+from typing import Any, Iterable, Callable, Optional, Tuple, Sequence, Union
 
 from lemoncheesecake.suite.core import InjectedFixture, Test
 
@@ -192,6 +192,12 @@ def _default_naming_scheme(name, description, parameters, nb):
     return name + "_%d" % nb, description + " #%d" % nb
 
 
+def _format_naming_scheme(name_fmt, description_fmt):
+    def naming_scheme(_, __, parameters, ___):
+        return name_fmt.format(**parameters), description_fmt.format(**parameters)
+    return naming_scheme
+
+
 class _Parametrized(object):
     def __init__(self, parameters_source, naming_scheme):
         self.parameters_source = parameters_source
@@ -199,18 +205,25 @@ class _Parametrized(object):
 
 
 def parametrized(parameter_source, naming_scheme=_default_naming_scheme):
-    # type: (Iterable[dict], Optional[Callable[[str, str, dict, int], Tuple[str, str]]]) -> Any
+    # type: (Iterable[dict], Optional[Union[Callable[[str, str, dict, int], Tuple[str, str]], Sequence]]) -> Any
     """
     Decorator, make the test parametrized.
 
     :param parameter_source: a list / iterable of dicts, each dict represent the parameters that will be used
         by the test
-    :param naming_scheme: a optional function that takes as parameters the base test name, description, parameters, index
-         and must return the expanded test name and description as a two elements list
+    :param naming_scheme: optional, it can be either:
+
+      - a optional function that takes as parameters the base test name, description, parameters, index
+        and must return the expanded test name and description as a two elements list
+
+      - a tuple/list of two (name + description) format strings, example: ``("test_{i}_plus_{j}", "Test {i} plus {j}")``
     """
 
     def wrapper(obj):
         md = get_metadata(obj)
-        md.parametrized = _Parametrized(parameter_source, naming_scheme)
+        md.parametrized = _Parametrized(
+            parameter_source,
+            naming_scheme if callable(naming_scheme) else _format_naming_scheme(*naming_scheme)
+        )
         return obj
     return wrapper

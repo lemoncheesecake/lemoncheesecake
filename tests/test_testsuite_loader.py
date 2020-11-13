@@ -323,6 +323,21 @@ def test_load_parametrized_test_custom_naming():
     assert test.description == "test foo"
 
 
+def test_load_parametrized_test_custom_naming_with_format():
+    @lcc.suite("suite")
+    class MySuite:
+        @lcc.test()
+        @lcc.parametrized(({"value": "foo"},), ("test_{value}", "test {value}"))
+        def test(self, value):
+            pass
+
+    suite = load_suite_from_class(MySuite)
+    test = suite.get_tests()[0]
+
+    assert test.name == "test_foo"
+    assert test.description == "test foo"
+
+
 def test_hidden_test():
     @lcc.suite("My Suite")
     class MySuite:
