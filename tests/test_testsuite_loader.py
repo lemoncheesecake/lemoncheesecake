@@ -305,6 +305,78 @@ def test_load_parametrized_test():
     assert tests[1].tags == ["mytag"]
 
 
+def test_load_parametrized_test_no_parameters():
+    @lcc.suite()
+    class MySuite:
+        @lcc.test()
+        @lcc.parametrized(())
+        def test(self, value):
+            pass
+
+    suite = load_suite_from_class(MySuite)
+
+    tests = suite.get_tests()
+    assert len(tests) == 0
+
+
+def test_load_parametrized_test_csv_like():
+    @lcc.suite("suite")
+    class MySuite:
+        @lcc.test("test")
+        @lcc.parametrized(("i,j", (1, 2), (3, 4)))
+        def test(self, i, j):
+            pass
+
+    suite = load_suite_from_class(MySuite)
+
+    tests = suite.get_tests()
+    assert len(tests) == 2
+    assert tests[0].name == "test_1"
+    assert tests[0].description == "test #1"
+    assert tests[1].name == "test_2"
+    assert tests[1].description == "test #2"
+
+
+def test_load_parametrized_test_csv_like_with_header_as_tuple():
+    @lcc.suite("suite")
+    class MySuite:
+        @lcc.test("test")
+        @lcc.parametrized((("i", "j"), (1, 2), (3, 4)))
+        def test(self, i, j):
+            pass
+
+    suite = load_suite_from_class(MySuite)
+
+    tests = suite.get_tests()
+    assert len(tests) == 2
+    assert tests[0].name == "test_1"
+    assert tests[0].description == "test #1"
+    assert tests[1].name == "test_2"
+    assert tests[1].description == "test #2"
+
+
+def test_load_parametrized_test_from_iterator():
+    def my_iterator():
+        yield {"value": 1}
+        yield {"value": 2}
+
+    @lcc.suite("suite")
+    class MySuite:
+        @lcc.test("test")
+        @lcc.parametrized(my_iterator())
+        def test(self, value):
+            pass
+
+    suite = load_suite_from_class(MySuite)
+
+    tests = suite.get_tests()
+    assert len(tests) == 2
+    assert tests[0].name == "test_1"
+    assert tests[0].description == "test #1"
+    assert tests[1].name == "test_2"
+    assert tests[1].description == "test #2"
+
+
 def test_load_parametrized_test_custom_naming():
     def naming_scheme(name, description, parameters, idx):
         return "%s_%s" % (name, parameters["value"]), "%s %s" % (description, parameters["value"])
@@ -328,6 +400,21 @@ def test_load_parametrized_test_custom_naming_with_format():
     class MySuite:
         @lcc.test()
         @lcc.parametrized(({"value": "foo"},), ("test_{value}", "test {value}"))
+        def test(self, value):
+            pass
+
+    suite = load_suite_from_class(MySuite)
+    test = suite.get_tests()[0]
+
+    assert test.name == "test_foo"
+    assert test.description == "test foo"
+
+
+def test_load_parametrized_test_csv_like_custom_naming_with_format():
+    @lcc.suite("suite")
+    class MySuite:
+        @lcc.test("test")
+        @lcc.parametrized(("value", ("foo",)), ("test_{value}", "test {value}"))
         def test(self, value):
             pass
 

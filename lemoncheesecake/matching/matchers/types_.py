@@ -7,7 +7,7 @@ Created on Apr 3, 2017
 import six
 from typing import List, Any
 
-from lemoncheesecake.helpers.text import jsonify
+from lemoncheesecake.helpers.text import STRING_TYPES, jsonify
 from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatcherDescriptionTransformer
 from lemoncheesecake.matching.matchers.value import is_
 
@@ -20,8 +20,6 @@ _TYPE_NAMES = {
 }
 if six.PY2:
     _TYPE_NAMES[unicode] = "string",
-
-STRING_TYPES = [str] if six.PY3 else [str, unicode]
 
 
 class IsValueOfType(Matcher):

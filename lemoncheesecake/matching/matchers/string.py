@@ -10,9 +10,8 @@ import json
 
 from typing import Any, Pattern, Union, Callable
 
-from lemoncheesecake.helpers.text import jsonify
+from lemoncheesecake.helpers.text import jsonify, STRING_TYPES
 from lemoncheesecake.matching.matcher import Matcher, MatchResult
-from lemoncheesecake.matching.matchers.types_ import STRING_TYPES
 
 _REGEXP_TYPE = type(re.compile(r"dummy"))
 

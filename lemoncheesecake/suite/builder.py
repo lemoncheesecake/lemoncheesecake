@@ -9,6 +9,7 @@ import copy
 
 from typing import Any, Iterable, Callable, Optional, Tuple, Sequence, Union
 
+from lemoncheesecake.helpers.text import STRING_TYPES
 from lemoncheesecake.suite.core import InjectedFixture, Test
 
 
@@ -200,17 +201,42 @@ def _format_naming_scheme(name_fmt, description_fmt):
 
 class _Parametrized(object):
     def __init__(self, parameters_source, naming_scheme):
-        self.parameters_source = parameters_source
+        self._parameters_source = parameters_source
         self.naming_scheme = naming_scheme
+
+    @property
+    def parameters_source(self):
+        source = iter(self._parameters_source)
+        try:
+            first_item = next(source)
+        except StopIteration:
+            return
+        if type(first_item) is dict:
+            yield first_item
+            for item in source:
+                yield item
+        else:
+            if type(first_item) in STRING_TYPES:
+                names = [s.strip() for s in first_item.split(",")]
+            else:
+                names = first_item  # assume list or tuple
+            for values in source:
+                yield dict(zip(names, values))
 
 
 def parametrized(parameter_source, naming_scheme=_default_naming_scheme):
-    # type: (Iterable[dict], Optional[Union[Callable[[str, str, dict, int], Tuple[str, str]], Sequence]]) -> Any
+    # type: (Iterable, Optional[Union[Callable[[str, str, dict, int], Tuple[str, str]], Sequence]]) -> Any
     """
     Decorator, make the test parametrized.
 
-    :param parameter_source: a list / iterable of dicts, each dict represent the parameters that will be used
-        by the test
+    :param parameter_source: it can be either:
+
+        -  an iterable of dicts, each dict representing the arguments passed to the test
+
+        - a CSV-like mode, where the first element of the list represents the argument names as an str or a sequence
+          (example: ``"i,j"`` or ``("i", "j")``) and the remaining elements are sequences of the arguments to be
+          passed to the test.
+
     :param naming_scheme: optional, it can be either:
 
       - a optional function that takes as parameters the base test name, description, parameters, index
