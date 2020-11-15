@@ -5,6 +5,9 @@ Parametrized tests
 
 .. versionadded:: 1.4.0
 
+Passing parameters as dicts
+---------------------------
+
 lemoncheesecake allows a same test to be run against a list of parameters:
 
 .. code-block:: python
@@ -13,9 +16,9 @@ lemoncheesecake allows a same test to be run against a list of parameters:
     from lemoncheesecake.matching import *
 
 
-    @lcc.suite("suite")
+    @lcc.suite()
     class suite:
-        @lcc.test("test")
+        @lcc.test()
         @lcc.parametrized((
             {"phrase": "i like cakes", "word": "cakes"},
             {"phrase": "cakes with lemon are great", "word": "lemon"}
@@ -23,7 +26,7 @@ lemoncheesecake allows a same test to be run against a list of parameters:
         def test(self, phrase, word):
             check_that("phrase", phrase, contains_string(word))
 
-Parametrized tests are evaluated at project load time and each expanded test is seen like an individual test by lcc commands:
+Parametrized tests are evaluated at project load time and lcc commands will see them as multiple, independent tests:
 
 .. code-block:: console
 
@@ -44,23 +47,48 @@ Parametrized tests are evaluated at project load time and each expanded test is 
      * Failures: 0
 
     $ lcc report -e
-    PASSED: test #1
+    PASSED: Test #1
     (suite.test_1)
     +----------+----------------------------------+--------------------+
-    |          | test #1                          | 0.000s             |
+    |          | Test #1                          | 0.000s             |
     +----------+----------------------------------+--------------------+
     | CHECK OK | Expect phrase to contain "cakes" | Got "i like cakes" |
     +----------+----------------------------------+--------------------+
 
-    PASSED: test #2
+    PASSED: Test #2
     (suite.test_2)
     +----------+----------------------------------+----------------------------------+
-    |          | test #2                          | 0.000s                           |
+    |          | Test #2                          | 0.000s                           |
     +----------+----------------------------------+----------------------------------+
     | CHECK OK | Expect phrase to contain "lemon" | Got "cakes with lemon are great" |
     +----------+----------------------------------+----------------------------------+
 
-When parametrized tests are expanded, they are named according the base test name and description as it can be seen above.
+Passing parameters in a CSV-like mode
+-------------------------------------
+
+.. versionadded:: 1.7.0 Test parameters can also be passed in a more CSV-like mode:
+
+.. code-block:: python
+
+    import lemoncheesecake.api as lcc
+    from lemoncheesecake.matching import *
+
+
+    @lcc.suite()
+    class suite:
+        @lcc.test()
+        @lcc.parametrized((
+            "phrase,word",
+            ("i like cakes", "cakes"),
+            ("cakes with lemon are great", "lemon")
+        ))
+        def test(self, phrase, word):
+            check_that("phrase", phrase, contains_string(word))
+
+Customizing test's name and description using a function
+--------------------------------------------------------
+
+By default, parametrized tests are named from the original test name and description.
 
 This behavior can be changed by using a custom naming scheme:
 
@@ -74,13 +102,13 @@ This behavior can be changed by using a custom naming scheme:
         return "%s_%s" % (name, parameters["word"]), "Check if phrase contains '%s'" % parameters["word"]
 
 
-    @lcc.suite("suite")
+    @lcc.suite()
     class suite:
-        @lcc.test("test")
+        @lcc.test()
         @lcc.parametrized((
             {"phrase": "i like cakes", "word": "cakes"},
-            {"phrase": "cakes with lemon are great", "word": "lemon"}
-        ), naming_scheme)
+            {"phrase": "cakes with lemon are great", "word": "lemon"}),
+            naming_scheme)
         def test(self, phrase, word):
             check_that("phrase", phrase, contains_string(word))
 
@@ -92,16 +120,32 @@ This behavior can be changed by using a custom naming scheme:
         - suite.test_cakes
         - suite.test_lemon
     $ lcc show -d
-    * suite
+    * Suite
         - Check if phrase contains 'cakes'
         - Check if phrase contains 'lemon'
 
-The naming scheme is a function that takes the base test name, description, associated parameters, test number
-(starting at 1) and must return a two elements list: the name and the description of the expanded test.
+Customizing test's name and description using strings
+-----------------------------------------------------
 
-The ``@lcc.parametrized()`` decorator provides an easy to use mechanism to pass parameters to a test function as a list
-(or more generally speaking, an iterable) of dict. In the previous example they were hard-coded, but something more
-complex can be implemented such as taking parameters from an external file.
+.. versionadded:: 1.7.0 The naming scheme can be also be written as two strings with placeholders.
+
+.. code-block:: python
+
+    [...]
+
+    @lcc.test()
+    @lcc.parametrized((
+        {"phrase": "i like cakes", "word": "cakes"},
+        {"phrase": "cakes with lemon are great", "word": "lemon"}),
+        ("test_{word}", "Test {word}"))
+    def test(self, phrase, word):
+        check_that("phrase", phrase, contains_string(word))
+
+Example #1: loading parameters from a CSV file
+----------------------------------------------
+
+The ``@lcc.parametrized()`` decorator provides an easy to use mechanism to pass parameters to a test function as an iterable of dicts.
+Previously, they were hard-coded, but they could also be defined in an external CSV file.
 
 `Example for a CSV file <https://github.com/lemoncheesecake/lemoncheesecake/tree/master/examples/example12>`_
 (given a ``data.csv`` file stored in the project directory):
@@ -123,13 +167,15 @@ complex can be implemented such as taking parameters from an external file.
     PROJECT_DIR = os.path.join(os.path.dirname(__file__), "..")
 
 
-    @lcc.suite("suite")
+    @lcc.suite()
     class suite:
-        @lcc.test("test")
+        @lcc.test()
         @lcc.parametrized(csv.DictReader(open(os.path.join(PROJECT_DIR, "data.csv"))))
         def test(self, phrase, word):
             check_that("phrase", phrase, contains_string(word))
 
+Example #2: loading parameters from a JSON file
+-----------------------------------------------
 
 `Another example with a JSON file <https://github.com/lemoncheesecake/lemoncheesecake/tree/master/examples/example13>`_
 (given a ``data.json`` file stored in the project directory):
@@ -158,22 +204,20 @@ complex can be implemented such as taking parameters from an external file.
     PROJECT_DIR = os.path.join(os.path.dirname(__file__), "..")
 
 
-    @lcc.suite("suite")
+    @lcc.suite()
     class suite:
-        @lcc.test("test")
+        @lcc.test()
         @lcc.parametrized(json.load(open(os.path.join(PROJECT_DIR, "data.json"))))
         def test(self, phrase, word):
             check_that("phrase", phrase, contains_string(word))
 
 
-If you want the external data file to be any file path, then you will have to use an environment variable:
-
-.. code-block:: python
-
-    @lcc.parametrized(json.load(os.environ["DATA_JSON"]))
-
-
 .. note::
+    - if you want the external data file to be any file path, then you will have to use an environment variable:
+
+    .. code-block:: python
+
+        @lcc.parametrized(json.load(os.environ["DATA_JSON"]))
 
     - both parameters and fixtures can be used in a test
 

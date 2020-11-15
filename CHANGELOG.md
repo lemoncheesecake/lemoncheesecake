@@ -1,5 +1,8 @@
 # NEXT RELEASE
 
+- **API**: parametrized test improvements:
+  - parameters can now also be passed in a CSV-like mode
+  - support strings with placeholders as a naming scheme
 - Fix `has_entry` matcher exception when an item cannot be found by index like in `has_entry(("foo", 0))` with the
   actual data being `{"foo": []}`; also fixes the same use case with `{check,require,assert}_that_in` functions
 - Fix `starts_with/ends_with/contains_string` matchers exception when the actual value is not a string
