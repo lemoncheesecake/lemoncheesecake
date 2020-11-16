@@ -11,11 +11,11 @@ import sys
 import platform
 
 import lemoncheesecake
-from lemoncheesecake.project import find_project_dir, find_project_file, load_project_from_file
+from lemoncheesecake.project import find_project_dir, load_project
 from lemoncheesecake.reporting import get_reporting_backends
 from lemoncheesecake.reporting.reportdir import DEFAULT_REPORT_DIR_NAME
 from lemoncheesecake.testtree import filter_suites
-from lemoncheesecake.exceptions import UserError, ProjectLoadingError
+from lemoncheesecake.exceptions import UserError, ProjectNotFound
 
 LEMONCHEESECAKE_VERSION = "lemoncheesecake version %s (using Python %s - %s)" % (
     lemoncheesecake.__version__, platform.python_version(), sys.executable
@@ -38,14 +38,10 @@ def load_suites_from_project(project, test_filter=None):
 
 
 def auto_detect_reporting_backends():
-    project_filename = find_project_file()
-    if project_filename is None:
-        return get_reporting_backends()
-
     try:
-        project = load_project_from_file(project_filename)
+        project = load_project()
         return project.reporting_backends.values()
-    except ProjectLoadingError:
+    except ProjectNotFound:
         return get_reporting_backends()
 
 

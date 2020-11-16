@@ -10,6 +10,10 @@ class ProjectLoadingError(LemoncheesecakeException):
     pass
 
 
+class ProjectNotFound(ProjectLoadingError):
+    pass
+
+
 class ModuleImportError(LemoncheesecakeException):
     pass
 

@@ -21,7 +21,7 @@ from lemoncheesecake.fixture import load_fixtures_from_directory, Fixture, Fixtu
 from lemoncheesecake.metadatapolicy import MetadataPolicy
 from lemoncheesecake.reporting import get_reporting_backends, ReportingBackend
 from lemoncheesecake.reporting.reportdir import create_report_dir_with_rotation
-from lemoncheesecake.exceptions import ProjectLoadingError, ModuleImportError
+from lemoncheesecake.exceptions import ProjectLoadingError, ProjectNotFound, ModuleImportError
 from lemoncheesecake.helpers.resources import get_resource_path
 from lemoncheesecake.helpers.moduleimport import import_module
 from lemoncheesecake.testtree import flatten_tests
@@ -133,11 +133,11 @@ def _iter_on_path_hierarchy(path):
         path, parent_path = parent_path, osp.dirname(parent_path)
 
 
-def find_project_file():
+def _find_project_file():
     # type: () -> Optional[str]
     filename = os.environ.get("LCC_PROJECT_FILE")
     if filename:
-        return filename if osp.exists(filename) else None
+        return filename
 
     for dirname in _iter_on_path_hierarchy(os.getcwd()):
         filename = osp.join(dirname, PROJECT_FILE)
@@ -156,7 +156,7 @@ def _find_project_dir_from_suites_dir():
 
 def find_project_dir():
     # type: () -> Optional[str]
-    project_filename = find_project_file()
+    project_filename = _find_project_file()
     if project_filename:
         return osp.dirname(project_filename)
     else:
@@ -193,7 +193,7 @@ def load_project_from_file(project_filename):
 def load_project():
     # type: () -> Project
 
-    project_filename = find_project_file()
+    project_filename = _find_project_file()
     if project_filename:
         return load_project_from_file(project_filename)
 
@@ -201,7 +201,7 @@ def load_project():
     if project_dir:
         return Project(project_dir)
 
-    raise ProjectLoadingError("Cannot neither find a 'suites' directory nor a 'project.py' file")
+    raise ProjectNotFound("Cannot neither find a 'suites' directory nor a 'project.py' file")
 
 
 def _build_fixture_registry(project, cli_args):

@@ -4,7 +4,7 @@ import re
 
 import pytest
 
-from lemoncheesecake.project import Project, create_project, find_project_file, load_project, run_project
+from lemoncheesecake.project import Project, create_project, load_project, run_project
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake.fixture import load_fixtures_from_func
 from lemoncheesecake.session import Session
