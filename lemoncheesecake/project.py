@@ -160,21 +160,37 @@ def _iter_on_path_hierarchy(path):
         path, parent_path = parent_path, osp.dirname(parent_path)
 
 
-def load_project():
-    # type: () -> Project
+def _load_project_from_path(path):
+    if osp.isfile(path):
+        return _load_project_from_file(path)
+    elif osp.isdir(path):
+        if osp.exists(osp.join(path, PROJECT_FILE)):
+            return _load_project_from_file(osp.join(path, PROJECT_FILE))
+        if osp.exists(osp.join(path, DEFAULT_SUITES_DIR)):
+            return Project(path)
 
-    # first try: from environment
-    filename = os.environ.get("LCC_PROJECT_FILE")
-    if filename:
-        return _load_project_from_file(filename)
+    raise ProjectLoadingError("'%s' is not a suitable project path" % path)
 
-    # second try: look for a project.py file in directory hierarchy
+
+def load_project(path=None):
+    # type: (str) -> Project
+
+    # first try: from argument
+    if path:
+        return _load_project_from_path(path)
+
+    # second try: from environment
+    path = os.environ.get("LCC_PROJECT", os.environ.get("LCC_PROJECT_FILE"))
+    if path:
+        return _load_project_from_path(path)
+
+    # third try: look for a project.py file in directory hierarchy
     for dirname in _iter_on_path_hierarchy(os.getcwd()):
         filename = osp.join(dirname, PROJECT_FILE)
         if osp.exists(filename):
             return _load_project_from_file(filename)
 
-    # third try: look for a "suites" sub-directory in the directory hierarchy
+    # fourth try: look for a "suites" sub-directory in the directory hierarchy
     for dirname in _iter_on_path_hierarchy(os.getcwd()):
         if osp.exists(osp.join(dirname, DEFAULT_SUITES_DIR)):
             return Project(dirname)
