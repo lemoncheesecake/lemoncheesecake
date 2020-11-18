@@ -11,7 +11,7 @@ import sys
 import platform
 
 import lemoncheesecake
-from lemoncheesecake.project import find_project_dir, load_project
+from lemoncheesecake.project import load_project
 from lemoncheesecake.reporting import get_reporting_backends
 from lemoncheesecake.reporting.reportdir import DEFAULT_REPORT_DIR_NAME
 from lemoncheesecake.testtree import filter_suites
@@ -59,9 +59,12 @@ def get_report_path(cli_args):
         return DEFAULT_REPORT_DIR_NAME
 
     # third attempt: try to find a project and then the corresponding report
-    project_dirname = find_project_dir()
-    if project_dirname:
-        report_path = osp.join(project_dirname, DEFAULT_REPORT_DIR_NAME)
+    try:
+        project = load_project()
+    except ProjectNotFound:
+        pass
+    else:
+        report_path = osp.join(project.dir, DEFAULT_REPORT_DIR_NAME)
         if osp.exists(report_path):
             return report_path
 
