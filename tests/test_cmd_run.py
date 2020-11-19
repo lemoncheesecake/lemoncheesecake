@@ -97,6 +97,12 @@ def test_cli_run(project, cmdout):
     assert_run_output(cmdout, "mysuite", successful_tests=["mytest2"], failed_tests=["mytest1"])
 
 
+def test_project_path(tmpdir, cmdout):
+    generate_project(tmpdir.strpath, "mysuite", TEST_MODULE)
+    assert run_main(["run", "-p", tmpdir.strpath]) == 0
+    assert_run_output(cmdout, "mysuite", successful_tests=["mytest2"], failed_tests=["mytest1"])
+
+
 def test_cli_exit_error_on_failure_successful_suite(successful_project):
     assert run_main(["run", "--exit-error-on-failure"]) == 0
 

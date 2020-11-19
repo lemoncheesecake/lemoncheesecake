@@ -132,6 +132,12 @@ class RunCommand(Command):
 
         add_test_filter_cli_args(cli_parser)
 
+        project_group = cli_parser.add_argument_group("Project")
+        project_group.add_argument(
+            "--project", "-p", required=False,
+            help="Project path (default: $LCC_PROJECT or lookup for a project in the directory hierarchy)"
+        )
+
         test_execution_group = cli_parser.add_argument_group("Test execution")
         test_execution_group.add_argument(
             "--force-disabled", action="store_true",
@@ -172,4 +178,4 @@ class RunCommand(Command):
             project.add_cli_args(cli_group)
 
     def run_cmd(self, cli_args):
-        return run_suites_from_project(load_project(), cli_args)
+        return run_suites_from_project(load_project(cli_args.project), cli_args)
