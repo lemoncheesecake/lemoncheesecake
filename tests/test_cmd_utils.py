@@ -5,7 +5,7 @@ from lemoncheesecake.cli.utils import auto_detect_reporting_backends, load_suite
 from lemoncheesecake.reporting.backend import get_reporting_backends
 from lemoncheesecake.project import Project
 from lemoncheesecake.suite import load_suite_from_class
-from lemoncheesecake.exceptions import MetadataPolicyViolation
+from lemoncheesecake.exceptions import MetadataPolicyViolation, ProjectLoadingError
 
 from helpers.runner import build_project_module
 from helpers.utils import env_vars
@@ -20,9 +20,8 @@ def test_auto_detect_reporting_backends_invalid_project(tmpdir):
     tmpdir.join("project.py").write("THIS IS NOT A VALID PYTHON MODULE")
 
     with env_vars(LCC_PROJECT_FILE=tmpdir.join("project.py").strpath):
-        backends = auto_detect_reporting_backends()
-
-    assert sorted(b.get_name() for b in backends) == sorted(b.get_name() for b in get_reporting_backends())
+        with pytest.raises(ProjectLoadingError):
+            auto_detect_reporting_backends()
 
 
 def test_auto_detect_reporting_backends_custom_project(tmpdir):

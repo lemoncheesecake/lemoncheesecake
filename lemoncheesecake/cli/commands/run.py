@@ -8,10 +8,9 @@ import os
 
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import load_suites_from_project
-from lemoncheesecake.exceptions import LemoncheesecakeException, UserError, serialize_current_exception
+from lemoncheesecake.exceptions import LemoncheesecakeException, ProjectNotFound, UserError, serialize_current_exception
 from lemoncheesecake.filter import add_test_filter_cli_args, make_test_filter
-from lemoncheesecake.project import find_project_file, load_project_from_file, load_project, run_project, \
-    DEFAULT_REPORTING_BACKENDS
+from lemoncheesecake.project import load_project, run_project, DEFAULT_REPORTING_BACKENDS
 from lemoncheesecake.reporting.backend import get_reporting_backend_names as do_get_reporting_backend_names, \
     parse_reporting_backend_names_expression, get_reporting_backends_for_test_run
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy, DEFAULT_REPORT_SAVING_STRATEGY
@@ -124,15 +123,20 @@ class RunCommand(Command):
         return "Run the tests"
 
     def add_cli_args(self, cli_parser):
-        project_file = find_project_file()
-        if project_file:
-            project = load_project_from_file(project_file)
+        try:
+            project = load_project()
             default_reporting_backend_names = project.default_reporting_backend_names
-        else:
+        except ProjectNotFound:
             project = None
             default_reporting_backend_names = DEFAULT_REPORTING_BACKENDS
 
         add_test_filter_cli_args(cli_parser)
+
+        project_group = cli_parser.add_argument_group("Project")
+        project_group.add_argument(
+            "--project", "-p", required=False,
+            help="Project path (default: $LCC_PROJECT or lookup for a project in the directory hierarchy)"
+        )
 
         test_execution_group = cli_parser.add_argument_group("Test execution")
         test_execution_group.add_argument(
@@ -174,4 +178,4 @@ class RunCommand(Command):
             project.add_cli_args(cli_group)
 
     def run_cmd(self, cli_args):
-        return run_suites_from_project(load_project(), cli_args)
+        return run_suites_from_project(load_project(cli_args.project), cli_args)

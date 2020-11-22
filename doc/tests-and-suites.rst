@@ -341,20 +341,22 @@ of the suite execution:
       it generates will be associated to the given test
 
 
+.. _suites_discovery:
+
 Suites discovery
 ----------------
 
+A project path can be either:
+
+- a ``project.py``-like file
+- a directory containing a ``project.py``
+- a directory containing a ``suites`` sub-directory
+
 Here is how suites are discovered by lemoncheesecake (by order of priority):
 
-- if a ``$LCC_PROJECT_FILE`` environment variable is defined, then the suites will be loaded using
-  this :ref:`customized project file <project>`
-- a :ref:`customized project file <project>` named ``project.py`` is searched from the current directory up to the root
-  directory and is used to load suites
-- a ``suites`` directory is searched from the current directory up to the root directory, if it's found then
-  the suites will be loaded from that directory
-
-In the first two cases, the project file loads (by default) suites from a ``suites`` directory present at the same
-level as the project file itself.
+- in case of ``lcc run``, with the ``--project/-p`` is used
+- using the ``$LCC_PROJECT`` environment variable if defined
+- by searching a project path among the directory hierarchy
 
 .. versionchanged:: 1.5.0
 

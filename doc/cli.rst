@@ -17,6 +17,10 @@ The ``lcc`` command line tool
 Like most of the ``lcc`` sub-commands, ``lcc run`` benefits from the :ref:`filtering arguments <cli_filters>` but also
 from extra arguments that allow a finer control over tests execution and reporting:
 
+.. option:: --project
+
+    A project path (see :ref:`Suites discovery <suites_discovery>` for more details).
+
 .. option:: --threads
 
     The number of threads used to execute tests; default is one thread (meaning tests are run sequentially).

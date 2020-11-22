@@ -4,7 +4,7 @@ import re
 
 import pytest
 
-from lemoncheesecake.project import Project, create_project, find_project_file, load_project, run_project
+from lemoncheesecake.project import Project, create_project, load_project, run_project
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake.fixture import load_fixtures_from_func
 from lemoncheesecake.session import Session
@@ -96,13 +96,46 @@ def test_load_project_while_project_file_in_parent_dir(tmp_cwd):
     assert project.dir == tmp_cwd
 
 
-def test_load_project_while_project_file_env_var_not_found(tmpdir):
-    with env_vars(LCC_PROJECT_FILE=tmpdir.join("project.py").strpath):
-        with pytest.raises(ProjectLoadingError):
-            load_project()
+def test_load_project_with_path_using_project_py(tmpdir):
+    create_project(tmpdir.strpath)
+
+    project = load_project(tmpdir.join("project.py").strpath)
+    assert project.dir == tmpdir.strpath
 
 
-def test_load_project_while_project_file_env_var_found(tmpdir):
+def test_load_project_with_path_using_project_py_parent_dir(tmpdir):
+    create_project(tmpdir.strpath)
+
+    project = load_project(tmpdir.strpath)
+    assert project.dir == tmpdir.strpath
+
+
+def test_load_project_with_path_using_suites_parent_dir(tmpdir):
+    tmpdir.mkdir("suites")
+
+    project = load_project(tmpdir.strpath)
+    assert project.dir == tmpdir.strpath
+
+
+def test_load_project_with_path_invalid_file(tmpdir):
+    with pytest.raises(ProjectLoadingError):
+        load_project(tmpdir.join("project.py").strpath)
+
+
+def test_load_project_with_path_invalid_path(tmpdir):
+    with pytest.raises(ProjectLoadingError):
+        load_project(tmpdir.strpath)
+
+
+def test_load_project_with_lcc_project_env_var(tmpdir):
+    create_project(tmpdir.strpath)
+
+    with env_vars(LCC_PROJECT=tmpdir.join("project.py").strpath):
+        project = load_project()
+        assert project.dir == tmpdir.strpath
+
+
+def test_load_project_with_lcc_project_file_env_var(tmpdir):
     create_project(tmpdir.strpath)
 
     with env_vars(LCC_PROJECT_FILE=tmpdir.join("project.py").strpath):
