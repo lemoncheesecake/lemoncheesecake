@@ -7,10 +7,16 @@ Deprecations may come over new releases. In that case, backward-compatibility wi
 next major release, example: something deprecated in version 1.2.0 will continue to work in all 1.x versions coming afterward
 until version 2.0.0.
 
+Deprecated in 1.7.0
+-------------------
+
+- the ``LCC_PROJECT_FILE`` environment variable has been deprecated/renamed in favor of ``LCC_PROJECT``
+
+
 Deprecated in 1.5.0
 -------------------
 
-- the ``lcc bootstrap`` is deprecated now that the ``project.py`` is optional
+- the ``lcc bootstrap`` command is deprecated now that the ``project.py`` file is optional
 
 Deprecated in 1.4.5
 -------------------
@@ -23,4 +29,4 @@ Deprecated in 1.4.5
 Deprecated in 1.1.0
 -------------------
 
-- ``MatchDescriptionTransformer`` has been deprecated/renamed in favor of ``MatcherDescriptionTransformer``
+- the ``MatchDescriptionTransformer`` class has been deprecated/renamed in favor of ``MatcherDescriptionTransformer``
