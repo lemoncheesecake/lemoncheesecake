@@ -18,8 +18,8 @@ def _jsonify_items(items):
 class HasItemMatchResult(MatchResult):
     def __init__(self, is_successful, description, index, item):
         MatchResult.__init__(self, is_successful, description)
-        self.item = item  # type: Any
         self.index = index  # type: int
+        self.item = item  # type: Any
 
     @classmethod
     def found(cls, index, item):
@@ -114,6 +114,46 @@ def has_only_items(expected):
     # type: (Sequence) -> HasOnlyItems
     """Test if the sequence only contains the given values"""
     return HasOnlyItems(expected)
+
+
+class HasAllItems(Matcher):
+    def __init__(self, expected):
+        self.expected = expected
+
+    def build_description(self, transformation):
+        return transformation(
+            "to have an item whose value %s" %
+            self.expected.build_description(MatcherDescriptionTransformer(conjugate=True))
+        )
+
+    def build_short_description(self, transformation):
+        return transformation(
+            "to have an item whose value %s" %
+            self.expected.build_short_description(MatcherDescriptionTransformer(conjugate=True))
+        )
+
+    def matches(self, actual):
+        failures = {}
+        for idx, item in enumerate(actual):
+            result = self.expected.matches(item)
+            if not result:
+                failures[idx] = result
+
+        if failures:
+            return MatchResult.failure(
+                "\n".join(
+                    ["Non-matching items:"] +
+                    ["- at index %d: %s" % (idx, failures[idx].description) for idx in sorted(failures)]
+                )
+            )
+        else:
+            return MatchResult.success()
+
+
+def has_all_items(expected):
+    # type: (Any) -> HasAllItems
+    """Test if all the items of the sequence match expected"""
+    return HasAllItems(is_(expected))
 
 
 class IsIn(Matcher):

@@ -37,6 +37,14 @@ def test_has_only_items_extra_missing():
     assert_match_failure(has_only_items([1, 2, 3]), [4, 1, 2, 3], Contains("Extra") & Contains("4"))
 
 
+def test_has_all_items_success():
+    assert_match_success(has_all_items(greater_than(1)), (2, 3, 4))
+
+
+def test_has_all_items_failure():
+    assert_match_failure(has_all_items(greater_than(1)), (0, 1, 2), Contains("at index 0") & Contains("at index 1"))
+
+
 def test_is_in_success():
     assert_match_success(is_in([1, 2, 3]), 1, Contains("1"))
 

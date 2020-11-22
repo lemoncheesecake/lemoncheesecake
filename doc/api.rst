@@ -104,6 +104,7 @@ Matchers
 .. autofunction:: has_item
 .. autofunction:: has_items
 .. autofunction:: has_only_items
+.. autofunction:: has_all_items
 .. autofunction:: is_in
 .. autofunction:: has_entry
 .. autofunction:: is_
