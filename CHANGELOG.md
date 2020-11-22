@@ -1,4 +1,4 @@
-# NEXT RELEASE
+# 1.7.0 (2020-11-22)
 
 - **API**: parametrized test improvements:
   - parameters can now also be passed in a CSV-like mode
