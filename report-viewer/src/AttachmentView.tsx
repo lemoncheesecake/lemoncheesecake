@@ -11,7 +11,7 @@ class AttachmentView extends React.Component<Props, {}> {
         let preview;
 
         if (attachment.as_image) {
-            preview = <img src={attachment.filename} title={attachment.description}/>;
+            preview = <img src={attachment.filename} alt={attachment.description}/>;
         } else {
             preview = attachment.description;
         }
@@ -20,6 +20,7 @@ class AttachmentView extends React.Component<Props, {}> {
             <tr className="step_entry attachment" style={{display: this.props.expanded ? "" : "none"}}>
                 <td className="text-uppercase text-info">ATTACHMENT</td>
                 <td colSpan={3}>
+                    {/* eslint react/jsx-no-target-blank: "off" */}
                     <a href={attachment.filename} target="_blank">{preview}</a>
                 </td>
             </tr>
