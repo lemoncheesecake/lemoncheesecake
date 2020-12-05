@@ -7,7 +7,7 @@ interface KeyValueTableProps {
 
 class KeyValueTableView extends React.Component<KeyValueTableProps, {}> {
     render() {
-        if (this.props.rows.length == 0) {
+        if (this.props.rows.length === 0) {
             return (null);
         }
 

@@ -35,7 +35,7 @@ export function humanize_duration(duration: number, show_milliseconds=false) {
         if (duration >= 1) {
             ret += sprintf(ret ? "%02ds" : "%ds", duration);
         }
-        if (ret == "") {
+        if (ret === "") {
             ret = sprintf("%.03fs", duration);
         }
     }

@@ -215,7 +215,7 @@ class ReportView extends React.Component<ReportProps, {}> {
 
         // focus on selected test, if any
         let splitted_url = document.location.href.split('#');
-        if (splitted_url.length == 2) {
+        if (splitted_url.length === 2) {
             const row = get_result_row_by_id(splitted_url[1]);
             if (row) {
                 row.expand();
