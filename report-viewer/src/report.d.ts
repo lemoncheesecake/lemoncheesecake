@@ -56,7 +56,7 @@ declare interface Metadata {
     name: string,
     description: string,
     tags: Array<string>,
-    properties: Array<object>,
+    properties: { [key: string]: string },
     links: Array<Link>
 }
 

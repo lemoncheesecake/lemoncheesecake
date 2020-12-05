@@ -1,24 +1,49 @@
 {
-  "name": "lemoncheesecake",
+  "name": "report-viewer",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@types/jest": "^20.0.7",
-    "@types/node": "^8.0.24",
-    "@types/react": "^16.0.2",
-    "@types/react-dom": "^15.5.3",
-    "@types/react-scroll": "^1.5.4",
-    "@types/sprintf-js": "^1.1.2",
+    "@testing-library/jest-dom": "^5.11.4",
+    "@testing-library/react": "^11.1.0",
+    "@testing-library/user-event": "^12.1.10",
     "moment": "^2.24.0",
-    "react": "^16.5.0",
-    "react-dom": "^16.5.0",
-    "react-scripts-ts": "2.6.0",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "react-scripts": "4.0.1",
     "react-scroll": "^1.7.10",
-    "sprintf-js": "^1.1.2"
+    "sprintf-js": "^1.1.2",
+    "typescript": "^4.1.2",
+    "web-vitals": "^0.2.4"
   },
   "scripts": {
-    "start": "react-scripts-ts start",
-    "build": "react-scripts-ts build",
-    "test": "react-scripts-ts test --env=jsdom",
-    "eject": "react-scripts-ts eject"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@types/moment": "^2.13.0",
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "@types/react-scroll": "^1.8.2",
+    "@types/sprintf-js": "^1.1.2"
   }
 }

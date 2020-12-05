@@ -3,6 +3,7 @@ import TestView from './TestView';
 import SetupView from './SetupView';
 import ResultTableView from './ResultTableView';
 import {get_time_from_iso8601, humanize_duration} from './utils';
+import { JsxElement } from 'typescript';
 
 interface SuiteProps {
     suite: Suite,
@@ -54,8 +55,8 @@ class SuiteView extends React.Component<SuiteProps, {}> {
                             suite.links.
                                 map((link, index) => <div key={index}><a href={link.url} title={link.name || link.url} target="_blank">{link.name || link.url}</a></div>).
                                 reduce((accu, elem) => {
-                                    return accu.length == 0 ? [elem] : [...accu, ',', elem]
-                                }, [])
+                                    return accu.length == 0 ? [elem] : [...accu, <span>,</span>, elem]
+                                }, Array.of<JSX.Element>())
                         }
                     </div>
                 </div>

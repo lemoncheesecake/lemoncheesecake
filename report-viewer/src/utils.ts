@@ -1,4 +1,5 @@
-import * as moment from 'moment';
+// import * as moment from 'moment';
+import moment from 'moment';
 import {sprintf} from 'sprintf-js';
 
 export function get_time_from_iso8601(val: string) {
