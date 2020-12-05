@@ -3,7 +3,6 @@ import TestView from './TestView';
 import SetupView from './SetupView';
 import ResultTableView from './ResultTableView';
 import {get_time_from_iso8601, humanize_duration} from './utils';
-import { JsxElement } from 'typescript';
 
 interface SuiteProps {
     suite: Suite,
