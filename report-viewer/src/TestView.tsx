@@ -30,7 +30,16 @@ class TestView extends React.Component<Props, {}> {
                     { Object.keys(test.properties).map((prop) => <div key={prop}>{prop}: {test.properties[prop]}</div>) }
                 </td>
                 <td>
-                    { test.links.map((link, index) => <div key={index}><a href={link.url} title={link.name || link.url} target="_blank">{link.name || link.url}</a></div>) }
+                    {
+                        test.links.map((link, index) =>
+                            <div key={index}>
+                                {/* eslint react/jsx-no-target-blank: "off" */}
+                                <a href={link.url} title={link.name || link.url} target="_blank">
+                                    {link.name || link.url}
+                                </a>
+                            </div>
+                        )
+                    }
                 </td>
             </ResultRowView> 
         )

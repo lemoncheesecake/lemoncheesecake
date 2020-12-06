@@ -51,6 +51,7 @@ class SuiteView extends React.Component<SuiteProps, {}> {
                     <div>{tags_and_properties}</div>
                     <div>
                         {
+                            /* eslint react/jsx-no-target-blank: "off" */
                             suite.links.
                                 map((link, index) => <div key={index}><a href={link.url} title={link.name || link.url} target="_blank">{link.name || link.url}</a></div>).
                                 reduce((accu, elem) => {

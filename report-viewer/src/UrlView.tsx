@@ -13,7 +13,7 @@ class UrlView extends React.Component<Props, {}> {
             <tr className="step_entry attachment" style={{display: this.props.expanded ? "" : "none"}}>
                 <td className="text-uppercase text-info">URL</td>
                 <td colSpan={3}>
-                    <a href={url.url} target="_blank">{url.description}</a>
+                    <a href={url.url} target="_blank" rel="noopener noreferrer">{url.description}</a>
                 </td>
             </tr>
         )
