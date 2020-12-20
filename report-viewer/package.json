@@ -11,13 +11,17 @@
     "react-dom": "^17.0.1",
     "react-scripts": "4.0.1",
     "react-scroll": "^1.7.10",
+    "rewire": "^5.0.0",
     "sprintf-js": "^1.1.2",
     "typescript": "^4.1.2",
+    "uglifyjs-webpack-plugin": "^2.2.0",
     "web-vitals": "^0.2.4"
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "node ./scripts/build-non-split.js",
+    "build:react": "react-scripts build",
+    "build:bundle": "webpack --config webpack.config.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -44,6 +48,7 @@
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
     "@types/react-scroll": "^1.8.2",
-    "@types/sprintf-js": "^1.1.2"
+    "@types/sprintf-js": "^1.1.2",
+    "webpack-cli": "^4.2.0"
   }
 }
