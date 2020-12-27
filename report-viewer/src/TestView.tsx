@@ -1,8 +1,9 @@
 import * as React from 'react';
 import TimeExtraInfoView from './TimeExtraInfoView';
 import ResultRowView from './ResultRowView';
+import {FocusProps} from './ResultRowView';
 
-interface Props {
+interface Props extends FocusProps {
     test: Test,
     test_id: string
 }
@@ -13,7 +14,10 @@ class TestView extends React.Component<Props, {}> {
         const test_id = this.props.test_id;
 
         return (
-            <ResultRowView id={test_id} status={test.status} status_details={test.status_details} steps={test.steps}>
+            <ResultRowView
+             id={test_id} status={test.status} status_details={test.status_details} steps={test.steps}
+             focus={this.props.focus} onFocusChange={this.props.onFocusChange}
+            >
                 <td>
                     <div className="extra-info-container">
                         <h5>

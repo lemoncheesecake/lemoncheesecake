@@ -4,7 +4,7 @@ import KeyValueTableView from './KeyValueTableView';
 import SuiteView from './SuiteView';
 import { SetupProps, SetupView } from './SetupView';
 import ResultTableView from './ResultTableView';
-import { get_result_row_by_id } from './ResultRowView';
+import { Focus } from './ResultRowView';
 import TimeExtraInfoView from './TimeExtraInfoView';
 import { get_time_from_iso8601, humanize_datetime_from_iso8601, humanize_duration } from './utils';
 
@@ -31,7 +31,11 @@ class ReportHook extends React.Component<SetupProps, {}> {
 }
 
 interface ReportProps {
-    report: Report;
+    report: Report
+}
+
+interface ReportState {
+    focus: Focus
 }
 
 function walk_suites(suites: Array<Suite>, callback: (index: number, suite: Suite, parent_suites: Array<Suite>) => any) {
@@ -184,7 +188,19 @@ function build_report_stats(report: Report): Array<Array<string>> {
     return stats;
 }
 
-class ReportView extends React.Component<ReportProps, {}> {
+class ReportView extends React.Component<ReportProps, ReportState> {
+    constructor(props: ReportProps) {
+        super(props);
+        this.state = {
+            focus: {id: "", scrollTo: false}
+        };
+        this.handleFocusChange = this.handleFocusChange.bind(this);
+    }
+
+    handleFocusChange(id: string, scrollTo: boolean = false) {
+        this.setState({focus : {id, scrollTo}});
+    }
+
     render() {
         let report = this.props.report;
 
@@ -198,13 +214,33 @@ class ReportView extends React.Component<ReportProps, {}> {
 
                 <p style={{textAlign: 'right'}}><a href="report.js" download="report.js">Download raw report data</a></p>
 
-                {report.test_session_setup &&
-                    <ReportHook result={report.test_session_setup} description="- Setup test session -" id="setup_test_session"/>}
+                {
+                    report.test_session_setup
+                    && <ReportHook
+                        result={report.test_session_setup} description="- Setup test session -" id="setup_test_session"
+                        focus={this.state.focus} onFocusChange={this.handleFocusChange}
+                        />
+                }
+                {
+                    walk_suites(
+                        report.suites,
+                        ((index, suite, parent_suites) => 
+                            <SuiteView
+                                suite={suite} parent_suites={parent_suites}
+                                focus={this.state.focus} onFocusChange={this.handleFocusChange}
+                                key={index}
+                            />
+                        )
+                    )
+                }
 
-                {walk_suites(report.suites, ((index, suite, parent_suites) => <SuiteView suite={suite} parent_suites={parent_suites} key={index}/>))}
-
-                {report.test_session_teardown &&
-                    <ReportHook result={report.test_session_teardown} description="- Teardown test session -" id="teardown_test_session"/>}
+                {
+                    report.test_session_teardown
+                    && <ReportHook
+                        result={report.test_session_teardown} description="- Teardown test session -" id="teardown_test_session"
+                        focus={this.state.focus} onFocusChange={this.handleFocusChange}
+                       />
+                }
             </div>
         );
     }
@@ -215,13 +251,8 @@ class ReportView extends React.Component<ReportProps, {}> {
 
         // focus on selected test, if any
         let splitted_url = document.location.href.split('#');
-        if (splitted_url.length === 2) {
-            const row = get_result_row_by_id(splitted_url[1]);
-            if (row) {
-                row.expand();
-                row.scrollTo();
-            }
-        }
+        if (splitted_url.length === 2)
+            this.handleFocusChange(splitted_url[1], true);
     }
 }
 

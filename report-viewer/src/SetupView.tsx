@@ -1,8 +1,9 @@
 import * as React from 'react';
 import TimeExtraInfoView from './TimeExtraInfoView';
 import ResultRowView from './ResultRowView';
+import {FocusProps} from './ResultRowView';
 
-export interface SetupProps {
+export interface SetupProps extends FocusProps {
     result: Result,
     id: string,
     description: string
@@ -13,7 +14,8 @@ export class SetupView extends React.Component<SetupProps, {}> {
         const result = this.props.result;
 
         return (
-            <ResultRowView id={this.props.id} status={result.status} steps={result.steps}>
+            <ResultRowView id={this.props.id} status={result.status} steps={result.steps}
+             focus={this.props.focus} onFocusChange={this.props.onFocusChange}>
                 <td>
                     <div className="extra-info-container">
                         <h5 className="special">

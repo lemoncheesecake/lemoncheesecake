@@ -2,9 +2,10 @@ import * as React from 'react';
 import TestView from './TestView';
 import SetupView from './SetupView';
 import ResultTableView from './ResultTableView';
+import {FocusProps} from './ResultRowView';
 import {get_time_from_iso8601, humanize_duration} from './utils';
 
-interface SuiteProps {
+interface SuiteProps extends FocusProps {
     suite: Suite,
     parent_suites: Array<Suite>
 }
@@ -66,7 +67,11 @@ class SuiteView extends React.Component<SuiteProps, {}> {
         let tests = [];
         for (let test of suite.tests) {
             let test_id = suite_id + "." + test.name;
-            tests.push(<TestView test={test} test_id={test_id} key={test_id}/>);
+            tests.push(
+                <TestView
+                    test={test} test_id={test_id} key={test_id} focus={this.props.focus} onFocusChange={this.props.onFocusChange}
+                />
+            );
         }
 
         return (
@@ -74,11 +79,19 @@ class SuiteView extends React.Component<SuiteProps, {}> {
                 heading={<Heading/>}
                 extra_info={<span className='extra-info'>{humanize_duration(get_suite_duration(suite), true)}</span>}>
                 {
-                    suite.suite_setup && <SetupView result={suite.suite_setup} description="- Setup suite -" id={suite_id + ".setup_suite"}/>
+                    suite.suite_setup
+                    && <SetupView
+                        result={suite.suite_setup} description="- Setup suite -" id={suite_id + ".setup_suite"}
+                        focus={this.props.focus} onFocusChange={this.props.onFocusChange}
+                       />
                 }
                 { tests }
                 {
-                    suite.suite_teardown && <SetupView result={suite.suite_teardown} description="- Teardown suite -" id={suite_id + ".teardown_suite"}/>
+                    suite.suite_teardown
+                    && <SetupView
+                        result={suite.suite_teardown} description="- Teardown suite -" id={suite_id + ".teardown_suite"}
+                        focus={this.props.focus} onFocusChange={this.props.onFocusChange}
+                       />
                 }
             </ResultTableView>
         );

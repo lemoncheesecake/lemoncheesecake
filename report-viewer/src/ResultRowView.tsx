@@ -2,30 +2,25 @@ import * as React from 'react';
 import {render_steps} from './StepView';
 import { scroller } from 'react-scroll';
 
-let all_rows = new Map<string, ResultRowView>();
-
-export function get_result_row_by_id(id: string): ResultRowView {
-    const ret = all_rows.get(id);
-    if (ret === undefined) {
-        throw new Error();
-    }
-    return ret;
+export interface Focus {
+    id: string,
+    scrollTo: boolean
 }
 
-function collapseIfExpanded() {
-    for (let row of all_rows.values()) {
-        if (row.isExpanded()) {
-            row.collapse()
-            break;
-        }
-    }
+export interface OnFocusChange {
+    (id: string, scrollTo?: boolean) : void
+}
+
+export interface FocusProps {
+    focus: Focus,
+    onFocusChange: OnFocusChange
 }
 
 interface State {
     expanded: boolean
 }
 
-interface Props {
+interface Props extends FocusProps {
     id: string,
     status: Status | null,
     status_details?: string | null,
@@ -71,25 +66,12 @@ class ResultRowView extends React.Component<Props, State> {
         this.domRef = null;
     }
 
-    isExpanded() {
-        return this.state.expanded;
-    }
-
-    expand() {
-        this.setState({expanded: true})
-    }
-
-    collapse() {
-        this.setState({expanded: false})
+    isFocused() {
+        return this.props.id === this.props.focus.id;
     }
 
     toggle() {
-        if (this.isExpanded()) {
-            this.collapse()
-        } else {
-            collapseIfExpanded();
-            this.expand();
-        }
+        this.props.onFocusChange(this.isFocused() ? "" : this.props.id)
     }
 
     scrollTo() {
@@ -98,11 +80,14 @@ class ResultRowView extends React.Component<Props, State> {
             delay: 100,
             smooth: "easeInOutQuint",
           });
-   }
+    }
 
     componentDidMount() {
-        all_rows.set(this.props.id, this);
+        if (this.isFocused() && this.props.focus.scrollTo) {
+            this.scrollTo();
+        }
     }
+    componentDidUpdate = this.componentDidMount
 
     render() {
         return (
@@ -115,7 +100,7 @@ class ResultRowView extends React.Component<Props, State> {
                     </td>
                     {this.props.children}
                 </tr>
-                { render_steps(this.props.steps, this.state.expanded) }
+                { render_steps(this.props.steps, this.isFocused()) }
             </tbody>
         )
     }
