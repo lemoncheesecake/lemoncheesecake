@@ -8,19 +8,20 @@ interface Props {
 class AttachmentView extends React.Component<Props, {}> {
     render() {
         const attachment = this.props.attachment;
-        let attached_file;
+        let preview;
 
         if (attachment.as_image) {
-            attached_file = <a href={attachment.filename} target="_blank"><img src={attachment.filename} title={attachment.description}/></a>
+            preview = <img src={attachment.filename} alt={attachment.description}/>;
         } else {
-            attached_file = <a href={attachment.filename} target="_blank">{attachment.description}</a>
+            preview = attachment.description;
         }
 
         return (
             <tr className="step_entry attachment" style={{display: this.props.expanded ? "" : "none"}}>
                 <td className="text-uppercase text-info">ATTACHMENT</td>
                 <td colSpan={3}>
-                    {attached_file}
+                    {/* eslint react/jsx-no-target-blank: "off" */}
+                    <a href={attachment.filename} target="_blank">{preview}</a>
                 </td>
             </tr>
         )

@@ -1,4 +1,5 @@
-import * as moment from 'moment';
+// import * as moment from 'moment';
+import moment from 'moment';
 import {sprintf} from 'sprintf-js';
 
 export function get_time_from_iso8601(val: string) {
@@ -34,7 +35,7 @@ export function humanize_duration(duration: number, show_milliseconds=false) {
         if (duration >= 1) {
             ret += sprintf(ret ? "%02ds" : "%ds", duration);
         }
-        if (ret == "") {
+        if (ret === "") {
             ret = sprintf("%.03fs", duration);
         }
     }

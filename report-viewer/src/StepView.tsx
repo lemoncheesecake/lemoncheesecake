@@ -12,9 +12,9 @@ interface Props {
 
 function get_step_outcome(step: Step) {
     for (let entry of step.entries) {
-        if (entry.type == "log" && entry.level == "error")
+        if (entry.type === "log" && entry.level === "error")
             return false;
-        else if (entry.type == "check" && entry.is_successful == false)
+        else if (entry.type === "check" && entry.is_successful === false)
             return false;
     }
     return true;

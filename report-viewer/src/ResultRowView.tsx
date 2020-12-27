@@ -2,15 +2,18 @@ import * as React from 'react';
 import {render_steps} from './StepView';
 import { scroller } from 'react-scroll';
 
-let all_rows = {};
+let all_rows = new Map<string, ResultRowView>();
 
 export function get_result_row_by_id(id: string): ResultRowView {
-    return all_rows[id];
+    const ret = all_rows.get(id);
+    if (ret === undefined) {
+        throw new Error();
+    }
+    return ret;
 }
 
 function collapseIfExpanded() {
-    for (let row_id in all_rows) {
-        let row = all_rows[row_id];
+    for (let row of all_rows.values()) {
         if (row.isExpanded()) {
             row.collapse()
             break;
@@ -30,16 +33,16 @@ interface Props {
 }
 
 function get_text_class_from_test_status(status: Status | null) {
-    if (status == null)
+    if (status === null)
         return ""
     
-    if (status == "passed")
+    if (status === "passed")
         return "text-success";
     
-    if (status == "failed")
+    if (status === "failed")
         return "text-danger";
 
-    if (status == "disabled")
+    if (status === "disabled")
         return "text-default";
 
     return "text-warning";
@@ -48,8 +51,8 @@ function get_text_class_from_test_status(status: Status | null) {
 class ResultRowView extends React.Component<Props, State> {
     domRef: any;
 
-    constructor() {
-        super();
+    constructor(props: Props) {
+        super(props);
         this.state = {
             expanded: false
         };
@@ -87,7 +90,7 @@ class ResultRowView extends React.Component<Props, State> {
    }
 
     componentDidMount() {
-        all_rows[this.props.id] = this;
+        all_rows.set(this.props.id, this);
     }
 
     render() {

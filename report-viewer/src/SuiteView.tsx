@@ -51,11 +51,12 @@ class SuiteView extends React.Component<SuiteProps, {}> {
                     <div>{tags_and_properties}</div>
                     <div>
                         {
-                            suite.links.
-                                map((link, index) => <div key={index}><a href={link.url} title={link.name || link.url} target="_blank">{link.name || link.url}</a></div>).
-                                reduce((accu, elem) => {
-                                    return accu.length == 0 ? [elem] : [...accu, ',', elem]
-                                }, [])
+                            /* eslint react/jsx-no-target-blank: "off" */
+                            suite.links
+                                .map((link, index) => <div key={index}><a href={link.url} title={link.name || link.url} target="_blank">{link.name || link.url}</a></div>)
+                                .reduce((accu, elem) => {
+                                    return accu.length === 0 ? [elem] : [...accu, <span>,</span>, elem]
+                                }, Array.of<JSX.Element>())
                         }
                     </div>
                 </div>
