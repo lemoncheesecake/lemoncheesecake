@@ -32,20 +32,31 @@ interface Props {
     steps: Array<Step>
 }
 
-function get_text_class_from_test_status(status: Status | null) {
-    if (status === null)
-        return ""
-    
-    if (status === "passed")
-        return "text-success";
-    
-    if (status === "failed")
-        return "text-danger";
+function Status(props: any) {
+    let text_class;
+    switch (props.value) {
+        case null:
+            text_class = "";
+            break;
+        case "passed":
+            text_class = "text-success";
+            break;
+        case "failed":
+            text_class = "text-danger";
+            break;
+        case "disabled":
+            text_class = "text-default";
+            break;
+        default:
+            text_class = "text-warning";
 
-    if (status === "disabled")
-        return "text-default";
+    }
 
-    return "text-warning";
+    return (
+        <span className={text_class} style={{fontSize: "120%"}}>
+            {props.value ? props.value.toUpperCase() : "IN PROGRESS"}
+        </span>
+    );
 }
 
 class ResultRowView extends React.Component<Props, State> {
@@ -100,9 +111,7 @@ class ResultRowView extends React.Component<Props, State> {
                     <td className="test_status" title={this.props.status_details || ""}
                         style={this.props.steps.length > 0 ? {cursor: "pointer"} : undefined}
                         onClick={this.props.steps.length > 0 ? this.toggle : undefined}>
-                        <span className={get_text_class_from_test_status(this.props.status)} style={{fontSize: "120%"}}>
-                            {this.props.status ? this.props.status.toUpperCase() : "IN PROGRESS"}
-                        </span>
+                        <Status value={this.props.status}/>
                     </td>
                     {this.props.children}
                 </tr>
