@@ -27,9 +27,9 @@ interface Props extends FocusProps {
     steps: Array<Step>
 }
 
-function Status(props: any) {
+function Status(props: {status: string | null}) {
     let text_class;
-    switch (props.value) {
+    switch (props.status) {
         case null:
             text_class = "";
             break;
@@ -49,9 +49,31 @@ function Status(props: any) {
 
     return (
         <span className={text_class} style={{fontSize: "120%"}}>
-            {props.value ? props.value.toUpperCase() : "IN PROGRESS"}
+            {props.status ? props.status.toUpperCase() : "IN PROGRESS"}
         </span>
     );
+}
+
+function ExpandIndicator(props: {expanded: boolean, hasSteps: boolean}) {
+    if (props.hasSteps) {
+        if (props.expanded) {
+            return  (
+                <span className="glyphicon glyphicon-chevron-down" title="Collapse">
+                </span>
+            );
+        } else {
+            return  (
+                <span className="visibility-slave glyphicon glyphicon-chevron-right" title="Expand">
+                </span>
+            );
+        }
+    } else {
+        // keep an always invisible glyphicon to keep a consistent alignment with other result rows
+        return  (
+            <span className="glyphicon glyphicon-chevron-right" style={{visibility: "hidden"}}>
+            </span>
+        );
+    }
 }
 
 class ResultRowView extends React.Component<Props, State> {
@@ -90,13 +112,17 @@ class ResultRowView extends React.Component<Props, State> {
     componentDidUpdate = this.componentDidMount
 
     render() {
+        const hasSteps = this.props.steps.length > 0;
+
         return (
             <tbody>
                 <tr id={this.props.id} className="test visibility-master" key={this.props.id} ref={(re) => { this.domRef = re }}>
                     <td className="test_status" title={this.props.status_details || ""}
-                        style={this.props.steps.length > 0 ? {cursor: "pointer"} : undefined}
-                        onClick={this.props.steps.length > 0 ? this.toggle : undefined}>
-                        <Status value={this.props.status}/>
+                        style={hasSteps ? {cursor: "pointer"} : undefined}
+                        onClick={hasSteps ? this.toggle : undefined}>
+                        <ExpandIndicator expanded={this.isFocused()} hasSteps={hasSteps}/>
+                        &nbsp;
+                        <Status status={this.props.status}/>
                     </td>
                     {this.props.children}
                 </tr>
