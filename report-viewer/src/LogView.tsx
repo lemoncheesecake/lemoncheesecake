@@ -25,7 +25,7 @@ class LogView extends React.Component<Props, {}> {
             <tr className="step_entry log" style={{display: this.props.expanded ? "" : "none"}}>
                 <td className={"text-uppercase " + get_log_level_text_class(log.level)}>{log.level}</td>
                 <td colSpan={3}>
-                    <div className="extra-info-container">
+                    <div className="extra-info-container visibility-master">
                         <samp>{log.message}</samp>
                         <TimeExtraInfoView start={log.time}/>
                     </div>

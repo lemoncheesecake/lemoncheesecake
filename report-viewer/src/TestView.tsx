@@ -23,7 +23,11 @@ class TestView extends React.Component<Props, {}> {
                         <h5>
                             <span className="multi-line-text">{test.description}</span>&nbsp;
                             {/* eslint jsx-a11y/anchor-has-content: "off" */}
-                            <a href={"#" + test_id} className="glyphicon glyphicon-link extra-info anchorlink" style={{fontSize: "90%"}}/>
+                            <a
+                                href={"#" + test_id}
+                                className="glyphicon glyphicon-link anchorlink extra-info visibility-slave"
+                                style={{fontSize: "90%"}}
+                            />
                             <br/>
                             <small>{test_id}</small>
                         </h5>

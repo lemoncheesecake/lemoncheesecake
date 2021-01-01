@@ -92,7 +92,7 @@ class ResultRowView extends React.Component<Props, State> {
     render() {
         return (
             <tbody>
-                <tr id={this.props.id} className="test" key={this.props.id} ref={(re) => { this.domRef = re }}>
+                <tr id={this.props.id} className="test visibility-master" key={this.props.id} ref={(re) => { this.domRef = re }}>
                     <td className="test_status" title={this.props.status_details || ""}
                         style={this.props.steps.length > 0 ? {cursor: "pointer"} : undefined}
                         onClick={this.props.steps.length > 0 ? this.toggle : undefined}>

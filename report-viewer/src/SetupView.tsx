@@ -21,7 +21,11 @@ export class SetupView extends React.Component<SetupProps, {}> {
                         <h5 className="special">
                             {this.props.description}&nbsp;
                             {/* eslint jsx-a11y/anchor-has-content: "off" */}
-                            <a href={"#" + this.props.id} className="glyphicon glyphicon-link extra-info anchorlink" style={{fontSize: "90%"}}/>
+                            <a
+                                href={"#" + this.props.id}
+                                className="glyphicon glyphicon-link anchorlink extra-info visibility-slave"
+                                style={{fontSize: "90%"}}
+                            />
                         </h5>
                         <TimeExtraInfoView start={result.start_time} end={result.end_time}/>
                     </div>

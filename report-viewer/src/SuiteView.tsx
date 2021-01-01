@@ -77,7 +77,7 @@ class SuiteView extends React.Component<SuiteProps, {}> {
         return (
             <ResultTableView
                 heading={<Heading/>}
-                extra_info={<span className='extra-info'>{humanize_duration(get_suite_duration(suite), true)}</span>}>
+                extra_info={<span className='extra-info visibility-slave'>{humanize_duration(get_suite_duration(suite), true)}</span>}>
                 {
                     suite.suite_setup
                     && <SetupView

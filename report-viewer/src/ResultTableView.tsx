@@ -9,7 +9,7 @@ class ResultTableView extends React.Component<Props, {}> {
     render() {
         return (
             <div className='panel panel-default'>
-                <div className="panel-heading extra-info-container">
+                <div className="panel-heading extra-info-container visibility-master">
                     { this.props.heading }
                     { this.props.extra_info }
                 </div>

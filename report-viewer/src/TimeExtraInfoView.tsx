@@ -12,9 +12,13 @@ class TimeExtraInfoView extends React.Component<Props, {}> {
         
         if (this.props.end) {
             const duration = humanize_duration(get_time_from_iso8601(this.props.end) - get_time_from_iso8601(this.props.start), true);
-            return <span className='extra-info'>{start_time} &rarr; {duration}</span>;
+            return (
+                <span className='extra-info visibility-slave'>
+                    {start_time} <span className="glyphicon glyphicon-arrow-right"/> {duration}
+                </span>
+            );
         } else {
-            return <span className='extra-info'>{start_time}</span>;
+            return <span className='extra-info visibility-slave'>{start_time}</span>;
         }
     }
 }
