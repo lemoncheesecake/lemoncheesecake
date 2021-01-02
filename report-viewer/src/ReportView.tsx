@@ -8,7 +8,7 @@ import { Focus } from './ResultRowView';
 import TimeExtraInfoView from './TimeExtraInfoView';
 import { get_time_from_iso8601, humanize_datetime_from_iso8601, humanize_duration } from './utils';
 
-class ReportHook extends React.Component<SetupProps, {}> {
+class SessionSetup extends React.Component<SetupProps, {}> {
     render() {
         function Heading(props: {desc: string}) {
             return (
@@ -216,7 +216,7 @@ class ReportView extends React.Component<ReportProps, ReportState> {
 
                 {
                     report.test_session_setup
-                    && <ReportHook
+                    && <SessionSetup
                         result={report.test_session_setup} description="- Setup test session -" id="setup_test_session"
                         focus={this.state.focus} onFocusChange={this.handleFocusChange}
                         />
@@ -236,7 +236,7 @@ class ReportView extends React.Component<ReportProps, ReportState> {
 
                 {
                     report.test_session_teardown
-                    && <ReportHook
+                    && <SessionSetup
                         result={report.test_session_teardown} description="- Teardown test session -" id="teardown_test_session"
                         focus={this.state.focus} onFocusChange={this.handleFocusChange}
                        />
