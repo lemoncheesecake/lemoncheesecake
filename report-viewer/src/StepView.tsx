@@ -5,11 +5,6 @@ import Log from './LogView';
 import AttachmentView from './AttachmentView';
 import UrlView from './UrlView';
 
-interface Props {
-    step: Step,
-    expanded: boolean
-}
-
 function get_step_outcome(step: Step) {
     for (let entry of step.entries) {
         if (entry.type === "log" && entry.level === "error")
@@ -20,29 +15,32 @@ function get_step_outcome(step: Step) {
     return true;
 }
 
-class StepView extends React.Component<Props, {}> {
-    render() {
-        const step = this.props.step;
+interface Props {
+    step: Step,
+    expanded: boolean
+}
 
-        return (
-            <tr className="step" style={{display: this.props.expanded ? "" : "none"}}>
-                <td colSpan={4}>
-                    <h6 className="extra-info-container">
-                        <span style={{fontSize: "120%"}}>
-                            {
-                                get_step_outcome(step) ?
-                                    <span className="glyphicon glyphicon-ok text-success"></span> :
-                                    <span className="glyphicon glyphicon-remove text-danger"></span>
-                            }
-                            &nbsp;
-                            <span className="multi-line-text"><strong>{step.description}</strong></span>
-                        </span>
-                        <TimeExtraInfoView start={step.start_time} end={step.end_time}/>
-                    </h6>
-                </td>
-            </tr>
-        )
-    }
+function StepView(props: Props) {
+    const step = props.step;
+
+    return (
+        <tr className="step" style={{display: props.expanded ? "" : "none"}}>
+            <td colSpan={4}>
+                <h6 className="extra-info-container">
+                    <span style={{fontSize: "120%"}}>
+                        {
+                            get_step_outcome(step) ?
+                                <span className="glyphicon glyphicon-ok text-success"></span> :
+                                <span className="glyphicon glyphicon-remove text-danger"></span>
+                        }
+                        &nbsp;
+                        <span className="multi-line-text"><strong>{step.description}</strong></span>
+                    </span>
+                    <TimeExtraInfoView start={step.start_time} end={step.end_time}/>
+                </h6>
+            </td>
+        </tr>
+    )
 }
 
 function render_step_entry(entry: StepEntry, expanded: boolean, index: number) {
