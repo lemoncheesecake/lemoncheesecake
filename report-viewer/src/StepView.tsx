@@ -15,6 +15,14 @@ function get_step_outcome(step: Step) {
     return true;
 }
 
+function StepOutcome(props: {step: Step}) {
+    return (
+        get_step_outcome(props.step) ?
+        <span className="glyphicon glyphicon-ok text-success"></span> :
+        <span className="glyphicon glyphicon-remove text-danger"></span>
+    );
+}
+
 interface Props {
     step: Step,
     expanded: boolean
@@ -28,11 +36,7 @@ function StepView(props: Props) {
             <td colSpan={4}>
                 <h6 className="extra-info-container">
                     <span style={{fontSize: "120%"}}>
-                        {
-                            get_step_outcome(step) ?
-                                <span className="glyphicon glyphicon-ok text-success"></span> :
-                                <span className="glyphicon glyphicon-remove text-danger"></span>
-                        }
+                        <StepOutcome step={step}/>
                         &nbsp;
                         <span className="multi-line-text"><strong>{step.description}</strong></span>
                     </span>
