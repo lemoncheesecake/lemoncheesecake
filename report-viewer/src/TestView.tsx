@@ -16,8 +16,7 @@ class TestView extends React.Component<Props, {}> {
         return (
             <ResultRowView
              id={test_id} status={test.status} status_details={test.status_details} steps={test.steps}
-             focus={this.props.focus} onFocusChange={this.props.onFocusChange}
-            >
+             focus={this.props.focus} onFocusChange={this.props.onFocusChange}>
                 <td>
                     <div className="extra-info-container">
                         <h5>

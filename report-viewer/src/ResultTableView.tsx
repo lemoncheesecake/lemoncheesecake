@@ -7,6 +7,11 @@ interface Props {
 
 class ResultTableView extends React.Component<Props, {}> {
     render() {
+        let children = React.Children.toArray(this.props.children);
+        console.log(children);
+        if (children.every((e) => ! e))
+            return null;
+
         return (
             <div className='panel panel-default'>
                 <div className="panel-heading extra-info-container visibility-master">

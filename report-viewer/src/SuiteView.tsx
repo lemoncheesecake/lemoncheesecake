@@ -3,11 +3,13 @@ import TestView from './TestView';
 import SetupView from './SetupView';
 import ResultTableView from './ResultTableView';
 import {FocusProps} from './ResultRowView';
+import {Filter, match_filter} from './FilterView';
 import {get_time_from_iso8601, humanize_duration} from './utils';
 
 interface SuiteProps extends FocusProps {
     suite: Suite,
-    parent_suites: Array<Suite>
+    parent_suites: Array<Suite>,
+    filter: Filter
 }
 
 function get_duration_from_time_interval(interval: TimeInterval) {
@@ -34,6 +36,7 @@ function get_suite_duration(suite: Suite) {
 
 class SuiteView extends React.Component<SuiteProps, {}> {
     render() {
+        const filter = this.props.filter;
         const suite = this.props.suite;
         const parent_suites = this.props.parent_suites;
 
@@ -64,37 +67,52 @@ class SuiteView extends React.Component<SuiteProps, {}> {
             );
         }
 
-        let tests = [];
-        for (let test of suite.tests) {
-            let test_id = suite_id + "." + test.name;
-            tests.push(
-                <TestView
-                    test={test} test_id={test_id} key={test_id} focus={this.props.focus} onFocusChange={this.props.onFocusChange}
-                />
+        let results = [];
+        if (suite.suite_setup && match_filter(filter, suite.suite_setup)) {
+            results.push(
+                <SetupView
+                    result={suite.suite_setup} description="- Setup suite -"
+                    id={suite_id + ".setup_suite"} key={suite_id + ".setup_suite"}
+                    focus={this.props.focus} onFocusChange={this.props.onFocusChange}/>
             );
         }
 
-        return (
-            <ResultTableView
-                heading={<Heading/>}
-                extra_info={<span className='extra-info visibility-slave'>{humanize_duration(get_suite_duration(suite), true)}</span>}>
-                {
-                    suite.suite_setup
-                    && <SetupView
-                        result={suite.suite_setup} description="- Setup suite -" id={suite_id + ".setup_suite"}
+        for (let test of suite.tests) {
+            if (match_filter(filter, test)) {
+                let test_id = suite_id + "." + test.name;
+                results.push(
+                    <TestView
+                        test={test} test_id={test_id}
                         focus={this.props.focus} onFocusChange={this.props.onFocusChange}
-                       />
-                }
-                { tests }
-                {
-                    suite.suite_teardown
-                    && <SetupView
-                        result={suite.suite_teardown} description="- Teardown suite -" id={suite_id + ".teardown_suite"}
-                        focus={this.props.focus} onFocusChange={this.props.onFocusChange}
-                       />
-                }
-            </ResultTableView>
-        );
+                        key={test_id}/>
+                );
+            }
+        }
+
+        if (suite.suite_teardown && match_filter(filter, suite.suite_teardown)) {
+            results.push(
+                <SetupView
+                    result={suite.suite_teardown} description="- Teardown suite -"
+                    id={suite_id + ".teardown_suite"} key={suite_id + ".teardown_suite"}
+                    focus={this.props.focus} onFocusChange={this.props.onFocusChange}/>
+            );
+        }
+
+        if (results) {
+            return (
+                <ResultTableView
+                    heading={<Heading/>}
+                    extra_info={
+                        <span className='extra-info visibility-slave'>
+                            {humanize_duration(get_suite_duration(suite), true)}
+                        </span>
+                }>
+                    {results}
+                </ResultTableView>
+            );
+        } else {
+            return null;
+        }
     }
 }
 

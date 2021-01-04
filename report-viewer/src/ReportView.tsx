@@ -6,27 +6,34 @@ import { SetupProps, SetupView } from './SetupView';
 import ResultTableView from './ResultTableView';
 import { Focus } from './ResultRowView';
 import TimeExtraInfoView from './TimeExtraInfoView';
+import {FilterView, Filter, match_filter} from './FilterView';
 import { get_time_from_iso8601, humanize_datetime_from_iso8601, humanize_duration } from './utils';
 
-class SessionSetup extends React.Component<SetupProps, {}> {
-    render() {
-        function Heading(props: {desc: string}) {
-            return (
-                <div>
-                    <span>
-                        <h4 className="special">{props.desc}</h4>
-                    </span>
-                </div>
-            );
-        }
+interface SessionSetupProps extends SetupProps {
+    filter: Filter
+}
 
+function SessionSetupHeading(props: {desc: string}) {
+    return (
+        <div>
+            <span>
+                <h4 className="special">{props.desc}</h4>
+            </span>
+        </div>
+    );
+}
+
+function SessionSetup(props: SessionSetupProps) {
+    if (match_filter(props.filter, props.result)) {
         return (
             <ResultTableView
-                heading={<Heading desc={this.props.description}/>}
-                extra_info={<TimeExtraInfoView start={this.props.result.start_time} end={this.props.result.end_time}/>}>
-                <SetupView {...this.props}/>
+                heading={<SessionSetupHeading desc={props.description}/>}
+                extra_info={<TimeExtraInfoView start={props.result.start_time} end={props.result.end_time}/>}>
+                <SetupView {...props}/>
             </ResultTableView>
         );
+    } else {
+        return null;
     }
 }
 
@@ -35,7 +42,8 @@ interface ReportProps {
 }
 
 interface ReportState {
-    focus: Focus
+    focus: Focus,
+    filter: Filter
 }
 
 function walk_suites(suites: Array<Suite>, callback: (index: number, suite: Suite, parent_suites: Array<Suite>) => any) {
@@ -192,13 +200,25 @@ class ReportView extends React.Component<ReportProps, ReportState> {
     constructor(props: ReportProps) {
         super(props);
         this.state = {
-            focus: {id: "", scrollTo: false}
+            focus: {id: "", scrollTo: false},
+            filter: {onlyFailures: false}
         };
         this.handleFocusChange = this.handleFocusChange.bind(this);
+        this.handleOnlyFailuresChange = this.handleOnlyFailuresChange.bind(this);
     }
 
     handleFocusChange(id: string, scrollTo: boolean = false) {
         this.setState({focus : {id, scrollTo}});
+    }
+
+    handleOnlyFailuresChange() {
+        this.setState(
+            {
+                filter: {onlyFailures: ! this.state.filter.onlyFailures},
+                // ensure we don't trigger an undesired scroll:
+                focus: {id: this.state.focus.id, scrollTo: false}
+            }
+        )
     }
 
     render() {
@@ -212,14 +232,17 @@ class ReportView extends React.Component<ReportProps, ReportState> {
 
                 <KeyValueTableView title="Statistics" rows={build_report_stats(report)}/>
 
+                <FilterView onlyFailures={this.state.filter.onlyFailures} onOnlyFailuresChange={this.handleOnlyFailuresChange}/>
+
                 <p style={{textAlign: 'right'}}><a href="report.js" download="report.js">Download raw report data</a></p>
 
                 {
                     report.test_session_setup
                     && <SessionSetup
-                        result={report.test_session_setup} description="- Setup test session -" id="setup_test_session"
-                        focus={this.state.focus} onFocusChange={this.handleFocusChange}
-                        />
+                            result={report.test_session_setup}
+                            description="- Setup test session -" id="setup_test_session"
+                            focus={this.state.focus} onFocusChange={this.handleFocusChange}
+                            filter={this.state.filter}/>
                 }
                 {
                     walk_suites(
@@ -228,8 +251,8 @@ class ReportView extends React.Component<ReportProps, ReportState> {
                             <SuiteView
                                 suite={suite} parent_suites={parent_suites}
                                 focus={this.state.focus} onFocusChange={this.handleFocusChange}
-                                key={index}
-                            />
+                                filter={this.state.filter}
+                                key={index}/>
                         )
                     )
                 }
@@ -237,9 +260,10 @@ class ReportView extends React.Component<ReportProps, ReportState> {
                 {
                     report.test_session_teardown
                     && <SessionSetup
-                        result={report.test_session_teardown} description="- Teardown test session -" id="teardown_test_session"
-                        focus={this.state.focus} onFocusChange={this.handleFocusChange}
-                       />
+                            result={report.test_session_teardown}
+                            description="- Teardown test session -" id="teardown_test_session"
+                            focus={this.state.focus} onFocusChange={this.handleFocusChange}
+                            filter={this.state.filter}/>
                 }
             </div>
         );
