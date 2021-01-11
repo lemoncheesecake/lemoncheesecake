@@ -2,50 +2,78 @@ import * as React from 'react';
 import {render_steps} from './StepView';
 import { scroller } from 'react-scroll';
 
-let all_rows = new Map<string, ResultRowView>();
-
-export function get_result_row_by_id(id: string): ResultRowView {
-    const ret = all_rows.get(id);
-    if (ret === undefined) {
-        throw new Error();
-    }
-    return ret;
+export interface Focus {
+    id: string,
+    scrollTo: boolean
 }
 
-function collapseIfExpanded() {
-    for (let row of all_rows.values()) {
-        if (row.isExpanded()) {
-            row.collapse()
-            break;
-        }
-    }
+export interface OnFocusChange {
+    (id: string, scrollTo?: boolean) : void
+}
+
+export interface FocusProps {
+    focus: Focus,
+    onFocusChange: OnFocusChange
 }
 
 interface State {
     expanded: boolean
 }
 
-interface Props {
+interface Props extends FocusProps {
     id: string,
     status: Status | null,
     status_details?: string | null,
     steps: Array<Step>
 }
 
-function get_text_class_from_test_status(status: Status | null) {
-    if (status === null)
-        return ""
-    
-    if (status === "passed")
-        return "text-success";
-    
-    if (status === "failed")
-        return "text-danger";
+function Status(props: {status: string | null}) {
+    let text_class;
+    switch (props.status) {
+        case null:
+            text_class = "";
+            break;
+        case "passed":
+            text_class = "text-success";
+            break;
+        case "failed":
+            text_class = "text-danger";
+            break;
+        case "disabled":
+            text_class = "text-default";
+            break;
+        default:
+            text_class = "text-warning";
 
-    if (status === "disabled")
-        return "text-default";
+    }
 
-    return "text-warning";
+    return (
+        <span className={text_class} style={{fontSize: "120%"}}>
+            {props.status ? props.status.toUpperCase() : "IN PROGRESS"}
+        </span>
+    );
+}
+
+function ExpandIndicator(props: {expanded: boolean, hasSteps: boolean}) {
+    if (props.hasSteps) {
+        if (props.expanded) {
+            return  (
+                <span className="glyphicon glyphicon-chevron-down" title="Collapse">
+                </span>
+            );
+        } else {
+            return  (
+                <span className="visibility-slave glyphicon glyphicon-chevron-right" title="Expand">
+                </span>
+            );
+        }
+    } else {
+        // keep an always invisible glyphicon to keep a consistent alignment with other result rows
+        return  (
+            <span className="glyphicon glyphicon-chevron-right" style={{visibility: "hidden"}}>
+            </span>
+        );
+    }
 }
 
 class ResultRowView extends React.Component<Props, State> {
@@ -60,25 +88,12 @@ class ResultRowView extends React.Component<Props, State> {
         this.domRef = null;
     }
 
-    isExpanded() {
-        return this.state.expanded;
-    }
-
-    expand() {
-        this.setState({expanded: true})
-    }
-
-    collapse() {
-        this.setState({expanded: false})
+    isFocused() {
+        return this.props.id === this.props.focus.id;
     }
 
     toggle() {
-        if (this.isExpanded()) {
-            this.collapse()
-        } else {
-            collapseIfExpanded();
-            this.expand();
-        }
+        this.props.onFocusChange(this.isFocused() ? "" : this.props.id)
     }
 
     scrollTo() {
@@ -87,26 +102,31 @@ class ResultRowView extends React.Component<Props, State> {
             delay: 100,
             smooth: "easeInOutQuint",
           });
-   }
-
-    componentDidMount() {
-        all_rows.set(this.props.id, this);
     }
 
+    componentDidMount() {
+        if (this.isFocused() && this.props.focus.scrollTo) {
+            this.scrollTo();
+        }
+    }
+    componentDidUpdate = this.componentDidMount
+
     render() {
+        const hasSteps = this.props.steps.length > 0;
+
         return (
             <tbody>
-                <tr id={this.props.id} className="test" key={this.props.id} ref={(re) => { this.domRef = re }}>
+                <tr id={this.props.id} className="test visibility-master" key={this.props.id} ref={(re) => { this.domRef = re }}>
                     <td className="test_status" title={this.props.status_details || ""}
-                        style={this.props.steps.length > 0 ? {cursor: "pointer"} : undefined}
-                        onClick={this.props.steps.length > 0 ? this.toggle : undefined}>
-                        <span className={get_text_class_from_test_status(this.props.status)} style={{fontSize: "120%"}}>
-                            {this.props.status ? this.props.status.toUpperCase() : "IN PROGRESS"}
-                        </span>
+                        style={hasSteps ? {cursor: "pointer"} : undefined}
+                        onClick={hasSteps ? this.toggle : undefined}>
+                        <ExpandIndicator expanded={this.isFocused()} hasSteps={hasSteps}/>
+                        &nbsp;
+                        <Status status={this.props.status}/>
                     </td>
                     {this.props.children}
                 </tr>
-                { render_steps(this.props.steps, this.state.expanded) }
+                { render_steps(this.props.steps, this.isFocused()) }
             </tbody>
         )
     }

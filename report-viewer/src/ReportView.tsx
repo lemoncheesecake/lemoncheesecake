@@ -4,34 +4,46 @@ import KeyValueTableView from './KeyValueTableView';
 import SuiteView from './SuiteView';
 import { SetupProps, SetupView } from './SetupView';
 import ResultTableView from './ResultTableView';
-import { get_result_row_by_id } from './ResultRowView';
+import { Focus } from './ResultRowView';
 import TimeExtraInfoView from './TimeExtraInfoView';
+import {FilterView, Filter, match_filter} from './FilterView';
 import { get_time_from_iso8601, humanize_datetime_from_iso8601, humanize_duration } from './utils';
 
-class ReportHook extends React.Component<SetupProps, {}> {
-    render() {
-        function Heading(props: {desc: string}) {
-            return (
-                <div>
-                    <span>
-                        <h4 className="special">{props.desc}</h4>
-                    </span>
-                </div>
-            );
-        }
+interface SessionSetupProps extends SetupProps {
+    filter: Filter
+}
 
+function SessionSetupHeading(props: {desc: string}) {
+    return (
+        <div>
+            <span>
+                <h4 className="special">{props.desc}</h4>
+            </span>
+        </div>
+    );
+}
+
+function SessionSetup(props: SessionSetupProps) {
+    if (match_filter(props.filter, props.result)) {
         return (
             <ResultTableView
-                heading={<Heading desc={this.props.description}/>}
-                extra_info={<TimeExtraInfoView start={this.props.result.start_time} end={this.props.result.end_time}/>}>
-                <SetupView {...this.props}/>
+                heading={<SessionSetupHeading desc={props.description}/>}
+                extra_info={<TimeExtraInfoView start={props.result.start_time} end={props.result.end_time}/>}>
+                <SetupView {...props}/>
             </ResultTableView>
         );
+    } else {
+        return null;
     }
 }
 
 interface ReportProps {
-    report: Report;
+    report: Report
+}
+
+interface ReportState {
+    focus: Focus,
+    filter: Filter
 }
 
 function walk_suites(suites: Array<Suite>, callback: (index: number, suite: Suite, parent_suites: Array<Suite>) => any) {
@@ -184,7 +196,42 @@ function build_report_stats(report: Report): Array<Array<string>> {
     return stats;
 }
 
-class ReportView extends React.Component<ReportProps, {}> {
+function MadeBy(props: {version: string}) {
+    return (
+        <span style={{float: 'right', paddingBottom: '10px', fontSize: '90%'}}>
+            Made by&nbsp;
+            <a href='http://lemoncheesecake.io' target="_blank" rel="noopener noreferrer">
+                lemoncheesecake {props.version}
+            </a>
+        </span>
+    );
+}
+
+class ReportView extends React.Component<ReportProps, ReportState> {
+    constructor(props: ReportProps) {
+        super(props);
+        this.state = {
+            focus: {id: "", scrollTo: false},
+            filter: {onlyFailures: false}
+        };
+        this.handleFocusChange = this.handleFocusChange.bind(this);
+        this.handleOnlyFailuresChange = this.handleOnlyFailuresChange.bind(this);
+    }
+
+    handleFocusChange(id: string, scrollTo: boolean = false) {
+        this.setState({focus : {id, scrollTo}});
+    }
+
+    handleOnlyFailuresChange() {
+        this.setState(
+            {
+                filter: {onlyFailures: ! this.state.filter.onlyFailures},
+                // ensure we don't trigger an undesired scroll:
+                focus: {id: this.state.focus.id, scrollTo: false}
+            }
+        )
+    }
+
     render() {
         let report = this.props.report;
 
@@ -196,15 +243,41 @@ class ReportView extends React.Component<ReportProps, {}> {
 
                 <KeyValueTableView title="Statistics" rows={build_report_stats(report)}/>
 
+                <FilterView onlyFailures={this.state.filter.onlyFailures} onOnlyFailuresChange={this.handleOnlyFailuresChange}/>
+
                 <p style={{textAlign: 'right'}}><a href="report.js" download="report.js">Download raw report data</a></p>
 
-                {report.test_session_setup &&
-                    <ReportHook result={report.test_session_setup} description="- Setup test session -" id="setup_test_session"/>}
+                {
+                    report.test_session_setup
+                    && <SessionSetup
+                            result={report.test_session_setup}
+                            description="- Setup test session -" id="setup_test_session"
+                            focus={this.state.focus} onFocusChange={this.handleFocusChange}
+                            filter={this.state.filter}/>
+                }
+                {
+                    walk_suites(
+                        report.suites,
+                        ((index, suite, parent_suites) => 
+                            <SuiteView
+                                suite={suite} parent_suites={parent_suites}
+                                focus={this.state.focus} onFocusChange={this.handleFocusChange}
+                                filter={this.state.filter}
+                                key={index}/>
+                        )
+                    )
+                }
 
-                {walk_suites(report.suites, ((index, suite, parent_suites) => <SuiteView suite={suite} parent_suites={parent_suites} key={index}/>))}
+                {
+                    report.test_session_teardown
+                    && <SessionSetup
+                            result={report.test_session_teardown}
+                            description="- Teardown test session -" id="teardown_test_session"
+                            focus={this.state.focus} onFocusChange={this.handleFocusChange}
+                            filter={this.state.filter}/>
+                }
 
-                {report.test_session_teardown &&
-                    <ReportHook result={report.test_session_teardown} description="- Teardown test session -" id="teardown_test_session"/>}
+                <MadeBy version={report.lemoncheesecake_version}/>
             </div>
         );
     }
@@ -215,13 +288,8 @@ class ReportView extends React.Component<ReportProps, {}> {
 
         // focus on selected test, if any
         let splitted_url = document.location.href.split('#');
-        if (splitted_url.length === 2) {
-            const row = get_result_row_by_id(splitted_url[1]);
-            if (row) {
-                row.expand();
-                row.scrollTo();
-            }
-        }
+        if (splitted_url.length === 2)
+            this.handleFocusChange(splitted_url[1], true);
     }
 }
 

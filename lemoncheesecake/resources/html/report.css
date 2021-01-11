@@ -84,11 +84,11 @@ th, td {
     align-items: center;
 }
 
-.extra-info {
+.visibility-slave {
     visibility: hidden;
 }
 
-.extra-info-container:hover .extra-info {
+.visibility-master:hover .visibility-slave {
     visibility: visible;
 }
 
