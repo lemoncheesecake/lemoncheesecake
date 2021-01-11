@@ -71,6 +71,7 @@ declare interface Suite extends Metadata {
 }
 
 declare interface Report {
+    lemoncheesecake_version: string,
     title: string,
     start_time: string,
     end_time: string,

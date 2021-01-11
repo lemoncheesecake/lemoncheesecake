@@ -196,6 +196,17 @@ function build_report_stats(report: Report): Array<Array<string>> {
     return stats;
 }
 
+function MadeBy(props: {version: string}) {
+    return (
+        <span style={{float: 'right', paddingBottom: '10px', fontSize: '90%'}}>
+            Made by&nbsp;
+            <a href='http://lemoncheesecake.io' target="_blank" rel="noopener noreferrer">
+                lemoncheesecake {props.version}
+            </a>
+        </span>
+    );
+}
+
 class ReportView extends React.Component<ReportProps, ReportState> {
     constructor(props: ReportProps) {
         super(props);
@@ -265,6 +276,8 @@ class ReportView extends React.Component<ReportProps, ReportState> {
                             focus={this.state.focus} onFocusChange={this.handleFocusChange}
                             filter={this.state.filter}/>
                 }
+
+                <MadeBy version={report.lemoncheesecake_version}/>
             </div>
         );
     }
