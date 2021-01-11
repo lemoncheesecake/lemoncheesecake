@@ -1,3 +1,11 @@
+# 1.8.0 (2021-01-11)
+
+- **HTML report**:
+  - add a filter to show failed tests only
+  - various visual improvements
+  - under the hood: upgrade to React 17.0.1 and latest versions of other dependencies
+  - under the hood: refactoring
+
 # 1.7.0 (2020-11-22)
 
 - **API**: parametrized test improvements:
