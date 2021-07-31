@@ -1,3 +1,7 @@
+# 1.8.1 (2021-07-31)
+
+- **HTML report**: fix missing time information in step on mouse over (regression introduced in 1.8.0)
+
 # 1.8.0 (2021-01-11)
 
 - **HTML report**:
