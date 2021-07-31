@@ -33,7 +33,7 @@ function StepView(props: Props) {
 
     return (
         <tr className="step" style={{display: props.expanded ? "" : "none"}}>
-            <td colSpan={4}>
+            <td colSpan={4} className="visibility-master">
                 <h6 className="extra-info-container">
                     <span style={{fontSize: "120%"}}>
                         <StepOutcome step={step}/>
