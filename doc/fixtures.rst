@@ -3,7 +3,7 @@
 Fixtures
 ========
 
-Lemoncheesecake provides a fixture system similar to what `pytest <https://pytest.org>`_ offers
+lemoncheesecake provides a fixture system similar to what `pytest <https://pytest.org>`_ offers
 (http://doc.pytest.org/en/latest/fixture.html).
 Fixtures are a powerful and modular way to inject dependencies into your tests.
 
@@ -108,7 +108,7 @@ Please note that:
 - a fixture can use other fixtures as arguments, in this case the scope level compatibility must be respected:
   for example, a ``test`` scoped fixture can use a ``session`` scoped fixture, but the opposite is not true
 
-Lemoncheesecake provides several special builtin fixtures:
+lemoncheesecake provides several special builtin fixtures:
 
 - ``cli_args`` (scope: ``pre_run``) is the object returned by ``parse_args`` of the
   `argparse <https://docs.python.org/2/library/argparse.html>`_ module and that contains the actual CLI arguments;

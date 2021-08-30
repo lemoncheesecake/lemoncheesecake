@@ -3,7 +3,7 @@
 Matchers
 ========
 
-Lemoncheesecake comes with support of matchers, a feature inspired by
+lemoncheesecake comes with support of matchers, a feature inspired by
 `Hamcrest <http://hamcrest.org/>`_ / `PyHamcrest <https://github.com/hamcrest/PyHamcrest>`_.
 
 The matchers
