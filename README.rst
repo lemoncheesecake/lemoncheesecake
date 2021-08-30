@@ -51,11 +51,9 @@ And here are the corresponding test results:
 .. image:: https://github.com/lemoncheesecake/lemoncheesecake/blob/master/doc/_static/report-sample.png?raw=true
     :alt: test results
 
-.. note::
-
-   In real test code, you'd better use
-   `lemoncheesecake-requests <https://github.com/lemoncheesecake/lemoncheesecake-requests>`_ when doing HTTP / REST API
-   testing.
+NB: in real test code, you'd better use
+`lemoncheesecake-requests <https://github.com/lemoncheesecake/lemoncheesecake-requests>`_ when doing HTTP / REST API
+testing.
 
 Features
 --------
