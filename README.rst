@@ -51,6 +51,11 @@ And here are the corresponding test results:
 .. image:: https://github.com/lemoncheesecake/lemoncheesecake/blob/master/doc/_static/report-sample.png?raw=true
     :alt: test results
 
+.. note::
+
+   In real test code, you'd better use
+   `lemoncheesecake-requests <https://github.com/lemoncheesecake/lemoncheesecake-requests>`_ when doing HTTP / REST API
+   testing.
 
 Features
 --------
@@ -90,6 +95,12 @@ Documentation
 
 The documentation is available on http://docs.lemoncheesecake.io.
 
+The lemoncheesecake ecosystem
+-----------------------------
+
+For HTTP / REST API / Web Services testing, it is recommended to use
+`lemoncheesecake-requests <https://github.com/lemoncheesecake/lemoncheesecake-requests>`_ which provides logging
+and response checking features for `requests <https://docs.python-requests.org/en/master/>`_.
 
 Contact
 -------
