@@ -61,6 +61,12 @@ And here are the corresponding test results:
 
 .. image:: _static/report-sample.png
 
+.. note::
+
+   In real test code, you'd better use
+   `lemoncheesecake-requests <https://lemoncheesecake-requests.readthedocs.io/en/latest/>`_ when doing HTTP / REST API
+   testing.
+
 See :ref:`Getting Started <getting started>` to create your first test project.
 
 Features
@@ -131,6 +137,14 @@ Writing tests
 - :ref:`Deprecations <deprecations>`
 
 - :ref:`Migrating from to 0.22.x to 1.x <migrating to 1.x>`
+
+
+The lemoncheesecake ecosystem
+-----------------------------
+
+For HTTP / REST API / Web Services testing, it is recommended to use
+`lemoncheesecake-requests <https://lemoncheesecake-requests.readthedocs.io/en/latest/>`_ which provides logging
+and response checking features for `requests <https://docs.python-requests.org/en/master/>`_.
 
 Contact
 -------
