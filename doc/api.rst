@@ -54,8 +54,10 @@ Logging
 Threading
 ---------
 
-..  autoclass:: lemoncheesecake.api.Thread
+.. autoclass:: lemoncheesecake.api.Thread
 
+.. autoclass:: lemoncheesecake.api.ThreadedFactory
+    :members:
 
 Matching
 --------

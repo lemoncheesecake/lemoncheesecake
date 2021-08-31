@@ -9,6 +9,7 @@ from lemoncheesecake.suite import Test, add_test_into_suite, \
 from lemoncheesecake.session import set_step, detached_step, end_step, log_debug, log_info, log_warning, log_error, \
     log_check, prepare_attachment, prepare_image_attachment, save_attachment_file, save_image_file, \
     save_attachment_content, save_image_content, log_url, add_report_info, Thread
+from lemoncheesecake.helpers.threading import ThreadedFactory
 from lemoncheesecake.fixture import fixture, get_fixture
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, UserError
 

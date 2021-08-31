@@ -26,6 +26,77 @@ The number of threads used to run tests can also be specified using the ``$LCC_T
 The CLI argument has priority over the environment variable.
 
 
+Creating objects on a per-thread basis
+--------------------------------------
+
+.. _threaded_factory:
+
+.. versionadded:: 1.9.0
+
+You may need to share objects between tests while not sharing them between threads because either there are not
+thread-safe or simply because the underlying object is not intended to be used simultaneously (think for instance
+to a web browser driven by a `selenium <https://selenium-python.readthedocs.io/>`_ web driver).
+
+In this case, you may use :py:class:`ThreadedFactory <lemoncheesecake.api.ThreadedFactory>`.
+
+Let's say you're writing tests with selenium. You want to parallelize tests and you want to avoid starting and quitting
+a new browser for each test because it slows down the test run and you want your driver instance to be available across all
+your test suite, then you could write something like this::
+
+    # suites/suite.py
+
+    import lemoncheesecake.api as lcc
+    from selenium import webdriver
+
+
+    class DriverFactory(lcc.ThreadedFactory):
+        def setup_object(self):
+            return webdriver.Firefox()
+
+        def teardown_object(self, driver):
+            driver.quit()
+
+
+    @lcc.suite()
+    class suite:
+        def __init__(self):
+            self.factory = DriverFactory()
+
+        @property
+        def driver(self):
+            return self.factory.get_object()
+
+        def teardown_suite(self):
+            self.factory.teardown_factory()
+
+        def some_helper_function(self):
+            self.driver.do_something_useful(...)
+
+        @lcc.test()
+        def test_1().
+            self.driver.get(...)
+            [... do things ...]
+
+        @lcc.test()
+        def test_2().
+            self.driver.get(...)
+            [... do some other things ...]
+
+        @lcc.test()
+        def test_3().
+            self.driver.get(...)
+            self.some_helper_function()
+            [... do some other things again ...]
+
+
+By doing this, when ``self.driver`` (we implement the underlying object retrieval as a property to make it convenient to use)
+is called directly or indirectly by a test, you are guaranteed that the object you'll get is
+**not used by another thread at the same time** while this object will be
+**reused between tests running on the same thread**.
+
+We took selenium here as an example because this is a typical use case where tests parallelization + object sharing between tests
+running on the same thread is quite useful, but it will work with any kind of object of course.
+
 Threading within tests
 ----------------------
 
