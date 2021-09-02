@@ -60,29 +60,48 @@ def fixture(names=None, scope="test"):
     return wrapper
 
 
-class _FixtureResult(object):
-    def __init__(self, name, result):
-        self.name = name
-        if inspect.isgenerator(result):
-            self._generator = result
-            self._result = next(result)
-        else:
-            self._generator = None
-            self._result = result
-
+class _BaseFixtureResult(object):
     def get(self):
-        return self._result
+        raise NotImplementedError()
 
     def teardown(self):
-        if not self._generator:
-            return
+        pass
 
+
+class _FixtureResult(_BaseFixtureResult):
+    def __init__(self, value):
+        self.value = value
+
+    def get(self):
+        return self.value
+
+
+class _GeneratorFixtureResult(_BaseFixtureResult):
+    def __init__(self, name, generator):
+        self.name = name
+        self.generator = generator
+        self.value = next(generator)
+
+    def get(self):
+        return self.value
+
+    def teardown(self):
         try:
-            next(self._generator)
+            next(self.generator)
         except StopIteration:
             pass
         else:
-            raise AssertionError("Fixture '%s' yields more than once: only one yield is supported." % self.name)
+            raise AssertionError(
+                "Fixture '%s' yields more than once: only one yield is supported." % self.name
+            )
+
+
+def _build_fixture_result_from_func(name, func, params):
+    value = func(**params)
+    if inspect.isgenerator(value):
+        return _GeneratorFixtureResult(name, value)
+    else:
+        return _FixtureResult(value)
 
 
 class _BaseFixture(object):
@@ -96,7 +115,7 @@ class _BaseFixture(object):
         return _SCOPE_LEVELS[self.scope]
 
     def execute(self, params):
-        # type: (dict) -> _FixtureResult
+        # type: (dict) -> _BaseFixtureResult
         raise NotImplementedError()
 
 
@@ -114,10 +133,10 @@ class Fixture(_BaseFixture):
 class BuiltinFixture(_BaseFixture):
     def __init__(self, name, value):
         _BaseFixture.__init__(self, name, scope="pre_run", params={})
-        self.value = value
+        self.result = _FixtureResult(value)
 
     def execute(self, _):
-        return _FixtureResult(self.value)
+        return self.result
 
 
 class ScheduledFixtures(object):
