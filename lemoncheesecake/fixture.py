@@ -86,44 +86,38 @@ class _FixtureResult(object):
 
 
 class _BaseFixture(object):
-    def is_builtin(self):
-        return False
+    def __init__(self, name, scope, params):
+        self.name = name
+        self.scope = scope
+        self.params = params
 
-    def get_scope_level(self):
-        return {
-            "test": 1,
-            "suite": 2,
-            "session": 3,
-            "pre_run": 4
-        }[self.scope]
+    @property
+    def scope_level(self):
+        return _SCOPE_LEVELS[self.scope]
+
+    def execute(self, params):
+        # type: (dict) -> _FixtureResult
+        raise NotImplementedError()
 
 
 class Fixture(_BaseFixture):
     def __init__(self, name, func, scope, params):
-        self.name = name
+        _BaseFixture.__init__(self, name, scope, params)
         self.func = func
-        self.scope = scope
-        self.params = params
 
-    def execute(self, params={}):
+    def execute(self, params):
         for param_name in params.keys():
             assert param_name in self.params
-
-        return _FixtureResult(self.name, self.func(**params))
+        return _build_fixture_result_from_func(self.name, self.func, params)
 
 
 class BuiltinFixture(_BaseFixture):
     def __init__(self, name, value):
-        self.name = name
-        self.scope = "pre_run"
-        self.params = []
-        self._value = value
+        _BaseFixture.__init__(self, name, scope="pre_run", params={})
+        self.value = value
 
-    def is_builtin(self):
-        return True
-
-    def execute(self, params={}):
-        return _FixtureResult(self.name, self._value() if callable(self._value) else self._value)
+    def execute(self, _):
+        return _FixtureResult(self.value)
 
 
 class ScheduledFixtures(object):
@@ -187,7 +181,7 @@ class FixtureRegistry:
         self._fixtures = {}
 
     def add_fixture(self, fixture):
-        if fixture.name in self._fixtures and self._fixtures[fixture.name].is_builtin():
+        if fixture.name in self._fixtures and isinstance(self._fixtures[fixture.name], BuiltinFixture):
             raise FixtureConstraintViolation("'%s' is a builtin fixture name" % fixture.name)
         self._fixtures[fixture.name] = fixture
 
@@ -236,7 +230,7 @@ class FixtureRegistry:
         for fixture in self._fixtures.values():
             dependency_fixtures = [self._fixtures[param] for param in fixture.params if param != "fixture_name"]
             for dependency_fixture in dependency_fixtures:
-                if dependency_fixture.get_scope_level() < fixture.get_scope_level():
+                if dependency_fixture.scope_level < fixture.scope_level:
                     raise FixtureConstraintViolation("Fixture '%s' with scope '%s' is incompatible with scope '%s' of fixture '%s'" % (
                         fixture.name, fixture.scope, dependency_fixture.scope, dependency_fixture.name
                     ))
@@ -250,7 +244,7 @@ class FixtureRegistry:
         for fixture in suite.get_fixtures():
             if fixture not in self._fixtures:
                 raise FixtureConstraintViolation("Suite '%s' uses an unknown fixture '%s'" % (suite.path, fixture))
-            if self._fixtures[fixture].get_scope_level() < _SCOPE_LEVELS["suite"]:
+            if self._fixtures[fixture].scope_level < _SCOPE_LEVELS["suite"]:
                 raise FixtureConstraintViolation("Suite '%s' uses fixture '%s' which has an incompatible scope" % (
                     suite.path, fixture
                 ))

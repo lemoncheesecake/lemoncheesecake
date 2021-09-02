@@ -66,19 +66,13 @@ def test_execute_fixture():
         return 42
 
     fixture = load_fixtures_from_func(myfixture)[0]
-    result = fixture.execute()
+    result = fixture.execute({})
     assert result.get() == 42
 
 
 def test_execute_fixture_builtin():
     fixture = BuiltinFixture("fix", 42)
-    result = fixture.execute()
-    assert result.get() == 42
-
-
-def test_execute_fixture_builtin_lambda():
-    fixture = BuiltinFixture("fix", lambda: 42)
-    result = fixture.execute()
+    result = fixture.execute({})
     assert result.get() == 42
 
 
@@ -88,7 +82,7 @@ def test_execute_fixture_with_yield():
         yield 42
 
     fixture = load_fixtures_from_func(myfixture)[0]
-    result = fixture.execute()
+    result = fixture.execute({})
     assert result.get() == 42
 
 
@@ -98,7 +92,7 @@ def test_teardown_fixture():
         return 42
 
     fixture = load_fixtures_from_func(myfixture)[0]
-    result = fixture.execute()
+    result = fixture.execute({})
     result.get()
     result.teardown()
 
@@ -111,7 +105,7 @@ def test_teardown_fixture_with_yield():
         flag.append(True)
 
     fixture = load_fixtures_from_func(myfixture)[0]
-    result = fixture.execute()
+    result = fixture.execute({})
     assert result.get() == 42
     assert not flag
     result.teardown()
@@ -134,7 +128,7 @@ def test_get_fixture_result_multiple_times():
         return 42
 
     fixture = load_fixtures_from_func(myfixture)[0]
-    result = fixture.execute()
+    result = fixture.execute({})
     assert result.get() == 42
     assert result.get() == 42
     assert result.get() == 42
