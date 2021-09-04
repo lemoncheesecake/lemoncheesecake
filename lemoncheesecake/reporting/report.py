@@ -608,31 +608,31 @@ class Report(object):
 
         The following variables are available:
 
-        - `start_time`: the test run start time
+        - ``start_time``: the test run start time
 
-        - `end_time`: the test run end time
+        - ``end_time``: the test run end time
 
-        - `duration`: the test run duration
+        - ``duration``: the test run duration
 
-        - `total`: the total number of tests (including disabled tests)
+        - ``total``: the total number of tests (including disabled tests)
 
-        - `enabled`: the total number of tests (excluding disabled tests)
+        - ``enabled``: the total number of tests (excluding disabled tests)
 
-        - `passed`: the number of passed tests
+        - ``passed``: the number of passed tests
 
-        - `passed_pct`: the number of passed tests in percentage of enabled tests
+        - ``passed_pct``: the number of passed tests in percentage of enabled tests
 
-        - `failed`: the number of failed tests
+        - ``failed``: the number of failed tests
 
-        - `failed_pct`: the number of failed tests in percentage of enabled tests
+        - ``failed_pct``: the number of failed tests in percentage of enabled tests
 
-        - `skipped`: the number of skipped tests
+        - ``skipped``: the number of skipped tests
 
-        - `skipped_pct`: the number of skipped tests in percentage of enabled tests
+        - ``skipped_pct``: the number of skipped tests in percentage of enabled tests
 
-        - `disabled`: the number of disabled tests
+        - ``disabled``: the number of disabled tests
 
-        - `disabled_pct`: the number of disabled tests in percentage of all tests
+        - ``disabled_pct``: the number of disabled tests in percentage of all tests
         """
         stats = ReportStats.from_report(self)
         variables = {
