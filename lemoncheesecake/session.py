@@ -11,6 +11,7 @@ import threading
 import traceback
 from typing import Optional
 import warnings
+import functools
 
 import six
 
@@ -240,6 +241,7 @@ class Session(object):
 
 
 def _interruptible(wrapped):
+    @functools.wraps(wrapped)
     def wrapper(*args, **kwargs):
         if Session.get().aborted:
             raise AbortTest("tests have been manually stopped")
