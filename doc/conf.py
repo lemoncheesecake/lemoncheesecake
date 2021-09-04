@@ -20,8 +20,9 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+import os.path as osp
 import sys
-sys.path.append("..")
+sys.path.insert(0, osp.join(osp.dirname(__file__), ".."))
 
 from lemoncheesecake import __version__
 
