@@ -39,7 +39,8 @@ Fixtures are a powerful and modular way to inject dependencies into your tests.
         resp = api.get("GET", "/some/resource")
         [...]
 
-Fixtures can be injected into suites through parameters passed to ``setup_suite`` and class instance / module attributes:
+Fixtures can also be injected into suites through parameters passed to ``setup_suite`` and class
+instance / module attributes:
 
 .. code-block:: python
 
@@ -64,9 +65,22 @@ Fixtures can be injected into suites through parameters passed to ``setup_suite`
 
     api = lcc.inject_fixture()
 
-Fixtures with scope ``pre_run`` that have been previously executed through a dependency can get be retrieved
-using ``lcc.get_fixture(name)``.
 
+Fixture name
+------------
+
+A fixture can be called through multiple names specified in the ``names`` parameter (otherwise the fixture name
+is the fixture function name):
+
+  .. code-block:: python
+
+      @lcc.fixture(names=("fixt_a", "fixt_b"))
+      def fixt():
+          [...]
+
+
+Fixture scope
+-------------
 
 Four fixture scopes are available (higher to lower scope):
 
@@ -83,19 +97,18 @@ Four fixture scopes are available (higher to lower scope):
 
 - ``test``: fixtures with this scope are initialized at the test level
 
-Please note that:
+A fixture can use other fixtures as arguments, in this case the scope level compatibility must be respected:
+for instance, a ``test`` scoped fixture can use a ``session`` scoped fixture, but the opposite is not true.
 
-- a fixture can be called through multiple names specified in the ``names`` parameter (otherwise the fixture name
-  is the fixture function name):
+Fixtures with scope ``pre_run`` that have been previously executed through a dependency can get be retrieved
+using ``lcc.get_fixture(name)``.
 
-  .. code-block:: python
 
-      @lcc.fixture(names=("fixt_a", "fixt_b"))
-      def fixt():
-          [...]
+Fixture teardown
+----------------
 
-- fixture teardown can be implemented using yield to initially return the fixture value and then to
-  de-initialize the fixture:
+Fixture teardown can be implemented using yield to initially return the fixture value and then to
+de-initialize the fixture:
 
   .. code-block:: python
 
@@ -105,8 +118,9 @@ Please note that:
           yield fh
           fh.close()
 
-- a fixture can use other fixtures as arguments, in this case the scope level compatibility must be respected:
-  for example, a ``test`` scoped fixture can use a ``session`` scoped fixture, but the opposite is not true
+
+Builtin fixtures
+----------------
 
 lemoncheesecake provides several special builtin fixtures:
 
