@@ -1,3 +1,11 @@
+# 1.9.0 (2021-09-05)
+
+- Add per-thread objet sharing feature (see documentation for more details) through:
+  - per-thread fixture support
+  - `ThreadedFactory` class
+- The teardown phase has been improved so that the suite-scoped fixture teardown happens after `teardown_suite`
+  function/method, in other words: suite-scoped fixtures can be safely used in `teardown_suite` functions/methods
+
 # 1.8.1 (2021-07-31)
 
 - **HTML report**: fix missing time information in step on mouse over (regression introduced in 1.8.0)
