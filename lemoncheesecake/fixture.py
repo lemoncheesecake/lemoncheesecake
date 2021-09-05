@@ -64,7 +64,7 @@ def fixture(names=None, scope="test", per_thread=False):
         if per_thread and scope not in ("session", "suite"):
             raise AssertionError("The fixture can only be per_thread=True if scope is 'session' or 'suite'")
 
-        setattr(func, "_lccfixtureinfo", _FixtureInfo(names, scope, per_thread))
+        setattr(func, "_lccfixtureinfo", _FixtureInfo(names or [func.__name__], scope, per_thread))
         return func
 
     return wrapper
@@ -392,15 +392,12 @@ class FixtureRegistry:
 def load_fixtures_from_func(func):
     # type: (Callable) -> List[Fixture]
     """
-    Load a fixture from a function.
+    Load a fixture from a function that has been decorated with ``@lcc.fixture()``
     """
     assert hasattr(func, "_lccfixtureinfo")
     info = func._lccfixtureinfo  # noqa
-    names = info.names
-    if not names:
-        names = [func.__name__]
     args = get_callable_args(func)
-    return [Fixture(name, func, info.scope, args, info.per_thread) for name in names]
+    return [Fixture(name, func, info.scope, args, info.per_thread) for name in info.names]
 
 
 def load_fixtures_from_module(mod):
