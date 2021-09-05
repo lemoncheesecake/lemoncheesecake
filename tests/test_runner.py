@@ -3,6 +3,9 @@ Created on Sep 30, 2016
 
 @author: nicolas
 '''
+import threading
+import time
+from collections import defaultdict
 
 import pytest
 
@@ -1137,6 +1140,29 @@ def sometest():
 
     test = next(report.all_tests())
     assert test.get_steps()[0].get_logs()[0].message == "MARKER"
+
+
+def test_run_with_fixture_per_thread():
+    @lcc.fixture(scope="session", per_thread=True)
+    def fixt():
+        return object()
+
+    witness = defaultdict(set)
+
+    @lcc.suite()
+    class Suite:
+        @lcc.test()
+        @lcc.parametrized({"value": value} for value in range(20))  # create 20 different tests
+        def test(self, value, fixt):
+            time.sleep(0.01)  # make sure that each thread will be able to execute some tests
+            witness[threading.current_thread().ident].add(fixt)
+
+    run_suite_class(Suite, fixtures=(fixt,), nb_threads=4)
+
+    # make sure that for each test-thread, the same fixture actual value is returned:
+    assert len(witness) >= 1
+    for objects in witness.values():
+        assert len(objects) == 1
 
 
 def test_fixture_called_multiple_times():

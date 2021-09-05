@@ -18,6 +18,20 @@ def test_fixture_decorator():
     assert myfixture._lccfixtureinfo.scope == "test"
 
 
+def test_fixture_decorator_invalid_scope():
+    with pytest.raises(ValueError, match=r"Invalid fixture scope"):
+        @lcc.fixture(scope="not_a_valid_scope")
+        def myfixt():
+            pass
+
+
+def test_fixture_decorator_invalid_per_thread():
+    with pytest.raises(AssertionError, match=r"can only be per_thread"):
+        @lcc.fixture(scope="test", per_thread=True)
+        def myfixt():
+            pass
+
+
 def test_load_from_func():
     @lcc.fixture()
     def myfixture():
@@ -66,19 +80,13 @@ def test_execute_fixture():
         return 42
 
     fixture = load_fixtures_from_func(myfixture)[0]
-    result = fixture.execute()
+    result = fixture.execute({})
     assert result.get() == 42
 
 
 def test_execute_fixture_builtin():
     fixture = BuiltinFixture("fix", 42)
-    result = fixture.execute()
-    assert result.get() == 42
-
-
-def test_execute_fixture_builtin_lambda():
-    fixture = BuiltinFixture("fix", lambda: 42)
-    result = fixture.execute()
+    result = fixture.execute({})
     assert result.get() == 42
 
 
@@ -88,7 +96,7 @@ def test_execute_fixture_with_yield():
         yield 42
 
     fixture = load_fixtures_from_func(myfixture)[0]
-    result = fixture.execute()
+    result = fixture.execute({})
     assert result.get() == 42
 
 
@@ -98,7 +106,7 @@ def test_teardown_fixture():
         return 42
 
     fixture = load_fixtures_from_func(myfixture)[0]
-    result = fixture.execute()
+    result = fixture.execute({})
     result.get()
     result.teardown()
 
@@ -111,7 +119,7 @@ def test_teardown_fixture_with_yield():
         flag.append(True)
 
     fixture = load_fixtures_from_func(myfixture)[0]
-    result = fixture.execute()
+    result = fixture.execute({})
     assert result.get() == 42
     assert not flag
     result.teardown()
@@ -134,7 +142,7 @@ def test_get_fixture_result_multiple_times():
         return 42
 
     fixture = load_fixtures_from_func(myfixture)[0]
-    result = fixture.execute()
+    result = fixture.execute({})
     assert result.get() == 42
     assert result.get() == 42
     assert result.get() == 42
@@ -472,6 +480,36 @@ def test_check_fixture_in_suites_parametrized_test():
     suite = load_suite_from_class(MySuite)
     registry = build_registry()
     registry.check_fixtures_in_suites([suite])
+
+
+def test_check_fixture_in_suite_incompatible_dependency_on_per_thread_fixture():
+    @lcc.fixture(scope="session", per_thread=True)
+    def fixt():
+        pass
+
+    @lcc.suite()
+    class Suite:
+        def setup_suite(self, fixt):
+            pass
+
+    suite = load_suite_from_class(Suite)
+    registry = build_fixture_registry(fixt)
+    with pytest.raises(exceptions.FixtureConstraintViolation, match=r"per-thread.+not allowed"):
+        registry.check_fixtures_in_suite(suite)
+
+
+def test_check_fixture_dependencies_incompatible_dependency_on_per_thread_fixture():
+    @lcc.fixture(scope="session", per_thread=True)
+    def per_thread_fixture():
+        pass
+
+    @lcc.fixture(scope="suite")
+    def suite_fixture(per_thread_fixture):
+        pass
+
+    registry = build_fixture_registry(per_thread_fixture, suite_fixture)
+    with pytest.raises(exceptions.FixtureConstraintViolation, match=r"incompatible with per-thread fixture"):
+        registry.check_dependencies()
 
 
 @pytest.fixture()

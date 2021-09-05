@@ -12,8 +12,8 @@ internal and is subject to change at anytime.
 
 .. module:: lemoncheesecake.api
 
-Tests and suites declaration
-----------------------------
+Tests and suites
+----------------
 
 .. autofunction:: suite
 .. autofunction:: test
@@ -31,6 +31,12 @@ Tests and suites declaration
 .. autoclass:: lemoncheesecake.api.Test
     :members:
     :inherited-members:
+
+
+Fixtures
+--------
+
+.. autofunction:: fixture
 
 
 Logging

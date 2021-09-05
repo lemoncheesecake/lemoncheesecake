@@ -25,11 +25,10 @@ run tests:
 The number of threads used to run tests can also be specified using the ``$LCC_THREADS`` environment variable.
 The CLI argument has priority over the environment variable.
 
+.. _threaded_factory:
 
 Creating objects on a per-thread basis
 --------------------------------------
-
-.. _threaded_factory:
 
 .. versionadded:: 1.9.0
 
@@ -96,6 +95,10 @@ is called directly or indirectly by a test, you are guaranteed that the object y
 
 We took selenium here as an example because this is a typical use case where tests parallelization + object sharing between tests
 running on the same thread is quite useful, but it will work with any kind of object of course.
+
+Please note that per-thread object sharing can also be achieved through
+:ref:`per-thread fixtures <per_thread_fixtures>`. While they are not as flexible to use as the ``ThreadedFactory`` class,
+they are more easy to use and should solve most of object sharing issues in parallelized tests environment.
 
 Threading within tests
 ----------------------
