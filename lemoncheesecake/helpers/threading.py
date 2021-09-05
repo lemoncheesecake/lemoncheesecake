@@ -4,6 +4,8 @@ import threading
 
 class ThreadedFactory(object):
     """
+    .. versionadded:: 1.9.0
+
     This factory class returns a new object per thread when calling :py:func:`get_object`.
 
     This class works by subclassing and:

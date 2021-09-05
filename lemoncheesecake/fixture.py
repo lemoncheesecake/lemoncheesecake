@@ -47,15 +47,19 @@ class _FixtureInfo:
 
 def fixture(names=None, scope="test", per_thread=False):
     """
-    Decorator. Declare a function as a fixture.
+    Decorator, declare a function as a fixture.
+
     :param names: an optional list of names that can be used to access the fixture value,
         if no names are provided the decorated function name will be used
-    :param scope: the fixture scope, available scopes are: "test", "suite", "session", "pre_run"; default is "test"
-    :param per_thread: whether or not the fixture must be executed on a per-thread basis
-        Please note that when ``per_thread`` is set to true:
 
-        - the fixture can only be used in tests or by fixtures with the "test" scope
-        - scope can only be ``session`` or ``suite``
+    :param scope: the fixture scope, available scopes are: ``test``, ``suite``, ``session``, ``pre_run``;
+        default is ``test``
+
+    :param per_thread: whether or not the fixture must be executed on a per-thread basis
+        Please note that when ``per_thread`` is set to ``True``:
+
+        - the scope can only be ``session`` or ``suite``
+        - the fixture can only be used in tests or by fixtures with the ``test`` scope
     """
     def wrapper(func):
         if scope not in _SCOPE_LEVELS.keys():
