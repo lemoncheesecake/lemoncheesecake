@@ -18,6 +18,20 @@ def test_fixture_decorator():
     assert myfixture._lccfixtureinfo.scope == "test"
 
 
+def test_fixture_decorator_invalid_scope():
+    with pytest.raises(ValueError, match=r"Invalid fixture scope"):
+        @lcc.fixture(scope="not_a_valid_scope")
+        def myfixt():
+            pass
+
+
+def test_fixture_decorator_invalid_per_thread():
+    with pytest.raises(AssertionError, match=r"can only be per_thread"):
+        @lcc.fixture(scope="test", per_thread=True)
+        def myfixt():
+            pass
+
+
 def test_load_from_func():
     @lcc.fixture()
     def myfixture():
@@ -466,6 +480,36 @@ def test_check_fixture_in_suites_parametrized_test():
     suite = load_suite_from_class(MySuite)
     registry = build_registry()
     registry.check_fixtures_in_suites([suite])
+
+
+def test_check_fixture_in_suite_incompatible_dependency_on_per_thread_fixture():
+    @lcc.fixture(scope="session", per_thread=True)
+    def fixt():
+        pass
+
+    @lcc.suite()
+    class Suite:
+        def setup_suite(self, fixt):
+            pass
+
+    suite = load_suite_from_class(Suite)
+    registry = build_fixture_registry(fixt)
+    with pytest.raises(exceptions.FixtureConstraintViolation, match=r"per-thread.+not allowed"):
+        registry.check_fixtures_in_suite(suite)
+
+
+def test_check_fixture_dependencies_incompatible_dependency_on_per_thread_fixture():
+    @lcc.fixture(scope="session", per_thread=True)
+    def per_thread_fixture():
+        pass
+
+    @lcc.fixture(scope="suite")
+    def suite_fixture(per_thread_fixture):
+        pass
+
+    registry = build_fixture_registry(per_thread_fixture, suite_fixture)
+    with pytest.raises(exceptions.FixtureConstraintViolation, match=r"incompatible with per-thread fixture"):
+        registry.check_dependencies()
 
 
 @pytest.fixture()

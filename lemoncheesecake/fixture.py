@@ -6,6 +6,7 @@ from lemoncheesecake.helpers.moduleimport import import_module, get_matching_fil
 from lemoncheesecake.exceptions import FixtureConstraintViolation, ModuleImportError, FixtureLoadingError
 from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.helpers.introspection import get_callable_args
+from lemoncheesecake.helpers.threading import ThreadedFactory
 
 
 _FORBIDDEN_FIXTURE_NAMES = ("fixture_name",)
@@ -38,23 +39,32 @@ def get_fixture(name):
 
 
 class _FixtureInfo:
-    def __init__(self, names, scope):
+    def __init__(self, names, scope, per_thread):
         self.names = names
         self.scope = scope
+        self.per_thread = per_thread
 
 
-def fixture(names=None, scope="test"):
+def fixture(names=None, scope="test", per_thread=False):
     """
     Decorator. Declare a function as a fixture.
     :param names: an optional list of names that can be used to access the fixture value,
         if no names are provided the decorated function name will be used
     :param scope: the fixture scope, available scopes are: "test", "suite", "session", "pre_run"; default is "test"
+    :param per_thread: whether or not the fixture must be executed on a per-thread basis
+        Please note that when ``per_thread`` is set to true:
+
+        - the fixture can only be used in tests or by fixtures with the "test" scope
+        - scope can only be ``session`` or ``suite``
     """
     def wrapper(func):
         if scope not in _SCOPE_LEVELS.keys():
             raise ValueError("Invalid fixture scope '%s' in fixture function '%s'" % (scope, func.__name__))
 
-        setattr(func, "_lccfixtureinfo", _FixtureInfo(names, scope))
+        if per_thread and scope not in ("session", "suite"):
+            raise AssertionError("The fixture can only be per_thread=True if scope is 'session' or 'suite'")
+
+        setattr(func, "_lccfixtureinfo", _FixtureInfo(names, scope, per_thread))
         return func
 
     return wrapper
@@ -96,19 +106,43 @@ class _GeneratorFixtureResult(_BaseFixtureResult):
             )
 
 
-def _build_fixture_result_from_func(name, func, params):
-    value = func(**params)
-    if inspect.isgenerator(value):
-        return _GeneratorFixtureResult(name, value)
+class _PerThreadFixtureResult(_BaseFixtureResult, ThreadedFactory):
+    def __init__(self, name, func, params):
+        ThreadedFactory.__init__(self)
+        self.name = name
+        self.func = func
+        self.params = params
+
+    def get(self):
+        return self.get_object().get()
+
+    def teardown(self):
+        self.teardown_factory()
+
+    def setup_object(self):
+        return _build_fixture_result_from_func(self.name, self.func, self.params)
+
+    def teardown_object(self, result):
+        result.teardown()
+
+
+def _build_fixture_result_from_func(name, func, params, per_thread=False):
+    if per_thread:
+        return _PerThreadFixtureResult(name, func, params)
     else:
-        return _FixtureResult(value)
+        value = func(**params)
+        if inspect.isgenerator(value):
+            return _GeneratorFixtureResult(name, value)
+        else:
+            return _FixtureResult(value)
 
 
 class _BaseFixture(object):
-    def __init__(self, name, scope, params):
+    def __init__(self, name, scope, params, per_thread):
         self.name = name
         self.scope = scope
         self.params = params
+        self.per_thread = per_thread
 
     @property
     def scope_level(self):
@@ -120,19 +154,19 @@ class _BaseFixture(object):
 
 
 class Fixture(_BaseFixture):
-    def __init__(self, name, func, scope, params):
-        _BaseFixture.__init__(self, name, scope, params)
+    def __init__(self, name, func, scope, params, per_thread):
+        _BaseFixture.__init__(self, name, scope, params, per_thread)
         self.func = func
 
     def execute(self, params):
         for param_name in params.keys():
             assert param_name in self.params
-        return _build_fixture_result_from_func(self.name, self.func, params)
+        return _build_fixture_result_from_func(self.name, self.func, params, self.per_thread)
 
 
 class BuiltinFixture(_BaseFixture):
     def __init__(self, name, value):
-        _BaseFixture.__init__(self, name, scope="pre_run", params={})
+        _BaseFixture.__init__(self, name, scope="pre_run", params={}, per_thread=False)
         self.result = _FixtureResult(value)
 
     def execute(self, _):
@@ -236,6 +270,7 @@ class FixtureRegistry:
         - forbidden fixture name
         raises FixtureConstraintViolation if a check fails
         """
+
         # first, check for forbidden fixture name
         for fixture_name in self._fixtures.keys():
             if fixture_name in _FORBIDDEN_FIXTURE_NAMES:
@@ -245,14 +280,22 @@ class FixtureRegistry:
         for fixture_name in self._fixtures.keys():
             self.get_fixture_dependencies(fixture_name)
 
-        # third, check fixture scope compliance with their direct fixture dependencies
+        # third, check fixture compliance with their direct fixture dependencies
         for fixture in self._fixtures.values():
             dependency_fixtures = [self._fixtures[param] for param in fixture.params if param != "fixture_name"]
             for dependency_fixture in dependency_fixtures:
+                if dependency_fixture.per_thread and fixture.scope != "test":
+                    raise FixtureConstraintViolation(
+                        "Fixture '%s' with scope '%s' is incompatible with per-thread fixture '%s'" % (
+                            fixture.name, fixture.scope, dependency_fixture.name
+                        )
+                    )
                 if dependency_fixture.scope_level < fixture.scope_level:
-                    raise FixtureConstraintViolation("Fixture '%s' with scope '%s' is incompatible with scope '%s' of fixture '%s'" % (
-                        fixture.name, fixture.scope, dependency_fixture.scope, dependency_fixture.name
-                    ))
+                    raise FixtureConstraintViolation(
+                        "Fixture '%s' with scope '%s' is incompatible with scope '%s' of fixture '%s'" % (
+                            fixture.name, fixture.scope, dependency_fixture.scope, dependency_fixture.name
+                        )
+                    )
 
     def check_fixtures_in_test(self, test):
         for fixture in test.get_fixtures():
@@ -260,12 +303,20 @@ class FixtureRegistry:
                 raise FixtureConstraintViolation("Unknown fixture '%s' used in test '%s'" % (fixture, test.path))
 
     def check_fixtures_in_suite(self, suite):
-        for fixture in suite.get_fixtures():
-            if fixture not in self._fixtures:
-                raise FixtureConstraintViolation("Suite '%s' uses an unknown fixture '%s'" % (suite.path, fixture))
-            if self._fixtures[fixture].scope_level < _SCOPE_LEVELS["suite"]:
+        for fixture_name in suite.get_fixtures():
+            try:
+                fixture = self._fixtures[fixture_name]
+            except KeyError:
+                raise FixtureConstraintViolation("Suite '%s' uses an unknown fixture '%s'" % (suite.path, fixture_name))
+            if fixture.per_thread:
+                raise FixtureConstraintViolation(
+                    "Suite '%s' uses per-thread fixture '%s' which is not allowed" % (
+                        suite.path, fixture.name
+                    )
+                )
+            if fixture.scope_level < _SCOPE_LEVELS["suite"]:
                 raise FixtureConstraintViolation("Suite '%s' uses fixture '%s' which has an incompatible scope" % (
-                    suite.path, fixture
+                    suite.path, fixture.name
                 ))
 
         for test in suite.get_tests():
@@ -344,12 +395,12 @@ def load_fixtures_from_func(func):
     Load a fixture from a function.
     """
     assert hasattr(func, "_lccfixtureinfo")
-    names = func._lccfixtureinfo.names
+    info = func._lccfixtureinfo  # noqa
+    names = info.names
     if not names:
         names = [func.__name__]
-    scope = func._lccfixtureinfo.scope
     args = get_callable_args(func)
-    return [Fixture(name, func, scope, args) for name in names]
+    return [Fixture(name, func, info.scope, args, info.per_thread) for name in names]
 
 
 def load_fixtures_from_module(mod):
