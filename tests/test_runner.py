@@ -1165,6 +1165,26 @@ def test_run_with_fixture_per_thread():
         assert len(objects) == 1
 
 
+def test_run_with_fixture_per_thread_logging():
+    @lcc.fixture(scope="session", per_thread=True)
+    def fixt():
+        lcc.log_info("Fixture setup")
+        yield 1
+        lcc.log_info("Fixture teardown")
+
+    @lcc.suite()
+    class Suite:
+        @lcc.test()
+        def test(self, fixt):
+            pass
+
+    report = run_suite_class(Suite, fixtures=(fixt,))
+    test = get_last_test(report)
+
+    assert test.get_steps()[0].get_logs()[0].message == "Fixture setup"
+    assert report.test_session_teardown.get_steps()[0].get_logs()[0].message == "Fixture teardown"
+
+
 def test_fixture_called_multiple_times():
     marker = []
 

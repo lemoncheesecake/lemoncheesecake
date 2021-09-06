@@ -173,8 +173,9 @@ class TestTask(BaseTask):
         )
         setup_teardown_funcs.extend(scheduled_fixtures.get_setup_teardown_pairs())
 
+        context.session.set_step("Setup test")
+
         if any(setup for setup, _ in setup_teardown_funcs):
-            context.session.set_step("Setup test")
             teardown_funcs = context.run_setup_funcs(setup_teardown_funcs, ReportLocation.in_test(self.test))
         else:
             teardown_funcs = [teardown for _, teardown in setup_teardown_funcs if teardown]

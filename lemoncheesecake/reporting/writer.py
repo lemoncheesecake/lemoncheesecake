@@ -23,7 +23,8 @@ class ReportWriter:
         result = self.report.get(event.location)
         assert result, "Cannot find location %s in the report" % event.location
         step = self._lookup_step(event)
-        assert not step.end_time, "Cannot update step '%s', it is already ended" % step.description
+        assert step, "Cannot find active step for %s" % event.location
+        assert not step.end_time, "Cannot update step '%s', it has already been ended" % step.description
         step.add_log(log)
 
     @staticmethod
