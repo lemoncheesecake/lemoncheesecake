@@ -429,9 +429,10 @@ class ReportLocation(object):
     def __str__(self):
         ret = ""
         if self.node_hierarchy:
-            ret += ".".join(self.node_hierarchy) + " "
+            ret += "'%s' " % ".".join(self.node_hierarchy)
         ret += ("session setup", "session teardown", "suite setup", "suite teardown", "test")[self.node_type]
-        return "<%s>" % ret
+
+        return "<ReportLocation %s>" % ret
 
 
 def flatten_results(suites):
