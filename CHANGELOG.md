@@ -1,3 +1,7 @@
+# 1.9.1 (2021-09-06)
+
+- Fix crash when a log without a former `set_step` is created in the setup phase of a per-thread fixture
+
 # 1.9.0 (2021-09-05)
 
 - Add per-thread objet sharing feature (see documentation for more details) through:
