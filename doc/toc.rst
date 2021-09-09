@@ -6,6 +6,7 @@ Table of content
 .. toctree::
     :maxdepth: 2
 
+    Overview <index>
     installation
     getting-started
     tests-and-suites
