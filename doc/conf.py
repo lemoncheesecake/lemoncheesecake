@@ -7,7 +7,10 @@ sys.path.insert(0, osp.join(osp.dirname(__file__), ".."))
 from lemoncheesecake import __version__
 
 
-extensions = ["sphinx.ext.autodoc"]
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.intersphinx"
+]
 
 autodoc_typehints = "description"
 autodoc_member_order = "bysource"
@@ -47,4 +50,10 @@ html_sidebars = {
         'links.html',
         'searchbox.html',
     ]
+}
+
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "lemoncheesecake": ("http://docs.lemoncheesecake.io/en/latest", None),
+    "requests": ("https://docs.python-requests.org/en/latest", None)
 }
