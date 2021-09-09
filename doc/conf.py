@@ -30,8 +30,6 @@ language = None
 
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
-pygments_style = 'sphinx'
-
 todo_include_todos = False
 
 html_theme = 'alabaster'
