@@ -35,7 +35,7 @@ Example:
 Steps
 -----
 
-Steps provide a way to organize your logs ad checks within logical steps:
+Steps provide a way to organize your logs and checks within logical steps:
 
 .. code-block:: python
 
