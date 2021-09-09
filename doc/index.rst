@@ -10,7 +10,7 @@
 lemoncheesecake: Test Storytelling
 ==================================
 
-lemoncheesecake is a functional test framework for Python that brings trust around test results.
+lemoncheesecake is an end-to-end test framework for Python that brings trust around test results.
 It allows test developers to be very explicit about what their tests really do with logging, matchers, file attachments, etc..
 
 Here is a test example:
