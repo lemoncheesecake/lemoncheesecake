@@ -9,6 +9,7 @@ from lemoncheesecake import __version__
 
 extensions = ["sphinx.ext.autodoc"]
 
+autodoc_typehints = "description"
 autodoc_member_order = "bysource"
 
 templates_path = ['_templates']
