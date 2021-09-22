@@ -223,6 +223,7 @@ Shows a generated report on the console, passing the ``--short`` argument will p
 
   .. code-block:: console
 
+    $ lcc report
     Test Organization end-point
     (github.organization)
     +-------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
