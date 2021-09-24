@@ -1,15 +1,10 @@
-'''
-Created on Mar 19, 2016
-
-@author: nicolas
-'''
-
 import os
 import os.path as osp
 from shutil import copy, copytree
 
 from lemoncheesecake.helpers.resources import get_resource_path
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSessionBuilderMixin, ReportingSession
+from lemoncheesecake.helpers.console import bold
 
 
 class HtmlReportWriter(ReportingSession):
@@ -32,6 +27,10 @@ class HtmlReportWriter(ReportingSession):
             copy(osp.join(src_dir, "bootstrap-slate.min.css"), osp.join(dst_dir, "bootstrap-3.3.6-dist", "css", "bootstrap.min.css"))
         else:
             copy(osp.join(src_dir, "report_external.html"), osp.join(self.report_dir, "report.html"))
+
+    def on_test_session_end(self, _):
+        print("%s : file://%s/report.html" % (bold("HTML report"), self.report_dir))
+        print()
 
 
 class HtmlBackend(ReportingBackend, ReportingSessionBuilderMixin):
