@@ -8,7 +8,7 @@ function AttachmentView(props: Props) {
     let preview;
 
     if (attachment.as_image) {
-        preview = <img src={attachment.filename} alt={attachment.description}/>;
+        preview = <img src={attachment.filename} alt={attachment.description} title={attachment.description}/>;
     } else {
         preview = attachment.description;
     }
