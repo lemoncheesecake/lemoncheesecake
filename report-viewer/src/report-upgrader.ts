@@ -27,22 +27,33 @@ function* flatten_results(suites: Array<Suite>) : Generator<Result> {
     }
 }
 
+function upgrade_test(test: Test, parent_suite: Suite) {
+    test.parent_suite = parent_suite;
+    test.get_path = function(this: Test) {
+        return this.parent_suite?.get_path() + "." + this.name;
+    };
+}
+
 function upgrade_suites(suites: Array<Suite>, parent_suite?: Suite) {
     for (let suite of suites) {
         suite.parent_suite = parent_suite;
 
-        suite.get_hierachy = function*(this: Suite) {
-            if (this.parent_suite) {
-                for (let node of this.parent_suite.get_hierachy()) {
+        suite.get_hierachy = function*() {
+            if (suite.parent_suite) {
+                for (let node of suite.parent_suite.get_hierachy()) {
                     yield node;
                 }
             }
             yield this;
         };
 
-        suite.get_path = function(this: Suite) {
-            return [...this.get_hierachy()].map((s) => s.name).join(".");
+        suite.get_path = function() {
+            return [...suite.get_hierachy()].map((s) => s.name).join(".");
         };
+
+        for (let test of suite.tests) {
+            upgrade_test(test, suite);
+        }
 
         upgrade_suites(suite.suites, suite);
     }

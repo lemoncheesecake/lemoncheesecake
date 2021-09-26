@@ -218,10 +218,16 @@ class ReportView extends React.Component<ReportProps, ReportState> {
         // set window title
         document.title = this.props.report.title;
 
-        // focus on selected test, if any
+        // focus on selected test (through URL anchor), if any
         let splitted_url = document.location.href.split('#');
         if (splitted_url.length === 2) {
             this.handleFocusChange(splitted_url[1], true);
+        // when the report contains only one test, focus on that test
+        } else {
+            let tests = [...this.props.report.get_all_tests()]
+            if (tests.length === 1) {
+                this.handleFocusChange(tests[0].get_path(), true);
+            }
         }
     }
 }
