@@ -64,10 +64,13 @@ declare interface Test extends Result, Metadata {
 }
 
 declare interface Suite extends Metadata {
+    parent_suite?: Suite,
     tests: Array<Test>,
     suites: Array<Suite>,
     suite_setup: Result | undefined,
-    suite_teardown: Result | undefined
+    suite_teardown: Result | undefined,
+    get_hierachy(): Generator<Suite>,
+    get_path(): string
 }
 
 declare interface Report {

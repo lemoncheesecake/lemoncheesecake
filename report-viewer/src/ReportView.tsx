@@ -46,6 +46,28 @@ interface ReportState {
     filter: Filter
 }
 
+function* get_hierarchy(this: Suite) {
+    if (this.parent_suite) {
+        for (let node of this.parent_suite.get_hierachy()) {
+            yield node;
+        }
+    }
+    yield this;
+}
+
+function get_path(this: Suite) {
+    return [...this.get_hierachy()].map((s) => s.name).join(".");
+}
+
+function upgrade_suites(suites: Array<Suite>, parent_suite?: Suite) {
+    for (let suite of suites) {
+        suite.parent_suite = parent_suite;
+        suite.get_hierachy = get_hierarchy;
+        suite.get_path = get_path;
+        upgrade_suites(suite.suites, suite);
+    }
+}
+
 function walk_suites(suites: Array<Suite>, callback: (index: number, suite: Suite, parent_suites: Array<Suite>) => any) {
     let ret_values: Array<any> = [];
     let current_index = 0;
@@ -216,6 +238,7 @@ class ReportView extends React.Component<ReportProps, ReportState> {
         };
         this.handleFocusChange = this.handleFocusChange.bind(this);
         this.handleOnlyFailuresChange = this.handleOnlyFailuresChange.bind(this);
+        upgrade_suites(props.report.suites);
     }
 
     handleFocusChange(id: string, scrollTo: boolean = false) {
@@ -260,7 +283,7 @@ class ReportView extends React.Component<ReportProps, ReportState> {
                         report.suites,
                         ((index, suite, parent_suites) => 
                             <SuiteView
-                                suite={suite} parent_suites={parent_suites}
+                                suite={suite}
                                 focus={this.state.focus} onFocusChange={this.handleFocusChange}
                                 filter={this.state.filter}
                                 key={index}/>
@@ -288,8 +311,9 @@ class ReportView extends React.Component<ReportProps, ReportState> {
 
         // focus on selected test, if any
         let splitted_url = document.location.href.split('#');
-        if (splitted_url.length === 2)
+        if (splitted_url.length === 2) {
             this.handleFocusChange(splitted_url[1], true);
+        }
     }
 }
 
