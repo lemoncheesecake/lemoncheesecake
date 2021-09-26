@@ -8,6 +8,7 @@ import { Focus } from './ResultRowView';
 import TimeExtraInfoView from './TimeExtraInfoView';
 import {FilterView, Filter, match_filter} from './FilterView';
 import { get_time_from_iso8601, humanize_datetime_from_iso8601, humanize_duration } from './utils';
+import {upgrade_report} from './report-upgrader';
 
 interface SessionSetupProps extends SetupProps {
     filter: Filter
@@ -44,28 +45,6 @@ interface ReportProps {
 interface ReportState {
     focus: Focus,
     filter: Filter
-}
-
-function* get_hierarchy(this: Suite) {
-    if (this.parent_suite) {
-        for (let node of this.parent_suite.get_hierachy()) {
-            yield node;
-        }
-    }
-    yield this;
-}
-
-function get_path(this: Suite) {
-    return [...this.get_hierachy()].map((s) => s.name).join(".");
-}
-
-function upgrade_suites(suites: Array<Suite>, parent_suite?: Suite) {
-    for (let suite of suites) {
-        suite.parent_suite = parent_suite;
-        suite.get_hierachy = get_hierarchy;
-        suite.get_path = get_path;
-        upgrade_suites(suite.suites, suite);
-    }
 }
 
 function walk_suites(suites: Array<Suite>, callback: (index: number, suite: Suite, parent_suites: Array<Suite>) => any) {
@@ -238,7 +217,7 @@ class ReportView extends React.Component<ReportProps, ReportState> {
         };
         this.handleFocusChange = this.handleFocusChange.bind(this);
         this.handleOnlyFailuresChange = this.handleOnlyFailuresChange.bind(this);
-        upgrade_suites(props.report.suites);
+        upgrade_report(props.report);
     }
 
     handleFocusChange(id: string, scrollTo: boolean = false) {
