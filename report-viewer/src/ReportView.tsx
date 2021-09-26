@@ -47,71 +47,6 @@ interface ReportState {
     filter: Filter
 }
 
-function walk_suites(suites: Array<Suite>, callback: (index: number, suite: Suite, parent_suites: Array<Suite>) => any) {
-    let ret_values: Array<any> = [];
-    let current_index = 0;
-
-    function do_walk(suite: Suite, parent_suites: Array<Suite>): any {
-        if (suite.tests.length > 0) {
-            const ret_value = callback(current_index++, suite, parent_suites);
-            ret_values.push(ret_value);
-        }
-        for (let sub_suite of suite.suites) {
-            do_walk(sub_suite, parent_suites.concat(suite));
-        }
-    }
-
-    for (let suite of suites) {
-        do_walk(suite, []);
-    }
-
-    return ret_values;
-}
-
-function walk_tests(suites: Array<Suite>, callback: (index: number, suite: Test, parent_suites: Array<Suite>) => any) {
-    let ret_values: Array<any> = [];
-    let current_index = 0;
-
-    walk_suites(
-        suites,
-        (suite_index: number, suite: Suite, parent_suites: Array<Suite>) => {
-            for (let test of suite.tests) {
-                const ret_value = callback(current_index++, test, Array.of(suite).concat(parent_suites));
-                ret_values.push(ret_value);
-            }
-        }
-    );
-
-    return ret_values;
-}
-
-function walk_results(report: Report, callback: (result: Test | Result) => any) {
-    let ret_values: Array<any> = [];
-
-    if (report.test_session_setup) {
-        ret_values.push(callback(report.test_session_setup));
-    }
-
-    walk_suites(
-        report.suites,
-        (suite_index: number, suite: Suite, parent_suites: Array<Suite>) => {
-            if (suite.suite_setup) {
-                ret_values.push(callback(suite.suite_setup));
-            }
-            for (let test of suite.tests) {
-                ret_values.push(callback(test));
-            }
-            if (suite.suite_teardown) {
-                ret_values.push(callback(suite.suite_teardown));
-            }
-        }
-    );
-
-    if (report.test_session_teardown) {
-        ret_values.push(callback(report.test_session_teardown));
-    }
-}
-
 function build_report_stats(report: Report): Array<Array<string>> {
     let stats: Array<Array<string>> = [];
 
@@ -138,11 +73,11 @@ function build_report_stats(report: Report): Array<Array<string>> {
     ////
     if (report.nb_threads > 1) {
         let duration_cumulative = 0;
-        walk_results(report, (result: Test | Result) => {
+        for (let result of report.get_all_results()) {
             if (result.end_time) {
                 duration_cumulative += get_time_from_iso8601(result.end_time) - get_time_from_iso8601(result.start_time);
             }
-        });
+        }
         let duration_cumulative_description = humanize_duration(duration_cumulative);
         if (duration) {
             duration_cumulative_description += sprintf(" (parallelization speedup factor is %.1f)", duration_cumulative / duration);
@@ -159,26 +94,23 @@ function build_report_stats(report: Report): Array<Array<string>> {
     let skipped_tests_nb = 0;
     let disabled_tests_nb = 0;
 
-    walk_tests(
-        report.suites,
-        (index: number, test: Test, suites: Array<Suite>) => {
-            tests_nb++;
-            switch (test.status) {
-                case 'passed':
-                    successful_tests_nb++;
-                    break;
-                case 'failed':
-                    failed_tests_nb++;
-                    break;
-                case 'skipped':
-                    skipped_tests_nb++;
-                    break;
-                case 'disabled':
-                    disabled_tests_nb++;
-                    break;
-            }
+    for (let test of report.get_all_tests()) {
+        tests_nb++;
+        switch (test.status) {
+            case 'passed':
+                successful_tests_nb++;
+                break;
+            case 'failed':
+                failed_tests_nb++;
+                break;
+            case 'skipped':
+                skipped_tests_nb++;
+                break;
+            case 'disabled':
+                disabled_tests_nb++;
+                break;
         }
-    );
+    }
 
     stats.push(Array.of("Tests", tests_nb.toString()));
 
@@ -258,15 +190,13 @@ class ReportView extends React.Component<ReportProps, ReportState> {
                             filter={this.state.filter}/>
                 }
                 {
-                    walk_suites(
-                        report.suites,
-                        ((index, suite, parent_suites) => 
-                            <SuiteView
-                                suite={suite}
-                                focus={this.state.focus} onFocusChange={this.handleFocusChange}
-                                filter={this.state.filter}
-                                key={index}/>
-                        )
+                    [...[...report.get_all_suites()].entries()].map(([index, suite]) =>
+                        <SuiteView
+                            suite={suite}
+                            focus={this.state.focus} onFocusChange={this.handleFocusChange}
+                            filter={this.state.filter}
+                            key={index}/>
+
                     )
                 }
 

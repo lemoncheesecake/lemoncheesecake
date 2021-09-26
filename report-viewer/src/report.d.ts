@@ -83,5 +83,8 @@ declare interface Report {
     info: Array<Array<string>>,
     test_session_setup: Result,
     test_session_teardown: Result,
-    suites: Array<Suite>
+    suites: Array<Suite>,
+    get_all_suites(): Generator<Suite>,
+    get_all_results(): Generator<Result>,
+    get_all_tests(): Generator<Test>
 }

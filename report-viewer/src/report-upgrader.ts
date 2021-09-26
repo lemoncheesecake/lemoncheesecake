@@ -1,26 +1,73 @@
-
-function* get_hierarchy(this: Suite) {
-    if (this.parent_suite) {
-        for (let node of this.parent_suite.get_hierachy()) {
-            yield node;
-        }
+function* flatten_suites(suites: Array<Suite>): Generator<Suite> {
+    for (let suite of suites) {
+        yield suite;
+        yield * flatten_suites(suite.suites);
     }
-    yield this;
 }
 
-function get_path(this: Suite) {
-    return [...this.get_hierachy()].map((s) => s.name).join(".");
+function* flatten_tests(suites: Array<Suite>): Generator<Test> {
+    for (let suite of flatten_suites(suites)) {
+        for (let test of suite.tests) {
+            yield test;
+        }
+    }
+}
+
+function* flatten_results(suites: Array<Suite>) : Generator<Result> {
+    for (let suite of flatten_suites(suites)) {
+        if (suite.suite_setup) {
+            yield suite.suite_setup;
+        }
+        for (let test of suite.tests) {
+            yield test;
+        }
+        if (suite.suite_teardown) {
+            yield suite.suite_teardown;
+        }
+    }
 }
 
 function upgrade_suites(suites: Array<Suite>, parent_suite?: Suite) {
     for (let suite of suites) {
         suite.parent_suite = parent_suite;
-        suite.get_hierachy = get_hierarchy;
-        suite.get_path = get_path;
+
+        suite.get_hierachy = function*(this: Suite) {
+            if (this.parent_suite) {
+                for (let node of this.parent_suite.get_hierachy()) {
+                    yield node;
+                }
+            }
+            yield this;
+        };
+
+        suite.get_path = function(this: Suite) {
+            return [...this.get_hierachy()].map((s) => s.name).join(".");
+        };
+
         upgrade_suites(suite.suites, suite);
     }
 }
 
 export function upgrade_report(report: Report) {
     upgrade_suites(report.suites);
+
+    report.get_all_suites = function(this: Report) {
+        return flatten_suites(this.suites);
+    };
+
+    report.get_all_results = function*(this: Report) {
+        if (report.test_session_setup) {
+            yield report.test_session_setup;
+        }
+        for (let result of flatten_results(report.suites)) {
+            yield result;
+        }
+        if (report.test_session_teardown) {
+            yield report.test_session_teardown;
+        }
+    };
+
+    report.get_all_tests = function*(this: Report) {
+        yield * flatten_tests(report.suites);
+    }
 }
