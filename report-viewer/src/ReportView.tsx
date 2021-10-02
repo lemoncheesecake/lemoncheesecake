@@ -6,12 +6,12 @@ import { SetupProps, SetupView } from './SetupView';
 import ResultTableView from './ResultTableView';
 import { Focus } from './ResultRowView';
 import TimeExtraInfoView from './TimeExtraInfoView';
-import {FilterView, Filter, match_filter} from './FilterView';
+import {DisplayOptionsView, DisplayOptions, is_result_to_be_displayed} from './DisplayOptionsView';
 import { get_time_from_iso8601, humanize_datetime_from_iso8601, humanize_duration } from './utils';
 import {upgrade_report} from './report-upgrader';
 
 interface SessionSetupProps extends SetupProps {
-    filter: Filter
+    display_options: DisplayOptions
 }
 
 function SessionSetupHeading(props: {desc: string}) {
@@ -25,7 +25,7 @@ function SessionSetupHeading(props: {desc: string}) {
 }
 
 function SessionSetup(props: SessionSetupProps) {
-    if (match_filter(props.filter, props.result)) {
+    if (is_result_to_be_displayed(props.display_options, props.result)) {
         return (
             <ResultTableView
                 heading={<SessionSetupHeading desc={props.description}/>}
@@ -44,7 +44,7 @@ interface ReportProps {
 
 interface ReportState {
     focus: Focus,
-    filter: Filter
+    options: DisplayOptions
 }
 
 function build_report_stats(report: Report): Array<Array<string>> {
@@ -145,7 +145,7 @@ class ReportView extends React.Component<ReportProps, ReportState> {
         super(props);
         this.state = {
             focus: {id: "", scrollTo: false},
-            filter: {onlyFailures: false}
+            options: {onlyFailures: false}
         };
         this.handleFocusChange = this.handleFocusChange.bind(this);
         this.handleOnlyFailuresChange = this.handleOnlyFailuresChange.bind(this);
@@ -159,7 +159,7 @@ class ReportView extends React.Component<ReportProps, ReportState> {
     handleOnlyFailuresChange() {
         this.setState(
             {
-                filter: {onlyFailures: ! this.state.filter.onlyFailures},
+                options: {onlyFailures: ! this.state.options.onlyFailures},
                 // ensure we don't trigger an undesired scroll:
                 focus: {id: this.state.focus.id, scrollTo: false}
             }
@@ -177,7 +177,7 @@ class ReportView extends React.Component<ReportProps, ReportState> {
 
                 <KeyValueTableView title="Statistics" rows={build_report_stats(report)}/>
 
-                <FilterView onlyFailures={this.state.filter.onlyFailures} onOnlyFailuresChange={this.handleOnlyFailuresChange}/>
+                <DisplayOptionsView onlyFailures={this.state.options.onlyFailures} onOnlyFailuresChange={this.handleOnlyFailuresChange}/>
 
                 <p style={{textAlign: 'right'}}><a href="report.js" download="report.js">Download raw report data</a></p>
 
@@ -187,14 +187,14 @@ class ReportView extends React.Component<ReportProps, ReportState> {
                             result={report.test_session_setup}
                             description="- Setup test session -" id="setup_test_session"
                             focus={this.state.focus} onFocusChange={this.handleFocusChange}
-                            filter={this.state.filter}/>
+                            display_options={this.state.options}/>
                 }
                 {
                     [...[...report.get_all_suites()].entries()].map(([index, suite]) =>
                         <SuiteView
                             suite={suite}
                             focus={this.state.focus} onFocusChange={this.handleFocusChange}
-                            filter={this.state.filter}
+                            display_options={this.state.options}
                             key={index}/>
 
                     )
@@ -206,7 +206,7 @@ class ReportView extends React.Component<ReportProps, ReportState> {
                             result={report.test_session_teardown}
                             description="- Teardown test session -" id="teardown_test_session"
                             focus={this.state.focus} onFocusChange={this.handleFocusChange}
-                            filter={this.state.filter}/>
+                            display_options={this.state.options}/>
                 }
 
                 <MadeBy version={report.lemoncheesecake_version}/>

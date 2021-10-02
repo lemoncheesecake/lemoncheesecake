@@ -1,25 +1,25 @@
 import * as React from 'react';
 
-export interface Filter {
+export interface DisplayOptions {
     onlyFailures: boolean
 }
 
-interface OnFilterChange {
+interface OnOnlyFailuresChange {
     () : void
 }
 
 interface Props {
     onlyFailures: boolean,
-    onOnlyFailuresChange: OnFilterChange
+    onOnlyFailuresChange: OnOnlyFailuresChange
 }
 
-export function match_filter(filter: Filter, result: Result) {
-    if (filter.onlyFailures && result.status !== "failed")
+export function is_result_to_be_displayed(options: DisplayOptions, result: Result) {
+    if (options.onlyFailures && result.status !== "failed")
         return false;
     return true;
 }
 
-export class FilterView extends React.Component<Props, {}> {
+export class DisplayOptionsView extends React.Component<Props, {}> {
     constructor(props: Props) {
         super(props);
         this.handleChange = this.handleChange.bind(this);

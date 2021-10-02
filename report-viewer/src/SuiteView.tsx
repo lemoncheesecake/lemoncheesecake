@@ -3,12 +3,12 @@ import TestView from './TestView';
 import SetupView from './SetupView';
 import ResultTableView from './ResultTableView';
 import {FocusProps} from './ResultRowView';
-import {Filter, match_filter} from './FilterView';
+import {DisplayOptions, is_result_to_be_displayed} from './DisplayOptionsView';
 import {get_time_from_iso8601, humanize_duration} from './utils';
 
 interface SuiteProps extends FocusProps {
     suite: Suite,
-    filter: Filter
+    display_options: DisplayOptions
 }
 
 function get_duration_from_time_interval(interval: TimeInterval) {
@@ -68,11 +68,11 @@ function Heading(props: SuiteProps) {
 }
 
 function SuiteView(props: SuiteProps) {
-    const filter = props.filter;
+    const display_options = props.display_options;
     const suite = props.suite;
     let results = [];
 
-    if (suite.suite_setup && match_filter(filter, suite.suite_setup)) {
+    if (suite.suite_setup && is_result_to_be_displayed(display_options, suite.suite_setup)) {
         results.push(
             <SetupView
                 result={suite.suite_setup} description="- Setup suite -"
@@ -82,7 +82,7 @@ function SuiteView(props: SuiteProps) {
     }
 
     for (let test of suite.tests) {
-        if (match_filter(filter, test)) {
+        if (is_result_to_be_displayed(display_options, test)) {
             let test_id = suite.get_path() + "." + test.name;
             results.push(
                 <TestView
@@ -93,7 +93,7 @@ function SuiteView(props: SuiteProps) {
         }
     }
 
-    if (suite.suite_teardown && match_filter(filter, suite.suite_teardown)) {
+    if (suite.suite_teardown && is_result_to_be_displayed(display_options, suite.suite_teardown)) {
         results.push(
             <SetupView
                 result={suite.suite_teardown} description="- Teardown suite -"
