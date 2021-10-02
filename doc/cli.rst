@@ -68,7 +68,7 @@ from extra arguments that allow a finer control over tests execution and reporti
 
     Set the frequency at which reporting backends such as "json" and "xml" will save the reporting data
     on disk. Possibles values for this option are: ``at_end_of_tests``, ``at_each_suite``, ``at_each_test``,
-    ``at_each_failed_test``, ``at_each_event``, ``every_${N}s`` (the reporting
+    ``at_each_failed_test``, ``at_each_log``, ``every_${N}s`` (the reporting
     data will be saved every "N" seconds). The default value for this option is ``at_each_failed_test``.
     This behavior can also be configured through the ``$LCC_SAVE_REPORT`` environment variable (the CLI argument
     will have precedence over this variable).
