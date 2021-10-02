@@ -8,7 +8,6 @@ import {get_time_from_iso8601, humanize_duration} from './utils';
 
 interface SuiteProps extends FocusProps {
     suite: Suite,
-    parent_suites: Array<Suite>,
     filter: Filter
 }
 
@@ -36,10 +35,9 @@ function get_suite_duration(suite: Suite) {
 
 function Heading(props: SuiteProps) {
     const suite = props.suite;
-    const parent_suites = props.parent_suites;
 
-    const suite_description = parent_suites.map((p) => p.description).concat(suite.description).join(" > ");
-    const suite_id = parent_suites.map((p) => p.name).concat(suite.name).join(".");
+    const suite_description = [...suite.get_hierachy()].map((s) => s.description).join(" > ");
+    const suite_id = [...suite.get_hierachy()].map((s) => s.description).join(".");
 
     const properties = Object.keys(suite.properties).map((prop) => prop + ": " + suite.properties[prop]);
     const tags_and_properties = suite.tags.concat(properties).join(", ");
@@ -72,22 +70,20 @@ function Heading(props: SuiteProps) {
 function SuiteView(props: SuiteProps) {
     const filter = props.filter;
     const suite = props.suite;
-    const parent_suites = props.parent_suites;
-    const suite_id = parent_suites.map((p) => p.name).concat(suite.name).join(".");
     let results = [];
 
     if (suite.suite_setup && match_filter(filter, suite.suite_setup)) {
         results.push(
             <SetupView
                 result={suite.suite_setup} description="- Setup suite -"
-                id={suite_id + ".setup_suite"} key={suite_id + ".setup_suite"}
+                id={suite.get_path() + ".setup_suite"} key={suite.get_path() + ".setup_suite"}
                 focus={props.focus} onFocusChange={props.onFocusChange}/>
         );
     }
 
     for (let test of suite.tests) {
         if (match_filter(filter, test)) {
-            let test_id = suite_id + "." + test.name;
+            let test_id = suite.get_path() + "." + test.name;
             results.push(
                 <TestView
                     test={test} test_id={test_id}
@@ -101,7 +97,7 @@ function SuiteView(props: SuiteProps) {
         results.push(
             <SetupView
                 result={suite.suite_teardown} description="- Teardown suite -"
-                id={suite_id + ".teardown_suite"} key={suite_id + ".teardown_suite"}
+                id={suite.get_path() + ".teardown_suite"} key={suite.get_path() + ".teardown_suite"}
                 focus={props.focus} onFocusChange={props.onFocusChange}/>
         );
     }

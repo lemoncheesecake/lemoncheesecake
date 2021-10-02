@@ -52,22 +52,25 @@ declare interface Link {
     url: string
 }
 
-declare interface Metadata {
+declare interface TestTreeNode {
+    parent_suite?: Suite,
     name: string,
     description: string,
     tags: Array<string>,
     properties: { [key: string]: string },
     links: Array<Link>
+    get_path(): string
 }
 
-declare interface Test extends Result, Metadata {
+declare interface Test extends Result, TestTreeNode {
 }
 
-declare interface Suite extends Metadata {
+declare interface Suite extends TestTreeNode {
     tests: Array<Test>,
     suites: Array<Suite>,
     suite_setup: Result | undefined,
-    suite_teardown: Result | undefined
+    suite_teardown: Result | undefined,
+    get_hierachy(): Generator<Suite>
 }
 
 declare interface Report {
@@ -80,5 +83,8 @@ declare interface Report {
     info: Array<Array<string>>,
     test_session_setup: Result,
     test_session_teardown: Result,
-    suites: Array<Suite>
+    suites: Array<Suite>,
+    get_all_suites(): Generator<Suite>,
+    get_all_results(): Generator<Result>,
+    get_all_tests(): Generator<Test>
 }
