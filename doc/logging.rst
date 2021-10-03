@@ -30,6 +30,13 @@ Example:
     lcc.log_error("Something bad happened")
     lcc.log_url("http://example.com", "Example dot com")
 
+.. note::
+
+    Debug logs are not displayed by default in the HTML report nor by the ``lcc report`` command,
+    unless you check the appropriate checkbox or use the ``--debug`` argument respectively. It makes
+    the debug log level particularly useful if you want less-important information to be not displayed
+    by default to the report reader.
+
 .. _`steps`:
 
 Steps
