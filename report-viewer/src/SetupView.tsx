@@ -1,18 +1,21 @@
 import TimeExtraInfoView from './TimeExtraInfoView';
 import ResultRowView from './ResultRowView';
 import {FocusProps} from './ResultRowView';
+import { DisplayOptions } from './DisplayOptionsView';
 
 export interface SetupProps extends FocusProps {
     result: Result,
     id: string,
     description: string,
+    display_options: DisplayOptions
 }
 
 export function SetupView(props: SetupProps) {
     return (
         <ResultRowView
             id={props.id} status={props.result.status} steps={props.result.steps}
-            focus={props.focus} onFocusChange={props.onFocusChange}>
+            focus={props.focus} onFocusChange={props.onFocusChange}
+            display_options={props.display_options}>
             <td>
                 <div className="extra-info-container">
                     <h5 className="special">

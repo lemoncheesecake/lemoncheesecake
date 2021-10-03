@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {render_steps} from './StepView';
 import { scroller } from 'react-scroll';
+import { DisplayOptions } from './DisplayOptionsView';
 
 export interface Focus {
     id: string,
@@ -24,7 +25,8 @@ interface Props extends FocusProps {
     id: string,
     status: Status | null,
     status_details?: string | null,
-    steps: Array<Step>
+    steps: Array<Step>,
+    display_options: DisplayOptions
 }
 
 function Status(props: {status: string | null}) {
@@ -126,7 +128,7 @@ class ResultRowView extends React.Component<Props, State> {
                     </td>
                     {this.props.children}
                 </tr>
-                { render_steps(this.props.steps, this.isFocused()) }
+                { render_steps(this.props.steps, this.props.display_options, this.isFocused()) }
             </tbody>
         )
     }

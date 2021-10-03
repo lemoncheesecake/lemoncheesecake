@@ -46,6 +46,10 @@ class ReportCommand(Command):
             help="Display report as lcc run display test results"
         )
         group.add_argument(
+            "--debug", "-d", action="store_true", required=False,
+            help="Show debug logs"
+        )
+        group.add_argument(
             "--explicit", "-e", action="store_true", required=False,
             help="Make all indicators 'explicit' (i.e not only relying on a color-code), "
                  "will be enforced is stdout is redirected"
@@ -66,6 +70,7 @@ class ReportCommand(Command):
             with ignore_broken_pipe():
                 print_report(
                     report, result_filter=result_filter, max_width=cli_args.max_width,
+                    show_debug_logs=cli_args.debug,
                     explicit=cli_args.explicit or not sys.stdout.isatty()
                 )
 

@@ -61,10 +61,11 @@ def serialize_hierarchy_metadata(obj, hide_disabled=False):
 
 
 class Renderer(object):
-    def __init__(self, max_width, explicit=False, highlight=None):
+    def __init__(self, max_width, explicit=False, highlight=None, show_debug_logs=False):
         self.max_width = max_width
         self.explicit = explicit
         self.highlight = highlight
+        self.show_debug_logs = show_debug_logs
         # "20" is an approximation of the maximal overhead of table border, padding, and table first cell
         self._table_overhead = 20
 
@@ -90,46 +91,58 @@ class Renderer(object):
             lambda m: colored(m.group(0), color="yellow", attrs=["bold", "underline"]), content
         )
 
+    def render_step_log(self, log):
+        if isinstance(log, Log):
+            if log.level == "debug" and not self.show_debug_logs:
+                return None
+            else:
+                return [
+                    colored(log.level.upper(), color=log_level_to_color(log.level), attrs=["bold"]),
+                    self.render_highlighted(self.wrap_description_col(log.message))
+                ]
+        if isinstance(log, Check):
+            return [
+                self.render_check_outcome(log.is_successful),
+                self.render_highlighted(self.wrap_description_col(log.description)),
+                self.render_highlighted(self.wrap_details_col(log.details))
+            ]
+        if isinstance(log, Url):
+            if log.description == log.url:
+                description = log.url
+            else:
+                description = "%s (%s)" % (log.url, log.description)
+            return [
+                colored("URL", color="cyan", attrs=["bold"]),
+                self.render_highlighted(self.wrap_description_col(description))
+            ]
+        if isinstance(log, Attachment):
+            return [
+                colored("ATTACH", color="cyan", attrs=["bold"]),
+                self.render_highlighted(self.wrap_description_col(log.description)),
+                self.render_highlighted(log.filename)
+            ]
+
+        raise ValueError("Unknown step log class '%s'" % log.__class__.__name__)
+
     def render_steps(self, steps):
         rows = []
         for step in steps:
-            rows.append([
-                "",
-                colored(
-                    self.render_highlighted(self.wrap_description_col(step.description)),
-                    color=outcome_to_color(step.is_successful()),
-                    attrs=["bold"]
-                ),
-                colored(humanize_duration(step.duration, show_milliseconds=True), attrs=["bold"])
-                    if step.duration is not None else "-"
-            ])
-            for log in step.get_logs():
-                if isinstance(log, Log):
-                    rows.append([
-                        colored(log.level.upper(), color=log_level_to_color(log.level), attrs=["bold"]),
-                        self.render_highlighted(self.wrap_description_col(log.message))
-                    ])
-                if isinstance(log, Check):
-                    rows.append([
-                        self.render_check_outcome(log.is_successful),
-                        self.render_highlighted(self.wrap_description_col(log.description)),
-                        self.render_highlighted(self.wrap_details_col(log.details))
-                    ])
-                if isinstance(log, Url):
-                    if log.description == log.url:
-                        description = log.url
-                    else:
-                        description = "%s (%s)" % (log.url, log.description)
-                    rows.append([
-                        colored("URL", color="cyan", attrs=["bold"]),
-                        self.render_highlighted(self.wrap_description_col(description))
-                    ])
-                if isinstance(log, Attachment):
-                    rows.append([
-                        colored("ATTACH", color="cyan", attrs=["bold"]),
-                        self.render_highlighted(self.wrap_description_col(log.description)),
-                        self.render_highlighted(log.filename)
-                    ])
+            step_log_rows = list(filter(bool, map(self.render_step_log, step.get_logs())))
+            if step_log_rows:
+                rows.append([
+                    "",
+                    colored(
+                        self.render_highlighted(self.wrap_description_col(step.description)),
+                        color=outcome_to_color(step.is_successful()),
+                        attrs=["bold"]
+                    ),
+                    colored(humanize_duration(step.duration, show_milliseconds=True), attrs=["bold"])
+                        if step.duration is not None else "-"
+                ])
+                rows.extend(step_log_rows)
+
+        if not rows:
+            return None
 
         table = AsciiTable(rows)
         table.inner_heading_row_border = False
@@ -143,7 +156,7 @@ class Renderer(object):
             status = "in_progress"
 
         if steps:
-            details = self.render_steps(steps)
+            details = self.render_steps(steps) or "n/a"
         else:
             details = "n/a"
 
@@ -201,7 +214,7 @@ def _print_chunks(chunks):
         print(chunk if six.PY3 else chunk.encode("utf8"))
 
 
-def print_report(report, result_filter=None, max_width=None, explicit=False):
+def print_report(report, result_filter=None, max_width=None, show_debug_logs=False, explicit=False):
     ###
     # Setup terminal
     ###
@@ -212,7 +225,7 @@ def print_report(report, result_filter=None, max_width=None, explicit=False):
     # Get a generator over data to be printed on the console
     ###
     renderer = Renderer(
-        max_width=max_width, explicit=explicit,
+        max_width=max_width, show_debug_logs=show_debug_logs, explicit=explicit,
         highlight=result_filter.grep if isinstance(result_filter, ResultFilter) else None
     )
     if not result_filter:
