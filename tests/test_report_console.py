@@ -16,7 +16,7 @@ def _test_render_test(suites, *expected_lines, **kwargs):
     actual = "\n".join(renderer.render_results(report.all_results()))
     print("<<<\n%s\n>>>" % actual, file=sys.stderr)
     for actual_line, expected_line in zip(actual.split("\n"), expected_lines):
-        assert re.compile(expected_line).search(actual_line)
+        assert re.compile(expected_line).search(actual_line), "Cannot find '%s'" % expected_line
 
 
 def test_log_info():

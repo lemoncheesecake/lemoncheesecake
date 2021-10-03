@@ -33,6 +33,10 @@ def cmdout(capsys):
             else:
                 raise AssertionError()
 
+        def assert_substrs_nowhere(self, substrs, on_stderr=False):
+            with pytest.raises(AssertionError):
+                self.assert_substrs_anywhere(substrs, on_stderr)
+
         def assert_substrs_not_in_line(self, line_nb, substrs, on_stderr=False):
             lines = self.get_lines(on_stderr)
             for substr in substrs:

@@ -38,6 +38,9 @@ class A:
     @lcc.tags("my_tag1")
     @lcc.test("My test description")
     def this_is_a_test(self, fixt1, fixt9):
+        lcc.log_debug("THIS IS DEBUG")
+        lcc.log_info("sccd")
+
         lcc.set_step("Test list matchers")
         check_that("my list", [1, 2], has_length(3))
         check_that("my other list", [1, 2, 3], has_items((1, 4)))

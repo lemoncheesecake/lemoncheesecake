@@ -20,6 +20,21 @@ class mysuite:
         pass
 
 
+@lcc.suite()
+class suite_with_debug:
+    @lcc.test()
+    def test(self):
+        lcc.set_step("step 1")
+        lcc.log_info("1_info_message")
+        lcc.log_debug("1_debug_message")
+        lcc.set_step("step 2")
+        lcc.log_debug("2_debug_message")
+
+    @lcc.test("My Test 2")
+    def mytest2(self):
+        pass
+
+
 def test_report_from_dir(tmpdir, cmdout):
     run_suite_class(mysuite, tmpdir=tmpdir, backends=[JsonBackend()])
 
@@ -107,3 +122,31 @@ def test_report_test_run_in_progress(report_in_progress_path, cmdout):
     cmdout.assert_substrs_anywhere(["suite.test_1"])
     cmdout.assert_substrs_anywhere(["step"])
     cmdout.assert_substrs_anywhere(["message"])
+
+
+def test_report_without_debug_arg(tmpdir, cmdout):
+    run_suite_class(suite_with_debug, tmpdir=tmpdir, backends=[JsonBackend()])
+
+    assert main(["report", tmpdir.strpath]) == 0
+
+    cmdout.dump()
+
+    cmdout.assert_substrs_anywhere(["step 1"])
+    cmdout.assert_substrs_anywhere(["1_info_message"])
+    cmdout.assert_substrs_nowhere(["1_debug_message"])
+    cmdout.assert_substrs_nowhere(["step 2"])
+    cmdout.assert_substrs_nowhere(["2_debug_message"])
+
+
+def test_report_with_debug_arg(tmpdir, cmdout):
+    run_suite_class(suite_with_debug, tmpdir=tmpdir, backends=[JsonBackend()])
+
+    assert main(["report", tmpdir.strpath, "--debug"]) == 0
+
+    cmdout.dump()
+
+    cmdout.assert_substrs_anywhere(["step 1"])
+    cmdout.assert_substrs_anywhere(["1_info_message"])
+    cmdout.assert_substrs_anywhere(["1_debug_message"])
+    cmdout.assert_substrs_anywhere(["step 2"])
+    cmdout.assert_substrs_anywhere(["2_debug_message"])
