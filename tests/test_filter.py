@@ -48,6 +48,12 @@ def _test_step_filter(func, filtr, expected):
     assert [s.description for s in steps] == expected
 
 
+def prepare_cli_args(args, func, **func_kwargs):
+    cli_parser = argparse.ArgumentParser()
+    func(cli_parser, **func_kwargs)
+    return cli_parser.parse_args(args)
+
+
 def test_filter_full_path_on_test():
     @lcc.suite("mysuite")
     class mysuite:
@@ -1490,14 +1496,11 @@ def test_filter_suites_on_suite_teardown():
 
 
 def test_make_test_filter():
-    cli_parser = argparse.ArgumentParser()
-    add_test_filter_cli_args(cli_parser)
-    cli_args = cli_parser.parse_args(args=[])
-    filtr = make_test_filter(cli_args)
+    filtr = make_test_filter(prepare_cli_args([], add_test_filter_cli_args))
     assert not filtr
 
 
-def test_test_filter_from_report(tmpdir):
+def test_make_test_filter_from_report(tmpdir):
     @lcc.suite("mysuite")
     class mysuite:
         @lcc.test("mytest")
@@ -1508,25 +1511,18 @@ def test_test_filter_from_report(tmpdir):
 
     run_suite(suite, backends=[JsonBackend()], tmpdir=tmpdir)
 
-    cli_parser = argparse.ArgumentParser()
-    add_test_filter_cli_args(cli_parser)
-    cli_args = cli_parser.parse_args(args=["--from-report", tmpdir.strpath])
+    cli_args = prepare_cli_args(["--from-report", tmpdir.strpath], add_test_filter_cli_args)
     filtr = make_test_filter(cli_args)
     assert filtr(suite.get_tests()[0])
 
 
 def test_make_result_filter():
-    cli_parser = argparse.ArgumentParser()
-    add_result_filter_cli_args(cli_parser)
-    cli_args = cli_parser.parse_args(args=[])
-    filtr = make_result_filter(cli_args)
+    filtr = make_result_filter(prepare_cli_args([], add_result_filter_cli_args))
     assert not filtr
 
 
 def test_add_result_filter_cli_args():
-    cli_parser = argparse.ArgumentParser()
-    add_result_filter_cli_args(cli_parser)
-    cli_args = cli_parser.parse_args(args=[])
+    cli_args = prepare_cli_args([], add_result_filter_cli_args)
     assert hasattr(cli_args, "passed")
     assert hasattr(cli_args, "failed")
     assert hasattr(cli_args, "skipped")
@@ -1537,9 +1533,7 @@ def test_add_result_filter_cli_args():
 
 
 def test_add_result_filter_cli_args_with_only_executed_tests():
-    cli_parser = argparse.ArgumentParser()
-    add_result_filter_cli_args(cli_parser, only_executed_tests=True)
-    cli_args = cli_parser.parse_args(args=[])
+    cli_args = prepare_cli_args([], add_result_filter_cli_args, only_executed_tests=True)
     assert hasattr(cli_args, "passed")
     assert hasattr(cli_args, "failed")
     assert not hasattr(cli_args, "skipped")
@@ -1550,9 +1544,7 @@ def test_add_result_filter_cli_args_with_only_executed_tests():
 
 
 def test_add_step_filter_cli_args():
-    cli_parser = argparse.ArgumentParser()
-    add_step_filter_cli_args(cli_parser)
-    cli_args = cli_parser.parse_args(args=[])
+    cli_args = prepare_cli_args([], add_step_filter_cli_args)
     assert hasattr(cli_args, "passed")
     assert hasattr(cli_args, "failed")
     assert not hasattr(cli_args, "skipped")
@@ -1563,40 +1555,30 @@ def test_add_step_filter_cli_args():
 
 
 def test_make_result_filter_with_only_executed_tests():
-    cli_parser = argparse.ArgumentParser()
-    add_result_filter_cli_args(cli_parser, only_executed_tests=True)
-    cli_args = cli_parser.parse_args(args=[])
+    cli_args = prepare_cli_args([], add_result_filter_cli_args, only_executed_tests=True)
     filtr = make_result_filter(cli_args, only_executed_tests=True)
     assert filtr.statuses == {"passed", "failed"}
 
 
 def test_make_result_filter_with_only_executed_tests_and_passed():
-    cli_parser = argparse.ArgumentParser()
-    add_result_filter_cli_args(cli_parser, only_executed_tests=True)
-    cli_args = cli_parser.parse_args(args=["--passed"])
+    cli_args = prepare_cli_args(["--passed"], add_result_filter_cli_args, only_executed_tests=True)
     filtr = make_result_filter(cli_args, only_executed_tests=True)
     assert filtr.statuses == {"passed"}
 
 
 def test_make_result_filter_non_passed():
-    cli_parser = argparse.ArgumentParser()
-    add_result_filter_cli_args(cli_parser)
-    cli_args = cli_parser.parse_args(args=["--non-passed"])
+    cli_args = prepare_cli_args(["--non-passed"], add_result_filter_cli_args)
     filtr = make_result_filter(cli_args)
     assert filtr.statuses == {"skipped", "failed"}
 
 
 def test_make_result_filter_grep():
-    cli_parser = argparse.ArgumentParser()
-    add_result_filter_cli_args(cli_parser)
-    cli_args = cli_parser.parse_args(args=["--grep", "foobar"])
+    cli_args = prepare_cli_args(["--grep", "foobar"], add_result_filter_cli_args)
     filtr = make_result_filter(cli_args)
     assert filtr.grep
 
 
 def test_make_step_filter_passed():
-    cli_parser = argparse.ArgumentParser()
-    add_step_filter_cli_args(cli_parser)
-    cli_args = cli_parser.parse_args(args=["--passed"])
+    cli_args = prepare_cli_args(["--passed"], add_step_filter_cli_args)
     filtr = make_step_filter(cli_args)
     assert filtr.passed
