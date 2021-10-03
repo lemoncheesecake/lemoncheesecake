@@ -11,8 +11,12 @@ from lemoncheesecake.suite import load_suites_from_classes, load_suite_from_clas
 from lemoncheesecake.testtree import flatten_tests, filter_suites
 from lemoncheesecake.reporting.backends.json_ import JsonBackend
 from lemoncheesecake.reporting import ReportLocation
+from lemoncheesecake.reporting.reportdir import DEFAULT_REPORT_DIR_NAME
+from lemoncheesecake.reporting.report import Log
 
 from helpers.runner import run_suite, run_suites, run_suite_class, run_func_in_test
+from helpers.report import make_report, make_suite_result, make_test_result, make_step
+from helpers.utils import change_dir
 
 
 def _test_filter(suites, filtr, expected_test_paths):
@@ -1514,6 +1518,40 @@ def test_make_test_filter_from_report(tmpdir):
     cli_args = prepare_cli_args(["--from-report", tmpdir.strpath], add_test_filter_cli_args)
     filtr = make_test_filter(cli_args)
     assert filtr(suite.get_tests()[0])
+
+
+def test_make_test_filter_from_report_implicit(tmpdir):
+    def do_test(args, expected):
+        filtr = make_test_filter(prepare_cli_args(args, add_test_filter_cli_args))
+        assert filtr._tests == expected
+
+    report = make_report(
+        suites=[
+            make_suite_result(
+                name="tests",
+                tests=(
+                    make_test_result(name="passed", status="passed"),
+                    make_test_result(name="failed", status="failed"),
+                    make_test_result(name="skipped", status="skipped"),
+                    make_test_result(
+                        name="grepable", status="passed",
+                        steps=[
+                            make_step(logs=[Log(Log.LEVEL_INFO, "this is grepable", ts=0)])
+                        ]
+                    )
+                )
+            )
+        ]
+    )
+    backend = JsonBackend()
+    tmpdir.mkdir(DEFAULT_REPORT_DIR_NAME)
+    backend.save_report(tmpdir.join(DEFAULT_REPORT_DIR_NAME, "report.json").strpath, report)
+    with change_dir(tmpdir.strpath):
+        do_test(["--passed"], ["tests.passed", "tests.grepable"])
+        do_test(["--failed"], ["tests.failed"])
+        do_test(["--skipped"], ["tests.skipped"])
+        do_test(["--grep", "grepable"], ["tests.grepable"])
+        do_test(["--non-passed"], ["tests.failed", "tests.skipped"])
 
 
 def test_make_result_filter():

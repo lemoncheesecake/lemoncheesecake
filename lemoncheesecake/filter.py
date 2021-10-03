@@ -394,7 +394,7 @@ def _make_from_report_filter(cli_args, only_executed_tests=False):
 
 
 def make_test_filter(cli_args):
-    if any((cli_args.from_report, cli_args.passed, cli_args.failed, cli_args.skipped, cli_args.grep)):
+    if any((cli_args.from_report, cli_args.passed, cli_args.failed, cli_args.skipped, cli_args.non_passed, cli_args.grep)):
         return _make_from_report_filter(cli_args)
     else:
         return _make_test_filter(cli_args)
