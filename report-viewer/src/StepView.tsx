@@ -4,6 +4,7 @@ import CheckView from './CheckView';
 import Log from './LogView';
 import AttachmentView from './AttachmentView';
 import UrlView from './UrlView';
+import { DisplayOptions, is_step_entry_to_be_displayed } from './DisplayOptionsView';
 
 function get_step_outcome(step: Step) {
     for (let entry of step.entries) {
@@ -15,7 +16,7 @@ function get_step_outcome(step: Step) {
     return true;
 }
 
-function StepOutcome(props: {step: Step}) {
+function StepOutcomeView(props: {step: Step}) {
     return (
         get_step_outcome(props.step) ?
         <span className="glyphicon glyphicon-ok text-success"></span> :
@@ -36,7 +37,7 @@ function StepView(props: Props) {
             <td colSpan={4} className="visibility-master">
                 <h6 className="extra-info-container">
                     <span style={{fontSize: "120%"}}>
-                        <StepOutcome step={step}/>
+                        <StepOutcomeView step={step}/>
                         &nbsp;
                         <span className="multi-line-text"><strong>{step.description}</strong></span>
                     </span>
@@ -60,14 +61,21 @@ function render_step_entry(entry: StepEntry, expanded: boolean, index: number) {
     }
 }
 
-export function render_steps(steps: Array<Step>, expanded: boolean) {
+export function render_steps(steps: Array<Step>, display_option: DisplayOptions, expanded: boolean) {
     let rows = [];
     let index = 0;
 
     for (let step of steps) {
-        rows.push(<StepView step={step} expanded={expanded} key={index++}/>)
+        let step_entry_rows = [];
         for (let step_entry of step.entries) {
-            rows.push(render_step_entry(step_entry, expanded, index++));
+            if (is_step_entry_to_be_displayed(step_entry, display_option)) {
+                step_entry_rows.push(render_step_entry(step_entry, expanded, index++));
+            }
+        }
+        if (step_entry_rows.length > 0) {
+            rows.push(<StepView step={step} expanded={expanded} key={index++}/>);
+            for (let row of step_entry_rows)
+                rows.push(row);
         }
     }
 

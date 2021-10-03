@@ -1,40 +1,59 @@
 import * as React from 'react';
 
 export interface DisplayOptions {
-    onlyFailures: boolean
+    onlyFailures: boolean,
+    showDebugLogs: boolean
 }
 
 interface OnOnlyFailuresChange {
     () : void
 }
 
-interface Props {
-    onlyFailures: boolean,
-    onOnlyFailuresChange: OnOnlyFailuresChange
+interface OnShowDebugLogsChange {
+    () : void
 }
 
-export function is_result_to_be_displayed(options: DisplayOptions, result: Result) {
-    if (options.onlyFailures && result.status !== "failed")
-        return false;
-    return true;
+interface Props {
+    onlyFailures: boolean,
+    onOnlyFailuresChange: OnOnlyFailuresChange,
+    showDebugLogs: boolean,
+    onShowDebugLogsChange: OnShowDebugLogsChange
+}
+
+export function is_result_to_be_displayed(result: Result, options: DisplayOptions) {
+    return ! (options.onlyFailures && result.status !== "failed")
+}
+
+export function is_step_entry_to_be_displayed(entry: StepEntry, options: DisplayOptions) {
+    return ! (entry.type === "log" && entry.level === "debug" && ! options.showDebugLogs);
 }
 
 export class DisplayOptionsView extends React.Component<Props, {}> {
     constructor(props: Props) {
         super(props);
-        this.handleChange = this.handleChange.bind(this);
+        this.handleOnlyFailuresChange = this.handleOnlyFailuresChange.bind(this);
+        this.handleShowDebugLogsChange = this.handleShowDebugLogsChange.bind(this);
     }
 
-    handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+    handleOnlyFailuresChange(event: React.ChangeEvent<HTMLInputElement>) {
         this.props.onOnlyFailuresChange();
+    }
+
+    handleShowDebugLogsChange(event: React.ChangeEvent<HTMLInputElement>) {
+        this.props.onShowDebugLogsChange();
     }
     
     render() {
         return (
             <span>
-                <input type="checkbox" id="failures-only" checked={this.props.onlyFailures} onChange={this.handleChange}/>
+                <input type="checkbox" id="failures-only" checked={this.props.onlyFailures} onChange={this.handleOnlyFailuresChange}/>
                 &nbsp;
                 <label htmlFor="failures-only">Only show failures</label>
+                &nbsp;|&nbsp;
+                <input type="checkbox" id="show-debug-logs" checked={this.props.showDebugLogs} onChange={this.handleShowDebugLogsChange}/>
+                &nbsp;
+                <label htmlFor="show-debug-logs">Show debug logs</label>
+                <br/>
             </span>
         );
     }

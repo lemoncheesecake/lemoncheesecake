@@ -25,7 +25,7 @@ function SessionSetupHeading(props: {desc: string}) {
 }
 
 function SessionSetup(props: SessionSetupProps) {
-    if (is_result_to_be_displayed(props.display_options, props.result)) {
+    if (is_result_to_be_displayed(props.result, props.display_options)) {
         return (
             <ResultTableView
                 heading={<SessionSetupHeading desc={props.description}/>}
@@ -145,10 +145,11 @@ class ReportView extends React.Component<ReportProps, ReportState> {
         super(props);
         this.state = {
             focus: {id: "", scrollTo: false},
-            options: {onlyFailures: false}
+            options: {onlyFailures: false, showDebugLogs: false}
         };
         this.handleFocusChange = this.handleFocusChange.bind(this);
         this.handleOnlyFailuresChange = this.handleOnlyFailuresChange.bind(this);
+        this.handleShowDebugLogsChange = this.handleShowDebugLogsChange.bind(this);
         upgrade_report(props.report);
     }
 
@@ -159,7 +160,23 @@ class ReportView extends React.Component<ReportProps, ReportState> {
     handleOnlyFailuresChange() {
         this.setState(
             {
-                options: {onlyFailures: ! this.state.options.onlyFailures},
+                options: {
+                    onlyFailures: ! this.state.options.onlyFailures,
+                    showDebugLogs: this.state.options.showDebugLogs
+                },
+                // ensure we don't trigger an undesired scroll:
+                focus: {id: this.state.focus.id, scrollTo: false}
+            }
+        )
+    }
+
+    handleShowDebugLogsChange() {
+        this.setState(
+            {
+                options: {
+                    onlyFailures: this.state.options.onlyFailures,
+                    showDebugLogs: ! this.state.options.showDebugLogs
+                },
                 // ensure we don't trigger an undesired scroll:
                 focus: {id: this.state.focus.id, scrollTo: false}
             }
@@ -177,7 +194,11 @@ class ReportView extends React.Component<ReportProps, ReportState> {
 
                 <KeyValueTableView title="Statistics" rows={build_report_stats(report)}/>
 
-                <DisplayOptionsView onlyFailures={this.state.options.onlyFailures} onOnlyFailuresChange={this.handleOnlyFailuresChange}/>
+                <DisplayOptionsView
+                    onlyFailures={this.state.options.onlyFailures}
+                    onOnlyFailuresChange={this.handleOnlyFailuresChange}
+                    showDebugLogs={this.state.options.showDebugLogs}
+                    onShowDebugLogsChange={this.handleShowDebugLogsChange}/>
 
                 <p style={{textAlign: 'right'}}><a href="report.js" download="report.js">Download raw report data</a></p>
 
