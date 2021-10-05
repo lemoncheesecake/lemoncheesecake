@@ -4,7 +4,7 @@ Created on May 2, 2017
 @author: nicolas
 '''
 
-from typing import Sequence, Any
+from typing import Iterable, Any
 
 from lemoncheesecake.helpers.text import jsonify
 from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatcherDescriptionTransformer
@@ -78,7 +78,7 @@ class HasItems(Matcher):
 
 
 def has_items(values):
-    # type: (Sequence) -> HasItems
+    # type: (Iterable) -> HasItems
     """Test if the sequence contains at least the given values"""
     return HasItems(values)
 
@@ -111,7 +111,7 @@ class HasOnlyItems(Matcher):
 
 
 def has_only_items(expected):
-    # type: (Sequence) -> HasOnlyItems
+    # type: (Iterable) -> HasOnlyItems
     """Test if the sequence only contains the given values"""
     return HasOnlyItems(expected)
 
@@ -168,6 +168,11 @@ class IsIn(Matcher):
 
 
 def is_in(expected):
-    # type: (Sequence) -> IsIn
+    # type: (Iterable) -> IsIn
     """Test if the sequence contains the expected item"""
     return IsIn(expected)
+
+
+# NB: the matchers should use a Collection type instead of an Iterable (which is too permissive),
+# unfortunately the Collection type (https://docs.python.org/3/library/collections.abc.html#collections.abc.Collection)
+# appeared first in Python 3.6 and lemoncheesecake still supports Python 2.7
