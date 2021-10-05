@@ -48,11 +48,11 @@ export class DisplayOptionsView extends React.Component<Props, {}> {
             <span>
                 <input type="checkbox" id="failures-only" checked={this.props.onlyFailures} onChange={this.handleOnlyFailuresChange}/>
                 &nbsp;
-                <label htmlFor="failures-only">Only show failures</label>
+                <label htmlFor="failures-only">Failed tests only</label>
                 &nbsp;|&nbsp;
                 <input type="checkbox" id="show-debug-logs" checked={this.props.showDebugLogs} onChange={this.handleShowDebugLogsChange}/>
                 &nbsp;
-                <label htmlFor="show-debug-logs">Show debug logs</label>
+                <label htmlFor="show-debug-logs">Debug logs</label>
                 <br/>
             </span>
         );
