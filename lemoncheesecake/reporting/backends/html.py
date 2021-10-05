@@ -19,6 +19,7 @@ class HtmlReportWriter(ReportingSession):
         os.mkdir(dst_dir)
         copy(osp.join(src_dir, "report.js"), dst_dir)
         copy(osp.join(src_dir, "report.css"), dst_dir)
+        copy(osp.join(src_dir, "logo.png"), dst_dir)
 
         if self.fat_html:
             copy(osp.join(src_dir, "report_static.html"), osp.join(self.report_dir, "report.html"))

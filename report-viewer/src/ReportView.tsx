@@ -131,12 +131,13 @@ function build_report_stats(report: Report): Array<Array<string>> {
 
 function MadeBy(props: {version: string}) {
     return (
-        <span style={{float: 'right', paddingBottom: '10px', fontSize: '90%'}}>
-            Made by&nbsp;
-            <a href='http://lemoncheesecake.io' target="_blank" rel="noopener noreferrer">
-                lemoncheesecake {props.version}
-            </a>
-        </span>
+        <a href='http://lemoncheesecake.io' target="_blank" rel="noopener noreferrer">
+            <span style={{float: 'right', paddingTop: '10px', paddingBottom: '10px', fontSize: '90%'}}>
+                <img src=".html/logo.png" style={{display: "block", marginLeft: "auto", marginRight: "auto"}} alt=""/>
+                <br/>
+                Made by lemoncheesecake {props.version}
+            </span>
+        </a>
     );
 }
 
