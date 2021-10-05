@@ -2,6 +2,7 @@ exclude lemoncheesecake/resources/html/*
 
 include lemoncheesecake/resources/html/report.js
 include lemoncheesecake/resources/html/report.css
+include lemoncheesecake/resources/html/logo.png
 include lemoncheesecake/resources/html/report_static.html
 include lemoncheesecake/resources/html/report_external.html
 
