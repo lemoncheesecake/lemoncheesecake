@@ -72,7 +72,7 @@ Features
 
 - Rich CLI toolbox
 
-lemoncheesecake is compatible with Python 2.7, 3.5-3.9.
+lemoncheesecake is compatible with Python 2.7, 3.6-3.10.
 
 
 Installation
