@@ -32,6 +32,8 @@ Example:
 
 .. note::
 
+    .. versionchanged:: 1.10.0
+
     Debug logs are not displayed by default in the HTML report nor by the ``lcc report`` command,
     unless you check the appropriate checkbox or use the ``--debug`` argument respectively. It makes
     the debug log level particularly useful if you want less-important information to be not displayed
