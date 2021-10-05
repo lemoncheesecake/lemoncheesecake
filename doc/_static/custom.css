@@ -5,3 +5,7 @@ dl {
 div.highlight pre {
     padding: 11px 14px;
 }
+
+.logo > a {
+    border-bottom: 0px ! important;
+}
