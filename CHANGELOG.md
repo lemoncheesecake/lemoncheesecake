@@ -1,3 +1,18 @@
+# 1.10.0 (2021-10-05)
+
+- **CLI**: `lcc run` shows the HTML report path at the end of the test run
+- **CLI**: fix `lcc run --non-passed` running all tests instead of non-passed tests
+- **CLI**: debug logs are now hidden by default in `lcc report` unless the `--debug` argument is passed
+- **HTML report**: debug logs are now hidden by default, a checkbox can be checked to display them
+- **HTML report**: when the report only contains one test result, this test is automatically expanded
+  and focused when the report is loaded
+- **HTML report**: fix missing img title for inlined images (regression introduced in 1.8.0)
+- **HTML report**: drop support of Internet Explorer 11
+- **API**: improve typing annotation of `has_items`, `has_only_items` and `is_in` matchers to accept
+  `Iterable`
+- Add official support for Python 3.10
+- Drop official support for Python 3.5
+
 # 1.9.1 (2021-09-06)
 
 - Fix crash when a log without a former `set_step` is created in the setup phase of a per-thread fixture
