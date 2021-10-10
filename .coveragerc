@@ -1,0 +1,4 @@
+[run]
+omit =
+    lemoncheesecake/helpers/terminalsize.py
+    lemoncheesecake/helpers/orderedset.py
