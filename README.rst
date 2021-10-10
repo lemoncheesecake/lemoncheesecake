@@ -1,6 +1,18 @@
 lemoncheesecake: Test Storytelling
 ==================================
 
+.. image:: https://github.com/lemoncheesecake/lemoncheesecake/actions/workflows/tests.yml/badge.svg
+    :target: https://github.com/lemoncheesecake/lemoncheesecake/actions/workflows/tests.yml
+
+.. image:: https://codecov.io/gh/lemoncheesecake/lemoncheesecake/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/lemoncheesecake/lemoncheesecake
+
+.. image:: https://img.shields.io/pypi/v/lemoncheesecake.svg
+    :target: https://pypi.org/project/lemoncheesecake/
+
+.. image:: https://img.shields.io/pypi/pyversions/lemoncheesecake.svg
+    :target: https://pypi.org/project/lemoncheesecake/
+
 lemoncheesecake is an end-to-end test framework for Python that brings trust around test results.
 It allows test developers to be very explicit about what their tests really do with logging, matchers, file attachments, etc..
 
