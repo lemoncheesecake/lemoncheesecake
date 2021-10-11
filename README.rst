@@ -1,4 +1,5 @@
 .. image:: https://github.com/lemoncheesecake/lemoncheesecake/blob/master/doc/_static/logo.png?raw=true
+    :target: http://lemoncheesecake.io
 
 ------------
 
