@@ -30,6 +30,13 @@ def get_terminal_size():
         tuple_xy = _get_terminal_size_linux()
     if tuple_xy is None:
         tuple_xy = (80, 25)      # default value
+
+    # - lemoncheesecake specific -
+    # this is dirty workaround for an issue that is only happening
+    # on GitHub actions for Windows hosts while running tests:
+    if tuple_xy == (0, 0):
+        tuple_xy = (80, 25)
+
     return tuple_xy
 
 
