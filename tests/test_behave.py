@@ -249,10 +249,11 @@ Scenario: do a simple addition
             Then a + b is equal to 4
         """
         env = u"""import os
+import os.path
 from lemoncheesecake.bdd.behave import install_hooks
 
 def after_all(_):
-    os.mkdir("{tmpdir}/iwashere")
+    os.mkdir(os.path.join(r"{tmpdir}", "iwashere"))
 
 install_hooks()
 """.format(tmpdir=tmpdir.strpath)
