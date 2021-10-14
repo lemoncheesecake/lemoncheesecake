@@ -8,6 +8,7 @@ except ImportError:
 
 else:
     import os
+    import os.path as osp
 
     import pytest
 
@@ -55,7 +56,8 @@ install_hooks()
 """
         tmpdir.join("environment.py").write_text(env_content, "utf-8")
 
-        behave_main((tmpdir.join("features").join("feature.feature").strpath,))
+        with change_dir(tmpdir.strpath):
+            behave_main([osp.join("features", "feature.feature")])
 
         if not expected_report_dir:
             expected_report_dir = tmpdir.join("report").strpath
