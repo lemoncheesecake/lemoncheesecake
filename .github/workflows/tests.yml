@@ -13,6 +13,7 @@ jobs:
           # skip this matrix combination for now
           - os: windows-2019
             python-version: "3.10"
+      fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
       - uses: "actions/checkout@v2"
