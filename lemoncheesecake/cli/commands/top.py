@@ -90,7 +90,7 @@ class TopSuites(Command):
                 suite.path,
                 len(suite.get_tests()),
                 humanize_duration(suite.duration, show_milliseconds=True),
-                "%d%%" % (suite.duration / total_time * 100) if total_time else 100
+                "%d%%" % ((suite.duration / total_time * 100) if total_time else 100)
             )
         else:
             return suite.path, len(suite.get_tests()), "-", "-"
