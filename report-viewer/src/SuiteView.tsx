@@ -20,7 +20,7 @@ function get_duration_from_time_interval(interval: TimeInterval) {
 }
 
 function get_suite_duration(suite: Suite) {
-    let duration = suite.tests.map((t) => get_duration_from_time_interval(t)).reduce((x, y) => x + y);
+    let duration = suite.tests.map((t) => get_duration_from_time_interval(t)).reduce((x, y) => x + y, 0);
 
     if (suite.suite_setup) {
         duration += get_duration_from_time_interval(suite.suite_setup);
