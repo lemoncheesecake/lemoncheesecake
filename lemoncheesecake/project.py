@@ -41,7 +41,7 @@ def get_caller_dir(stack):
 class Project(object):
     def __init__(self, project_dir=None):
         #: The project's directory path (optional, defaults to the caller dir)
-        self.dir = project_dir or get_caller_dir(inspect.stack())  # type: str
+        self.dir = osp.abspath(project_dir or get_caller_dir(inspect.stack()))  # type: str
         #: The project's metadata policy
         self.metadata_policy = MetadataPolicy()
         #: Indicates whether or not the project supports parallel execution of tests

@@ -1,3 +1,4 @@
+import os
 import os.path as osp
 
 try:
@@ -146,8 +147,8 @@ def test_run_suites_from_project_default():
     project = SampleProject(".")
     _test_run_suites_from_project(
         project, [],
-        (project, Any(), Any(), ReportingBackendMatcher("json", "html", "console"), osp.join(".", "report"),
-         savingstrategy.save_at_each_failed_test_strategy, False, False, 1)
+        (project, Any(), Any(), ReportingBackendMatcher("json", "html", "console"),
+         osp.join(os.getcwd(), "report"), savingstrategy.save_at_each_failed_test_strategy, False, False, 1)
     )
 
 
