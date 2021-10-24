@@ -1,3 +1,10 @@
+# 1.10.1 (2021-10-24)
+
+- **HTML report**: fix possible crash when rendering empty suites
+- **HTML report**: fix suite path not being properly rendered (regression introduced in 1.10.0)
+- **API**: ensure that `Project.dir` is always an absolute path
+- **API**: fix incorrect description of matcher `has_all_items`
+
 # 1.10.0 (2021-10-05)
 
 - **CLI**: `lcc run` shows the HTML report path at the end of the test run
