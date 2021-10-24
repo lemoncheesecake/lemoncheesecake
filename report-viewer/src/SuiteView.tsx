@@ -37,7 +37,7 @@ function Heading(props: SuiteProps) {
     const suite = props.suite;
 
     const suite_description = [...suite.get_hierachy()].map((s) => s.description).join(" > ");
-    const suite_id = [...suite.get_hierachy()].map((s) => s.description).join(".");
+    const suite_id = [...suite.get_hierachy()].map((s) => s.name).join(".");
 
     const properties = Object.keys(suite.properties).map((prop) => prop + ": " + suite.properties[prop]);
     const tags_and_properties = suite.tags.concat(properties).join(", ");
