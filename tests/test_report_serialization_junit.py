@@ -58,12 +58,12 @@ def assert_testcase(junit_xml, name, steps_with_error=[], steps_with_failed_chec
     test = junit_xml.xpath("/testsuites/testsuite/testcase[@name='%s']" % name)[0]
     assert_duration_format(test.attrib["time"])
     
-    for step in steps_with_failed_check:
-        assert len(test.xpath("failure[@message=\"failed check in step '%s'\"]" % step)) == 1
+    for msg in steps_with_failed_check:
+        assert len(test.xpath("failure[@message=\"failed check in step %s\"]" % msg)) == 1
     assert len(test.xpath("failure")) == len(steps_with_failed_check)
     
-    for step in steps_with_error:
-        assert len(test.xpath("error[@message=\"error log in step '%s'\"]" % step)) == 1
+    for msg in steps_with_error:
+        assert len(test.xpath("error[@message=\"error log in step %s\"]" % msg)) == 1
     assert len(test.xpath("error")) == len(steps_with_error)
     
     assert len(test.xpath("skipped")) == (1 if skipped else 0)
@@ -98,7 +98,7 @@ else:
         junit_xml = get_junit_xml_from_suite(suite, tmpdir)
         assert_testsuites(junit_xml, tests=0, failures=1)
         assert_testsuite(junit_xml, "suite", tests=1, failures=1)
-        assert_testcase(junit_xml, "test", steps_with_error=["second step"])
+        assert_testcase(junit_xml, "test", steps_with_error=["'second step': error !"])
 
     def test_failed_check(tmpdir):
         @lcc.suite("Suite")
@@ -111,7 +111,7 @@ else:
         junit_xml = get_junit_xml_from_suite(suite, tmpdir)
         assert_testsuites(junit_xml, tests=0, failures=1)
         assert_testsuite(junit_xml, "suite", tests=1, failures=1)
-        assert_testcase(junit_xml, "test", steps_with_failed_check=["first step"])
+        assert_testcase(junit_xml, "test", steps_with_failed_check=["'first step', Expect value to be equal to 1: Got 2"])
 
     def test_skipped_test(tmpdir):
         @lcc.suite("Suite")
@@ -128,5 +128,5 @@ else:
         junit_xml = get_junit_xml_from_suite(suite, tmpdir, stop_on_failure=True)
         assert_testsuites(junit_xml, tests=0, failures=1)
         assert_testsuite(junit_xml, "suite", tests=2, failures=1, skipped=1)
-        assert_testcase(junit_xml, "test_1", steps_with_failed_check=["first step"])
+        assert_testcase(junit_xml, "test_1", steps_with_failed_check=["'first step', Expect value to be equal to 1: Got 2"])
         assert_testcase(junit_xml, "test_2", skipped=True)
