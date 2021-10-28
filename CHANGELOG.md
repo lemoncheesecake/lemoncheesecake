@@ -1,3 +1,8 @@
+# 1.10.2 (2021-10-28)
+
+- **junit**: provide more details about errors
+- **API**: fix typo in description of matcher `has_all_items`
+
 # 1.10.1 (2021-10-24)
 
 - **HTML report**: fix possible crash when rendering empty suites
