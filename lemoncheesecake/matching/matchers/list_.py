@@ -122,13 +122,13 @@ class HasAllItems(Matcher):
 
     def build_description(self, transformation):
         return transformation(
-            "to have all item whose value %s" %
+            "to have all items whose value %s" %
             self.expected.build_description(MatcherDescriptionTransformer(conjugate=True))
         )
 
     def build_short_description(self, transformation):
         return transformation(
-            "to have all item whose value %s" %
+            "to have all items whose value %s" %
             self.expected.build_short_description(MatcherDescriptionTransformer(conjugate=True))
         )
 
