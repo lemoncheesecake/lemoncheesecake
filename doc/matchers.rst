@@ -120,7 +120,7 @@ Those matcher are used by a matching function:
 
 The ``quiet`` flag can be set to ``True`` to hide the matching result details in the report.
 
-The ``lemoncheesecake.matching`` module also provides helper functions to ease operations on dict object:
+The ``lemoncheesecake.matching`` module also provides helper functions to ease operations on nested data:
 
 The code:
 
@@ -154,6 +154,7 @@ Nested lists are also supported::
         ("foo", 0, "bar"), equal_to(1),
     )
 
+
 The ``base_key`` keyword-argument can also be used when checking nested dicts::
 
     check_that_in(
@@ -162,7 +163,6 @@ The ``base_key`` keyword-argument can also be used when checking nested dicts::
         "baz", equal_to(2),
         base_key=("foo",)
     )
-
 
 
 The same dict helper counterparts are available for:
@@ -174,6 +174,30 @@ The same dict helper counterparts are available for:
 Like their ``*_that`` counterpart, the ``*_that_in`` functions can also take a ``quiet`` keyword argument.
 
 If one match fails in a test, this test will be marked as failed.
+
+.. versionadded:: 1.11.0
+
+The ``*_that_in`` functions have been improved to make nested data checking easier and more powerful.
+
+This::
+
+    check_that_in(
+        {"foo": {"bar": 1, "baz": 2},
+        ("foo", "bar"), equal_to(1),
+        ("foo", "baz"), equal_to(2)
+    )
+
+Can now be written as this::
+
+    check_that_in(
+        {"foo": {"bar": 1, "baz": 2},
+        {"foo": {"bar": equal_to(1), "baz": equal_to(2)}
+    )
+
+It leads to the exact same result, with two distinct ``equal_to`` matching operations.
+
+It also means that in addition of the even number (key/matcher) arguments for the "expected" argument,
+these functions now also accept a single argument form.
 
 Creating custom matchers
 ------------------------

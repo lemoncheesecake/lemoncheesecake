@@ -4,14 +4,13 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
-from typing import Any, Mapping, List
+from typing import Any, Mapping, Sequence, Optional, Union
 import six
 
 from lemoncheesecake.session import log_check
 from lemoncheesecake.exceptions import AbortTest
 from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatcherDescriptionTransformer
-from lemoncheesecake.matching.matchers.dict_ import HasEntry, wrap_key_matcher
-from lemoncheesecake.matching.matchers.composites import is_
+from lemoncheesecake.matching.matchers.dict_ import HasEntry, KeyPathMatcher
 
 
 class _HasEntry(HasEntry):
@@ -22,11 +21,54 @@ class _HasEntry(HasEntry):
         return ret
 
 
-def _build_matcher_for_dict_operation(key_matcher, value_matcher, base_key):
-    return _HasEntry(
-        wrap_key_matcher(key_matcher, base_key=base_key),
-        value_matcher if value_matcher is not None else is_(value_matcher)
-    )
+def _build_has_entry_matchers_from_arg(arg, path=()):
+    if isinstance(arg, (list, tuple)):
+        for idx, value in enumerate(arg):
+            for matcher in _build_has_entry_matchers_from_arg(value, path + (idx,)):
+                yield matcher
+
+    elif isinstance(arg, dict):
+        for key, value in arg.items():
+            for matcher in _build_has_entry_matchers_from_arg(value, path + (key,)):
+                yield matcher
+
+    elif isinstance(arg, Matcher):
+        yield _HasEntry(KeyPathMatcher(path), arg)
+
+    else:
+        raise ValueError("argument %r must be either an instance of list, tuple, dict or Matcher" % arg)
+
+
+def _normalize_key_path(path):
+    if isinstance(path, tuple):
+        return path
+    elif isinstance(path, list):
+        return tuple(path)
+    else:
+        return (path,)
+
+
+def _build_has_entry_matchers_from_args(args, base_key=()):
+    base_key = _normalize_key_path(base_key)
+
+    if len(args) == 1:
+        assert isinstance(args[0], (list, tuple, dict))
+        for matcher in _build_has_entry_matchers_from_arg(args[0], base_key):
+            yield matcher
+
+    elif len(args) % 2 == 0:
+        i = 0
+        while i < len(args):
+            key, value_matcher = args[i], args[i + 1]
+            for matcher in _build_has_entry_matchers_from_arg(value_matcher, base_key + _normalize_key_path(key)):
+                yield matcher
+            i += 2
+
+    else:
+        raise ValueError(
+            "*args must be a list of one element (being a list/tuple/dict) or "
+            "a even number list (a list of key/matcher pairs)"
+        )
 
 
 def _format_result_details(details):
@@ -51,7 +93,7 @@ def _log_match_result(hint, matcher, result, quiet=False):
 
 
 def check_that(hint, actual, matcher, quiet=False):
-    # type: (str, Any, Matcher, bool) -> MatchResult
+    # type: (Optional[str], Any, Matcher, bool) -> MatchResult
 
     """Check that actual matches given matcher.
 
@@ -66,31 +108,8 @@ def check_that(hint, actual, matcher, quiet=False):
     return result
 
 
-def _do_that_in(func, actual, *args, **kwargs):
-    if len(args) % 2 != 0:
-        raise TypeError("function expects an even number of *args")
-
-    for value_matcher in args[1::2]:  # iterate over each odd element
-        assert value_matcher is None or isinstance(value_matcher, Matcher)
-
-    base_key = kwargs.get("base_key", [])
-    quiet = kwargs.get("quiet", False)
-
-    results = []
-    i = 0
-    while i < len(args):
-        key_matcher, value_matcher = args[i], args[i+1]
-        result = func(
-            None, actual, _build_matcher_for_dict_operation(key_matcher, value_matcher, base_key), quiet=quiet
-        )
-        results.append(result)
-        i += 2
-
-    return results
-
-
-def check_that_in(actual, *args, **kwargs):
-    # type: (Mapping, Any, Any) -> List[MatchResult]
+def check_that_in(actual, *expected, **kwargs):
+    # type: (Mapping, Any, Any) -> Sequence[MatchResult]
 
     """
     Equivalent of :py:func:`check_that` over items of a dict.
@@ -115,35 +134,62 @@ def check_that_in(actual, *args, **kwargs):
     If an extra ``quiet`` keyword-arg is set to ``True``, the check details won't appear in the check log.
 
     The function returns a list of :py:class:`MatchResult <lemoncheesecake.matching.matcher.MatchResult>`.
+
+    .. versionadded:: 1.11.0
+
+    Nested data can also be checked this way::
+
+        check_that_in(
+            {"foo": {"bar": 2}},
+            {"foo": {"bar": equal_to(2)}}
+        )
+
+    It also means that instead of calling ``check_that_in`` with a list of key/matcher pairs, it can now
+    be called with a data structure as the "expected" argument.
     """
+    quiet = kwargs.get("quiet", False)
+    base_key = kwargs.get("base_key", ())
 
-    return _do_that_in(check_that, actual, *args, **kwargs)
+    return [
+        check_that(None, actual, matcher, quiet=quiet)
+        for matcher in _build_has_entry_matchers_from_args(expected, base_key)
+    ]
 
 
-def require_that_in(actual, *args, **kwargs):
-    # type: (Mapping, Any, Any) -> List[MatchResult]
+def require_that_in(actual, *expected, **kwargs):
+    # type: (Mapping, Any, Any) -> Sequence[MatchResult]
 
     """
     Does the same thing as :py:func:`check_that_in` except it performs a
-    :py:func:`require_that` on each key-value pair.
+    :py:func:`require_that` on each key-matcher pair.
     """
+    quiet = kwargs.get("quiet", False)
+    base_key = kwargs.get("base_key", ())
 
-    return _do_that_in(require_that, actual, *args, **kwargs)
+    return [
+        require_that(None, actual, matcher, quiet=quiet)
+        for matcher in _build_has_entry_matchers_from_args(expected, base_key)
+    ]
 
 
-def assert_that_in(actual, *args, **kwargs):
-    # type: (Mapping, Any, Any) -> List[MatchResult]
+def assert_that_in(actual, *expected, **kwargs):
+    # type: (Mapping, Any, Any) -> Sequence[MatchResult]
 
     """
     Does the same thing as :py:func:`check_that_in` except it performs a
-    :py:func:`assert_that` on each key-value pair.
+    :py:func:`assert_that` on each key-matcher pair.
     """
+    quiet = kwargs.get("quiet", False)
+    base_key = kwargs.get("base_key", ())
 
-    return _do_that_in(assert_that, actual, *args, **kwargs)
+    return [
+        assert_that(None, actual, matcher, quiet=quiet)
+        for matcher in _build_has_entry_matchers_from_args(expected, base_key)
+    ]
 
 
 def require_that(hint, actual, matcher, quiet=False):
-    # type: (str, Any, Matcher, bool) -> MatchResult
+    # type: (Optional[str], Any, Matcher, bool) -> MatchResult
 
     """Require that actual matches given matcher.
 
@@ -162,7 +208,7 @@ def require_that(hint, actual, matcher, quiet=False):
 
 
 def assert_that(hint, actual, matcher, quiet=False):
-    # type: (str, Any, Matcher, bool) -> MatchResult
+    # type: (Optional[str], Any, Matcher, bool) -> MatchResult
 
     """Assert that actual matches given matcher.
 

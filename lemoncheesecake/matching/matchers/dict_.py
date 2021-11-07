@@ -42,12 +42,12 @@ class KeyPathMatcher(EntryMatcher):
         return d
 
 
-def wrap_key_matcher(key_matcher, base_key=()):
+def wrap_key_matcher(key_matcher):
     if isinstance(key_matcher, EntryMatcher):
         return key_matcher
     if type(key_matcher) not in (list, tuple):
         key_matcher = (key_matcher,)
-    return KeyPathMatcher(tuple(base_key) + tuple(key_matcher))
+    return KeyPathMatcher(tuple(key_matcher))
 
 
 class HasEntry(Matcher):

@@ -69,6 +69,47 @@ def test_check_that_in_with_tuple_and_base_key(log_check_mock):
     log_check_mock.assert_called_once_with(Search("foo.+bar"), True, Search("baz"))
 
 
+def test_check_that_in_with_tuple_and_list_index(log_check_mock):
+    results = check_that_in({"foo": [{"bar": "baz"}]}, ("foo", 0, "bar"), equal_to("baz"))
+
+    assert all(results)
+
+    log_check_mock.assert_called_once_with(Search("foo.+0.+bar"), True, Search("baz"))
+
+
+def test_check_that_in_with_expected_as_dict(log_check_mock):
+    results = check_that_in({"foo": {"bar": "baz"}}, {"foo": {"bar": equal_to("baz")}})
+
+    assert all(results)
+
+    log_check_mock.assert_called_once_with(Search("foo.+bar"), True, Search("baz"))
+
+
+def test_check_that_in_with_expected_as_dict_with_list(log_check_mock):
+    results = check_that_in({"foo": [{"bar": "baz"}]}, {"foo": [{"bar": equal_to("baz")}]})
+
+    assert all(results)
+
+    log_check_mock.assert_called_once_with(Search("foo.+bar"), True, Search("baz"))
+
+
+def test_check_that_in_with_expected_as_dict_and_base_key(log_check_mock):
+    results = check_that_in({"foo": {"bar": "baz"}}, {"bar": equal_to("baz")}, base_key=("foo",))
+
+    assert all(results)
+
+    log_check_mock.assert_called_once_with(Search("foo.+bar"), True, Search("baz"))
+
+
+def test_check_that_in_with_expected_as_dict_multiple(log_check_mock):
+    results = check_that_in({"foo": {"bar": 1, "baz": 2}}, {"foo": {"bar": equal_to(1), "baz": equal_to(2)}})
+
+    assert all(results)
+
+    log_check_mock.assert_any_call(Search("foo.+bar"), True, Search("1"))
+    log_check_mock.assert_any_call(Search("foo.+baz"), True, Search("2"))
+
+
 def test_check_that_in_quiet(log_check_mock):
     check_that_in({"foo": "bar"}, "foo", equal_to("bar"), quiet=True)
 
