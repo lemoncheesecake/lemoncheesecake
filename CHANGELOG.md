@@ -1,3 +1,13 @@
+# 1.11.0 (2021-11-07)
+
+- **API**: improve nested data structure support in `{check,require,assert}_that_in` functions (see documentation
+  for more details) making this kind call now possible:
+  ```python
+  check_that_in({"foo": {"bar": "baz"}}, {"foo": {"bar": equal_to("baz")}})
+  ```
+- **API**: add new methods `Matcher.override_description` and `Matcher.hide_result_details` to
+  provide customization on an existing matcher instance
+
 # 1.10.2 (2021-10-28)
 
 - **junit**: provide more details about errors
