@@ -243,3 +243,13 @@ A matcher must inherit the :class:`Matcher <lemoncheesecake.matching.matcher.Mat
 - the ``matches`` method tests if passed argument fulfills the matcher requirements. The method must return an instance of
   :class:`MatchResult <lemoncheesecake.matching.matcher.MatchResult>` that will indicate whether or not the
   match succeed and an optional match description.
+
+.. versionadded:: 1.11.0
+
+The description and the result details from an existing matcher instance can be changed using the methods
+:py:func:`Matcher.override_description <lemoncheesecake.matching.matcher.Matcher.override_description>`
+and :py:func:`Matcher.hide_result_details <lemoncheesecake.matching.matcher.Matcher.hide_result_details>`::
+
+    check_that("value", 1, equal_to(1).override_description("to be one"))
+
+    check_that("value", 1, equal_to(1).hide_result_details())

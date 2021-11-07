@@ -137,3 +137,41 @@ class Matcher(object):
         :return: an instance of :py:class:`MatchResult`
         """
         raise NotImplementedError()
+
+    def override_description(self, description):
+        # type: (str) -> MatcherWrapper
+        """
+        Override the matcher description.
+
+        :param description: the new description
+        :return: a new matcher wrapping the actual matcher
+        """
+        return MatcherWrapper(self, description=description)
+
+    def hide_result_details(self):
+        # type: () -> MatcherWrapper
+        """
+        Hide the matching operation result details.
+
+        :return: a new matcher wrapping the actual matcher
+        """
+        return MatcherWrapper(self, result_details=None)
+
+
+class MatcherWrapper(Matcher):
+    def __init__(self, matcher, description=NotImplemented, result_details=NotImplemented):
+        self.matcher = matcher
+        self.description = description
+        self.result_details = result_details
+
+    def build_description(self, transformation):
+        if self.description is NotImplemented:
+            return self.matcher.build_description(transformation)
+        else:
+            return transformation(self.description)
+
+    def matches(self, actual):
+        result = self.matcher.matches(actual)
+        if self.result_details is not NotImplemented:
+            result.description = self.result_details
+        return result

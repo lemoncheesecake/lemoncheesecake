@@ -131,7 +131,7 @@ Matcher
 .. module:: lemoncheesecake.matching.matcher
 
 .. autoclass:: Matcher
-    :members: build_description, matches
+    :members: build_description, matches, override_description, hide_result_details
 
 .. autoclass:: MatchResult
     :members: is_successful, description, success, failure, __bool__
