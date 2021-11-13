@@ -6,7 +6,7 @@ API reference
 API compatibility / stability
 -----------------------------
 
-lemoncheesecake follows the well know `Semantic Versioning <https://semver.org/>`_ for it's public API.
+lemoncheesecake follows the well know `Semantic Versioning <https://semver.org/>`_ for its public API.
 What is considered as "public" is everything which is documented on http://docs.lemoncheesecake.io/. Everything else is
 internal and is subject to change at anytime.
 
