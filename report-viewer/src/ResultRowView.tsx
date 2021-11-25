@@ -107,7 +107,7 @@ class ResultRowView extends React.Component<Props, State> {
     }
 
     componentDidMount() {
-        if (this.isFocused() && this.props.focus.scrollTo) {
+        if (this.isFocused()) {
             this.scrollTo();
         }
     }
