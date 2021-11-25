@@ -142,9 +142,13 @@ Writing tests
 The lemoncheesecake ecosystem
 -----------------------------
 
-For HTTP / REST API / Web Services testing, it is recommended to use
-`lemoncheesecake-requests <https://lemoncheesecake-requests.readthedocs.io/en/latest/>`_ which provides logging
-and response checking features for `requests <https://docs.python-requests.org/en/master/>`_.
+- `lemoncheesecake-requests <https://lemoncheesecake-requests.readthedocs.io/en/latest/>`_ provides logging
+  and response checking features for `requests <https://docs.python-requests.org/en/master/>`_
+  and HTTP / REST API / Web Services testing
+
+- `lemoncheesecake-selenium <https://lemoncheesecake-selenium.readthedocs.io/en/latest/>`_ is a package
+  that helps you develop Web UI tests with `selenium <https://www.selenium.dev>`_
+
 
 Contact
 -------

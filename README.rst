@@ -113,9 +113,12 @@ The documentation is available on http://docs.lemoncheesecake.io.
 The lemoncheesecake ecosystem
 -----------------------------
 
-For HTTP / REST API / Web Services testing, it is recommended to use
-`lemoncheesecake-requests <https://github.com/lemoncheesecake/lemoncheesecake-requests>`_ which provides logging
-and response checking features for `requests <https://docs.python-requests.org/en/master/>`_.
+- `lemoncheesecake-requests <https://github.com/lemoncheesecake/lemoncheesecake-requests>`_ provides logging
+  and response checking features for `requests <https://docs.python-requests.org/en/master/>`_
+  and HTTP / REST API / Web Services testing
+
+- `lemoncheesecake-selenium <https://github.com/lemoncheesecake/lemoncheesecake-selenium>`_ is a package
+  that helps you develop Web UI tests with `selenium <https://www.selenium.dev>`_
 
 Contact
 -------
