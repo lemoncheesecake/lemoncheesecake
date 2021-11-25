@@ -1,3 +1,8 @@
+# 1.11.1 (2021-11-25)
+
+- **HTML report**: improve display of large attached images
+- **HTML report**: scroll to the test result when it's clicked
+
 # 1.11.0 (2021-11-07)
 
 - **API**: improve nested data structure support in `{check,require,assert}_that_in` functions (see documentation
