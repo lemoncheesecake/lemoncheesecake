@@ -154,8 +154,8 @@ class ReportView extends React.Component<ReportProps, ReportState> {
         upgrade_report(props.report);
     }
 
-    handleFocusChange(id: string, scrollTo: boolean = false) {
-        this.setState({focus : {id, scrollTo}});
+    handleFocusChange(id: string) {
+        this.setState({focus : {id, scrollTo: true}});
     }
 
     handleOnlyFailuresChange() {
@@ -243,12 +243,12 @@ class ReportView extends React.Component<ReportProps, ReportState> {
         // focus on selected test (through URL anchor), if any
         let splitted_url = document.location.href.split('#');
         if (splitted_url.length === 2) {
-            this.handleFocusChange(splitted_url[1], true);
+            this.handleFocusChange(splitted_url[1]);
         // when the report contains only one test, focus on that test
         } else {
             let tests = [...this.props.report.get_all_tests()]
             if (tests.length === 1) {
-                this.handleFocusChange(tests[0].get_path(), true);
+                this.handleFocusChange(tests[0].get_path());
             }
         }
     }

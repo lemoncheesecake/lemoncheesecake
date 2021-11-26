@@ -9,7 +9,7 @@ export interface Focus {
 }
 
 export interface OnFocusChange {
-    (id: string, scrollTo?: boolean) : void
+    (id: string) : void
 }
 
 export interface FocusProps {
@@ -107,7 +107,7 @@ class ResultRowView extends React.Component<Props, State> {
     }
 
     componentDidMount() {
-        if (this.isFocused()) {
+        if (this.isFocused() && this.props.focus.scrollTo) {
             this.scrollTo();
         }
     }
