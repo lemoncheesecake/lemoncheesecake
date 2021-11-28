@@ -1,3 +1,8 @@
+# 1.11.2 (2021-11-28)
+
+- **HTML report**: fix undesired scrolling when clicking display option checkboxes
+  (regression introduced in 1.11.1)
+
 # 1.11.1 (2021-11-25)
 
 - **HTML report**: improve display of large attached images
