@@ -1,6 +1,5 @@
 interface Props {
-    attachment: Attachment,
-    expanded: boolean
+    attachment: Attachment
 }
 
 function AttachmentView(props: Props) {
@@ -14,7 +13,7 @@ function AttachmentView(props: Props) {
     }
 
     return (
-        <tr className="step_entry attachment" style={{display: props.expanded ? "" : "none"}}>
+        <tr className="step_entry attachment">
             <td className="text-uppercase text-info">ATTACHMENT</td>
             <td colSpan={3}>
                 {/* eslint react/jsx-no-target-blank: "off" */}

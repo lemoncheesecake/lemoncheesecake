@@ -25,15 +25,14 @@ function StepOutcomeView(props: {step: Step}) {
 }
 
 interface Props {
-    step: Step,
-    expanded: boolean
+    step: Step
 }
 
 function StepView(props: Props) {
     const step = props.step;
 
     return (
-        <tr className="step" style={{display: props.expanded ? "" : "none"}}>
+        <tr className="step">
             <td colSpan={4} className="visibility-master">
                 <h6 className="extra-info-container">
                     <span style={{fontSize: "120%"}}>
@@ -48,20 +47,20 @@ function StepView(props: Props) {
     )
 }
 
-function render_step_entry(entry: StepEntry, expanded: boolean, index: number) {
+function render_step_entry(entry: StepEntry, index: number) {
     switch (entry.type) {
         case "check":
-            return <CheckView check={entry} expanded={expanded} key={index}/>;
+            return <CheckView check={entry} key={index}/>;
         case "log":
-            return <Log log={entry} expanded={expanded} key={index}/>;
+            return <Log log={entry} key={index}/>;
         case "attachment":
-            return <AttachmentView attachment={entry} expanded={expanded} key={index}/>
+            return <AttachmentView attachment={entry} key={index}/>
         case "url":
-            return <UrlView url={entry} expanded={expanded} key={index}/>
+            return <UrlView url={entry} key={index}/>
     }
 }
 
-export function render_steps(steps: Array<Step>, display_option: DisplayOptions, expanded: boolean) {
+export function render_steps(steps: Array<Step>, display_option: DisplayOptions) {
     let rows = [];
     let index = 0;
 
@@ -69,11 +68,11 @@ export function render_steps(steps: Array<Step>, display_option: DisplayOptions,
         let step_entry_rows = [];
         for (let step_entry of step.entries) {
             if (is_step_entry_to_be_displayed(step_entry, display_option)) {
-                step_entry_rows.push(render_step_entry(step_entry, expanded, index++));
+                step_entry_rows.push(render_step_entry(step_entry, index++));
             }
         }
         if (step_entry_rows.length > 0) {
-            rows.push(<StepView step={step} expanded={expanded} key={index++}/>);
+            rows.push(<StepView step={step} key={index++}/>);
             for (let row of step_entry_rows)
                 rows.push(row);
         }

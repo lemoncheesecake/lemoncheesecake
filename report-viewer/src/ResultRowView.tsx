@@ -128,7 +128,9 @@ class ResultRowView extends React.Component<Props, State> {
                     </td>
                     {this.props.children}
                 </tr>
-                { render_steps(this.props.steps, this.props.display_options, this.isFocused()) }
+                {
+                    this.isFocused() ? render_steps(this.props.steps, this.props.display_options) : []
+                }
             </tbody>
         )
     }
