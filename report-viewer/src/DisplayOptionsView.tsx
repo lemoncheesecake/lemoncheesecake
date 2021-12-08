@@ -83,7 +83,11 @@ export class DisplayOptionsView extends React.Component<Props, State> {
             this.updateOptions({});
         }
     }
-    
+
+    handleReset = (event: React.MouseEvent<HTMLInputElement>) => {
+        this.updateOptions({onlyFailures: false, showDebugLogs: false, testFilter: ""})
+    }
+
     render = () => {
         return (
             <span>
@@ -105,6 +109,11 @@ export class DisplayOptionsView extends React.Component<Props, State> {
                     size={40} autoFocus
                     value={this.state.options.testFilter}
                     onChange={this.handleTestFilterChange} onKeyDown={this.handleTestFilterKeyDown}/>
+
+                &nbsp;|&nbsp;
+
+                <input type="button" value="Reset" title="Reset all display options" className="btn btn-default"
+                    onClick={this.handleReset}/>
             </span>
         );
     }
