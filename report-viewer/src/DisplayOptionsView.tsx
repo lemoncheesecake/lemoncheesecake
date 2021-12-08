@@ -6,26 +6,16 @@ export interface DisplayOptions {
     testFilter: string
 }
 
-interface OnOnlyFailuresChange {
-    () : void
+interface OnDisplayOptionsChange {
+    (options: DisplayOptions): void
 }
 
-interface OnShowDebugLogsChange {
-    () : void
-}
-
-interface OnTestFilterChange {
-    (value: string) : void
-}
-
-interface Props extends DisplayOptions {
-    onOnlyFailuresChange: OnOnlyFailuresChange,
-    onShowDebugLogsChange: OnShowDebugLogsChange,
-    onTestFilterChange: OnTestFilterChange
+interface Props {
+    displayOptionsChange: OnDisplayOptionsChange
 }
 
 interface State {
-    testFilter: string,
+    options: DisplayOptions,
     timeoutId: any | null
 }
 
@@ -58,46 +48,54 @@ export function is_step_entry_to_be_displayed(entry: StepEntry, options: Display
 export class DisplayOptionsView extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
-        this.state = {testFilter: props.testFilter, timeoutId: null};
-        this.handleOnlyFailuresChange = this.handleOnlyFailuresChange.bind(this);
-        this.handleShowDebugLogsChange = this.handleShowDebugLogsChange.bind(this);
-        this.handleTestFilterChange = this.handleTestFilterChange.bind(this);
-        this.handleTestFilterKeyDown = this.handleTestFilterKeyDown.bind(this);
+        this.state = {
+            options: {onlyFailures: false, showDebugLogs: false, testFilter: ""},
+            timeoutId: null
+        };
     }
 
-    handleOnlyFailuresChange(event: React.ChangeEvent<HTMLInputElement>) {
-        this.props.onOnlyFailuresChange();
+    updateOptions = (updated: object) => {
+        this.setState({
+            options: {...this.state.options, ...updated}
+        }, () => this.props.displayOptionsChange(this.state.options));
     }
 
-    handleShowDebugLogsChange(event: React.ChangeEvent<HTMLInputElement>) {
-        this.props.onShowDebugLogsChange();
+    handleOnlyFailuresChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        this.updateOptions({onlyFailures: ! this.state.options.onlyFailures});
     }
 
-    handleTestFilterChange(event: React.ChangeEvent<HTMLInputElement>) {
+    handleShowDebugLogsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        this.updateOptions({showDebugLogs: ! this.state.options.showDebugLogs});
+    }
+
+    handleTestFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (this.state.timeoutId)
             clearTimeout(this.state.timeoutId);
-        this.setState({testFilter: event.target.value});
+
         this.setState({
-            timeoutId: setTimeout(() => this.props.onTestFilterChange(this.state.testFilter), 500)
+            options: {...this.state.options, testFilter: event.target.value},
+            timeoutId: setTimeout(() => this.updateOptions({}), 500)
         });
     }
 
-    handleTestFilterKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    handleTestFilterKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === "Enter") {
-            this.props.onTestFilterChange(this.state.testFilter);
+            this.updateOptions({});
         }
     }
     
-    render() {
+    render = () => {
         return (
             <span>
-                <input type="checkbox" id="failures-only" checked={this.props.onlyFailures} onChange={this.handleOnlyFailuresChange}/>
+                <input type="checkbox" id="failures-only"
+                    checked={this.state.options.onlyFailures} onChange={this.handleOnlyFailuresChange}/>
                 &nbsp;
                 <label htmlFor="failures-only">Failed tests only</label>
 
                 &nbsp;|&nbsp;
 
-                <input type="checkbox" id="show-debug-logs" checked={this.props.showDebugLogs} onChange={this.handleShowDebugLogsChange}/>
+                <input type="checkbox" id="show-debug-logs"
+                    checked={this.state.options.showDebugLogs} onChange={this.handleShowDebugLogsChange}/>
                 &nbsp;
                 <label htmlFor="show-debug-logs">Debug logs</label>
 
@@ -105,7 +103,8 @@ export class DisplayOptionsView extends React.Component<Props, State> {
 
                 <input type="text" id="text-filter" placeholder="Filter on test path &amp; description"
                     size={40} autoFocus
-                    value={this.state.testFilter} onChange={this.handleTestFilterChange} onKeyDown={this.handleTestFilterKeyDown}/>
+                    value={this.state.options.testFilter}
+                    onChange={this.handleTestFilterChange} onKeyDown={this.handleTestFilterKeyDown}/>
             </span>
         );
     }

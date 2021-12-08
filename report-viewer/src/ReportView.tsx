@@ -149,56 +149,19 @@ class ReportView extends React.Component<ReportProps, ReportState> {
             options: {onlyFailures: false, showDebugLogs: false, testFilter: ""}
         };
         this.handleFocusChange = this.handleFocusChange.bind(this);
-        this.handleOnlyFailuresChange = this.handleOnlyFailuresChange.bind(this);
-        this.handleShowDebugLogsChange = this.handleShowDebugLogsChange.bind(this);
-        this.handleTestFilterChange = this.handleTestFilterChange.bind(this);
         upgrade_report(props.report);
     }
 
     handleFocusChange(id: string) {
-        this.setState({focus : {id, scrollTo: true}});
+        this.setState(
+            {focus : {id, scrollTo: true}},
+            () => this.setState({focus : {id, scrollTo: false}})  // prevent further undesired auto-scroll
+        );
     }
 
-    handleOnlyFailuresChange() {
-        this.setState(
-            {
-                options: {
-                    onlyFailures: ! this.state.options.onlyFailures,
-                    showDebugLogs: this.state.options.showDebugLogs,
-                    testFilter: this.state.options.testFilter
-                },
-                // ensure we don't trigger an undesired scroll:
-                focus: {id: this.state.focus.id, scrollTo: false}
-            }
-        )
-    }
-
-    handleShowDebugLogsChange() {
-        this.setState(
-            {
-                options: {
-                    onlyFailures: this.state.options.onlyFailures,
-                    showDebugLogs: ! this.state.options.showDebugLogs,
-                    testFilter: this.state.options.testFilter
-                },
-                // ensure we don't trigger an undesired scroll:
-                focus: {id: this.state.focus.id, scrollTo: false}
-            }
-        )
-    }
-
-    handleTestFilterChange(filter: string) {
-        this.setState(
-            {
-                options: {
-                    onlyFailures: this.state.options.onlyFailures,
-                    showDebugLogs: this.state.options.showDebugLogs,
-                    testFilter: filter
-                },
-                // ensure we don't trigger an undesired scroll:
-                focus: {id: this.state.focus.id, scrollTo: false}
-            }
-        )
+    handleDisplayOptionsChange = (options: DisplayOptions) => {
+        console.debug("handleDisplayOptionsChange !", options);
+        this.setState({options: options})
     }
 
     render() {
@@ -212,14 +175,7 @@ class ReportView extends React.Component<ReportProps, ReportState> {
 
                 <KeyValueTableView title="Statistics" rows={build_report_stats(report)}/>
 
-                <DisplayOptionsView
-                    onlyFailures={this.state.options.onlyFailures}
-                    onOnlyFailuresChange={this.handleOnlyFailuresChange}
-                    showDebugLogs={this.state.options.showDebugLogs}
-                    onShowDebugLogsChange={this.handleShowDebugLogsChange}
-                    testFilter=""
-                    onTestFilterChange={this.handleTestFilterChange}
-                    />
+                <DisplayOptionsView displayOptionsChange={this.handleDisplayOptionsChange}/>
 
                 <p style={{textAlign: 'right'}}><a href="report.js" download="report.js">Download raw report data</a></p>
 
