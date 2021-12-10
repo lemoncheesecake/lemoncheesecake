@@ -1,7 +1,7 @@
 import * as React from 'react';
-import {render_steps} from './StepView';
-import { scroller } from 'react-scroll';
-import { DisplayOptions } from './DisplayOptionsView';
+import {StepView} from './StepView';
+import {scroller} from 'react-scroll';
+import {DisplayOptions} from './DisplayOptionsView';
 
 export interface Focus {
     id: string,
@@ -115,6 +115,7 @@ class ResultRowView extends React.Component<Props, State> {
 
     render() {
         const hasSteps = this.props.steps.length > 0;
+        let index = 0;
 
         return (
             <tbody>
@@ -129,7 +130,9 @@ class ResultRowView extends React.Component<Props, State> {
                     {this.props.children}
                 </tr>
                 {
-                    this.isFocused() ? render_steps(this.props.steps, this.props.display_options) : []
+                    this.isFocused() ?
+                        this.props.steps.map(s => (<StepView step={s} display_options={this.props.display_options} key={index++}/>)) :
+                        []
                 }
             </tbody>
         )

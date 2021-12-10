@@ -160,7 +160,6 @@ class ReportView extends React.Component<ReportProps, ReportState> {
     }
 
     handleDisplayOptionsChange = (options: DisplayOptions) => {
-        console.debug("handleDisplayOptionsChange !", options);
         this.setState({options: options})
     }
 

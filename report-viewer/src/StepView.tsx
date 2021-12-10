@@ -24,59 +24,50 @@ function StepOutcomeView(props: {step: Step}) {
     );
 }
 
-interface Props {
-    step: Step
-}
-
-function StepView(props: Props) {
-    const step = props.step;
-
-    return (
-        <tr className="step">
-            <td colSpan={4} className="visibility-master">
-                <h6 className="extra-info-container">
-                    <span style={{fontSize: "120%"}}>
-                        <StepOutcomeView step={step}/>
-                        &nbsp;
-                        <span className="multi-line-text"><strong>{step.description}</strong></span>
-                    </span>
-                    <TimeExtraInfoView start={step.start_time} end={step.end_time}/>
-                </h6>
-            </td>
-        </tr>
-    )
-}
-
-function render_step_entry(entry: StepEntry, index: number) {
-    switch (entry.type) {
+function StepEntry(props: {entry: StepEntry}) {
+    switch (props.entry.type) {
         case "check":
-            return <CheckView check={entry} key={index}/>;
+            return <CheckView check={props.entry}/>;
         case "log":
-            return <Log log={entry} key={index}/>;
+            return <Log log={props.entry}/>;
         case "attachment":
-            return <AttachmentView attachment={entry} key={index}/>
+            return <AttachmentView attachment={props.entry}/>
         case "url":
-            return <UrlView url={entry} key={index}/>
+            return <UrlView url={props.entry}/>
     }
 }
 
-export function render_steps(steps: Array<Step>, display_option: DisplayOptions) {
-    let rows = [];
+export function StepView(props: {step: Step, display_options: DisplayOptions}) {
+    const step = props.step;
     let index = 0;
+    let entries = [];
 
-    for (let step of steps) {
-        let step_entry_rows = [];
-        for (let step_entry of step.entries) {
-            if (is_step_entry_to_be_displayed(step_entry, display_option)) {
-                step_entry_rows.push(render_step_entry(step_entry, index++));
-            }
-        }
-        if (step_entry_rows.length > 0) {
-            rows.push(<StepView step={step} key={index++}/>);
-            for (let row of step_entry_rows)
-                rows.push(row);
+    for (let step_entry of props.step.entries) {
+        if (is_step_entry_to_be_displayed(step_entry, props.display_options)) {
+            entries.push(<StepEntry entry={step_entry} key={index++}/>);
         }
     }
 
-    return rows;
+    if (entries.length > 0) {
+        return (
+            <>
+                <tr className="step">
+                    <td colSpan={4} className="visibility-master">
+                        <h6 className="extra-info-container">
+                            <span style={{fontSize: "120%"}}>
+                                <StepOutcomeView step={step}/>
+                                &nbsp;
+                                <span className="multi-line-text"><strong>{step.description}</strong></span>
+                            </span>
+                            <TimeExtraInfoView start={step.start_time} end={step.end_time}/>
+                        </h6>
+                    </td>
+                </tr>
+                {entries}
+            </>
+        );
+
+    } else {
+        return null;
+    }
 }
