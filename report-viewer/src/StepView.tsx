@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useState, useEffect } from 'react';
 import TimeExtraInfoView from './TimeExtraInfoView';
 import CheckView from './CheckView';
 import Log from './LogView';
@@ -51,11 +51,36 @@ function StepEntry(props: {entry: StepEntry}) {
     }
 }
 
-export function StepView(props: {step: Step, display_options: DisplayOptions}) {
+interface Props {
+    step: Step,
+    display_options: DisplayOptions,
+    expanded: boolean,
+    expandedChange: (expanded: boolean) => void
+}
+
+export function StepView(props: Props) {
     const step = props.step;
     let index = 0;
     let entries = [];
-    const [expanded, setExpanded] = React.useState(true);
+    const [expanded, setExpanded] = useState(true);
+    const [lastClick, setLastClick] = useState(0);
+
+    useEffect(() => {
+        setExpanded(props.expanded);
+    }, [props.expanded]);
+
+    // this handler handle both single and double click
+    const clickHandler = () => {
+        const now = Date.now();
+        // handle the simple click or the first click of the double click
+        if (now - lastClick > 300) {
+            setExpanded(!expanded);
+        // handle the second click of a double click
+        } else {
+            props.expandedChange(expanded);
+        }
+        setLastClick(now);
+    }
 
     for (let step_entry of props.step.entries) {
         if (is_step_entry_to_be_displayed(step_entry, props.display_options)) {
@@ -67,8 +92,13 @@ export function StepView(props: {step: Step, display_options: DisplayOptions}) {
         return (
             <>
                 <tr className="step" style={{cursor: "pointer"}}
-                    title={expanded ? "Click to collapse step details" : "Click to expand step details"}
-                    onClick={() => setExpanded(!expanded)}>
+                    title={
+                        expanded ?
+                        "Click to collapse step details.\nDouble-click to collapse ALL step details." :
+                        "Click to expand step details.\nDouble-click to expand ALL step details."
+                    }
+                    onClick={clickHandler}
+                    >
                     <td colSpan={4} className="visibility-master">
                         <h6 className="extra-info-container">
                             <span style={{fontSize: "120%"}}>

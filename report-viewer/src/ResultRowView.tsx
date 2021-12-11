@@ -18,7 +18,8 @@ export interface FocusProps {
 }
 
 interface State {
-    expanded: boolean
+    expanded: boolean,
+    stepDetailsExpanded: boolean
 }
 
 interface Props extends FocusProps {
@@ -84,7 +85,8 @@ class ResultRowView extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {
-            expanded: false
+            expanded: false,
+            stepDetailsExpanded: true
         };
         this.toggle = this.toggle.bind(this);
         this.domRef = null;
@@ -108,6 +110,7 @@ class ResultRowView extends React.Component<Props, State> {
 
     componentDidMount() {
         if (this.isFocused() && this.props.focus.scrollTo) {
+            this.setState({stepDetailsExpanded: true});
             this.scrollTo();
         }
     }
@@ -131,8 +134,12 @@ class ResultRowView extends React.Component<Props, State> {
                 </tr>
                 {
                     this.isFocused() ?
-                        this.props.steps.map(s => (<StepView step={s} display_options={this.props.display_options} key={index++}/>)) :
-                        []
+                        this.props.steps.map(s => (
+                            <StepView step={s} display_options={this.props.display_options}
+                                expanded={this.state.stepDetailsExpanded}
+                                expandedChange={(expanded: boolean) => this.setState({stepDetailsExpanded: expanded})}
+                                key={index++}/>)
+                        ) : []
                 }
             </tbody>
         )
