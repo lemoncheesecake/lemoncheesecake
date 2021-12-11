@@ -61,12 +61,12 @@ function ExpandIndicator(props: {expanded: boolean, hasSteps: boolean}) {
     if (props.hasSteps) {
         if (props.expanded) {
             return  (
-                <span className="glyphicon glyphicon-chevron-down" title="Collapse">
+                <span className="glyphicon glyphicon-chevron-down">
                 </span>
             );
         } else {
             return  (
-                <span className="visibility-slave glyphicon glyphicon-chevron-right" title="Expand">
+                <span className="visibility-slave glyphicon glyphicon-chevron-right">
                 </span>
             );
         }
@@ -122,10 +122,12 @@ class ResultRowView extends React.Component<Props, State> {
 
         return (
             <tbody>
-                <tr id={this.props.id} className="test visibility-master" key={this.props.id} ref={(re) => { this.domRef = re }}>
-                    <td className="test_status" title={this.props.status_details || ""}
-                        style={hasSteps ? {cursor: "pointer"} : undefined}
-                        onClick={hasSteps ? this.toggle : undefined}>
+                <tr id={this.props.id} className="test visibility-master"
+                    key={this.props.id} ref={(re) => { this.domRef = re }}
+                    style={hasSteps ? {cursor: "pointer"} : undefined}
+                    onClick={hasSteps ? this.toggle : undefined}
+                    title={hasSteps ? (this.isFocused() ? "Click to collapse test details." : "Click to expand test details.") : undefined}>
+                    <td className="test_status" title={this.props.status_details || ""}>
                         <ExpandIndicator expanded={this.isFocused()} hasSteps={hasSteps}/>
                         &nbsp;
                         <Status status={this.props.status}/>
