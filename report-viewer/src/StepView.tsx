@@ -16,6 +16,20 @@ function get_step_outcome(step: Step) {
     return true;
 }
 
+function StepExpanderView(props: {expanded: boolean}) {
+    if (props.expanded) {
+        return  (
+            <span className="glyphicon glyphicon-resize-full visibility-slave" title="Collapse">
+            </span>
+        );
+    } else {
+        return  (
+            <span className="glyphicon glyphicon-resize-small visibility-slave" title="Expand">
+            </span>
+        );
+    }
+}
+
 function StepOutcomeView(props: {step: Step}) {
     return (
         get_step_outcome(props.step) ?
@@ -41,6 +55,7 @@ export function StepView(props: {step: Step, display_options: DisplayOptions}) {
     const step = props.step;
     let index = 0;
     let entries = [];
+    const [expanded, setExpanded] = React.useState(true);
 
     for (let step_entry of props.step.entries) {
         if (is_step_entry_to_be_displayed(step_entry, props.display_options)) {
@@ -51,19 +66,23 @@ export function StepView(props: {step: Step, display_options: DisplayOptions}) {
     if (entries.length > 0) {
         return (
             <>
-                <tr className="step">
+                <tr className="step" style={{cursor: "pointer"}}
+                    title={expanded ? "Click to collapse step details" : "Click to expand step details"}
+                    onClick={() => setExpanded(!expanded)}>
                     <td colSpan={4} className="visibility-master">
                         <h6 className="extra-info-container">
                             <span style={{fontSize: "120%"}}>
                                 <StepOutcomeView step={step}/>
-                                &nbsp;
+                                &nbsp;&nbsp;
                                 <span className="multi-line-text"><strong>{step.description}</strong></span>
+                                &nbsp;&nbsp;
+                                <StepExpanderView expanded={expanded}/>
                             </span>
                             <TimeExtraInfoView start={step.start_time} end={step.end_time}/>
                         </h6>
                     </td>
                 </tr>
-                {entries}
+                {expanded ? entries : undefined}
             </>
         );
 
