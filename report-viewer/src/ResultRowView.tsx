@@ -138,8 +138,8 @@ class ResultRowView extends React.Component<Props, State> {
                     this.isFocused() ?
                         this.props.steps.map(s => (
                             <StepView step={s} display_options={this.props.display_options}
-                                expanded={this.state.stepDetailsExpanded}
-                                expandedChange={(expanded: boolean) => this.setState({stepDetailsExpanded: expanded})}
+                                opened={this.state.stepDetailsExpanded}
+                                openingChange={(expanded: boolean) => this.setState({stepDetailsExpanded: expanded})}
                                 key={index++}/>)
                         ) : []
                 }

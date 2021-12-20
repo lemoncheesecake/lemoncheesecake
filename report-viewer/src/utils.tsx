@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 // import * as moment from 'moment';
 import moment from 'moment';
 import {sprintf} from 'sprintf-js';
@@ -42,45 +41,4 @@ export function humanize_duration(duration: number, show_milliseconds=false) {
     }
 
     return ret;
-}
-
-export function useDoubleExpander(propagateExpandedChange: (expanded: boolean) => void,
-                                  externalExpanded: boolean) : [boolean, () => void] { 
-    const [expanded, setExpanded] = useState(true);
-    const [lastClick, setLastClick] = useState(0);
-
-    useEffect(() => {
-        setExpanded(externalExpanded);
-    }, [externalExpanded]);
-
-    // this handler handle both single and double click
-    return [
-        expanded,
-        () => {
-            const now = Date.now();
-            // handle the simple click or the first click of the double click
-            if (now - lastClick > 300) {
-                setExpanded(!expanded);
-            // handle the second click of a double click
-            } else {
-                propagateExpandedChange(expanded);
-            }
-            setLastClick(now);
-        }
-    ];
-}
-
-
-export function ExpanderIndicator(props: {expanded: boolean}) {
-    if (props.expanded) {
-        return  (
-            <span className="glyphicon glyphicon-resize-full visibility-slave" title="Collapse">
-            </span>
-        );
-    } else {
-        return  (
-            <span className="glyphicon glyphicon-resize-small visibility-slave" title="Expand">
-            </span>
-        );
-    }
 }
