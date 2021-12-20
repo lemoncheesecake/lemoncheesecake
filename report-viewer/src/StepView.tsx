@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
 import TimeExtraInfoView from './TimeExtraInfoView';
 import CheckView from './CheckView';
 import Log from './LogView';
 import AttachmentView from './AttachmentView';
 import UrlView from './UrlView';
 import { DisplayOptions, is_step_entry_to_be_displayed } from './DisplayOptionsView';
+import { useDoubleExpander, ExpanderIndicator } from './utils';
 
 function get_step_outcome(step: Step) {
     for (let entry of step.entries) {
@@ -14,20 +14,6 @@ function get_step_outcome(step: Step) {
             return false;
     }
     return true;
-}
-
-function StepExpanderView(props: {expanded: boolean}) {
-    if (props.expanded) {
-        return  (
-            <span className="glyphicon glyphicon-resize-full visibility-slave" title="Collapse">
-            </span>
-        );
-    } else {
-        return  (
-            <span className="glyphicon glyphicon-resize-small visibility-slave" title="Expand">
-            </span>
-        );
-    }
 }
 
 function StepOutcomeView(props: {step: Step}) {
@@ -62,25 +48,7 @@ export function StepView(props: Props) {
     const step = props.step;
     let index = 0;
     let entries = [];
-    const [expanded, setExpanded] = useState(true);
-    const [lastClick, setLastClick] = useState(0);
-
-    useEffect(() => {
-        setExpanded(props.expanded);
-    }, [props.expanded]);
-
-    // this handler handle both single and double click
-    const clickHandler = () => {
-        const now = Date.now();
-        // handle the simple click or the first click of the double click
-        if (now - lastClick > 300) {
-            setExpanded(!expanded);
-        // handle the second click of a double click
-        } else {
-            props.expandedChange(expanded);
-        }
-        setLastClick(now);
-    }
+    const [expanded, expandHandler] = useDoubleExpander(props.expandedChange, props.expanded);
 
     for (let step_entry of props.step.entries) {
         if (is_step_entry_to_be_displayed(step_entry, props.display_options)) {
@@ -97,7 +65,7 @@ export function StepView(props: Props) {
                         "Click to collapse step details.\nDouble-click to collapse ALL step details." :
                         "Click to expand step details.\nDouble-click to expand ALL step details."
                     }
-                    onClick={clickHandler}
+                    onClick={expandHandler}
                     >
                     <td colSpan={4} className="visibility-master">
                         <h6 className="extra-info-container">
@@ -106,7 +74,7 @@ export function StepView(props: Props) {
                                 &nbsp;&nbsp;
                                 <span className="multi-line-text"><strong>{step.description}</strong></span>
                                 &nbsp;&nbsp;
-                                <StepExpanderView expanded={expanded}/>
+                                <ExpanderIndicator expanded={expanded}/>
                             </span>
                             <TimeExtraInfoView start={step.start_time} end={step.end_time}/>
                         </h6>
