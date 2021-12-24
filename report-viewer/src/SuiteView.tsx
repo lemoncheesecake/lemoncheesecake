@@ -55,7 +55,7 @@ function Heading(props: SuiteProps) {
                         .map(
                             (link, index) =>
                             <div key={index}>
-                                <a href={link.url} title={link.name || link.url} target="_blank">{link.name || link.url}</a>
+                                <a href={link.url} title={link.url} target="_blank">{link.name || link.url}</a>
                             </div>
                         )
                         .reduce((accu, elem) => {
