@@ -1,13 +1,12 @@
 import * as React from 'react';
 
 interface Props {
-    url: Url,
-    expanded: boolean
+    url: Url
 }
 
 function UrlView(props: Props) {
     return (
-        <tr className="step_entry attachment" style={{display: props.expanded ? "" : "none"}}>
+        <tr className="step_entry attachment">
             <td className="text-uppercase text-info">URL</td>
             <td colSpan={3}>
                 <a href={props.url.url} target="_blank" rel="noopener noreferrer">

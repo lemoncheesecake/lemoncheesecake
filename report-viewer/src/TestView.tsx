@@ -44,7 +44,7 @@ function TestView(props: Props) {
                     test.links.map((link, index) =>
                         <div key={index}>
                             {/* eslint react/jsx-no-target-blank: "off" */}
-                            <a href={link.url} title={link.name || link.url} target="_blank">
+                            <a href={link.url} title={link.url} target="_blank">
                                 {link.name || link.url}
                             </a>
                         </div>

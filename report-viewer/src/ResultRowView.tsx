@@ -1,7 +1,7 @@
 import * as React from 'react';
-import {render_steps} from './StepView';
-import { scroller } from 'react-scroll';
-import { DisplayOptions } from './DisplayOptionsView';
+import {StepView} from './StepView';
+import {scroller} from 'react-scroll';
+import {DisplayOptions} from './DisplayOptionsView';
 
 export interface Focus {
     id: string,
@@ -18,7 +18,8 @@ export interface FocusProps {
 }
 
 interface State {
-    expanded: boolean
+    opened: boolean,
+    stepsOpened: boolean
 }
 
 interface Props extends FocusProps {
@@ -56,16 +57,16 @@ function Status(props: {status: string | null}) {
     );
 }
 
-function ExpandIndicator(props: {expanded: boolean, hasSteps: boolean}) {
+function OpeningIndicator(props: {opened: boolean, hasSteps: boolean}) {
     if (props.hasSteps) {
-        if (props.expanded) {
+        if (props.opened) {
             return  (
-                <span className="glyphicon glyphicon-chevron-down" title="Collapse">
+                <span className="glyphicon glyphicon-chevron-down">
                 </span>
             );
         } else {
             return  (
-                <span className="visibility-slave glyphicon glyphicon-chevron-right" title="Expand">
+                <span className="visibility-slave glyphicon glyphicon-chevron-right">
                 </span>
             );
         }
@@ -84,7 +85,8 @@ class ResultRowView extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {
-            expanded: false
+            opened: false,
+            stepsOpened: true
         };
         this.toggle = this.toggle.bind(this);
         this.domRef = null;
@@ -108,6 +110,7 @@ class ResultRowView extends React.Component<Props, State> {
 
     componentDidMount() {
         if (this.isFocused() && this.props.focus.scrollTo) {
+            this.setState({stepsOpened: true});
             this.scrollTo();
         }
     }
@@ -115,20 +118,31 @@ class ResultRowView extends React.Component<Props, State> {
 
     render() {
         const hasSteps = this.props.steps.length > 0;
+        let index = 0;
 
         return (
             <tbody>
-                <tr id={this.props.id} className="test visibility-master" key={this.props.id} ref={(re) => { this.domRef = re }}>
-                    <td className="test_status" title={this.props.status_details || ""}
-                        style={hasSteps ? {cursor: "pointer"} : undefined}
-                        onClick={hasSteps ? this.toggle : undefined}>
-                        <ExpandIndicator expanded={this.isFocused()} hasSteps={hasSteps}/>
+                <tr id={this.props.id} className="test visibility-master"
+                    key={this.props.id} ref={(re) => { this.domRef = re }}
+                    style={hasSteps ? {cursor: "pointer"} : undefined}
+                    onClick={hasSteps ? this.toggle : undefined}
+                    title={hasSteps ? (this.isFocused() ? "Click to collapse test details." : "Click to expand test details.") : undefined}>
+                    <td className="test_status" title={this.props.status_details || ""}>
+                        <OpeningIndicator opened={this.isFocused()} hasSteps={hasSteps}/>
                         &nbsp;
                         <Status status={this.props.status}/>
                     </td>
                     {this.props.children}
                 </tr>
-                { render_steps(this.props.steps, this.props.display_options, this.isFocused()) }
+                {
+                    this.isFocused() ?
+                        this.props.steps.map(s => (
+                            <StepView step={s} display_options={this.props.display_options}
+                                opened={this.state.stepsOpened}
+                                openingChange={(opened: boolean) => this.setState({stepsOpened: opened})}
+                                key={index++}/>)
+                        ) : []
+                }
             </tbody>
         )
     }

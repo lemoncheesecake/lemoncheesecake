@@ -1,18 +1,11 @@
-interface Props {
-    check: Check
-    expanded: boolean
-}
-
-function StepView(props: Props) {
-    const check = props.check;
-
+function CheckView(props: {check: Check}) {
     return (
-        <tr className="step_entry check" style={{display: props.expanded ? "" : "none"}}>
-            <td className={check.is_successful ? "text-success" : "text-danger"}>CHECK</td>
-            <td className="check_description">{check.description}</td>
-            <td className="check_result" colSpan={2}>{check.details}</td>
+        <tr className="step_entry check">
+            <td className={props.check.is_successful ? "text-success" : "text-danger"}>CHECK</td>
+            <td className="check_description">{props.check.description}</td>
+            <td className="check_result" colSpan={2}>{props.check.details}</td>
         </tr>
     )
 }
 
-export default StepView;
+export default CheckView;
