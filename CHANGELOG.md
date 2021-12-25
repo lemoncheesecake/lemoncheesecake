@@ -1,3 +1,14 @@
+# 1.12.0 (2021-12-25)
+
+- **HTML report**:
+  - improve CPU and memory usage by creating DOM elements for results only when they are visible
+    (instead of using `display: none` CSS style)
+  - add filtering feature on test path & description
+  - add a "reset" button to reset all display options at once
+  - step details can now be collapsed/expanded individually (single click) or all at once (double click)
+  - a test result can now be expanded by clicking anywhere in the row (only the status column was previously clickable)
+  - on test/suite links, display the actual URL on mouse over
+
 # 1.11.2 (2021-11-28)
 
 - **HTML report**: fix undesired scrolling when clicking display option checkboxes
