@@ -13,7 +13,7 @@ function ResultTableView(props: Props) {
                 { props.heading }
                 { props.extra_info }
             </div>
-            <table className="table table-hover table-bordered table-condensed">
+            <table className="table table-hover table-bordered">
                 <colgroup>
                     <col style={{"width": "10%"}}/>
                     <col style={{"width": "50%"}}/>
