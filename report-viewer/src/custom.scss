@@ -122,3 +122,9 @@ pre, samp {
 .multi-line-text {
 	white-space: pre-line;
 }
+
+.table tbody {
+	border-top-width: 0px !important;
+	border-top-style: none !important;
+	border-top-color: inherit !important;
+}
