@@ -13,6 +13,7 @@
     "react-scripts": "4.0.1",
     "react-scroll": "^1.7.10",
     "rewire": "^5.0.0",
+    "sass": "^1.45.2",
     "sprintf-js": "^1.1.2",
     "typescript": "^4.1.2",
     "uglifyjs-webpack-plugin": "^2.2.0",

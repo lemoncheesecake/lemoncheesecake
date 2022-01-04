@@ -1,0 +1,124 @@
+/* http://paletton.com/#uid=7000u0k3V4WaYgf7Lb1ac80gJaQ */
+
+/* body {
+	background-color: #0F1E1F;
+	padding-top: 20px;
+}
+
+table {
+	background-color: #0F2C2E;
+	border-color: #194547;
+}
+
+td {
+	color: #DDDDDD;
+}
+
+.table-bordered>tbody>tr>td, .table-bordered>tbody>tr>th, .table-bordered>tfoot>tr>td, .table-bordered>tfoot>tr>th, .table-bordered>thead>tr>td, .table-bordered>thead>tr>th {
+	border-color: #194547;
+	font-color: #000000;
+}
+
+.table>tbody>tr.danger>td, .table>tbody>tr.danger>th, .table>tbody>tr>td.danger, .table>tbody>tr>th.danger, .table>tfoot>tr.danger>td, .table>tfoot>tr.danger>th, .table>tfoot>tr>td.danger, .table>tfoot>tr>th.danger, .table>thead>tr.danger>td, .table>thead>tr.danger>th, .table>thead>tr>td.danger, .table>thead>tr>th.danger {
+	background-color: #752B29;
+}
+ */
+/* Keep this custom */
+
+body {
+	padding-top: 20px;
+}
+
+.container-fluid {
+	padding-left: 7%;
+	padding-right: 7%;
+}
+
+.panel-heading {
+	font-size: 13px;
+   	line-height: 1.0;
+   	padding: 4px 10px;
+}
+
+.table {
+	width: 100%;	
+	table-layout: fixed;
+}
+
+th, td {
+	font-size: 12px;
+   	line-height: 1.0;
+   	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
+.table>thead>tr>td.danger, .table>tbody>tr>td.danger, .table>tfoot>tr>td.danger, .table>thead>tr>th.danger, .table>tbody>tr>th.danger, .table>tfoot>tr>th.danger, .table>thead>tr.danger>td, .table>tbody>tr.danger>td, .table>tfoot>tr.danger>td, .table>thead>tr.danger>th, .table>tbody>tr.danger>th, .table>tfoot>tr.danger>th {
+	background-color: #803330;	
+}
+
+.step td:first-child {
+	padding-left: 15px;
+}
+
+.step, .check, .log, .attachment, .url {
+	background-color: #353d44;
+}
+
+.step_entry td:first-child, .test_status {
+    text-align: center ! important;
+    vertical-align: middle ! important;
+}
+
+.attachment img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.test td {
+    vertical-align: middle ! important;
+}
+
+.check_description, .check_result {
+	white-space: pre-wrap;
+}
+
+.extra-info-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.visibility-slave {
+    visibility: hidden;
+}
+
+.visibility-master:hover .visibility-slave {
+    visibility: visible;
+}
+
+.special {
+	font-style: italic;
+}
+
+pre, samp {
+    border: 0px;
+    padding: 0px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+}
+
+.anchorlink {
+    text-decoration: none;
+    opacity: 0.5;
+}
+
+.anchorlink:hover, .anchorlink:focus {
+    text-decoration: none;
+    opacity: 1;
+}
+
+.multi-line-text {
+	white-space: pre-line;
+}
