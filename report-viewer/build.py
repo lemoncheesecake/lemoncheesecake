@@ -10,7 +10,15 @@ import glob
 if os.system("yarn build") != 0:
     sys.exit(1)
 
-js_src_filename = glob.glob(osp.join("build", "static", "js", "main.*.js"))[0]
-js_dst_filename = osp.join("..", "lemoncheesecake", "resources", "html", "report.js")
-print("Copy %s into %s" % (js_src_filename, js_dst_filename))
-shutil.copy(js_src_filename, js_dst_filename)
+dst_dir = osp.join("..", "lemoncheesecake", "resources", "html")
+
+shutil.copy(
+    glob.glob(osp.join("build", "static", "js", "main.*.js"))[0],
+    osp.join(dst_dir, "report.js")
+)
+shutil.copy(
+    glob.glob(osp.join("build", "static", "css", "main.*.css"))[0],
+    osp.join(dst_dir, "report.css")
+)
+
+print("Copied JS and CSS files into %s" % dst_dir)
