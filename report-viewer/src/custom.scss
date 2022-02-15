@@ -1,3 +1,7 @@
+@import "bootswatch/dist/slate/_variables.scss";
+@import "bootstrap/scss/bootstrap";
+@import "bootswatch/dist/slate/_bootswatch.scss";
+
 body {
 	padding-top: 20px;
 }
@@ -13,7 +17,6 @@ body {
 }
 
 th, td {
-	font-size: 12px;
    	line-height: 1.0;
    	text-overflow: ellipsis;
 	overflow: hidden;
@@ -98,4 +101,42 @@ pre, samp {
 
 .card {
 	margin-bottom: 20px;
+}
+
+/* Customize font sizes */
+
+$content-font-size: 13px;
+
+samp {
+	font-size: $content-font-size;
+}
+
+table {
+	font-size: $content-font-size;
+}
+
+h4 {
+	font-size: 18px;
+}
+
+h4 small {
+	font-size: 16px;
+}
+
+h5 {
+	font-size: 14px;
+}
+
+h5 small {
+	font-size: 13px;
+	font-weight: 300;
+}
+
+h6 {
+	font-size: 14px;
+}
+
+.test_status {
+	font-size: 14px;
+	font-weight: 600;
 }

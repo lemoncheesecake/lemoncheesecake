@@ -51,7 +51,7 @@ function Status(props: {status: string | null}) {
     }
 
     return (
-        <span className={text_class} style={{fontSize: "120%"}}>
+        <span className={text_class}>
             {props.status ? props.status.toUpperCase() : "IN PROGRESS"}
         </span>
     );

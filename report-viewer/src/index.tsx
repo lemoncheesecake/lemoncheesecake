@@ -1,7 +1,6 @@
 import * as ReactDOM from 'react-dom';
 import ReportView from './ReportView';
 import registerServiceWorker from './registerServiceWorker';
-import "bootswatch/dist/slate/bootstrap.min.css";
 import './custom.scss';
 
 declare var reporting_data: Report;

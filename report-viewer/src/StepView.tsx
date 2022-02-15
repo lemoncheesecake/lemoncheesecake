@@ -69,7 +69,7 @@ export function StepView(props: Props) {
                     >
                     <td colSpan={4} className="visibility-master">
                         <h6 className="extra-info-container">
-                            <span style={{fontSize: "120%"}}>
+                            <span>
                                 <StepOutcomeView step={step}/>
                                 &nbsp;&nbsp;
                                 <span className="multi-line-text"><strong>{step.description}</strong></span>
