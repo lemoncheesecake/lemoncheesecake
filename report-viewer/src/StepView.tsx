@@ -19,8 +19,8 @@ function get_step_outcome(step: Step) {
 function StepOutcomeView(props: {step: Step}) {
     return (
         get_step_outcome(props.step) ?
-        <span className="glyphicon glyphicon-ok text-success"></span> :
-        <span className="glyphicon glyphicon-remove text-danger"></span>
+        <i className="bi bi-check-lg text-success" style={{fontSize: "16px"}}></i> :
+        <i className="bi bi-x-lg text-danger" style={{fontSize: "16px"}}></i>
     );
 }
 

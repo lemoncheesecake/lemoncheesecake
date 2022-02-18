@@ -55,6 +55,10 @@ th, td {
     align-items: center;
 }
 
+.time-extra-info {
+	font-size: 13px;
+}
+
 .visibility-slave {
     visibility: hidden;
 }
@@ -99,8 +103,8 @@ h5 {
 }
 
 h6 {
-	margin-top: 1px;
-	margin-bottom: 1px;
+	margin-top: 5px;
+	margin-bottom: 5px;
 }
 
 .table tbody {

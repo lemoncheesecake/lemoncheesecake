@@ -11,12 +11,12 @@ function TimeExtraInfoView(props: Props) {
     if (props.end) {
         const duration = humanize_duration(get_time_from_iso8601(props.end) - get_time_from_iso8601(props.start), true);
         return (
-            <span className='extra-info visibility-slave'>
-                {start_time} <span className="glyphicon glyphicon-arrow-right"/> {duration}
+            <span className='extra-info time-extra-info visibility-slave'>
+                {start_time} <i className="bi bi-clock-history"/> {duration}
             </span>
         );
     } else {
-        return <span className='extra-info visibility-slave'>{start_time}</span>;
+        return <span className='extra-info time-extra-info visibility-slave'>{start_time}</span>;
     }
 }
 

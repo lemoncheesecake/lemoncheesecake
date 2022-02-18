@@ -31,13 +31,13 @@ export function useAccordionHandler(propagateOpeningChange: (opened: boolean) =>
 export function AccordionOpeningIndicator(props: {opened: boolean}) {
     if (props.opened) {
         return  (
-            <span className="glyphicon glyphicon-resize-full visibility-slave" title="Collapse">
-            </span>
+            <i className="bi bi-arrows-angle-expand visibility-slave" title="Collapse">
+            </i>
         );
     } else {
         return  (
-            <span className="glyphicon glyphicon-resize-small visibility-slave" title="Expand">
-            </span>
+            <i className="bi bi-arrows-angle-contract visibility-slave" title="Expand">
+            </i>
         );
     }
 }

@@ -1,6 +1,7 @@
 import * as ReactDOM from 'react-dom';
 import ReportView from './ReportView';
 import registerServiceWorker from './registerServiceWorker';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import './custom.scss';
 
 declare var reporting_data: Report;

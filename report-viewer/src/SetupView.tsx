@@ -23,8 +23,8 @@ export function SetupView(props: SetupProps) {
                         {/* eslint jsx-a11y/anchor-has-content: "off" */}
                         <a
                             href={"#" + props.id}
-                            className="glyphicon glyphicon-link anchorlink extra-info visibility-slave"
-                            style={{fontSize: "90%"}}/>
+                            className="bi bi-link-45deg anchorlink extra-info visibility-slave"
+                            style={{fontSize: "120%"}}/>
                     </h5>
                     <TimeExtraInfoView start={props.result.start_time} end={props.result.end_time}/>
                 </div>

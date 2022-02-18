@@ -26,8 +26,8 @@ function TestView(props: Props) {
                         {/* eslint jsx-a11y/anchor-has-content: "off" */}
                         <a
                             href={"#" + test_id}
-                            className="glyphicon glyphicon-link anchorlink extra-info visibility-slave"
-                            style={{fontSize: "90%"}}
+                            className="bi bi-link-45deg anchorlink extra-info visibility-slave"
+                            style={{fontSize: "120%"}}
                         />
                         <br/>
                         <small>{test_id}</small>

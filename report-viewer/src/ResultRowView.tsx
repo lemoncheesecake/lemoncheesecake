@@ -57,25 +57,29 @@ function Status(props: {status: string | null}) {
     );
 }
 
+function HiddenOpeningIndicator() {
+    // keep an always invisible icon to keep a consistent alignment with other result rows
+    return  (
+        <span className="bi bi-caret-right-fill" style={{visibility: "hidden"}}>
+        </span>
+    );
+}
+
 function OpeningIndicator(props: {opened: boolean, hasSteps: boolean}) {
     if (props.hasSteps) {
         if (props.opened) {
             return  (
-                <span className="glyphicon glyphicon-chevron-down">
+                <span className="bi bi-caret-down-fill">
                 </span>
             );
         } else {
             return  (
-                <span className="visibility-slave glyphicon glyphicon-chevron-right">
+                <span className="visibility-slave bi bi-caret-right-fill">
                 </span>
             );
         }
     } else {
-        // keep an always invisible glyphicon to keep a consistent alignment with other result rows
-        return  (
-            <span className="glyphicon glyphicon-chevron-right" style={{visibility: "hidden"}}>
-            </span>
-        );
+        return <HiddenOpeningIndicator/>;
     }
 }
 
@@ -131,6 +135,7 @@ class ResultRowView extends React.Component<Props, State> {
                         <OpeningIndicator opened={this.isFocused()} hasSteps={hasSteps}/>
                         &nbsp;
                         <Status status={this.props.status}/>
+                        <HiddenOpeningIndicator/> { /* quick & dirty trick to have a centered status */ }
                     </td>
                     {this.props.children}
                 </tr>
