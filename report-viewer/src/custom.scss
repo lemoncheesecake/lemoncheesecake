@@ -137,6 +137,13 @@ table {
 	font-size: $content-font-size;
 }
 
+// See https://css-tricks.com/table-with-borders-only-on-the-inside/#aa-possibility-3-using-border-style-hidden
+// it makes the table's borders not overlap with the card's borders
+table.card-body {
+	border-collapse: collapse;
+	border-style: hidden;
+}
+
 h4 {
 	font-size: 18px;
 }
