@@ -17,7 +17,6 @@ body {
 }
 
 th, td {
-   	line-height: 1.0;
    	text-overflow: ellipsis;
 	overflow: hidden;
 }
@@ -33,6 +32,11 @@ th, td {
 .step_entry td:first-child, .test_status {
     text-align: center ! important;
     vertical-align: middle ! important;
+}
+
+.step_entry td {
+	padding-top: 0.35rem ! important;
+	padding-bottom: 0.35rem ! important;
 }
 
 .attachment img {
