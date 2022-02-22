@@ -9,7 +9,7 @@ interface Props {
 function ResultTableView(props: Props) {
     return (
         <div className='card'>
-            <div className="card-header extra-info-container visibility-master">
+            <div className="card-header text-white extra-info-container visibility-master">
                 { props.heading }
                 { props.extra_info }
             </div>

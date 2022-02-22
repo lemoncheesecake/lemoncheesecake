@@ -110,8 +110,8 @@ function SuiteView(props: SuiteProps) {
             <ResultTableView
                 heading={<Heading {...props}/>}
                 extra_info={
-                    <span className='extra-info visibility-slave'>
-                        {humanize_duration(get_suite_duration(suite), true)}
+                    <span className='extra-info time-extra-info visibility-slave'>
+                        <i className="bi bi-clock-history"/> {humanize_duration(get_suite_duration(suite), true)}
                     </span>}>
                 {results}
             </ResultTableView>
