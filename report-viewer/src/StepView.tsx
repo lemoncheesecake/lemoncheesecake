@@ -59,7 +59,7 @@ export function StepView(props: Props) {
     if (entries.length > 0) {
         return (
             <>
-                <tr className="step" style={{cursor: "pointer"}}
+                <tr className="step table-active" style={{cursor: "pointer"}}
                     title={
                         opened ?
                         "Click to collapse step details.\nDouble-click to collapse ALL step details." :
