@@ -1,6 +1,6 @@
 import os
 import os.path as osp
-from shutil import copy
+from shutil import copy, copytree
 
 from lemoncheesecake.helpers.resources import get_resource_path
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSessionBuilderMixin, ReportingSession
@@ -19,6 +19,10 @@ class HtmlReportWriter(ReportingSession):
         copy(osp.join(src_dir, "report.js"), resources_dir)
         copy(osp.join(src_dir, "report.css"), resources_dir)
         copy(osp.join(src_dir, "logo.png"), resources_dir)
+        copy(osp.join(src_dir, "bootstrap-icons.css"), resources_dir)
+        os.mkdir(osp.join(resources_dir, "fonts"))
+        copy(osp.join(src_dir, "fonts", "bootstrap-icons.woff"), osp.join(resources_dir, "fonts"))
+        copy(osp.join(src_dir, "fonts", "bootstrap-icons.woff2"), osp.join(resources_dir, "fonts"))
         copy(osp.join(src_dir, "report.html"), self.report_dir)
 
     def on_test_session_end(self, _):

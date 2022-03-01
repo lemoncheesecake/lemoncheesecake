@@ -20,5 +20,19 @@ shutil.copy(
     glob.glob(osp.join("build", "static", "css", "main.*.css"))[0],
     osp.join(dst_dir, "report.css")
 )
+shutil.copy(
+    osp.join("node_modules", "bootstrap-icons", "font", "bootstrap-icons.css"),
+    dst_dir
+)
+# The Bootstrap Icons fonts are handled outside the React app since controlling the font paths inside the built CSS
+# is not (easily) feasible
+shutil.copy(
+    osp.join("node_modules", "bootstrap-icons", "font", "fonts", "bootstrap-icons.woff"),
+    osp.join(dst_dir, "fonts")
+)
+shutil.copy(
+    osp.join("node_modules", "bootstrap-icons", "font", "fonts", "bootstrap-icons.woff2"),
+    osp.join(dst_dir, "fonts")
+)
 
-print("Copied JS and CSS files into %s" % dst_dir)
+print("Copied JS, CSS and font files into %s" % dst_dir)
