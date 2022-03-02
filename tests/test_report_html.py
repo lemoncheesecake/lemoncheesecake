@@ -19,7 +19,10 @@ def test_html(tmpdir):
         "report.html",
         osp.join(".html", "report.js"),
         osp.join(".html", "report.css"),
-        osp.join(".html", "logo.png")
+        osp.join(".html", "logo.png"),
+        osp.join(".html", "bootstrap-icons.css"),
+        osp.join(".html", "fonts", "bootstrap-icons.woff"),
+        osp.join(".html", "fonts", "bootstrap-icons.woff2")
     )
     for path in expected:
         assert osp.exists(osp.join(tmpdir.strpath, path))
