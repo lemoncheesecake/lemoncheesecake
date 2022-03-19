@@ -109,6 +109,7 @@ class ResultRowView extends React.Component<Props, State> {
             duration: 1500,
             delay: 100,
             smooth: "easeInOutQuint",
+            offset: -60 // add an offset to take the top-fixed navbar height into account
           });
     }
 

@@ -84,37 +84,46 @@ export class DisplayOptionsView extends React.Component<Props, State> {
         }
     }
 
-    handleReset = (event: React.MouseEvent<HTMLInputElement>) => {
+    handleReset = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         this.updateOptions({onlyFailures: false, showDebugLogs: false, testFilter: ""})
     }
 
     render = () => {
         return (
-            <span>
-                <input type="checkbox" id="failures-only"
-                    checked={this.state.options.onlyFailures} onChange={this.handleOnlyFailuresChange}/>
-                &nbsp;
-                <label htmlFor="failures-only">Failed tests only</label>
-
-                &nbsp;|&nbsp;
-
-                <input type="checkbox" id="show-debug-logs"
-                    checked={this.state.options.showDebugLogs} onChange={this.handleShowDebugLogsChange}/>
-                &nbsp;
-                <label htmlFor="show-debug-logs">Debug logs</label>
-
-                &nbsp;|&nbsp;
-
-                <input type="text" id="text-filter" placeholder="Filter on test path &amp; description"
-                    size={40} autoFocus
-                    value={this.state.options.testFilter}
-                    onChange={this.handleTestFilterChange} onKeyDown={this.handleTestFilterKeyDown}/>
-
-                &nbsp;|&nbsp;
-
-                <input type="button" value="Reset" title="Reset all display options" className="btn btn-default"
-                    onClick={this.handleReset}/>
-            </span>
+            <div className="navbar navbar-expand fixed-top navbar-dark bg-dark" id="navbar">
+                <div className="container">
+                    <div className="collapse navbar-collapse py-1">
+                        <div className="d-flex">
+                            <input type="text" id="text-filter" placeholder="Filter on test path &amp; description"
+                                className="form-control me-sm-4"
+                                size={40} autoFocus
+                                value={this.state.options.testFilter}
+                                onChange={this.handleTestFilterChange} onKeyDown={this.handleTestFilterKeyDown}/>
+                        </div>
+                        <div className="form-check form-check-inline">
+                            <input type="checkbox" id="failures-only" className="form-check-input"
+                                checked={this.state.options.onlyFailures} onChange={this.handleOnlyFailuresChange}/>
+                            <label htmlFor="failures-only" className="form-check-label">Failed tests only</label>
+                        </div>
+                        <div className="form-check form-check-inline">
+                            <input type="checkbox" id="show-debug-logs" className="form-check-input"
+                                checked={this.state.options.showDebugLogs} onChange={this.handleShowDebugLogsChange}/>
+                            <label htmlFor="show-debug-logs" className="form-check-label">Debug logs</label>
+                        </div>
+                        <div className="d-flex">
+                            <button title="Reset all display options" type="submit"
+                                className="btn btn-secondary my-2 my-sm-0 me-sm-4"
+                                onClick={this.handleReset}>
+                                Reset
+                            </button>
+                            <a href="report.js" download="report.js" className="btn btn-secondary my-2 my-sm-0"
+                                title="Download raw report data">
+                                <i className="bi bi-download"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         );
     }
 }

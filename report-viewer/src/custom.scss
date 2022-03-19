@@ -1,16 +1,30 @@
 $white: rgba(#fff, 0.90);
 
+$container-max-widths: (
+  xxl: 1800px
+);
+
 @import "bootswatch/dist/slate/_variables.scss";
 @import "bootstrap/scss/bootstrap";
 @import "bootswatch/dist/slate/_bootswatch.scss";
 
 body {
-	padding-top: 20px;
+	padding-top: 80px;
 }
 
-.container-fluid {
+#main, #navbar {
 	padding-left: 7%;
 	padding-right: 7%;
+}
+
+#navbar {
+	border-right-width: 0px;
+	border-left-width: 0px;
+}
+
+#main {
+	margin-left: 0px;
+	margin-right: 0px;
 }
 
 .table {
@@ -127,6 +141,11 @@ h6 {
 	margin-bottom: 20px;
 }
 
+// Add a margin on top of the first result table
+#main > *:nth-child(4) {
+	margin-top: 40px;
+}
+
 .card-header {
 	font-size: 14px;
 }
@@ -175,4 +194,11 @@ h6 {
 .test_status {
 	font-size: 14px;
 	font-weight: 600;
+}
+
+// fix alignment issue of bootstrap-icons when used within buttons
+// see https://github.com/twbs/icons/issues/913
+.btn .bi {
+    display: inline-block;
+    vertical-align: -1.125em;
 }

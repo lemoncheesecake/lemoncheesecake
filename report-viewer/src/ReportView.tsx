@@ -167,47 +167,46 @@ class ReportView extends React.Component<ReportProps, ReportState> {
         let report = this.props.report;
 
         return (
-            <div>
-                <h1>{report.title}</h1>
-
-                <KeyValueTableView title="Information" rows={report.info}/>
-
-                <KeyValueTableView title="Statistics" rows={build_report_stats(report)}/>
-
+            <>
                 <DisplayOptionsView displayOptionsChange={this.handleDisplayOptionsChange}/>
+                <div className="container-xxl" id="main">
+                    <h1>{report.title}</h1>
 
-                <p style={{textAlign: 'right'}}><a href="report.js" download="report.js">Download raw report data</a></p>
+                    <KeyValueTableView title="Information" rows={report.info}/>
 
-                {
-                    report.test_session_setup
-                    && <SessionSetup
-                            result={report.test_session_setup}
-                            description="- Setup test session -" id="setup_test_session"
-                            focus={this.state.focus} onFocusChange={this.handleFocusChange}
-                            display_options={this.state.options}/>
-                }
-                {
-                    [...[...report.get_all_suites()].entries()].map(([index, suite]) =>
-                        <SuiteView
-                            suite={suite}
-                            focus={this.state.focus} onFocusChange={this.handleFocusChange}
-                            display_options={this.state.options}
-                            key={index}/>
+                    <KeyValueTableView title="Statistics" rows={build_report_stats(report)}/>
 
-                    )
-                }
+                    {
+                        report.test_session_setup
+                        && <SessionSetup
+                                result={report.test_session_setup}
+                                description="- Setup test session -" id="setup_test_session"
+                                focus={this.state.focus} onFocusChange={this.handleFocusChange}
+                                display_options={this.state.options}/>
+                    }
+                    {
+                        [...[...report.get_all_suites()].entries()].map(([index, suite]) =>
+                            <SuiteView
+                                suite={suite}
+                                focus={this.state.focus} onFocusChange={this.handleFocusChange}
+                                display_options={this.state.options}
+                                key={index}/>
 
-                {
-                    report.test_session_teardown
-                    && <SessionSetup
-                            result={report.test_session_teardown}
-                            description="- Teardown test session -" id="teardown_test_session"
-                            focus={this.state.focus} onFocusChange={this.handleFocusChange}
-                            display_options={this.state.options}/>
-                }
+                        )
+                    }
 
-                <MadeBy version={report.lemoncheesecake_version}/>
-            </div>
+                    {
+                        report.test_session_teardown
+                        && <SessionSetup
+                                result={report.test_session_teardown}
+                                description="- Teardown test session -" id="teardown_test_session"
+                                focus={this.state.focus} onFocusChange={this.handleFocusChange}
+                                display_options={this.state.options}/>
+                    }
+
+                    <MadeBy version={report.lemoncheesecake_version}/>
+                </div>
+            </>
         );
     }
 
