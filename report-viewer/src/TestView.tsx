@@ -2,7 +2,7 @@ import * as React from 'react';
 import TimeExtraInfoView from './TimeExtraInfoView';
 import ResultRowView from './ResultRowView';
 import { FocusProps } from './ResultRowView';
-import { DisplayOptions } from './DisplayOptionsView';
+import { DisplayOptions } from './NavbarView';
 
 interface Props extends FocusProps {
     test: Test,

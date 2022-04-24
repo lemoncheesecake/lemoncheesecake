@@ -3,7 +3,7 @@ import TestView from './TestView';
 import SetupView from './SetupView';
 import ResultTableView from './ResultTableView';
 import {FocusProps} from './ResultRowView';
-import {DisplayOptions, is_result_to_be_displayed} from './DisplayOptionsView';
+import {DisplayOptions, is_result_to_be_displayed} from './NavbarView';
 import {get_time_from_iso8601, humanize_duration} from './utils';
 
 interface SuiteProps extends FocusProps {

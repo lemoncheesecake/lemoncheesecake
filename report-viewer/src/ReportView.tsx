@@ -6,7 +6,7 @@ import { SetupProps, SetupView } from './SetupView';
 import ResultTableView from './ResultTableView';
 import { Focus } from './ResultRowView';
 import TimeExtraInfoView from './TimeExtraInfoView';
-import {DisplayOptionsView, DisplayOptions, is_result_to_be_displayed} from './DisplayOptionsView';
+import {NavbarView, DisplayOptions, is_result_to_be_displayed} from './NavbarView';
 import { get_time_from_iso8601, humanize_datetime_from_iso8601, humanize_duration } from './utils';
 import {upgrade_report} from './report-upgrader';
 
@@ -168,7 +168,7 @@ class ReportView extends React.Component<ReportProps, ReportState> {
 
         return (
             <>
-                <DisplayOptionsView displayOptionsChange={this.handleDisplayOptionsChange}/>
+                <NavbarView displayOptionsChange={this.handleDisplayOptionsChange}/>
                 <div className="container-xxl" id="main">
                     <h1>{report.title}</h1>
 

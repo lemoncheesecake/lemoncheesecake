@@ -45,7 +45,7 @@ export function is_step_entry_to_be_displayed(entry: StepEntry, options: Display
     return ! (entry.type === "log" && entry.level === "debug" && ! options.showDebugLogs);
 }
 
-export class DisplayOptionsView extends React.Component<Props, State> {
+export class NavbarView extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {

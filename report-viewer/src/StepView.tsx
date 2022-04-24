@@ -3,7 +3,7 @@ import CheckView from './CheckView';
 import Log from './LogView';
 import AttachmentView from './AttachmentView';
 import UrlView from './UrlView';
-import { DisplayOptions, is_step_entry_to_be_displayed } from './DisplayOptionsView';
+import { DisplayOptions, is_step_entry_to_be_displayed } from './NavbarView';
 import { useAccordionHandler, AccordionOpeningIndicator } from './accordion';
 
 function get_step_outcome(step: Step) {

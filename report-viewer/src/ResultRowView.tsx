@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {StepView} from './StepView';
 import {scroller} from 'react-scroll';
-import {DisplayOptions} from './DisplayOptionsView';
+import {DisplayOptions} from './NavbarView';
 
 export interface Focus {
     id: string,
