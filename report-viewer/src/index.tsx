@@ -8,7 +8,7 @@ declare var reporting_data: Report;
 window.addEventListener('load', () => {
     ReactDOM.render(
       typeof reporting_data !== "undefined" ? <ReportView report={reporting_data} /> : <h1>No report data is yet available.</h1>,
-      document.getElementsByTagName("body")[0] as HTMLElement
+      document.getElementById("root")
     );
     registerServiceWorker();
 });
