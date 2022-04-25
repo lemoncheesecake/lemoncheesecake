@@ -3,6 +3,7 @@ import TimeExtraInfoView from './TimeExtraInfoView';
 import ResultRowView from './ResultRowView';
 import { FocusProps } from './ResultRowView';
 import { DisplayOptions } from './NavbarView';
+import { MetadataView } from './MetadataView';
 
 interface Props extends FocusProps {
     test: Test,
@@ -35,21 +36,8 @@ function TestView(props: Props) {
                     <TimeExtraInfoView start={test.start_time} end={test.end_time}/>
                 </div>
             </td>
-            <td>
-                { test.tags.map((tag, index) => <div key={index}>{tag}</div>) }
-                { Object.keys(test.properties).map((prop) => <div key={prop}>{prop}: {test.properties[prop]}</div>) }
-            </td>
-            <td>
-                {
-                    test.links.map((link, index) =>
-                        <div key={index}>
-                            {/* eslint react/jsx-no-target-blank: "off" */}
-                            <a href={link.url} title={link.url} target="_blank">
-                                {link.name || link.url}
-                            </a>
-                        </div>
-                    )
-                }
+            <td colSpan={2}>
+                <MetadataView result={test}/>
             </td>
         </ResultRowView>
     )

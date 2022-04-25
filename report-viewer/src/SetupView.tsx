@@ -16,7 +16,7 @@ export function SetupView(props: SetupProps) {
             id={props.id} status={props.result.status} steps={props.result.steps}
             focus={props.focus} onFocusChange={props.onFocusChange}
             display_options={props.display_options}>
-            <td>
+            <td colSpan={3}>
                 <div className="extra-info-container">
                     <h5 className="special">
                         {props.description}&nbsp;
@@ -28,10 +28,6 @@ export function SetupView(props: SetupProps) {
                     </h5>
                     <TimeExtraInfoView start={props.result.start_time} end={props.result.end_time}/>
                 </div>
-            </td>
-            <td>
-            </td>
-            <td>
             </td>
         </ResultRowView>
     )
