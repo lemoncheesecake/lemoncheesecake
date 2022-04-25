@@ -195,10 +195,3 @@ h6 {
 	font-size: 14px;
 	font-weight: 600;
 }
-
-// fix alignment issue of bootstrap-icons when used within buttons
-// see https://github.com/twbs/icons/issues/913
-.btn .bi {
-    display: inline-block;
-    vertical-align: -1.125em;
-}
