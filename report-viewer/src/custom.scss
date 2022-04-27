@@ -195,3 +195,10 @@ h6 {
 	font-size: 14px;
 	font-weight: 600;
 }
+
+// fix react-scroll scrolling issue on Chrome since
+// the bootstrap5 upgrade
+// see https://github.com/fisshy/react-scroll/issues/475
+:root {
+	scroll-behavior: auto !important;
+}
