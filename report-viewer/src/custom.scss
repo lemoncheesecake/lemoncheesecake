@@ -202,3 +202,15 @@ h6 {
 :root {
 	scroll-behavior: auto !important;
 }
+
+// Fix the scroll-to-test feature on chrome when the report is loaded with a test anchor.
+// I've made a bruteforce debug to come to this workaround.
+// It changes the original CSS property line-height of bootstrap-icons from 1 to 0.
+// I don't have any idea of why it causes Chrome to badly scroll to the anchor.
+//
+// Check the following URL to see the original property definition:
+// https://github.com/twbs/icons/blob/85aaf06d7dd804ef36b8be2d019d67842708175e/font/bootstrap-icons.scss#L19
+//
+.bi::before, [class^="bi-"]::before, [class*=" bi-"]::before {
+  line-height: 0;
+}
