@@ -1,3 +1,13 @@
+# 1.13.0 (2022-04-30)
+
+- **HTML report**:
+  - upgrade bootstrap and bootswatch-slate theme from 3.3.6 to 5.1.3
+  - use bootstrap-icons over fontawesome
+  - many visual improvements among which:
+    - move all controls to a new fixed top-navbar
+    - make the report content more readable by increasing font size and contrast
+- Drop Python 3.6 support
+
 # 1.12.0 (2021-12-25)
 
 - **HTML report**:
