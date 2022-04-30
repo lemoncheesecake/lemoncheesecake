@@ -6,10 +6,19 @@ Created on Aug 20, 2016
 @author: nicolas
 '''
 
+import sys
 from setuptools import setup, find_packages
 
 import lemoncheesecake
 
+install_requires = ["colorama", "termcolor", "terminaltables", "six", "typing"]
+# slugify 5.0 and higher does no longer support Python 2.7 anymore.
+# Installing slugify using Python 2.7 unfortunately does not install a supported version of slugify,
+# meaning we must manually pick the right version ourself.
+if sys.version_info[0] == 2:
+    install_requires.append("python-slugify~=4.0.1")
+else:
+    install_requires.append("python-slugify")
 
 setup(
     name="lemoncheesecake",
@@ -47,7 +56,7 @@ setup(
 
     packages=find_packages(),
     include_package_data=True,
-    install_requires=("colorama", "termcolor", "terminaltables", "six", "typing", "python-slugify"),
+    install_requires=install_requires,
     extras_require={
         "xml": "lxml",
         "junit": "lxml",
