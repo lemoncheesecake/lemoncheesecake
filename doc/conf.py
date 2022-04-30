@@ -23,7 +23,7 @@ source_suffix = ['.rst']
 master_doc = 'toc'
 
 project = u'lemoncheesecake'
-copyright = u'2021, Nicolas Delon'
+copyright = u'2022, Nicolas Delon'
 author = u'Nicolas Delon'
 
 version = __version__
