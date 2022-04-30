@@ -6,7 +6,7 @@ interface Props {
 
 function UrlView(props: Props) {
     return (
-        <tr className="step_entry attachment">
+        <tr className="step_entry attachment table-active">
             <td className="text-uppercase text-info">URL</td>
             <td colSpan={3}>
                 <a href={props.url.url} target="_blank" rel="noopener noreferrer">

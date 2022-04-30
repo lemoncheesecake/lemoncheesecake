@@ -18,7 +18,7 @@ function KeyValueTableView(props: Props) {
     return (
         <div>
             <h2>{props.title}</h2>
-            <table className="table table-hover table-bordered table-condensed">
+            <table className="table table-hover table-bordered">
                 <colgroup>
                     <col style={{width: '30%'}}/>
                     <col style={{width: '70%'}}/>

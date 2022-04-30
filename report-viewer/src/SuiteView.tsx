@@ -3,8 +3,9 @@ import TestView from './TestView';
 import SetupView from './SetupView';
 import ResultTableView from './ResultTableView';
 import {FocusProps} from './ResultRowView';
-import {DisplayOptions, is_result_to_be_displayed} from './DisplayOptionsView';
+import {DisplayOptions, is_result_to_be_displayed} from './NavbarView';
 import {get_time_from_iso8601, humanize_duration} from './utils';
+import {MetadataView} from './MetadataView';
 
 interface SuiteProps extends FocusProps {
     suite: Suite,
@@ -39,29 +40,13 @@ function Heading(props: SuiteProps) {
     const suite_description = [...suite.get_hierachy()].map((s) => s.description).join(" > ");
     const suite_id = [...suite.get_hierachy()].map((s) => s.name).join(".");
 
-    const properties = Object.keys(suite.properties).map((prop) => prop + ": " + suite.properties[prop]);
-    const tags_and_properties = suite.tags.concat(properties).join(", ");
-
     return (
         <div>
             <span>
                 <h4 className="multi-line-text">{suite_description}<br/><small>{suite_id}</small></h4>
             </span>
-            <div>{tags_and_properties}</div>
             <div>
-                {
-                    /* eslint react/jsx-no-target-blank: "off" */
-                    suite.links
-                        .map(
-                            (link, index) =>
-                            <div key={index}>
-                                <a href={link.url} title={link.url} target="_blank">{link.name || link.url}</a>
-                            </div>
-                        )
-                        .reduce((accu, elem) => {
-                            return accu.length === 0 ? [elem] : [...accu, <span>,</span>, elem]
-                        }, Array.of<JSX.Element>())
-                }
+                <MetadataView result={props.suite}/>
             </div>
         </div>
     );
@@ -110,8 +95,8 @@ function SuiteView(props: SuiteProps) {
             <ResultTableView
                 heading={<Heading {...props}/>}
                 extra_info={
-                    <span className='extra-info visibility-slave'>
-                        {humanize_duration(get_suite_duration(suite), true)}
+                    <span className='extra-info time-extra-info visibility-slave'>
+                        <i className="bi bi-clock-history"/> {humanize_duration(get_suite_duration(suite), true)}
                     </span>}>
                 {results}
             </ResultTableView>

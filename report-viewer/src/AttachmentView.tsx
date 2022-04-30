@@ -13,7 +13,7 @@ function AttachmentView(props: Props) {
     }
 
     return (
-        <tr className="step_entry attachment">
+        <tr className="step_entry attachment table-active">
             <td className="text-uppercase text-info">ATTACHMENT</td>
             <td colSpan={3}>
                 {/* eslint react/jsx-no-target-blank: "off" */}

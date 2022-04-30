@@ -19,7 +19,7 @@ function LogView(props: Props) {
     const log = props.log;
 
     return (
-        <tr className="step_entry log">
+        <tr className="step_entry log table-active">
             <td className={"text-uppercase " + get_log_level_text_class(log.level)}>{log.level}</td>
             <td colSpan={3}>
                 <div className="extra-info-container visibility-master">

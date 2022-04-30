@@ -3,7 +3,7 @@ import CheckView from './CheckView';
 import Log from './LogView';
 import AttachmentView from './AttachmentView';
 import UrlView from './UrlView';
-import { DisplayOptions, is_step_entry_to_be_displayed } from './DisplayOptionsView';
+import { DisplayOptions, is_step_entry_to_be_displayed } from './NavbarView';
 import { useAccordionHandler, AccordionOpeningIndicator } from './accordion';
 
 function get_step_outcome(step: Step) {
@@ -19,8 +19,8 @@ function get_step_outcome(step: Step) {
 function StepOutcomeView(props: {step: Step}) {
     return (
         get_step_outcome(props.step) ?
-        <span className="glyphicon glyphicon-ok text-success"></span> :
-        <span className="glyphicon glyphicon-remove text-danger"></span>
+        <i className="bi bi-check-lg text-success" style={{fontSize: "16px"}}></i> :
+        <i className="bi bi-x-lg text-danger" style={{fontSize: "16px"}}></i>
     );
 }
 
@@ -59,7 +59,7 @@ export function StepView(props: Props) {
     if (entries.length > 0) {
         return (
             <>
-                <tr className="step" style={{cursor: "pointer"}}
+                <tr className="step table-active" style={{cursor: "pointer"}}
                     title={
                         opened ?
                         "Click to collapse step details.\nDouble-click to collapse ALL step details." :
@@ -69,7 +69,7 @@ export function StepView(props: Props) {
                     >
                     <td colSpan={4} className="visibility-master">
                         <h6 className="extra-info-container">
-                            <span style={{fontSize: "120%"}}>
+                            <span>
                                 <StepOutcomeView step={step}/>
                                 &nbsp;&nbsp;
                                 <span className="multi-line-text"><strong>{step.description}</strong></span>

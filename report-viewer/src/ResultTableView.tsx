@@ -8,12 +8,12 @@ interface Props {
 
 function ResultTableView(props: Props) {
     return (
-        <div className='panel panel-default'>
-            <div className="panel-heading extra-info-container visibility-master">
+        <div className='card'>
+            <div className="card-header text-white extra-info-container visibility-master">
                 { props.heading }
                 { props.extra_info }
             </div>
-            <table className="table table-hover table-bordered table-condensed">
+            <table className="card-body table table-hover table-bordered">
                 <colgroup>
                     <col style={{"width": "10%"}}/>
                     <col style={{"width": "50%"}}/>

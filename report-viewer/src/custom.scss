@@ -1,0 +1,216 @@
+$white: rgba(#fff, 0.90);
+
+$container-max-widths: (
+  xxl: 1800px
+);
+
+@import "bootswatch/dist/slate/_variables.scss";
+@import "bootstrap/scss/bootstrap";
+@import "bootswatch/dist/slate/_bootswatch.scss";
+
+body {
+	padding-top: 80px;
+}
+
+#main, #navbar {
+	padding-left: 7%;
+	padding-right: 7%;
+}
+
+#navbar {
+	border-right-width: 0px;
+	border-left-width: 0px;
+}
+
+#main {
+	margin-left: 0px;
+	margin-right: 0px;
+}
+
+.table {
+	width: 100%;	
+	table-layout: fixed;
+}
+
+th, td {
+   	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
+.step td:first-child {
+	padding-left: 15px;
+}
+
+.step, .check, .log, .attachment, .url {
+	background-color: #353d44;
+}
+
+.step_entry td:first-child, .test_status {
+    text-align: center ! important;
+    vertical-align: middle ! important;
+}
+
+.step_entry td {
+	padding-top: 0.35rem ! important;
+	padding-bottom: 0.35rem ! important;
+}
+
+.attachment img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.test td {
+    vertical-align: middle ! important;
+}
+
+.check_description, .check_result {
+	white-space: pre-wrap;
+}
+
+.extra-info-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.time-extra-info {
+	font-size: 13px;
+}
+
+.visibility-slave {
+    visibility: hidden;
+}
+
+.visibility-master:hover .visibility-slave {
+    visibility: visible;
+}
+
+.special {
+	font-style: italic;
+}
+
+pre, samp {
+    border: 0px;
+    padding: 0px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+}
+
+.anchorlink {
+    text-decoration: none;
+    opacity: 0.5;
+}
+
+.anchorlink:hover, .anchorlink:focus {
+    text-decoration: none;
+    opacity: 1;
+}
+
+.multi-line-text {
+	white-space: pre-line;
+}
+
+h2 {
+	margin-top: 20px;
+}
+
+h5 {
+	margin-top: 1px;
+	margin-bottom: 1px;
+}
+
+h6 {
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+.table tbody {
+	border-top-width: 0px !important;
+	border-top-style: none !important;
+	border-top-color: inherit !important;
+}
+
+.table {
+	margin-bottom: 0px ! important;
+}
+
+.card {
+	margin-bottom: 20px;
+}
+
+// Add a margin on top of the first result table
+#main > *:nth-child(4) {
+	margin-top: 40px;
+}
+
+.card-header {
+	font-size: 14px;
+}
+
+/* Customize font sizes */
+
+$content-font-size: 13px;
+
+samp {
+	font-size: $content-font-size;
+}
+
+table {
+	font-size: $content-font-size;
+}
+
+// See https://css-tricks.com/table-with-borders-only-on-the-inside/#aa-possibility-3-using-border-style-hidden
+// it makes the table's borders not overlap with the card's borders
+table.card-body {
+	border-collapse: collapse;
+	border-style: hidden;
+}
+
+h4 {
+	font-size: 18px;
+}
+
+h4 small {
+	font-size: 16px;
+	font-weight: 300;
+}
+
+h5 {
+	font-size: 14px;
+}
+
+h5 small {
+	font-size: 13px;
+	font-weight: 300;
+}
+
+h6 {
+	font-size: 14px;
+}
+
+.test_status {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+// fix react-scroll scrolling issue on Chrome since
+// the bootstrap5 upgrade
+// see https://github.com/fisshy/react-scroll/issues/475
+:root {
+	scroll-behavior: auto !important;
+}
+
+// Fix the scroll-to-test feature on chrome when the report is loaded with a test anchor.
+// I've made a bruteforce debug to come to this workaround.
+// It changes the original CSS property line-height of bootstrap-icons from 1 to 0.
+// I don't have any idea of why it causes Chrome to badly scroll to the anchor.
+//
+// Check the following URL to see the original property definition:
+// https://github.com/twbs/icons/blob/85aaf06d7dd804ef36b8be2d019d67842708175e/font/bootstrap-icons.scss#L19
+//
+.bi::before, [class^="bi-"]::before, [class*=" bi-"]::before {
+  line-height: 0;
+}
