@@ -6,7 +6,7 @@ jobs:
   tests:
     strategy:
       matrix:
-        python-version: ["2.7", "3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
         os: [ubuntu-20.04, macos-11, windows-2019]
         exclude:
           # lxml does not currently support wheel for Python 3.10 on Windows
