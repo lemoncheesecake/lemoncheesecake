@@ -212,8 +212,7 @@ class _Parametrized(object):
             return
         if type(first_item) is dict:
             yield first_item
-            for item in source:
-                yield item
+            yield from source
         else:
             if isinstance(first_item, str):
                 names = [s.strip() for s in first_item.split(",")]

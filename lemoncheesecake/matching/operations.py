@@ -23,13 +23,11 @@ class _HasEntry(HasEntry):
 def _build_has_entry_matchers_from_arg(arg, path=()):
     if isinstance(arg, (list, tuple)):
         for idx, value in enumerate(arg):
-            for matcher in _build_has_entry_matchers_from_arg(value, path + (idx,)):
-                yield matcher
+            yield from _build_has_entry_matchers_from_arg(value, path + (idx,))
 
     elif isinstance(arg, dict):
         for key, value in arg.items():
-            for matcher in _build_has_entry_matchers_from_arg(value, path + (key,)):
-                yield matcher
+            yield from _build_has_entry_matchers_from_arg(value, path + (key,))
 
     elif isinstance(arg, Matcher):
         yield _HasEntry(KeyPathMatcher(path), arg)
@@ -52,15 +50,13 @@ def _build_has_entry_matchers_from_args(args, base_key=()):
 
     if len(args) == 1:
         assert isinstance(args[0], (list, tuple, dict))
-        for matcher in _build_has_entry_matchers_from_arg(args[0], base_key):
-            yield matcher
+        yield from _build_has_entry_matchers_from_arg(args[0], base_key)
 
     elif len(args) % 2 == 0:
         i = 0
         while i < len(args):
             key, value_matcher = args[i], args[i + 1]
-            for matcher in _build_has_entry_matchers_from_arg(value_matcher, base_key + _normalize_key_path(key)):
-                yield matcher
+            yield from _build_has_entry_matchers_from_arg(value_matcher, base_key + _normalize_key_path(key))
             i += 2
 
     else:

@@ -37,8 +37,7 @@ class BaseTreeNode(object):
     @property
     def hierarchy(self):
         if self.parent_suite is not None:
-            for node in self.parent_suite.hierarchy:
-                yield node
+            yield from self.parent_suite.hierarchy
         yield self
 
     @property
@@ -198,15 +197,13 @@ def flatten_suites(suites):
     # type: (Sequence[S]) -> Generator[S]
     for suite in suites:
         yield suite
-        for sub_suite in flatten_suites(suite.get_suites()):
-            yield sub_suite
+        yield from flatten_suites(suite.get_suites())
 
 
 def flatten_tests(suites):
     # type: (Sequence[S]) -> Generator[T]
     for suite in flatten_suites(suites):
-        for test in suite.get_tests():
-            yield test
+        yield from suite.get_tests()
 
 
 def find_suite(suites, hierarchy):

@@ -440,8 +440,7 @@ def flatten_results(suites):
     for suite in flatten_suites(suites):
         if suite.suite_setup:
             yield suite.suite_setup
-        for test in suite.get_tests():
-            yield test
+        yield from suite.get_tests()
         if suite.suite_teardown:
             yield suite.suite_teardown
 
@@ -585,8 +584,7 @@ class Report(object):
         """
         if self.test_session_setup:
             yield self.test_session_setup
-        for result in flatten_results(self.get_suites()):
-            yield result
+        yield from flatten_results(self.get_suites())
         if self.test_session_teardown:
             yield self.test_session_teardown
 
@@ -596,8 +594,7 @@ class Report(object):
         An iterator over all steps contained in the report.
         """
         for result in self.all_results():
-            for step in result.get_steps():
-                yield step
+            yield from result.get_steps()
 
     def build_message(self, template):
         # type: (str) -> str
