@@ -4,8 +4,7 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
-from typing import Any, Mapping, Sequence, Optional, Union
-import six
+from typing import Any, Mapping, Sequence, Optional
 
 from lemoncheesecake.session import log_check
 from lemoncheesecake.exceptions import AbortTest
@@ -75,7 +74,7 @@ def _format_result_details(details):
     if details is None:
         return None
 
-    if not isinstance(details, six.string_types):
+    if not isinstance(details, str):
         details = str(details)
 
     return details[0].upper() + details[1:]

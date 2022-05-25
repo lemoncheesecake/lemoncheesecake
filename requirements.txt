@@ -1,5 +1,4 @@
 colorama
 termcolor
 terminaltables
-six
 typing

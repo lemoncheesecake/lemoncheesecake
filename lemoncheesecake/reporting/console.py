@@ -2,7 +2,6 @@ from __future__ import print_function
 
 from terminaltables import AsciiTable
 from termcolor import colored
-import six
 
 from lemoncheesecake.helpers.text import wrap_text
 from lemoncheesecake.helpers.time import humanize_duration
@@ -211,7 +210,7 @@ class Renderer(object):
 
 def _print_chunks(chunks):
     for chunk in chunks:
-        print(chunk if six.PY3 else chunk.encode("utf8"))
+        print(chunk)
 
 
 def print_report(report, result_filter=None, max_width=None, show_debug_logs=False, explicit=False):

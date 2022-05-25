@@ -7,8 +7,6 @@ Created on Jan 24, 2016
 import traceback
 import itertools
 
-import six
-
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, LemoncheesecakeException, \
     UserError, TaskFailure, serialize_current_exception
 from lemoncheesecake.testtree import flatten_tests
@@ -38,10 +36,7 @@ class RunContext(TaskContext):
             self._aborted_session = True
         else:
             # FIXME: use exception instead of last implicit stacktrace
-            stacktrace = traceback.format_exc()
-            if six.PY2:
-                stacktrace = stacktrace.decode("utf-8", "replace")
-            self.session.log_error("Caught unexpected exception while running test: " + stacktrace)
+            self.session.log_error("Caught unexpected exception while running test: " + traceback.format_exc())
 
     def run_setup_funcs(self, funcs, location):
         teardown_funcs = []
@@ -115,7 +110,7 @@ class TestTask(BaseTask):
 
     def _handle_disabled_test(self, context):
         disabled = self.test.is_disabled()
-        disabled_reason = disabled if isinstance(disabled, six.string_types) else None
+        disabled_reason = disabled if isinstance(disabled, str) else None
         context.session.disable_test(self.test, disabled_reason)
 
     def skip(self, context, reason=None):

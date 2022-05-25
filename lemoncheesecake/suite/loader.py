@@ -3,7 +3,6 @@ import os.path as osp
 import inspect
 
 from typing import Sequence, Any, List
-import six
 
 from lemoncheesecake.helpers.moduleimport import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
 from lemoncheesecake.helpers.introspection import get_object_attributes
@@ -29,19 +28,19 @@ def _is_test_function(obj):
 
 def _check_tags(tags):
     return isinstance(tags, (list, tuple)) and \
-           all(isinstance(tag, six.string_types) for tag in tags)
+           all(isinstance(tag, str) for tag in tags)
 
 
 def _check_properties(props):
     return isinstance(props, dict) and \
-        all(isinstance(key, six.string_types) for key in props.keys()) and \
-        all(isinstance(value, six.string_types) for value in props.values())
+        all(isinstance(key, str) for key in props.keys()) and \
+        all(isinstance(value, str) for value in props.values())
 
 
 def _check_links(links):
     return isinstance(links, (list, tuple)) and \
-        all(isinstance(url, six.string_types) for url, _ in links) and \
-        all(name is None or isinstance(name, six.string_types) for _, name in links)
+        all(isinstance(url, str) for url, _ in links) and \
+        all(name is None or isinstance(name, str) for _, name in links)
 
 
 def _check_test_tree_node_types(node):

@@ -13,8 +13,6 @@ from typing import Optional
 import warnings
 import functools
 
-import six
-
 from lemoncheesecake.reporting import Report, ReportWriter, ReportLocation, Log
 from lemoncheesecake import events
 from lemoncheesecake.helpers.typecheck import check_type_string, check_type_bool
@@ -393,10 +391,8 @@ def save_image_file(filename, description=None):
 
 
 def _save_attachment_content(content, filename, description=None, as_image=False):
-    if type(content) is six.text_type:
+    if isinstance(content, str):
         opening_mode = "w"
-        if six.PY2:
-            content = content.encode("utf-8")
     else:
         opening_mode = "wb"
 
@@ -469,9 +465,6 @@ class Thread(threading.Thread):
             return super(Thread, self).run()
         except Exception:
             # FIXME: use exception instead of last implicit stacktrace
-            stacktrace = traceback.format_exc()
-            if six.PY2:
-                stacktrace = stacktrace.decode("utf-8", "replace")
-            log_error("Caught unexpected exception while running test: " + stacktrace)
+            log_error("Caught unexpected exception while running test: " + traceback.format_exc())
         finally:
             self._session.end_step()

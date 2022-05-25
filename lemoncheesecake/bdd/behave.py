@@ -7,7 +7,6 @@ import os
 import inspect
 
 from slugify import slugify
-import six
 
 from lemoncheesecake.reporting import ReportLocation
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy, DEFAULT_REPORT_SAVING_STRATEGY
@@ -110,7 +109,7 @@ class _Hooks(object):
         suite = Suite(
             None, _Hooks._make_suite_name(feature), _Hooks._make_suite_description(feature)
         )
-        suite.tags.extend(map(six.text_type, feature.tags))
+        suite.tags.extend(map(str, feature.tags))
         return suite
 
     @staticmethod
@@ -119,7 +118,7 @@ class _Hooks(object):
             _Hooks._make_test_name(scenario), _Hooks._make_test_description(scenario), None
         )
         test.parent_suite = context.current_suite
-        test.tags.extend(map(six.text_type, scenario.tags))
+        test.tags.extend(map(str, scenario.tags))
         return test
 
     def before_all(self, _):

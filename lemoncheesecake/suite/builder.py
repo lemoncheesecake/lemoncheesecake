@@ -9,7 +9,6 @@ import copy
 
 from typing import Any, Iterable, Callable, Optional, Tuple, Sequence, Union
 
-from lemoncheesecake.helpers.text import STRING_TYPES
 from lemoncheesecake.suite.core import InjectedFixture, Test
 
 
@@ -216,7 +215,7 @@ class _Parametrized(object):
             for item in source:
                 yield item
         else:
-            if type(first_item) in STRING_TYPES:
+            if isinstance(first_item, str):
                 names = [s.strip() for s in first_item.split(",")]
             else:
                 names = first_item  # assume list or tuple

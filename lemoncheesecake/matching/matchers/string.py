@@ -10,14 +10,14 @@ import json
 
 from typing import Any, Pattern, Union, Callable
 
-from lemoncheesecake.helpers.text import jsonify, STRING_TYPES
+from lemoncheesecake.helpers.text import jsonify
 from lemoncheesecake.matching.matcher import Matcher, MatchResult
 
 _REGEXP_TYPE = type(re.compile(r"dummy"))
 
 
 def _is_string(actual):
-    return type(actual) in STRING_TYPES
+    return isinstance(actual, str)
 
 
 class StartsWith(Matcher):

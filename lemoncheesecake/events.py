@@ -5,7 +5,7 @@ import inspect
 import threading
 from contextlib import contextmanager
 
-from six.moves.queue import Queue
+from queue import Queue
 
 from lemoncheesecake.helpers.text import camel_case_to_snake_case
 from lemoncheesecake.exceptions import serialize_current_exception
