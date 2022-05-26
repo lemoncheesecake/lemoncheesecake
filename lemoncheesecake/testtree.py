@@ -5,7 +5,6 @@ Created on Jun 16, 2017
 '''
 
 import copy
-from collections import OrderedDict
 
 from typing import Union, Tuple, List, Sequence, TypeVar, Generator
 
@@ -121,9 +120,9 @@ T = TypeVar("T", bound=BaseTest)
 class BaseSuite(BaseTreeNode):
     def __init__(self, name, description):
         BaseTreeNode.__init__(self, name, description)
-        # NB: use OrderedDict instead of list to enable fast test lookup in suites
+        # NB: use a dict instead of a list to enable fast test lookup in suites
         # containing a large number of tests
-        self._tests = OrderedDict()
+        self._tests = {}
         self._suites = []
 
     def add_test(self, test):
@@ -165,7 +164,7 @@ class BaseSuite(BaseTreeNode):
     def pull_node(self):
         # type: () -> "BaseSuite"
         node = BaseTreeNode.pull_node(self)
-        node._tests = OrderedDict()
+        node._tests = {}
         node._suites = []
         return node
 

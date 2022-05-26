@@ -1,5 +1,4 @@
 import inspect
-from collections import OrderedDict
 from typing import List, Any, Sequence, Callable, Optional
 
 from lemoncheesecake.helpers.moduleimport import import_module, get_matching_files, get_py_files_from_dir
@@ -180,7 +179,7 @@ class BuiltinFixture(_BaseFixture):
 class ScheduledFixtures(object):
     def __init__(self, scope, fixtures=(), parent_scheduled_fixtures=None):
         self.scope = scope
-        self._fixtures = OrderedDict()
+        self._fixtures = {}
         self._parent_scheduled_fixtures = parent_scheduled_fixtures
         self._results = {}
         for fixture in fixtures:

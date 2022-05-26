@@ -6,7 +6,6 @@ Created on Mar 27, 2016
 
 import re
 import json
-from collections import OrderedDict
 import time
 
 import lemoncheesecake
@@ -24,56 +23,47 @@ def _serialize_time(t):
     return format_time_as_iso8601(t) if t is not None else None
 
 
-def _odict(*args):
-    d = OrderedDict()
-    i = 0
-    while i < len(args):
-        d[args[i]] = args[i+1]
-        i += 2
-    return d
-
-
 def _serialize_steps(steps):
     json_steps = []
     for step in steps:
-        json_step = _odict(
-            "description", step.description,
-            "start_time", _serialize_time(step.start_time),
-            "end_time", _serialize_time(step.end_time),
-            "entries", []
-        )
+        json_step = {
+            "description": step.description,
+            "start_time": _serialize_time(step.start_time),
+            "end_time": _serialize_time(step.end_time),
+            "entries": []
+        }
         json_steps.append(json_step)
         for log in step.get_logs():
             if isinstance(log, Log):
-                json_log = _odict(
-                    "type", "log",
-                    "level", log.level,
-                    "message", log.message,
-                    "time", _serialize_time(log.time)
-                )
+                json_log = {
+                    "type": "log",
+                    "level": log.level,
+                    "message": log.message,
+                    "time": _serialize_time(log.time)
+                }
             elif isinstance(log, Attachment):
-                json_log = _odict(
-                    "type", "attachment",
-                    "description", log.description,
-                    "filename", log.filename,
-                    "as_image", log.as_image,
-                    "time", _serialize_time(log.time)
-                )
+                json_log = {
+                    "type": "attachment",
+                    "description": log.description,
+                    "filename": log.filename,
+                    "as_image": log.as_image,
+                    "time": _serialize_time(log.time)
+                }
             elif isinstance(log, Url):
-                json_log = _odict(
-                    "type", "url",
-                    "description", log.description,
-                    "url", log.url,
-                    "time", _serialize_time(log.time)
-                )
+                json_log = {
+                    "type": "url",
+                    "description": log.description,
+                    "url": log.url,
+                    "time": _serialize_time(log.time)
+                }
             elif isinstance(log, Check):
-                json_log = _odict(
-                    "type", "check",
-                    "description", log.description,
-                    "is_successful", log.is_successful,
-                    "details", log.details,
-                    "time", _serialize_time(log.time)
-                )
+                json_log = {
+                    "type": "check",
+                    "description": log.description,
+                    "is_successful": log.is_successful,
+                    "details": log.details,
+                    "time": _serialize_time(log.time)
+                }
             else:
                 raise ValueError("Don't know how to handle step log %s" % log)
             json_step["entries"].append(json_log)
@@ -81,22 +71,23 @@ def _serialize_steps(steps):
 
 
 def _serialize_node_metadata(node, json_node):
-    json_node.update(_odict(
-        "name", node.name, "description", node.description,
-        "tags", node.tags,
-        "properties", node.properties,
-        "links", [_odict("name", link[1], "url", link[0]) for link in node.links]
-    ))
+    json_node.update({
+        "name": node.name,
+        "description": node.description,
+        "tags": node.tags,
+        "properties": node.properties,
+        "links": [{"name": link[1], "url": link[0]} for link in node.links]
+    })
 
 
 def _serialize_result(result):
-    return _odict(
-        "start_time", _serialize_time(result.start_time),
-        "end_time", _serialize_time(result.end_time),
-        "steps", _serialize_steps(result.get_steps()),
-        "status", result.status,
-        "status_details", result.status_details
-    )
+    return {
+        "start_time": _serialize_time(result.start_time),
+        "end_time": _serialize_time(result.end_time),
+        "steps": _serialize_steps(result.get_steps()),
+        "status": result.status,
+        "status_details": result.status_details
+    }
 
 
 def _serialize_test_result(test):
@@ -106,12 +97,12 @@ def _serialize_test_result(test):
 
 
 def _serialize_suite_result(suite):
-    json_suite = _odict(
-        "start_time", _serialize_time(suite.start_time),
-        "end_time", _serialize_time(suite.end_time),
-        "tests", list(map(_serialize_test_result, suite.get_tests())),
-        "suites", list(map(_serialize_suite_result, suite.get_suites()))
-    )
+    json_suite = {
+        "start_time": _serialize_time(suite.start_time),
+        "end_time": _serialize_time(suite.end_time),
+        "tests": list(map(_serialize_test_result, suite.get_tests())),
+        "suites": list(map(_serialize_suite_result, suite.get_suites()))
+    }
     _serialize_node_metadata(suite, json_suite)
     if suite.suite_setup:
         json_suite["suite_setup"] = _serialize_result(suite.suite_setup)
@@ -122,16 +113,16 @@ def _serialize_suite_result(suite):
 
 
 def serialize_report_into_json(report):
-    json_report = _odict(
-        "lemoncheesecake_version", lemoncheesecake.__version__,
-        "report_version", 1.1,
-        "start_time", _serialize_time(report.start_time),
-        "end_time", _serialize_time(report.end_time),
-        "generation_time", _serialize_time(time.time()),
-        "nb_threads", report.nb_threads,
-        "title", report.title,
-        "info", [[n, v] for n, v in report.info]
-    )
+    json_report = {
+        "lemoncheesecake_version": lemoncheesecake.__version__,
+        "report_version": 1.1,
+        "start_time": _serialize_time(report.start_time),
+        "end_time": _serialize_time(report.end_time),
+        "generation_time": _serialize_time(time.time()),
+        "nb_threads": report.nb_threads,
+        "title": report.title,
+        "info": [[n, v] for n, v in report.info]
+    }
 
     if report.test_session_setup:
         json_report["test_session_setup"] = _serialize_result(report.test_session_setup)
