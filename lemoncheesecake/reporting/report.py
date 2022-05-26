@@ -74,7 +74,7 @@ class Log(StepLog):
 
     def __init__(self, level, message, ts):
         # type: (str, str, float) -> None
-        super(Log, self).__init__(ts)
+        super().__init__(ts)
         #: Log level.
         self.level = level
         #: Log message.
@@ -88,7 +88,7 @@ class Check(StepLog):
     """
     def __init__(self, description, is_successful, details, ts):
         # type: (str, bool, Optional[str], float) -> None
-        super(Check, self).__init__(ts)
+        super().__init__(ts)
         #: Check description.
         self.description = description
         #: Whether the check is successful or not (boolean).
@@ -104,7 +104,7 @@ class Attachment(StepLog):
     """
     def __init__(self, description, filename, as_image, ts):
         # type: (str, str, bool, float) -> None
-        super(Attachment, self).__init__(ts)
+        super().__init__(ts)
         #: Attachment description.
         self.description = description
         #: Attachment filename, this is a path relative to the report directory.
@@ -120,7 +120,7 @@ class Url(StepLog):
     """
     def __init__(self, description, url, ts):
         # type: (str, str, float) -> None
-        super(Url, self).__init__(ts)
+        super().__init__(ts)
         #: Optional description.
         self.description = description
         #: Actual url.
@@ -332,7 +332,7 @@ class SuiteResult(BaseSuite):
         """
         Return the tests contained in the suite.
         """
-        tests = super(SuiteResult, self).get_tests()
+        tests = super().get_tests()
         return sorted(tests, key=lambda t: t.rank)
 
     def get_suites(self):
@@ -340,7 +340,7 @@ class SuiteResult(BaseSuite):
         """
         Return the sub-suites contained in the suite.
         """
-        suites = super(SuiteResult, self).get_suites()
+        suites = super().get_suites()
         return sorted(suites, key=lambda s: s.rank)
 
     def pull_node(self):

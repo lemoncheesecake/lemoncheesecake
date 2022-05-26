@@ -17,7 +17,7 @@ from lemoncheesecake.fixture import initialize_fixture_cache
 
 class RunContext(TaskContext):
     def __init__(self, session, fixture_registry, force_disabled, stop_on_failure):
-        super(RunContext, self).__init__()
+        super().__init__()
         self.session = session
         self.fixture_registry = fixture_registry
         self.force_disabled = force_disabled
@@ -65,12 +65,12 @@ class RunContext(TaskContext):
                     self.handle_exception(e)
 
     def enable_task_abort(self):
-        super(RunContext, self).enable_task_abort()
+        super().enable_task_abort()
         self.session.aborted = True
 
     def is_task_to_be_skipped(self, task):
         # check for error in base implementation
-        skip_reason = super(RunContext, self).is_task_to_be_skipped(task)
+        skip_reason = super().is_task_to_be_skipped(task)
         if skip_reason:
             return skip_reason
 

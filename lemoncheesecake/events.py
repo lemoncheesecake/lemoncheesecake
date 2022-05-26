@@ -157,7 +157,7 @@ class SyncEventManager(EventManager):
 
 class _ReportEvent(Event):
     def __init__(self, report, event_time=None):
-        super(_ReportEvent, self).__init__(event_time)
+        super().__init__(event_time)
         self.report = report
 
 
@@ -191,7 +191,7 @@ class TestSessionTeardownEndEvent(Event):
 
 class _SuiteEvent(Event):
     def __init__(self, suite, event_time=None):
-        super(_SuiteEvent, self).__init__(event_time)
+        super().__init__(event_time)
         self.suite = suite
 
     def __str__(self):
@@ -228,7 +228,7 @@ class SuiteTeardownEndEvent(_SuiteEvent):
 
 class _TestEvent(Event):
     def __init__(self, test, event_time=None):
-        super(_TestEvent, self).__init__(event_time)
+        super().__init__(event_time)
         self.test = test
 
     def __str__(self):
@@ -245,13 +245,13 @@ class TestEndEvent(_TestEvent):
 
 class TestSkippedEvent(_TestEvent):
     def __init__(self, test, reason, event_time=None):
-        super(TestSkippedEvent, self).__init__(test, event_time)
+        super().__init__(test, event_time)
         self.skipped_reason = reason
 
 
 class TestDisabledEvent(_TestEvent):
     def __init__(self, test, reason, event_time=None):
-        super(TestDisabledEvent, self).__init__(test, event_time)
+        super().__init__(test, event_time)
         self.disabled_reason = reason
 
 
@@ -261,13 +261,13 @@ class TestDisabledEvent(_TestEvent):
 
 class RuntimeEvent(Event):
     def __init__(self, location, event_time=None):
-        super(RuntimeEvent, self).__init__(event_time)
+        super().__init__(event_time)
         self.location = location
 
 
 class StepStartEvent(RuntimeEvent):
     def __init__(self, location, description, thread_id, event_time=None):
-        super(StepStartEvent, self).__init__(location, event_time)
+        super().__init__(location, event_time)
         self.step_description = description
         self.thread_id = thread_id
 
@@ -279,7 +279,7 @@ class StepStartEvent(RuntimeEvent):
 
 class StepEndEvent(RuntimeEvent):
     def __init__(self, location, step, thread_id, event_time=None):
-        super(StepEndEvent, self).__init__(location, event_time)
+        super().__init__(location, event_time)
         self.step = step
         self.thread_id = thread_id
 
@@ -290,14 +290,14 @@ class SteppedEvent(RuntimeEvent):
     class for all events happening within a step.
     """
     def __init__(self, location, step, thread_id, event_time=None):
-        super(SteppedEvent, self).__init__(location, event_time)
+        super().__init__(location, event_time)
         self.step = step
         self.thread_id = thread_id
 
 
 class LogEvent(SteppedEvent):
     def __init__(self, location, step, thread_id, level, message, event_time=None):
-        super(LogEvent, self).__init__(location, step, thread_id, event_time)
+        super().__init__(location, step, thread_id, event_time)
         self.log_level = level
         self.log_message = message
 
@@ -309,7 +309,7 @@ class LogEvent(SteppedEvent):
 
 class CheckEvent(SteppedEvent):
     def __init__(self, location, step, thread_id, description, is_successful, details=None, event_time=None):
-        super(CheckEvent, self).__init__(location, step, thread_id, event_time)
+        super().__init__(location, step, thread_id, event_time)
         self.check_description = description
         self.check_is_successful = is_successful
         self.check_details = details
@@ -323,7 +323,7 @@ class CheckEvent(SteppedEvent):
 
 class LogAttachmentEvent(SteppedEvent):
     def __init__(self, location, step, thread_id, path, description, as_image, event_time=None):
-        super(LogAttachmentEvent, self).__init__(location, step, thread_id, event_time)
+        super().__init__(location, step, thread_id, event_time)
         self.attachment_path = path
         self.attachment_description = description
         self.as_image = as_image
@@ -336,7 +336,7 @@ class LogAttachmentEvent(SteppedEvent):
 
 class LogUrlEvent(SteppedEvent):
     def __init__(self, location, step, thread_id, url, description, event_time=None):
-        super(LogUrlEvent, self).__init__(location, step, thread_id, event_time)
+        super().__init__(location, step, thread_id, event_time)
         self.url = url
         self.url_description = description
 

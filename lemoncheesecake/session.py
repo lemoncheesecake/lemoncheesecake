@@ -445,7 +445,7 @@ class Thread(threading.Thread):
     within a test.
     """
     def __init__(self, *args, **kwargs):
-        super(Thread, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._session = Session.get()
 
         # flush result starting event if any
@@ -462,7 +462,7 @@ class Thread(threading.Thread):
         self._session.cursor = self._cursor
         self._session.start_step(self._default_step)
         try:
-            return super(Thread, self).run()
+            return super().run()
         except Exception:
             # FIXME: use exception instead of last implicit stacktrace
             log_error("Caught unexpected exception while running test: " + traceback.format_exc())
