@@ -73,7 +73,7 @@ def fixture(names=None, scope="test", per_thread=False):
     return wrapper
 
 
-class _BaseFixtureResult(object):
+class _BaseFixtureResult:
     def get(self):
         raise NotImplementedError()
 
@@ -140,7 +140,7 @@ def _build_fixture_result_from_func(name, func, params, per_thread=False):
             return _FixtureResult(value)
 
 
-class _BaseFixture(object):
+class _BaseFixture:
     def __init__(self, name, scope, params, per_thread):
         self.name = name
         self.scope = scope
@@ -176,7 +176,7 @@ class BuiltinFixture(_BaseFixture):
         return self.result
 
 
-class ScheduledFixtures(object):
+class ScheduledFixtures:
     def __init__(self, scope, fixtures=(), parent_scheduled_fixtures=None):
         self.scope = scope
         self._fixtures = {}

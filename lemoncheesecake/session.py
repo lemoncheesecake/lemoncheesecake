@@ -25,14 +25,14 @@ def _get_thread_id():
     return threading.current_thread().ident
 
 
-class _Cursor(object):
+class _Cursor:
     def __init__(self, location, step=None):
         self.location = location
         self.step = step
         self.pending_events = []
 
 
-class Session(object):
+class Session:
     _instance = None
 
     def __init__(self, event_manager, report_dir, report):

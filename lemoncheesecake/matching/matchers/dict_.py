@@ -11,7 +11,7 @@ from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatcherDescri
 from lemoncheesecake.matching.matchers.composites import is_
 
 
-class EntryMatcher(object):
+class EntryMatcher:
     def build_description(self):
         raise NotImplementedError()
 

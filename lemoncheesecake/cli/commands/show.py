@@ -15,7 +15,7 @@ from lemoncheesecake.project import load_project
 from lemoncheesecake.reporting.console import serialize_metadata
 
 
-class TestTreeRenderer(object):
+class TestTreeRenderer:
     def __init__(self, show_description=False, indent=4):
         self.show_description = show_description
         self.indent = indent

@@ -59,7 +59,7 @@ def serialize_hierarchy_metadata(obj, hide_disabled=False):
     )
 
 
-class Renderer(object):
+class Renderer:
     def __init__(self, max_width, explicit=False, highlight=None, show_debug_logs=False):
         self.max_width = max_width
         self.explicit = explicit

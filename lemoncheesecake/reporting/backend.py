@@ -12,26 +12,26 @@ from lemoncheesecake.exceptions import LemoncheesecakeException
 _NEGATION_FLAGS = "-^~"
 
 
-class ReportingSession(object):
+class ReportingSession:
     pass
 
 
-class ReportingSessionBuilderMixin(object):
+class ReportingSessionBuilderMixin:
     def create_reporting_session(self, report_dir, report, parallel, report_saving_strategy):
         raise NotImplementedError()
 
 
-class ReportSerializerMixin(object):
+class ReportSerializerMixin:
     def save_report(self, filename, report):
         raise NotImplementedError()
 
 
-class ReportUnserializerMixin(object):
+class ReportUnserializerMixin:
     def load_report(self, filename):
         raise NotImplementedError()
 
 
-class ReportingBackend(object):
+class ReportingBackend:
     def get_name(self):
         raise NotImplementedError()
 

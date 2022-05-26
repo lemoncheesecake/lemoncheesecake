@@ -75,7 +75,7 @@ def _init_reporting_session(top_dir):
     return Session.create(SyncEventManager.load(), reporting_backends, report_dir, report_saving_strategy)
 
 
-class _Hooks(object):
+class _Hooks:
     def __init__(self, top_dir):
         self.top_dir = top_dir
         self.session = None

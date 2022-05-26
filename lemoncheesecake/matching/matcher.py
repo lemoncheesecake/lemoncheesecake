@@ -16,7 +16,7 @@ CONJUGATION_FORMS = {
 }
 
 
-class MatcherDescriptionTransformer(object):
+class MatcherDescriptionTransformer:
     """
     This class is used as a callable and passed to :py:meth:`Matcher.build_description`
     to transform the leading verb in description according to the transformer settings.
@@ -82,7 +82,7 @@ class MatcherDescriptionTransformer(object):
 MatchDescriptionTransformer = MatcherDescriptionTransformer
 
 
-class MatchResult(object):
+class MatchResult:
     def __init__(self, is_successful, description=None):
         # type: (bool, Optional[str]) -> None
         #: whether or not the match did succeed
@@ -116,7 +116,7 @@ class MatchResult(object):
         return self.__bool__()
 
 
-class Matcher(object):
+class Matcher:
     def build_description(self, transformation):
         # type: (MatcherDescriptionTransformer) -> str
         """

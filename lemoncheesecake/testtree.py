@@ -15,7 +15,7 @@ from lemoncheesecake.helpers.orderedset import OrderedSet
 # in generated api documentation
 # (see https://github.com/sphinx-doc/sphinx/issues/741)
 
-class BaseTreeNode(object):
+class BaseTreeNode:
     """
     :var name: name
     """

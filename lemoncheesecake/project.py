@@ -38,7 +38,7 @@ def get_caller_dir(stack):
     return os.path.dirname(frame_info[1])
 
 
-class Project(object):
+class Project:
     def __init__(self, project_dir=None):
         #: The project's directory path (optional, defaults to the caller dir)
         self.dir = osp.abspath(project_dir or get_caller_dir(inspect.stack()))  # type: str

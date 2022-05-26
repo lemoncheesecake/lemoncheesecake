@@ -51,7 +51,7 @@ def _get_duration(start_time, end_time):
         return None
 
 
-class StepLog(object):
+class StepLog:
     """
     Base class for logs contained in a Step instance.
     """
@@ -127,7 +127,7 @@ class Url(StepLog):
         self.url = url
 
 
-class Step(object):
+class Step:
     """
     This class holds logs occurring within a step.
     """
@@ -182,7 +182,7 @@ class Step(object):
         return _get_duration(self.start_time, self.end_time)
 
 
-class Result(object):
+class Result:
     """
     Holds the result of setup/teardown phase and it's also the base class of
     :py:class:`TestResult <lemoncheesecake.reporting.TestResult>`.
@@ -363,7 +363,7 @@ class SuiteResult(BaseSuite):
         return suite
 
 
-class ReportLocation(object):
+class ReportLocation:
     _TEST_SESSION_SETUP = 0
     _TEST_SESSION_TEARDOWN = 1
     _SUITE_SETUP = 2
@@ -445,7 +445,7 @@ def flatten_results(suites):
             yield suite.suite_teardown
 
 
-class Report(object):
+class Report:
     DEFAULT_TITLE = "Test Report"
 
     def __init__(self):
@@ -651,7 +651,7 @@ class Report(object):
         self.backend.save_report(self.path, self)
 
 
-class ReportStats(object):
+class ReportStats:
     def __init__(self):
         self.tests_nb = 0
         self.tests_nb_by_status = {s: 0 for s in Result.STATUSES}

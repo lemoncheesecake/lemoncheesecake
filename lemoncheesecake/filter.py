@@ -40,7 +40,7 @@ def _grep(pattern, steps):
     return any(map(pattern.search, _iter_grepable(steps)))
 
 
-class Filter(object):
+class Filter:
     def __bool__(self):
         raise NotImplementedError()
 

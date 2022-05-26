@@ -12,7 +12,7 @@ from typing import Any, Iterable, Callable, Optional, Tuple, Sequence, Union
 from lemoncheesecake.suite.core import InjectedFixture, Test
 
 
-class Metadata(object):
+class Metadata:
     _next_rank = 1
 
     def __init__(self):
@@ -198,7 +198,7 @@ def _format_naming_scheme(name_fmt, description_fmt):
     return naming_scheme
 
 
-class _Parametrized(object):
+class _Parametrized:
     def __init__(self, parameters_source, naming_scheme):
         self._parameters_source = parameters_source
         self.naming_scheme = naming_scheme

@@ -13,7 +13,7 @@ from lemoncheesecake.exceptions import serialize_current_exception
 DEBUG = False
 
 
-class Event(object):
+class Event:
     def __init__(self, event_time=None):
         self.time = event_time or time.time()
 
@@ -44,7 +44,7 @@ class EventType:
             handler(event)
 
 
-class EventManager(object):
+class EventManager:
     def __init__(self):
         self._event_types = {}
 

@@ -48,7 +48,7 @@ def save_at_each_log_strategy(event, _):
     return isinstance(event, SteppedEvent)
 
 
-class SaveAtInterval(object):
+class SaveAtInterval:
     def __init__(self, interval):
         self.interval = interval
         self.last_saving = None
