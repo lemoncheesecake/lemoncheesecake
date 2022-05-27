@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import inspect
 from typing import List, Any, Sequence, Callable, Optional
 
@@ -16,7 +18,7 @@ _SCOPE_LEVELS = {
     "pre_run": 4
 }
 
-_scheduled_fixtures = None  # type: Optional[ScheduledFixtures]
+_scheduled_fixtures: Optional[ScheduledFixtures] = None
 
 
 def initialize_fixture_cache(scheduled_fixtures):
@@ -151,8 +153,7 @@ class _BaseFixture:
     def scope_level(self):
         return _SCOPE_LEVELS[self.scope]
 
-    def execute(self, params):
-        # type: (dict) -> _BaseFixtureResult
+    def execute(self, params: dict) -> _BaseFixtureResult:
         raise NotImplementedError()
 
 
@@ -392,8 +393,7 @@ class FixtureRegistry:
         )
 
 
-def load_fixtures_from_func(func):
-    # type: (Callable) -> List[Fixture]
+def load_fixtures_from_func(func: Callable) -> List[Fixture]:
     """
     Load a fixture from a function that has been decorated with ``@lcc.fixture()``
     """
@@ -403,8 +403,7 @@ def load_fixtures_from_func(func):
     return [Fixture(name, func, info.scope, args, info.per_thread) for name in info.names]
 
 
-def load_fixtures_from_module(mod):
-    # type: (Any) -> List[Fixture]
+def load_fixtures_from_module(mod: Any) -> List[Fixture]:
     """
     Load fixtures from a module instance.
 
@@ -419,8 +418,7 @@ def load_fixtures_from_module(mod):
     return fixtures
 
 
-def load_fixtures_from_file(filename):
-    # type: (str) -> List[Fixture]
+def load_fixtures_from_file(filename: str) -> List[Fixture]:
     """
     Load fixtures from a given file.
     """
@@ -432,8 +430,7 @@ def load_fixtures_from_file(filename):
     return load_fixtures_from_module(mod)
 
 
-def load_fixtures_from_files(patterns, excluding=[]):
-    # type: (Any[str, Sequence[str]], Any[str, Sequence[str]]) -> List[Fixture]
+def load_fixtures_from_files(patterns: Any[str, Sequence[str]], excluding: Any[str, Sequence[str]] = []) -> List[Fixture]:
     """
     Load fixtures from files.
 
@@ -452,8 +449,7 @@ def load_fixtures_from_files(patterns, excluding=[]):
     return fixtures
 
 
-def load_fixtures_from_directory(dir):
-    # type: (str) -> List[Fixture]
+def load_fixtures_from_directory(dir: str) -> List[Fixture]:
     """
     Load fixtures from a given directory (not recursive).
     """

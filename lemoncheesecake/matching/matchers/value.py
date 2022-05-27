@@ -4,6 +4,8 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
+from typing import Union, Any
+
 from lemoncheesecake.helpers.text import jsonify
 from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatcherDescriptionTransformer
 from lemoncheesecake.matching.matchers.composites import is_, not_
@@ -29,7 +31,7 @@ class EqualTo(Matcher):
             return MatchResult.failure("got %s" % jsonify(actual))
 
 
-def equal_to(expected):
+def equal_to(expected: Any) -> Matcher:
     """Test if value is equal to expected"""
     return EqualTo(expected)
 
@@ -73,8 +75,7 @@ class IsBetween(Matcher):
         return MatchResult(self.min <= actual <= self.max, "got %s" % jsonify(actual))
 
 
-def is_between(min, max):
-    # type: (float, float) -> IsBetween
+def is_between(min: Union[int, float], max: Union[int, float]) -> Matcher:
     """Test if value is between min and max"""
     return IsBetween(min, max)
 
@@ -90,19 +91,18 @@ class IsNone(Matcher):
             return MatchResult.failure("got %s" % jsonify(actual))
 
 
-def is_none():
+def is_none() -> Matcher:
     """Test if value is None"""
     return IsNone()
 
 
-def is_not_none():
+def is_not_none() -> Matcher:
     """Test if value is not None"""
     return not_(is_none())
 
 
 class HasLength(Matcher):
-    def __init__(self, matcher):
-        # type: (Matcher) -> None
+    def __init__(self, matcher: Matcher) -> None:
         self.matcher = matcher
 
     def build_description(self, transformation):
@@ -114,17 +114,16 @@ class HasLength(Matcher):
         return self.matcher.matches(len(actual))
 
 
-def has_length(length):
-    # type: (int) -> HasLength
+def has_length(length: Union[int, Matcher]) -> Matcher:
     """Test if value has a length of"""
     return HasLength(is_(length))
 
 
-def is_true():
+def is_true() -> Matcher:
     """Test if value is true (boolean type)"""
     return is_bool(True)
 
 
-def is_false():
+def is_false() -> Matcher:
     """Test if value is false (boolean type)"""
     return is_bool(False)

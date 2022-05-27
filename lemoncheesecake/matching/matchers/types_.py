@@ -20,8 +20,7 @@ _TYPE_NAMES = {
 
 
 class IsValueOfType(Matcher):
-    def __init__(self, types, type_name, value_matcher):
-        # type: (List[Any], str, Matcher) -> None
+    def __init__(self, types: List[Any], type_name: str, value_matcher: Matcher) -> None:
         self.types = types
         self.type_name = type_name
         self.value_matcher = value_matcher

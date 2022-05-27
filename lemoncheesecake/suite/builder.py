@@ -40,8 +40,7 @@ def build_description_from_name(name):
     return name.capitalize().replace("_", " ")
 
 
-def add_test_into_suite(test, suite):
-    # type: (Test, Any) -> None
+def add_test_into_suite(test: Test, suite: Any) -> None:
     """
     Add test into suite
 
@@ -165,8 +164,7 @@ def hidden():
     return visible_if(lambda _: False)
 
 
-def depends_on(*deps):
-    # type: (*str) -> Any
+def depends_on(*deps: str) -> Any:
     """
     Decorator, only applicable to a test. Add dependencies to a test.
 
@@ -180,7 +178,7 @@ def depends_on(*deps):
     return wrapper
 
 
-def inject_fixture(fixture_name=None):
+def inject_fixture(fixture_name: str = None):
     """
     Inject a fixture into a suite. If no fixture name is specified then the name of the variable holding
     the injected fixture will be used.
@@ -188,7 +186,7 @@ def inject_fixture(fixture_name=None):
     return InjectedFixture(fixture_name)
 
 
-def _default_naming_scheme(name, description, parameters, nb):
+def _default_naming_scheme(name, description, _, nb):
     return name + "_%d" % nb, description + " #%d" % nb
 
 
@@ -222,8 +220,10 @@ class _Parametrized:
                 yield dict(zip(names, values))
 
 
-def parametrized(parameter_source, naming_scheme=_default_naming_scheme):
-    # type: (Iterable, Optional[Union[Callable[[str, str, dict, int], Tuple[str, str]], Sequence]]) -> Any
+def parametrized(
+        parameter_source: Iterable,
+        naming_scheme: Optional[Union[Callable[[str, str, dict, int], Tuple[str, str]], Sequence]] = _default_naming_scheme
+) -> Any:
     """
     Decorator, make the test parametrized.
 

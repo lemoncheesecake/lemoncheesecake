@@ -43,8 +43,7 @@ def _check_links(links):
         all(name is None or isinstance(name, str) for _, name in links)
 
 
-def _check_test_tree_node_types(node):
-    # type: (BaseTreeNode) -> None
+def _check_test_tree_node_types(node: BaseTreeNode) -> None:
     check_type_string("name", node.name)
     check_type_string("description", node.description)
     check_type("tags", node.tags, "List[str]", _check_tags, show_actual_type=False)
@@ -142,8 +141,7 @@ def _normalize_link(link):
         return link
 
 
-def load_suite_from_class(class_):
-    # type: (Any) -> Suite
+def load_suite_from_class(class_: Any) -> Suite:
     """
     Load a suite from a class.
     """
@@ -190,8 +188,7 @@ def load_suite_from_class(class_):
     return suite
 
 
-def load_suites_from_classes(classes):
-    # type: (Sequence[Any]) -> List[Suite]
+def load_suites_from_classes(classes: Sequence[Any]) -> List[Suite]:
     """
     Load a list of suites from a list of classes.
     """
@@ -202,8 +199,7 @@ def load_suites_from_classes(classes):
     )
 
 
-def load_suite_from_module(mod):
-    # type: (Any) -> Suite
+def load_suite_from_module(mod: Any) -> Suite:
     """
     Load a suite from a module instance.
     """
@@ -241,9 +237,7 @@ def load_suite_from_module(mod):
     return suite
 
 
-def load_suite_from_file(filename):
-    # type: (str) -> Suite
-
+def load_suite_from_file(filename: str) -> Suite:
     """
     Load a suite from a Python module indicated by a filename.
 
@@ -267,9 +261,7 @@ def load_suite_from_file(filename):
     return suite
 
 
-def load_suites_from_files(patterns, excluding=()):
-    # type: (Sequence[str], Sequence[str]) -> List[Suite]
-
+def load_suites_from_files(patterns: Sequence[str], excluding: Sequence[str] = ()) -> List[Suite]:
     """
     Load a list of suites from a list of files.
 
@@ -290,9 +282,7 @@ def load_suites_from_files(patterns, excluding=()):
     )
 
 
-def load_suites_from_directory(dir, recursive=True):
-    # type: (str, bool) -> List[Suite]
-
+def load_suites_from_directory(dir: str, recursive: bool = True) -> List[Suite]:
     """
     Load a list of suites from a directory.
 
@@ -321,4 +311,11 @@ def load_suites_from_directory(dir, recursive=True):
             for sub_suite in load_suites_from_directory(dirname, recursive=True):
                 suite.add_suite(sub_suite)
 
-    return sorted(sorted(filter(lambda s: not s.is_empty(), suites.values()), key=lambda s: s.name), key=lambda s: s.rank)
+    return \
+        sorted(
+            sorted(
+                filter(lambda s: not s.is_empty(), suites.values()),
+                key=lambda s: s.name
+            ),
+            key=lambda s: s.rank
+        )

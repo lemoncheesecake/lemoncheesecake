@@ -73,7 +73,7 @@ class Session:
         return cls._instance
 
     @property
-    def cursor(self):  # type: () -> _Cursor
+    def cursor(self) -> _Cursor:
         return self._local.cursor
 
     @cursor.setter
@@ -249,8 +249,7 @@ def _interruptible(wrapped):
 
 
 @_interruptible
-def set_step(description, detached=NotImplemented):
-    # type: (str, bool) -> None
+def set_step(description: str, detached: bool = NotImplemented) -> None:
     """
     Set a new step.
 
@@ -292,8 +291,7 @@ def detached_step(description):
 
 
 @_interruptible
-def log_debug(content):
-    # type: (str) -> None
+def log_debug(content: str) -> None:
     """
     Log a debug level message.
     """
@@ -302,8 +300,7 @@ def log_debug(content):
 
 
 @_interruptible
-def log_info(content):
-    # type: (str) -> None
+def log_info(content: str) -> None:
     """
     Log a info level message.
     """
@@ -312,8 +309,7 @@ def log_info(content):
 
 
 @_interruptible
-def log_warning(content):
-    # type: (str) -> None
+def log_warning(content: str) -> None:
     """
     Log a warning level message.
     """
@@ -322,8 +318,7 @@ def log_warning(content):
 
 
 @_interruptible
-def log_error(content):
-    # type: (str) -> None
+def log_error(content: str) -> None:
     """
     Log an error level message.
     """
@@ -418,8 +413,7 @@ def save_image_content(content, filename, description=None):
 
 
 @_interruptible
-def log_url(url, description=None):
-    # type: (str, Optional[str]) -> None
+def log_url(url: str, description: str = None):
     """
     Log an URL.
     """
@@ -429,9 +423,7 @@ def log_url(url, description=None):
     Session.get().log_url(url, description or url)
 
 
-def add_report_info(name, value):
-    # type: (str, str) -> None
-
+def add_report_info(name: str, value: str) -> None:
     check_type_string("name", name)
     check_type_string("value", value)
 

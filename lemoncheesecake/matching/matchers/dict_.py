@@ -15,16 +15,14 @@ class EntryMatcher:
     def build_description(self):
         raise NotImplementedError()
 
-    def get_entry(self, actual):
-        # type: (dict) -> Any
+    def get_entry(self, actual: dict) -> Any:
         """Return the value of dict corresponding to entry matching or raise KeyError if entry is not found"""
         raise NotImplementedError()
 
 
 class KeyPathMatcher(EntryMatcher):
     """Dict lookup through a list of key, each key represent a level of depth of the dict"""
-    def __init__(self, path):
-        # type: (Sequence[str]) -> None
+    def __init__(self, path: Sequence[str]) -> None:
         self.path = path
 
     def build_description(self):
@@ -51,8 +49,7 @@ def wrap_key_matcher(key_matcher):
 
 
 class HasEntry(Matcher):
-    def __init__(self, key_matcher, value_matcher):
-        # type: (EntryMatcher, Matcher) -> None
+    def __init__(self, key_matcher: EntryMatcher, value_matcher: Matcher) -> None:
         self.key_matcher = key_matcher
         self.value_matcher = value_matcher
 
@@ -80,7 +77,7 @@ class HasEntry(Matcher):
             return MatchResult.success("got %s" % jsonify(value))
 
 
-def has_entry(key_matcher, value_matcher=None):
+def has_entry(key_matcher, value_matcher: Matcher = None) -> Matcher:
     """
     Test if dict has a <key> entry whose value matches (optional) value_matcher.
     Key entry can a standard dict key or a list of key where each element represent a

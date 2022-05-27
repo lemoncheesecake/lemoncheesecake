@@ -182,9 +182,7 @@ class ResultFilter(BaseTreeNodeFilter):
             result, self._do_statuses, self._do_enabled, self._do_disabled, self._do_grep
         )
 
-    def __call__(self, result):
-        # type: (Result) -> bool
-
+    def __call__(self, result: Result) -> bool:
         assert isinstance(result, Result)
 
         # test result:
@@ -230,9 +228,7 @@ class StepFilter(BaseTreeNodeFilter):
             step, self._do_passed, self._do_failed, self._do_grep
         )
 
-    def __call__(self, step):
-        # type: (Step) -> bool
-
+    def __call__(self, step: Step) -> bool:
         assert isinstance(step, Step)
 
         # test result:

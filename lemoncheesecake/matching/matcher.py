@@ -4,6 +4,8 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
+from __future__ import annotations
+
 import re
 
 from typing import Optional, Any
@@ -27,8 +29,7 @@ class MatcherDescriptionTransformer:
         #: indicate whether or not the description will be turned into the negative form
         self.negative = negative
 
-    def __call__(self, description):
-        # type: (str) -> str
+    def __call__(self, description: str) -> str:
         """
         Transform the description according transformer settings.
         """
@@ -83,24 +84,21 @@ MatchDescriptionTransformer = MatcherDescriptionTransformer
 
 
 class MatchResult:
-    def __init__(self, is_successful, description=None):
-        # type: (bool, Optional[str]) -> None
+    def __init__(self, is_successful: bool, description: str = None) -> None:
         #: whether or not the match did succeed
-        self.is_successful = is_successful
+        self.is_successful: bool = is_successful
         #: optional description
-        self.description = description
+        self.description: str = description
 
     @classmethod
-    def success(cls, description=None):
-        # type: ( Optional[str]) -> "MatchResult"
+    def success(cls, description: str = None) -> MatchResult:
         """
         Shortcut used to create a "successful" MatchResult.
         """
         return cls(True, description)
 
     @classmethod
-    def failure(cls, description=None):
-        # type: ( Optional[str]) -> "MatchResult"
+    def failure(cls, description: str = None) -> MatchResult:
         """
         Shortcut used to create a "failed" MatchResult.
         """
@@ -117,8 +115,7 @@ class MatchResult:
 
 
 class Matcher:
-    def build_description(self, transformation):
-        # type: (MatcherDescriptionTransformer) -> str
+    def build_description(self, transformation: MatcherDescriptionTransformer) -> str:
         """
         Build a description for the matcher given the instance of :py:class:`MatcherDescriptionTransformer`
         passed as argument.
@@ -128,8 +125,7 @@ class Matcher:
     def build_short_description(self, transformation):
         return self.build_description(transformation)
 
-    def matches(self, actual):
-        # type: (Any) -> MatchResult
+    def matches(self, actual: Any) -> MatchResult:
         """
         Test if the passed argument matches.
 
@@ -138,8 +134,7 @@ class Matcher:
         """
         raise NotImplementedError()
 
-    def override_description(self, description):
-        # type: (str) -> MatcherWrapper
+    def override_description(self, description: str) -> Matcher:
         """
         Override the matcher description.
 
@@ -148,8 +143,7 @@ class Matcher:
         """
         return MatcherWrapper(self, description=description)
 
-    def hide_result_details(self):
-        # type: () -> MatcherWrapper
+    def hide_result_details(self) -> Matcher:
         """
         Hide the matching operation result details.
 
@@ -159,7 +153,7 @@ class Matcher:
 
 
 class MatcherWrapper(Matcher):
-    def __init__(self, matcher, description=NotImplemented, result_details=NotImplemented):
+    def __init__(self, matcher, description: str = NotImplemented, result_details: Optional[str] = NotImplemented) -> None:
         self.matcher = matcher
         self.description = description
         self.result_details = result_details

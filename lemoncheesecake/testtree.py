@@ -4,9 +4,11 @@ Created on Jun 16, 2017
 @author: nicolas
 '''
 
+from __future__ import annotations
+
 import copy
 
-from typing import Union, Tuple, List, Sequence, TypeVar, Generator
+from typing import Union, Tuple, List, Sequence, TypeVar, Iterator, Iterable
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
 
@@ -40,13 +42,11 @@ class BaseTreeNode:
         yield self
 
     @property
-    def hierarchy_depth(self):
-        # type: () -> int
+    def hierarchy_depth(self) -> int:
         return len(list(self.hierarchy)) - 1
 
     @property
-    def path(self):
-        # type: () -> str
+    def path(self) -> str:
         """
         The complete path of the test node (example: if used on a test named "my_test" and a suite named
         "my_suite", then the path is "my_suite.my_test").
@@ -82,8 +82,7 @@ class BaseTreeNode:
             links.update(node.links)
         return links
 
-    def pull_node(self):
-        # type: () -> "_N"
+    def pull_node(self) -> _N:
         node = copy.copy(self)
         node.parent_suite = None
         return node
@@ -98,8 +97,7 @@ _N = TypeVar("_N", bound=BaseTreeNode)
 TreeNodeHierarchy = Union[Tuple[str, ...], List, BaseTreeNode, str]
 
 
-def normalize_node_hierarchy(hierarchy):
-    # type: (TreeNodeHierarchy) -> Tuple[str, ...]
+def normalize_node_hierarchy(hierarchy: TreeNodeHierarchy) -> Tuple[str, ...]:
     if type(hierarchy) is tuple:
         return hierarchy
     elif type(hierarchy) is list:
@@ -161,8 +159,7 @@ class BaseSuite(BaseTreeNode):
 
         return True
 
-    def pull_node(self):
-        # type: () -> "BaseSuite"
+    def pull_node(self) -> BaseSuite:
         node = BaseTreeNode.pull_node(self)
         node._tests = {}
         node._suites = []
@@ -192,22 +189,18 @@ def filter_suites(suites, test_filter):
 S = TypeVar("S", bound=BaseSuite)
 
 
-def flatten_suites(suites):
-    # type: (Sequence[S]) -> Generator[S]
+def flatten_suites(suites: Iterable[S]) -> Iterator[S]:
     for suite in suites:
         yield suite
         yield from flatten_suites(suite.get_suites())
 
 
-def flatten_tests(suites):
-    # type: (Sequence[S]) -> Generator[T]
+def flatten_tests(suites: Iterable[S]) -> Iterator[T]:
     for suite in flatten_suites(suites):
         yield from suite.get_tests()
 
 
-def find_suite(suites, hierarchy):
-    # type: (Sequence[S], TreeNodeHierarchy) -> S
-
+def find_suite(suites: Sequence[S], hierarchy: TreeNodeHierarchy) -> S:
     hierarchy = normalize_node_hierarchy(hierarchy)
 
     lookup_suites = suites
@@ -225,9 +218,7 @@ def find_suite(suites, hierarchy):
     return lookup_suite
 
 
-def find_test(suites, hierarchy):
-    # type: (Sequence[BaseSuite], TreeNodeHierarchy) -> T
-
+def find_test(suites: Sequence[BaseSuite], hierarchy: TreeNodeHierarchy) -> T:
     hierarchy = normalize_node_hierarchy(hierarchy)
 
     suite = find_suite(suites, hierarchy[:-1])

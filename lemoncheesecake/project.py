@@ -39,43 +39,39 @@ def get_caller_dir(stack):
 
 
 class Project:
-    def __init__(self, project_dir=None):
+    def __init__(self, project_dir=None) -> None:
         #: The project's directory path (optional, defaults to the caller dir)
-        self.dir = osp.abspath(project_dir or get_caller_dir(inspect.stack()))  # type: str
+        self.dir: str = osp.abspath(project_dir or get_caller_dir(inspect.stack()))
         #: The project's metadata policy
         self.metadata_policy = MetadataPolicy()
         #: Indicates whether or not the project supports parallel execution of tests
-        self.threaded = True  # type: bool
+        self.threaded: bool = True
         #: Indicated whether or not the command line ("lcc run...") will be displayed in the report
-        self.show_command_line_in_report = True  # type: bool
+        self.show_command_line_in_report: bool = True
         #: The reporting backends of the project as a dict (whose key is the reporting backend name)
-        self.reporting_backends = {b.get_name(): b for b in get_reporting_backends()}  # type: Dict[str, ReportingBackend]
+        self.reporting_backends: Dict[str, ReportingBackend] = {b.get_name(): b for b in get_reporting_backends()}
         #: The list of default reporting backend (indicated by their name) that will be used by "lcc run"
         self.default_reporting_backend_names = list(DEFAULT_REPORTING_BACKENDS)
 
-    def add_cli_args(self, cli_parser):
-        # type: (argparse.ArgumentParser) -> None
+    def add_cli_args(self, cli_parser: argparse.ArgumentParser) -> None:
         """
         Overridable. This method can be used to add extra CLI arguments to "lcc run".
         """
         pass
 
-    def create_report_dir(self):
-        # type: () -> str
+    def create_report_dir(self) -> str:
         """
         Overridable. Create the report directory when no report directory is specified to "lcc run".
         """
         return create_report_dir_with_rotation(self.dir)
 
-    def load_suites(self):
-        # type: () -> Sequence[Suite]
+    def load_suites(self) -> Sequence[Suite]:
         """
         Overridable. Load the project's suites.
         """
         return load_suites_from_directory(osp.join(self.dir, DEFAULT_SUITES_DIR))
 
-    def load_fixtures(self):
-        # type: () -> Sequence[Fixture]
+    def load_fixtures(self) -> Sequence[Fixture]:
         """
         Overridable. Load the project's fixtures.
         """
@@ -85,29 +81,25 @@ class Project:
         else:
             return []
 
-    def pre_run(self, cli_args, report_dir):
-        # type: (Any, str) -> None
+    def pre_run(self, cli_args: Any, report_dir: str) -> None:
         """
         Overridable. This hook is called before running the tests.
         """
         pass
 
-    def post_run(self, cli_args, report_dir):
-        # type: (Any, str) -> None
+    def post_run(self, cli_args: Any, report_dir: str) -> None:
         """
         Overridable. This hook is called after running the tests.
         """
         pass
 
-    def build_report_title(self):
-        # type: () -> Optional[str]
+    def build_report_title(self) -> Optional[str]:
         """
         Overridable. Build a custom report title as a string.
         """
         return None
 
-    def build_report_info(self):
-        # type: () -> List[Tuple[str, str]]
+    def build_report_info(self) -> List[Tuple[str, str]]:
         """
         Overridable. Build a list key/value pairs (expressed as a two items tuple)
         that will be available in the report.
@@ -125,19 +117,16 @@ class Project:
         return info
 
 
-def create_project(project_dir):
-    # type: (str) -> None
+def create_project(project_dir: str) -> None:
     shutil.copyfile(get_resource_path(("project", "template.py")), osp.join(project_dir, PROJECT_FILE))
     os.mkdir(osp.join(project_dir, "suites"))
     os.mkdir(osp.join(project_dir, "fixtures"))
 
 
-def _load_project_from_file(project_filename):
-    # type: (str) -> Project
-
+def _load_project_from_file(path: str) -> Project:
     # load project module
     try:
-        project_module = import_module(project_filename)
+        project_module = import_module(path)
     except ModuleImportError as e:
         raise ProjectLoadingError(str(e))
 
@@ -145,9 +134,9 @@ def _load_project_from_file(project_filename):
     try:
         project = project_module.project
     except AttributeError:
-        raise ProjectLoadingError("Cannot find symbol 'project' in module '%s'" % project_filename)
+        raise ProjectLoadingError("Cannot find symbol 'project' in module '%s'" % path)
     if not isinstance(project, Project):
-        raise ProjectLoadingError("Symbol 'project' in module '%s' does not inherit lemoncheesecake.project.Project" % project_filename)
+        raise ProjectLoadingError("Symbol 'project' in module '%s' does not inherit lemoncheesecake.project.Project" % path)
     
     return project
 
@@ -172,9 +161,7 @@ def _load_project_from_path(path):
     raise ProjectLoadingError("'%s' is not a suitable project path" % path)
 
 
-def load_project(path=None):
-    # type: (str) -> Project
-
+def load_project(path: str = None) -> Project:
     # first try: from argument
     if path:
         return _load_project_from_path(path)

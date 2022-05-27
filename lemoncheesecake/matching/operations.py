@@ -87,9 +87,7 @@ def _log_match_result(hint, matcher, result, quiet=False):
     )
 
 
-def check_that(hint, actual, matcher, quiet=False):
-    # type: (Optional[str], Any, Matcher, bool) -> MatchResult
-
+def check_that(hint: Optional[str], actual: Any, matcher: Matcher, quiet: bool = False) -> MatchResult:
     """Check that actual matches given matcher.
 
     A check log is added to the report.
@@ -103,9 +101,7 @@ def check_that(hint, actual, matcher, quiet=False):
     return result
 
 
-def check_that_in(actual, *expected, **kwargs):
-    # type: (Mapping, Any, Any) -> Sequence[MatchResult]
-
+def check_that_in(actual: Mapping, *expected, **kwargs) -> Sequence[MatchResult]:
     """
     Equivalent of :py:func:`check_that` over items of a dict.
 
@@ -151,9 +147,7 @@ def check_that_in(actual, *expected, **kwargs):
     ]
 
 
-def require_that_in(actual, *expected, **kwargs):
-    # type: (Mapping, Any, Any) -> Sequence[MatchResult]
-
+def require_that_in(actual: Mapping, *expected, **kwargs) -> Sequence[MatchResult]:
     """
     Does the same thing as :py:func:`check_that_in` except it performs a
     :py:func:`require_that` on each key-matcher pair.
@@ -167,9 +161,7 @@ def require_that_in(actual, *expected, **kwargs):
     ]
 
 
-def assert_that_in(actual, *expected, **kwargs):
-    # type: (Mapping, Any, Any) -> Sequence[MatchResult]
-
+def assert_that_in(actual: Mapping, *expected, **kwargs) -> Sequence[MatchResult]:
     """
     Does the same thing as :py:func:`check_that_in` except it performs a
     :py:func:`assert_that` on each key-matcher pair.
@@ -183,9 +175,7 @@ def assert_that_in(actual, *expected, **kwargs):
     ]
 
 
-def require_that(hint, actual, matcher, quiet=False):
-    # type: (Optional[str], Any, Matcher, bool) -> MatchResult
-
+def require_that(hint: Optional[str], actual: Any, matcher: Matcher, quiet: bool = False) -> MatchResult:
     """Require that actual matches given matcher.
 
     A check log is added to the report. An AbortTest exception is raised if the check does not succeed.
@@ -202,9 +192,7 @@ def require_that(hint, actual, matcher, quiet=False):
         raise AbortTest("previous requirement was not fulfilled")
 
 
-def assert_that(hint, actual, matcher, quiet=False):
-    # type: (Optional[str], Any, Matcher, bool) -> MatchResult
-
+def assert_that(hint: Optional[str], actual: Any, matcher: Matcher, quiet: bool = False) -> MatchResult:
     """Assert that actual matches given matcher.
 
     If assertion fail, a check log is added to the report and an AbortTest exception is raised.
