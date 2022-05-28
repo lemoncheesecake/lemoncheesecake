@@ -1,6 +1,6 @@
 import threading
 
-from typing import Iterator
+from typing import Iterable
 
 from lemoncheesecake.reporting import Report, Step, TestResult, SuiteResult, Log, Attachment, Url, Check, ReportLocation
 from lemoncheesecake import events
@@ -44,7 +44,7 @@ def _replay_step(location: ReportLocation, step: Step, eventmgr: EventManager) -
     eventmgr.fire(events.StepEndEvent(location, step.description, thread_id, event_time=step.end_time))
 
 
-def _replay_steps_events(location: ReportLocation, steps: Iterator[Step], eventmgr: EventManager) -> None:
+def _replay_steps_events(location: ReportLocation, steps: Iterable[Step], eventmgr: EventManager) -> None:
     for step in steps:
         _replay_step(location, step, eventmgr)
 
