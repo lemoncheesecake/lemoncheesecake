@@ -36,31 +36,52 @@ def equal_to(expected: Any) -> Matcher:
     return EqualTo(expected)
 
 
-def _comparator(comparison_description, comparison_func):
-    def wrapper(expected):
-        class _Comparator(Matcher):
-            def __init__(self, expected):
-                self.expected = expected
+class _Comparator(Matcher):
+    def __init__(self, expected, comparison, comparison_description):
+        self.expected = expected
+        self.comparison = comparison
+        self.comparison_description = comparison_description
 
-            def build_description(self, transformation):
-                return transformation("to be %s %s" % (comparison_description, jsonify(self.expected)))
+    def build_description(self, transformation):
+        return transformation("to be %s %s" % (self.comparison_description, jsonify(self.expected)))
 
-            def matches(self, actual):
-                return MatchResult(comparison_func(actual, self.expected), "got %s" % jsonify(actual))
-
-        return _Comparator(expected)
-
-    wrapper.__doc__ = """Test if value is %s expected""" % comparison_description
-    return wrapper
+    def matches(self, actual):
+        return MatchResult(self.comparison(actual, self.expected), f"got {jsonify(actual)}")
 
 
-not_equal_to = _comparator("not equal to", lambda a, e: a != e)
+def not_equal_to(expected: Any) -> Matcher:
+    """
+    Test if value is not equal to expected.
+    """
+    return _Comparator(expected, lambda a, e: a != e, "not equal to")
 
-greater_than = _comparator("greater than", lambda a, e: a > e)
-greater_than_or_equal_to = _comparator("greater than or equal to", lambda a, e: a >= e)
 
-less_than = _comparator("less than", lambda a, e: a < e)
-less_than_or_equal_to = _comparator("greater than or equal to", lambda a, e: a <= e)
+def greater_than(expected: Any) -> Matcher:
+    """
+    Test if value is greater than expected.
+    """
+    return _Comparator(expected, lambda a, e: a > e, "greater than")
+
+
+def greater_than_or_equal_to(expected: Any) -> Matcher:
+    """
+    Test if value is greater than or equal to expected.
+    """
+    return _Comparator(expected, lambda a, e: a >= e, "greater than or equal to")
+
+
+def less_than(expected: Any) -> Matcher:
+    """
+    Test if value is less than expected.
+    """
+    return _Comparator(expected, lambda a, e: a < e, "less than")
+
+
+def less_than_or_equal_to(expected: Any) -> Matcher:
+    """
+    Test if value is less than or equal to expected.
+    """
+    return _Comparator(expected, lambda a, e: a <= e, "less than or equal to")
 
 
 class IsBetween(Matcher):
