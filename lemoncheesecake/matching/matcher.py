@@ -110,9 +110,6 @@ class MatchResult:
         """
         return self.is_successful
 
-    def __nonzero__(self):  # Python 2.7 compatibility
-        return self.__bool__()
-
 
 class Matcher:
     def build_description(self, transformation: MatcherDescriptionTransformer) -> str:

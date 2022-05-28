@@ -44,9 +44,6 @@ class Filter:
     def __bool__(self):
         raise NotImplementedError()
 
-    def __nonzero__(self):  # for Python 2 compatibility
-        return self.__bool__()
-
     def __call__(self, test):
         raise NotImplementedError()
 
