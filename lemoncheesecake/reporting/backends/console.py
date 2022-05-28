@@ -4,8 +4,6 @@ Created on Mar 19, 2016
 @author: nicolas
 '''
 
-from __future__ import print_function
-
 import sys
 
 from termcolor import colored

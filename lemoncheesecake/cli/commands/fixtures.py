@@ -4,7 +4,6 @@ Created on Feb 14, 2017
 @author: nicolas
 '''
 
-from __future__ import print_function
 from collections import defaultdict
 
 from lemoncheesecake.helpers.console import print_table, bold

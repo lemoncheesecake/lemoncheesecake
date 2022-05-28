@@ -4,7 +4,6 @@ Created on Jan 25, 2017
 @author: nicolas
 '''
 
-from __future__ import print_function
 import argparse
 import sys
 

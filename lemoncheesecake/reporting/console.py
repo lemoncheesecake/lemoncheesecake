@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from terminaltables import AsciiTable
 from termcolor import colored
 

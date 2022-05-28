@@ -4,8 +4,6 @@ Created on Feb 14, 2017
 @author: nicolas
 '''
 
-from __future__ import print_function
-
 from lemoncheesecake.helpers.console import bold
 from lemoncheesecake.helpers.text import ensure_single_line_text
 from lemoncheesecake.cli.command import Command

@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from lemoncheesecake.cli.utils import LEMONCHEESECAKE_VERSION
 from lemoncheesecake.cli.command import Command
 
