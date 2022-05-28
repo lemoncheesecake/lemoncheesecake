@@ -43,7 +43,7 @@ class Project:
         #: The project's directory path (optional, defaults to the caller dir)
         self.dir: str = osp.abspath(project_dir or get_caller_dir(inspect.stack()))
         #: The project's metadata policy
-        self.metadata_policy = MetadataPolicy()
+        self.metadata_policy: MetadataPolicy = MetadataPolicy()
         #: Indicates whether or not the project supports parallel execution of tests
         self.threaded: bool = True
         #: Indicated whether or not the command line ("lcc run...") will be displayed in the report
