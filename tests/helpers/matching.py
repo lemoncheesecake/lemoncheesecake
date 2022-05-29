@@ -1,9 +1,4 @@
-try:
-    # Python 3
-    from unittest.mock import patch
-except ImportError:
-    # Python 2
-    from mock import patch
+from unittest.mock import patch
 
 import pytest
 from pytest_mock import mocker
