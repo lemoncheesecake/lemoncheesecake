@@ -17,7 +17,7 @@ else:
     from helpers.report import get_last_test, get_last_suite
     from helpers.utils import env_vars, change_dir
 
-    STEPS = u"""# -*- coding: utf-8 -*-
+    STEPS = """# -*- coding: utf-8 -*-
 from behave import *
 
 import lemoncheesecake.api as lcc
@@ -30,7 +30,7 @@ def step_impl(context, value):
     lcc.log_info("a = %s" % value)
 
 
-@given(u"a is {value:d} éà")
+@given("a is {value:d} éà")
 def step_impl(context, value):
     context.a = value
     lcc.log_info("a = %s" % value)
@@ -51,7 +51,7 @@ def step_impl(context, value):
         tmpdir.mkdir("features").join("feature.feature").write_text(feature_content, "utf-8")
         tmpdir.mkdir("steps").join("step.py").write_text(step_content, "utf-8")
         if not env_content:
-            env_content = u"""from lemoncheesecake.bdd.behave import install_hooks
+            env_content = """from lemoncheesecake.bdd.behave import install_hooks
 install_hooks()
 """
         tmpdir.join("environment.py").write_text(env_content, "utf-8")
@@ -80,7 +80,7 @@ install_hooks()
                     _init_reporting_session(".")
 
     def test_scenario_passed(tmpdir):
-        feature = u"""Feature: do some computations
+        feature = """Feature: do some computations
     
 Scenario: do a simple addition
     Given a is 2
@@ -107,7 +107,7 @@ Scenario: do a simple addition
 
 
     def test_scenario_failed(tmpdir):
-        feature = u"""Feature: do some computations
+        feature = """Feature: do some computations
     
 Scenario: do a simple addition
     Given a is 2
@@ -134,7 +134,7 @@ Scenario: do a simple addition
 
 
     def test_scenario_unicode(tmpdir):
-        feature = u"""Feature: do some computations éà
+        feature = """Feature: do some computations éà
     
 Scenario: do a simple addition éà
     Given a is 2 éà
@@ -146,12 +146,12 @@ Scenario: do a simple addition éà
 
         test = get_last_test(report)
         assert test.parent_suite.name == "do_some_computations_ea"
-        assert test.parent_suite.description == u"Feature: do some computations éà"
+        assert test.parent_suite.description == "Feature: do some computations éà"
         assert test.status == "passed"
         assert test.name == "do_a_simple_addition_ea"
-        assert test.description == u"Scenario: do a simple addition éà"
+        assert test.description == "Scenario: do a simple addition éà"
         steps = test.get_steps()
-        assert steps[0].description == u"Given a is 2 éà"
+        assert steps[0].description == "Given a is 2 éà"
         assert steps[0].get_logs()[0].message == "a = 2"
         assert steps[1].description == "And b is 2"
         assert steps[1].get_logs()[0].message == "b = 2"
@@ -161,7 +161,7 @@ Scenario: do a simple addition éà
 
 
     def test_tags(tmpdir):
-        feature = u"""@tag1
+        feature = """@tag1
 Feature: do some computations
 
 @tag2
@@ -179,7 +179,7 @@ Scenario: do a simple addition
 
 
     def test_scenario_outline(tmpdir):
-        feature = u"""Feature: do some computations
+        feature = """Feature: do some computations
     
   Scenario Outline: addition
     Given a is <a>
@@ -211,7 +211,7 @@ Scenario: do a simple addition
         assert test_3.status == "passed"
 
     def test_custom_report_dir(tmpdir):
-        feature = u"""Feature: do some computations
+        feature = """Feature: do some computations
 
         Scenario: do a simple addition
             Given a is 2
@@ -226,7 +226,7 @@ Scenario: do a simple addition
         assert report is not None
 
     def test_custom_reporting(tmpdir):
-        feature = u"""Feature: do some computations
+        feature = """Feature: do some computations
 
         Scenario: do a simple addition
             Given a is 2
@@ -241,14 +241,14 @@ Scenario: do a simple addition
         assert not tmpdir.join("report", "report.html").exists()
 
     def test_play_well_with_existing_hook(tmpdir):
-        feature = u"""Feature: do some computations
+        feature = """Feature: do some computations
 
         Scenario: do a simple addition
             Given a is 2
             And b is 2
             Then a + b is equal to 4
         """
-        env = u"""import os
+        env = """import os
 import os.path
 from lemoncheesecake.bdd.behave import install_hooks
 

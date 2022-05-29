@@ -612,10 +612,10 @@ def test_unicode(tmpdir):
     class mysuite:
         @lcc.test("some test")
         def sometest(self):
-            lcc.set_step(u"éééààà")
-            check_that(u"éééààà", 1, equal_to(1))
-            lcc.log_info(u"éééààà")
-            lcc.save_attachment_content("A" * 1024, u"somefileààà", u"éééààà")
+            lcc.set_step("éééààà")
+            check_that("éééààà", 1, equal_to(1))
+            lcc.log_info("éééààà")
+            lcc.save_attachment_content("A" * 1024, "somefileààà", "éééààà")
 
     report = run_suite_class(mysuite, tmpdir=tmpdir)
 

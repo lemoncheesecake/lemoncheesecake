@@ -158,29 +158,29 @@ def test_decorator_with_suite_inheritance():
 
 
 def test_decorator_unicode():
-    @lcc.suite(u"My Suite éééààà")
-    @lcc.link("http://foo.bar", u"éééààà")
-    @lcc.prop(u"ééé", u"ààà")
-    @lcc.tags(u"ééé", u"ààà")
+    @lcc.suite("My Suite éééààà")
+    @lcc.link("http://foo.bar", "éééààà")
+    @lcc.prop("ééé", "ààà")
+    @lcc.tags("ééé", "ààà")
     class MySuite:
-        @lcc.test(u"Some test ààà")
-        @lcc.link("http://foo.bar", u"éééààà")
-        @lcc.prop(u"ééé", u"ààà")
-        @lcc.tags(u"ééé", u"ààà")
+        @lcc.test("Some test ààà")
+        @lcc.link("http://foo.bar", "éééààà")
+        @lcc.prop("ééé", "ààà")
+        @lcc.tags("ééé", "ààà")
         def sometest(self):
             pass
 
     suite = load_suite_from_class(MySuite)
 
-    assert suite.links[0] == ("http://foo.bar", u"éééààà")
-    assert suite.properties[u"ééé"] == u"ààà"
-    assert suite.tags == [u"ééé", u"ààà"]
+    assert suite.links[0] == ("http://foo.bar", "éééààà")
+    assert suite.properties["ééé"] == "ààà"
+    assert suite.tags == ["ééé", "ààà"]
 
     test = suite.get_tests()[0]
-    assert test.description == u"Some test ààà"
-    assert test.links[0] == ("http://foo.bar", u"éééààà")
-    assert test.properties[u"ééé"] == u"ààà"
-    assert test.tags == [u"ééé", u"ààà"]
+    assert test.description == "Some test ààà"
+    assert test.links[0] == ("http://foo.bar", "éééààà")
+    assert test.properties["ééé"] == "ààà"
+    assert test.tags == ["ééé", "ààà"]
 
 
 def test_duplicated_suite_description():

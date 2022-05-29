@@ -76,7 +76,7 @@ def test_is_str_success():
 
 
 def test_is_str_with_unicode_success():
-    assert_match_success(is_str(), u"ààà", Contains(u"ààà"))
+    assert_match_success(is_str(), "ààà", Contains("ààà"))
 
 
 def test_is_str_failure():
