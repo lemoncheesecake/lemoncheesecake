@@ -15,8 +15,7 @@ from lemoncheesecake.cli.utils import LEMONCHEESECAKE_VERSION
 
 
 # we implement our own "version" instead of using the built-in argparse "version" action
-# because its behavior between Python 2 & 3 is not consistent and because it does
-# undesired text-wrapping
+# because of the undesired text-wrapping
 class Version(argparse.Action):
     def __call__(self, *dummy_args, **dummy_kwargs):
         print(LEMONCHEESECAKE_VERSION)
