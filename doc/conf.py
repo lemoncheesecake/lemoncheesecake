@@ -22,14 +22,14 @@ source_suffix = ['.rst']
 
 master_doc = 'toc'
 
-project = u'lemoncheesecake'
-copyright = u'2022, Nicolas Delon'
-author = u'Nicolas Delon'
+project = 'lemoncheesecake'
+copyright = '2022, Nicolas Delon'
+author = 'Nicolas Delon'
 
 version = __version__
 release = __version__
 
-language = None
+language = "en"
 
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
