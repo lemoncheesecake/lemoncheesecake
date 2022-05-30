@@ -38,3 +38,9 @@ Multiple extras can be specified:
     $ pip install lemoncheesecake[junit,reportportal]
 
 Some reporting backends require specific configuration, see :ref:`here <configuring reporting backends>`.
+
+.. note::
+    Since lemoncheesecake 1.14.0, Python 2.7 is no longer supported. Thanks to
+    `setuptools python_requires <https://packaging.python.org/en/latest/guides/distributing-packages-using-setuptools/#python-requires>`_,
+    installing lemoncheesecake on Python 2.7 will install the latest version of lemoncheesecake supported for that version
+    of Python.
