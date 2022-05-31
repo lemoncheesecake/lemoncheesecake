@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import threading
 
 from typing import Iterable
@@ -9,9 +7,7 @@ from lemoncheesecake import events
 from lemoncheesecake.events import EventManager
 
 
-def _replay_step(location, step, eventmgr):
-    # type: (ReportLocation, Step, EventManager) -> None
-
+def _replay_step(location: ReportLocation, step: Step, eventmgr: EventManager) -> None:
     thread_id = threading.current_thread().ident
     eventmgr.fire(events.StepStartEvent(location, step.description, thread_id, event_time=step.start_time))
 
@@ -48,14 +44,12 @@ def _replay_step(location, step, eventmgr):
     eventmgr.fire(events.StepEndEvent(location, step.description, thread_id, event_time=step.end_time))
 
 
-def _replay_steps_events(location, steps, eventmgr):
-    # type: (ReportLocation, Iterable[Step], EventManager) -> None
+def _replay_steps_events(location: ReportLocation, steps: Iterable[Step], eventmgr: EventManager) -> None:
     for step in steps:
         _replay_step(location, step, eventmgr)
 
 
-def _replay_test_events(test, eventmgr):
-    # type: (TestResult, EventManager) -> None
+def _replay_test_events(test: TestResult, eventmgr: EventManager) -> None:
     if test.status in ("passed", "failed", None):  # None means "in progress"
         eventmgr.fire(events.TestStartEvent(test, test.start_time))
         _replay_steps_events(ReportLocation.in_test(test), test.get_steps(), eventmgr)
@@ -69,9 +63,7 @@ def _replay_test_events(test, eventmgr):
         raise ValueError("Unknown test status '%s'" % test.status)
 
 
-def _replay_suite_events(suite, eventmgr):
-    # type: (SuiteResult, EventManager) -> None
-
+def _replay_suite_events(suite: SuiteResult, eventmgr: EventManager) -> None:
     eventmgr.fire(events.SuiteStartEvent(suite, suite.start_time))
 
     if suite.suite_setup:
@@ -96,9 +88,7 @@ def _replay_suite_events(suite, eventmgr):
         eventmgr.fire(events.SuiteEndEvent(suite, suite.end_time))
 
 
-def replay_report_events(report, eventmgr):
-    # type: (Report, EventManager) -> None
-
+def replay_report_events(report: Report, eventmgr: EventManager) -> None:
     eventmgr.fire(events.TestSessionStartEvent(report, report.start_time))
 
     if report.test_session_setup:

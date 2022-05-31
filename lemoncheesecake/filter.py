@@ -40,12 +40,9 @@ def _grep(pattern, steps):
     return any(map(pattern.search, _iter_grepable(steps)))
 
 
-class Filter(object):
+class Filter:
     def __bool__(self):
         raise NotImplementedError()
-
-    def __nonzero__(self):  # for Python 2 compatibility
-        return self.__bool__()
 
     def __call__(self, test):
         raise NotImplementedError()
@@ -182,9 +179,7 @@ class ResultFilter(BaseTreeNodeFilter):
             result, self._do_statuses, self._do_enabled, self._do_disabled, self._do_grep
         )
 
-    def __call__(self, result):
-        # type: (Result) -> bool
-
+    def __call__(self, result: Result) -> bool:
         assert isinstance(result, Result)
 
         # test result:
@@ -230,9 +225,7 @@ class StepFilter(BaseTreeNodeFilter):
             step, self._do_passed, self._do_failed, self._do_grep
         )
 
-    def __call__(self, step):
-        # type: (Step) -> bool
-
+    def __call__(self, step: Step) -> bool:
         assert isinstance(step, Step)
 
         # test result:

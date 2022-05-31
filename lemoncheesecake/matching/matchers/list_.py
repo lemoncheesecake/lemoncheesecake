@@ -4,7 +4,7 @@ Created on May 2, 2017
 @author: nicolas
 '''
 
-from typing import Iterable, Any
+from typing import Any, Collection
 
 from lemoncheesecake.helpers.text import jsonify
 from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatcherDescriptionTransformer
@@ -18,8 +18,8 @@ def _jsonify_items(items):
 class HasItemMatchResult(MatchResult):
     def __init__(self, is_successful, description, index, item):
         MatchResult.__init__(self, is_successful, description)
-        self.index = index  # type: int
-        self.item = item  # type: Any
+        self.index: int = index
+        self.item: Any = item
 
     @classmethod
     def found(cls, index, item):
@@ -52,8 +52,7 @@ class HasItem(Matcher):
         return HasItemMatchResult.not_found()
 
 
-def has_item(expected):
-    # type: (Any) -> HasItem
+def has_item(expected: Any) -> Matcher:
     """Test if the sequence has item matching expected"""
     return HasItem(is_(expected))
 
@@ -77,8 +76,7 @@ class HasItems(Matcher):
             return MatchResult.success("got %s" % jsonify(actual))
 
 
-def has_items(values):
-    # type: (Iterable) -> HasItems
+def has_items(values: Collection) -> Matcher:
     """Test if the sequence contains at least the given values"""
     return HasItems(values)
 
@@ -110,8 +108,7 @@ class HasOnlyItems(Matcher):
             return MatchResult.failure("; ".join(details))
 
 
-def has_only_items(expected):
-    # type: (Iterable) -> HasOnlyItems
+def has_only_items(expected: Collection) -> Matcher:
     """Test if the sequence only contains the given values"""
     return HasOnlyItems(expected)
 
@@ -150,8 +147,7 @@ class HasAllItems(Matcher):
             return MatchResult.success()
 
 
-def has_all_items(expected):
-    # type: (Any) -> HasAllItems
+def has_all_items(expected: Any) -> Matcher:
     """Test if all the items of the sequence match expected"""
     return HasAllItems(is_(expected))
 
@@ -167,12 +163,6 @@ class IsIn(Matcher):
         return MatchResult(actual in self.expected, "got %s" % jsonify(actual))
 
 
-def is_in(expected):
-    # type: (Iterable) -> IsIn
+def is_in(expected: Collection) -> Matcher:
     """Test if the sequence contains the expected item"""
     return IsIn(expected)
-
-
-# NB: the matchers should use a Collection type instead of an Iterable (which is too permissive),
-# unfortunately the Collection type (https://docs.python.org/3/library/collections.abc.html#collections.abc.Collection)
-# appeared first in Python 3.6 and lemoncheesecake still supports Python 2.7

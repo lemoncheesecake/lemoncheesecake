@@ -4,10 +4,9 @@ Created on Apr 3, 2017
 @author: nicolas
 '''
 
-import six
-from typing import List, Any
+from typing import List, Any, Union
 
-from lemoncheesecake.helpers.text import STRING_TYPES, jsonify
+from lemoncheesecake.helpers.text import jsonify
 from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatcherDescriptionTransformer
 from lemoncheesecake.matching.matchers.value import is_
 
@@ -18,13 +17,10 @@ _TYPE_NAMES = {
     dict: "collection",
     list: "array", tuple: "array"
 }
-if six.PY2:
-    _TYPE_NAMES[unicode] = "string",
 
 
 class IsValueOfType(Matcher):
-    def __init__(self, types, type_name, value_matcher):
-        # type: (List[Any], str, Matcher) -> None
+    def __init__(self, types: List[Any], type_name: str, value_matcher: Matcher) -> None:
         self.types = types
         self.type_name = type_name
         self.value_matcher = value_matcher
@@ -53,18 +49,49 @@ class IsValueOfType(Matcher):
             return MatchResult.failure("got %s (%s)" % (jsonify(actual), self._get_value_type_name(actual)))
 
 
-def _is_type(types, type_name):
-    def wrapper(value_matcher=None):
-        return IsValueOfType(
-            types, type_name, is_(value_matcher) if value_matcher is not None else None
-        )
-    wrapper.__doc__ = "Test if value is of type %s" % type_name
-    return wrapper
+def _is_type(types, type_name, value_matcher):
+    return IsValueOfType(
+        types, type_name, is_(value_matcher) if value_matcher is not None else None
+    )
 
 
-is_integer = _is_type([int], "an integer")
-is_float = _is_type([float], "a float")
-is_bool = _is_type([bool], "a boolean")
-is_str = _is_type(STRING_TYPES, "a string")
-is_dict = _is_type([dict], "a collection")
-is_list = _is_type([list, tuple], "a list")
+def is_integer(expected: Union[int, Matcher] = None) -> Matcher:
+    """
+    Test if value is an integer.
+    """
+    return _is_type([int], "an integer", expected)
+
+
+def is_float(expected: Union[float, Matcher] = None) -> Matcher:
+    """
+    Test if value is a float.
+    """
+    return _is_type([float], "a float", expected)
+
+
+def is_bool(expected: Union[bool, Matcher] = None) -> Matcher:
+    """
+    Test if value is a boolean.
+    """
+    return _is_type([bool], "a boolean", expected)
+
+
+def is_str(expected: Union[str, Matcher] = None) -> Matcher:
+    """
+    Test if value is a string.
+    """
+    return _is_type([str], "a string", expected)
+
+
+def is_dict(expected: Union[dict, Matcher] = None) -> Matcher:
+    """
+    Test if value is a dict (key/value collection).
+    """
+    return _is_type([dict], "a collection", expected)
+
+
+def is_list(expected: Union[list, tuple, Matcher] = None) -> Matcher:
+    """
+    Test if value is a list.
+    """
+    return _is_type([list, tuple], "a list", expected)

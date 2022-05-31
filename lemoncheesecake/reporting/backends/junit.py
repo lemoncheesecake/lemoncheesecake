@@ -7,9 +7,7 @@ Created on Jun 14, 2017
 from decimal import Decimal
 from functools import reduce
 
-import six
-
-# This junit backend implementation is based on the documentation 
+# This junit backend implementation is based on the documentation
 # http://llg.cubic.org/docs/junit/
 # also see:
 # https://confluence.atlassian.com/display/BAMBOO/JUnit+parsing+in+Bamboo
@@ -98,10 +96,7 @@ def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
     xml_report = serialize_report_as_xml_tree(report)
     indent_xml(xml_report, indent_level=indent_level)
 
-    if six.PY3:
-        return ET.tostring(xml_report, pretty_print=True, encoding="unicode")
-    else:
-        return ET.tostring(xml_report, pretty_print=True, xml_declaration=True, encoding="utf-8")
+    return ET.tostring(xml_report, pretty_print=True, encoding="unicode")
 
 
 def save_report_into_file(report, filename, indent_level=DEFAULT_INDENT_LEVEL):

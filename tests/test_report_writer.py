@@ -1,4 +1,4 @@
- # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 '''
 Created on Nov 1, 2016
@@ -10,7 +10,6 @@ import os.path as osp
 import time
 
 import pytest
-import six
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import *
@@ -39,12 +38,10 @@ def _get_suite_teardown(report, suite_path=None):
     return suite.suite_teardown
 
 
-def make_file_reader(encoding=None, binary=False):
+def make_file_reader(binary=False):
     def reader(path):
         with open(path, "rb" if binary else "r") as fh:
             content = fh.read()
-        if encoding and six.PY2:
-            content = content.decode(encoding)
         return content
     return reader
 
@@ -576,7 +573,7 @@ def test_save_attachment_text_ascii(tmpdir):
 
 
 def test_save_attachment_text_utf8(tmpdir):
-    _test_save_attachment_content(tmpdir, "foobar.txt", u"éééçççààà", make_file_reader(encoding="utf-8"))
+    _test_save_attachment_content(tmpdir, "foobar.txt", "éééçççààà", make_file_reader())
 
 
 def test_save_attachment_binary(tmpdir):
@@ -615,21 +612,21 @@ def test_unicode(tmpdir):
     class mysuite:
         @lcc.test("some test")
         def sometest(self):
-            lcc.set_step(u"éééààà")
-            check_that(u"éééààà", 1, equal_to(1))
-            lcc.log_info(u"éééààà")
-            lcc.save_attachment_content("A" * 1024, u"somefileààà", u"éééààà")
+            lcc.set_step("éééààà")
+            check_that("éééààà", 1, equal_to(1))
+            lcc.log_info("éééààà")
+            lcc.save_attachment_content("A" * 1024, "somefileààà", "éééààà")
 
     report = run_suite_class(mysuite, tmpdir=tmpdir)
 
     test = get_last_test(report)
     assert test.status == "passed"
     step = test.get_steps()[0]
-    assert step.description == u"éééààà"
-    assert u"éééààà" in step.get_logs()[0].description
+    assert step.description == "éééààà"
+    assert "éééààà" in step.get_logs()[0].description
     assert "1" in step.get_logs()[0].description
-    assert step.get_logs()[1].message == u"éééààà"
-    assert_attachment(step.get_logs()[2], u"somefileààà", u"éééààà", False, "A" * 1024, make_file_reader(encoding="utf8"))
+    assert step.get_logs()[1].message == "éééààà"
+    assert_attachment(step.get_logs()[2], "somefileààà", "éééààà", False, "A" * 1024, make_file_reader())
 
 
 def test_setup_suite_success():

@@ -89,7 +89,7 @@ Features
 
 - Rich CLI toolbox
 
-lemoncheesecake is compatible with Python 2.7, 3.7-3.10.
+lemoncheesecake is compatible with Python 3.7-3.10.
 
 
 Installation
@@ -103,7 +103,6 @@ lemoncheesecake can be installed through pip:
 
 For more details about installing lemoncheesecake with the non-default reporting backends, see
 `here <http://docs.lemoncheesecake.io/en/latest/installation.html>`_.
-
 
 Documentation
 -------------

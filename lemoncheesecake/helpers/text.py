@@ -3,11 +3,6 @@ import textwrap
 import itertools
 import json
 
-import six
-
-
-STRING_TYPES = [str] if six.PY3 else [str, unicode]
-
 
 # borrowed from https://stackoverflow.com/a/1176023
 def camel_case_to_snake_case(name):

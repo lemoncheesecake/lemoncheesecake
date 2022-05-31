@@ -1,6 +1,3 @@
-import six
-
-
 def check_type(value_description, value, type_description, check, optional=False, show_actual_type=True):
     if optional and value is None:
         return
@@ -14,7 +11,7 @@ def check_type(value_description, value, type_description, check, optional=False
 
 def check_type_string(value_description, value, optional=False):
     return check_type(
-        value_description, value, "string", lambda value: isinstance(value, six.string_types), optional=optional
+        value_description, value, "string", lambda value: isinstance(value, str), optional=optional
     )
 
 

@@ -1,6 +1,6 @@
-import pytest
+import inspect
 
-import six
+import pytest
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite.loader import load_suites_from_directory, load_suite_from_file, \
@@ -262,7 +262,7 @@ def test_load_suites_from_classes_with_condition_on_test_met():
     @lcc.suite("My Suite")
     class MySuite:
         @lcc.test("My Test")
-        @lcc.visible_if(lambda test_arg: six.get_method_function(test_arg) == six.get_unbound_function((MySuite.mytest)))
+        @lcc.visible_if(lambda test_arg: test_arg.__func__ == MySuite.mytest)
         def mytest(self):
             pass
 
@@ -275,7 +275,7 @@ def test_load_suites_from_classes_with_condition_on_test_not_met():
     @lcc.suite("My Suite")
     class MySuite:
         @lcc.test("My Test")
-        @lcc.visible_if(lambda test_arg: six.get_method_function(test_arg) != six.get_unbound_function(MySuite.mytest))
+        @lcc.visible_if(lambda test_arg: test_arg.__func__ != MySuite.mytest)
         def mytest(self):
             pass
 

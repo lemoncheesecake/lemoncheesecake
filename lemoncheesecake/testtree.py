@@ -4,10 +4,11 @@ Created on Jun 16, 2017
 @author: nicolas
 '''
 
-import copy
-from collections import OrderedDict
+from __future__ import annotations
 
-from typing import Union, Tuple, List, Sequence, TypeVar, Generator
+import copy
+
+from typing import Union, Tuple, List, Sequence, TypeVar, Iterator, Iterable
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
 
@@ -16,7 +17,7 @@ from lemoncheesecake.helpers.orderedset import OrderedSet
 # in generated api documentation
 # (see https://github.com/sphinx-doc/sphinx/issues/741)
 
-class BaseTreeNode(object):
+class BaseTreeNode:
     """
     :var name: name
     """
@@ -37,18 +38,15 @@ class BaseTreeNode(object):
     @property
     def hierarchy(self):
         if self.parent_suite is not None:
-            for node in self.parent_suite.hierarchy:
-                yield node
+            yield from self.parent_suite.hierarchy
         yield self
 
     @property
-    def hierarchy_depth(self):
-        # type: () -> int
+    def hierarchy_depth(self) -> int:
         return len(list(self.hierarchy)) - 1
 
     @property
-    def path(self):
-        # type: () -> str
+    def path(self) -> str:
         """
         The complete path of the test node (example: if used on a test named "my_test" and a suite named
         "my_suite", then the path is "my_suite.my_test").
@@ -84,8 +82,7 @@ class BaseTreeNode(object):
             links.update(node.links)
         return links
 
-    def pull_node(self):
-        # type: () -> "_N"
+    def pull_node(self) -> _N:
         node = copy.copy(self)
         node.parent_suite = None
         return node
@@ -100,8 +97,7 @@ _N = TypeVar("_N", bound=BaseTreeNode)
 TreeNodeHierarchy = Union[Tuple[str, ...], List, BaseTreeNode, str]
 
 
-def normalize_node_hierarchy(hierarchy):
-    # type: (TreeNodeHierarchy) -> Tuple[str, ...]
+def normalize_node_hierarchy(hierarchy: TreeNodeHierarchy) -> Tuple[str, ...]:
     if type(hierarchy) is tuple:
         return hierarchy
     elif type(hierarchy) is list:
@@ -122,9 +118,9 @@ T = TypeVar("T", bound=BaseTest)
 class BaseSuite(BaseTreeNode):
     def __init__(self, name, description):
         BaseTreeNode.__init__(self, name, description)
-        # NB: use OrderedDict instead of list to enable fast test lookup in suites
+        # NB: use a dict instead of a list to enable fast test lookup in suites
         # containing a large number of tests
-        self._tests = OrderedDict()
+        self._tests = {}
         self._suites = []
 
     def add_test(self, test):
@@ -163,10 +159,9 @@ class BaseSuite(BaseTreeNode):
 
         return True
 
-    def pull_node(self):
-        # type: () -> "BaseSuite"
+    def pull_node(self) -> BaseSuite:
         node = BaseTreeNode.pull_node(self)
-        node._tests = OrderedDict()
+        node._tests = {}
         node._suites = []
         return node
 
@@ -194,24 +189,18 @@ def filter_suites(suites, test_filter):
 S = TypeVar("S", bound=BaseSuite)
 
 
-def flatten_suites(suites):
-    # type: (Sequence[S]) -> Generator[S]
+def flatten_suites(suites: Iterable[S]) -> Iterator[S]:
     for suite in suites:
         yield suite
-        for sub_suite in flatten_suites(suite.get_suites()):
-            yield sub_suite
+        yield from flatten_suites(suite.get_suites())
 
 
-def flatten_tests(suites):
-    # type: (Sequence[S]) -> Generator[T]
+def flatten_tests(suites: Iterable[S]) -> Iterator[T]:
     for suite in flatten_suites(suites):
-        for test in suite.get_tests():
-            yield test
+        yield from suite.get_tests()
 
 
-def find_suite(suites, hierarchy):
-    # type: (Sequence[S], TreeNodeHierarchy) -> S
-
+def find_suite(suites: Sequence[S], hierarchy: TreeNodeHierarchy) -> S:
     hierarchy = normalize_node_hierarchy(hierarchy)
 
     lookup_suites = suites
@@ -229,9 +218,7 @@ def find_suite(suites, hierarchy):
     return lookup_suite
 
 
-def find_test(suites, hierarchy):
-    # type: (Sequence[BaseSuite], TreeNodeHierarchy) -> T
-
+def find_test(suites: Sequence[BaseSuite], hierarchy: TreeNodeHierarchy) -> T:
     hierarchy = normalize_node_hierarchy(hierarchy)
 
     suite = find_suite(suites, hierarchy[:-1])

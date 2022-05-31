@@ -10,14 +10,14 @@ import json
 
 from typing import Any, Pattern, Union, Callable
 
-from lemoncheesecake.helpers.text import jsonify, STRING_TYPES
+from lemoncheesecake.helpers.text import jsonify
 from lemoncheesecake.matching.matcher import Matcher, MatchResult
 
 _REGEXP_TYPE = type(re.compile(r"dummy"))
 
 
 def _is_string(actual):
-    return type(actual) in STRING_TYPES
+    return isinstance(actual, str)
 
 
 class StartsWith(Matcher):
@@ -34,8 +34,7 @@ class StartsWith(Matcher):
         )
 
 
-def starts_with(expected):
-    # type: (str) -> StartsWith
+def starts_with(expected: str) -> Matcher:
     """Test if string begins with given prefix"""
     return StartsWith(expected)
 
@@ -54,8 +53,7 @@ class EndsWith(Matcher):
         )
 
 
-def ends_with(expected):
-    # type: (str) -> EndsWith
+def ends_with(expected: str) -> Matcher:
     """Test if string ends with given suffix"""
     return EndsWith(expected)
 
@@ -74,8 +72,7 @@ class ContainsString(Matcher):
         )
 
 
-def contains_string(expected):
-    # type: (str) -> ContainsString
+def contains_string(expected: str) -> Matcher:
     """Test if string contains sub string"""
     return ContainsString(expected)
 
@@ -104,16 +101,15 @@ class MatchPattern(Matcher):
         return MatchResult(match is not None, "got %s" % jsonify(actual))
 
 
-def match_pattern(pattern, description=None, mention_regexp=False):
-    # type: (Union[str, Pattern], str, bool) -> MatchPattern
+def match_pattern(pattern: Union[str, Pattern], description: str = None, mention_regexp: bool = False) -> Matcher:
     """Test if string matches given pattern (using the `search` method of the `re` module)"""
     return MatchPattern(
         pattern if type(pattern) == _REGEXP_TYPE else re.compile(pattern), description, mention_regexp
     )
 
 
-def make_pattern_matcher(pattern, description=None, mention_regexp=False):
-    # type: (Union[str, Pattern], str, bool) -> Callable[[], MatchPattern]
+def make_pattern_matcher(pattern: Union[str, Pattern], description: str = None, mention_regexp: bool = False
+                         ) -> Callable[[], Matcher]:
     def matcher():
         return match_pattern(pattern, description, mention_regexp)
     return matcher
@@ -144,8 +140,7 @@ class IsText(Matcher):
             )
 
 
-def is_text(expected, linesep="\n"):
-    # type: (str, str) -> IsText
+def is_text(expected: str, linesep: str = "\n") -> Matcher:
     """
     Test if the two multi-lines texts match.
 
@@ -176,8 +171,7 @@ class IsJson(Matcher):
             )
 
 
-def is_json(expected):
-    # type: (Any) -> IsJson
+def is_json(expected: Any) -> Matcher:
     """
     Test if the two data structures (that can be represented as JSON) match.
 

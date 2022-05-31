@@ -7,23 +7,21 @@ from lemoncheesecake.reporting.report import Report
 from lemoncheesecake.reporting.backend import get_reporting_backends, ReportUnserializerMixin, ReportingBackend
 
 
-def load_report_from_file(filename, backends=None):
-    # type: (str, Sequence[ReportingBackend]) -> Report
+def load_report_from_file(path: str, backends: Sequence[ReportingBackend] = None) -> Report:
     if backends is None:
         backends = get_reporting_backends()
     for backend in backends:
         if isinstance(backend, ReportUnserializerMixin):
             try:
-                return backend.load_report(filename)
+                return backend.load_report(path)
             except IOError as excp:
-                raise ReportLoadingError("Cannot load report from file '%s': %s" % (filename, excp))
+                raise ReportLoadingError("Cannot load report from file '%s': %s" % (path, excp))
             except ReportLoadingError:
                 pass
-    raise ReportLoadingError("Cannot find any suitable report backend to load report file '%s'" % filename)
+    raise ReportLoadingError("Cannot find any suitable report backend to load report file '%s'" % path)
 
 
-def load_reports_from_dir(dirname, backends=None):
-    # type: (str, Sequence[ReportingBackend]) -> Iterator[Report]
+def load_reports_from_dir(dirname: str, backends: Sequence[ReportingBackend] = None) -> Iterator[Report]:
     for filename in [os.path.join(dirname, filename) for filename in os.listdir(dirname)]:
         if os.path.isfile(filename):
             try:
@@ -32,8 +30,7 @@ def load_reports_from_dir(dirname, backends=None):
                 pass
 
 
-def load_report(path, backends=None):
-    # type: (str, Sequence[ReportingBackend]) -> Report
+def load_report(path: str, backends: Sequence[ReportingBackend] = None) -> Report:
     """
     Load report from a report directory or file.
     """

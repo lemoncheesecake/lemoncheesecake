@@ -43,7 +43,7 @@ def _build_single_line_description_if_suitable(matchers, transformation, relatio
 
     descriptions = [matcher.build_description(transformation) for matcher in matchers]
     if any("\n" in desc for desc in descriptions):
-        # in case of a \n in a matcher description, the resulting description will not be readable
+        # in case of a '\n' in a matcher description, the resulting description will not be readable
         return None
 
     description = " {} ".format(relationship).join(descriptions)
@@ -70,8 +70,7 @@ def _serialize_sub_matcher_result(matcher, result):
 
 
 class AllOf(Matcher):
-    def __init__(self, matchers):
-        # type: (List[Matcher]) -> None
+    def __init__(self, matchers: List[Matcher]) -> None:
         self.matchers = matchers
 
     def build_short_description(self, transformation):
@@ -100,15 +99,13 @@ class AllOf(Matcher):
         return MatchResult(is_success, match_details)
 
 
-def all_of(*matchers):
-    # type: (Any) -> AllOf
+def all_of(*matchers: Any) -> Matcher:
     """Test if all matchers match (logical AND between matchers)."""
     return AllOf(list(map(is_, matchers)))
 
 
 class AnyOf(Matcher):
-    def __init__(self, matchers):
-        # type: (List[Matcher]) -> None
+    def __init__(self, matchers: List[Matcher]) -> None:
         self.matchers = matchers
 
     def build_short_description(self, transformation):
@@ -132,8 +129,7 @@ class AnyOf(Matcher):
         )
 
 
-def any_of(*matchers):
-    # type: (Any) -> AnyOf
+def any_of(*matchers: Any) -> Matcher:
     """Test if at least one of the matcher match (logical OR between matchers)"""
     return AnyOf(list(map(is_, matchers)))
 
@@ -149,28 +145,27 @@ class Anything(Matcher):
         return MatchResult.success("got %s" % jsonify(actual))
 
 
-def anything():
+def anything() -> Matcher:
     """Matches anything (always succeed, whatever the actual value)"""
     return Anything()
 
 
-def something():
+def something() -> Matcher:
     """Same thing as the 'anything' matcher but use 'to be something' in the matcher description"""
     return Anything(wording="to be something")
 
 
-def existing():
+def existing() -> Matcher:
     """Same thing as the 'anything' matcher but use 'to exist' in the matcher description"""
     return Anything(wording="to exist")
 
 
-def present():
+def present() -> Matcher:
     """Same thing as the 'anything' matcher but use 'to be present' in the matcher description"""
     return Anything(wording="to be present")
 
 
-def is_(matcher):
-    # type: (Any) -> Matcher
+def is_(matcher: Any) -> Matcher:
     """If the function argument is not an instance of Matcher, wrap it into
     a matcher using equal_to, otherwise return the matcher argument as-is"""
     from lemoncheesecake.matching.matchers.value import equal_to
@@ -178,8 +173,7 @@ def is_(matcher):
 
 
 class Not(Matcher):
-    def __init__(self, matcher):
-        # type: (Matcher) -> None
+    def __init__(self, matcher: Matcher) -> None:
         self.matcher = matcher
 
     def build_description(self, transformation):
@@ -191,8 +185,7 @@ class Not(Matcher):
         return MatchResult(not result, result.description)
 
 
-def not_(matcher):
-    # type: (Any) -> Matcher
+def not_(matcher: Any) -> Matcher:
     """Negates the matcher in argument"""
     return Not(is_(matcher))
 

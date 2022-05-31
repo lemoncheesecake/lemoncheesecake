@@ -9,11 +9,10 @@ import copy
 
 from typing import Any, Iterable, Callable, Optional, Tuple, Sequence, Union
 
-from lemoncheesecake.helpers.text import STRING_TYPES
 from lemoncheesecake.suite.core import InjectedFixture, Test
 
 
-class Metadata(object):
+class Metadata:
     _next_rank = 1
 
     def __init__(self):
@@ -41,8 +40,7 @@ def build_description_from_name(name):
     return name.capitalize().replace("_", " ")
 
 
-def add_test_into_suite(test, suite):
-    # type: (Test, Any) -> None
+def add_test_into_suite(test: Test, suite: Any) -> None:
     """
     Add test into suite
 
@@ -166,8 +164,7 @@ def hidden():
     return visible_if(lambda _: False)
 
 
-def depends_on(*deps):
-    # type: (*str) -> Any
+def depends_on(*deps: str) -> Any:
     """
     Decorator, only applicable to a test. Add dependencies to a test.
 
@@ -181,7 +178,7 @@ def depends_on(*deps):
     return wrapper
 
 
-def inject_fixture(fixture_name=None):
+def inject_fixture(fixture_name: str = None):
     """
     Inject a fixture into a suite. If no fixture name is specified then the name of the variable holding
     the injected fixture will be used.
@@ -189,7 +186,7 @@ def inject_fixture(fixture_name=None):
     return InjectedFixture(fixture_name)
 
 
-def _default_naming_scheme(name, description, parameters, nb):
+def _default_naming_scheme(name, description, _, nb):
     return name + "_%d" % nb, description + " #%d" % nb
 
 
@@ -199,7 +196,7 @@ def _format_naming_scheme(name_fmt, description_fmt):
     return naming_scheme
 
 
-class _Parametrized(object):
+class _Parametrized:
     def __init__(self, parameters_source, naming_scheme):
         self._parameters_source = parameters_source
         self.naming_scheme = naming_scheme
@@ -213,10 +210,9 @@ class _Parametrized(object):
             return
         if type(first_item) is dict:
             yield first_item
-            for item in source:
-                yield item
+            yield from source
         else:
-            if type(first_item) in STRING_TYPES:
+            if isinstance(first_item, str):
                 names = [s.strip() for s in first_item.split(",")]
             else:
                 names = first_item  # assume list or tuple
@@ -224,8 +220,10 @@ class _Parametrized(object):
                 yield dict(zip(names, values))
 
 
-def parametrized(parameter_source, naming_scheme=_default_naming_scheme):
-    # type: (Iterable, Optional[Union[Callable[[str, str, dict, int], Tuple[str, str]], Sequence]]) -> Any
+def parametrized(
+        parameter_source: Iterable,
+        naming_scheme: Optional[Union[Callable[[str, str, dict, int], Tuple[str, str]], Sequence]] = _default_naming_scheme
+) -> Any:
     """
     Decorator, make the test parametrized.
 

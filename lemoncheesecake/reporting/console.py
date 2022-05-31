@@ -1,8 +1,5 @@
-from __future__ import print_function
-
 from terminaltables import AsciiTable
 from termcolor import colored
-import six
 
 from lemoncheesecake.helpers.text import wrap_text
 from lemoncheesecake.helpers.time import humanize_duration
@@ -60,7 +57,7 @@ def serialize_hierarchy_metadata(obj, hide_disabled=False):
     )
 
 
-class Renderer(object):
+class Renderer:
     def __init__(self, max_width, explicit=False, highlight=None, show_debug_logs=False):
         self.max_width = max_width
         self.explicit = explicit
@@ -211,7 +208,7 @@ class Renderer(object):
 
 def _print_chunks(chunks):
     for chunk in chunks:
-        print(chunk if six.PY3 else chunk.encode("utf8"))
+        print(chunk)
 
 
 def print_report(report, result_filter=None, max_width=None, show_debug_logs=False, explicit=False):

@@ -4,8 +4,6 @@ Created on Feb 14, 2017
 @author: nicolas
 '''
 
-from __future__ import print_function
-
 from lemoncheesecake.helpers.console import bold
 from lemoncheesecake.helpers.text import ensure_single_line_text
 from lemoncheesecake.cli.command import Command
@@ -15,7 +13,7 @@ from lemoncheesecake.project import load_project
 from lemoncheesecake.reporting.console import serialize_metadata
 
 
-class TestTreeRenderer(object):
+class TestTreeRenderer:
     def __init__(self, show_description=False, indent=4):
         self.show_description = show_description
         self.indent = indent

@@ -4,8 +4,7 @@ Created on Mar 27, 2017
 @author: nicolas
 '''
 
-from typing import Any, Mapping, Sequence, Optional, Union
-import six
+from typing import Any, Mapping, Sequence, Optional
 
 from lemoncheesecake.session import log_check
 from lemoncheesecake.exceptions import AbortTest
@@ -24,13 +23,11 @@ class _HasEntry(HasEntry):
 def _build_has_entry_matchers_from_arg(arg, path=()):
     if isinstance(arg, (list, tuple)):
         for idx, value in enumerate(arg):
-            for matcher in _build_has_entry_matchers_from_arg(value, path + (idx,)):
-                yield matcher
+            yield from _build_has_entry_matchers_from_arg(value, path + (idx,))
 
     elif isinstance(arg, dict):
         for key, value in arg.items():
-            for matcher in _build_has_entry_matchers_from_arg(value, path + (key,)):
-                yield matcher
+            yield from _build_has_entry_matchers_from_arg(value, path + (key,))
 
     elif isinstance(arg, Matcher):
         yield _HasEntry(KeyPathMatcher(path), arg)
@@ -53,15 +50,13 @@ def _build_has_entry_matchers_from_args(args, base_key=()):
 
     if len(args) == 1:
         assert isinstance(args[0], (list, tuple, dict))
-        for matcher in _build_has_entry_matchers_from_arg(args[0], base_key):
-            yield matcher
+        yield from _build_has_entry_matchers_from_arg(args[0], base_key)
 
     elif len(args) % 2 == 0:
         i = 0
         while i < len(args):
             key, value_matcher = args[i], args[i + 1]
-            for matcher in _build_has_entry_matchers_from_arg(value_matcher, base_key + _normalize_key_path(key)):
-                yield matcher
+            yield from _build_has_entry_matchers_from_arg(value_matcher, base_key + _normalize_key_path(key))
             i += 2
 
     else:
@@ -75,7 +70,7 @@ def _format_result_details(details):
     if details is None:
         return None
 
-    if not isinstance(details, six.string_types):
+    if not isinstance(details, str):
         details = str(details)
 
     return details[0].upper() + details[1:]
@@ -92,9 +87,7 @@ def _log_match_result(hint, matcher, result, quiet=False):
     )
 
 
-def check_that(hint, actual, matcher, quiet=False):
-    # type: (Optional[str], Any, Matcher, bool) -> MatchResult
-
+def check_that(hint: Optional[str], actual: Any, matcher: Matcher, quiet: bool = False) -> MatchResult:
     """Check that actual matches given matcher.
 
     A check log is added to the report.
@@ -108,9 +101,7 @@ def check_that(hint, actual, matcher, quiet=False):
     return result
 
 
-def check_that_in(actual, *expected, **kwargs):
-    # type: (Mapping, Any, Any) -> Sequence[MatchResult]
-
+def check_that_in(actual: Mapping, *expected, **kwargs) -> Sequence[MatchResult]:
     """
     Equivalent of :py:func:`check_that` over items of a dict.
 
@@ -156,9 +147,7 @@ def check_that_in(actual, *expected, **kwargs):
     ]
 
 
-def require_that_in(actual, *expected, **kwargs):
-    # type: (Mapping, Any, Any) -> Sequence[MatchResult]
-
+def require_that_in(actual: Mapping, *expected, **kwargs) -> Sequence[MatchResult]:
     """
     Does the same thing as :py:func:`check_that_in` except it performs a
     :py:func:`require_that` on each key-matcher pair.
@@ -172,9 +161,7 @@ def require_that_in(actual, *expected, **kwargs):
     ]
 
 
-def assert_that_in(actual, *expected, **kwargs):
-    # type: (Mapping, Any, Any) -> Sequence[MatchResult]
-
+def assert_that_in(actual: Mapping, *expected, **kwargs) -> Sequence[MatchResult]:
     """
     Does the same thing as :py:func:`check_that_in` except it performs a
     :py:func:`assert_that` on each key-matcher pair.
@@ -188,9 +175,7 @@ def assert_that_in(actual, *expected, **kwargs):
     ]
 
 
-def require_that(hint, actual, matcher, quiet=False):
-    # type: (Optional[str], Any, Matcher, bool) -> MatchResult
-
+def require_that(hint: Optional[str], actual: Any, matcher: Matcher, quiet: bool = False) -> MatchResult:
     """Require that actual matches given matcher.
 
     A check log is added to the report. An AbortTest exception is raised if the check does not succeed.
@@ -207,9 +192,7 @@ def require_that(hint, actual, matcher, quiet=False):
         raise AbortTest("previous requirement was not fulfilled")
 
 
-def assert_that(hint, actual, matcher, quiet=False):
-    # type: (Optional[str], Any, Matcher, bool) -> MatchResult
-
+def assert_that(hint: Optional[str], actual: Any, matcher: Matcher, quiet: bool = False) -> MatchResult:
     """Assert that actual matches given matcher.
 
     If assertion fail, a check log is added to the report and an AbortTest exception is raised.

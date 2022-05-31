@@ -85,20 +85,20 @@ class ReportingSessionTests(object):
         self.do_test_reporting_session(MySuite)
 
     def test_unicode(self):
-        @lcc.link("http://foo.bar", u"éééààà")
-        @lcc.prop(u"ééé", u"ààà")
-        @lcc.tags(u"ééé", u"ààà")
+        @lcc.link("http://foo.bar", "éééààà")
+        @lcc.prop("ééé", "ààà")
+        @lcc.tags("ééé", "ààà")
         @lcc.suite("MySuite")
         class MySuite:
-            @lcc.link("http://foo.bar", u"éééààà")
-            @lcc.prop(u"ééé", u"ààà")
-            @lcc.tags(u"ééé", u"ààà")
-            @lcc.test(u"Some test ààà")
+            @lcc.link("http://foo.bar", "éééààà")
+            @lcc.prop("ééé", "ààà")
+            @lcc.tags("ééé", "ààà")
+            @lcc.test("Some test ààà")
             def sometest(self):
-                lcc.set_step(u"éééààà")
-                check_that(u"éééààà", 1, equal_to(1))
-                lcc.log_info(u"éééààà")
-                lcc.save_attachment_content("A" * 1024, u"somefileààà", u"éééààà")
+                lcc.set_step("éééààà")
+                check_that("éééààà", 1, equal_to(1))
+                lcc.log_info("éééààà")
+                lcc.save_attachment_content("A" * 1024, "somefileààà", "éééààà")
                 lcc.log_url("http://example.com", "example")
 
         self.do_test_reporting_session(MySuite)

@@ -1,7 +1,5 @@
 import inspect
 
-import six
-
 
 def object_has_method(obj, method_name):
     try:
@@ -17,7 +15,7 @@ def get_callable_args(cb):
         except AttributeError:
             raise ValueError("%s is not something that can be called" % cb)
 
-    spec = inspect.getfullargspec(cb) if six.PY3 else inspect.getargspec(cb)
+    spec = inspect.getfullargspec(cb)
     args_start = 1 if inspect.ismethod(cb) else 0
     return spec.args[args_start:]
 

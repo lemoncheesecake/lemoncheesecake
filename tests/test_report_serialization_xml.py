@@ -4,7 +4,6 @@ Created on Nov 17, 2016
 @author: nicolas
 '''
 
-import six
 import pytest
 
 from lemoncheesecake.reporting.backends.xml import XmlBackend, load_report_from_file, save_report_into_file
@@ -41,10 +40,7 @@ else:
             xml = ET.parse(fh)
         root = xml.getroot().xpath("/lemoncheesecake-report")[0]
         root.attrib["report-version"] = "2.0"
-        if six.PY3:
-            xml_content = ET.tostring(root, pretty_print=True, encoding="unicode")
-        else:
-            xml_content = ET.tostring(root, pretty_print=True, xml_declaration=True, encoding="utf-8")
+        xml_content = ET.tostring(root, pretty_print=True, encoding="unicode")
 
         with open(filename, "w") as fh:
             fh.write(xml_content)

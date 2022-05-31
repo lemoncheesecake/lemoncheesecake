@@ -1,5 +1,4 @@
 import sys
-import errno
 from contextlib import contextmanager
 
 from lemoncheesecake.cli.command import Command
@@ -14,19 +13,13 @@ from lemoncheesecake.filter import add_result_filter_cli_args, make_result_filte
 def ignore_broken_pipe():
     try:
         yield
-    # catch IOError + check errno (instead of simply catching BrokenPipeError on Python 3)
-    # to be Python 2 compatible
-    except IOError as excp:
-        if excp.errno == errno.EPIPE:
-            # Broken pipe (example: "lcc report | head"), in that case, simply exit gracefully
-            # We just close stderr to avoid Python warnings about ignored exception at the end of the
-            # command. This behavior occurs with Python3 (not 2), see :
-            # https://stackoverflow.com/questions/26692284/how-to-prevent-brokenpipeerror-when-doing-a-flush-in-python
-            # please note that the ignored exception is related to the stream wrapper of colorama
-            sys.stderr.close()
-        else:
-            # otherwise, re-raise
-            raise
+    except BrokenPipeError:
+        # Broken pipe (example: "lcc report | head"), in that case, simply exit gracefully
+        # We just close stderr to avoid Python warnings about ignored exception at the end of the
+        # command.
+        # See https://stackoverflow.com/questions/26692284/how-to-prevent-brokenpipeerror-when-doing-a-flush-in-python
+        # Please note that the ignored exception is related to the stream wrapper of colorama
+        sys.stderr.close()
 
 
 class ReportCommand(Command):

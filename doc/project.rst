@@ -68,7 +68,7 @@ And then accessed through the ``cli_args`` fixture::
     def target_url(cli_args):
         return "https://%s:%s" % (cli_args.host, cli_args.port)
 
-``cli_parser`` is an ``ArgumentParser`` instance of the `argparse <https://docs.python.org/2/library/argparse.html>`_ module.
+``cli_parser`` is an ``ArgumentParser`` instance of the `argparse <https://docs.python.org/3/library/argparse.html>`_ module.
 
 .. _prepostrunhooks:
 

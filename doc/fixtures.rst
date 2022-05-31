@@ -161,7 +161,7 @@ Builtin fixtures
 lemoncheesecake provides several special builtin fixtures:
 
 - ``cli_args`` (scope: ``pre_run``) is the object returned by ``parse_args`` of the
-  `argparse <https://docs.python.org/2/library/argparse.html>`_ module and that contains the actual CLI arguments;
+  `argparse <https://docs.python.org/3/library/argparse.html>`_ module and that contains the actual CLI arguments;
   this fixture can be used to access custom command line arguments previously setup by the method ``add_custom_cli_args``
   of the project class declared in the lemoncheesecake project file
 

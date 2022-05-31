@@ -12,26 +12,26 @@ def _debug(msg):
         print(msg)
 
 
-class TaskResultSuccess(object):
+class TaskResultSuccess:
     pass
 
 
-class TaskResultSkipped(object):
+class TaskResultSkipped:
     def __init__(self, reason):
         self.reason = reason
 
 
-class TaskResultFailure(object):
+class TaskResultFailure:
     def __init__(self, reason):
         self.reason = reason
 
 
-class TaskResultException(object):
+class TaskResultException:
     def __init__(self, stacktrace):
         self.stacktrace = stacktrace
 
 
-class BaseTask(object):
+class BaseTask:
     def __init__(self):
         self.result = None
 
@@ -51,7 +51,7 @@ class BaseTask(object):
         pass
 
 
-class TaskContext(object):
+class TaskContext:
     def __init__(self):
         self._tasks_aborted = False
 

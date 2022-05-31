@@ -13,8 +13,6 @@ try:
 except ImportError:
     LXML_IS_AVAILABLE = False
 
-import six
-
 import lemoncheesecake
 from lemoncheesecake.reporting.backend import FileReportBackend, ReportUnserializerMixin
 from lemoncheesecake.reporting.report import (
@@ -201,10 +199,7 @@ def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
     xml_report = serialize_report_as_xml_tree(report)
     indent_xml(xml_report, indent_level=indent_level)
 
-    if six.PY3:
-        return ET.tostring(xml_report, pretty_print=True, encoding="unicode")
-    else:
-        return ET.tostring(xml_report, pretty_print=True, xml_declaration=True, encoding="utf-8")
+    return ET.tostring(xml_report, pretty_print=True, encoding="unicode")
 
 
 def save_report_into_file(report, filename, indent_level=DEFAULT_INDENT_LEVEL):

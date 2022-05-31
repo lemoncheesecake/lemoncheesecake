@@ -4,12 +4,9 @@ Created on Mar 19, 2016
 @author: nicolas
 '''
 
-from __future__ import print_function
-
 import sys
 
 from termcolor import colored
-import six
 
 from lemoncheesecake.testtree import filter_suites, flatten_suites
 from lemoncheesecake.reporting.backend import ReportingBackend, ReportingSession, ReportingSessionBuilderMixin
@@ -27,10 +24,6 @@ class LinePrinter:
 
     def print_line(self, line, force_len=None):
         value_len = force_len if force_len else len(line)
-        if six.PY2:
-            if type(line) is unicode:
-                line = line.encode("utf-8")
-
         if value_len >= self.terminal_width - 1:
             line = line[:self.terminal_width - 5] + "..."
             value_len = len(line)

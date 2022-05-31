@@ -187,7 +187,7 @@ def test_assert_that_quiet(log_check_mock):
 
 
 def test_unicode(log_check_mock):
-    result = check_that(u"ééé", u"éééààà", starts_with(u"ééé"))
+    result = check_that("ééé", "éééààà", starts_with("ééé"))
     assert result
 
-    log_check_mock.assert_called_once_with(Search(u"ééé"), True, Search(u"éééààà"))
+    log_check_mock.assert_called_once_with(Search("ééé"), True, Search("éééààà"))

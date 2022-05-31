@@ -5,7 +5,7 @@ Created on Mar 12, 2017
 '''
 
 
-class Command(object):
+class Command:
     def get_name(self):
         pass
 

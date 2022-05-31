@@ -1,17 +1,10 @@
-'''
-Created on Sep 10, 2016
-
-@author: nicolas
-'''
-
 import os
 import os.path as osp
 import sys
 import glob
 import fnmatch
 import re
-import imp
-import warnings
+import importlib.util
 
 from lemoncheesecake.exceptions import serialize_current_exception, ModuleImportError
 
@@ -47,41 +40,23 @@ def get_matching_files(patterns, excluding=[]):
     return sorted(files)
 
 
-def import_module(mod_filename):
-    mod_dir = osp.dirname(mod_filename)
-    mod_name = strip_py_ext(osp.basename(mod_filename))
-
-    ###
-    # Find module
-    ###
-    sys.path.insert(0, mod_dir)
+def import_module(path):
+    mod_name = strip_py_ext(osp.basename(path))
     try:
-        with warnings.catch_warnings():
-            # would raise a warning since module's directory does not need to have a __init__.py
-            warnings.simplefilter("ignore", ImportWarning)
-            fh, path, description = imp.find_module(mod_name)
-    except ImportError:
-        raise ModuleImportError(
-            "Cannot find module '%s': %s" % (mod_filename, serialize_current_exception(show_stacktrace=True))
-        )
-    finally:
-        del sys.path[0]
-
-    ###
-    # Load module
-    ###
-    package_name = "".join(osp.splitdrive(mod_dir)[1].split(osp.sep)[1:])
-    try:
-        mod = imp.load_module(package_name + mod_name, fh, path, description)
-    except ImportError:
-        raise ModuleImportError(
-            "Cannot import file '%s': %s" % (mod_filename, serialize_current_exception(show_stacktrace=True))
-        )
+        spec = importlib.util.spec_from_file_location(mod_name, path)
+        module = importlib.util.module_from_spec(spec)
+        # NB: we should not make the module visible in sys.modules because a module without package could
+        # conflict with another module (suite or Python module) of the same name.
+        # Unfortunately, this behavior must be kept for backward compatibility with the use-case where
+        # a test is programmatically added to a module: add_test_into_suite(..., sys.modules[__name__])
+        # The best idea would be to:
+        # - create a dedicated function to handle this use-case
+        # - deprecate the usage of sys.modules within suite modules
+        sys.modules[mod_name] = module
+        spec.loader.exec_module(module)
     except Exception:
         raise ModuleImportError(
-            "Error while importing file '%s': %s" % (mod_filename, serialize_current_exception(show_stacktrace=True))
+            "Error while importing file '%s': %s" % (path, serialize_current_exception(show_stacktrace=True))
         )
-    finally:
-        fh.close()
 
-    return mod
+    return module

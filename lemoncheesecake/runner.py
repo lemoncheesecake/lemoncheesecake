@@ -7,8 +7,6 @@ Created on Jan 24, 2016
 import traceback
 import itertools
 
-import six
-
 from lemoncheesecake.exceptions import AbortTest, AbortSuite, AbortAllTests, LemoncheesecakeException, \
     UserError, TaskFailure, serialize_current_exception
 from lemoncheesecake.testtree import flatten_tests
@@ -19,7 +17,7 @@ from lemoncheesecake.fixture import initialize_fixture_cache
 
 class RunContext(TaskContext):
     def __init__(self, session, fixture_registry, force_disabled, stop_on_failure):
-        super(RunContext, self).__init__()
+        super().__init__()
         self.session = session
         self.fixture_registry = fixture_registry
         self.force_disabled = force_disabled
@@ -38,10 +36,7 @@ class RunContext(TaskContext):
             self._aborted_session = True
         else:
             # FIXME: use exception instead of last implicit stacktrace
-            stacktrace = traceback.format_exc()
-            if six.PY2:
-                stacktrace = stacktrace.decode("utf-8", "replace")
-            self.session.log_error("Caught unexpected exception while running test: " + stacktrace)
+            self.session.log_error("Caught unexpected exception while running test: " + traceback.format_exc())
 
     def run_setup_funcs(self, funcs, location):
         teardown_funcs = []
@@ -70,12 +65,12 @@ class RunContext(TaskContext):
                     self.handle_exception(e)
 
     def enable_task_abort(self):
-        super(RunContext, self).enable_task_abort()
+        super().enable_task_abort()
         self.session.aborted = True
 
     def is_task_to_be_skipped(self, task):
         # check for error in base implementation
-        skip_reason = super(RunContext, self).is_task_to_be_skipped(task)
+        skip_reason = super().is_task_to_be_skipped(task)
         if skip_reason:
             return skip_reason
 
@@ -115,7 +110,7 @@ class TestTask(BaseTask):
 
     def _handle_disabled_test(self, context):
         disabled = self.test.is_disabled()
-        disabled_reason = disabled if isinstance(disabled, six.string_types) else None
+        disabled_reason = disabled if isinstance(disabled, str) else None
         context.session.disable_test(self.test, disabled_reason)
 
     def skip(self, context, reason=None):
