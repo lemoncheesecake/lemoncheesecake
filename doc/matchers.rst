@@ -63,7 +63,7 @@ The following stock matchers are available:
 
   - ``is_bool([expected])``: check if actual is of type ``bool``
 
-  - ``is_str([expected])``: check if actual is of type ``str`` (or ``unicode`` if Python 2.7)
+  - ``is_str([expected])``: check if actual is of type ``str``
 
   - ``is_list([expected])``: check if actual is of type ``list`` or ``tuple``
 
