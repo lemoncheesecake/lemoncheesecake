@@ -59,13 +59,22 @@ def cmdout(capsys):
             for line in lines:
                 if re.compile(pattern).search(line):
                     return
-            raise Exception("No line matches pattern '%s' in \n<<<\n%s\n>>>" % (pattern, "\n".join(lines)))
+            raise Exception(
+                "No line matches pattern '{pattern}' on {outorerr}\n{dump}".format(
+                    pattern=pattern,
+                    outorerr="STDERR" if on_stderr else "STDOUT",
+                    dump=self._dump()
+                )
+            )
 
-        def dump(self):
+        def _dump(self):
             stdout = self.get_lines()
             stderr = self.get_lines(on_stderr=True)
-            print("STDOUT:\n<<<\n%s>>>\n" % "\n".join(stdout))
-            print("STDERR:\n<<<\n%s>>>\n" % "\n".join(stderr))
+            return "STDOUT:\n<<<\n%s>>>\n" % "\n".join(stdout) + \
+                   "STDERR:\n<<<\n%s>>>\n" % "\n".join(stderr)
+
+        def dump(self):
+            print(self._dump())
 
     return _CmdOutput()
 

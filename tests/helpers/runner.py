@@ -75,13 +75,16 @@ def build_suite_from_module(module_content):
     return suite
 
 
-def generate_project(project_dir, module_name, module_content, fixtures_content=None):
+def generate_project(project_dir, module_name, module_content, fixtures_content=None, project_content=None):
     create_project(project_dir)
     with open(osp.join(project_dir, "suites", "%s.py" % module_name), "w") as fh:
         fh.write(module_content)
     if fixtures_content:
         with open(osp.join(project_dir, "fixtures", "fixtures.py"), "w") as fh:
             fh.write(fixtures_content)
+    if project_content:
+        with open(osp.join(project_dir, "project.py"), "w") as fh:
+            fh.write(project_content)
 
 
 def build_fixture_registry(*funcs):

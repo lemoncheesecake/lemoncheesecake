@@ -7,7 +7,7 @@ Created on Dec 31, 2016
 import os
 
 from lemoncheesecake.cli.command import Command
-from lemoncheesecake.cli.utils import load_suites_from_project
+from lemoncheesecake.cli.utils import load_suites_from_project, add_project_cli_arg
 from lemoncheesecake.exceptions import LemoncheesecakeException, ProjectNotFound, UserError, serialize_current_exception
 from lemoncheesecake.filter import add_test_filter_cli_args, make_test_filter
 from lemoncheesecake.project import load_project, run_project, DEFAULT_REPORTING_BACKENDS
@@ -133,10 +133,7 @@ class RunCommand(Command):
         add_test_filter_cli_args(cli_parser)
 
         project_group = cli_parser.add_argument_group("Project")
-        project_group.add_argument(
-            "--project", "-p", required=False,
-            help="Project path (default: $LCC_PROJECT or lookup for a project in the directory hierarchy)"
-        )
+        add_project_cli_arg(project_group)
 
         test_execution_group = cli_parser.add_argument_group("Test execution")
         test_execution_group.add_argument(

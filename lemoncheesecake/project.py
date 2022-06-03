@@ -186,7 +186,7 @@ def load_project(path: str = None) -> Project:
     raise ProjectNotFound("Cannot neither find a 'suites' directory nor a 'project.py' file")
 
 
-def _build_fixture_registry(project, cli_args):
+def build_fixture_registry(project, cli_args):
     registry = FixtureRegistry()
     registry.add_fixture(BuiltinFixture("cli_args", cli_args))
     registry.add_fixture(BuiltinFixture("project_dir", project.dir))
@@ -222,7 +222,7 @@ def _setup_report_from_project(report, project):
 def run_project(project, suites, cli_args, reporting_backends, report_dir, report_saving_strategy,
                 force_disabled=False, stop_on_failure=False, nb_threads=1):
     # Build fixture registry
-    fixture_registry = _build_fixture_registry(project, cli_args)
+    fixture_registry = build_fixture_registry(project, cli_args)
     fixture_registry.check_fixtures_in_suites(suites)
 
     # Handle "pre_run" hook
