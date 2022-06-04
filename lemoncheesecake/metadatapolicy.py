@@ -86,7 +86,7 @@ class MetadataPolicy:
                     help_msg = "available are %s" % ", ".join(map(repr, available_properties.keys())) \
                         if available_properties else "no property is available"
                     raise MetadataPolicyViolation(
-                        "In %s '%s', the property '%s' is not supported (%s)" % (
+                        "In %s '%s', the property '%s' is not allowed (%s)" % (
                             obj_type, obj.path, property_name, help_msg
                         )
                     )
@@ -95,7 +95,7 @@ class MetadataPolicy:
         for property_name in obj.properties.keys():
             if property_name in forbidden_properties:
                 raise MetadataPolicyViolation(
-                    "In %s '%s', the property '%s' is not accepted on a %s" % (
+                    "In %s '%s', the property '%s' is not allowed on a %s" % (
                         obj_type, obj.path, property_name, obj_type
                     )
                 )
@@ -125,9 +125,9 @@ class MetadataPolicy:
             for tag in obj.tags:
                 if tag not in available_tags.keys():
                     help_msg = "available are %s" % ", ".join(map(repr, available_tags.keys())) \
-                        if available_tags else "no property is available"
+                        if available_tags else "no tag is available"
                     raise MetadataPolicyViolation(
-                        "In %s '%s', the tag '%s' is not supported (%s)" % (
+                        "In %s '%s', the tag '%s' is not allowed (%s)" % (
                             obj_type, obj.path, tag, help_msg
                         )
                     )
@@ -136,7 +136,7 @@ class MetadataPolicy:
         for tag in obj.tags:
             if tag in forbidden_tags:
                 raise MetadataPolicyViolation(
-                    "In %s '%s', the tag '%s' is not accepted on a %s" % (
+                    "In %s '%s', the tag '%s' is not allowed on a %s" % (
                         obj_type, obj.path, tag, obj_type
                     )
                 )
@@ -157,7 +157,7 @@ class MetadataPolicy:
     def check_suite_compliance(self, suite):
         """
         Check if the suite complies to the metadata policy.
-        If recursive if set to True (which is the default), then suite tests and sub suites are also checked.
+        If recursive is set to True (which is the default), then suite tests and sub suites are also checked.
         Raise MetadataPolicyViolation if not compliant.
         """
         self._check_compliance(
