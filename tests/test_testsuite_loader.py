@@ -90,6 +90,13 @@ def test_load_suites_from_files_exclude(tmpdir):
     assert suites[0].name == "mysuite"
 
 
+def test_load_suites_with_space_char_in_path(tmpdir):
+    mod_path = tmpdir.mkdir("my dir").join("mysuite.py")
+    mod_path.write(build_test_module())
+    suite = load_suite_from_file(mod_path.strpath)
+    assert suite.name == "mysuite"
+
+
 def test_load_suites_with_same_name():
     @lcc.suite("My Suite 1")
     class MySuite1:

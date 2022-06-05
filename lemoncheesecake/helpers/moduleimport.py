@@ -41,18 +41,10 @@ def get_matching_files(patterns, excluding=[]):
 
 
 def import_module(path):
-    mod_name = strip_py_ext(osp.basename(path))
     try:
-        spec = importlib.util.spec_from_file_location(mod_name, path)
+        spec = importlib.util.spec_from_file_location(path, path)
         module = importlib.util.module_from_spec(spec)
-        # NB: we should not make the module visible in sys.modules because a module without package could
-        # conflict with another module (suite or Python module) of the same name.
-        # Unfortunately, this behavior must be kept for backward compatibility with the use-case where
-        # a test is programmatically added to a module: add_test_into_suite(..., sys.modules[__name__])
-        # The best idea would be to:
-        # - create a dedicated function to handle this use-case
-        # - deprecate the usage of sys.modules within suite modules
-        sys.modules[mod_name] = module
+        sys.modules[path] = module
         spec.loader.exec_module(module)
     except Exception:
         raise ModuleImportError(
