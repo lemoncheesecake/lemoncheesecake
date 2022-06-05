@@ -87,6 +87,23 @@ from extra arguments that allow a finer control over tests execution and reporti
     Force the execution of disabled tests
 
 
+``lcc check``
+~~~~~~~~~~~~~
+
+Check if the test project is valid, which means:
+
+- the ``project.py`` can be properly loaded
+- the suite modules can be properly loaded
+- fixtures are ok (fixtures are known, scope is ok, no circular dependency, etc...)
+- metadata policy is respected
+
+Example:
+    .. code-block:: console
+
+        $ lcc check
+        Everything is ok
+
+
 ``lcc show``
 ~~~~~~~~~~~~
 

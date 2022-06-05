@@ -43,11 +43,7 @@ def main(args=None):
 
     try:
         cli_args = build_cli_args(args)
-    except LemoncheesecakeException as excp:
-        return str(excp)
-
-    command = next(cmd for cmd in get_commands() if cmd.get_name() == cli_args.command)
-    try:
+        command = next(cmd for cmd in get_commands() if cmd.get_name() == cli_args.command)
         return command.run_cmd(cli_args)
     except LemoncheesecakeException as excp:
         return str(excp)

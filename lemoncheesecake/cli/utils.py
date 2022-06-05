@@ -47,6 +47,13 @@ def add_report_path_cli_arg(cli_parser):
     cli_parser.add_argument("report_path", nargs='?', help="Report file or directory")
 
 
+def add_project_cli_arg(cli_parser):
+    cli_parser.add_argument(
+        "--project", "-p", required=False,
+        help="Project path (default: $LCC_PROJECT or lookup for a project in the directory hierarchy)"
+    )
+
+
 def get_report_path(cli_args):
     # first attempt: has the report path been specified on the CLI ?
     if cli_args.report_path:
