@@ -1,5 +1,4 @@
 import os
-import os.path as osp
 import sys
 import glob
 import fnmatch
@@ -42,6 +41,8 @@ def get_matching_files(patterns, excluding=[]):
 
 def import_module(path):
     try:
+        # NB: path is used as module name to avoid possible conflicting with Python modules using
+        # the same name
         spec = importlib.util.spec_from_file_location(path, path)
         module = importlib.util.module_from_spec(spec)
         sys.modules[path] = module
