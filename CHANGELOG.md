@@ -1,3 +1,11 @@
+# 1.14.0 (2022-11-01)
+
+- **CLI**: add a `lcc check` command to check the project validity
+- **doc (http://docs.lemoncheesecake.io)**: use Sphinx 5.0.0 and improve type hinting
+- Add official support for Python 3.11
+- Drop support for Python 2.7 and upgrade/cleanup the whole code base to take advantage
+  of being Python 3.7+ only
+
 # 1.13.0 (2022-04-30)
 
 - **HTML report**:
