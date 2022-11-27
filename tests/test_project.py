@@ -10,7 +10,7 @@ from lemoncheesecake.fixture import load_fixtures_from_func
 from lemoncheesecake.session import Session
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy
 from lemoncheesecake.reporting import JsonBackend
-from lemoncheesecake.exceptions import LemoncheesecakeException, FixtureConstraintViolation, ProjectLoadingError
+from lemoncheesecake.exceptions import LemoncheesecakeException, ValidationError, ProjectLoadingError
 import lemoncheesecake.api as lcc
 
 from helpers.utils import env_vars, tmp_cwd
@@ -347,7 +347,7 @@ def test_run_project_with_fixture_error(tmpdir):
             return [load_suite_from_class(suite)]
 
     project = MyProject(tmpdir.strpath)
-    with pytest.raises(FixtureConstraintViolation):
+    with pytest.raises(ValidationError):
         run_project(
             project, project.load_suites(), NotImplemented, [], tmpdir.strpath,
             make_report_saving_strategy("at_end_of_tests")

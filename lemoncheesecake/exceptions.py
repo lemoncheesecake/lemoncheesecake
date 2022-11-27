@@ -18,7 +18,7 @@ class ModuleImportError(LemoncheesecakeException):
     pass
 
 
-class FixtureConstraintViolation(LemoncheesecakeException):
+class ValidationError(LemoncheesecakeException):
     pass
 
 
@@ -27,10 +27,6 @@ class SuiteLoadingError(LemoncheesecakeException):
 
 
 class FixtureLoadingError(LemoncheesecakeException):
-    pass
-
-
-class MetadataPolicyViolation(LemoncheesecakeException):
     pass
 
 
