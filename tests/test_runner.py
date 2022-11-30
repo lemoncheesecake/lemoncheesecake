@@ -1944,3 +1944,5 @@ def test_depends_on_failed_and_subsuite():
     report = run_suite_class(suite1)
 
     assert_test_statuses(report, failed=["suite1.test1"], skipped=["suite1.suite2.test2"])
+
+

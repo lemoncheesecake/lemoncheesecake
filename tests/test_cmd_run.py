@@ -125,9 +125,10 @@ class SampleProject(Project):
 
 
 def _test_run_suites_from_project(project, cli_args, expected_args):
-    with patch("lemoncheesecake.cli.commands.run.run_project") as mocked:
+    with patch("lemoncheesecake.cli.commands.run.PreparedProject") as mocked:
         run_suites_from_project(project, build_cli_args(["run"] + cli_args))
-        mocked.assert_called_with(*expected_args)
+        mocked.create.assert_called_with(project, Any(), Any())
+        mocked.create.return_value.run.assert_called_with(*expected_args)
 
 
 class ReportingBackendMatcher(Matcher):
@@ -142,7 +143,7 @@ def test_run_suites_from_project_default():
     project = SampleProject(".")
     _test_run_suites_from_project(
         project, [],
-        (project, Any(), Any(), ReportingBackendMatcher("json", "html", "console"),
+        (ReportingBackendMatcher("json", "html", "console"),
          osp.join(os.getcwd(), "report"), savingstrategy.save_at_each_failed_test_strategy, False, False, 1)
     )
 
@@ -150,7 +151,7 @@ def test_run_suites_from_project_default():
 def test_run_suites_from_project_thread_cli_args():
     _test_run_suites_from_project(
         SampleProject(), ["--threads", "4"],
-        (Any(), Any(), Any(), Any(), Any(), Any(), Any(), Any(), 4)
+        (Any(), Any(), Any(), Any(), Any(), 4)
     )
 
 
@@ -158,7 +159,7 @@ def test_run_suites_from_project_thread_env():
     with env_vars(LCC_THREADS="4"):
         _test_run_suites_from_project(
             SampleProject(), [],
-            (Any(), Any(), Any(), Any(), Any(), Any(), Any(), Any(), 4)
+            (Any(), Any(), Any(), Any(), Any(), 4)
         )
 
 
@@ -173,7 +174,7 @@ def test_run_suites_from_project_thread_cli_args_while_threaded_is_disabled():
 def test_run_suites_from_project_saving_strategy_cli_args():
     _test_run_suites_from_project(
         SampleProject(), ["--save-report", "at_each_failed_test"],
-        (Any(), Any(), Any(), Any(), Any(), savingstrategy.save_at_each_failed_test_strategy, Any(), Any(), Any())
+        (Any(), Any(), savingstrategy.save_at_each_failed_test_strategy, Any(), Any(), Any())
     )
 
 
@@ -181,14 +182,14 @@ def test_run_suites_from_project_saving_strategy_env():
     with env_vars(LCC_SAVE_REPORT="at_each_failed_test"):
         _test_run_suites_from_project(
             SampleProject(), [],
-            (Any(), Any(), Any(), Any(), Any(), savingstrategy.save_at_each_failed_test_strategy, Any(), Any(), Any())
+            (Any(), Any(), savingstrategy.save_at_each_failed_test_strategy, Any(), Any(), Any())
         )
 
 
 def test_run_suites_from_project_reporting_backends_cli_args():
     _test_run_suites_from_project(
         SampleProject(), ["--reporting", "^console"],
-        (Any(), Any(), Any(), ReportingBackendMatcher("json", "html"), Any(), Any(), Any(), Any(), Any())
+        (ReportingBackendMatcher("json", "html"), Any(), Any(), Any(), Any(), Any())
     )
 
 
@@ -196,7 +197,7 @@ def test_run_suites_from_project_reporting_backends_env():
     with env_vars(LCC_REPORTING="^console"):
         _test_run_suites_from_project(
             SampleProject(), [],
-            (Any(), Any(), Any(), ReportingBackendMatcher("json", "html"), Any(), Any(), Any(), Any(), Any())
+            (ReportingBackendMatcher("json", "html"), Any(), Any(), Any(), Any(), Any())
         )
 
 
@@ -206,21 +207,21 @@ def test_run_suites_from_project_custom_attr_default_reporting_backend_names():
 
     _test_run_suites_from_project(
         project, [],
-        (Any(), Any(), Any(), ReportingBackendMatcher("json", "html"), Any(), Any(), Any(), Any(), Any())
+        (ReportingBackendMatcher("json", "html"), Any(), Any(), Any(), Any(), Any())
     )
 
 
 def test_run_suites_from_project_force_disabled_set():
     _test_run_suites_from_project(
         SampleProject(), ["--force-disabled"],
-        (Any(), Any(), Any(), Any(), Any(), Any(), True, Any(), Any())
+        (Any(), Any(), Any(), True, Any(), Any())
     )
 
 
 def test_run_suites_from_project_stop_on_failure_set():
     _test_run_suites_from_project(
         SampleProject(), ["--stop-on-failure"],
-        (Any(), Any(), Any(), Any(), Any(), Any(), Any(), True, Any())
+        (Any(), Any(), Any(), Any(), True, Any())
     )
 
 
@@ -233,7 +234,7 @@ def test_run_suites_from_project_report_dir_through_project(tmpdir):
 
     _test_run_suites_from_project(
         MyProject(), [],
-        (Any(), Any(), Any(), Any(), report_dir, Any(), Any(), Any(), Any())
+        (Any(), report_dir, Any(), Any(), Any(), Any())
     )
 
 
@@ -242,7 +243,7 @@ def test_run_suites_from_project_report_dir_cli_args(tmpdir):
 
     _test_run_suites_from_project(
         SampleProject(), ["--report-dir", report_dir],
-        (Any(), Any(), Any(), Any(), report_dir, Any(), Any(), Any(), Any())
+        (Any(), report_dir, Any(), Any(), Any(), Any())
     )
 
 
@@ -252,5 +253,5 @@ def test_run_suites_from_project_report_dir_env(tmpdir):
     with env_vars(LCC_REPORT_DIR=report_dir):
         _test_run_suites_from_project(
             SampleProject(), [],
-            (Any(), Any(), Any(), Any(), report_dir, Any(), Any(), Any(), Any())
+            (Any(), report_dir, Any(), Any(), Any(), Any())
         )

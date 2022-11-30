@@ -15,7 +15,7 @@ from typing import Any, Dict, Optional, Sequence, Tuple, List
 
 from lemoncheesecake.session import Session
 from lemoncheesecake.events import AsyncEventManager
-from lemoncheesecake.suite import load_suites_from_directory, Suite
+from lemoncheesecake.suite import load_suites_from_directory, Suite, check_tests_dependencies
 from lemoncheesecake.runner import run_suites
 from lemoncheesecake.fixture import load_fixtures_from_directory, Fixture, FixtureRegistry, BuiltinFixture
 from lemoncheesecake.metadatapolicy import MetadataPolicy
@@ -186,79 +186,92 @@ def load_project(path: str = None) -> Project:
     raise ProjectNotFound("Cannot neither find a 'suites' directory nor a 'project.py' file")
 
 
-def build_fixture_registry(project, cli_args):
-    registry = FixtureRegistry()
-    registry.add_fixture(BuiltinFixture("cli_args", cli_args))
-    registry.add_fixture(BuiltinFixture("project_dir", project.dir))
-    for fixture in project.load_fixtures():
-        registry.add_fixture(fixture)
-    registry.check_dependencies()
-    return registry
+class PreparedProject:
+    def __init__(self, project, suites: Sequence[Suite], fixture_registry: FixtureRegistry, cli_args):
+        self.project = project
+        self.suites = suites
+        self.fixture_registry = fixture_registry
+        self.cli_args = cli_args
 
+    @staticmethod
+    def _build_fixture_registry(project, cli_args):
+        registry = FixtureRegistry()
+        registry.add_fixture(BuiltinFixture("cli_args", cli_args))
+        registry.add_fixture(BuiltinFixture("project_dir", project.dir))
+        for fixture in project.load_fixtures():
+            registry.add_fixture(fixture)
+        return registry
 
-def _setup_report_from_project(report, project):
-    try:
-        title = project.build_report_title()
-    except Exception:
-        raise LemoncheesecakeException(
-            "Got an unexpected exception while getting report title from project:%s" % \
+    @classmethod
+    def create(cls, project: Project, suites: Sequence[Suite] = None,  cli_args=()):
+        if suites is None:
+            suites = project.load_suites()
+
+        project.metadata_policy.check_suites_compliance(suites)
+        check_tests_dependencies(suites)
+        fixture_registry = cls._build_fixture_registry(project, cli_args)
+        fixture_registry.check_dependencies()
+        fixture_registry.check_fixtures_in_suites(suites)
+        return cls(project, suites, fixture_registry, cli_args)
+
+    def _setup_report(self, report):
+        try:
+            title = self.project.build_report_title()
+        except Exception:
+            raise LemoncheesecakeException(
+                "Got an unexpected exception while getting report title from project:%s" % \
                 serialize_current_exception(show_stacktrace=True)
-        )
-    if title:
-        report.title = title
+            )
+        if title:
+            report.title = title
 
-    try:
-        info = list(project.build_report_info())
-    except Exception:
-        raise LemoncheesecakeException(
-            "Got an unexpected exception while getting report info from project:%s" % \
+        try:
+            info = list(self.project.build_report_info())
+        except Exception:
+            raise LemoncheesecakeException(
+                "Got an unexpected exception while getting report info from project:%s" % \
                 serialize_current_exception(show_stacktrace=True)
+            )
+
+        for key, value in info:
+            report.add_info(key, value)
+
+    def run(self, reporting_backends, report_dir, report_saving_strategy,
+            force_disabled=False, stop_on_failure=False, nb_threads=1):
+        # Handle "pre_run" hook
+        try:
+            self.project.pre_run(self.cli_args, report_dir)
+        except UserError as e:
+            raise e
+        except Exception:
+            raise LemoncheesecakeException(
+                "Got an unexpected exception while running project's pre_run method:%s" % \
+                    serialize_current_exception(show_stacktrace=True)
+            )
+
+        # Create session
+        session = Session.create(
+            AsyncEventManager.load(), reporting_backends, report_dir, report_saving_strategy,
+            nb_threads=nb_threads, parallelized=nb_threads > 1 and len(list(flatten_tests(self.suites))) > 1
+        )
+        self._setup_report(session.report)
+
+        # Run tests
+        run_suites(
+            self.suites, self.fixture_registry, session,
+            force_disabled=force_disabled, stop_on_failure=stop_on_failure,
+            nb_threads=nb_threads
         )
 
-    for key, value in info:
-        report.add_info(key, value)
+        # Handle "post_run" hook
+        try:
+            self.project.post_run(self.cli_args, report_dir)
+        except UserError as e:
+            raise e
+        except Exception:
+            raise LemoncheesecakeException(
+                "Got an unexpected exception while running project's post_run method:%s" % \
+                    serialize_current_exception(show_stacktrace=True)
+            )
 
-
-def run_project(project, suites, cli_args, reporting_backends, report_dir, report_saving_strategy,
-                force_disabled=False, stop_on_failure=False, nb_threads=1):
-    # Build fixture registry
-    fixture_registry = build_fixture_registry(project, cli_args)
-    fixture_registry.check_fixtures_in_suites(suites)
-
-    # Handle "pre_run" hook
-    try:
-        project.pre_run(cli_args, report_dir)
-    except UserError as e:
-        raise e
-    except Exception:
-        raise LemoncheesecakeException(
-            "Got an unexpected exception while running project's pre_run method:%s" % \
-                serialize_current_exception(show_stacktrace=True)
-        )
-
-    # Create session
-    session = Session.create(
-        AsyncEventManager.load(), reporting_backends, report_dir, report_saving_strategy,
-        nb_threads=nb_threads, parallelized=nb_threads > 1 and len(list(flatten_tests(suites))) > 1
-    )
-    _setup_report_from_project(session.report, project)
-
-    # Run tests
-    run_suites(
-        suites, fixture_registry, session,
-        force_disabled=force_disabled, stop_on_failure=stop_on_failure,
-        nb_threads=nb_threads
-    )
-
-    # Handle "post_run" hook
-    try:
-        project.post_run(cli_args, report_dir)
-    except UserError as e:
-        raise e
-    except Exception:
-        raise LemoncheesecakeException(
-            "Got an unexpected exception while running project's post_run method:%s" % \
-                serialize_current_exception(show_stacktrace=True)
-        )
-
-    return session.report
+        return session.report

@@ -1,9 +1,3 @@
-'''
-Created on Sep 8, 2016
-
-@author: nicolas
-'''
-
 from lemoncheesecake.exceptions import SuiteLoadingError
 from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.helpers.introspection import get_callable_args, get_object_attributes

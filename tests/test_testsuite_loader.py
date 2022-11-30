@@ -4,7 +4,7 @@ import pytest
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite.loader import load_suites_from_directory, load_suite_from_file, \
-    load_suite_from_class, load_suites_from_files, load_suites_from_classes, _load_test
+    load_suite_from_class, load_suites_from_files, load_suites_from_classes, _load_test, check_tests_dependencies
 from lemoncheesecake.metadatapolicy import MetadataPolicy
 from lemoncheesecake.exceptions import *
 
@@ -946,3 +946,55 @@ def test_invalid_type_on_suite_module(tmpdir):
 
     with pytest.raises(SuiteLoadingError, match="Invalid suite metadata"):
         load_suite_from_file(file.strpath)
+
+
+def test_depends_on_test_unknown():
+    @lcc.suite()
+    class suite:
+        @lcc.test()
+        @lcc.depends_on("another.test")
+        def test(self):
+            pass
+
+    suite = load_suite_from_class(suite)
+
+    with pytest.raises(ValidationError):
+        check_tests_dependencies([suite])
+
+
+def test_depends_on_circular_dependency_direct():
+    @lcc.suite()
+    class suite:
+        @lcc.test()
+        @lcc.depends_on("suite.test")
+        def test(self):
+            pass
+
+    suite = load_suite_from_class(suite)
+
+    with pytest.raises(ValidationError):
+        check_tests_dependencies([suite])
+
+
+def test_depends_on_circular_dependency_indirect():
+    @lcc.suite()
+    class suite:
+        @lcc.test()
+        @lcc.depends_on("suite.test_3")
+        def test_1(self):
+            pass
+
+        @lcc.test()
+        @lcc.depends_on("suite.test_1")
+        def test_2(self):
+            pass
+
+        @lcc.test()
+        @lcc.depends_on("suite.test_2")
+        def test_3(self):
+            pass
+
+    suite = load_suite_from_class(suite)
+
+    with pytest.raises(ValidationError):
+        check_tests_dependencies([suite])

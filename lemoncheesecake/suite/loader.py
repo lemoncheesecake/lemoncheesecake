@@ -2,15 +2,15 @@ import os
 import os.path as osp
 import inspect
 
-from typing import Sequence, Any, List
+from typing import Sequence, Any, List, Iterable, Dict
 
 from lemoncheesecake.helpers.moduleimport import get_matching_files, get_py_files_from_dir, strip_py_ext, import_module
 from lemoncheesecake.helpers.introspection import get_object_attributes
 from lemoncheesecake.exceptions import LemoncheesecakeException, UserError, ModuleImportError, \
-    SuiteLoadingError, serialize_current_exception
+    SuiteLoadingError, ValidationError, serialize_current_exception
 from lemoncheesecake.suite.core import Test, Suite, SUITE_HOOKS
 from lemoncheesecake.suite.builder import _get_metadata_next_rank, build_description_from_name
-from lemoncheesecake.testtree import BaseTreeNode
+from lemoncheesecake.testtree import BaseTreeNode, flatten_tests
 from lemoncheesecake.helpers.typecheck import check_type_string, check_type_dict, check_type
 
 
@@ -319,3 +319,25 @@ def load_suites_from_directory(dir: str, recursive: bool = True) -> List[Suite]:
             ),
             key=lambda s: s.rank
         )
+
+
+def _check_test_dependencies(test: Test, all_tests: Dict[str, Test], ref_tests: Sequence[str] = ()):
+    for dep_test_path in test.dependencies:
+        try:
+            dep_test = all_tests[dep_test_path]
+        except KeyError:
+            raise ValidationError(
+                f"Cannot find dependency test '{dep_test_path}' for '{test.path}', "
+                "either the test does not exist or is not going to be run"
+            )
+
+        if dep_test.path in ([test.path] + list(ref_tests)):
+            raise ValidationError(f"Got circular dependency on test {test.path} through test {dep_test.path}")
+
+        _check_test_dependencies(dep_test, all_tests, [test.path] + list(ref_tests))
+
+
+def check_tests_dependencies(suites: Iterable[Suite]):
+    all_tests = {t.path: t for t in flatten_tests(suites)}
+    for test in all_tests.values():
+        _check_test_dependencies(test, all_tests)
