@@ -15,7 +15,7 @@ from typing import Any, Dict, Optional, Sequence, Tuple, List
 
 from lemoncheesecake.session import Session
 from lemoncheesecake.events import AsyncEventManager
-from lemoncheesecake.suite import load_suites_from_directory, Suite, check_tests_dependencies
+from lemoncheesecake.suite import load_suites_from_directory, Suite, resolve_tests_dependencies
 from lemoncheesecake.runner import run_suites
 from lemoncheesecake.fixture import load_fixtures_from_directory, Fixture, FixtureRegistry, BuiltinFixture
 from lemoncheesecake.metadatapolicy import MetadataPolicy
@@ -204,11 +204,12 @@ class PreparedProject:
 
     @classmethod
     def create(cls, project: Project, suites: Sequence[Suite] = None,  cli_args=()):
+        all_suites = project.load_suites()
         if suites is None:
-            suites = project.load_suites()
+            suites = all_suites
 
         project.metadata_policy.check_suites_compliance(suites)
-        check_tests_dependencies(suites)
+        resolve_tests_dependencies(suites, all_suites)
         fixture_registry = cls._build_fixture_registry(project, cli_args)
         fixture_registry.check_dependencies()
         fixture_registry.check_fixtures_in_suites(suites)

@@ -365,6 +365,31 @@ def test_project_with_depends_on_error(tmpdir):
         PreparedProject.create(MyProject(tmpdir.strpath))
 
 
+def test_project_with_depends_on_test_not_scheduled(tmpdir):
+    @lcc.suite()
+    class suite_1:
+        @lcc.test()
+        def test(self):
+            pass
+
+    @lcc.suite()
+    class suite_2:
+        @lcc.test()
+        @lcc.depends_on(lambda t: t.path == "suite_1.test")
+        def test(self):
+            pass
+
+    suite_1 = load_suite_from_class(suite_1)
+    suite_2 = load_suite_from_class(suite_2)
+
+    class MyProject(Project):
+        def load_suites(self):
+            return [suite_1, suite_2]
+
+    with pytest.raises(ValidationError, match="is not going to be run"):
+        PreparedProject.create(MyProject(tmpdir.strpath), [suite_2])
+
+
 def test_run_project_with_fixture_cli_args(tmpdir):
     test_args = []
 

@@ -164,7 +164,7 @@ def hidden():
     return visible_if(lambda _: False)
 
 
-def depends_on(*deps: str) -> Any:
+def depends_on(*deps: Union[str, Callable]) -> Any:
     """
     Decorator, only applicable to a test. Add dependencies to a test.
 

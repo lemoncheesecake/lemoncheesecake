@@ -1892,7 +1892,7 @@ def test_depends_on_failed_failure():
             lcc.log_error("some error")
 
         @lcc.test("t2")
-        @lcc.depends_on("suite.test1")
+        @lcc.depends_on(lambda t: t.path == "suite.test1")
         def test2(self):
             pass
 

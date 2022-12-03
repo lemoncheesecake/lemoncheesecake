@@ -9,8 +9,8 @@ Created on Sep 30, 2016
 import pytest
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.suite import load_suite_from_class, add_test_into_suite
-from lemoncheesecake.exceptions import SuiteLoadingError
+from lemoncheesecake.suite import load_suite_from_class, add_test_into_suite, resolve_tests_dependencies
+from lemoncheesecake.exceptions import SuiteLoadingError, ValidationError
 
 from helpers.runner import dummy_test_callback, build_suite_from_module
 
@@ -435,3 +435,89 @@ def test_depends_on_suite():
             @lcc.test("My Test")
             def test(self):
                 pass
+
+
+def test_resolve_test_dependencies():
+    @lcc.suite()
+    class suite:
+        @lcc.test()
+        def test_1(self):
+            pass
+
+        @lcc.test()
+        @lcc.depends_on("suite.test_1")
+        def test_2(self):
+            pass
+
+    suite = load_suite_from_class(suite)
+    resolve_tests_dependencies([suite], [suite])
+    assert suite.get_test_by_name("test_2").resolved_dependencies[0].path == "suite.test_1"
+
+
+def test_resolve_test_dependencies_with_callable():
+    @lcc.suite()
+    class suite:
+        @lcc.test()
+        def test_1(self):
+            pass
+
+        @lcc.test()
+        @lcc.depends_on(lambda test: test.path == "suite.test_1")
+        def test_2(self):
+            pass
+
+    suite = load_suite_from_class(suite)
+    resolve_tests_dependencies([suite], [suite])
+    assert suite.get_test_by_name("test_2").resolved_dependencies[0].path == "suite.test_1"
+
+
+def test_resolve_tests_dependencies_with_unknown_test():
+    @lcc.suite()
+    class suite:
+        @lcc.test()
+        @lcc.depends_on("another.test")
+        def test(self):
+            pass
+
+    suite = load_suite_from_class(suite)
+
+    with pytest.raises(ValidationError):
+        resolve_tests_dependencies([suite], [suite])
+
+
+def test_resolve_tests_dependencies_circular_dependency_direct():
+    @lcc.suite()
+    class suite:
+        @lcc.test()
+        @lcc.depends_on("suite.test")
+        def test(self):
+            pass
+
+    suite = load_suite_from_class(suite)
+
+    with pytest.raises(ValidationError):
+        resolve_tests_dependencies([suite], [suite])
+
+
+def test_resolve_tests_dependencies_circular_dependency_indirect():
+    @lcc.suite()
+    class suite:
+        @lcc.test()
+        @lcc.depends_on("suite.test_3")
+        def test_1(self):
+            pass
+
+        @lcc.test()
+        @lcc.depends_on("suite.test_1")
+        def test_2(self):
+            pass
+
+        @lcc.test()
+        @lcc.depends_on("suite.test_2")
+        def test_3(self):
+            pass
+
+    suite = load_suite_from_class(suite)
+
+    with pytest.raises(ValidationError):
+        resolve_tests_dependencies([suite], [suite])
