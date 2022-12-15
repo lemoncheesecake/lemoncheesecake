@@ -1,4 +1,4 @@
-from lemoncheesecake.project import load_project, build_fixture_registry
+from lemoncheesecake.project import load_project, PreparedProject
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import add_project_cli_arg
 
@@ -15,9 +15,6 @@ class CheckCommand(Command):
 
     def run_cmd(self, cli_args):
         project = load_project(cli_args.project)
-        suites = project.load_suites()
-        project.metadata_policy.check_suites_compliance(suites)
-        fixture_registry = build_fixture_registry(project, cli_args)
-        fixture_registry.check_fixtures_in_suites(suites)
+        PreparedProject.create(project)
 
         print("Everything is ok")

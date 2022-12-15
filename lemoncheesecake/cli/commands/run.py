@@ -1,16 +1,10 @@
-'''
-Created on Dec 31, 2016
-
-@author: nicolas
-'''
-
 import os
 
 from lemoncheesecake.cli.command import Command
 from lemoncheesecake.cli.utils import load_suites_from_project, add_project_cli_arg
 from lemoncheesecake.exceptions import LemoncheesecakeException, ProjectNotFound, UserError, serialize_current_exception
 from lemoncheesecake.filter import add_test_filter_cli_args, make_test_filter
-from lemoncheesecake.project import load_project, run_project, DEFAULT_REPORTING_BACKENDS
+from lemoncheesecake.project import load_project, PreparedProject, DEFAULT_REPORTING_BACKENDS
 from lemoncheesecake.reporting.backend import get_reporting_backend_names as do_get_reporting_backend_names, \
     parse_reporting_backend_names_expression, get_reporting_backends_for_test_run
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy, DEFAULT_REPORT_SAVING_STRATEGY
@@ -86,12 +80,15 @@ def create_report_dir(cli_args, project):
 
 
 def run_suites_from_project(project, cli_args):
-    # Load suites
-    suites = load_suites_from_project(project, make_test_filter(cli_args))
+    # Create prepared_project
+    prepared_project = PreparedProject.create(
+        project, load_suites_from_project(project, make_test_filter(cli_args)), cli_args
+    )
 
     # Get reporting backends
-    reporting_backend_names = get_reporting_backend_names(cli_args, project)
-    reporting_backends = get_reporting_backends_for_test_run(project.reporting_backends, reporting_backend_names)
+    reporting_backends = get_reporting_backends_for_test_run(
+        project.reporting_backends, get_reporting_backend_names(cli_args, project)
+    )
 
     # Get report save mode
     report_saving_strategy = get_report_saving_strategy(cli_args)
@@ -103,8 +100,8 @@ def run_suites_from_project(project, cli_args):
     nb_threads = get_nb_threads(cli_args, project)
 
     # Run tests
-    report = run_project(
-        project, suites, cli_args, reporting_backends, report_dir, report_saving_strategy,
+    report = prepared_project.run(
+        reporting_backends, report_dir, report_saving_strategy,
         cli_args.force_disabled, cli_args.stop_on_failure, nb_threads
     )
 

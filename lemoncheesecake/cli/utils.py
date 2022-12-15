@@ -1,9 +1,3 @@
-'''
-Created on Mar 12, 2017
-
-@author: nicolas
-'''
-
 import os.path as osp
 import sys
 import platform
@@ -24,8 +18,6 @@ def load_suites_from_project(project, test_filter=None):
     suites = project.load_suites()
     if all(suite.is_empty() for suite in suites):
         raise UserError("No test is defined in your lemoncheesecake project.")
-
-    project.metadata_policy.check_suites_compliance(suites)
 
     if test_filter:
         suites = filter_suites(suites, test_filter)

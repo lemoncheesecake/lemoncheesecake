@@ -7,6 +7,7 @@ import tempfile
 import shutil
 
 from lemoncheesecake.suite.loader import load_suites_from_classes, load_suite_from_file
+from lemoncheesecake.suite import resolve_tests_dependencies
 from lemoncheesecake import runner
 from lemoncheesecake.events import AsyncEventManager
 from lemoncheesecake.session import Session
@@ -103,6 +104,8 @@ def run_suites(suites, fixtures=None, backends=None, tmpdir=None, force_disabled
             fixture_registry = fixtures
         else:
             fixture_registry = build_fixture_registry(*fixtures)
+
+    resolve_tests_dependencies(suites, suites)
 
     if backends is None:
         backends = []

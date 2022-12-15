@@ -4,7 +4,7 @@ import inspect
 from typing import List, Any, Sequence, Callable, Optional
 
 from lemoncheesecake.helpers.moduleimport import import_module, get_matching_files, get_py_files_from_dir
-from lemoncheesecake.exceptions import FixtureConstraintViolation, ModuleImportError, FixtureLoadingError
+from lemoncheesecake.exceptions import ValidationError, ModuleImportError, FixtureLoadingError
 from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.helpers.introspection import get_callable_args
 from lemoncheesecake.helpers.threading import ThreadedFactory
@@ -239,7 +239,7 @@ class FixtureRegistry:
 
     def add_fixture(self, fixture):
         if fixture.name in self._fixtures and isinstance(self._fixtures[fixture.name], BuiltinFixture):
-            raise FixtureConstraintViolation("'%s' is a builtin fixture name" % fixture.name)
+            raise ValidationError("'%s' is a builtin fixture name" % fixture.name)
         self._fixtures[fixture.name] = fixture
 
     def add_fixtures(self, fixtures):
@@ -252,14 +252,14 @@ class FixtureRegistry:
     def get_fixture_dependencies(self, name, ref_fixtures=()):
         fixture_params = [p for p in self._fixtures[name].params if p != "fixture_name"]
         if any(ref_fixture in fixture_params for ref_fixture in ref_fixtures):
-            raise FixtureConstraintViolation(
+            raise ValidationError(
                 "Fixture params %s have circular dependency on a fixture among %s" % (fixture_params, ref_fixtures)
             )
 
         dependencies = OrderedSet()
         for param in fixture_params:
             if param not in self._fixtures:
-                raise FixtureConstraintViolation("Fixture '%s' used by fixture '%s' does not exist" % (param, name))
+                raise ValidationError("Fixture '%s' used by fixture '%s' does not exist" % (param, name))
             dependencies.update(self.get_fixture_dependencies(param, (name,) + ref_fixtures))
         dependencies.update(fixture_params)
 
@@ -278,7 +278,7 @@ class FixtureRegistry:
         # first, check for forbidden fixture name
         for fixture_name in self._fixtures.keys():
             if fixture_name in _FORBIDDEN_FIXTURE_NAMES:
-                raise FixtureConstraintViolation("Fixture name '%s' is forbidden" % fixture_name)
+                raise ValidationError("Fixture name '%s' is forbidden" % fixture_name)
 
         # second, check for missing & circular dependencies
         for fixture_name in self._fixtures.keys():
@@ -289,13 +289,13 @@ class FixtureRegistry:
             dependency_fixtures = [self._fixtures[param] for param in fixture.params if param != "fixture_name"]
             for dependency_fixture in dependency_fixtures:
                 if dependency_fixture.per_thread and fixture.scope != "test":
-                    raise FixtureConstraintViolation(
+                    raise ValidationError(
                         "Fixture '%s' with scope '%s' is incompatible with per-thread fixture '%s'" % (
                             fixture.name, fixture.scope, dependency_fixture.name
                         )
                     )
                 if dependency_fixture.scope_level < fixture.scope_level:
-                    raise FixtureConstraintViolation(
+                    raise ValidationError(
                         "Fixture '%s' with scope '%s' is incompatible with scope '%s' of fixture '%s'" % (
                             fixture.name, fixture.scope, dependency_fixture.scope, dependency_fixture.name
                         )
@@ -304,22 +304,22 @@ class FixtureRegistry:
     def check_fixtures_in_test(self, test):
         for fixture in test.get_fixtures():
             if fixture not in self._fixtures:
-                raise FixtureConstraintViolation("Unknown fixture '%s' used in test '%s'" % (fixture, test.path))
+                raise ValidationError("Unknown fixture '%s' used in test '%s'" % (fixture, test.path))
 
     def check_fixtures_in_suite(self, suite):
         for fixture_name in suite.get_fixtures():
             try:
                 fixture = self._fixtures[fixture_name]
             except KeyError:
-                raise FixtureConstraintViolation("Suite '%s' uses an unknown fixture '%s'" % (suite.path, fixture_name))
+                raise ValidationError("Suite '%s' uses an unknown fixture '%s'" % (suite.path, fixture_name))
             if fixture.per_thread:
-                raise FixtureConstraintViolation(
+                raise ValidationError(
                     "Suite '%s' uses per-thread fixture '%s' which is not allowed" % (
                         suite.path, fixture.name
                     )
                 )
             if fixture.scope_level < _SCOPE_LEVELS["suite"]:
-                raise FixtureConstraintViolation("Suite '%s' uses fixture '%s' which has an incompatible scope" % (
+                raise ValidationError("Suite '%s' uses fixture '%s' which has an incompatible scope" % (
                     suite.path, fixture.name
                 ))
 

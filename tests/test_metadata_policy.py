@@ -9,7 +9,7 @@ import pytest
 import lemoncheesecake.api as lcc
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake.metadatapolicy import MetadataPolicy
-from lemoncheesecake.exceptions import MetadataPolicyViolation
+from lemoncheesecake.exceptions import ValidationError
 
 
 def test_property_value_validation():
@@ -32,9 +32,9 @@ def test_property_value_validation():
     # non-passing case
     policy = MetadataPolicy()
     policy.add_property_rule("foo", ("3", "4"), on_test=True, on_suite=True)
-    with pytest.raises(MetadataPolicyViolation):
+    with pytest.raises(ValidationError):
         policy.check_test_compliance(suite.get_tests()[0])
-    with pytest.raises(MetadataPolicyViolation):
+    with pytest.raises(ValidationError):
         policy.check_suite_compliance(suite)
 
 
@@ -58,9 +58,9 @@ def test_required_property():
     # non-passing case
     policy = MetadataPolicy()
     policy.add_property_rule("bar", on_test=True, on_suite=True, required=True)
-    with pytest.raises(MetadataPolicyViolation):
+    with pytest.raises(ValidationError):
         policy.check_test_compliance(suite.get_tests()[0])
-    with pytest.raises(MetadataPolicyViolation):
+    with pytest.raises(ValidationError):
         policy.check_suite_compliance(suite)
 
 
@@ -93,9 +93,9 @@ def test_allowed_properties_and_tags():
     policy.disallow_unknown_properties()
     policy.disallow_unknown_tags()
 
-    with pytest.raises(MetadataPolicyViolation):
+    with pytest.raises(ValidationError):
         policy.check_test_compliance(suite.get_tests()[0])
-    with pytest.raises(MetadataPolicyViolation):
+    with pytest.raises(ValidationError):
         policy.check_suite_compliance(suite)
 
 
@@ -122,9 +122,9 @@ def test_different_test_and_suite_property_configurations():
     policy.add_property_rule("foo", on_test=True)
     policy.add_property_rule("bar", on_suite=True)
 
-    with pytest.raises(MetadataPolicyViolation):
+    with pytest.raises(ValidationError):
         policy.check_test_compliance(suite.get_tests()[0])
-    with pytest.raises(MetadataPolicyViolation):
+    with pytest.raises(ValidationError):
         policy.check_suite_compliance(suite)
 
 
@@ -151,9 +151,9 @@ def test_different_test_and_suite_tag_configurations():
     policy.add_tag_rule("tag1", on_test=True)
     policy.add_tag_rule("tag2", on_suite=True)
 
-    with pytest.raises(MetadataPolicyViolation):
+    with pytest.raises(ValidationError):
         policy.check_test_compliance(suite.get_tests()[0])
-    with pytest.raises(MetadataPolicyViolation):
+    with pytest.raises(ValidationError):
         policy.check_suite_compliance(suite)
 
 
@@ -177,9 +177,9 @@ def test_disallow_unknown_property():
     policy = MetadataPolicy()
     policy.disallow_unknown_properties()
 
-    with pytest.raises(MetadataPolicyViolation):
+    with pytest.raises(ValidationError):
         policy.check_test_compliance(suite.get_tests()[0])
-    with pytest.raises(MetadataPolicyViolation):
+    with pytest.raises(ValidationError):
         policy.check_suite_compliance(suite)
 
 
@@ -203,7 +203,7 @@ def test_disallow_unknown_tag():
     policy = MetadataPolicy()
     policy.disallow_unknown_tags()
 
-    with pytest.raises(MetadataPolicyViolation):
+    with pytest.raises(ValidationError):
         policy.check_test_compliance(suite.get_tests()[0])
-    with pytest.raises(MetadataPolicyViolation):
+    with pytest.raises(ValidationError):
         policy.check_suite_compliance(suite)

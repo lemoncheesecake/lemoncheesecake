@@ -360,7 +360,7 @@ def test_registry_forbidden_fixture_name():
 
     registry = FixtureRegistry()
     registry.add_fixtures(load_fixtures_from_func(fixture_name))
-    with pytest.raises(exceptions.FixtureConstraintViolation) as excinfo:
+    with pytest.raises(exceptions.ValidationError) as excinfo:
         registry.check_dependencies()
     assert "forbidden" in str(excinfo.value)
 
@@ -418,7 +418,7 @@ def test_check_fixtures_in_suites_unknown_fixture_in_test():
 
     suite = load_suite_from_class(MySuite)
     registry = build_registry()
-    with pytest.raises(exceptions.FixtureConstraintViolation):
+    with pytest.raises(exceptions.ValidationError):
         registry.check_fixtures_in_suites([suite])
 
 
@@ -434,7 +434,7 @@ def test_check_fixtures_in_suites_unknown_fixture_in_setup_suite():
 
     suite = load_suite_from_class(MySuite)
     registry = build_registry()
-    with pytest.raises(exceptions.FixtureConstraintViolation):
+    with pytest.raises(exceptions.ValidationError):
         registry.check_fixtures_in_suites([suite])
 
 
@@ -450,7 +450,7 @@ def test_check_fixtures_in_suites_incompatible_fixture_in_setup_suite():
 
     suite = load_suite_from_class(MySuite)
     registry = build_registry()
-    with pytest.raises(exceptions.FixtureConstraintViolation):
+    with pytest.raises(exceptions.ValidationError):
         registry.check_fixtures_in_suites([suite])
 
 
@@ -465,7 +465,7 @@ def test_check_fixtures_in_suites_incompatible_fixture_in_inject():
 
     suite = load_suite_from_class(MySuite)
     registry = build_registry()
-    with pytest.raises(exceptions.FixtureConstraintViolation):
+    with pytest.raises(exceptions.ValidationError):
         registry.check_fixtures_in_suites([suite])
 
 
@@ -494,7 +494,7 @@ def test_check_fixture_in_suite_incompatible_dependency_on_per_thread_fixture():
 
     suite = load_suite_from_class(Suite)
     registry = build_fixture_registry(fixt)
-    with pytest.raises(exceptions.FixtureConstraintViolation, match=r"per-thread.+not allowed"):
+    with pytest.raises(exceptions.ValidationError, match=r"per-thread.+not allowed"):
         registry.check_fixtures_in_suite(suite)
 
 
@@ -508,7 +508,7 @@ def test_check_fixture_dependencies_incompatible_dependency_on_per_thread_fixtur
         pass
 
     registry = build_fixture_registry(per_thread_fixture, suite_fixture)
-    with pytest.raises(exceptions.FixtureConstraintViolation, match=r"incompatible with per-thread fixture"):
+    with pytest.raises(exceptions.ValidationError, match=r"incompatible with per-thread fixture"):
         registry.check_dependencies()
 
 

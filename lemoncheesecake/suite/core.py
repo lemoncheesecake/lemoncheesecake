@@ -1,13 +1,9 @@
-'''
-Created on Sep 8, 2016
+from typing import Dict, Iterable, Sequence
 
-@author: nicolas
-'''
-
-from lemoncheesecake.exceptions import SuiteLoadingError
+from lemoncheesecake.exceptions import SuiteLoadingError, ValidationError
 from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.helpers.introspection import get_callable_args, get_object_attributes
-from lemoncheesecake.testtree import BaseTest, BaseSuite
+from lemoncheesecake.testtree import BaseTest, BaseSuite, flatten_tests_as_dict
 
 SUITE_HOOKS = "setup_test", "teardown_test", "setup_suite", "teardown_suite"
 
@@ -31,6 +27,7 @@ class Test(BaseTest):
         self.hidden = False
         self.rank = 0
         self.dependencies = []
+        self.resolved_dependencies = []
         self.parameters = {}
 
     def is_disabled(self):
@@ -157,3 +154,47 @@ class Suite(BaseSuite):
             fixtures.update(get_callable_args(suite_setup))
 
         return fixtures
+
+
+def _normalize_test_dependencies(test: Test, all_tests: Dict[str, Test]):
+    for test_dep in test.dependencies:
+        if callable(test_dep):
+            for other_test in all_tests.values():
+                if other_test != test and test_dep(other_test):
+                    yield other_test
+        else:
+            try:
+                yield all_tests[test_dep]
+            except KeyError:
+                raise ValidationError(
+                    f"Cannot find dependency test '{test_dep}' for '{test.path}'"
+                )
+
+
+def _resolve_test_dependencies(test: Test, scheduled_tests: Dict[str, Test], all_tests: Dict[str, Test],
+                               ref_tests: Sequence[str] = ()):
+    # NB: the all_tests vs scheduled_tests distinction is here to make sure that an existing test dependency
+    # (i.e present in all_tests) is really going to be run (i.e present in scheduled_tests)
+    ref_tests = [test.path] + list(ref_tests)
+    resolved_dependencies = []
+
+    for dep_test in _normalize_test_dependencies(test, all_tests):
+        if dep_test.path in ref_tests:
+            raise ValidationError(f"Got circular dependency on test {test.path} through test {dep_test.path}")
+        if dep_test.path not in scheduled_tests:
+            raise ValidationError(
+                f"Error: test dependency '{dep_test.path}' of '{test.path}' "
+                "is not going to be run"
+            )
+
+        resolved_dependencies.append(dep_test)
+        _resolve_test_dependencies(dep_test, scheduled_tests, all_tests, ref_tests)
+
+    return resolved_dependencies
+
+
+def resolve_tests_dependencies(scheduled_suites: Iterable[Suite], all_suites: Iterable[Suite]):
+    scheduled_tests = flatten_tests_as_dict(scheduled_suites)
+    all_tests = flatten_tests_as_dict(all_suites)
+    for test in scheduled_tests.values():
+        test.resolved_dependencies = _resolve_test_dependencies(test, scheduled_tests, all_tests)

@@ -4,13 +4,13 @@ import re
 
 import pytest
 
-from lemoncheesecake.project import Project, create_project, load_project, run_project
+from lemoncheesecake.project import Project, create_project, load_project, PreparedProject
 from lemoncheesecake.suite import load_suite_from_class
 from lemoncheesecake.fixture import load_fixtures_from_func
 from lemoncheesecake.session import Session
 from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy
 from lemoncheesecake.reporting import JsonBackend
-from lemoncheesecake.exceptions import LemoncheesecakeException, FixtureConstraintViolation, ProjectLoadingError
+from lemoncheesecake.exceptions import LemoncheesecakeException, ValidationError, ProjectLoadingError
 import lemoncheesecake.api as lcc
 
 from helpers.utils import env_vars, tmp_cwd
@@ -154,9 +154,9 @@ def test_run_project(tmpdir):
         def load_suites(self):
             return [load_suite_from_class(suite)]
 
-    project = MyProject(tmpdir.strpath)
-    report = run_project(
-        project, project.load_suites(), None, [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
+    prepared = PreparedProject.create(MyProject(tmpdir.strpath))
+    report = prepared.run(
+        [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
     )
 
     assert report.is_successful()
@@ -178,13 +178,13 @@ def test_run_project_with_pre_run(tmpdir):
         def load_suites(self):
             return [load_suite_from_class(suite)]
 
-    project = MyProject(tmpdir.strpath)
-    report = run_project(
-        project, project.load_suites(), NotImplemented, [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
+    prepared = PreparedProject.create(MyProject(tmpdir.strpath), cli_args=["mark"])
+    report = prepared.run(
+        [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
     )
 
     assert report.is_successful()
-    assert pre_run_args == [NotImplemented, tmpdir.strpath]
+    assert pre_run_args == [["mark"], tmpdir.strpath]
 
 
 def test_run_project_with_pre_run_exception(tmpdir):
@@ -201,11 +201,11 @@ def test_run_project_with_pre_run_exception(tmpdir):
         def load_suites(self):
             return [load_suite_from_class(suite)]
 
-    project = MyProject(tmpdir.strpath)
+    prepared = PreparedProject.create(MyProject(tmpdir.strpath))
 
     with pytest.raises(LemoncheesecakeException, match=re.compile("error from pre_run")):
-        run_project(
-            project, project.load_suites(), NotImplemented, [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
+        prepared.run(
+            [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
         )
 
 
@@ -225,13 +225,13 @@ def test_run_project_with_post_run(tmpdir):
         def load_suites(self):
             return [load_suite_from_class(suite)]
 
-    project = MyProject(tmpdir.strpath)
-    report = run_project(
-        project, project.load_suites(), NotImplemented, [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
+    prepared = PreparedProject.create(MyProject(tmpdir.strpath), cli_args=["mark"])
+    report = prepared.run(
+        [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
     )
 
     assert report.is_successful()
-    assert post_run_args == [NotImplemented, tmpdir.strpath]
+    assert post_run_args == [["mark"], tmpdir.strpath]
 
 
 def test_run_project_with_post_run_exception(tmpdir):
@@ -248,11 +248,11 @@ def test_run_project_with_post_run_exception(tmpdir):
         def load_suites(self):
             return [load_suite_from_class(suite)]
 
-    project = MyProject(tmpdir.strpath)
+    prepared = PreparedProject.create(MyProject(tmpdir.strpath))
 
     with pytest.raises(LemoncheesecakeException, match=re.compile("error from post_run")):
-        run_project(
-            project, project.load_suites(), NotImplemented, [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
+        prepared.run(
+            [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
         )
 
     session = Session.get()
@@ -273,9 +273,9 @@ def test_run_project_with_build_report_title(tmpdir):
         def load_suites(self):
             return [load_suite_from_class(suite)]
 
-    project = MyProject(tmpdir.strpath)
-    report = run_project(
-        project, project.load_suites(), NotImplemented, [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
+    prepared = PreparedProject.create(MyProject(tmpdir.strpath))
+    report = prepared.run(
+        [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
     )
 
     assert report.is_successful()
@@ -296,9 +296,9 @@ def test_run_project_with_build_report_info(tmpdir):
         def load_suites(self):
             return [load_suite_from_class(suite)]
 
-    project = MyProject(tmpdir.strpath)
-    report = run_project(
-        project, project.load_suites(), NotImplemented, [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
+    prepared = PreparedProject.create(MyProject(tmpdir.strpath))
+    report = prepared.run(
+        [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
     )
 
     assert report.is_successful()
@@ -325,17 +325,16 @@ def test_run_project_with_fixtures(tmpdir):
         def load_suites(self):
             return [load_suite_from_class(suite)]
 
-    project = MyProject(tmpdir.strpath)
-    report = run_project(
-        project, project.load_suites(), NotImplemented, [], tmpdir.strpath,
-        make_report_saving_strategy("at_end_of_tests")
+    prepared = PreparedProject.create(MyProject(tmpdir.strpath))
+    report = prepared.run(
+        [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
     )
 
     assert report.is_successful()
     assert test_args == [42]
 
 
-def test_run_project_with_fixture_error(tmpdir):
+def test_project_with_fixture_error(tmpdir):
     @lcc.suite("suite")
     class suite:
         @lcc.test("test")
@@ -346,12 +345,49 @@ def test_run_project_with_fixture_error(tmpdir):
         def load_suites(self):
             return [load_suite_from_class(suite)]
 
-    project = MyProject(tmpdir.strpath)
-    with pytest.raises(FixtureConstraintViolation):
-        run_project(
-            project, project.load_suites(), NotImplemented, [], tmpdir.strpath,
-            make_report_saving_strategy("at_end_of_tests")
-        )
+    with pytest.raises(ValidationError):
+        PreparedProject.create(MyProject(tmpdir.strpath))
+
+
+def test_project_with_depends_on_error(tmpdir):
+    @lcc.suite()
+    class suite:
+        @lcc.test()
+        @lcc.depends_on("suite.non_existing_test")
+        def test(self):
+            pass
+
+    class MyProject(Project):
+        def load_suites(self):
+            return [load_suite_from_class(suite)]
+
+    with pytest.raises(ValidationError):
+        PreparedProject.create(MyProject(tmpdir.strpath))
+
+
+def test_project_with_depends_on_test_not_scheduled(tmpdir):
+    @lcc.suite()
+    class suite_1:
+        @lcc.test()
+        def test(self):
+            pass
+
+    @lcc.suite()
+    class suite_2:
+        @lcc.test()
+        @lcc.depends_on(lambda t: t.path == "suite_1.test")
+        def test(self):
+            pass
+
+    suite_1 = load_suite_from_class(suite_1)
+    suite_2 = load_suite_from_class(suite_2)
+
+    class MyProject(Project):
+        def load_suites(self):
+            return [suite_1, suite_2]
+
+    with pytest.raises(ValidationError, match="is not going to be run"):
+        PreparedProject.create(MyProject(tmpdir.strpath), [suite_2])
 
 
 def test_run_project_with_fixture_cli_args(tmpdir):
@@ -361,20 +397,19 @@ def test_run_project_with_fixture_cli_args(tmpdir):
     class suite:
         @lcc.test("test")
         def test(self, cli_args):
-            test_args.append(cli_args)
+            test_args.extend(cli_args)
 
     class MyProject(Project):
         def load_suites(self):
             return [load_suite_from_class(suite)]
 
-    project = MyProject(tmpdir.strpath)
-    report = run_project(
-        project, project.load_suites(), NotImplemented, [], tmpdir.strpath,
-        make_report_saving_strategy("at_end_of_tests")
+    prepared = PreparedProject.create(MyProject(tmpdir.strpath), cli_args=["mark"])
+    report = prepared.run(
+        [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
     )
 
     assert report.is_successful()
-    assert test_args == [NotImplemented]
+    assert test_args == ["mark"]
 
 
 def test_run_project_with_fixture_project_dir(tmpdir):
@@ -390,10 +425,9 @@ def test_run_project_with_fixture_project_dir(tmpdir):
         def load_suites(self):
             return [load_suite_from_class(suite)]
 
-    project = MyProject(tmpdir.strpath)
-    report = run_project(
-        project, project.load_suites(), NotImplemented, [], tmpdir.strpath,
-        make_report_saving_strategy("at_end_of_tests")
+    prepared = PreparedProject.create(MyProject(tmpdir.strpath))
+    report = prepared.run(
+        [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
     )
 
     assert report.is_successful()
@@ -411,9 +445,9 @@ def test_run_project_with_custom_nb_threads(tmpdir):
         def load_suites(self):
             return [load_suite_from_class(suite)]
 
-    project = MyProject(tmpdir.strpath)
-    report = run_project(
-        project, project.load_suites(), NotImplemented, [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests"),
+    prepared = PreparedProject.create(MyProject(tmpdir.strpath))
+    report = prepared.run(
+        [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests"),
         nb_threads=2
     )
 
@@ -433,10 +467,9 @@ def test_run_project_with_force_disabled(tmpdir):
         def load_suites(self):
             return [load_suite_from_class(suite)]
 
-    project = MyProject(tmpdir.strpath)
-    report = run_project(
-        project, project.load_suites(), NotImplemented, [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests"),
-        force_disabled=True
+    prepared = PreparedProject.create(MyProject(tmpdir.strpath))
+    report = prepared.run(
+        [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests"), force_disabled=True
     )
 
     test, = list(report.all_tests())
@@ -458,10 +491,9 @@ def test_run_project_with_stop_on_failure(tmpdir):
         def load_suites(self):
             return [load_suite_from_class(suite)]
 
-    project = MyProject(tmpdir.strpath)
-    report = run_project(
-        project, project.load_suites(), NotImplemented, [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests"),
-        stop_on_failure=True
+    prepared = PreparedProject.create(MyProject(tmpdir.strpath))
+    report = prepared.run(
+        [], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests"), stop_on_failure=True
     )
 
     test_1, test_2 = list(report.all_tests())
@@ -480,9 +512,9 @@ def test_run_project_with_reporting_backends(tmpdir):
         def load_suites(self):
             return [load_suite_from_class(suite)]
 
-    project = MyProject(tmpdir.strpath)
-    report = run_project(
-        project, project.load_suites(), None, [JsonBackend()], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
+    prepared = PreparedProject.create(MyProject(tmpdir.strpath))
+    report = prepared.run(
+        [JsonBackend()], tmpdir.strpath, make_report_saving_strategy("at_end_of_tests")
     )
 
     assert report.is_successful()

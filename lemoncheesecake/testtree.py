@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import copy
 
-from typing import Union, Tuple, List, Sequence, TypeVar, Iterator, Iterable
+from typing import Union, Tuple, List, Dict, Sequence, TypeVar, Iterator, Iterable
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
 
@@ -198,6 +198,10 @@ def flatten_suites(suites: Iterable[S]) -> Iterator[S]:
 def flatten_tests(suites: Iterable[S]) -> Iterator[T]:
     for suite in flatten_suites(suites):
         yield from suite.get_tests()
+
+
+def flatten_tests_as_dict(suites: Iterable[S]) -> Dict[str, T]:
+    return {t.path: t for t in flatten_tests(suites)}
 
 
 def find_suite(suites: Sequence[S], hierarchy: TreeNodeHierarchy) -> S:

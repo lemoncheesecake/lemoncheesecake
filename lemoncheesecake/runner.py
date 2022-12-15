@@ -522,18 +522,12 @@ def build_tasks(suites, fixture_registry, session_scheduled_fixtures, force_disa
     # Add extra dependencies in tasks for tests that depend on other tests
     ###
     for test in flatten_tests(suites):
-        if not test.dependencies:
+        if not test.resolved_dependencies:
             continue
         test_task = lookup_test_task(tasks, test.path)
-        for dep_test_path in test.dependencies:
-            try:
-                dep_test = lookup_test_task(tasks, dep_test_path)
-            except LookupError:
-                raise UserError(
-                    "Cannot find dependency test '%s' for '%s', "
-                    "either the test does not exist or is not going to be run" % (dep_test_path, test.path)
-                )
-            test_task.dependencies.append(dep_test)
+        test_task.dependencies.extend(
+            lookup_test_task(tasks, test_dep.path) for test_dep in test.resolved_dependencies
+        )
 
     ###
     # Return tasks

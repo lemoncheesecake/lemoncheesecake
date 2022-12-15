@@ -291,7 +291,7 @@ Usage::
 Dependency between tests
 ------------------------
 
-Dependency between tests can be added using the ``@lcc.depends_on(*test_paths)`` decorator::
+Dependency between tests can be added using the ``@lcc.depends_on()`` decorator::
 
     @lcc.suite("My Suite")
     class mysuite:
@@ -304,11 +304,39 @@ Dependency between tests can be added using the ``@lcc.depends_on(*test_paths)``
         def test_2():
             pass
 
-If "mysuite.test_1" fails, then "mysuite.test_2" will be skipped.
+If ``mysuite.test_1`` fails, then ``mysuite.test_2`` will be skipped.
 
-This decorator:
+Dependencies can be expressed as test paths.
 
-- can take multiple test paths
+.. versionadded:: 1.15.0 Callable syntax
+
+They can also be expressed using a callable that takes a :py:class:`Test <lemoncheesecake.api.Test>` instance::
+
+    @lcc.suite("My Suite")
+    class mysuite:
+        @lcc.test("Test 1")
+        @lcc.tags("mytag")
+        def test_1():
+            pass
+
+        @lcc.test("Test 2")
+        @lcc.tags("mytag")
+        def test_2():
+            pass
+
+        @lcc.test("Test 3")
+        @lcc.depends_on(lambda test: "mytag" in test.tags)
+        def test_3():
+            pass
+
+
+In this example above, the ``test_3`` depends on all tests with the ``mytag`` tag, in other words: ``test_1`` and ``test_2``.
+
+The ``lcc.depends_on()`` decorator:
+
+- can take multiple test paths or callable
+
+- a test can depend on any test of a test project
 
 - it is only applicable to tests (not suites)
 

@@ -5,7 +5,7 @@ from lemoncheesecake.cli.utils import auto_detect_reporting_backends, load_suite
 from lemoncheesecake.reporting.backend import get_reporting_backends
 from lemoncheesecake.project import Project
 from lemoncheesecake.suite import load_suite_from_class
-from lemoncheesecake.exceptions import MetadataPolicyViolation, ProjectLoadingError
+from lemoncheesecake.exceptions import ValidationError, ProjectLoadingError
 
 from helpers.runner import build_project_module
 from helpers.utils import env_vars
@@ -40,41 +40,70 @@ class MyProject(Project):
     assert [b.get_name() for b in backends] == ["console"]
 
 
-def test_load_suites_from_project_with_metadata_policy_ko(tmpdir):
-    @lcc.suite("My Suite")
+def test_load_suites_from_project(tmpdir):
+    @lcc.suite()
     class mysuite:
-        @lcc.test("My Test")
-        @lcc.tags("mytag")
+        @lcc.test()
         def test(self):
             pass
 
     class MyProject(Project):
-        def __init__(self, project_dir):
-            Project.__init__(self, project_dir)
-            self.metadata_policy.disallow_unknown_tags()
-
         def load_suites(self):
             return [load_suite_from_class(mysuite)]
 
     project = MyProject(tmpdir.strpath)
-    with pytest.raises(MetadataPolicyViolation):
+    assert len(load_suites_from_project(project)) == 1
+
+
+def test_load_suites_from_project_with_filter(tmpdir):
+    @lcc.suite()
+    class mysuite:
+        @lcc.test()
+        def test_1(self):
+            pass
+
+        @lcc.test()
+        def test_2(self):
+            pass
+
+    class MyProject(Project):
+        def load_suites(self):
+            return [load_suite_from_class(mysuite)]
+
+    project = MyProject(tmpdir.strpath)
+    suites = load_suites_from_project(project, lambda test: test.path == "mysuite.test_1")
+    assert len(suites[0].get_tests()) == 1
+
+
+def test_load_suites_from_project_with_filter_no_match(tmpdir):
+    @lcc.suite()
+    class mysuite:
+        @lcc.test()
+        def test_1(self):
+            pass
+
+        @lcc.test()
+        def test_2(self):
+            pass
+
+    class MyProject(Project):
+        def load_suites(self):
+            return [load_suite_from_class(mysuite)]
+
+    project = MyProject(tmpdir.strpath)
+    with pytest.raises(lcc.UserError, match="does not match"):
+        load_suites_from_project(project, lambda test: False)
+
+
+def test_load_suites_from_empty(tmpdir):
+    @lcc.suite()
+    class mysuite:
+        pass
+
+    class MyProject(Project):
+        def load_suites(self):
+            return [load_suite_from_class(mysuite)]
+
+    project = MyProject(tmpdir.strpath)
+    with pytest.raises(lcc.UserError, match="No test is defined"):
         load_suites_from_project(project)
-
-
-def test_load_suites_from_project_with_metadata_policy_ok(tmpdir):
-    @lcc.suite("My Suite")
-    class mysuite:
-        @lcc.test("My Test")
-        def test(self):
-            pass
-
-    class MyProject(Project):
-        def __init__(self, project_dir):
-            Project.__init__(self, project_dir)
-            self.metadata_policy.disallow_unknown_tags()
-
-        def load_suites(self):
-            return [load_suite_from_class(mysuite)]
-
-    project = MyProject(tmpdir.strpath)
-    load_suites_from_project(project)

@@ -164,11 +164,21 @@ def hidden():
     return visible_if(lambda _: False)
 
 
-def depends_on(*deps: str) -> Any:
+def depends_on(*deps: Union[str, Callable]) -> Any:
     """
     Decorator, only applicable to a test. Add dependencies to a test.
 
-    :param deps: the test paths that the decorated test is depending on.
+    :param deps: dependencies can be either:
+
+        - a full test path::
+
+            @lcc.depends("mysuite.mytest")
+
+        - a callable that express dependencies as a filter (a :py:class:`Test <lemoncheesecake.api.Test>` instance is passed to the callable)::
+
+            @lcc.depends(lambda test: "mytag" in test.tags)
+
+        .. versionadded:: 1.15.0 callable syntax
     """
     def wrapper(obj):
         md = get_metadata(obj)

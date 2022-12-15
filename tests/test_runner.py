@@ -1892,7 +1892,7 @@ def test_depends_on_failed_failure():
             lcc.log_error("some error")
 
         @lcc.test("t2")
-        @lcc.depends_on("suite.test1")
+        @lcc.depends_on(lambda t: t.path == "suite.test1")
         def test2(self):
             pass
 
@@ -1944,3 +1944,5 @@ def test_depends_on_failed_and_subsuite():
     report = run_suite_class(suite1)
 
     assert_test_statuses(report, failed=["suite1.test1"], skipped=["suite1.suite2.test2"])
+
+
