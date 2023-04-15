@@ -1,7 +1,10 @@
 import time
 
 import pytest
+from pytest_mock import mocker
 
+
+import lemoncheesecake.api as lcc
 from lemoncheesecake.reporting import Report, XmlBackend, JsonBackend, load_report, load_reports_from_dir
 from lemoncheesecake.reporting.backends.xml import \
     save_report_into_file as save_xml, \
@@ -10,8 +13,11 @@ from lemoncheesecake.reporting.backends.json_ import \
     save_report_into_file as save_json, \
     load_report_from_file as load_json
 from lemoncheesecake.reporting.backend import get_reporting_backend_names, parse_reporting_backend_names_expression
+from lemoncheesecake.reporting.backends import JsonBackend
+from lemoncheesecake.reporting.savingstrategy import make_report_saving_strategy
 
 from helpers.report import assert_report
+from helpers.runner import run_suite_classes
 
 
 @pytest.fixture()
@@ -116,3 +122,103 @@ def test_reporting_fixed_invalid_turn_off():
 
 def test_parse_reporting_backend_names_expression():
     assert parse_reporting_backend_names_expression("-console  +xml  ") == ["-console", "+xml"]
+
+
+@pytest.fixture()
+def json_save_func_mock(mocker):
+    return mocker.patch("lemoncheesecake.reporting.backends.json_.save_report_into_file")
+
+
+@pytest.fixture()
+def do_test_saving_strategy(json_save_func_mock):
+    def func(suites, strategy_name, call_count):
+        run_suite_classes(
+            suites, backends=[JsonBackend()],
+            report_saving_strategy=make_report_saving_strategy(strategy_name)
+        )
+        assert json_save_func_mock.call_count == call_count
+    return func
+
+
+def test_saving_strategy_at_end_of_tests(do_test_saving_strategy):
+    @lcc.suite()
+    class suite_1:
+        @lcc.test()
+        def test(self):
+            pass
+
+    do_test_saving_strategy((suite_1,), "at_end_of_tests", call_count=1)
+
+
+def test_saving_strategy_at_each_suite(do_test_saving_strategy):
+    @lcc.suite()
+    class suite_1:
+        @lcc.test()
+        def test(self):
+            pass
+
+    @lcc.suite()
+    class suite_2:
+        @lcc.test()
+        def test(self):
+            pass
+
+    do_test_saving_strategy((suite_1, suite_2), "at_each_suite", call_count=3)
+
+
+def test_saving_strategy_at_each_test(do_test_saving_strategy):
+    @lcc.suite()
+    class suite:
+        @lcc.test()
+        def test_1(self):
+            pass
+
+        @lcc.test()
+        def test_2(self):
+            pass
+
+        @lcc.test()
+        def test_3(self):
+            pass
+
+    do_test_saving_strategy((suite,), "at_each_test", call_count=4)
+
+
+def test_saving_strategy_at_each_failed_test(do_test_saving_strategy):
+    @lcc.suite()
+    class suite:
+        @lcc.test()
+        def test_1(self):
+            lcc.log_error("error")
+
+        @lcc.test()
+        def test_2(self):
+            pass
+
+        @lcc.test()
+        def test_3(self):
+            pass
+
+    do_test_saving_strategy((suite,), "at_each_failed_test", call_count=2)
+
+
+def test_saving_strategy_at_each_log(do_test_saving_strategy):
+    @lcc.suite()
+    class suite:
+        @lcc.test()
+        def test(self):
+            lcc.log_info("log 1")
+            lcc.log_info("log 2")
+
+    do_test_saving_strategy((suite,), "at_each_log", call_count=3)
+
+
+def test_saving_strategy_every_N(do_test_saving_strategy):
+    @lcc.suite()
+    class suite:
+        @lcc.test()
+        def test(self):
+            pass
+
+    # this one is a very basic test because doing time-related test can be painful
+    do_test_saving_strategy((suite,), "every_100s", call_count=1)
