@@ -5,6 +5,7 @@ Created on Mar 29, 2016
 '''
 
 import os
+import time
 
 from lemoncheesecake.helpers.orderedset import OrderedSet
 from lemoncheesecake.exceptions import LemoncheesecakeException
@@ -40,17 +41,19 @@ class ReportingBackend:
 
 
 class FileReportSession(ReportingSession):
-    def __init__(self, report_filename, report, reporting_backend, report_saving_strategy):
-        self.report_filename = report_filename
+    def __init__(self, path, report, backend, saving_strategy):
+        self.path = path
         self.report = report
-        self.reporting_backend = reporting_backend
-        self.report_saving_strategy = report_saving_strategy
+        self.backend = backend
+        self.saving_strategy = saving_strategy
+        self.last_saved_time = None
 
     def _save(self):
-        self.reporting_backend.save_report(self.report_filename, self.report)
+        self.backend.save_report(self.path, self.report)
+        self.last_saved_time = time.time()
 
     def _handle_event(self, event):
-        report_must_be_saved = self.report_saving_strategy and self.report_saving_strategy(event, self.report)
+        report_must_be_saved = self.saving_strategy and self.saving_strategy(event, self.report, self.last_saved_time)
         if report_must_be_saved:
             self._save()
 

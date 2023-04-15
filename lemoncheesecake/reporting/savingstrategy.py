@@ -27,15 +27,15 @@ def _is_end_of_result_event(event):
     return None
 
 
-def save_at_each_suite_strategy(event, _):
+def save_at_each_suite_strategy(event, _, __):
     return isinstance(event, SuiteEndEvent)
 
 
-def save_at_each_test_strategy(event, _):
+def save_at_each_test_strategy(event, _, __):
     return _is_end_of_result_event(event) is not None
 
 
-def save_at_each_failed_test_strategy(event, report):
+def save_at_each_failed_test_strategy(event, report, _):
     location = _is_end_of_result_event(event)
     if location:
         result = report.get(location)
@@ -44,25 +44,19 @@ def save_at_each_failed_test_strategy(event, report):
         return False
 
 
-def save_at_each_log_strategy(event, _):
+def save_at_each_log_strategy(event, _, __):
     return isinstance(event, SteppedEvent)
 
 
 class SaveAtInterval:
     def __init__(self, interval):
         self.interval = interval
-        self.last_saving = None
 
-    def __call__(self, event, report):
-        now = time.time()
-        if self.last_saving:
-            must_be_saved = now > self.last_saving + self.interval
-            if must_be_saved:
-                self.last_saving = now
-            return must_be_saved
-        else:
-            self.last_saving = now  # not a saving but an initialization
+    def __call__(self, event, report, last_saved_time):
+        if last_saved_time is None:
             return False
+
+        return last_saved_time + self.interval < time.time()
 
 
 def make_report_saving_strategy(expression):
