@@ -178,7 +178,7 @@ def depends_on(*deps: Union[str, Callable]) -> Any:
 
             @lcc.depends(lambda test: "mytag" in test.tags)
 
-        .. versionadded:: 1.15.0 callable syntax
+        .. versionadded:: 1.14.1 callable syntax
     """
     def wrapper(obj):
         md = get_metadata(obj)

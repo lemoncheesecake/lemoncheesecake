@@ -308,7 +308,7 @@ If ``mysuite.test_1`` fails, then ``mysuite.test_2`` will be skipped.
 
 Dependencies can be expressed as test paths.
 
-.. versionadded:: 1.15.0 Callable syntax
+.. versionadded:: 1.14.1 Callable syntax
 
 They can also be expressed using a callable that takes a :py:class:`Test <lemoncheesecake.api.Test>` instance::
 
