@@ -1,3 +1,10 @@
+# 1.14.1 (2023-04-16)
+
+- `@lcc.depends_on()`: the decorator argument can now be expressed as a callable that acts like a filter
+- `lcc check`: improve coherency checks
+- `lcc run --save-report every_Ns`: compute the time interval using the time the report has been
+  actually saved
+
 # 1.14.0 (2022-11-01)
 
 - **CLI**: add a `lcc check` command to check the project validity
