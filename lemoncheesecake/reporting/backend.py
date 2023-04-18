@@ -46,7 +46,7 @@ class FileReportSession(ReportingSession):
         self.report = report
         self.backend = backend
         self.saving_strategy = saving_strategy
-        self.last_saved_time = None
+        self.last_saved_time = time.time()
 
     def _save(self):
         self.backend.save_report(self.path, self.report)

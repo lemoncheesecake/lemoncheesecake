@@ -53,9 +53,6 @@ class SaveAtInterval:
         self.interval = interval
 
     def __call__(self, event, report, last_saved_time):
-        if last_saved_time is None:
-            return False
-
         return last_saved_time + self.interval < time.time()
 
 
