@@ -1,3 +1,7 @@
+# 1.14.2 (2023-04-18)
+
+- `lcc run --save-report every_Ns`: fix option no longer working (bug introduced in 1.14.1)
+
 # 1.14.1 (2023-04-16)
 
 - `@lcc.depends_on()`: the decorator argument can now be expressed as a callable that acts like a filter
