@@ -1505,6 +1505,68 @@ def test_fixture_evaluation_order():
     assert [e.message for e in test.get_steps()[0].get_logs()] == ["a", "b", "c"]
 
 
+def test_fixture_teardown_order():
+    marker = []
+
+    @lcc.fixture(scope="pre_run")
+    def fixt_pre_run_1():
+        yield None
+        marker.append("fixt_pre_run_1")
+
+    @lcc.fixture(scope="pre_run")
+    def fixt_pre_run_2():
+        yield None
+        marker.append("fixt_pre_run_2")
+
+    @lcc.fixture(scope="session")
+    def fixt_session_1():
+        yield None
+        marker.append("fixt_session_1")
+
+    @lcc.fixture(scope="session")
+    def fixt_session_2():
+        yield None
+        marker.append("fixt_session_2")
+
+    @lcc.fixture(scope="suite")
+    def fixt_suite_1():
+        yield None
+        marker.append("fixt_suite_1")
+
+    @lcc.fixture(scope="suite")
+    def fixt_suite_2():
+        yield None
+        marker.append("fixt_suite_2")
+
+    @lcc.fixture(scope="test")
+    def fixt_test_1():
+        yield None
+        marker.append("fixt_test_1")
+
+    @lcc.fixture(scope="test")
+    def fixt_test_2():
+        yield None
+        marker.append("fixt_test_2")
+
+    @lcc.suite()
+    class suite:
+        @lcc.test()
+        def test(self,
+                 fixt_pre_run_1, fixt_session_1, fixt_suite_1, fixt_test_1,
+                 fixt_pre_run_2, fixt_session_2, fixt_suite_2, fixt_test_2):
+            pass
+
+    run_suite_class(suite, (fixt_pre_run_1, fixt_session_1, fixt_suite_1, fixt_test_1,
+                            fixt_pre_run_2, fixt_session_2, fixt_suite_2, fixt_test_2))
+
+    assert marker == [
+        "fixt_test_2", "fixt_test_1",
+        "fixt_suite_2", "fixt_suite_1",
+        "fixt_session_2", "fixt_session_1",
+        "fixt_pre_run_2", "fixt_pre_run_1"
+    ]
+
+
 def test_parametrized_simple():
     @lcc.suite("suite")
     class suite:

@@ -57,7 +57,7 @@ class RunContext(TaskContext):
         return teardown_funcs
 
     def run_teardown_funcs(self, teardown_funcs):
-        for teardown_func in teardown_funcs:
+        for teardown_func in reversed(teardown_funcs):
             if teardown_func:
                 try:
                     teardown_func()
@@ -580,7 +580,7 @@ def run_suites(suites, fixture_registry, session, force_disabled=False, stop_on_
         )
 
     # teardown of 'pre_run' fixtures
-    for teardown in fixture_teardowns:
+    for teardown in reversed(fixture_teardowns):
         try:
             teardown()
         except UserError:
