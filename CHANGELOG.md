@@ -1,3 +1,7 @@
+# 1.14.3 (2023-10-02)
+
+- Teardown fixtures of the same scope in the LIFO order
+
 # 1.14.2 (2023-04-18)
 
 - `lcc run --save-report every_Ns`: fix option no longer working (bug introduced in 1.14.1)
