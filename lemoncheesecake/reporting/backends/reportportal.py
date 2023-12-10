@@ -253,8 +253,8 @@ class ReportPortalReportingSession(ReportingSession):
             return
 
         result = event.location.get(self.report)
-        last_step = result.get_steps()[-1]
-        self._end_test_item(event.time, is_successful=last_step.is_successful())
+        steps = list(filter(lambda step: step.description == event.step, reversed(result.get_steps())))
+        self._end_test_item(event.time, is_successful=steps[-1].is_successful() if steps else False)
 
     def on_log(self, event):
         if self._has_rp_error():
