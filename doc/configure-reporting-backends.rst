@@ -26,7 +26,7 @@ If the ReportPortal instance uses https over plain http, you'll need to explicit
 variable to a file that contains the remote server certificate chain. It will be the server certificate itself if it's a
 self-signed certificate.
 
-Only ReportPortal version 4.x is supported at this time.
+lemoncheesecake supports ReportPortal 5.x.
 
 Slack
 -----

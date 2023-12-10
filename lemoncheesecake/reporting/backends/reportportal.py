@@ -28,13 +28,14 @@ def make_tags_from_test_tree_node(node):
 
 class ReportPortalReportingSession(ReportingSession):
     def __init__(self, url, auth_token, project, launch_name, launch_description, report_dir, report):
-        self.service = reportportal_client.ReportPortalServiceAsync(
-            endpoint=url, project=project, token=auth_token, error_handler=self._handle_rp_error
+        self.service = reportportal_client.RPClient(
+            endpoint=url, project=project, api_key=auth_token, error_handler=self._handle_rp_error
         )
         self.launch_name = launch_name
         self.launch_description = launch_description
         self.report_dir = report_dir
         self.report = report
+        self._item_ids = []
         self._rp_exc_info = None
 
     def _handle_rp_error(self, exc_info):
@@ -52,25 +53,35 @@ class ReportPortalReportingSession(ReportingSession):
         )
         traceback.print_exception(*self._rp_exc_info, file=sys.stderr)
 
-    def _end_current_test_item(self, end_time, status):
-        self.service.finish_test_item(end_time=make_time(end_time), status=status)
-
-    def _start_test_item(self, item_type, start_time, name, description, wrapped=False):
+    def _start_test_item(self, item_type, start_time, name, description=None, tags=None, wrapped=False):
         if wrapped:
-            self.service.start_test_item(
-                item_type="SUITE", start_time=make_time(start_time),
-                name=name, description=description
+            self._item_ids.append(
+                self.service.start_test_item(
+                    item_type="SUITE", start_time=make_time(start_time),
+                    name=name, description=description,
+                    parent_item_id=self._item_ids[-1] if self._item_ids else None
+                )
             )
-        self.service.start_test_item(
-            item_type=item_type, start_time=make_time(start_time),
-            name=name, description=description
+        self._item_ids.append(
+            self.service.start_test_item(
+                item_type=item_type, start_time=make_time(start_time),
+                name=name, description=description, tags=tags,
+                parent_item_id=self._item_ids[-1] if self._item_ids else None,
+                has_stats=(item_type != "STEP")  # we want nested steps
+            )
         )
+
+    def _end_current_test_item(self, end_time, status):
+        self.service.finish_test_item(self._item_ids.pop(), end_time=make_time(end_time), status=status)
 
     def _end_test_item(self, end_time, is_successful, wrapped=False):
         status = "passed" if is_successful else "failed"
         if wrapped:
             self._end_current_test_item(end_time, status=status)
         self._end_current_test_item(end_time, status=status)
+
+    def _log(self, time, message, level, **kwargs):
+        self.service.log(make_time(time), message, level, item_id=self._item_ids[-1], **kwargs)
 
     def on_test_session_start(self, event):
         if self._has_rp_error():
@@ -85,7 +96,6 @@ class ReportPortalReportingSession(ReportingSession):
             self._show_rp_error()
         else:
             self.service.finish_launch(end_time=make_time(event.time))
-            self.service.terminate()
 
             if self._has_rp_error():
                 self._show_rp_error()
@@ -135,8 +145,8 @@ class ReportPortalReportingSession(ReportingSession):
             return
 
         suite = event.suite
-        self.service.start_test_item(
-            item_type="SUITE", start_time=make_time(event.time),
+        self._start_test_item(
+            item_type="SUITE", start_time=event.time,
             name=suite.name, description=suite.description,
             tags=make_tags_from_test_tree_node(suite)
         )
@@ -196,8 +206,8 @@ class ReportPortalReportingSession(ReportingSession):
             return
 
         test = event.test
-        self.service.start_test_item(
-            item_type="TEST", start_time=make_time(event.time),
+        self._start_test_item(
+            item_type="TEST", start_time=event.time,
             name=test.name, description=test.description,
             tags=make_tags_from_test_tree_node(test)
         )
@@ -213,8 +223,8 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        self.service.start_test_item(
-            item_type="TEST", start_time=make_time(time),
+        self._start_test_item(
+            item_type="TEST", start_time=time,
             name=test.name, description=test.description, tags=test.tags,
         )
         self._end_current_test_item(time, status=status)
@@ -233,13 +243,24 @@ class ReportPortalReportingSession(ReportingSession):
         if self._has_rp_error():
             return
 
-        self.service.log(make_time(event.time), "--- STEP: %s ---" % event.step_description, "INFO")
+        self._start_test_item(
+            item_type="STEP", start_time=event.time,
+            name=event.step_description
+        )
+
+    def on_step_end(self, event):
+        if self._has_rp_error():
+            return
+
+        result = event.location.get(self.report)
+        last_step = result.get_steps()[-1]
+        self._end_test_item(event.time, is_successful=last_step.is_successful())
 
     def on_log(self, event):
         if self._has_rp_error():
             return
 
-        self.service.log(make_time(event.time), event.log_message, event.log_level.upper())
+        self._log(event.time, event.log_message, event.log_level.upper())
 
     def on_check(self, event):
         if self._has_rp_error():
@@ -248,7 +269,7 @@ class ReportPortalReportingSession(ReportingSession):
         message = "%s => %s" % (event.check_description, "OK" if event.check_is_successful else "NOT OK")
         if event.check_details is not None:
             message += "\nDetails: %s" % event.check_details
-        self.service.log(make_time(event.time), message, "INFO" if event.check_is_successful else "ERROR")
+        self._log(event.time, message, "INFO" if event.check_is_successful else "ERROR")
 
     def on_log_attachment(self, event):
         if self._has_rp_error():
@@ -256,7 +277,7 @@ class ReportPortalReportingSession(ReportingSession):
 
         abspath = os.path.join(self.report_dir, event.attachment_path)
         with open(abspath, "rb") as fh:
-            self.service.log(make_time(event.time), event.attachment_description, "INFO", attachment={
+            self._log(event.time, event.attachment_description, "INFO", attachment={
                 "name": osp.basename(event.attachment_path),
                 "data": fh.read(),
                 "mime": mimetypes.guess_type(abspath)[0] or "application/octet-stream"
@@ -270,7 +291,7 @@ class ReportPortalReportingSession(ReportingSession):
             message = "%s: %s" % (event.url_description, event.url)
         else:
             message = event.url
-        self.service.log(make_time(event.time), message, "INFO")
+        self._log(event.time, message, "INFO")
 
 
 class ReportPortalReportingSessionParallelized(ReportingSession):

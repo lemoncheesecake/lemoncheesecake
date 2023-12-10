@@ -22,7 +22,7 @@ def _test_reporting_session(**vars):
 
 @pytest.fixture
 def rp_mock(mocker):
-    mocker.patch("reportportal_client.ReportPortalServiceAsync")
+    mocker.patch("reportportal_client.RPClient")
     return mocker
 
 
@@ -66,12 +66,14 @@ def assert_rp_calls(actual_calls, expected_calls):
         if actual_name.startswith("finish_"):
             assert int_as_str_pattern.match(actual_kwargs["end_time"]) is not None
 
+        # TODO: add checks on item_id & parent_item_id
+
     assert len(actual_calls) == len(expected_calls)
 
 
 def steps_to_calls(steps):
     for step in steps:
-        yield "log", (substr(step.description), 'INFO'), {}
+        yield start_test_item("STEP", step.description)
         for log in step.get_logs():
             if isinstance(log, Log):
                 yield "log", (log.message, log.level.upper()), {}
@@ -92,9 +94,10 @@ def steps_to_calls(steps):
                     "mime": mimetypes.guess_type(log.filename)[0] or "application/octet-stream"
                 }
                 yield "log", (log.description, "INFO"), {"attachment": attachment_arg}
+        yield finish_test_item("passed" if step.is_successful() else "failed")
 
 
-def start_test_item(item_type, name, description, tags=None):
+def start_test_item(item_type, name, description=None, tags=None):
     kwargs = {"item_type": item_type, "name": name, "description": description}
     if tags is not None:
         kwargs["tags"] = tags
@@ -108,8 +111,7 @@ def finish_test_item(status):
 def _tests_to_rp_calls(tests):
     for test in tests:
         yield start_test_item("TEST", test.name, test.description, make_tags_from_test_tree_node(test))
-        for call in steps_to_calls(test.get_steps()):
-            yield call
+        yield from steps_to_calls(test.get_steps())
         yield finish_test_item(test.status)
 
 
@@ -120,20 +122,16 @@ def suites_to_rp_calls(suites):
         # SUITE SETUP
         if suite.suite_setup:
             yield start_test_item("BEFORE_CLASS", "suite_setup", "Suite Setup")
-            for call in steps_to_calls(suite.suite_setup.get_steps()):
-                yield call
+            yield from steps_to_calls(suite.suite_setup.get_steps())
             yield finish_test_item(suite.suite_setup.status)
         # TESTS
-        for call in _tests_to_rp_calls(suite.get_tests()):
-            yield call
+        yield from _tests_to_rp_calls(suite.get_tests())
         # SUB SUITES
-        for call in suites_to_rp_calls(suite.get_suites()):
-            yield call
+        yield from suites_to_rp_calls(suite.get_suites())
         # SUITE TEARDOWN
         if suite.suite_teardown:
             yield start_test_item("AFTER_CLASS", "suite_teardown", "Suite Teardown")
-            for call in steps_to_calls(suite.suite_teardown.get_steps()):
-                yield call
+            yield from steps_to_calls(suite.suite_teardown.get_steps())
             yield finish_test_item(suite.suite_teardown.status)
         # END SUITE
         yield finish_test_item("passed")
@@ -145,24 +143,20 @@ def report_to_rp_calls(report, launch_name="Test Run", launch_description=None):
     if report.test_session_setup:
         yield start_test_item("SUITE", "session_setup", "Test Session Setup")
         yield start_test_item("BEFORE_CLASS", "session_setup", "Test Session Setup")
-        for call in steps_to_calls(report.test_session_setup.get_steps()):
-            yield call
+        yield from steps_to_calls(report.test_session_setup.get_steps())
         yield finish_test_item(report.test_session_setup.status)
         yield finish_test_item(report.test_session_setup.status)
 
-    for call in suites_to_rp_calls(report.get_suites()):
-        yield call
+    yield from suites_to_rp_calls(report.get_suites())
 
     if report.test_session_teardown:
         yield start_test_item("SUITE", "session_teardown", "Test Session Teardown")
         yield start_test_item("AFTER_CLASS", "session_teardown", "Test Session Teardown")
-        for call in steps_to_calls(report.test_session_teardown.get_steps()):
-            yield call
+        yield from steps_to_calls(report.test_session_teardown.get_steps())
         yield finish_test_item(report.test_session_teardown.status)
         yield finish_test_item(report.test_session_teardown.status)
 
     yield "finish_launch", (), {}
-    yield "terminate", (), {}
 
 
 try:
@@ -180,7 +174,7 @@ else:
                     suites, backends=[ReportPortalBackend()], fixtures=fixtures, tmpdir=".", nb_threads=nb_threads
                 )
             assert_rp_calls(
-                reportportal_client.ReportPortalServiceAsync.return_value.mock_calls,
+                reportportal_client.RPClient.return_value.mock_calls,
                 list(report_to_rp_calls(report))
             )
 
