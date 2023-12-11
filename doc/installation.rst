@@ -17,9 +17,9 @@ The following reporting backends are supported:
 
 - ``html``: available by default
 
-- ``xml``: available through the extra of the same name
+- ``xml``: available by default (since 1.15.0, otherwise: use the extra of the same name)
 
-- ``junit``: available through the extra of the same name
+- ``junit``: available by default (since 1.15.0, otherwise: use the extra of the same name)
 
 - ``reportportal``: available through the extra of the same name
 

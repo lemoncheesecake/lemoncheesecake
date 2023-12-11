@@ -25,12 +25,7 @@ def test_create_report_dir(tmpdir):
 def test_reporting_backends(tmpdir):
     project = Project(tmpdir.strpath)
 
-    expected_reporting_backends = ["console", "html", "json"]
-    try:
-        import lxml
-        expected_reporting_backends.extend(["xml", "junit"])
-    except ImportError:
-        pass
+    expected_reporting_backends = ["console", "html", "json", "xml", "junit"]
     try:
         import reportportal_client
         expected_reporting_backends.append("reportportal")

@@ -8,11 +8,6 @@ jobs:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         os: [ubuntu-20.04, macos-11, windows-2019]
-        exclude:
-          # lxml does not currently support wheel for Python 3.11 on Windows
-          # skip this matrix combination for now
-          - os: windows-2019
-            python-version: "3.11"
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:

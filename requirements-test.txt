@@ -3,7 +3,6 @@ pytest_mock
 callee
 tox
 # all extra dependencies:
-lxml
 reportportal-client~=5.5
 slacker
 

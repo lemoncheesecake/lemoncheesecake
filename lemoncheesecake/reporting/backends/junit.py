@@ -1,23 +1,13 @@
-'''
-Created on Jun 14, 2017
-
-@author: nicolas
-'''
-
-from decimal import Decimal
-from functools import reduce
-
+###
 # This junit backend implementation is based on the documentation
 # http://llg.cubic.org/docs/junit/
 # also see:
 # https://confluence.atlassian.com/display/BAMBOO/JUnit+parsing+in+Bamboo
+###
 
-try:
-    from lxml import etree as ET
-    from lxml.builder import E
-    LXML_IS_AVAILABLE = True
-except ImportError:
-    LXML_IS_AVAILABLE = False
+from decimal import Decimal
+from functools import reduce
+import xml.etree.ElementTree as ET
 
 from lemoncheesecake.reporting.backend import FileReportBackend
 from lemoncheesecake.reporting import ReportStats, Log, Check, format_time_as_iso8601
@@ -75,7 +65,7 @@ def _serialize_suite_result(suite):
 
 
 def serialize_report_as_xml_tree(report):
-    xml_report = E("testsuites")
+    xml_report = ET.Element("testsuites")
 
     stats = ReportStats.from_report(report)
 
@@ -96,7 +86,7 @@ def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
     xml_report = serialize_report_as_xml_tree(report)
     indent_xml(xml_report, indent_level=indent_level)
 
-    return ET.tostring(xml_report, pretty_print=True, encoding="unicode")
+    return ET.tostring(xml_report, encoding="unicode", xml_declaration=True)
 
 
 def save_report_into_file(report, filename, indent_level=DEFAULT_INDENT_LEVEL):
@@ -113,7 +103,7 @@ class JunitBackend(FileReportBackend):
         return "junit"
 
     def is_available(self):
-        return LXML_IS_AVAILABLE
+        return True
 
     def get_report_filename(self):
         return "report-junit.xml"

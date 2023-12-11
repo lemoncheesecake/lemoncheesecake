@@ -1,17 +1,5 @@
-'''
-Created on Mar 27, 2016
-
-@author: nicolas
-'''
-
 import time
-
-try:
-    from lxml import etree as ET
-    from lxml.builder import E
-    LXML_IS_AVAILABLE = True
-except ImportError:
-    LXML_IS_AVAILABLE = False
+import xml.etree.ElementTree as ET
 
 import lemoncheesecake
 from lemoncheesecake.reporting.backend import FileReportBackend, ReportUnserializerMixin
@@ -25,6 +13,10 @@ DEFAULT_INDENT_LEVEL = 4
 
 
 # borrowed from http://stackoverflow.com/a/1239193
+# NB: an indent function has been added in Python 3.9
+# (https://docs.python.org/3/library/xml.etree.elementtree.html#xml.etree.ElementTree.indent)
+# it could be used in a future where Python 3.9 is the older version of Python we support
+# (it is Python 3.8 at time of writing)
 def indent_xml(elem, level=0, indent_level=DEFAULT_INDENT_LEVEL):
     i = "\n" + level * (" " * indent_level)
     if len(elem):
@@ -42,7 +34,7 @@ def indent_xml(elem, level=0, indent_level=DEFAULT_INDENT_LEVEL):
 
 
 def make_xml_node(name, *args):
-    node = E(name)
+    node = ET.Element(name)
     i = 0
     while i < len(args):
         attr_name, attr_value = args[i], args[i+1]
@@ -169,7 +161,7 @@ def _serialize_suite_result(suite):
 
 
 def serialize_report_as_xml_tree(report):
-    xml_report = E("lemoncheesecake-report")
+    xml_report = ET.Element("lemoncheesecake-report")
     xml_report.attrib["lemoncheesecake-version"] = lemoncheesecake.__version__
     xml_report.attrib["report-version"] = "1.1"
     xml_report.attrib["start-time"] = _serialize_time(report.start_time)
@@ -199,7 +191,7 @@ def serialize_report_as_string(report, indent_level=DEFAULT_INDENT_LEVEL):
     xml_report = serialize_report_as_xml_tree(report)
     indent_xml(xml_report, indent_level=indent_level)
 
-    return ET.tostring(xml_report, pretty_print=True, encoding="unicode")
+    return ET.tostring(xml_report, encoding="unicode", xml_declaration=True)
 
 
 def save_report_into_file(report, filename, indent_level=DEFAULT_INDENT_LEVEL):
@@ -257,14 +249,14 @@ def _unserialize_result(xml_result, result):
     result.status_details = xml_result.attrib.get("status-details", None)
     result.start_time = _unserialize_time(xml_result.attrib["start-time"])
     result.end_time = _unserialize_time(xml_result.attrib["end-time"]) if "end-time" in xml_result.attrib else None
-    for xml_step in xml_result.xpath("step"):
+    for xml_step in xml_result.findall("step"):
         result.add_step(_unserialize_step(xml_step))
 
 
 def _unserialize_node_metadata(xml_node, node):
-    node.tags = [n.text for n in xml_node.xpath("tag")]
-    node.properties = {n.attrib["name"]: n.text for n in xml_node.xpath("property")}
-    node.links = [(n.text, n.attrib.get("name", None)) for n in xml_node.xpath("link")]
+    node.tags = [n.text for n in xml_node.findall("tag")]
+    node.properties = {n.attrib["name"]: n.text for n in xml_node.findall("property")}
+    node.links = [(n.text, n.attrib.get("name", None)) for n in xml_node.findall("link")]
 
 
 def _unserialize_test_result(xml_result):
@@ -280,22 +272,20 @@ def _unserialize_suite_result(xml_suite):
     suite.end_time = _unserialize_time(xml_suite.attrib["end-time"]) if "end-time" in xml_suite.attrib else None
     _unserialize_node_metadata(xml_suite, suite)
 
-    xml_setup = xml_suite.xpath("suite-setup")
-    xml_setup = xml_setup[0] if len(xml_setup) > 0 else None
+    xml_setup = xml_suite.find("suite-setup")
     if xml_setup is not None:
         suite.suite_setup = Result()
         _unserialize_result(xml_setup, suite.suite_setup)
 
-    for xml_test in xml_suite.xpath("test"):
+    for xml_test in xml_suite.findall("test"):
         suite.add_test(_unserialize_test_result(xml_test))
 
-    xml_teardown = xml_suite.xpath("suite-teardown")
-    xml_teardown = xml_teardown[0] if len(xml_teardown) > 0 else None
+    xml_teardown = xml_suite.find("suite-teardown")
     if xml_teardown is not None:
         suite.suite_teardown = Result()
         _unserialize_result(xml_teardown, suite.suite_teardown)
 
-    for xml_suite in xml_suite.xpath("suite"):
+    for xml_suite in xml_suite.findall("suite"):
         suite.add_suite(_unserialize_suite_result(xml_suite))
 
     return suite
@@ -308,20 +298,18 @@ def _unserialize_report(xml_report):
     report.end_time = _unserialize_time(xml_report.attrib["end-time"]) if "end-time" in xml_report.attrib else None
     report.saving_time = _unserialize_time(xml_report.attrib["generation-time"]) if "generation-time" in xml_report.attrib else None
     report.nb_threads = int(xml_report.attrib["nb-threads"])
-    report.title = xml_report.xpath("title")[0].text
-    report.info = [(node.attrib["name"], node.text) for node in xml_report.xpath("info")]
+    report.title = xml_report.find("title").text
+    report.info = [(node.attrib["name"], node.text) for node in xml_report.findall("info")]
 
-    xml_setup = xml_report.xpath("test-session-setup")
-    xml_setup = xml_setup[0] if len(xml_setup) else None
+    xml_setup = xml_report.find("test-session-setup")
     if xml_setup is not None:
         report.test_session_setup = Result()
         _unserialize_result(xml_setup, report.test_session_setup)
 
-    for xml_suite in xml_report.xpath("suite"):
+    for xml_suite in xml_report.findall("suite"):
         report.add_suite(_unserialize_suite_result(xml_suite))
 
-    xml_teardown = xml_report.xpath("test-session-teardown")
-    xml_teardown = xml_teardown[0] if len(xml_teardown) else None
+    xml_teardown = xml_report.find("test-session-teardown")
     if xml_teardown is not None:
         report.test_session_teardown = Result()
         _unserialize_result(xml_teardown, report.test_session_teardown)
@@ -333,13 +321,13 @@ def load_report_from_file(filename):
     try:
         with open(filename, "r") as fh:
             xml = ET.parse(fh)
-    except ET.LxmlError as e:
+    except ET.ParseError as e:
         raise ReportLoadingError(str(e))
     except IOError as e:
         raise e  # re-raise as-is
-    try:
-        root = xml.getroot().xpath("/lemoncheesecake-report")[0]
-    except IndexError:
+
+    root = xml.getroot()
+    if root is None or root.tag != "lemoncheesecake-report":
         raise ReportLoadingError("Cannot find lemoncheesecake-report element in XML")
 
     report_version = float(root.attrib["report-version"])
@@ -357,7 +345,7 @@ class XmlBackend(FileReportBackend, ReportUnserializerMixin):
         return "xml"
 
     def is_available(self):
-        return LXML_IS_AVAILABLE
+        return True
 
     def get_report_filename(self):
         return "report.xml"

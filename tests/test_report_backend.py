@@ -64,26 +64,23 @@ def test_save_loaded_report(tmpdir, sample_report):
     assert reloaded_report.end_time == loaded_report.end_time
 
 
-try:
-    import lxml
-except ImportError:
-    pass
-else:
-    def test_load_report_xml(tmpdir, sample_report):
-        _test_load_report(tmpdir, sample_report, save_xml)
+def test_load_report_xml(tmpdir, sample_report):
+    _test_load_report(tmpdir, sample_report, save_xml)
 
-    def test_save_report_xml(tmpdir, sample_report):
-        _test_save_report(tmpdir, sample_report, XmlBackend(), load_xml)
 
-    def test_load_reports_from_dir(tmpdir, sample_report):
-        save_xml(sample_report, tmpdir.join("report.xml").strpath)
-        save_json(sample_report, tmpdir.join("report.js").strpath)
-        tmpdir.join("report.txt").write("foobar")
-        reports = list(load_reports_from_dir(tmpdir.strpath))
-        assert_report(reports[0], sample_report)
-        assert_report(reports[1], sample_report)
-        assert "json" in [r.backend.get_name() for r in reports]
-        assert "xml" in [r.backend.get_name() for r in reports]
+def test_save_report_xml(tmpdir, sample_report):
+    _test_save_report(tmpdir, sample_report, XmlBackend(), load_xml)
+
+
+def test_load_reports_from_dir(tmpdir, sample_report):
+    save_xml(sample_report, tmpdir.join("report.xml").strpath)
+    save_json(sample_report, tmpdir.join("report.js").strpath)
+    tmpdir.join("report.txt").write("foobar")
+    reports = list(load_reports_from_dir(tmpdir.strpath))
+    assert_report(reports[0], sample_report)
+    assert_report(reports[1], sample_report)
+    assert "json" in [r.backend.get_name() for r in reports]
+    assert "xml" in [r.backend.get_name() for r in reports]
 
 
 def _test_get_reporting_backend_names(specified, expected):

@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import os
 import os.path as osp
 import sys
@@ -181,13 +179,8 @@ def run_func_in_test(callback, tmpdir=None):
 
 
 def dump_report(report):
-    try:
-        import lxml
-    except ImportError:
-        pass
-    else:
-        xml = serialize_report_as_string(report)
-        print(xml, file=sys.stderr)
+    xml = serialize_report_as_string(report)
+    print(xml, file=sys.stderr)
 
 
 def dummy_test_callback():

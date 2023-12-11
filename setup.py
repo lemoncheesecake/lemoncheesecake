@@ -44,8 +44,8 @@ setup(
     include_package_data=True,
     install_requires=("colorama", "termcolor", "terminaltables", "typing", "python-slugify"),
     extras_require={
-        "xml": "lxml",
-        "junit": "lxml",
+        "xml": "",
+        "junit": "",
         "reportportal": "reportportal-client~=5.5",
         "slack": "slacker"
     },
