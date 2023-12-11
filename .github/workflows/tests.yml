@@ -22,7 +22,10 @@ jobs:
           python-version: "${{matrix.python-version}}"
       - run: pip install tox tox-gh-actions
       - run: python -m tox
-      - uses: codecov/codecov-action@v2
+      # v4-beta is used instead of v3 because it supports "global upload token"
+      # which is easier to use than having a separate token per repository
+      - uses: codecov/codecov-action@v4.0.0-beta.3
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
           files: ./tests/coverage.xml
