@@ -321,11 +321,10 @@ class ReportPortalBackend(ReportingBackend, ReportingSessionBuilderMixin):
         except KeyError as excp:
             raise UserError("ReportPortal reporting backend, cannot get environment variable %s" % excp)
 
-        # the ReportPortal REST API allows working on multiple test item at a time,
-        # unfortunately reportportal_client module does not support it because test item ids are not exposed and
-        # the API make it impossible to work on multiple test item in parallel.
-        # When lemoncheesecake tests are run in parallel, we must then wait the end of the test session to
-        # replay the events from the report as the tests would have been run sequentially.
+        # ReportPortal allows working on multiple test items at a time however, to simplify the integration
+        # implementation, we chose to:
+        # - replay the report at the end of the test run if tests are parallelized
+        # - otherwise: push report data as the tests are executed
         if parallel:
             return ReportPortalReportingSessionParallelized(
                 url, auth_token, project, launch_name, launch_description, report_dir, report
