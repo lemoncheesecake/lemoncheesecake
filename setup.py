@@ -14,7 +14,7 @@ setup(
     author_email="nicolas.delon@gmail.com",
     license="Apache License (Version 2.0)",
     url="http://lemoncheesecake.io",
-    python_requires='>=3.7',
+    python_requires='>=3.8',
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
@@ -44,8 +44,6 @@ setup(
     include_package_data=True,
     install_requires=("colorama", "termcolor", "terminaltables", "typing", "python-slugify"),
     extras_require={
-        "xml": "",
-        "junit": "",
         "reportportal": "reportportal-client~=5.5",
         "slack": "slacker"
     },
