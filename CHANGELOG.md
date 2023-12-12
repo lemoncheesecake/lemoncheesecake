@@ -1,3 +1,15 @@
+# 1.15.0 (2023-12-12)
+
+- **ReportPortal**:
+  - add support for ReportPortal 5.x (4.x is no longer supported)
+  - steps are now logged as "nested steps" in ReportPortal
+- **xml** and **junit** reporting backends now use the builtin XML implementation of Python, making it possible
+  to drop the lxml dependency (it caused some installation difficulties in some cases/platforms);
+  as a result, the `xml` and `junit` installation "extras" no longer exist (using them with `pip install` will simply
+  trigger a warning)
+- Add support for Python 3.12
+- Drop support for Python 3.7
+
 # 1.14.3 (2023-10-02)
 
 - Teardown fixtures of the same scope in the LIFO order
