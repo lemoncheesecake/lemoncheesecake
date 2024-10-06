@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import os.path as osp
 import sys
 sys.path.insert(0, osp.join(osp.dirname(__file__), ".."))
@@ -17,13 +18,12 @@ autodoc_member_order = "bysource"
 
 templates_path = ['_templates']
 
-
 source_suffix = ['.rst']
 
 master_doc = 'toc'
 
 project = 'lemoncheesecake'
-copyright = '2023, Nicolas Delon'
+copyright = '2024, Nicolas Delon'
 author = 'Nicolas Delon'
 
 version = __version__
@@ -51,6 +51,14 @@ html_sidebars = {
         'searchbox.html',
     ]
 }
+
+html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "")
+
+# Tell Jinja2 templates the build is running on Read the Docs
+if os.environ.get("READTHEDOCS", "") == "True":
+    if "html_context" not in globals():
+        html_context = {}
+    html_context["READTHEDOCS"] = True
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
